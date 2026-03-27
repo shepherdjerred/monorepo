@@ -1,0 +1,137 @@
+{
+  "questionId": "1448",
+  "questionFrontendId": "1323",
+  "title": "Maximum 69 Number",
+  "titleSlug": "maximum-69-number",
+  "difficulty": "Easy",
+  "content": "<p>You are given a positive integer <code>num</code> consisting only of digits <code>6</code> and <code>9</code>.</p>\n\n<p>Return <em>the maximum number you can get by changing <strong>at most</strong> one digit (</em><code>6</code><em> becomes </em><code>9</code><em>, and </em><code>9</code><em> becomes </em><code>6</code><em>)</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = 9669\n<strong>Output:</strong> 9969\n<strong>Explanation:</strong> \nChanging the first digit results in 6669.\nChanging the second digit results in 9969.\nChanging the third digit results in 9699.\nChanging the fourth digit results in 9666.\nThe maximum number is 9969.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = 9996\n<strong>Output:</strong> 9999\n<strong>Explanation:</strong> Changing the last digit 6 to 9 results in the maximum number.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = 9999\n<strong>Output:</strong> 9999\n<strong>Explanation:</strong> It is better not to apply any change.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= num &lt;= 10<sup>4</sup></code></li>\n\t<li><code>num</code>&nbsp;consists of only <code>6</code> and <code>9</code> digits.</li>\n</ul>\n",
+  "hints": [
+    "Convert the number in an array of its digits.",
+    "Brute force on every digit to get the maximum number."
+  ],
+  "metaData": "{\n  \"name\": \"maximum69Number \",\n  \"params\": [\n    {\n      \"name\": \"num\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"486.2K\", \"totalSubmission\": \"575.1K\", \"totalAcceptedRaw\": 486178, \"totalSubmissionRaw\": 575094, \"acRate\": \"84.5%\"}",
+  "likes": 3314,
+  "dislikes": 240,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "9669",
+    "9996",
+    "9999"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"hrt\", \"name\": \"Hudson River Trading\"}, {\"timesEncountered\": 2, \"slug\": \"hsbc\", \"name\": \"HSBC\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximum69Number (int num) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximum69Number (int num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximum69Number (self, num: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximum69Number (self, num):\n        \"\"\"\n        :type num: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} num\n * @return {number}\n */\nvar maximum69Number  = function(num) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximum69Number (num: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int Maximum69Number (int num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maximum69Number (int num) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximum69Number (num int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximum69Number (num: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximum69Number (_ num: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum69_number (num: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} num\n# @return {Integer}\ndef maximum69_number (num)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $num\n     * @return Integer\n     */\n    function maximum69Number ($num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximum69Number (int num) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximum69Number (num: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum69_number (num :: integer) :: integer\n  def maximum69_number (num) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum69_number (Num :: integer()) -> integer().\nmaximum69_number (Num) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum69-number  num)\n  (-> exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1572",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nIn this problem, we are given an integer `num` where every digit is either `6` or `9`, we can change up to 1 digit (from `6` to `9` or vice versa).\n\nThe task is to return the largest integer we can get.\n\nAfter observation, we can get these conclusions as follows:\n\n- We can only increment `num` by converting a digit `6` to `9`. \n- We should always convert the **highest** digit `6`. Suppose `num = 669`, it has multiple digits `6`, we must convert the first one to make it `969` rather than `699`. \n- If every digit of `num` is `9`, we only need to return `num` since it already stands for the largest integer.\n\nMore examples:\n\n![img](../Figures/1323/1323-1.png)\n\nHence, the task equals finding the highest digit `6` (if it exists) and replacing it with `9`.\n\n---\n\n### Approach 1: Convert the integer to an iterable object\n\n#### Intuition   \n\nThe most intuitive method to find the first digit `6` is to traverse through each digit of `num` from high to low, as we discussed in the overview section. \n\nHowever, we can't traverse over an integer in C++, Java, or Python, nor can we modify it. Hence, we can first convert it to an iterable and mutable object, such as a string in C++, a string builder in Java, or a list in Python, and traverse over the object to locate the first occurrence of `6`.\n\n\n<br>\n\n#### Algorithm\n\n1) Convert the input integer `num` to an iterable and mutable object `num_obj`.\n2) Iterate over `num_obj`, if we find a digit `6`, replace it with `9` and stop the iteration.\n3) Return the integer converted from the modified `num_obj`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/hsg2jXrL/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"hsg2jXrL\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$L$$ be the maximum number of digits `nums` can have ($$L = 4$$ in this problem).\n\n* Time complexity: $$O(L)$$\n\n    - Since the input number `num` has up to most $$L$$ digits, it requires $$O(L)$$ time to convert it to an equivalent object and vice versa.\n    - To sum up, the time complexity is $$O(L)$$.\n    \n\n* Space complexity: $$O(L)$$\n    - We create an object of length $$L$$.\n\n<br/>\n\n\n\n---\n\n### Approach 2: Use built-in function\n\n#### Intuition   \n\nSimilar to the previous approach, but with some built-in features. We don't need to manually traverse through the converted object. \n\nAlthough this solution is concise, it is not necessarily the best approach for interviews.\n\n<br>\n\n#### Algorithm\n\n- Convert the input number `num` to the string `num_string`.\n- Use the built-in function to replace the first `6` to `9` if it exists.\n- Return the integer converted from the modified `num_string`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/4QZWhKKZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"225\" name=\"4QZWhKKZ\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$L$$ be the maximum number of digits `nums` can have ($$L = 4$$ in this problem).\n\n* Time complexity: $$O(L)$$\n    - We need to look for the first occurrence of digit `6` and make at most one replacement, which takes $$O(L)$$ time.\n\n* Space complexity: $$O(L)$$\n    - We convert `num` to a string of length $$L$$, therefore, the space complexity is $$O(L)$$.\n\n<br/>\n\n\n\n---\n\n### Approach 3: Check the remainder\n\n#### Intuition   \n\nCan we locate the highest digit of `6` without converting `num` to string? The answer is Yes! \n\nWe can always get the last digit of a non-negative integer by taking the remainder of `num` divided by $$10$$, for example, to get the last digit of `613`: \n\n$$613\\ \\%\\ 10 = 3$$\n\nHow about the second last digit? We can 'remove' the last digit by taking the quotient of `num` and $$10$$.\n\n$$613\\ /\\ 10 = 61$$\n\n\nTherefore, we can check every digit of `num` from low to high and record the highest digit `6`. Assume that it is the `k-th` digit (`0` based), 'converting' this digit from `6` to `9` equals adding $$3 \\cdot 10^{k}$$ to the original integer `num`! As shown in the picture below, we find the highest `6` is the **2nd** digit and increment `9669` by $$3\\ \\cdot \\ 10^{2}$$ to make the answer `9969`!\n\n![img](../Figures/1323/1323-2.png)\n\nTake the picture below as an example.\n\n![img](../Figures/1323/1323-3.png)\n\n<br>\n\n#### Algorithm\n\n1) Initialize an integer `num_copy = num` for checking digits.\n2) Get the remainder of `num_copy` and $$10$$.\n3) If the remainder is $$6$$, record the current digit as the first (highest) digit of `6`.\n4) Divide `num_copy` by $$10$$ using integer division.\n    - If `num_copy = 0`, go to step 5.\n    - Otherwise, repeat step 2.\n5) If we find the first digit of `6`, let's say `index_first_six`, increment `num` by $$3 \\cdot 10^{index\\_first\\_six}$$ and return `num`. Otherwise, just return `num`. \n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/g5R2LR8K/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"g5R2LR8K\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$L$$ be the maximum number of digits `nums` can have ($$L = 4$$ in this problem).\n\n* Time complexity: $$O(L)$$\n    - We need to make at most $$L$$ time of integer divisions, which takes $$O(L)$$ time.\n\n* Space complexity: $$O(1)$$\n    - We only need to update several variables, which takes $$O(1)$$ space.\n\n\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

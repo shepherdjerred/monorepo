@@ -1,0 +1,141 @@
+{
+  "questionId": "994",
+  "questionFrontendId": "957",
+  "title": "Prison Cells After N Days",
+  "titleSlug": "prison-cells-after-n-days",
+  "difficulty": "Medium",
+  "content": "<p>There are <code>8</code> prison cells in a row and each cell is either occupied or vacant.</p>\n\n<p>Each day, whether the cell is occupied or vacant changes according to the following rules:</p>\n\n<ul>\n\t<li>If a cell has two adjacent neighbors that are both occupied or both vacant, then the cell becomes occupied.</li>\n\t<li>Otherwise, it becomes vacant.</li>\n</ul>\n\n<p><strong>Note</strong> that because the prison is a row, the first and the last cells in the row can&#39;t have two adjacent neighbors.</p>\n\n<p>You are given an integer array <code>cells</code> where <code>cells[i] == 1</code> if the <code>i<sup>th</sup></code> cell is occupied and <code>cells[i] == 0</code> if the <code>i<sup>th</sup></code> cell is vacant, and you are given an integer <code>n</code>.</p>\n\n<p>Return the state of the prison after <code>n</code> days (i.e., <code>n</code> such changes described above).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> cells = [0,1,0,1,1,0,0,1], n = 7\n<strong>Output:</strong> [0,0,1,1,0,0,0,0]\n<strong>Explanation:</strong> The following table summarizes the state of the prison on each day:\nDay 0: [0, 1, 0, 1, 1, 0, 0, 1]\nDay 1: [0, 1, 1, 0, 0, 0, 0, 0]\nDay 2: [0, 0, 0, 0, 1, 1, 1, 0]\nDay 3: [0, 1, 1, 0, 0, 1, 0, 0]\nDay 4: [0, 0, 0, 0, 0, 1, 0, 0]\nDay 5: [0, 1, 1, 1, 0, 1, 0, 0]\nDay 6: [0, 0, 1, 0, 1, 1, 0, 0]\nDay 7: [0, 0, 1, 1, 0, 0, 0, 0]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> cells = [1,0,0,1,0,0,1,0], n = 1000000000\n<strong>Output:</strong> [0,0,1,1,1,1,1,0]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>cells.length == 8</code></li>\n\t<li><code>cells[i]</code>&nbsp;is either <code>0</code> or <code>1</code>.</li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"prisonAfterNDays\",\n  \"params\": [\n    {\n      \"name\": \"cells\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"176.2K\", \"totalSubmission\": \"450K\", \"totalAcceptedRaw\": 176164, \"totalSubmissionRaw\": 450012, \"acRate\": \"39.1%\"}",
+  "likes": 1562,
+  "dislikes": 1779,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[0,1,0,1,1,0,0,1]\n7",
+    "[1,0,0,1,0,0,1,0]\n1000000000"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> prisonAfterNDays(vector<int>& cells, int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] prisonAfterNDays(int[] cells, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def prisonAfterNDays(self, cells: List[int], n: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def prisonAfterNDays(self, cells, n):\n        \"\"\"\n        :type cells: List[int]\n        :type n: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} cells\n * @param {number} n\n * @return {number[]}\n */\nvar prisonAfterNDays = function(cells, n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function prisonAfterNDays(cells: number[], n: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] PrisonAfterNDays(int[] cells, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* prisonAfterNDays(int* cells, int cellsSize, int n, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func prisonAfterNDays(cells []int, n int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun prisonAfterNDays(cells: IntArray, n: Int): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func prisonAfterNDays(_ cells: [Int], _ n: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn prison_after_n_days(cells: Vec<i32>, n: i32) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} cells\n# @param {Integer} n\n# @return {Integer[]}\ndef prison_after_n_days(cells, n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $cells\n     * @param Integer $n\n     * @return Integer[]\n     */\n    function prisonAfterNDays($cells, $n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> prisonAfterNDays(List<int> cells, int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def prisonAfterNDays(cells: Array[Int], n: Int): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec prison_after_n_days(cells :: [integer], n :: integer) :: [integer]\n  def prison_after_n_days(cells, n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec prison_after_n_days(Cells :: [integer()], N :: integer()) -> [integer()].\nprison_after_n_days(Cells, N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (prison-after-n-days cells n)\n  (-> (listof exact-integer?) exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "963",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Overview\n\nFirst of all, one can consider this problem as a simplified version of the [Game of Life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life) invented by the British mathematician John Horton Conway in 1970.\n\nBy simplification, this problem is played on one dimensional array (compared to 2D in Game of Life), and it has less rules.\n\n>Due to the nature of game, one of the most intuitive solutions to solve this problem is _playing the game_, _i.e._ we can simply run the **simulation**.\n\nStarting from the initial state of the prison cells, we could evolve the states following the rules defined in the problem _step by step_.\n\nIn the following sections, we will give some approaches on how to run the simulation efficiently.\n\n---\n### Approach 1: Simulation with Fast Forwarding\n\n**Intuition**\n\nOne important observation from the Game of Life is that we would encounter some already-seen states over time, simply due to the fact that there are a limited number of states.\n\nThe above observation applies to our problem here as well. Given $$K$$ number of cells, there could be at most $$2^K$$ possible states. If the number of steps is larger than all possible states (_i.e._ $$N \\gt 2^K$$), we are destined to repeat ourselves sooner or later.\n\nIn fact, we would encounter the repetitive states **sooner** than the theoretical boundary we estimated above. For instance, with the initial state of `[1,0,0,0,1,0,0,1]`, just after `15` steps, we would encounter a previously seen state. Once we encounter a state seen before, history would then repeat itself again and again, assuming that time is infinite.\n\n>All states between two repetitive states form a cycle, which would repeat itself over time. Therefore, based on this observation, we could **fast-forward** the simulation rather than going step by step, once we encounter any repetitive state.\n\n**Algorithm**\n\nHere is the overall idea to implement our fast-forward strategy.\n\n- First of all, we record the state at each step, with the index of the current step, _i.e._ `state -> step_index`.\n\n- Once we discover a repetitive state, we can then determine the **_length_** (denoted as $$C$$) of the cycle, with the help of the hashmap that we recorded.\n\n- Starting from this repetitive state, the prison cells would play out the states within the cycle over and over, until we run out of steps.\n\n- In other words, if the remaining steps is $$N$$, at least we could **_fast-forward_** to the step of $$N \\mod C$$.\n\n- And then from the step of $$N \\mod C$$, we continue the simulation step by step.\n\n![fastforward](../Figures/957/957_fastforward.png)\n\nNote: we only need to do the fast-forward once, if there is any.\n\nHere are some sample implementations based on the above idea.\n\n<iframe src=\"https://leetcode.com/playground/4AWwkBpL/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"4AWwkBpL\"></iframe>\n\n\n\n**Complexity Analysis**\n\nLet $$K$$ be the number of cells, and $$N$$ be the number of steps.\n\n- Time Complexity: $$\\mathcal{O}\\big(K \\cdot \\min(N, 2^K)\\big)$$ \n\n    - As we discussed before, at most we could have $$2^K$$ possible states. While we run the simulation with $$N$$ steps, we might need to run $$\\min(N, 2^K)$$ steps without fast-forwarding in the worst case.\n\n    - For each simulation step, it takes $$\\mathcal{O}(K)$$ time to process and evolve the state of cells.\n\n    - Hence, the overall time complexity of the algorithm is $$\\mathcal{O}\\big(K \\cdot \\min(N, 2^K)\\big)$$.\n\n- Space Complexity:\n\n    - The main memory consumption of the algorithm is the hashmap that we use to keep track of the states of the cells. The maximal number of entries in the hashmap would be $$2^K$$ as we discussed before.\n\n    - In the Java implementation, we encode the state as a single integer value. Therefore, its space complexity would be $$\\mathcal{O}(2^K)$$, assuming that $$K$$ does not exceed 32 so that a state can fit into a single integer number.\n\n    - In the Python implementation, we keep the states of cells as they are in the hashmap. As a result, for each entry, it takes $$\\mathcal{O}(K)$$ space. In total, its space complexity becomes $$\\mathcal{O}(K \\cdot 2^K)$$.\n\n---\n### Approach 2: Simulation with Bitmap\n\n**Intuition**\n\nIn the above approach, we implemented the function `nextDay(state)`, which runs an **iteration** to calculate the next state of cells, given the current state.\n\nGiven that we have already encoded the state as a bitmap in the Java implementation of the previous approach, a more efficient way to implement the `nextDay` function would be to apply the **_bit operations_** (_e.g_ _AND, OR, XOR_ _etc._).\n\nThe next state of a cell depends on its left and right neighbors. To align the states of its neighbors, we could make a _left_ and a _right_ shift respectively on the bitmap. Upon the shifted bitmaps, we then apply the _XOR_ and _NOT_ operations sequentially, which would lead to the next state of the cell.\n\nHere we show how it works with a concrete example.\n\n![bit operations](../Figures/957/957_bit_operations.png)\n\nNote that, the head and tail cells are particular, which would remain vacant once we start the simulation. Therefore, we should reset the head and tail bits by applying the bit _AND_ operation with the **bitmask** of `01111110` (_i.e._ `0x7e`).\n\n**Algorithm**\n\nWe could reuse the bulk of the previous implementations, and simply rewrite the `nextDay` function with the bit operations as we discussed.\n\nAdditionally, at the end of the simulation, we should *decode* the states of the cells from the final bitmap.\n\n<iframe src=\"https://leetcode.com/playground/G5TEhMP2/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"G5TEhMP2\"></iframe>\n\n\n**Complexity Analysis**\n\nLet $$K$$ be the number of cells, and $$N$$ be the number of steps.\n\n- Time Complexity: $$\\mathcal{O}\\big(\\min(N, 2^K)\\big)$$ assuming that $$K$$ does not exceed 32.\n\n    - As we discussed before, at most we could have $$2^K$$ possible states. While we run the simulation, we need to run $$\\min(N, 2^K)$$ steps without fast-forwarding in the worst case.\n\n    - For each simulation step, it takes a constant $$\\mathcal{O}(1)$$ time to process and evolve the states of cells, since we applied the bit operations rather than iteration. \n\n    - Hence, the overall time complexity of the algorithm is $$\\mathcal{O}\\big(\\min(N, 2^K)\\big)$$.\n\n- Space Complexity: $$\\mathcal{O}(2^K)$$\n\n    - The main memory consumption of the algorithm is the hashmap that we use to keep track of the states of the cells. The maximal number of entries in the hashmap would be $$2^K$$ as we discussed before.\n\n    - This time we adopted the bitmap for both Java and Python implementation so that each state consumes a constant $$\\mathcal{O}(1)$$ space.\n\n    - To sum up, the overall space complexity of the algorithm is $$\\mathcal{O}(2^K)$$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

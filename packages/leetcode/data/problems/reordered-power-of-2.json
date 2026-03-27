@@ -1,0 +1,145 @@
+{
+  "questionId": "900",
+  "questionFrontendId": "869",
+  "title": "Reordered Power of 2",
+  "titleSlug": "reordered-power-of-2",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer <code>n</code>. We reorder the digits in any order (including the original order) such that the leading digit is not zero.</p>\n\n<p>Return <code>true</code> <em>if and only if we can do this so that the resulting number is a power of two</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 1\n<strong>Output:</strong> true\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 10\n<strong>Output:</strong> false\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"reorderedPowerOf2\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"228.9K\", \"totalSubmission\": \"347.1K\", \"totalAcceptedRaw\": 228933, \"totalSubmissionRaw\": 347064, \"acRate\": \"66.0%\"}",
+  "likes": 2542,
+  "dislikes": 499,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "1",
+    "10"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 11, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool reorderedPowerOf2(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean reorderedPowerOf2(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def reorderedPowerOf2(self, n: int) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def reorderedPowerOf2(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {boolean}\n */\nvar reorderedPowerOf2 = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function reorderedPowerOf2(n: number): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool ReorderedPowerOf2(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool reorderedPowerOf2(int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func reorderedPowerOf2(n int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun reorderedPowerOf2(n: Int): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func reorderedPowerOf2(_ n: Int) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn reordered_power_of2(n: i32) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Boolean}\ndef reordered_power_of2(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Boolean\n     */\n    function reorderedPowerOf2($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool reorderedPowerOf2(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def reorderedPowerOf2(n: Int): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec reordered_power_of2(n :: integer) :: boolean\n  def reordered_power_of2(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec reordered_power_of2(N :: integer()) -> boolean().\nreordered_power_of2(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (reordered-power-of2 n)\n  (-> exact-integer? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "508",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach 1: Permutations\n\n**Intuition**\n\nFor each permutation of the digits of `N`, let's check if that permutation is a power of 2.\n\n**Algorithm**\n\nThis approach has two steps: how will we generate the permutations of the digits, and how will we check that the permutation represents a power of 2?\n\nTo generate permutations of the digits, we place any digit into the first position (`start = 0`), then any of the remaining digits into the second position (`start = 1`), and so on.  In Python, we can use the builtin function `itertools.permutations`.\n\nTo check whether a permutation represents a power of 2, we check that there is no leading zero, and divide out all factors of 2.  If the result is `1` (that is, it contained no other factors besides `2`), then it was a power of 2.  In Python, we can use the check `bin(N).count('1') == 1`.\n\n\n<iframe src=\"https://leetcode.com/playground/5NVeXRvi/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"5NVeXRvi\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O((\\log N)! * \\log N)$$.  Note that $$\\log N$$ is the number of digits in the binary representation of $$N$$.  For each of $$(\\log N)!$$ permutations of the digits of $$N$$, we need to check that it is a power of 2 in $$O(\\log N)$$ time.\n\n* Space Complexity:  $$O(\\log N)$$, the space used by `A` (or `cand` in Python).\n<br />\n<br />\n\n\n---\n### Approach 2: Counting\n\n**Intuition and Algorithm**\n\nWe can check whether two numbers have the same digits by comparing the *count* of their digits.  For example, 338 and 833 have the same digits because they both have exactly two 3's and one 8.\n\nSince $$N$$ could only be a power of 2 with 9 digits or less (namely, $$2^0, 2^1, \\cdots, 2^{29}$$), we can just check whether $$N$$ has the same digits as any of these possibilities.\n\n<iframe src=\"https://leetcode.com/playground/b8P7cCzD/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"b8P7cCzD\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(\\log^2 N)$$.  There are $$\\log N$$ different candidate powers of 2, and each comparison has $$O(\\log N)$$ time complexity.\n\n* Space Complexity:  $$O(\\log N)$$.\n<br />\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

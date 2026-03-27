@@ -1,0 +1,130 @@
+{
+  "questionId": "899",
+  "questionFrontendId": "868",
+  "title": "Binary Gap",
+  "titleSlug": "binary-gap",
+  "difficulty": "Easy",
+  "content": "<p>Given a positive integer <code>n</code>, find and return <em>the <strong>longest distance</strong> between any two <strong>adjacent</strong> </em><code>1</code><em>&#39;s in the binary representation of </em><code>n</code><em>. If there are no two adjacent </em><code>1</code><em>&#39;s, return </em><code>0</code><em>.</em></p>\n\n<p>Two <code>1</code>&#39;s are <strong>adjacent</strong> if there are only <code>0</code>&#39;s separating them (possibly no <code>0</code>&#39;s). The <b>distance</b> between two <code>1</code>&#39;s is the absolute difference between their bit positions. For example, the two <code>1</code>&#39;s in <code>&quot;1001&quot;</code> have a distance of 3.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 22\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> 22 in binary is &quot;10110&quot;.\nThe first adjacent pair of 1&#39;s is &quot;<u>1</u>0<u>1</u>10&quot; with a distance of 2.\nThe second adjacent pair of 1&#39;s is &quot;10<u>11</u>0&quot; with a distance of 1.\nThe answer is the largest of these two distances, which is 2.\nNote that &quot;<u>1</u>01<u>1</u>0&quot; is not a valid pair since there is a 1 separating the two 1&#39;s underlined.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 8\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> 8 in binary is &quot;1000&quot;.\nThere are not any adjacent pairs of 1&#39;s in the binary representation of 8, so we return 0.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 5\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> 5 in binary is &quot;101&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"binaryGap\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"213K\", \"totalSubmission\": \"287K\", \"totalAcceptedRaw\": 213025, \"totalSubmissionRaw\": 286983, \"acRate\": \"74.2%\"}",
+  "likes": 976,
+  "dislikes": 740,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "22",
+    "8",
+    "5"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"twitter\", \"name\": \"X\"}, {\"timesEncountered\": 2, \"slug\": \"ebay\", \"name\": \"eBay\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int binaryGap(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int binaryGap(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def binaryGap(self, n: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def binaryGap(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {number}\n */\nvar binaryGap = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function binaryGap(n: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int BinaryGap(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int binaryGap(int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func binaryGap(n int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun binaryGap(n: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func binaryGap(_ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn binary_gap(n: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Integer}\ndef binary_gap(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Integer\n     */\n    function binaryGap($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int binaryGap(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def binaryGap(n: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec binary_gap(n :: integer) :: integer\n  def binary_gap(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec binary_gap(N :: integer()) -> integer().\nbinary_gap(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (binary-gap n)\n  (-> exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "509",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach 1: Store Indexes\n\n**Intuition**\n\nSince we wanted to inspect the distance between consecutive 1s in the binary representation of `N`, let's write down the index of each `1` in that binary representation.  For example, if `N = 22 = 0b10110`, then we'll write `A = [1, 2, 4]`.  This makes it easier to proceed, as now we have a problem about adjacent values in an array.\n\n**Algorithm**\n\nLet's make a list `A` of indices `i` such that `N` has the `i`th bit set.\n\nWith this array `A`, finding the maximum distance between consecutive `1`s is much easier: it's the maximum distance between adjacent values of this array.\n\n<iframe src=\"https://leetcode.com/playground/6YTZNRpD/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"6YTZNRpD\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(\\log N)$$.  Note that $$\\log N$$ is the number of digits in the binary representation of $$N$$.\n\n* Space Complexity:  $$O(\\log N)$$, the space used by `A`.\n<br />\n<br />\n\n\n---\n### Approach 2: One Pass\n\n**Intuition**\n\nIn *Approach 1*, we created an array `A` of indices `i` for which `N` had the `i`th bit set.\n\nSince we only care about consecutive values of this array `A`, we don't need to store the whole array.  We only need to remember the last value seen.\n\n**Algorithm**\n\nWe'll store `last`, the last value added to the *virtual* array `A`.  If `N` has the `i`th bit set, a candidate answer is `i - last`, and then the new last value added to `A` would be `last = i`.\n\n<iframe src=\"https://leetcode.com/playground/UTrNsmQ4/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"UTrNsmQ4\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(\\log N)$$.  Note that $$\\log N$$ is the number of digits in the binary representation of $$N$$.\n\n* Space Complexity:  $$O(1)$$.\n<br />\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

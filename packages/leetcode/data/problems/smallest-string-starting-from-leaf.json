@@ -1,0 +1,146 @@
+{
+  "questionId": "1030",
+  "questionFrontendId": "988",
+  "title": "Smallest String Starting From Leaf",
+  "titleSlug": "smallest-string-starting-from-leaf",
+  "difficulty": "Medium",
+  "content": "<p>You are given the <code>root</code> of a binary tree where each node has a value in the range <code>[0, 25]</code> representing the letters <code>&#39;a&#39;</code> to <code>&#39;z&#39;</code>.</p>\n\n<p>Return <em>the <strong>lexicographically smallest</strong> string that starts at a leaf of this tree and ends at the root</em>.</p>\n\n<p>As a reminder, any shorter prefix of a string is <strong>lexicographically smaller</strong>.</p>\n\n<ul>\n\t<li>For example, <code>&quot;ab&quot;</code> is lexicographically smaller than <code>&quot;aba&quot;</code>.</li>\n</ul>\n\n<p>A leaf of a node is a node that has no children.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/01/30/tree1.png\" style=\"width: 534px; height: 358px;\" />\n<pre>\n<strong>Input:</strong> root = [0,1,2,3,4,3,4]\n<strong>Output:</strong> &quot;dba&quot;\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/01/30/tree2.png\" style=\"width: 534px; height: 358px;\" />\n<pre>\n<strong>Input:</strong> root = [25,1,3,1,3,0,2]\n<strong>Output:</strong> &quot;adz&quot;\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/02/01/tree3.png\" style=\"height: 490px; width: 468px;\" />\n<pre>\n<strong>Input:</strong> root = [2,2,1,null,1,0,null,0]\n<strong>Output:</strong> &quot;abc&quot;\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[1, 8500]</code>.</li>\n\t<li><code>0 &lt;= Node.val &lt;= 25</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"smallestFromLeaf\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"root\",\r\n      \"type\": \"TreeNode\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"string\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"221K\", \"totalSubmission\": \"361.1K\", \"totalAcceptedRaw\": 220969, \"totalSubmissionRaw\": 361145, \"acRate\": \"61.2%\"}",
+  "likes": 2416,
+  "dislikes": 336,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Sum Root to Leaf Numbers\", \"titleSlug\": \"sum-root-to-leaf-numbers\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Binary Tree Paths\", \"titleSlug\": \"binary-tree-paths\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[0,1,2,3,4,3,4]",
+    "[25,1,3,1,3,0,2]",
+    "[2,2,1,null,1,0,null,0]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    string smallestFromLeaf(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public String smallestFromLeaf(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def smallestFromLeaf(self, root: Optional[TreeNode]) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def smallestFromLeaf(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {string}\n */\nvar smallestFromLeaf = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction smallestFromLeaf(root: TreeNode | null): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public string SmallestFromLeaf(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nchar* smallestFromLeaf(struct TreeNode* root) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc smallestFromLeaf(root *TreeNode) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun smallestFromLeaf(root: TreeNode?): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func smallestFromLeaf(_ root: TreeNode?) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn smallest_from_leaf(root: Option<Rc<RefCell<TreeNode>>>) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {String}\ndef smallest_from_leaf(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return String\n     */\n    function smallestFromLeaf($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  String smallestFromLeaf(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def smallestFromLeaf(root: TreeNode): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec smallest_from_leaf(root :: TreeNode.t | nil) :: String.t\n  def smallest_from_leaf(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec smallest_from_leaf(Root :: #tree_node{} | null) -> unicode:unicode_binary().\nsmallest_from_leaf(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (smallest-from-leaf root)\n  (-> (or/c tree-node? #f) string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2285",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given the root of a binary tree, where each node has a value in the range `[0, 25]` representing the letters `'a'` to `'z'`. The task is to find the lexicographically smallest string that starts at a leaf node and ends at the root of the binary tree.\n\n**Key Observations:**\n1. The string should start from a leaf node and end at the root node.\n2. The string should be the smallest lexicographically, where a shorter prefix is considered smaller than a longer prefix of equal lexicographical size.\n3. The input values are numbers and represent characters from `'a'` to `'z'`, and the output needs to be returned as a string of characters.\n\nThis article includes tree traversal. If you're not familiar with tree traversal, check out our [tree traversal explore card](https://leetcode.com/explore/learn/card/data-structure-tree/134/traverse-a-tree/).\n\n---\n\n### Approach 1: Depth First Search (DFS)\n\n#### Intuition\n\nA common approach to solving this problem is to use a depth-first search (DFS), exploring the tree from the leaf nodes to the root and keeping track of the current string. The idea is to recursively explore all possible paths while maintaining the lexicographically smallest string encountered along the way.\n\nDuring traversal, we ensure that we visit all nodes to avoid missing any potential lexicographically smallest string. To achieve this, we maintain track of the current values traversed to construct the current string.\n\nAs we explore different paths, we check if the current string is lexicographically smaller than the previously encountered smallest string. If the current string is lexicographically smaller, we update it; otherwise, we continue our exploration.\n\nThe following is an illustration demonstrating the depth first search approach:\n\n!?!../Documents/988/depth_first_search.json:636,301!?!\n\n> **Note:** You may wonder whether a greedy algorithm that assumes that each local optimal step will eventually lead to a globally optimal solution could solve this problem. Consider the test case [4,0,1,1]. In this scenario, a greedy approach would fail to produce the correct result. Similarly, in the case of [25,1,null,0,0,1,null,null,null,0], the expected answer is \"ababz\", but the greedy solution would result in \"abz\".\n\n#### Algorithm\n\n- Initialize an empty string `smallestString` to store the lexicographically smallest string.\n\n- Call the helper function `dfs(root, \"\")`.\n   - The `dfs` function takes the current node `root` and the current string `currentString` as parameters.\n\n- Inside the `dfs` function:\n   - If the current node `root` is NULL, return (base case).\n   - Construct the `currentString` by appending the character corresponding to the current node's value to the beginning of the `currentString`.\n   - If the current node `root` is a leaf node:\n        - If `smallestString` is empty or if the `currentString` is lexicographically smaller than `smallestString`:\n              - Update `smallestString` to be the `currentString`.\n   - Recursively call `dfs` on the left child of the current node (if it exists).\n   - Recursively call `dfs` on the right child of the current node (if it exists).\n\n- After the `dfs` function call, return the `smallestString`.\n\n> **Note:** Characters are represented as integers using ASCII values. For lowercase letters, the ASCII values start from 97 for `'a'`, 98 for `'b'`, and so on. \n> - Now, consider the expression `char(root->val + 'a')`. Here, `root->val` represents some integer value. Adding it to 'a' (which is 97) essentially shifts it to the corresponding position in the alphabet. For example, if `root->val` is 0, then `root->val + 'a'` becomes 97 ('a' in ASCII), resulting in the character 'a'. Similarly, if `root->val` is 1, then `root->val + 'a'` becomes 98 ('b' in ASCII), resulting in the character 'b', and so on. So, the expression `char(root->val + 'a')` converts the integer value `root->val` into its corresponding lowercase alphabetical character.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/QJn69ay9/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"QJn69ay9\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the binary tree.\n\n- Time complexity: $O(n \\cdot n)$\n\n    During each node visit in DFS, a new string is constructed by concatenating characters. Since string concatenation takes $O(n)$ time, where `n` is the length of the resulting string, and the length of the string grows with each recursive call, the time complexity of constructing and comparing each string in the worst case(skewed tree) is $O(n)$. Additionally, each node in the tree is visited once.\n\n    Thus, the overall time complexity of the algorithm is $O(n \\cdot n)$.\n\n- Space complexity: $O(n \\cdot n)$\n\n    This space is utilized for the recursive function calls on the call stack during the DFS traversal, which is equal to the height of the tree. In the worst-case scenario, when the tree is completely unbalanced (skewed), the height of the tree can be equal to the number of nodes, resulting in $O(n)$ space complexity.\n\n    In addition to the recursive call stack, the algorithm creates and stores a string for each node. In the worst-case scenario, where the tree is completely unbalanced and each node visit results in a new string, the total space required to store these strings becomes $O(n \\cdot n)$.\n\n    Thus, the overall space complexity of the algorithm is $O(n \\cdot n)$.\n \n---\n\n### Approach 2: Breadth First Search (BFS) Approach\n\n#### Intuition\n\nApart from DFS, we can also utilize the BFS approach to achieve the same outcome. In BFS, we implement a level-order traversal method, where we traverse the nodes level by level. Initially, we initialize an empty string to store the smallest path found so far and a queue to facilitate BFS traversal.\n\nGiven that the tree contains integer values that need to be returned as characters, we append nodes to the queue during traversal. Each node is accompanied by its value, converted to characters.\n\nDuring each iteration, if the current node has a left child, we append it to the queue. Additionally, we concatenate the current string with the character representation of its value and include it in the queue. Likewise, if the current node has a right child, we follow the same procedure.\n\nWithin each iteration, we pop the node from the front of the queue along with its corresponding string. If the node is a leaf node (i.e., it lacks both left and right children), we compare its corresponding string with the current smallest string found. If it's lexicographically smaller, we update the smallest string accordingly.\n\nOnce the queue becomes empty, which signifies the completion of traversal for all paths from the root to the leaf nodes, the smallest string found represents the lexicographically smallest path from the root to a leaf node in the binary tree.\n\nThe following is an illustration demonstrating the breadth first search approach:\n\n!?!../Documents/988/bfs.json:741,291!?!\n\n> **Note:** One advantage of DFS over BFS is its ability to avoid the need to create new string versions for each state. Instead, it allows for continuous appending and removal from a single string as child nodes are traversed. This eliminates the need to maintain multiple string states within the queue, simplifying the process compared to the BFS approach.\n\n#### Algorithm\n \n- Initialize an empty string, `smallestString`, to store the lexicographically smallest string.\n- Initialize an empty queue, `nodeQueue`, for storing node-value pairs.\n- Add the root node and its value, converted to a character, to the back of the `nodeQueue`.\n- While the `nodeQueue` is not empty:\n  - Pop the front node and its corresponding string from the `nodeQueue`.\n  - If the current node is a leaf node and if `smallestString` is empty or the current string `currentString` is lexicographically smaller than `smallestString`, update `smallestString` to be the current string `currentString`.\n  - If the current node has a left child:\n    - Add the left child and the string obtained by prepending the left child's value to `currentString` to the back of the `nodeQueue`.\n  - If the current node has a right child:\n    - Add the right child and the string obtained by prepending the right child's value to `currentString` to the back of the `nodeQueue`.\n- Return the string `smallestString`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Ci8dSWxd/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Ci8dSWxd\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the binary tree.\n\n* Time complexity: $O(n \\cdot n)$\n\n    In each iteration of the BFS traversal, a new string is created by concatenating characters. As string concatenation takes $O(n)$ time, where n is the length of the resulting string, the time complexity of constructing and comparing each string in worst case(skewed tree) will take $O(n)$. Additionally, each node in the tree is visited once.\n\n    Therefore, the overall time complexity of the BFS traversal becomes $O(n \\cdot n)$.\n\n* Space complexity: $O(n \\cdot n)$\n\n    At any given time during the BFS traversal, the deque could contain up to the maximum number of nodes at any level of the tree, which can be at most the number of nodes in the last level of the tree.\n\n    Additionally, the size of each string stored in the deque can be up to $O(n)$.\n\n    Therefore, the space complexity in the worst-case scenario (where the tree is completely unbalanced) would be $O(n \\cdot n)$, considering the space required to store both nodes and strings.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

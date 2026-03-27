@@ -1,0 +1,53 @@
+{
+  "questionId": "1246",
+  "questionFrontendId": "1142",
+  "title": "User Activity for the Past 30 Days II",
+  "titleSlug": "user-activity-for-the-past-30-days-ii",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Activity</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| user_id       | int     |\n| session_id    | int     |\n| activity_date | date    |\n| activity_type | enum    |\n+---------------+---------+\nThis table may have duplicate rows.\nThe activity_type column is an ENUM (category) of type (&#39;open_session&#39;, &#39;end_session&#39;, &#39;scroll_down&#39;, &#39;send_message&#39;).\nThe table shows the user activities for a social media website. \nNote that each session belongs to exactly one user.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to find the average number of sessions per user for a period of <code>30</code> days ending <code>2019-07-27</code> inclusively, <strong>rounded to 2 decimal places</strong>. The sessions we want to count for a user are those with at least one activity in that time period.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nActivity table:\n+---------+------------+---------------+---------------+\n| user_id | session_id | activity_date | activity_type |\n+---------+------------+---------------+---------------+\n| 1       | 1          | 2019-07-20    | open_session  |\n| 1       | 1          | 2019-07-20    | scroll_down   |\n| 1       | 1          | 2019-07-20    | end_session   |\n| 2       | 4          | 2019-07-20    | open_session  |\n| 2       | 4          | 2019-07-21    | send_message  |\n| 2       | 4          | 2019-07-21    | end_session   |\n| 3       | 2          | 2019-07-21    | open_session  |\n| 3       | 2          | 2019-07-21    | send_message  |\n| 3       | 2          | 2019-07-21    | end_session   |\n| 3       | 5          | 2019-07-21    | open_session  |\n| 3       | 5          | 2019-07-21    | scroll_down   |\n| 3       | 5          | 2019-07-21    | end_session   |\n| 4       | 3          | 2019-06-25    | open_session  |\n| 4       | 3          | 2019-06-25    | end_session   |\n+---------+------------+---------------+---------------+\n<strong>Output:</strong> \n+---------------------------+ \n| average_sessions_per_user |\n+---------------------------+ \n| 1.33                      |\n+---------------------------+\n<strong>Explanation:</strong> User 1 and 2 each had 1 session in the past 30 days while user 3 had 2 sessions so the average is (1 + 1 + 2) / 3 = 1.33.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Activity (user_id int, session_id int, activity_date date, activity_type ENUM('open_session', 'end_session', 'scroll_down', 'send_message'))\"], \"mssql\": [\"create table Activity (user_id int, session_id int, activity_date date, activity_type varchar(15) not null check(activity_type in ('open_session', 'end_session', 'scroll_down', 'send_message')))\"], \"oraclesql\": [\"create table Activity (user_id int, session_id int, activity_date date, activity_type varchar(15) not null check(activity_type in ('open_session', 'end_session', 'scroll_down', 'send_message')))\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"user_activity\", \"pythondata\": [\"Activity = pd.DataFrame([], columns=['user_id', 'session_id', 'activity_date', 'activity_type']).astype({'user_id':'Int64', 'session_id':'Int64', 'activity_date':'datetime64[ns]', 'activity_type':'object'})\"], \"postgresql\": [\"Create table If Not Exists Activity (user_id int, session_id int, activity_date date, activity_type VARCHAR(30) CHECK (activity_type IN ('open_session', 'end_session', 'scroll_down', 'send_message')))\\n\"], \"database_schema\": {\"Activity\": {\"user_id\": \"INT\", \"session_id\": \"INT\", \"activity_date\": \"DATE\", \"activity_type\": \"ENUM('open_session', 'end_session', 'scroll_down', 'send_message')\"}}}",
+  "stats": "{\"totalAccepted\": \"49.2K\", \"totalSubmission\": \"138.2K\", \"totalAcceptedRaw\": 49220, \"totalSubmissionRaw\": 138206, \"acRate\": \"35.6%\"}",
+  "likes": 107,
+  "dislikes": 380,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Activity\":[\"user_id\",\"session_id\",\"activity_date\",\"activity_type\"]},\"rows\":{\"Activity\":[[1,1,\"2019-07-20\",\"open_session\"],[1,1,\"2019-07-20\",\"scroll_down\"],[1,1,\"2019-07-20\",\"end_session\"],[2,4,\"2019-07-20\",\"open_session\"],[2,4,\"2019-07-21\",\"send_message\"],[2,4,\"2019-07-21\",\"end_session\"],[3,2,\"2019-07-21\",\"open_session\"],[3,2,\"2019-07-21\",\"send_message\"],[3,2,\"2019-07-21\",\"end_session\"],[3,5,\"2019-07-21\",\"open_session\"],[3,5,\"2019-07-21\",\"scroll_down\"],[3,5,\"2019-07-21\",\"end_session\"],[4,3,\"2019-06-25\",\"open_session\"],[4,3,\"2019-06-25\",\"end_session\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"zoom\", \"name\": \"Zoom\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef user_activity(activity: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

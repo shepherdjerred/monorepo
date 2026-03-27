@@ -1,0 +1,144 @@
+{
+  "questionId": "1083",
+  "questionFrontendId": "1099",
+  "title": "Two Sum Less Than K",
+  "titleSlug": "two-sum-less-than-k",
+  "difficulty": "Easy",
+  "content": "<p>Given an array <code>nums</code> of integers and&nbsp;integer <code>k</code>, return the maximum <code>sum</code> such that there exists <code>i &lt; j</code> with <code>nums[i] + nums[j] = sum</code> and <code>sum &lt; k</code>. If no <code>i</code>, <code>j</code> exist satisfying this equation, return <code>-1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [34,23,1,24,75,33,54,8], k = 60\n<strong>Output:</strong> 58\n<strong>Explanation: </strong>We can use 34 and 24 to sum 58 which is less than 60.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [10,20,30], k = 15\n<strong>Output:</strong> -1\n<strong>Explanation: </strong>In this case it is not possible to get a pair sum less that 15.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 1000</code></li>\n\t<li><code>1 &lt;= k &lt;= 2000</code></li>\n</ul>\n",
+  "hints": [
+    "What if we have the array sorted?",
+    "Loop the array and get the value A[i] then we need to find a value A[j] such that A[i] + A[j] < K  which means A[j] < K - A[i]. In order to do that we can find that value with a binary search."
+  ],
+  "metaData": "{\n  \"name\": \"twoSumLessThanK\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"148.6K\", \"totalSubmission\": \"239.2K\", \"totalAcceptedRaw\": 148605, \"totalSubmissionRaw\": 239205, \"acRate\": \"62.1%\"}",
+  "likes": 1172,
+  "dislikes": 135,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Two Sum\", \"titleSlug\": \"two-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Two Sum II - Input Array Is Sorted\", \"titleSlug\": \"two-sum-ii-input-array-is-sorted\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"3Sum Smaller\", \"titleSlug\": \"3sum-smaller\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Subarray Product Less Than K\", \"titleSlug\": \"subarray-product-less-than-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[34,23,1,24,75,33,54,8]\n60",
+    "[10,20,30]\n15"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int twoSumLessThanK(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int twoSumLessThanK(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def twoSumLessThanK(self, nums: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def twoSumLessThanK(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number}\n */\nvar twoSumLessThanK = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function twoSumLessThanK(nums: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int TwoSumLessThanK(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int twoSumLessThanK(int* nums, int numsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func twoSumLessThanK(nums []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun twoSumLessThanK(nums: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func twoSumLessThanK(_ nums: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn two_sum_less_than_k(nums: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Integer}\ndef two_sum_less_than_k(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Integer\n     */\n    function twoSumLessThanK($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int twoSumLessThanK(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def twoSumLessThanK(nums: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec two_sum_less_than_k(nums :: [integer], k :: integer) :: integer\n  def two_sum_less_than_k(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec two_sum_less_than_k(Nums :: [integer()], K :: integer()) -> integer().\ntwo_sum_less_than_k(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (two-sum-less-than-k nums k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "964",
+    "content": "[TOC]\n\n## Video Solution\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/476771045\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n---\n\nThis problem is a variation of [Two Sum](https://leetcode.com/articles/two-sum/). The main difference is that we are not searching for the exact target here. Instead, our sum is in some *relation* with the target. For this problem, we are looking for a maximum sum that is *smaller* than the target.\n\nFirst, let's check solutions for the similar problems:\n\n1. [Two Sum](https://leetcode.com/articles/two-sum/) uses a hashmap to find complement values, and therefore achieves $$\\mathcal{O}(N)$$ time complexity.\n2. [Two Sum II](https://leetcode.com/articles/two-sum-ii-input-array-is-sorted/) uses the two pointers pattern and also has $$\\mathcal{O}(N)$$ time complexity for a sorted array. We can use this approach for any array if we sort it first, which bumps the time complexity to $$\\mathcal{O}(n\\log{n})$$.\n\nSince our sum can be any value smaller than the target, we cannot use a hashmap. We do not know which value to look up! Instead, we need to sort the array and use a binary search or the two pointers pattern, like in [Two Sum II](https://leetcode.com/articles/two-sum-ii-input-array-is-sorted/). In a sorted array, it is easy to find elements that are close to a given value.\n\n---\n\n### Approach 1: Brute Force\n\nIt is important to understand the input constraints to choose the most appropriate approach. For this problem, the size of our array is limited to `100`. So, a brute force solution could be a reasonable option. It's simple and does not require any additional memory.\n\n**Algorithm**\n\n1. For each index `i` in `nums`:\n    - For each index `j > i` in `nums`:\n        - If `nums[i] + nums[j]` is less than `k`:\n            - Track maximum `nums[i] + nums[j]` in the result `answer`.\n\n2. Return the result `answer`.\n\n<iframe src=\"https://leetcode.com/playground/5uvNH3Kq/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"5uvNH3Kq\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity: $$\\mathcal{O}(n^2)$$. We have 2 nested loops.\n\n- Space Complexity: $$\\mathcal{O}(1)$$.\n\n---\n\n### Approach 2: Two Pointers\n\nWe will follow the same two pointers approach as in [Two Sum II](https://leetcode.com/articles/two-sum-ii-input-array-is-sorted/). It requires the array to be sorted, so we'll do that first.\n\nAs a quick refresher, the pointers are initially set to the first and the last element respectively. We compare the sum of these two elements with the target. If it is smaller than the target, we increment the lower pointer `left`. Otherwise, we decrement the higher pointer `right`. Thus, the sum always moves toward the target, and we \"prune\" pairs that would move it further away. Again, this works only if the array is sorted. Head to the [Two Sum II](https://leetcode.com/articles/two-sum-ii-input-array-is-sorted/) solution for a detailed explanation.\n\nSince the sum here must be smaller than the target, we don't stop when we find a pair that sums exactly to the target. We decrement the higher pointer and continue until our pointers collide. For each iteration, we track the maximum sum - if it's smaller than the target.\n\n!?!../Documents/1099_Two_Sum_Less_K.json:1200,470!?!\n\n**Algorithm**\n\n1. Sort the array.\n\n2. Set the `left` pointer to zero, and `right` - to the last index.\n\n3. While `left` is smaller than `right`:\n    - If `nums[left] + nums[right]` is less than `k`:\n        - Track maximum `nums[left] + nums[right]` in the result `answer`.\n        - Increment `left`.\n    - Else:\n        - Decrement `right`.\n\n4. Return the result `answer`.\n\n<iframe src=\"https://leetcode.com/playground/S4LegQrq/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"S4LegQrq\"></iframe>\n\n**Optimizations**\n\nWe can break from the loop as soon as `nums[left] > k / 2`. In the sorted array, `nums[left]` is the smallest of the remaining elements, so `nums[right] > k / 2` for any `right`. Therefore, `nums[left] + nums[right]` will be equal to or greater than `k` for the remaining elements.\n\n**Complexity Analysis**\n\n- Time Complexity: $$\\mathcal{O}(n\\log{n})$$ to sort the array. The two pointers approach itself is $$\\mathcal{O}(n)$$, so the time complexity would be linear if the input is sorted.\n\n- Space Complexity: from $$\\mathcal{O}(\\log{n})$$ to $$\\mathcal{O}(n)$$, depending on the implementation of the sorting algorithm.\n\n---\n\n### Approach 3: Binary Search\n\nInstead of moving two pointers towards the target, we can iterate through each element `nums[i]`, and binary-search for a complement value `k - nums[i]`. This approach is less efficient than the two pointers one, however, it can be more intuitive to come up with. Same as above, we need to sort the array first for this to work.\n\nNote that the binary search returns the \"insertion point\" for the searched value, i.e. the position where that value would be inserted to keep the array sorted. So, the binary search result points to the first element that is equal to or greater than the complement value. Since our sum must be smaller than `k`, we consider the element immediately *before* the found element.\n\n**Algorithm**\n\n1. Sort the array.\n\n2. For each index `i` in `nums`:\n    - Binary search for `k - nums[i]` starting from `i + 1`.\n    - Set `j` to the position before the found element.\n    - If `j` is less than `i`:\n        - Track maximum `nums[i] + nums[j]` in the result `answer`.\n\n3. Return the result `answer`.\n\n> Note that the binary search function in Java works a bit differently. If there are multiple elements that match the search value, it does not guarantee to point to the first one. That's why in the Java solution below we search for `k - nums[i] - 1`. Note that we decrement the pointer only if the value we found is greater than `k - nums[i] - 1`.\n\n<iframe src=\"https://leetcode.com/playground/5JxgzdY3/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"5JxgzdY3\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity: $$\\mathcal{O}(n\\log{n})$$ to sort the array and do the binary search for each element.\n\n- Space Complexity: from $$\\mathcal{O}(\\log{n})$$ to $$\\mathcal{O}(n)$$, depending on the implementation of the sorting algorithm.\n\n---\n\n### Approach 4: Counting Sort\n\nWe can leverage the fact that the input number range is limited to `[1..1000]` and use a counting sort. Then, we can use the two pointers pattern to enumerate pairs in the `[1..1000]` range.\n\n> Note that the result can be a sum of two identical numbers, and that means that `lo` can be equal to `hi`. In this case, we need to check if the count for that number is greater than one.\n\n**Algorithm**\n\n1. Count each element using the array `count`.\n\n2. Set the `lo` number to zero, and `hi` - to 1000.\n\n3. While `lo` is smaller than, or **equals** `hi`:\n    - If `lo + hi` is greater than `k`, or `count[hi] == 0`:\n        - Decrement `hi`.\n    - Else:\n        - If `count[lo]` is greater than `0` (when `lo < hi`), or `1` (when `lo == hi`):\n            - Track maximum `lo + hi` in the result `answer`.\n        - Increment `lo`.\n\n4. Return the result `answer`.\n\n<iframe src=\"https://leetcode.com/playground/Nbafqfg6/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"Nbafqfg6\"></iframe>\n\n**Optimizations**\n\n1. We can set `hi` to either the maximum number, or `k - 1`, whichever is smaller.\n2. We can ignore numbers greater than `k - 1`.\n3. We can use a boolean array (e.g. `seen`) instead of `count`. In the first loop, we will check if `i` is a duplicate (`seen[i]` is already true) and set `answer` to the highest `i + i < k`. Note that the two pointers loop will run while `lo < hi`, not while `lo <= hi`.\n4. We can break from the two pointers loop as soon as `nums[lo] > k / 2`.\n\n**Complexity Analysis**\n\n- Time Complexity: $$\\mathcal{O}(n + m)$$, where $$m$$ corresponds to the range of values in the input array.\n\n- Space Complexity: $$\\mathcal{O}(m)$$ to count each value.\n\n---\n\n### Further Thoughts\n\nAlways clarify the problem constraints and inputs during an interview. This would help you choose the right approach.\n\nThe Two Pointers approach is a good choice when the number of elements is large, and the range of possible values is not constrained. Also, if the input array is already sorted, this approach provides a linear time complexity and does not require additional memory.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

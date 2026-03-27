@@ -1,0 +1,140 @@
+{
+  "questionId": "1389",
+  "questionFrontendId": "1263",
+  "title": "Minimum Moves to Move a Box to Their Target Location",
+  "titleSlug": "minimum-moves-to-move-a-box-to-their-target-location",
+  "difficulty": "Hard",
+  "content": "<p>A storekeeper is a game in which the player pushes boxes around in a warehouse trying to get them to target locations.</p>\n\n<p>The game is represented by an <code>m x n</code> grid of characters <code>grid</code> where each element is a wall, floor, or box.</p>\n\n<p>Your task is to move the box <code>&#39;B&#39;</code> to the target position <code>&#39;T&#39;</code> under the following rules:</p>\n\n<ul>\n\t<li>The character <code>&#39;S&#39;</code> represents the player. The player can move up, down, left, right in <code>grid</code> if it is a floor (empty cell).</li>\n\t<li>The character <code>&#39;.&#39;</code> represents the floor which means a free cell to walk.</li>\n\t<li>The character<font face=\"monospace\">&nbsp;</font><code>&#39;#&#39;</code><font face=\"monospace\">&nbsp;</font>represents the wall which means an obstacle (impossible to walk there).</li>\n\t<li>There is only one box <code>&#39;B&#39;</code> and one target cell <code>&#39;T&#39;</code> in the <code>grid</code>.</li>\n\t<li>The box can be moved to an adjacent free cell by standing next to the box and then moving in the direction of the box. This is a <strong>push</strong>.</li>\n\t<li>The player cannot walk through the box.</li>\n</ul>\n\n<p>Return <em>the minimum number of <strong>pushes</strong> to move the box to the target</em>. If there is no way to reach the target, return <code>-1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/11/06/sample_1_1620.png\" style=\"width: 500px; height: 335px;\" />\n<pre>\n<strong>Input:</strong> grid = [[&quot;#&quot;,&quot;#&quot;,&quot;#&quot;,&quot;#&quot;,&quot;#&quot;,&quot;#&quot;],\n               [&quot;#&quot;,&quot;T&quot;,&quot;#&quot;,&quot;#&quot;,&quot;#&quot;,&quot;#&quot;],\n               [&quot;#&quot;,&quot;.&quot;,&quot;.&quot;,&quot;B&quot;,&quot;.&quot;,&quot;#&quot;],\n               [&quot;#&quot;,&quot;.&quot;,&quot;#&quot;,&quot;#&quot;,&quot;.&quot;,&quot;#&quot;],\n               [&quot;#&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;S&quot;,&quot;#&quot;],\n               [&quot;#&quot;,&quot;#&quot;,&quot;#&quot;,&quot;#&quot;,&quot;#&quot;,&quot;#&quot;]]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> We return only the number of times the box is pushed.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> grid = [[&quot;#&quot;,&quot;#&quot;,&quot;#&quot;,&quot;#&quot;,&quot;#&quot;,&quot;#&quot;],\n               [&quot;#&quot;,&quot;T&quot;,&quot;#&quot;,&quot;#&quot;,&quot;#&quot;,&quot;#&quot;],\n               [&quot;#&quot;,&quot;.&quot;,&quot;.&quot;,&quot;B&quot;,&quot;.&quot;,&quot;#&quot;],\n               [&quot;#&quot;,&quot;#&quot;,&quot;#&quot;,&quot;#&quot;,&quot;.&quot;,&quot;#&quot;],\n               [&quot;#&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;S&quot;,&quot;#&quot;],\n               [&quot;#&quot;,&quot;#&quot;,&quot;#&quot;,&quot;#&quot;,&quot;#&quot;,&quot;#&quot;]]\n<strong>Output:</strong> -1\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> grid = [[&quot;#&quot;,&quot;#&quot;,&quot;#&quot;,&quot;#&quot;,&quot;#&quot;,&quot;#&quot;],\n               [&quot;#&quot;,&quot;T&quot;,&quot;.&quot;,&quot;.&quot;,&quot;#&quot;,&quot;#&quot;],\n               [&quot;#&quot;,&quot;.&quot;,&quot;#&quot;,&quot;B&quot;,&quot;.&quot;,&quot;#&quot;],\n               [&quot;#&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;#&quot;],\n               [&quot;#&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;S&quot;,&quot;#&quot;],\n               [&quot;#&quot;,&quot;#&quot;,&quot;#&quot;,&quot;#&quot;,&quot;#&quot;,&quot;#&quot;]]\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> push the box down, left, left, up and up.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == grid.length</code></li>\n\t<li><code>n == grid[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 20</code></li>\n\t<li><code>grid</code> contains only characters <code>&#39;.&#39;</code>, <code>&#39;#&#39;</code>, <code>&#39;S&#39;</code>, <code>&#39;T&#39;</code>, or <code>&#39;B&#39;</code>.</li>\n\t<li>There is only one character <code>&#39;S&#39;</code>, <code>&#39;B&#39;</code>, and <code>&#39;T&#39;</code> in the <code>grid</code>.</li>\n</ul>\n",
+  "hints": [
+    "We represent the search state as (player_row, player_col, box_row, box_col).",
+    "You need to count only the number of pushes. Then inside of your BFS check if the box could be pushed (in any direction) given the current position of the player."
+  ],
+  "metaData": "{\n  \"name\": \"minPushBox\",\n  \"params\": [\n    {\n      \"name\": \"grid\",\n      \"type\": \"character[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"32K\", \"totalSubmission\": \"64.5K\", \"totalAcceptedRaw\": 31967, \"totalSubmissionRaw\": 64484, \"acRate\": \"49.6%\"}",
+  "likes": 888,
+  "dislikes": 60,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[\"#\",\"#\",\"#\",\"#\",\"#\",\"#\"],[\"#\",\"T\",\"#\",\"#\",\"#\",\"#\"],[\"#\",\".\",\".\",\"B\",\".\",\"#\"],[\"#\",\".\",\"#\",\"#\",\".\",\"#\"],[\"#\",\".\",\".\",\".\",\"S\",\"#\"],[\"#\",\"#\",\"#\",\"#\",\"#\",\"#\"]]",
+    "[[\"#\",\"#\",\"#\",\"#\",\"#\",\"#\"],[\"#\",\"T\",\"#\",\"#\",\"#\",\"#\"],[\"#\",\".\",\".\",\"B\",\".\",\"#\"],[\"#\",\"#\",\"#\",\"#\",\".\",\"#\"],[\"#\",\".\",\".\",\".\",\"S\",\"#\"],[\"#\",\"#\",\"#\",\"#\",\"#\",\"#\"]]",
+    "[[\"#\",\"#\",\"#\",\"#\",\"#\",\"#\"],[\"#\",\"T\",\".\",\".\",\"#\",\"#\"],[\"#\",\".\",\"#\",\"B\",\".\",\"#\"],[\"#\",\".\",\".\",\".\",\".\",\"#\"],[\"#\",\".\",\".\",\".\",\"S\",\"#\"],[\"#\",\"#\",\"#\",\"#\",\"#\",\"#\"]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minPushBox(vector<vector<char>>& grid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minPushBox(char[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minPushBox(self, grid: List[List[str]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minPushBox(self, grid):\n        \"\"\"\n        :type grid: List[List[str]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {character[][]} grid\n * @return {number}\n */\nvar minPushBox = function(grid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minPushBox(grid: string[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinPushBox(char[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minPushBox(char** grid, int gridSize, int* gridColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minPushBox(grid [][]byte) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minPushBox(grid: Array<CharArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minPushBox(_ grid: [[Character]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_push_box(grid: Vec<Vec<char>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Character[][]} grid\n# @return {Integer}\ndef min_push_box(grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[][] $grid\n     * @return Integer\n     */\n    function minPushBox($grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minPushBox(List<List<String>> grid) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minPushBox(grid: Array[Array[Char]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_push_box(grid :: [[char]]) :: integer\n  def min_push_box(grid) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_push_box(Grid :: [[char()]]) -> integer().\nmin_push_box(Grid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-push-box grid)\n  (-> (listof (listof char?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

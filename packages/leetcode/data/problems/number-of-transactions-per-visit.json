@@ -1,0 +1,53 @@
+{
+  "questionId": "1467",
+  "questionFrontendId": "1336",
+  "title": "Number of Transactions per Visit",
+  "titleSlug": "number-of-transactions-per-visit",
+  "difficulty": "Hard",
+  "content": "<p>Table: <code>Visits</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| user_id       | int     |\n| visit_date    | date    |\n+---------------+---------+\n(user_id, visit_date) is the primary key (combination of columns with unique values) for this table.\nEach row of this table indicates that user_id has visited the bank in visit_date.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Transactions</code></p>\n\n<pre>\n+------------------+---------+\n| Column Name      | Type    |\n+------------------+---------+\n| user_id          | int     |\n| transaction_date | date    |\n| amount           | int     |\n+------------------+---------+\nThis table may contain duplicates rows.\nEach row of this table indicates that user_id has done a transaction of amount in transaction_date.\nIt is guaranteed that the user has visited the bank in the transaction_date.(i.e The Visits table contains (user_id, transaction_date) in one row)\n</pre>\n\n<p>&nbsp;</p>\n\n<p>A bank wants to draw a chart of the number of transactions bank visitors did in one visit to the bank and the corresponding number of visitors who have done this number of transaction in one visit.</p>\n\n<p>Write a solution&nbsp;to find how many users visited the bank and didn&#39;t do any transactions, how many visited the bank and did one transaction, and so on.</p>\n\n<p>The result table will contain two columns:</p>\n\n<ul>\n\t<li><code>transactions_count</code> which is the number of transactions done in one visit.</li>\n\t<li><code>visits_count</code> which is the corresponding number of users who did <code>transactions_count</code> in one visit to the bank.</li>\n</ul>\n\n<p><code>transactions_count</code> should take all values from <code>0</code> to <code>max(transactions_count)</code> done by one or more users.</p>\n\n<p>Return the result table ordered by <code>transactions_count</code>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/01/31/chart.png\" style=\"width: 500px; height: 299px;\" />\n<pre>\n<strong>Input:</strong> \nVisits table:\n+---------+------------+\n| user_id | visit_date |\n+---------+------------+\n| 1       | 2020-01-01 |\n| 2       | 2020-01-02 |\n| 12      | 2020-01-01 |\n| 19      | 2020-01-03 |\n| 1       | 2020-01-02 |\n| 2       | 2020-01-03 |\n| 1       | 2020-01-04 |\n| 7       | 2020-01-11 |\n| 9       | 2020-01-25 |\n| 8       | 2020-01-28 |\n+---------+------------+\nTransactions table:\n+---------+------------------+--------+\n| user_id | transaction_date | amount |\n+---------+------------------+--------+\n| 1       | 2020-01-02       | 120    |\n| 2       | 2020-01-03       | 22     |\n| 7       | 2020-01-11       | 232    |\n| 1       | 2020-01-04       | 7      |\n| 9       | 2020-01-25       | 33     |\n| 9       | 2020-01-25       | 66     |\n| 8       | 2020-01-28       | 1      |\n| 9       | 2020-01-25       | 99     |\n+---------+------------------+--------+\n<strong>Output:</strong> \n+--------------------+--------------+\n| transactions_count | visits_count |\n+--------------------+--------------+\n| 0                  | 4            |\n| 1                  | 5            |\n| 2                  | 0            |\n| 3                  | 1            |\n+--------------------+--------------+\n<strong>Explanation:</strong> The chart drawn for this example is shown above.\n* For transactions_count = 0, The visits (1, &quot;2020-01-01&quot;), (2, &quot;2020-01-02&quot;), (12, &quot;2020-01-01&quot;) and (19, &quot;2020-01-03&quot;) did no transactions so visits_count = 4.\n* For transactions_count = 1, The visits (2, &quot;2020-01-03&quot;), (7, &quot;2020-01-11&quot;), (8, &quot;2020-01-28&quot;), (1, &quot;2020-01-02&quot;) and (1, &quot;2020-01-04&quot;) did one transaction so visits_count = 5.\n* For transactions_count = 2, No customers visited the bank and did two transactions so visits_count = 0.\n* For transactions_count = 3, The visit (9, &quot;2020-01-25&quot;) did three transactions so visits_count = 1.\n* For transactions_count &gt;= 4, No customers visited the bank and did more than three transactions so we will stop at transactions_count = 3\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Visits (user_id int, visit_date date)\", \"Create table If Not Exists Transactions (user_id int, transaction_date date, amount int)\"], \"mssql\": [\"Create table Visits (user_id int, visit_date date)\", \"Create table Transactions (user_id int, transaction_date date, amount int)\"], \"oraclesql\": [\"Create table Visits (user_id int, visit_date date)\", \"Create table Transactions (user_id int, transaction_date date, amount int)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"draw_chart\", \"pythondata\": [\"Visits = pd.DataFrame([], columns=['user_id', 'visit_date']).astype({'user_id':'Int64', 'visit_date':'datetime64[ns]'})\", \"Transactions = pd.DataFrame([], columns=['user_id', 'transaction_date', 'amount']).astype({'user_id':'Int64', 'transaction_date':'datetime64[ns]', 'amount':'Int64'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Visits (user_id int, visit_date date)\\n\", \"Create table If Not Exists Transactions (user_id int, transaction_date date, amount int)\"], \"database_schema\": {\"Visits\": {\"user_id\": \"INT\", \"visit_date\": \"DATE\"}, \"Transactions\": {\"user_id\": \"INT\", \"transaction_date\": \"DATE\", \"amount\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"15.8K\", \"totalSubmission\": \"32.9K\", \"totalAcceptedRaw\": 15763, \"totalSubmissionRaw\": 32924, \"acRate\": \"47.9%\"}",
+  "likes": 95,
+  "dislikes": 327,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Find the Missing IDs\", \"titleSlug\": \"find-the-missing-ids\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Visits\":[\"user_id\",\"visit_date\"],\"Transactions\":[\"user_id\",\"transaction_date\",\"amount\"]},\"rows\":{\"Visits\":[[1,\"2020-01-01\"],[2,\"2020-01-02\"],[12,\"2020-01-01\"],[19,\"2020-01-03\"],[1,\"2020-01-02\"],[2,\"2020-01-03\"],[1,\"2020-01-04\"],[7,\"2020-01-11\"],[9,\"2020-01-25\"],[8,\"2020-01-28\"]],\"Transactions\":[[1,\"2020-01-02\",120],[2,\"2020-01-03\",22],[7,\"2020-01-11\",232],[1,\"2020-01-04\",7],[9,\"2020-01-25\",33],[9,\"2020-01-25\",66],[8,\"2020-01-28\",1],[9,\"2020-01-25\",99]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"machine-zone\", \"name\": \"Machine Zone\"}, {\"timesEncountered\": 2, \"slug\": \"machinezone\", \"name\": \"MachineZone\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef draw_chart(visits: pd.DataFrame, transactions: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

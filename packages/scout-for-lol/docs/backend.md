@@ -190,7 +190,7 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    CONFIG["RIOT_API_TOKEN"]
+    CONFIG["RIOT_API_KEY"]
     CONFIG --> LOL_API["LolApi Client"]
     CONFIG --> RIOT_API["RiotApi Client"]
 

@@ -1,0 +1,141 @@
+{
+  "questionId": "1134",
+  "questionFrontendId": "1182",
+  "title": "Shortest Distance to Target Color",
+  "titleSlug": "shortest-distance-to-target-color",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array <code>colors</code>, in which there are three colors: <code>1</code>, <code>2</code> and&nbsp;<code>3</code>.</p>\n\n<p>You are also given some queries. Each query consists of two integers <code>i</code>&nbsp;and <code>c</code>, return&nbsp;the shortest distance between the given index&nbsp;<code>i</code> and the target color <code>c</code>. If there is no solution return <code>-1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> colors = [1,1,2,1,3,2,2,3,3], queries = [[1,3],[2,2],[6,1]]\n<strong>Output:</strong> [3,0,3]\n<strong>Explanation: </strong>\nThe nearest 3 from index 1 is at index 4 (3 steps away).\nThe nearest 2 from index 2 is at index 2 itself (0 steps away).\nThe nearest 1 from index 6 is at index 3 (3 steps away).\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> colors = [1,2], queries = [[0,3]]\n<strong>Output:</strong> [-1]\n<strong>Explanation: </strong>There is no 3 in the array.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= colors.length &lt;= 5*10^4</code></li>\n\t<li><code>1 &lt;= colors[i] &lt;= 3</code></li>\n\t<li><code>1&nbsp;&lt;= queries.length &lt;= 5*10^4</code></li>\n\t<li><code>queries[i].length == 2</code></li>\n\t<li><code>0 &lt;= queries[i][0] &lt;&nbsp;colors.length</code></li>\n\t<li><code>1 &lt;= queries[i][1] &lt;= 3</code></li>\n</ul>\n",
+  "hints": [
+    "Greedy solution is too slow because of the limits.",
+    "Can you solve this problem offline by doing some pre-processing?",
+    "Calculate the answers for all indexes moving to their left and to their right."
+  ],
+  "metaData": "{\n  \"name\": \"shortestDistanceColor\",\n  \"params\": [\n    {\n      \"name\": \"colors\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"queries\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<integer>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"41.1K\", \"totalSubmission\": \"72.7K\", \"totalAcceptedRaw\": 41055, \"totalSubmissionRaw\": 72673, \"acRate\": \"56.5%\"}",
+  "likes": 539,
+  "dislikes": 22,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,1,2,1,3,2,2,3,3]\n[[1,3],[2,2],[6,1]]",
+    "[1,2]\n[[0,3]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> shortestDistanceColor(vector<int>& colors, vector<vector<int>>& queries) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<Integer> shortestDistanceColor(int[] colors, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def shortestDistanceColor(self, colors: List[int], queries: List[List[int]]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def shortestDistanceColor(self, colors, queries):\n        \"\"\"\n        :type colors: List[int]\n        :type queries: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} colors\n * @param {number[][]} queries\n * @return {number[]}\n */\nvar shortestDistanceColor = function(colors, queries) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function shortestDistanceColor(colors: number[], queries: number[][]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<int> ShortestDistanceColor(int[] colors, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* shortestDistanceColor(int* colors, int colorsSize, int** queries, int queriesSize, int* queriesColSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func shortestDistanceColor(colors []int, queries [][]int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun shortestDistanceColor(colors: IntArray, queries: Array<IntArray>): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func shortestDistanceColor(_ colors: [Int], _ queries: [[Int]]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn shortest_distance_color(colors: Vec<i32>, queries: Vec<Vec<i32>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} colors\n# @param {Integer[][]} queries\n# @return {Integer[]}\ndef shortest_distance_color(colors, queries)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $colors\n     * @param Integer[][] $queries\n     * @return Integer[]\n     */\n    function shortestDistanceColor($colors, $queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> shortestDistanceColor(List<int> colors, List<List<int>> queries) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def shortestDistanceColor(colors: Array[Int], queries: Array[Array[Int]]): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec shortest_distance_color(colors :: [integer], queries :: [[integer]]) :: [integer]\n  def shortest_distance_color(colors, queries) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec shortest_distance_color(Colors :: [integer()], Queries :: [[integer()]]) -> [integer()].\nshortest_distance_color(Colors, Queries) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (shortest-distance-color colors queries)\n  (-> (listof exact-integer?) (listof (listof exact-integer?)) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1104",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Binary Search\n\n**Intuition**\n\nGiven an array `colors` and a series of queries, each of which contains two integers `i` and `c`, we want to find the shortest distance between `i` and the target color `c`.\nThe most straightforward approach would be: For each query containing index `i` and color `c`, find all occurrences of `c` in the array. For each occurrence, calculate the distance between it and index `i`. Return the shortest distance found.\n\nHowever, the above approach wastes time going through colors that are not `c`.\nTo solve this, we could begin by initializing three lists; one for each color. We could then iterate over `colors`, putting each index into its respective color list. Then when we go through the list of queries, we only need to look at the list that corresponds with `c`. The cleanest way of storing these lists would be to use a hashmap; the keys are colors, and the values are lists.\n\n!?!../Documents/1182_approach_1.json:602,361!?!\n\nWe've made a big improvement - but don't stop here - we can make it even better! The fact is, we don't have to scan an entire list for the given query containing `i` and `c`;\nthe values in each list are sorted, because we inserted the indexes in order, from `0` to `n`.\nTherefore, we can use a binary search to find the value nearest to `i`. Using binary search improves the time complexity from linear to logarithmic.\n\n**Algorithm**\n\n- Initialize a hashmap to map each color to a list of indexes.\n- Iterate over `colors` and put each index into its corresponding list of the hashmap.\n- For each query containing `i` and `c`:\n  - if `c` is not one of the keys in the hashmap, then we know that `colors` does not contain `c` and therefore should return `-1` as stated in the problem description;\n  - else, we want to find the position of `i` in its corresponding color list `indexList` to maintain the sorted order:\n    - if `i` is smaller than all elements in `indexList`, then `i - indexList[0]` is the shortest distance;\n    - else if `i` is larger than all elements in the color list, then `indexList[indexList.size() - 1] - i` is the shortest distance;\n    - else, the nearest occurrence of `c` to `i` is either at the insertion index, or the one before it, and so we calculate the distance from `i` to each of them, and return the smallest.\n\n> **Interview Tip:** It can be challenging to know whether you should implement the binary search algorithm yourself, or whether you should use the built-in one. Some interviewers will want you to implement it, as that is a part of what they're evaluating you on. Others might expect you to use the built-in one, as writing your own is often seen as poor *software engineering* practice.\nTo be on the safe side, we recommend that you ask your interviewer *whether or not it's okay for you to use the built-in* binary search. If they say it's your choice, then we recommend using the built-in binary search, as that is considered best practice in software engineering.\nTo learn more about implementing binary search, [check out our explore card](https://leetcode.com/explore/learn/card/binary-search/)\n\n<iframe src=\"https://leetcode.com/playground/jAZ8XTmz/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"jAZ8XTmz\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity : $$\\mathcal{O}(Q \\log N + N)$$, where $Q$ is the length of `queries` and $N$ is the length of `colors`.\n\n  Going through the input array `colors` and storing each `color - index` pair take $$\\mathcal{O}(N)$$ time. When iterating `queries` and generating results, we apply binary search once for each query, and each binary search takes $$\\mathcal{O}(\\log N)$$, which results in $$\\mathcal{O}(Q \\log N)$$. Putting them together and ignoring constants for Big O notation, we have $$\\mathcal{O}(Q \\log N + N)$$.\n* Space Complexity : $$\\mathcal{O}(N)$$.\nThis is because we store the indexes of each `color - index` pair in a hashmap.\n\n<br/>\n\n---\n\n### Approach 2: Pre-computed\n\n**Intuition**\n\nAnother approach is to pre-compute and store the shortest distance between each index `i` and each color `c` so that, for each query, we can then return the answer in constant time.\n\nTo find the shortest distance between `i` and `c`, we divide it into two steps: firstly find the nearest `c` on `i`'s left; secondly, find the nearest `c` on `i`'s right.\nThe minimum of these is the shortest distance.\n\n\nAn important fact is that, if `color[i]` and `color[j]` are `c` when `i<j` and there's no `c` between `i` and `j`, then for each index `k` between `i` and `j`:\n- the shortest distance between `k` and `c` on its *left* is `k-i`.\n- the shortest distance between `k` and `c` on its *right* is `j-k`.\n\n![Nearest color to the index.](../Figures/1182/1182-5.png)\n\n\n*Figure 1. Find the nearest color on the left and right.*\n\n\nTherefore, we can find the nearest target color in two separate phases:\n- Iterating **from left to right** and looking **forwards** to find the nearest target color on the **left**.\n- Iterating **from right to left** and looking **backwards** to find the nearest target color on the **right**.\n\nPlease don't hesitate to look at the visualizations below. Looking left (forwards) and right (backwards) are quite similar therefore I've put them sequentially for your reference.\n\n!?!../Documents/1182_approach_2.json:750,597!?!\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/RBXGKKoE/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"RBXGKKoE\"></iframe>\n\n\n**Complexity Analysis**\n\n* Time Complexity : $$\\mathcal{O}(N + Q)$$, where $N$ is the length of `colors` and $Q$ is the length of `queries`.\n\n  This is because we use iterations to fill `distance` which is a matrix of 3 rows and  $N$ columns taking $$\\mathcal{O}(N)$$ time. Afterwards, we generate the answer for each query in `queries` in $$\\mathcal{O}(1)$$.\n* Space Complexity : $$\\mathcal{O}(N)$$.\nThis is because we initialize two arrays of size 3 and one 2D array of 3 rows and $N$ columns.\n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

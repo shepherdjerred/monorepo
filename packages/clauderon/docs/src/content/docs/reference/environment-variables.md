@@ -32,7 +32,7 @@ Environment variables have highest priority over 1Password and secret files.
 
 | Variable                  | Service    |
 | ------------------------- | ---------- |
-| `GITHUB_TOKEN`            | GitHub     |
+| `GH_TOKEN`                | GitHub     |
 | `CLAUDE_CODE_OAUTH_TOKEN` | Anthropic  |
 | `OPENAI_API_KEY`          | OpenAI     |
 | `CODEX_API_KEY`           | OpenAI alt |
@@ -91,13 +91,13 @@ RUST_LOG=clauderon::proxy=debug,clauderon::session=trace clauderon daemon  # per
 
 **Bash/Zsh** (`~/.bashrc` or `~/.zshrc`):
 ```bash
-export GITHUB_TOKEN="ghp_xxxx"
+export GH_TOKEN="ghp_xxxx"
 export CLAUDERON_FEATURE_ENABLE_AI_METADATA=1
 ```
 
 **Fish** (`~/.config/fish/config.fish`):
 ```fish
-set -gx GITHUB_TOKEN "ghp_xxxx"
+set -gx GH_TOKEN "ghp_xxxx"
 set -gx CLAUDERON_FEATURE_ENABLE_AI_METADATA 1
 ```
 

@@ -1,0 +1,144 @@
+{
+  "questionId": "1093",
+  "questionFrontendId": "1028",
+  "title": "Recover a Tree From Preorder Traversal",
+  "titleSlug": "recover-a-tree-from-preorder-traversal",
+  "difficulty": "Hard",
+  "content": "<p>We run a&nbsp;preorder&nbsp;depth-first search (DFS) on the <code>root</code> of a binary tree.</p>\n\n<p>At each node in this traversal, we output <code>D</code> dashes (where <code>D</code> is the depth of this node), then we output the value of this node.&nbsp; If the depth of a node is <code>D</code>, the depth of its immediate child is <code>D + 1</code>.&nbsp; The depth of the <code>root</code> node is <code>0</code>.</p>\n\n<p>If a node has only one child, that child is guaranteed to be <strong>the left child</strong>.</p>\n\n<p>Given the output <code>traversal</code> of this traversal, recover the tree and return <em>its</em> <code>root</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/09/10/recover_tree_ex1.png\" style=\"width: 423px; height: 200px;\" />\n<pre>\n<strong>Input:</strong> traversal = &quot;1-2--3--4-5--6--7&quot;\n<strong>Output:</strong> [1,2,5,3,4,6,7]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/09/10/recover_tree_ex2.png\" style=\"width: 432px; height: 250px;\" />\n<pre>\n<strong>Input:</strong> traversal = &quot;1-2--3---4-5--6---7&quot;\n<strong>Output:</strong> [1,2,5,3,null,6,null,4,null,7]\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/09/10/recover_tree_ex3.png\" style=\"width: 305px; height: 250px;\" />\n<pre>\n<strong>Input:</strong> traversal = &quot;1-401--349---90--88&quot;\n<strong>Output:</strong> [1,401,null,349,88,90]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the original tree is in the range <code>[1, 1000]</code>.</li>\n\t<li><code>1 &lt;= Node.val &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Do an iterative depth first search, parsing dashes from the string to inform you how to link the nodes together."
+  ],
+  "metaData": "{\n  \"name\": \"recoverFromPreorder\",\n  \"params\": [\n    {\n      \"name\": \"traversal\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"TreeNode\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"165.1K\", \"totalSubmission\": \"198.4K\", \"totalAcceptedRaw\": 165121, \"totalSubmissionRaw\": 198404, \"acRate\": \"83.2%\"}",
+  "likes": 2292,
+  "dislikes": 70,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"1-2--3--4-5--6--7\"",
+    "\"1-2--3---4-5--6---7\"",
+    "\"1-401--349---90--88\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    TreeNode* recoverFromPreorder(string traversal) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public TreeNode recoverFromPreorder(String traversal) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def recoverFromPreorder(self, traversal: str) -> Optional[TreeNode]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def recoverFromPreorder(self, traversal):\n        \"\"\"\n        :type traversal: str\n        :rtype: Optional[TreeNode]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {string} traversal\n * @return {TreeNode}\n */\nvar recoverFromPreorder = function(traversal) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction recoverFromPreorder(traversal: string): TreeNode | null {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public TreeNode RecoverFromPreorder(string traversal) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nstruct TreeNode* recoverFromPreorder(char* traversal) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc recoverFromPreorder(traversal string) *TreeNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun recoverFromPreorder(traversal: String): TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func recoverFromPreorder(_ traversal: String) -> TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn recover_from_preorder(traversal: String) -> Option<Rc<RefCell<TreeNode>>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {String} traversal\n# @return {TreeNode}\ndef recover_from_preorder(traversal)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param String $traversal\n     * @return TreeNode\n     */\n    function recoverFromPreorder($traversal) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  TreeNode? recoverFromPreorder(String traversal) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def recoverFromPreorder(traversal: String): TreeNode = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec recover_from_preorder(traversal :: String.t) :: TreeNode.t | nil\n  def recover_from_preorder(traversal) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec recover_from_preorder(Traversal :: unicode:unicode_binary()) -> #tree_node{} | null.\nrecover_from_preorder(Traversal) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (recover-from-preorder traversal)\n  (-> string? (or/c tree-node? #f))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2687",
+    "content": "## Solution\n\n---\n\n### Overview\n\nWe are given a string representation of a preorder traversal of a binary tree, where each node is represented as `D` dashes followed by its value. The number of dashes `D` indicates the depth of the node in the tree, with the root having depth `0`. Each node may have one or two children, and if a node has only one child, it is always the left child. Our task is to reconstruct the original binary tree from this traversal string.  \n\nSince preorder traversal follows the **root → left → right** order, we process the nodes in sequence and assign them to their correct positions.\n\nFor example, given `traversal = \"1-2--3--4-5--6--7\"`, we can break it down as follows:  \n\n```css\n1  (Root)\n|- 2  (Depth 1, Left child of 1)\n|  |- 3  (Depth 2, Left child of 2)\n|  |- 4  (Depth 2, Right child of 2)\n|- 5  (Depth 1, Right child of 1)\n   |- 6  (Depth 2, Left child of 5)\n   |- 7  (Depth 2, Right child of 5)\n```\n\nThis means the tree structure is:  \n\n```css\n       1\n      / \\\n     2   5\n    / \\  / \\\n   3   4 6  7\n```\n\nThe output should be: `[1, 2, 5, 3, 4, 6, 7]`.\n\nBefore diving into specific approaches, let’s first build a high-level strategy that applies to all the approaches.  \n\n1. **Depth determines hierarchy**\n\nEach node’s position in the tree is determined by the number of dashes (`-`) before its value:  \n- A node with depth `D` is the child of the last node with depth `D - 1`.  \n- If a node has a sibling, it appears immediately after its left sibling in the traversal.  \n- If a node does not have a sibling, it is the only child of its parent.  \n\nThis means that the structure of the tree is fully determined by depth information, without requiring additional information like explicit left/right indicators. Because nodes appear before their children in preorder, we can sequentially assign them to their parents without needing to look ahead or backtrack significantly.  \n\n2. **Maintaining a Structure to Track Parent-Child Relationships**\n\nTo efficiently determine the correct parent for each node, we need a mechanism to track nodes at different depths. There are two main ways to do this:  \n- Using Recursion: We can recursively parse the string and build the tree.\n- Using Stack: We maintain a stack where each node is pushed when encountered. When we process a new node, we find its correct parent by checking the stack for the most recent node with `depth - 1`.  \n\nRegardless of the approach, the core idea is the same: When we encounter a new node, we determine its depth. We find the last node at `depth - 1` and attach the new node as its child. Then we ensure that the first child assigned to a parent is the left child, and the second (if present) is the right child.\n\n---\n\n### Approach 1: Brute Force (Recursive with String Manipulation)\n\n#### Intuition\n\nThe simplest way to reconstruct a tree from a string is to process the input step by step as the input is in the format of preorder traversal. We know that each number in the string represents a node in the tree, and the number of dashes before it tells us how deep it should be.\n\nTo build the tree, first, we count the number of dashes (-). The more dashes we see, the deeper the node is in the tree. After counting the dashes, we extract the number that follows. This number becomes the value of a new node.\n\nOnce we have a node, we need to figure out where to place it in the tree. Since the nodes appear in depth-first (preorder) order in the string, we know that every new node belongs as a child of the most recently encountered node that has space for a child. If a node is at a greater depth than the previous one, it must be its left child. If it's at the same depth as the last node, it means we have moved to a new subtree, and it should be attached as a right child instead.\n\nTo implement this, we use recursion. A helper function takes the string and the current index, processes the node at that position, and then calls itself to construct the left and right children. This recursion follows the same logic as a depth-first traversal of a tree. If the function encounters a node at the wrong depth, it stops and returns, ensuring that nodes are placed correctly.\n\n> For a more comprehensive understanding of recursion, check out the [Recursion Explore Card 🔗](https://leetcode.com/explore/learn/card/recursion-i/).\n\n#### Algorithm\n\n- Start with `index = 0` and call the recursive `helper` function with `depth = 0`.\n\n- In `helper` function:\n  - If `index` exceeds the length of `traversal`, return `nullptr`.\n\n  - Count the number of dashes (`dashCount`) at `index`:\n    - Iterate while the character at `index + dashCount` is `'-'`.\n    - Increase `dashCount` accordingly.\n\n  - If `dashCount` does not match `depth`, return `nullptr` (ensures correct tree structure).\n\n  - Move `index` past the dashes.\n\n  - Extract the numeric value for the node:\n    - Initialize `value = 0`.\n    - While `index` points to a digit, update `value` using `value * 10 + (digit)`.\n    - Increment `index` for each digit processed.\n\n  - Create a new `TreeNode` with the extracted value.\n\n  - Recursively construct left and right children:\n    - Call `helper` with `depth + 1` for the left subtree.\n    - Call `helper` with `depth + 1` for the right subtree.\n\n  - Return the constructed `TreeNode`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/dFsKLqhx/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"dFsKLqhx\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the tree.  \n\n- Time complexity: $O(n^2)$  \n\n    We traverse the input string exactly once while parsing node values and dashes. Each character is processed a constant number of times. However, the depth of the tree impacts the reconstruction process. In the worst case, when the tree is skewed, finding the correct parent for each node involves scanning up to $O(n)$ previous nodes, leading to an overall $O(n^2)$ time complexity.\n\n- Space complexity: $O(n)$  \n\n    The recursion depth is determined by the depth of the tree, which in the worst case (a skewed tree) can be $O(n)$, leading to an $O(n)$ recursive call stack space. Additionally, we allocate $O(n)$ new `TreeNode` objects, contributing to an extra $O(n)$ memory usage.  \n\n    Thus, the overall space complexity is $O(n)$.\n \n---\n\n### Approach 2: Iterative Approach with Stack (Single Pass)\n\n#### Intuition\n\nRecursion is useful, but it can be slow because it involves extra function calls and memory overhead. A more efficient way to process the string is to use a stack to keep track of nodes as we build the tree.\n\nThink of the stack as a way to remember where we are in the tree. Each time we find a new node, we check how deep it should be by counting dashes. If the stack already has more nodes than this depth, it means we have finished processing a subtree, so we remove nodes from the stack until we reach the correct depth. The node left at the top of the stack is the parent of the new node.\n\nSince the stack always holds the path from the root to the current node, its length at any point represents how deep we are in the tree. When we encounter a new node, we count the dashes to determine its depth. If the stack is longer than the depth, it means we need to move up in the tree, so we remove nodes from the stack until it matches the correct depth.\n\nOnce we identify the parent, we decide whether to attach the new node as its left or right child. If the left child doesn’t exist, we set it as the left child. Otherwise, it must be the right child. Finally, we push the new node onto the stack because it might have its own children in later steps.\n\nThe algorithm is visualized below: \n\n![approach__4](../Figures/1028/approach__4.png)\n\n> For a more comprehensive understanding of stacks, check out the [Stack Explore Card 🔗](https://leetcode.com/explore/learn/card/queue-stack/). \n\n#### Algorithm\n\n- Initialize a `stack` to keep track of nodes at different depths.\n- Initialize `index` to 0 for traversing the `traversal` string.\n\n- Iterate while `index` is within the bounds of `traversal`:\n  - Count the number of dashes (`-`) to determine the `depth` of the current node.\n  - Extract the numerical value of the node by iterating through the digits.\n  - Create a new `TreeNode` with the extracted value.\n  - Adjust the `stack` to ensure it aligns with the correct depth by popping elements if necessary.\n  - Attach the newly created node to its parent:\n    - If the top node of the stack has no left child, assign the new node as the left child.\n    - Otherwise, assign it as the right child.\n  - Push the new node onto the stack.\n\n- Ensure the root node is correctly identified by popping extra elements from the stack until only one remains.\n- Return the remaining node in the stack as the root of the reconstructed tree.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/aTogXeZG/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"aTogXeZG\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the tree.   \n\n- Time complexity: $O(n^2)$  \n\n    We traverse the input string exactly once while counting dashes and extracting node values. Each character is processed a constant number of times, contributing $O(n)$.  \n\n    However, in the worst case (a skewed tree), finding the correct parent node may require scanning up to $O(n)$ previous nodes. This results in an additional $O(n)$ factor, leading to an overall $O(n^2)$ time complexity.\n\n- Space complexity: $O(n)$  \n\n    The maximum depth of the tree determines the maximum size of the stack. In the worst case (a skewed tree), the depth can be $O(n)$, leading to an $O(n)$ stack size.  \n\n    Additionally, we allocate $O(n)$ `TreeNode` objects, contributing to an extra $O(n)$ memory usage.  \n\n    Thus, the overall space complexity is $O(n)$.\n \n---\n\n### Approach 3: Iterative Approach with List\n\n#### Intuition\n\nInstead of using a stack, we can implement the solution using a list, as some may find list operations more intuitive. Both a stack and a list perform similar operations, such as appending elements to the end and removing them in a last-in, first-out (LIFO) manner. As a result, the overall time and space complexity remain the same. The choice between the two is mainly a matter of readability and personal preference rather than performance. In fact, in Python 3, there will be negligible difference between the two approaches since both utilize a list for storage.\n\nWe traverse the input while keeping track of depth using dashes. Whenever we encounter a digit, we extract the node value directly and create a new node. Instead of using a stack, we maintain a `levels` list where `levels[depth]` always holds the last node at that depth. \n\nAfter extracting a node’s value, we update `levels` to ensure that the new node is correctly positioned. If a node at the same depth already exists, we replace it; otherwise, we append the new node. The parent of the new node is always stored at `levels[depth - 1]`, ensuring that the tree structure remains correct as we attach nodes to their left or right children.\n\n#### Algorithm\n\n- Initialize `levels` array to track the last node at each depth level.\n- Set `index` to 0 and `n` to the length of `traversal`.\n\n- Iterate while `index < n`:\n  - Count `depth` by counting consecutive dashes (`-`).\n  - Extract `value` by reading digits until a non-digit character is encountered.\n  - Create a new `TreeNode` with the extracted `value`.\n\n  - If `depth` is smaller than `levels.size()`, replace `levels[depth]` with the new node.\n  - Otherwise, append the new node to `levels`.\n\n  - If `depth > 0`, attach the new node as a child:\n    - Retrieve its `parent` from `levels[depth - 1]`.\n    - If `parent->left` is null, assign the new node to `parent->left`.\n    - Otherwise, assign the new node to `parent->right`.\n\n- Return `levels[0]` as the root of the reconstructed tree.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/fUWWjT7L/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"fUWWjT7L\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the tree.   \n\n- Time complexity: $O(n)$  \n\n    We traverse the input string exactly once to count dashes and extract numeric values. Each character is processed a constant number of times, contributing $O(n)$.  \n\n    However, in the worst case (a skewed tree), maintaining the list of levels and finding the correct parent may require scanning up to $O(n)$ previous nodes. This results in an additional $O(n)$ factor, leading to an overall $O(n^2)$ time complexity.\n\n- Space complexity: $O(n)$  \n\n    The levels list keeps track of at most $O(h)$ nodes, where the tree height $h$ can be at most $O(n)$ in the worst case. Additionally, we allocate $O(n)$ `TreeNode` objects for the tree itself.  \n\n    Thus, the overall space complexity is $O(n)$.\n \n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

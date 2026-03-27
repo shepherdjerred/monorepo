@@ -1,0 +1,144 @@
+{
+  "questionId": "1458",
+  "questionFrontendId": "1356",
+  "title": "Sort Integers by The Number of 1 Bits",
+  "titleSlug": "sort-integers-by-the-number-of-1-bits",
+  "difficulty": "Easy",
+  "content": "<p>You are given an integer array <code>arr</code>. Sort the integers in the array&nbsp;in ascending order by the number of <code>1</code>&#39;s&nbsp;in their binary representation and in case of two or more integers have the same number of <code>1</code>&#39;s you have to sort them in ascending order.</p>\n\n<p>Return <em>the array after sorting it</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [0,1,2,3,4,5,6,7,8]\n<strong>Output:</strong> [0,1,2,4,8,3,5,6,7]\n<strong>Explantion:</strong> [0] is the only integer with 0 bits.\n[1,2,4,8] all have 1 bit.\n[3,5,6] have 2 bits.\n[7] has 3 bits.\nThe sorted array by bits is [0,1,2,4,8,3,5,6,7]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [1024,512,256,128,64,32,16,8,4,2,1]\n<strong>Output:</strong> [1,2,4,8,16,32,64,128,256,512,1024]\n<strong>Explantion:</strong> All integers have 1 bit in the binary representation, you should just sort them in ascending order.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= arr.length &lt;= 500</code></li>\n\t<li><code>0 &lt;= arr[i] &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Simulate the problem. Count the number of 1's in the binary representation of each integer.",
+    "Sort by the number of 1's ascending and by the value in case of tie."
+  ],
+  "metaData": "{\n  \"name\": \"sortByBits\",\n  \"params\": [\n    {\n      \"name\": \"arr\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"392.9K\", \"totalSubmission\": \"477.3K\", \"totalAcceptedRaw\": 392877, \"totalSubmissionRaw\": 477327, \"acRate\": \"82.3%\"}",
+  "likes": 2866,
+  "dislikes": 138,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Find Subsequence of Length K With the Largest Sum\", \"titleSlug\": \"find-subsequence-of-length-k-with-the-largest-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find if Array Can Be Sorted\", \"titleSlug\": \"find-if-array-can-be-sorted\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[0,1,2,3,4,5,6,7,8]",
+    "[1024,512,256,128,64,32,16,8,4,2,1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> sortByBits(vector<int>& arr) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] sortByBits(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def sortByBits(self, arr: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def sortByBits(self, arr):\n        \"\"\"\n        :type arr: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arr\n * @return {number[]}\n */\nvar sortByBits = function(arr) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function sortByBits(arr: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] SortByBits(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* sortByBits(int* arr, int arrSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func sortByBits(arr []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun sortByBits(arr: IntArray): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func sortByBits(_ arr: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn sort_by_bits(arr: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} arr\n# @return {Integer[]}\ndef sort_by_bits(arr)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $arr\n     * @return Integer[]\n     */\n    function sortByBits($arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> sortByBits(List<int> arr) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def sortByBits(arr: Array[Int]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec sort_by_bits(arr :: [integer]) :: [integer]\n  def sort_by_bits(arr) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec sort_by_bits(Arr :: [integer()]) -> [integer()].\nsort_by_bits(Arr) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (sort-by-bits arr)\n  (-> (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2060",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Sort By Custom Comparator: Built-in\n\n**Intuition**\n\nThe number of `1's` in a number's binary representation is also known as the number of **set** bits, or the [hamming weight](https://en.wikipedia.org/wiki/Hamming_weight) of the number.\n\nIn this problem, we need to sort the numbers according to their hamming weight. We can sort arrays by any criteria using a custom comparator, which is a function that we pass into a language's sort function to specify how elements should be sorted.\n\nThere are a number of ways to find the hamming weight of a number, but the easiest way is by using built-in methods.\n\n> Note: we have included this approach for completeness. It is likely that in an interview, you will be expected to use bit manipulation to find the hamming weight, and simply using built-in methods may be considered \"cheating\".\n\nMost major programming languages have a built-in method for finding the hamming weight of a number. We simply define a custom comparator using these methods, then sort the input with it, and return the answer. Remember to handle the tiebreak: when two numbers have equal hamming weight, the one with a lower value should come first.\n\n**Algorithm**\n\n1. Use built-in methods to define a custom comparator that uses the hamming weight of a number.\n2. Sort `arr` with the custom comparator.\n3. Return `arr`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/4dYZ9SpT/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"4dYZ9SpT\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `arr`,\n\n* Time complexity: $$O(n \\cdot \\log{n})$$\n\n    Finding the hamming weight of a number is dependent on the size of a number, but as we are dealing with integers that have a fixed size (31 bits), we can consider it as an $$O(1)$$ operation. Sorting `arr` costs $$O(n \\cdot \\log{n})$$.\n\n* Space Complexity: $$O(\\log n)$$ or $$O(n)$$\n\n    The space complexity of the sorting algorithm depends on the implementation of each programming language:\n    * In Java, Arrays.sort() for primitives is implemented using a variant of the Quick Sort algorithm, which has a space complexity of $$O(\\log n)$$\n    * In C++, the sort() function provided by STL uses a hybrid of Quick Sort, Heap Sort and Insertion Sort, with a worst case space complexity of $$O(\\log n)$$\n    * In Python, the sort() function is implemented using the Timsort algorithm, which has a worst-case space complexity of $$O(n)$$\n    \n<br/>\n\n---\n\n### Approach 2: Bit Manipulation\n\n**Intuition**\n\nThis approach is the same as the previous one, except we will now obtain the hamming weight of each number using bit manipulation instead of built-in methods, which is what most interviewers will be expecting.\n\n\n<details>\n    <summary>\n        <b> &ensp; If you aren't familiar with bit manipulation and the operations used in bit manipulation, please click to expand. </b>\n    </summary>\n\n<br />\n\nBit manipulation is the act of manipulating bits, like changing bits of an integer.      \nAt the heart of bit manipulation are the bit-wise operators:     \n\n**NOT (~):** Bitwise NOT is a unary operator that flips the bits of the number i.e., if the current bit is $0$, it will change it to $1$ and vice versa. \n```text\nN = 5 = 101 (in binary)\n~N = ~(101) = 010 = 2 (in decimal)\n```\n\n**AND (&):** In bitwise AND if both bits in the compared position of the bit patterns are $1$, the bit in the resulting bit pattern is $1$, otherwise $0$.\n```text\nA = 5 = 101 (in binary) \nB = 1 = 001 (in binary) \nA & B = 101 & 001 = 001 = 1 (in decimal)\n```\n\n**OR ( | ):** Bitwise OR is also similar to bitwise AND. If both bits in the compared position of the bit patterns are $0$, the bit in the resulting bit pattern is $0$, otherwise $1$.\n```text\nA = 5 = 101 (in binary) \nB = 1 = 001 (in binary) \nA | B = 101 | 001 = 101 = 5 (in decimal)\n```\n\n**XOR (^):** In bitwise XOR if both bits are $0$ or $1$, the result will be $0$, otherwise $1$.\n```text\nA = 5 = 101 (in binary) \nB = 1 = 001 (in binary) \nA ^ B = 101 ^ 001 = 100 = 4 (in decimal)\n```\n\n**Left Shift (<<):** Left shift operator is a binary operator which shifts some number of bits to the left and appends $0$ at the end. One left shift is equivalent to multiplying the bit pattern with $2$.\n```text\nA = 1 = 001 (in binary) \nA << 1 = 001 << 1 = 010 = 2 (in decimal)\nA << 2 = 001 << 2 = 100 = 4 (in decimal)\n\nB = 5 = 00101 (in binary)\nB << 1 = 00101 << 1 = 01010 = 10 (in decimal)\nB << 2 = 00101 << 2 = 10100 = 20 (in decimal)\n```\n\n**Right Shift (>>):** Right shift operator is a binary operator which shifts some number of bits to the right and appends $0$ at the left side. One right shift is equivalent to dividing the bit pattern with $2$.\n```text\nA = 4 = 100 (in binary) \nA >> 1 = 100 >> 1 = 010 = 2 (in decimal)\nA >> 2 = 100 >> 2 = 001 = 1 (in decimal)\nA >> 3 = 100 >> 3 = 000 = 0 (in decimal)\n\nB = 5 = 00101 (in binary)\nB >> 1 = 00101 >> 1 = 00010 = 2 (in decimal)\n```\n</details>\n\n<br /> \n\nTo find the hamming weight of a number, we can use what is called a **mask**. This mask will have a single set bit, initially the least significant one (representing the number `1`, at position `0`). We will AND this mask with the number, and if the result is non-zero, it means the bit is set in the number. We can thus increment the hamming weight by 1 and then continue to the next position by left-shifting the mask, which moves the single bit over to the next position (this is the same as multiplying it by two).\n\nThere are two ways we can end this process.\n\n1. Iterate 31 times (since this is the maximum size of an integer)\n2. When we find a set bit in the number, flip it to a 0 (with XOR). When the number becomes 0, then we know there are no more set bits and can end.\n\nThe second option is better since we will terminate as soon as possible, whereas the first option will always iterate 31 times, regardless of the size of the number. We will proceed with the second option. The following animation illustrates this process:\n\n!?!../Documents/1356.json:960,540!?!\n<br>\n<br>\n\n**Algorithm**\n\n1. Define a function `findWeight` that takes an integer `num` and returns its hamming weight.\n    - Initialize `mask = 1` and `weight = 0`\n    - While `num > 0`:\n        - Check if `num & mask` is non-zero. If so, increment `weight` and XOR `num` with `mask`\n        - Left shift `mask`\n    - Return `weight`\n2. Create a custom comparator with `findWeight`. Sort `arr` with the custom comparator.\n3. Return `arr`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/a8EYPSyq/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"a8EYPSyq\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `arr`,\n\n* Time complexity: $$O(n \\cdot \\log{}n)$$\n\n    Finding the hamming weight of a number is dependent on the size of a number, but as we are dealing with integers that have a fixed size (31 bits), we can consider it as an $$O(1)$$ operation. Sorting `arr` costs $$O(n \\cdot \\log{n})$$.\n\n* Space Complexity: $$O(\\log n)$$ or $$O(n)$$\n\n    The space complexity of the sorting algorithm depends on the implementation of each programming language:\n    * In Java, Arrays.sort() for primitives is implemented using a variant of the Quick Sort algorithm, which has a space complexity of $$O(\\log n)$$\n    * In C++, the sort() function provided by STL uses a hybrid of Quick Sort, Heap Sort and Insertion Sort, with a worst case space complexity of $$O(\\log n)$$\n    * In Python, the sort() function is implemented using the Timsort algorithm, which has a worst-case space complexity of $$O(n)$$\n    \n<br/>\n\n---\n\n### Approach 3: Brian Kerninghan's Algorithm\n\n**Intuition**\n\nThere is a better way to find the hamming weight of a number. Brian Kerninghan's algorithm is an elegant and efficient way to find the number of set bits in a number.\n\nFor a given `num`, we run the algorithm until `num = 0`, that is the algorithm runs until there are no more set bits. At each iteration, we remove the least significant bit in `num`. Once all the bits are removed, `num = 0` and the algorithm terminates. The number of iterations is the number of set bits since we remove one bit per iteration.\n\nSo how do we remove the least significant bit (LSB)? All we need to do is AND `num` with `num - 1`. That is, `num &= (num - 1)`.\n\nWhy does this work? Take a look at the following image.\n\n![kerninghan algorithm](../Figures/1356/7.png)\n<br>\n\nLogically, every bit to the right of the LSB will be 0. That means when we subtract `1` from `num`, the LSB becomes `0` and every bit to the right of it becomes `1`.\n\n> In the image, the first 3 positions go from `100` to `011`. If the LSB was in position `5`, it would go from `10000` to `01111`.\n\nIn `num`, every bit to the right of the LSB is `0`. In `num - 1`, every bit to the right of the LSB is `1`. Thus, after an AND operation, every bit to the right of the LSB will remain `0`, since `0 & 1 = 0`.\n\nThe LSB itself will also become `0` since it's `1` in `num` and `0` in `num - 1`.\n\nFinally, everything to the left of the LSB is completely unchanged when subtracting by `1`. Thus, performing `num & (num - 1)` will not change any of these bits, and the only net change is that the LSB was set to `0`.\n\n**Algorithm**\n\n1. Define a function `findWeight` that takes an integer `num` and returns its hamming weight using Brian Kerninghan's algorithm.\n    - Initialize `weight = 0`\n    - While `num > 0`:\n        - Increment `weight`\n        - Set `num` to `num & (num - 1)`\n    - Return `weight`\n2. Create a custom comparator with `findWeight`. Sort `arr` with the custom comparator.\n3. Return `arr`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/ai2Z3h9R/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ai2Z3h9R\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `arr`,\n\n* Time complexity: $$O(n \\cdot \\log{}n)$$\n\n    Finding the hamming weight of a number is dependent on the size of a number, but as we are dealing with integers that have a fixed size (31 bits), we can consider it as an $$O(1)$$ operation. Sorting `arr` costs $$O(n \\cdot \\log{n})$$.\n\n* Space Complexity: $$O(\\log n)$$ or $$O(n)$$\n\n    The space complexity of the sorting algorithm depends on the implementation of each programming language:\n    * In Java, Arrays.sort() for primitives is implemented using a variant of the Quick Sort algorithm, which has a space complexity of $$O(\\log n)$$\n    * In C++, the sort() function provided by STL uses a hybrid of Quick Sort, Heap Sort and Insertion Sort, with a worst case space complexity of $$O(\\log n)$$\n    * In Python, the sort() function is implemented using the Timsort algorithm, which has a worst-case space complexity of $$O(n)$$\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

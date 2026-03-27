@@ -1,0 +1,137 @@
+{
+  "questionId": "974",
+  "questionFrontendId": "937",
+  "title": "Reorder Data in Log Files",
+  "titleSlug": "reorder-data-in-log-files",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array of <code>logs</code>. Each log is a space-delimited string of words, where the first word is the <strong>identifier</strong>.</p>\n\n<p>There are two types of logs:</p>\n\n<ul>\n\t<li><b>Letter-logs</b>: All words (except the identifier) consist of lowercase English letters.</li>\n\t<li><strong>Digit-logs</strong>: All words (except the identifier) consist of digits.</li>\n</ul>\n\n<p>Reorder these logs so that:</p>\n\n<ol>\n\t<li>The <strong>letter-logs</strong> come before all <strong>digit-logs</strong>.</li>\n\t<li>The <strong>letter-logs</strong> are sorted lexicographically by their contents. If their contents are the same, then sort them lexicographically by their identifiers.</li>\n\t<li>The <strong>digit-logs</strong> maintain their relative ordering.</li>\n</ol>\n\n<p>Return <em>the final order of the logs</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> logs = [&quot;dig1 8 1 5 1&quot;,&quot;let1 art can&quot;,&quot;dig2 3 6&quot;,&quot;let2 own kit dig&quot;,&quot;let3 art zero&quot;]\n<strong>Output:</strong> [&quot;let1 art can&quot;,&quot;let3 art zero&quot;,&quot;let2 own kit dig&quot;,&quot;dig1 8 1 5 1&quot;,&quot;dig2 3 6&quot;]\n<strong>Explanation:</strong>\nThe letter-log contents are all different, so their ordering is &quot;art can&quot;, &quot;art zero&quot;, &quot;own kit dig&quot;.\nThe digit-logs have a relative order of &quot;dig1 8 1 5 1&quot;, &quot;dig2 3 6&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> logs = [&quot;a1 9 2 3 1&quot;,&quot;g1 act car&quot;,&quot;zo4 4 7&quot;,&quot;ab1 off key dog&quot;,&quot;a8 act zoo&quot;]\n<strong>Output:</strong> [&quot;g1 act car&quot;,&quot;a8 act zoo&quot;,&quot;ab1 off key dog&quot;,&quot;a1 9 2 3 1&quot;,&quot;zo4 4 7&quot;]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= logs.length &lt;= 100</code></li>\n\t<li><code>3 &lt;= logs[i].length &lt;= 100</code></li>\n\t<li>All the tokens of <code>logs[i]</code> are separated by a <strong>single</strong> space.</li>\n\t<li><code>logs[i]</code> is guaranteed to have an identifier and at least one word after the identifier.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"reorderLogFiles\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"logs\",\r\n      \"type\": \"string[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"string[]\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"410.3K\", \"totalSubmission\": \"721.6K\", \"totalAcceptedRaw\": 410340, \"totalSubmissionRaw\": 721562, \"acRate\": \"56.9%\"}",
+  "likes": 2196,
+  "dislikes": 4423,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"dig1 8 1 5 1\",\"let1 art can\",\"dig2 3 6\",\"let2 own kit dig\",\"let3 art zero\"]",
+    "[\"a1 9 2 3 1\",\"g1 act car\",\"zo4 4 7\",\"ab1 off key dog\",\"a8 act zoo\"]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 20, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> reorderLogFiles(vector<string>& logs) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String[] reorderLogFiles(String[] logs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def reorderLogFiles(self, logs: List[str]) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def reorderLogFiles(self, logs):\n        \"\"\"\n        :type logs: List[str]\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} logs\n * @return {string[]}\n */\nvar reorderLogFiles = function(logs) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function reorderLogFiles(logs: string[]): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string[] ReorderLogFiles(string[] logs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** reorderLogFiles(char** logs, int logsSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func reorderLogFiles(logs []string) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun reorderLogFiles(logs: Array<String>): Array<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func reorderLogFiles(_ logs: [String]) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn reorder_log_files(logs: Vec<String>) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} logs\n# @return {String[]}\ndef reorder_log_files(logs)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $logs\n     * @return String[]\n     */\n    function reorderLogFiles($logs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> reorderLogFiles(List<String> logs) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def reorderLogFiles(logs: Array[String]): Array[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec reorder_log_files(logs :: [String.t]) :: [String.t]\n  def reorder_log_files(logs) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec reorder_log_files(Logs :: [unicode:unicode_binary()]) -> [unicode:unicode_binary()].\nreorder_log_files(Logs) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (reorder-log-files logs)\n  (-> (listof string?) (listof string?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "998",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Overview\n\nFirst of all, let us put aside the debate whether this problem is an easy or medium one.\nThe problem is a good exercise to practice the technique of **custom sort** in different languages.\n\n>The idea of custom sort is that we don't have to rewrite a sorting algorithm every time we have a different _**sorting criteria**_ among the elements.\n\nEach language provides certain interface that allows us to **customize** the sorting criteria of the sorting functions, so that we can reuse the implementation of sorting in different scenarios.\n\nIn this article, we will present two ways to specify the sorting order, namely by **comparator** and by **sorting key**.\n\n---\n### Approach 1: Comparator\n\n**Intuition**\n\nGiven a list of elements $$[e_1, e_2, e_3]$$, regardless of the content of the elements, the first way to specify the _order_ among the elements is to define the **pairwise** $$<$$ (_\"less than\"_) **relationship** globally.\n\nFor instance, for the above example, we could define the **relationships** as $$e_3 < e_2, \\space e_2 < e_1$$. \nThen if we are asked to sort the list in the _ascending_ order, the result would be $$[e_3, e_2, e_1]$$. \n\n**Note:** normally we should define all pairwise relationships among all elements, but due to the transitive property, we omit certain relationships that can be deduced from others, _e.g._ $$(e_3 < e_2, e_2 < e_1) \\to (e_1 < e_3)$$\n\nIf we ever change the _order_, _e.g._ $$e_1 < e_3, \\space e_3 < e_2$$, the final _sorted_ result would be changed accordingly, _i.e._ $$[e_1, e_3, e_2]$$.\n\n\n**Algorithm**\n\nThe above pairwise _\"less than\"_ relationship is also known as **comparator** in Java, which is a function object that helps the sorting functions to determine the orders among a collection of elements.\n\nWe show the [definition of the comparator](https://docs.oracle.com/javase/8/docs/api/java/util/Comparator.html) interface as follows:\n\n```java\nint compare(T o1, T o2) {\n    if (o1 < o2)\n        return -1;\n    else if (o1 == o2)\n        return 0;\n    else // o1 > o2\n        return 1;\n}\n``` \n\n>As we discussed before, once we define the pairwise relationship among the elements in a collection, the **total order** of the collection is then fixed.\n\nNow, what we need to do is to define our own proper **comparator** according to the description of the problem.\nWe can translate the problem into the following rules:\n\n* 1). The _letter-logs_ should be prioritized above all _digit-logs_.\n\n* 2). Among the _letter-logs_, we should further sort them firstly based on their **contents**, and then on their **identifiers** if the contents are identical.\n\n* 3). Among the _digit-logs_, they should remain in the same order as they are in the collection.\n\nOne can then go ahead and implement the comparator based on the above rules. Here is an example.\n\n<iframe src=\"https://leetcode.com/playground/gSjLo5Wd/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"gSjLo5Wd\"></iframe>\n\n\n**Stable Sort**\n\nOne might notice that in the above implementation one can find the logic that corresponds each of the rules, except the **Rule (3)**.\n\nIndeed, we did not do anything explicitly to ensure the order imposed by the Rule (3).\n\nThe short answer is that the Rule (3) is ensured _implicitly_ by an important property of sorting algorithms, called **[stability](https://en.wikipedia.org/wiki/Sorting_algorithm#Stability)**.\n\n>It is stated as \"stable sorting algorithms sort equal elements in the same order that they appear in the input.\"\n\nNot all sort algorithms are _stable_, _e.g._ **_merge sort_** is stable.\n\nThe `Arrays.sort()` interface that we used is stable, as one can find in the [specification](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Arrays.html).\n\nTherefore, the Rule (3) is implicitly respected thanks to the stability of the sorting algorithm that we used.\n\n**Complexity Analysis**\n\nLet $$N$$ be the number of logs in the list and\n$$M$$ be the maximum length of a single log. \n\n- Time Complexity: $$\\mathcal{O}(M \\cdot N \\cdot \\log N)$$\n\n    - First of all, the time complexity of the `Arrays.sort()` is $$\\mathcal{O}(N \\cdot \\log N)$$, as stated in the [API specification](https://docs.oracle.com/javase/8/docs/api/java/util/Arrays.html#sort-byte:A-), which is to say that the `compare()` function would be invoked $$\\mathcal{O}(N \\cdot \\log N)$$ times.\n\n    - For each invocation of the `compare()` function, it could take up to $$\\mathcal{O}(M)$$ time, since we compare the contents of the logs.\n\n    - Therefore, the overall time complexity of the algorithm is $$\\mathcal{O}(M \\cdot N \\cdot \\log N)$$.\n\n\n- Space Complexity: $$\\mathcal{O}(M \\cdot \\log N)$$\n\n    - For each invocation of the `compare()` function, we would need up to $$\\mathcal{O}(M)$$ space to hold the parsed logs.\n\n    - In addition, since the implementation of `Arrays.sort()` is based on quicksort algorithm whose space complexity is $$\\mathcal{O}(\\log n)$$, assuming that the space for each element is $$\\mathcal{O}(1)$$).\n    Since each log could be of $$\\mathcal{O}(M)$$ space, we would need $$\\mathcal{O}(M \\cdot \\log N)$$ space to hold the intermediate values for sorting.\n\n    - In total, the overall space complexity of the algorithm is $$\\mathcal{O}(M + M \\cdot \\log N) = \\mathcal{O}(M \\cdot \\log N)$$.\n\n\n---\n### Approach 2: Sorting by Keys\n\n**Intuition**\n\nRather than defining pairwise relationships among all elements in a collection, the order of the elements can also be defined with **sorting keys**.\n\nTo illustrate the idea, let us first define a `Student` object as follows, which has three properties: _name_, _grade_, _age_.\n\n```python\nclass Student:\n    def __init__(self, name, grade, age):\n        self.name = name\n        self.grade = grade\n        self.age = age\n\nstudent_objects = [\n    Student('john', 'A', 15),\n    Student('jane', 'B', 12),\n    Student('dave', 'B', 10),\n]\n```\n\nNow, if we are asked to sort the list of students by _age_ in ascending order, we could simply use the `age` property of each student as the sorting key, as follows:\n\n```python\n>>> sorted(student_objects, key=lambda student: student.age)\n[('dave', 'B', 10), ('jane', 'B', 12), ('john', 'A', 15)]\n```\n\n>Furthermore, the key could be a tuple of multiple keys, _i.e._ `tuple(key_1, key_2, ... key_n)`.\n\nIf two elements have the same value on `key_1`, the comparison will carry on for the following keys, _i.e._ `key_2 ... key_n`.\n\nAs a result, if we are asked to sort the students first by the _grade_, then by the _age_, we can simply return the compound key `(stduent.grade, student.age)`, as follows:\n\n```python\n>>> sorted(student_objects, key=lambda student: (student.grade, student.age))\n[('john', 'A', 15), ('dave', 'B', 10), ('jane', 'B', 12)]\n```\n\n**Algorithm**\n\nGiven the above intuition, it should be clear that all we need is to _translate_ the rules we defined before into a tuple of keys.\n\nAs a reminder, here are a list of the rules that we defined before, concerning the order of logs:\n\n* 1). The _letter-logs_ should be prioritized above all _digit-logs_.\n\n* 2). Among the _letter-logs_, we should further sort them based on firstly on their **contents**, and then on their **identifiers** if the contents are identical.\n\n* 3). Among the _digit-logs_, they should remain in the same order as they are in the collection.\n\nTo ensure the above order, we could define a tuple of 3 keys, `(key_1, key_2, key_3)`, as follows:\n\n- `key_1`: this key serves as a indicator for the type of logs. For the _letter-logs_, we could assign its `key_1` with `0`, and for the _digit-logs_, we assign its `key_1` with `1`.\nAs we can see, thanks to the assigned values, the _letter-logs_ would take the priority above the _digit-logs_.\n\n- `key_2`: for this key, we use the **_content_** of the _letter-logs_ as its value, so that among the _letter-logs_, they would be further ordered based on their content, as required in the Rule (2).\n\n- `key_3`: similarly with the `key_2`, this key serves to further order the _letter-logs_. We will use the **_identifier_** of the _letter-logs_ as its value, so that for the _letter-logs_ with the same content, we could further sort the logs based on its identifier, as required in the Rule (2).\n\n**Note:** for the _digit-logs_, we don't need the `key_2` and `key_3`.\nWe can simply assign the `None` value to these two keys. As a result, the key value for all the _digit-logs_ would be `(1, None, None)`.\n\nFinally, thanks to the **stability** of sorting algorithms, the elements with the same key value would remain the same order as in the original input.\nTherefore, the Rule (3) is ensured.\n\n<iframe src=\"https://leetcode.com/playground/btn8FViU/shared\" frameBorder=\"0\" width=\"100%\" height=\"191\" name=\"btn8FViU\"></iframe>\n\n\n\n**Complexity Analysis**\n\n\nLet $$N$$ be the number of logs in the list and\n$$M$$ be the maximum length of a single log. \n\n- Time Complexity: $$\\mathcal{O}(M \\cdot N \\cdot \\log N)$$\n\n    - The `sorted()` in Python is implemented with the [Timsort](https://en.wikipedia.org/wiki/Timsort) algorithm whose time complexity is $$\\mathcal{O}(N \\cdot \\log N)$$.\n\n    - Since the keys of the elements are basically the logs itself, the comparison between two keys can take up to $$\\mathcal{O}(M)$$ time.\n\n    - Therefore, the overall time complexity of the algorithm is $$\\mathcal{O}(M \\cdot N \\cdot \\log N)$$.\n\n\n- Space Complexity: $$\\mathcal{O}(M \\cdot N)$$\n\n    - First, we need $$\\mathcal{O}(M \\cdot N)$$ space to keep the keys for the log.\n\n    - In addition, the worst space complexity of the [Timsort](https://en.wikipedia.org/wiki/Timsort) algorithm is $$\\mathcal{O}(N)$$, assuming that the space for each element is $$\\mathcal{O}(1)$$.\n    Hence we would need $$\\mathcal{O}(M \\cdot N)$$ space to hold the intermediate values for sorting.\n\n    - In total, the overall space complexity of the algorithm is $$\\mathcal{O}(M \\cdot N + M \\cdot N) = \\mathcal{O}(M \\cdot N)$$.\n\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

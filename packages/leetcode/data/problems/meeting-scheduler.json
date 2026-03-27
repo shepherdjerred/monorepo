@@ -1,0 +1,141 @@
+{
+  "questionId": "1165",
+  "questionFrontendId": "1229",
+  "title": "Meeting Scheduler",
+  "titleSlug": "meeting-scheduler",
+  "difficulty": "Medium",
+  "content": "<p>Given the availability time slots arrays <code>slots1</code> and <code>slots2</code> of two people and a meeting duration <code>duration</code>, return the <strong>earliest time slot</strong> that works for both of them and is of duration <code>duration</code>.</p>\n\n<p>If there is no common time slot that satisfies the requirements, return an <strong>empty array</strong>.</p>\n\n<p>The format of a time slot is an array of two elements <code>[start, end]</code> representing an inclusive time range from <code>start</code> to <code>end</code>.</p>\n\n<p>It is guaranteed that no two availability slots of the same person intersect with each other. That is, for any two time slots <code>[start1, end1]</code> and <code>[start2, end2]</code> of the same person, either <code>start1 &gt; end2</code> or <code>start2 &gt; end1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> slots1 = [[10,50],[60,120],[140,210]], slots2 = [[0,15],[60,70]], duration = 8\n<strong>Output:</strong> [60,68]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> slots1 = [[10,50],[60,120],[140,210]], slots2 = [[0,15],[60,70]], duration = 12\n<strong>Output:</strong> []\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= slots1.length, slots2.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>slots1[i].length, slots2[i].length == 2</code></li>\n\t<li><code>slots1[i][0] &lt; slots1[i][1]</code></li>\n\t<li><code>slots2[i][0] &lt; slots2[i][1]</code></li>\n\t<li><code>0 &lt;= slots1[i][j], slots2[i][j] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= duration &lt;= 10<sup>6</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Assume that in the solution, the selected slot from slotsA is bigger than the respectively selected slot from slotsB.",
+    "Use two pointers in order to try all the possible intersections, and check the length.",
+    "Do the same in step N° 1 but now assume that the selected slot from slotsB is bigger, return the minimum of the two options."
+  ],
+  "metaData": "{\n  \"name\": \"minAvailableDuration\",\n  \"params\": [\n    {\n      \"name\": \"slots1\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"name\": \"slots2\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"name\": \"duration\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<integer>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"104.7K\", \"totalSubmission\": \"189.6K\", \"totalAcceptedRaw\": 104672, \"totalSubmissionRaw\": 189632, \"acRate\": \"55.2%\"}",
+  "likes": 957,
+  "dislikes": 39,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Merge Two 2D Arrays by Summing Values\", \"titleSlug\": \"merge-two-2d-arrays-by-summing-values\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Reschedule Meetings for Maximum Free Time I\", \"titleSlug\": \"reschedule-meetings-for-maximum-free-time-i\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[10,50],[60,120],[140,210]]\n[[0,15],[60,70]]\n8",
+    "[[10,50],[60,120],[140,210]]\n[[0,15],[60,70]]\n12"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"datadog\", \"name\": \"Datadog\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 6, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"paypal\", \"name\": \"PayPal\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> minAvailableDuration(vector<vector<int>>& slots1, vector<vector<int>>& slots2, int duration) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<Integer> minAvailableDuration(int[][] slots1, int[][] slots2, int duration) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minAvailableDuration(self, slots1: List[List[int]], slots2: List[List[int]], duration: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minAvailableDuration(self, slots1, slots2, duration):\n        \"\"\"\n        :type slots1: List[List[int]]\n        :type slots2: List[List[int]]\n        :type duration: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} slots1\n * @param {number[][]} slots2\n * @param {number} duration\n * @return {number[]}\n */\nvar minAvailableDuration = function(slots1, slots2, duration) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minAvailableDuration(slots1: number[][], slots2: number[][], duration: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<int> MinAvailableDuration(int[][] slots1, int[][] slots2, int duration) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* minAvailableDuration(int** slots1, int slots1Size, int* slots1ColSize, int** slots2, int slots2Size, int* slots2ColSize, int duration, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minAvailableDuration(slots1 [][]int, slots2 [][]int, duration int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minAvailableDuration(slots1: Array<IntArray>, slots2: Array<IntArray>, duration: Int): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minAvailableDuration(_ slots1: [[Int]], _ slots2: [[Int]], _ duration: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_available_duration(slots1: Vec<Vec<i32>>, slots2: Vec<Vec<i32>>, duration: i32) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} slots1\n# @param {Integer[][]} slots2\n# @param {Integer} duration\n# @return {Integer[]}\ndef min_available_duration(slots1, slots2, duration)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $slots1\n     * @param Integer[][] $slots2\n     * @param Integer $duration\n     * @return Integer[]\n     */\n    function minAvailableDuration($slots1, $slots2, $duration) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> minAvailableDuration(List<List<int>> slots1, List<List<int>> slots2, int duration) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minAvailableDuration(slots1: Array[Array[Int]], slots2: Array[Array[Int]], duration: Int): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_available_duration(slots1 :: [[integer]], slots2 :: [[integer]], duration :: integer) :: [integer]\n  def min_available_duration(slots1, slots2, duration) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_available_duration(Slots1 :: [[integer()]], Slots2 :: [[integer()]], Duration :: integer()) -> [integer()].\nmin_available_duration(Slots1, Slots2, Duration) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-available-duration slots1 slots2 duration)\n  (-> (listof (listof exact-integer?)) (listof (listof exact-integer?)) exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1110",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nTo find the earliest time slot that works for both the people, the most straightforward approach would be to examine all possible time slots for them. To improve it, we can either sort both input arrays and apply two pointers, or we can use a heap for sorting the time slots and find the earliest overlapping time slot. We will cover both of these approaches in this article.\n\n</br>\n\n---\n\n### Approach 1: Two pointers\n\n**Intuition**\n\n![The common slot between two slots.](../Figures/1229/1129-img1.png)\n\n\n*Figure 1. The common slot between two slots.*\n\n\nWe want to sort both `slots1` and `slots2` by the start time first, then initialize two pointers, each of which points to the beginning of the two arrays. From there, we will compare the two slots, and move one pointer at a time if the common slot is smaller than `duration`.\n\n> Note that sorting by the start time vs the end time is the same, this is because, if a time slot starts earlier, it will end earlier. Remember that for both people, there're no overlapping time slots\n\n\n\nHere comes the question: how do we decide which pointer should be incremented?\n\nThe answer is: we will always move the one that ends earlier. Assuming that we are comparing `slots1[i]` and `slots2[j]` and `slots1[i][1] > slots2[j][1]`, we would always choose to move the pointer `j`. The reason is that, as both slots are sorted, if `slots1[i][1] > slots2[j][1]`, we know `slots1[i+1][0] > slots2[j][1]` so that there will be no intersection between `slots1[i+1]` and `slots2[j]`.\n\n![Always move the one that ends earlier.](../Figures/1229/1129-img2.png)\n\n\n*Figure 2. Always move the one that ends earlier.*\n\n\n**Algorithm**\n\n- Sort both `slots1` and `slots2` by the start time.\n- Initialize two pointers, `pointer1` and `pointer2`, pointing to the beginning of `slots1` and the beginning of `slots2` respectively.\n- Iterate until `pointer1` reaches the end of `slots1` or `pointer2` reaches the end of `slots2`:\n  - Find the common slot of `slots1[pointer1]` and `slots2[pointer2]`.\n  - If the common slot is greater than or equal to `duration`, return the result.\n  - Else, find the slot that ends earlier and move the pointer.\n- If no common slot is found, return an empty array.\n\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/Zc89LUK5/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"Zc89LUK5\"></iframe>\n\n\n**Complexity Analysis**\n\n* Time complexity: $$O(M \\log M + N \\log N)$$, when $$M$$ is the length of `slots1` and $$N$$ is the length of `slots2`.\n\n  Sorting both arrays would take $$O(M \\log M + N \\log N)$$. The two pointers take $$O(M + N)$$ because, during each iteration, we would visit a new element, and there are a total of $$M+N$$ elements. Putting these together, the total time complexity is $$O(M \\log M + N \\log N)$$.\n\n* Space complexity: $O(n)$ or $O( \\log n )$\n\n    Some extra space is used when we sort an array of size $n$ in place. The space complexity of the sorting algorithm depends on the programming language.\n    - In Python, the sort method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has a space complexity of $O(n)$\n    - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worst-case space complexity of $O( \\log n )$\n    - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n)$\n\n    Thus, the total space complexity of the algorithm is $O(n)$ or $O( \\log n )$.\n\n<br/>\n\n---\n\n### Approach 2: Heap\n\n**Intuition**\n\nAnother approach of systematically selecting slots and comparing them is using a heap. We would initialize a heap `timeslots` and push all of the time slots into it.\n\nThe key idea here is that **we only need one heap**. That is, we can put the time slots for *both* people into the same heap, and then if we find a common time slot, we know that the two-time slots *couldn't possibly be for the same person*. Before reading the justification for this, have a think for yourself about why we can draw such a bold conclusion.\n\nThe problem description states that the time slots for a single person *do not overlap*. This means that if, for example, we have the time slots `[10, 15]` and `[14, 20]`, then we *know* that these time slots *cannot be for the same person*. Otherwise, we would have a contradiction. So, given that a common time slot has to overlap, the two slots have to be from different people.\n\nA heap returns the smallest items first. Because of this time slots we remove from the heap are sorted by the start time. Taking advantage of this, we can then compare the time slots in the order of time.\n\n![Pop the first time slot out of the heap and compare it against the first element in the heap.](../Figures/1229/1129-img3.png)\n\n\n*Figure 3. Compare the popped time slot and the top element in the heap.*\n\n\n**Algorithm**\n\n- Initialize a heap `timeslots` and push time slots that last longer than `duration` into it.\n- Iterate until there's only one time slot remaining in `timeslots`:\n  - Pop the first time slot `[start1, end1]` from `timeslots`.\n  - Retrieve the next time slot `[start2, end2]`, which is the current top element in `timeslots`.\n  - If we find `end1 >= start2 + duration`, because `start1 <= start2`, the common slot is longer than `duration` and we can return it.\n- If we don't find the common slot that is longer than `duration`, return an empty array.\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/66e82dSv/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"66e82dSv\"></iframe>\n\n\n**Complexity Analysis**\n\n* Time complexity: $$O((M+N) \\log (M+N))$$, when $$M$$ is the length of `slots1` and $$N$$ is the length of `slots2`.\n\n  There are two parts to be analyzed: 1) building up the heap; 2) the iteration when we keep popping elements from the heap. For the second part, popping one element takes $$O(\\log(M + N))$$, therefore, in the worst case, popping $$M + N$$ elements takes $$O((M+N) \\log (M+N))$$.\n\n  Regarding the first part, we have different answers for Java and Python implementations. For Python, `heapq.heapify` transforms a list into a heap, in-place, in linear time; however, in Java, we choose to pop each element into the heap, which leads to a time complexity of $$O((M+N) \\log (M+N))$$. Note that it is possible to convert the array into a heap in linear time using the constructor of `PriorityQueue`; however, that will not influence the overall time complexity and will make it less readable.\n\n  When we put these two parts together, the total time complexity is $$O((M+N) \\log (M+N))$$, which is determined by the first part.\n\n* Space complexity: $$O(M+N)$$. This is because we store all $$M+N$$ time slots in a heap.\n\n\n\n\n\n\n<br/>\n\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

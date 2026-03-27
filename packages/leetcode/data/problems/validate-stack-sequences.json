@@ -1,0 +1,137 @@
+{
+  "questionId": "983",
+  "questionFrontendId": "946",
+  "title": "Validate Stack Sequences",
+  "titleSlug": "validate-stack-sequences",
+  "difficulty": "Medium",
+  "content": "<p>Given two integer arrays <code>pushed</code> and <code>popped</code> each with distinct values, return <code>true</code><em> if this could have been the result of a sequence of push and pop operations on an initially empty stack, or </em><code>false</code><em> otherwise.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> pushed = [1,2,3,4,5], popped = [4,5,3,2,1]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> We might do the following sequence:\npush(1), push(2), push(3), push(4),\npop() -&gt; 4,\npush(5),\npop() -&gt; 5, pop() -&gt; 3, pop() -&gt; 2, pop() -&gt; 1\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> pushed = [1,2,3,4,5], popped = [4,3,5,1,2]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> 1 cannot be popped before 2.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= pushed.length &lt;= 1000</code></li>\n\t<li><code>0 &lt;= pushed[i] &lt;= 1000</code></li>\n\t<li>All the elements of <code>pushed</code> are <strong>unique</strong>.</li>\n\t<li><code>popped.length == pushed.length</code></li>\n\t<li><code>popped</code> is a permutation of <code>pushed</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"validateStackSequences\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"pushed\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"popped\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"369.9K\", \"totalSubmission\": \"526.5K\", \"totalAcceptedRaw\": 369919, \"totalSubmissionRaw\": 526466, \"acRate\": \"70.3%\"}",
+  "likes": 6110,
+  "dislikes": 130,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,2,3,4,5]\n[4,5,3,2,1]",
+    "[1,2,3,4,5]\n[4,3,5,1,2]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool validateStackSequences(vector<int>& pushed, vector<int>& popped) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean validateStackSequences(int[] pushed, int[] popped) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def validateStackSequences(self, pushed: List[int], popped: List[int]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def validateStackSequences(self, pushed, popped):\n        \"\"\"\n        :type pushed: List[int]\n        :type popped: List[int]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} pushed\n * @param {number[]} popped\n * @return {boolean}\n */\nvar validateStackSequences = function(pushed, popped) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function validateStackSequences(pushed: number[], popped: number[]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool ValidateStackSequences(int[] pushed, int[] popped) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool validateStackSequences(int* pushed, int pushedSize, int* popped, int poppedSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func validateStackSequences(pushed []int, popped []int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun validateStackSequences(pushed: IntArray, popped: IntArray): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func validateStackSequences(_ pushed: [Int], _ popped: [Int]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn validate_stack_sequences(pushed: Vec<i32>, popped: Vec<i32>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} pushed\n# @param {Integer[]} popped\n# @return {Boolean}\ndef validate_stack_sequences(pushed, popped)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $pushed\n     * @param Integer[] $popped\n     * @return Boolean\n     */\n    function validateStackSequences($pushed, $popped) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool validateStackSequences(List<int> pushed, List<int> popped) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def validateStackSequences(pushed: Array[Int], popped: Array[Int]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec validate_stack_sequences(pushed :: [integer], popped :: [integer]) :: boolean\n  def validate_stack_sequences(pushed, popped) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec validate_stack_sequences(Pushed :: [integer()], Popped :: [integer()]) -> boolean().\nvalidate_stack_sequences(Pushed, Popped) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (validate-stack-sequences pushed popped)\n  (-> (listof exact-integer?) (listof exact-integer?) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "623",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach 1: Greedy\n\n**Intuition**\n\nWe have to push the items in order, so when do we pop them?\n\nIf the stack has say, `2` at the top, then if we have to pop that value next, we must do it now.  That's because any subsequent push will make the top of the stack different from `2`, and we will never be able to pop again.\n\n**Algorithm**\n\nFor each value, push it to the stack.\n\nThen, greedily pop values from the stack if they are the next values to pop.\n\nAt the end, we check if we have popped all the values successfully.\n\n<iframe src=\"https://leetcode.com/playground/SCthwzaC/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"SCthwzaC\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N)$$, where $$N$$ is the length of `pushed` and `popped`.\n\n* Space Complexity:  $$O(N)$$.\n<br />\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

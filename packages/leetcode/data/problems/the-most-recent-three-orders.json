@@ -1,0 +1,53 @@
+{
+  "questionId": "1671",
+  "questionFrontendId": "1532",
+  "title": "The Most Recent Three Orders",
+  "titleSlug": "the-most-recent-three-orders",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Customers</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| customer_id   | int     |\n| name          | varchar |\n+---------------+---------+\ncustomer_id is the column with unique values for this table.\nThis table contains information about customers.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Orders</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| order_id      | int     |\n| order_date    | date    |\n| customer_id   | int     |\n| cost          | int     |\n+---------------+---------+\norder_id is the column with unique values for this table.\nThis table contains information about the orders made by customer_id.\nEach customer has <strong>one order per day</strong>.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to find the most recent three orders of each user. If a user ordered less than three orders, return all of their orders.</p>\n\n<p>Return the result table ordered by <code>customer_name</code> in <strong>ascending order</strong> and in case of a tie by the <code>customer_id</code> in <strong>ascending order</strong>. If there is still a tie, order them by <code>order_date</code> in <strong>descending order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nCustomers table:\n+-------------+-----------+\n| customer_id | name      |\n+-------------+-----------+\n| 1           | Winston   |\n| 2           | Jonathan  |\n| 3           | Annabelle |\n| 4           | Marwan    |\n| 5           | Khaled    |\n+-------------+-----------+\nOrders table:\n+----------+------------+-------------+------+\n| order_id | order_date | customer_id | cost |\n+----------+------------+-------------+------+\n| 1        | 2020-07-31 | 1           | 30   |\n| 2        | 2020-07-30 | 2           | 40   |\n| 3        | 2020-07-31 | 3           | 70   |\n| 4        | 2020-07-29 | 4           | 100  |\n| 5        | 2020-06-10 | 1           | 1010 |\n| 6        | 2020-08-01 | 2           | 102  |\n| 7        | 2020-08-01 | 3           | 111  |\n| 8        | 2020-08-03 | 1           | 99   |\n| 9        | 2020-08-07 | 2           | 32   |\n| 10       | 2020-07-15 | 1           | 2    |\n+----------+------------+-------------+------+\n<strong>Output:</strong> \n+---------------+-------------+----------+------------+\n| customer_name | customer_id | order_id | order_date |\n+---------------+-------------+----------+------------+\n| Annabelle     | 3           | 7        | 2020-08-01 |\n| Annabelle     | 3           | 3        | 2020-07-31 |\n| Jonathan      | 2           | 9        | 2020-08-07 |\n| Jonathan      | 2           | 6        | 2020-08-01 |\n| Jonathan      | 2           | 2        | 2020-07-30 |\n| Marwan        | 4           | 4        | 2020-07-29 |\n| Winston       | 1           | 8        | 2020-08-03 |\n| Winston       | 1           | 1        | 2020-07-31 |\n| Winston       | 1           | 10       | 2020-07-15 |\n+---------------+-------------+----------+------------+\n<strong>Explanation:</strong> \nWinston has 4 orders, we discard the order of &quot;2020-06-10&quot; because it is the oldest order.\nAnnabelle has only 2 orders, we return them.\nJonathan has exactly 3 orders.\nMarwan ordered only one time.\nWe sort the result table by customer_name in ascending order, by customer_id in ascending order, and by order_date in descending order in case of a tie.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> Could you write a general solution for the most recent <code>n</code> orders?</p>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Customers (customer_id int, name varchar(10))\", \"Create table If Not Exists Orders (order_id int, order_date date, customer_id int, cost int)\"], \"mssql\": [\"Create table Customers (customer_id int, name varchar(10))\", \"Create table Orders (order_id int, order_date date, customer_id int, cost int)\"], \"oraclesql\": [\"Create table Customers (customer_id int, name varchar(10))\", \"Create table Orders (order_id int, order_date date, customer_id int, cost int)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"recent_three_orders\", \"pythondata\": [\"Customers = pd.DataFrame([], columns=['customer_id', 'name']).astype({'customer_id':'Int64', 'name':'object'})\", \"Orders = pd.DataFrame([], columns=['order_id', 'order_date', 'customer_id', 'cost']).astype({'order_id':'Int64', 'order_date':'datetime64[ns]', 'customer_id':'Int64', 'cost':'Int64'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Customers (customer_id int, name varchar(10))\\n\", \"Create table If Not Exists Orders (order_id int, order_date date, customer_id int, cost int)\"], \"database_schema\": {\"Customers\": {\"customer_id\": \"INT\", \"name\": \"VARCHAR(10)\"}, \"Orders\": {\"order_id\": \"INT\", \"order_date\": \"DATE\", \"customer_id\": \"INT\", \"cost\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"38.9K\", \"totalSubmission\": \"56.3K\", \"totalAcceptedRaw\": 38895, \"totalSubmissionRaw\": 56270, \"acRate\": \"69.1%\"}",
+  "likes": 161,
+  "dislikes": 11,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"The Most Recent Orders for Each Product\", \"titleSlug\": \"the-most-recent-orders-for-each-product\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Customers\":[\"customer_id\",\"name\"],\"Orders\":[\"order_id\",\"order_date\",\"customer_id\",\"cost\"]},\"rows\":{\"Customers\":[[1,\"Winston\"],[2,\"Jonathan\"],[3,\"Annabelle\"],[4,\"Marwan\"],[5,\"Khaled\"]],\"Orders\":[[1,\"2020-07-31\",1,30],[2,\"2020-7-30\",2,40],[3,\"2020-07-31\",3,70],[4,\"2020-07-29\",4,100],[5,\"2020-06-10\",1,1010],[6,\"2020-08-01\",2,102],[7,\"2020-08-01\",3,111],[8,\"2020-08-03\",1,99],[9,\"2020-08-07\",2,32],[10,\"2020-07-15\",1,2]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef recent_three_orders(customers: pd.DataFrame, orders: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

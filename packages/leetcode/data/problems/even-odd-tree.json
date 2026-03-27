@@ -1,0 +1,140 @@
+{
+  "questionId": "1731",
+  "questionFrontendId": "1609",
+  "title": "Even Odd Tree",
+  "titleSlug": "even-odd-tree",
+  "difficulty": "Medium",
+  "content": "<p>A binary tree is named <strong>Even-Odd</strong> if it meets the following conditions:</p>\n\n<ul>\n\t<li>The root of the binary tree is at level index <code>0</code>, its children are at level index <code>1</code>, their children are at level index <code>2</code>, etc.</li>\n\t<li>For every <strong>even-indexed</strong> level, all nodes at the level have <strong>odd</strong> integer values in <strong>strictly increasing</strong> order (from left to right).</li>\n\t<li>For every <b>odd-indexed</b> level, all nodes at the level have <b>even</b> integer values in <strong>strictly decreasing</strong> order (from left to right).</li>\n</ul>\n\n<p>Given the <code>root</code> of a binary tree, <em>return </em><code>true</code><em> if the binary tree is <strong>Even-Odd</strong>, otherwise return </em><code>false</code><em>.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/15/sample_1_1966.png\" style=\"width: 362px; height: 229px;\" />\n<pre>\n<strong>Input:</strong> root = [1,10,4,3,null,7,9,12,8,6,null,null,2]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> The node values on each level are:\nLevel 0: [1]\nLevel 1: [10,4]\nLevel 2: [3,7,9]\nLevel 3: [12,8,6,2]\nSince levels 0 and 2 are all odd and increasing and levels 1 and 3 are all even and decreasing, the tree is Even-Odd.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/15/sample_2_1966.png\" style=\"width: 363px; height: 167px;\" />\n<pre>\n<strong>Input:</strong> root = [5,4,2,3,3,7]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> The node values on each level are:\nLevel 0: [5]\nLevel 1: [4,2]\nLevel 2: [3,3,7]\nNode values in level 2 must be in strictly increasing order, so the tree is not Even-Odd.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/22/sample_1_333_1966.png\" style=\"width: 363px; height: 167px;\" />\n<pre>\n<strong>Input:</strong> root = [5,9,1,3,5,7]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> Node values in the level 1 should be even integers.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[1, 10<sup>5</sup>]</code>.</li>\n\t<li><code>1 &lt;= Node.val &lt;= 10<sup>6</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Use the breadth-first search to go through all nodes layer by layer."
+  ],
+  "metaData": "{\n  \"name\": \"isEvenOddTree\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"TreeNode\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"194K\", \"totalSubmission\": \"289.2K\", \"totalAcceptedRaw\": 194023, \"totalSubmissionRaw\": 289187, \"acRate\": \"67.1%\"}",
+  "likes": 1887,
+  "dislikes": 102,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,10,4,3,null,7,9,12,8,6,null,null,2]",
+    "[5,4,2,3,3,7]",
+    "[5,9,1,3,5,7]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    bool isEvenOddTree(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public boolean isEvenOddTree(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def isEvenOddTree(self, root: Optional[TreeNode]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def isEvenOddTree(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {boolean}\n */\nvar isEvenOddTree = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction isEvenOddTree(root: TreeNode | null): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public bool IsEvenOddTree(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nbool isEvenOddTree(struct TreeNode* root) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc isEvenOddTree(root *TreeNode) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun isEvenOddTree(root: TreeNode?): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func isEvenOddTree(_ root: TreeNode?) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn is_even_odd_tree(root: Option<Rc<RefCell<TreeNode>>>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {Boolean}\ndef is_even_odd_tree(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return Boolean\n     */\n    function isEvenOddTree($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  bool isEvenOddTree(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def isEvenOddTree(root: TreeNode): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec is_even_odd_tree(root :: TreeNode.t | nil) :: boolean\n  def is_even_odd_tree(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec is_even_odd_tree(Root :: #tree_node{} | null) -> boolean().\nis_even_odd_tree(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (is-even-odd-tree root)\n  (-> (or/c tree-node? #f) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2247",
+    "content": "[TOC]\n\n\n\n## Solution\n\n\n---\n\n### Overview\n\nOur objective is to determine whether a given binary tree is an **Even-Odd** tree.\n\nTo be considered an **Even-Odd** tree, a tree must meet the following conditions:\n\n- Nodes at **even** levels must have **odd** values and be in **increasing (left to right)** order.\n- Nodes at **odd** levels must have **even** values and be in **decreasing (left to right)** order.\n\nSome of the conditions involve parity, the property of an integer with respect to being odd or even. We can determine the parity of an integer by using the modulo operation, `%`. For an odd integer `x`, `x % 2` always evaluates to `1` while for even integers `y`, `y % 2` always evaluates to `0`. \n\n\nTo determine whether a tree is **Even-Odd**, we need to traverse the tree, checking whether each node meets the above conditions.\n\n> If you are not familiar with tree traversal, check out our [Explore Card](https://leetcode.com/explore/learn/card/data-structure-tree/134/traverse-a-tree/)\n\n---\n\n### Approach 1: Depth-First Search\n\n\n#### Intuition\n\nThe conditions depend on the level or depth of the tree, which we will need to track.\n\nOne of the primary ways to traverse a tree is a Depth-First Search (DFS). We will use this approach with a preorder traversal.\n\nBinary trees are often traversed using recursive methods. Below is an example pseudocode for a preorder traversal.\n\n##### Recursive Preorder Traversal\n1. If the tree is empty, return.\n2. Handle the root.\n3. Traverse the right subtree - call Preorder(root.left).\n4. Traverse the left subtree - call Preorder(root.right).\n\n\nWe can implement a recursive function, `dfs`, to traverse the tree and check the **Even-Odd** conditions.\n\nWhen writing recursive functions, we start with the base case. When the tree is empty, we return `true`; an empty tree is **Even-Odd**. \n\nFrom there, we can build the rest of our recursive function `dfs`. The parameters will be a tree node `current` and `level` because when we encounter a node, we need to know what level we are on because the conditions are different for even and odd levels. \n\nWe also need to know whether the level we are on is even or odd. We can calculate `level % 2`, which will evaluate to `1` on odd levels and  `0` on even levels.\n\nWe also need to know the value of the previous node on this level so we can compare the current node and determine whether the values are increasing or decreasing. Depth-First Search does not visit the levels in order, so we will need to save the previously visited node from each level. We will use an array `prev`, indexed by `level`. The previous node on level 1 will be stored at `prev[1]`, and the previous node on level 2 will be stored at `prev[2]`. After handling each node, we will update `prev[level]` to the current node's value for use with the next node on this level.\n\nTo handle a node, we must check the conditions to determine whether it meets the requirements to be an **Even-Odd** tree:\n\nCheck whether the current value has the correct parity:\n - Nodes on **even** levels must have **odd** values\n - Nodes on **odd** levels must have **even** values\n\nThe level and the value should have opposite parity. We can use `current->val % 2 == level % 2` to compare the parity. If the parities are the same, the node breaks **Even-Odd** tree conditions, and we return `false`.\n\nCheck whether the current value is in the correct order:\n\n- Nodes on **even** levels must be in strictly **increasing** order.\n\n       node.val <= prev[level] // True when node.val is less than or equal to `prev`\n\nIf true, the node breaks the **increasing** condition, and we can return false.\n \n- Nodes on **odd** levels must be in strictly **decreasing** order.\n\n       node.val >= prev[level] // True when node.val is greater than or equal to `prev`\n\nIf true, the node breaks the **decreasing** condition, and we can return false.\n\nAfter handling a node, we recursively call `dfs` on its children.\n\nAfter defining `dfs`, all we have to do to solve the problem is call the function and return.\n\nThe algorithm is visualized below:\n\n!?!../Documents/1609/1609_dfs_slideshow.json:960,480!?!\n\n\n#### Algorithm\n\n1. Declare an array `prev` to store the previous value on each level. \n2. Initialize a node `current` to `root` for traversing the tree.\n3. Define a function `dfs` whose parameters are a TreeNode `current` and `level` that performs a depth-first search, checking that the nodes meet the requirements for being an **Even-Odd** tree. If the tree is **Even-Odd**, it returns `true`; otherwise, it returns `false`.\n    1. Base case: if the tree is empty, return `true`. An empty tree is **Even-Odd**.\n    2. Check whether the current value has the correct parity compared with the level: `current->val % 2 == level % 2`. Return `false` if not.\n    3. Resize and add a new level to `prev` if we've reached a new level.\n    4. If we have already visited a node on this level, check that the current value is in the correct order depending on the level. \n        - If on an even level, check that `current.val` is greater than the previous. \n        - If on an odd level, check that `current.val` is less than the previous. \n        - Otherwise, return `false`.\n    5. Add `current`'s value to the `prev` array. Only the most recent node on this level matters to the next node.\n    6. Recursively call `dfs` on the left and right child, incrementing `level`.\n4. Call and return `dfs(current, 0)` because the first level will be `0`.\n\n\n\n\n#### Implementation\n\nIn the below implementation, we will use tail recursion. Many times, we use tail recursion without even recognizing it. It's a significant concept and an optimization strategy often overlooked in interviews. Tail recursion is a specific optimization technique used in functional programming to avoid the use of explicit loops and improve performance.\n\nIn a recursive function, each recursive call creates a new stack frame, which can lead to a stack overflow if the function is called too many times. Tail recursion reduces this problem by reusing the current stack frame instead of creating a new one.\n\nTo use tail recursion, the last statement of a function must be a recursive call, and the function must have a base case that can be reached by the recursive call. The base case is used to stop the recursion and return a value.\nSince our approach has both conditions, we can use tail recursion in the below implementation.\n\n\n\n<iframe src=\"https://leetcode.com/playground/FHwmAU3N/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"FHwmAU3N\"></iframe>\n\n\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the tree.\n\n- Time complexity: $O(n)$\n\n    Traversing the tree with a DFS costs $O(n)$ as we visit each node exactly once. At each visit, we perform $O(1)$ work.\n\n\n- Space complexity: $O(n)$\n\n     The space complexity of DFS, when implemented recursively, is determined by the maximum depth of the call stack, which corresponds to the depth of the tree. In the worst case, if the tree is entirely unbalanced (e.g., a linked list or a left/right skewed tree), the call stack can grow as deep as the number of nodes, resulting in a space complexity of $O(n)$. We also use an array, `prev`, which can grow as large as the depth of the tree, making the overall time complexity $O(n)$.\n\n---\n\n### Approach 2: Breadth-First Search\n\n#### Intuition\n\nThe other primary way to traverse a tree is a Breath-First Search (BFS). This traversal method, also known as level-order traversal, could apply to this problem because the algorithm visits all the nodes in each level before moving on to the next level. BFS could be helpful because on each level, we need to check that all nodes on the level meet certain conditions. The general algorithm for Breadth-First Search is below.\n\n##### Breadth-First Search\n1. Create a queue for storing the nodes on each level.\n2. Add the first node to the queue.\n3. While the queue is not empty:\n    1. Remove the front node of the queue.\n    2. Add the adjacent nodes to the queue.\n\nWe will adjust a Breath-First Search to determine whether a tree is **Even-Odd**. \n\nWe create a flag `even` to track the current level's parity. It is set to `true` on even levels and `false` on odd levels. The size of the level is tracked to iterate through its nodes. After handling a node and enqueueing its children, we decrement `size`. The `even` flag is flipped with `!even` after processing all nodes on a level, alternating between `true` and `false` for even and odd levels.\n\nTo determine whether a tree is **Even-Odd**, we must handle each node, testing its parity.  We must also check the node's value compared to the other nodes on this level. Our BFS traversal will visit each node in each level in order, so we can use a variable `prev` to store the previous node's value. We can use this to check that the current node is greater than or less than the  `prev`, as needed. \n\nBelow are the conditions we will check to ensure the tree is **Even-Odd** :\n\n Nodes on even levels must have **odd** values and must be in strictly **increasing** order. We check the following conditions:\n - `node.val % 2 == 0` // True when `node.val` is even\n - `node.val <= prev` // True when `node.val` is less than or equal to `prev`\n\nIf either of these are `true`, the node breaks **Even-Odd** tree conditions, and we can return `false`.\n\n Nodes on odd levels must have **even** values and must be in strictly **decreasing** order. We check the following conditions:\n - `node.val % 2 == 1` // True when `node.val` is odd\n - `node.val >= prev` // True when `node.val` is greater than or equal to `prev`\n\nIf either of these are `true`, the node breaks **Even-Odd** tree conditions, and we can return `false`.\n\nThe algorithm is visualized below:\n\n!?!../Documents/1609/1609_bfs_slideshow.json:685,540!?!\n\n\n\n#### Algorithm\n\n1. Initialize a Queue `queue` for storing the nodes on each level.\n2. Declare a node `current` and set it to `root`. Add `current` to the queue.\n3. Declare a boolean `even`, which will evaluate to `true` on even levels and `false` on odd levels. Initialize to `true`; we will start on level `0` which is even.\n4. While `queue` is not empty:\n    1. Initialize a variable `size` to store the size of this level.\n    2. Declare a variable `prev` to store the value of the previous node on this level, so we can determine whether the nodes are in increasing or decreasing order. Set to `INT_MAX` on odd levels, which will ensure `current.val` is less than `prev`, and set to `INT_MIN` on even levels, which will ensure `current.val` is greater than `prev`.\n    3. For each node on this level:\n        1. Remove the front node from the queue and save in `current`.\n        2. Check to make sure this node meets the conditions of being even-odd:\n            - If on an even level, make sure the current node's value is odd and greater than the previous value.\n            - If on an odd level, make sure the current node's value is even, and less than the previous value.\n            - Otherwise return `false`.\n        3. Set `prev` to the current value.\n        4. If `current` has a left child, add it to `queue`.\n        5. If `current` has a right child, add it to `queue`.\n        6. Decrement `size`, we have handled a node on this level.\n    4. Flip the value of `even` with `!even`. The next level will have the opposite parity.\n5. If the loop completes, every node in the tree has been visited and the whole tree is **Even-Odd**. Return `true`.\n\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/KJibuLLw/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"KJibuLLw\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the tree.\n\n* Time complexity: $O(n)$\n\n    We perform BFS, which costs $O(n)$ because we don't visit a node more than once. At each node, we perform $O(1)$ work.\n\n\n* Space complexity: $O(n)$\n\n    We require $O(n)$ space for the queue during the BFS for `queue`.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

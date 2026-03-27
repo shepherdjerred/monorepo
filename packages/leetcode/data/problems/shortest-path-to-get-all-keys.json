@@ -1,0 +1,142 @@
+{
+  "questionId": "895",
+  "questionFrontendId": "864",
+  "title": "Shortest Path to Get All Keys",
+  "titleSlug": "shortest-path-to-get-all-keys",
+  "difficulty": "Hard",
+  "content": "<p>You are given an <code>m x n</code> grid <code>grid</code> where:</p>\n\n<ul>\n\t<li><code>&#39;.&#39;</code> is an empty cell.</li>\n\t<li><code>&#39;#&#39;</code> is a wall.</li>\n\t<li><code>&#39;@&#39;</code> is the starting point.</li>\n\t<li>Lowercase letters represent keys.</li>\n\t<li>Uppercase letters represent locks.</li>\n</ul>\n\n<p>You start at the starting point and one move consists of walking one space in one of the four cardinal directions. You cannot walk outside the grid, or walk into a wall.</p>\n\n<p>If you walk over a key, you can pick it up and you cannot walk over a lock unless you have its corresponding key.</p>\n\n<p>For some <code><font face=\"monospace\">1 &lt;= k &lt;= 6</font></code>, there is exactly one lowercase and one uppercase letter of the first <code>k</code> letters of the English alphabet in the grid. This means that there is exactly one key for each lock, and one lock for each key; and also that the letters used to represent the keys and locks were chosen in the same order as the English alphabet.</p>\n\n<p>Return <em>the lowest number of moves to acquire all keys</em>. If it is impossible, return <code>-1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/07/23/lc-keys2.jpg\" style=\"width: 404px; height: 245px;\" />\n<pre>\n<strong>Input:</strong> grid = [&quot;@.a..&quot;,&quot;###.#&quot;,&quot;b.A.B&quot;]\n<strong>Output:</strong> 8\n<strong>Explanation:</strong> Note that the goal is to obtain all the keys not to open all the locks.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/07/23/lc-key2.jpg\" style=\"width: 404px; height: 245px;\" />\n<pre>\n<strong>Input:</strong> grid = [&quot;@..aA&quot;,&quot;..B#.&quot;,&quot;....b&quot;]\n<strong>Output:</strong> 6\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/07/23/lc-keys3.jpg\" style=\"width: 244px; height: 85px;\" />\n<pre>\n<strong>Input:</strong> grid = [&quot;@Aa&quot;]\n<strong>Output:</strong> -1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == grid.length</code></li>\n\t<li><code>n == grid[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 30</code></li>\n\t<li><code>grid[i][j]</code> is either an English letter, <code>&#39;.&#39;</code>, <code>&#39;#&#39;</code>, or <code>&#39;@&#39;</code>.&nbsp;</li>\n\t<li>There is exactly one&nbsp;<code>&#39;@&#39;</code>&nbsp;in the grid.</li>\n\t<li>The number of keys in the grid is in the range <code>[1, 6]</code>.</li>\n\t<li>Each key in the grid is <strong>unique</strong>.</li>\n\t<li>Each key in the grid has a matching lock.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"shortestPathAllKeys\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"grid\",\r\n      \"type\": \"string[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"94.6K\", \"totalSubmission\": \"173.7K\", \"totalAcceptedRaw\": 94572, \"totalSubmissionRaw\": 173680, \"acRate\": \"54.5%\"}",
+  "likes": 2489,
+  "dislikes": 107,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"@.a..\",\"###.#\",\"b.A.B\"]",
+    "[\"@..aA\",\"..B#.\",\"....b\"]",
+    "[\"@Aa\"]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"roku\", \"name\": \"Roku\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"airbnb\", \"name\": \"Airbnb\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int shortestPathAllKeys(vector<string>& grid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int shortestPathAllKeys(String[] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def shortestPathAllKeys(self, grid: List[str]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def shortestPathAllKeys(self, grid):\n        \"\"\"\n        :type grid: List[str]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} grid\n * @return {number}\n */\nvar shortestPathAllKeys = function(grid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function shortestPathAllKeys(grid: string[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int ShortestPathAllKeys(string[] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int shortestPathAllKeys(char** grid, int gridSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func shortestPathAllKeys(grid []string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun shortestPathAllKeys(grid: Array<String>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func shortestPathAllKeys(_ grid: [String]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn shortest_path_all_keys(grid: Vec<String>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} grid\n# @return {Integer}\ndef shortest_path_all_keys(grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $grid\n     * @return Integer\n     */\n    function shortestPathAllKeys($grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int shortestPathAllKeys(List<String> grid) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def shortestPathAllKeys(grid: Array[String]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec shortest_path_all_keys(grid :: [String.t]) :: integer\n  def shortest_path_all_keys(grid) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec shortest_path_all_keys(Grid :: [unicode:unicode_binary()]) -> integer().\nshortest_path_all_keys(Grid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (shortest-path-all-keys grid)\n  (-> (listof string?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1879",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach 1: Brute Force + Permutations\n\n**Intuition and Algorithm**\n\nWe have to pick up the keys $$K$$ in some order, say $$K_{\\sigma_i}$$.\n\nFor each ordering, let's do a breadth first search to find the distance to the next key.\n\nFor example, if the keys are `'abcdef'`, then for each ordering such as `'bafedc'`, we will try to calculate the candidate distance from `'@' -> 'b' -> 'a' -> 'f' -> 'e' -> 'd' -> 'c'`.\n\nBetween each segment of our path (and corresponding breadth-first search), we should remember what keys we've picked up.  Keys that are picked up become part of a mask that helps us identify what locks we are allowed to walk through during the next breadth-first search.\n\nEach part of the algorithm is relatively straightforward, but the implementation in total can be quite challenging.  See the comments for more details.\n\n<iframe src=\"https://leetcode.com/playground/bMednP5j/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"bMednP5j\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(R * C * \\mathcal{A} * \\mathcal{A}!)$$, where $$R, C$$ are the dimensions of the grid, and $$\\mathcal{A}$$ is the maximum number of keys ($$\\mathcal{A}$$ because it is the \"size of the alphabet\".)  Each `bfs` is performed up to $$\\mathcal{A} * \\mathcal{A}!$$ times.\n\n* Space Complexity:  $$O(R * C + \\mathcal{A}!)$$, the space for the `bfs` and to store the candidate key permutations.\n<br />\n<br />\n\n\n---\n### Approach 2: Points of Interest + Dijkstra\n\n**Intuition and Algorithm**\n\nClearly, we only really care about walking between points of interest: the keys, locks, and starting position.  We can use this insight to speed up our calculation.\n\nLet's make this intuition more formal: any walk can be decomposed into *primitive* segments, where each segment (between two points of interest) is primitive if and only if it doesn't touch any other point of interest in between.\n\nThen, we can calculate the distance (of a primitive segment) between any two points of interest, using a breadth first search.\n\nAfterwards, we have some graph (where each node refers to at most $$13$$ places, and at most $$2^6$$ states of keys).  We have a starting node (at `'@'` with no keys) and ending nodes (at anywhere with all keys.)  We also know all the costs to go from one node to another - each node has outdegree at most 13.  This shortest path problem is now ideal for using Dijkstra's algorithm.\n\nDijkstra's algorithm uses a priority queue to continually searches the path with the lowest cost to destination, so that when we reach the target, we know it must have been through the lowest cost path.  Refer to [this link](https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm) for more detail.\n\nAgain, each part of the algorithm is relatively straightforward (for those familiar with BFS and Dijkstra's algorithm), but the implementation in total can be quite challenging.\n\n<iframe src=\"https://leetcode.com/playground/Mox2BNP6/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Mox2BNP6\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(RC(2\\mathcal{A} + 1) + \\mathcal{E} \\log \\mathcal{N})$$, where $$R, C$$ are the dimensions of the grid, and $$\\mathcal{A}$$ is the maximum number of keys, $$\\mathcal{N} = (2\\mathcal{A} + 1) * 2^\\mathcal{A}$$ is the number of nodes when we perform Dijkstra's, and $$\\mathcal{E} = \\mathcal{N} * (2 \\mathcal{A} + 1)$$ is the maximum number of edges.\n\n* Space Complexity:  $$O(\\mathcal{N})$$.\n<br />\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

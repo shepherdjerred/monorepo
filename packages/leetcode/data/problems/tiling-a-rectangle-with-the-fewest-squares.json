@@ -1,0 +1,129 @@
+{
+  "questionId": "1361",
+  "questionFrontendId": "1240",
+  "title": "Tiling a Rectangle with the Fewest Squares",
+  "titleSlug": "tiling-a-rectangle-with-the-fewest-squares",
+  "difficulty": "Hard",
+  "content": "<p>Given a rectangle of size <code>n</code> x <code>m</code>, return <em>the minimum number of integer-sided squares that tile the rectangle</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/10/17/sample_11_1592.png\" style=\"width: 154px; height: 106px;\" /></p>\n\n<pre>\n<strong>Input:</strong> n = 2, m = 3\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> <code>3</code> squares are necessary to cover the rectangle.\n<code>2</code> (squares of <code>1x1</code>)\n<code>1</code> (square of <code>2x2</code>)</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/10/17/sample_22_1592.png\" style=\"width: 224px; height: 126px;\" /></p>\n\n<pre>\n<strong>Input:</strong> n = 5, m = 8\n<strong>Output:</strong> 5\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/10/17/sample_33_1592.png\" style=\"width: 224px; height: 189px;\" /></p>\n\n<pre>\n<strong>Input:</strong> n = 11, m = 13\n<strong>Output:</strong> 6\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n, m &lt;= 13</code></li>\n</ul>\n",
+  "hints": [
+    "Can you use backtracking to solve this problem ?.",
+    "Suppose you've placed a bunch of squares. Where is the natural spot to place the next square ?.",
+    "The maximum number of squares to be placed will be ≤ max(n,m)."
+  ],
+  "metaData": "{\n  \"name\": \"tilingRectangle\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"m\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"27.5K\", \"totalSubmission\": \"50K\", \"totalAcceptedRaw\": 27475, \"totalSubmissionRaw\": 50013, \"acRate\": \"54.9%\"}",
+  "likes": 725,
+  "dislikes": 582,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Selling Pieces of Wood\", \"titleSlug\": \"selling-pieces-of-wood\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "2\n3",
+    "5\n8",
+    "11\n13"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int tilingRectangle(int n, int m) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int tilingRectangle(int n, int m) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def tilingRectangle(self, n: int, m: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def tilingRectangle(self, n, m):\n        \"\"\"\n        :type n: int\n        :type m: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number} m\n * @return {number}\n */\nvar tilingRectangle = function(n, m) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function tilingRectangle(n: number, m: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int TilingRectangle(int n, int m) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int tilingRectangle(int n, int m) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func tilingRectangle(n int, m int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun tilingRectangle(n: Int, m: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func tilingRectangle(_ n: Int, _ m: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn tiling_rectangle(n: i32, m: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer} m\n# @return {Integer}\ndef tiling_rectangle(n, m)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer $m\n     * @return Integer\n     */\n    function tilingRectangle($n, $m) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int tilingRectangle(int n, int m) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def tilingRectangle(n: Int, m: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec tiling_rectangle(n :: integer, m :: integer) :: integer\n  def tiling_rectangle(n, m) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec tiling_rectangle(N :: integer(), M :: integer()) -> integer().\ntiling_rectangle(N, M) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (tiling-rectangle n m)\n  (-> exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

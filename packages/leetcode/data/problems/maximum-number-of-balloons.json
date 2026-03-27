@@ -1,0 +1,141 @@
+{
+  "questionId": "1297",
+  "questionFrontendId": "1189",
+  "title": "Maximum Number of Balloons",
+  "titleSlug": "maximum-number-of-balloons",
+  "difficulty": "Easy",
+  "content": "<p>Given a string <code>text</code>, you want to use the characters of <code>text</code> to form as many instances of the word <strong>&quot;balloon&quot;</strong> as possible.</p>\n\n<p>You can use each character in <code>text</code> <strong>at most once</strong>. Return the maximum number of instances that can be formed.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/09/05/1536_ex1_upd.JPG\" style=\"width: 132px; height: 35px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> text = &quot;nlaebolko&quot;\n<strong>Output:</strong> 1\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/09/05/1536_ex2_upd.JPG\" style=\"width: 267px; height: 35px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> text = &quot;loonbalxballpoon&quot;\n<strong>Output:</strong> 2\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> text = &quot;leetcode&quot;\n<strong>Output:</strong> 0\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= text.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>text</code> consists of lower case English letters only.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Note:</strong> This question is the same as <a href=\"https://leetcode.com/problems/rearrange-characters-to-make-target-string/description/\" target=\"_blank\"> 2287: Rearrange Characters to Make Target String.</a></p>\n",
+  "hints": [
+    "Count the frequency of letters in the given string.",
+    "Find the letter than can make the minimum number of instances of the word \"balloon\"."
+  ],
+  "metaData": "{\n  \"name\": \"maxNumberOfBalloons\",\n  \"params\": [\n    {\n      \"name\": \"text\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"325.8K\", \"totalSubmission\": \"542.2K\", \"totalAcceptedRaw\": 325805, \"totalSubmissionRaw\": 542151, \"acRate\": \"60.1%\"}",
+  "likes": 1882,
+  "dislikes": 121,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"nlaebolko\"",
+    "\"loonbalxballpoon\"",
+    "\"leetcode\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"wayfair\", \"name\": \"Wayfair\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxNumberOfBalloons(string text) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxNumberOfBalloons(String text) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxNumberOfBalloons(self, text: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxNumberOfBalloons(self, text):\n        \"\"\"\n        :type text: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} text\n * @return {number}\n */\nvar maxNumberOfBalloons = function(text) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxNumberOfBalloons(text: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxNumberOfBalloons(string text) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxNumberOfBalloons(char* text) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxNumberOfBalloons(text string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxNumberOfBalloons(text: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxNumberOfBalloons(_ text: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_number_of_balloons(text: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} text\n# @return {Integer}\ndef max_number_of_balloons(text)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $text\n     * @return Integer\n     */\n    function maxNumberOfBalloons($text) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxNumberOfBalloons(String text) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxNumberOfBalloons(text: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_number_of_balloons(text :: String.t) :: integer\n  def max_number_of_balloons(text) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_number_of_balloons(Text :: unicode:unicode_binary()) -> integer().\nmax_number_of_balloons(Text) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-number-of-balloons text)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1159",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nThis problem can be interestingly related to production management. Assume there is an industry that produces a product `X`. The product `X` can be produced by assembling one instance of each of five different parts. We have some fixed quantity of each of these parts, then the maximum number of product `X` that can be produced will be equal to the quantity of that part which is available in the least quantity. This least available part is known as the bottleneck resource.\n\nIn this problem, the product `X` is the string $balloon$ and the five parts are the characters $b$, $a$, $l$, $o$, and $n$.\n<br/>\n\n---\n\n### Approach 1: Counting Characters\n\n**Intuition**\n\nThe word $balloon$ consists of five different characters with counts of `{'b':1, 'a':1, 'l':2, 'o':2, 'n':1}`. The first thing to note is that in order to find the number of instances of $balloon$ that can be produced by any given string `text` we only need to count the above five characters and the remaining twenty-one lowercase English letters can be ignored.\n\nNow we will observe each of these five characters in isolation. We define the `potential` of a character as the number of times that $balloon$ can be produced, assuming there is an infinite supply of other characters.\n\nFor instance, to find the `potential` of character $b$, which has a limited quantity equal to $x$, then the answer is $x$. We cannot form more than $x$ instances as we need one $b$ to produce each instance of $balloon$. Similarly, for character $l$, with a limited quantity of $x$ the `potential` will be $x/2$ as we need two instances of $l$ to produce each instance of $balloon$.\n\nAfter we find the `potential` of all five characters, we can make use of each character's `potential` to find the maximum number of $balloon$ strings that we can produce. The point to note here is that the production of the word $balloon$ depends on the bottleneck character. As in the above case, despite having an infinite capacity of other characters, we can only form $x$ instances of $balloon$ because character $b$ is the bottleneck.\n\n**Algorithm**\n\nPer the discussion above, the algorithm is: Find the `potential` of each of the five characters in isolation and then find the bottleneck character among them. The table below shows the `potential` for each character given $x$ instances of the character and an infinite supply of other characters.\n\n![fig](../Figures/1189/1189A.png)\n\nNow that we have the `potential` of each character, we can find the bottleneck character (the one with the lowest `potential`).\n\n**Implementation**\n\n1. Store the frequency of all the five characters in the given string `text`.\n2. Find the `potential` of each of the five characters.\n3. Return the minimum `potential` of the five characters.\n\nThe code below prioritizes readability; it could be written more succinctly by using an array (which is discussed in the next approach).\n\n<iframe src=\"https://leetcode.com/playground/HCSCcASA/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"HCSCcASA\"></iframe>\n\n\n**Complexity Analysis**\n\nHere $$N$$ is equal to the length of `text`.\n\n* Time complexity: $$O(N)$$\n\n  We iterate over all the characters of string `text` which requires $$N$$ operations.\n\n* Space complexity: $$O(1)$$\n\n  All we need is the $$5$$ variables to store the frequency of characters. Hence the space complexity is constant.\n\n<br/>\n\n---\n\n### Approach 2: Generalized Solution using an Array\n\n**Intuition**\n\nAs a follow-up exercise, let's consider how we can approach this problem if the word is not guaranteed to be $$balloon$$. Suppose we are given an arbitrary string `pattern` instead of $balloon$ then we can use the same counting characters approach, except we must do so in a more generalized way. Close observation of the previous approach reveals that the `potential` of each character is equal to the number of instances in `text` divided by the number of instances in `pattern` ($balloon$ in the previous approach). So we just need to find the frequency of all the letters in the strings `text` and `pattern`. Then the minimum `potential` of a character will be the answer.\n\n**Algorithm**\n1. Store the frequency of all the characters in `text` in `freqInText` and the frequency of all the characters in `pattern` in `freqInPattern`.\n2. Find the potential of all the lowercase English letters. The potential will be equal to its frequency in `text` divided by its frequency in `pattern`.\n3. Return the minimum potential of a character.\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/KTHN4t56/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"KTHN4t56\"></iframe>\n\n\n**Complexity Analysis**\n\nHere $$N$$ equals the length of `text`, $$M$$ equals the length of `pattern`, and $$K$$ equals the maximum possible number of distinct letters in `pattern`.\n\n* Time complexity: $$O(N + M)$$\n\n     We traverse over `text` having length $$N$$ and over the string `pattern` of length $$M$$ to find the frequency of each character in each string.  Lastly, we traverse over the frequency arrays of length $$K$$ to find the bottleneck character.  Since this problem only uses lowercase English letters, $$K$$ is fixed at $$26$$. Hence, we can consider the space complexity to be $$O(N + M)$$.\n\n* Space complexity: $$O(1)$$\n\n     The integer arrays used to store the frequency of characters in `text` and `pattern` each require $$O(K)$$ space.  Since this problem only uses lowercase English letters, $$K$$ is fixed at $$26$$. Hence, we can consider the space complexity to be constant.\n\n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,145 @@
+{
+  "questionId": "1723",
+  "questionFrontendId": "1601",
+  "title": "Maximum Number of Achievable Transfer Requests",
+  "titleSlug": "maximum-number-of-achievable-transfer-requests",
+  "difficulty": "Hard",
+  "content": "<p>We have <code>n</code> buildings numbered from <code>0</code> to <code>n - 1</code>. Each building has a number of employees. It&#39;s transfer season, and some employees want to change the building they reside in.</p>\n\n<p>You are given an array <code>requests</code> where <code>requests[i] = [from<sub>i</sub>, to<sub>i</sub>]</code> represents an employee&#39;s request to transfer from building <code>from<sub>i</sub></code> to building <code>to<sub>i</sub></code>.</p>\n\n<p><strong>All buildings are full</strong>, so a list of requests is achievable only if for each building, the <strong>net change in employee transfers is zero</strong>. This means the number of employees <strong>leaving</strong> is <strong>equal</strong> to the number of employees <strong>moving in</strong>. For example if <code>n = 3</code> and two employees are leaving building <code>0</code>, one is leaving building <code>1</code>, and one is leaving building <code>2</code>, there should be two employees moving to building <code>0</code>, one employee moving to building <code>1</code>, and one employee moving to building <code>2</code>.</p>\n\n<p>Return <em>the maximum number of achievable requests</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/10/move1.jpg\" style=\"width: 600px; height: 406px;\" />\n<pre>\n<strong>Input:</strong> n = 5, requests = [[0,1],[1,0],[0,1],[1,2],[2,0],[3,4]]\n<strong>Output:</strong> 5\n<strong>Explantion:</strong> Let&#39;s see the requests:\nFrom building 0 we have employees x and y and both want to move to building 1.\nFrom building 1 we have employees a and b and they want to move to buildings 2 and 0 respectively.\nFrom building 2 we have employee z and they want to move to building 0.\nFrom building 3 we have employee c and they want to move to building 4.\nFrom building 4 we don&#39;t have any requests.\nWe can achieve the requests of users x and b by swapping their places.\nWe can achieve the requests of users y, a and z by swapping the places in the 3 buildings.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/10/move2.jpg\" style=\"width: 450px; height: 327px;\" />\n<pre>\n<strong>Input:</strong> n = 3, requests = [[0,0],[1,2],[2,1]]\n<strong>Output:</strong> 3\n<strong>Explantion:</strong> Let&#39;s see the requests:\nFrom building 0 we have employee x and they want to stay in the same building 0.\nFrom building 1 we have employee y and they want to move to building 2.\nFrom building 2 we have employee z and they want to move to building 1.\nWe can achieve all the requests. </pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 4, requests = [[0,3],[3,1],[1,2],[2,0]]\n<strong>Output:</strong> 4\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 20</code></li>\n\t<li><code>1 &lt;= requests.length &lt;= 16</code></li>\n\t<li><code>requests[i].length == 2</code></li>\n\t<li><code>0 &lt;= from<sub>i</sub>, to<sub>i</sub> &lt; n</code></li>\n</ul>\n",
+  "hints": [
+    "Think brute force",
+    "When is a subset of requests okay?"
+  ],
+  "metaData": "{\n  \"name\": \"maximumRequests\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"requests\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"63.9K\", \"totalSubmission\": \"98.8K\", \"totalAcceptedRaw\": 63881, \"totalSubmissionRaw\": 98810, \"acRate\": \"64.7%\"}",
+  "likes": 1490,
+  "dislikes": 74,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "5\n[[0,1],[1,0],[0,1],[1,2],[2,0],[3,4]]",
+    "3\n[[0,0],[1,2],[2,1]]",
+    "4\n[[0,3],[3,1],[1,2],[2,0]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximumRequests(int n, vector<vector<int>>& requests) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximumRequests(int n, int[][] requests) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumRequests(self, n: int, requests: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumRequests(self, n, requests):\n        \"\"\"\n        :type n: int\n        :type requests: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} requests\n * @return {number}\n */\nvar maximumRequests = function(n, requests) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumRequests(n: number, requests: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaximumRequests(int n, int[][] requests) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maximumRequests(int n, int** requests, int requestsSize, int* requestsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumRequests(n int, requests [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumRequests(n: Int, requests: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumRequests(_ n: Int, _ requests: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_requests(n: i32, requests: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} requests\n# @return {Integer}\ndef maximum_requests(n, requests)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $requests\n     * @return Integer\n     */\n    function maximumRequests($n, $requests) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumRequests(int n, List<List<int>> requests) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumRequests(n: Int, requests: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_requests(n :: integer, requests :: [[integer]]) :: integer\n  def maximum_requests(n, requests) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_requests(N :: integer(), Requests :: [[integer()]]) -> integer().\nmaximum_requests(N, Requests) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-requests n requests)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1896",
+    "content": "[TOC]\n\n## Solution\n\n--- \n### Overview\n\nWe have $N$ buildings, each having some number of employees; there are some requests by the employees to get transferred from one building to another. We need to return the maximum number of requests that we can accommodate, considering the employee change count in each building should be zero, i.e. if one employee leaves a building, then some other employee should enter it too.\n\nThe most important observation is that the total requests could be at a max of $16$. Hence, trying out all the $2^{16}$ possibilities could be a possible solution. We have $16$ requests, and for each one, we can have two options either to consider this request and move the employees or don't consider it and move to the next request. This is similar to the classic 0/1 knapsack problem, as for each request, we can either take it (1) or not (0). We will discuss two approaches, one the recursive and other iterative.\n\n---\n\n\n### Approach 1: Backtracking\n\n**Intuition**\n\nAs we discussed, each request has two options; the first is to accept this and move the employee in request `[x, y]` from building `x` to `y` and the second is to ignore it. Since, in the end, we need to check if the change in each building is zero, we need to have an array where the indices for each building will store the current employee count that has entered or left it.\n\nFor every request `[x, y]` that we consider, we will decrement the count for the index `x` in the array and increment the count for `y` denoting that the number of employees in the building `x` has increased by one and similarly for `y` it got decreased by one. When we ignore a request, we don't need to do anything except move on to the next request and repeat the same process until we have reached the end of requests.\n\nOnce we iterate over all the requests, we will then check the count for each building, and if it's zero for all, we will count the number of requests we considered in this request and update the maximum requests we have considered so far without violating the constraint. In the end, we can just return the maximum number of requests we considered in a combination.\n\n**Algorithm**\n\n1. Initialize `answer` to `0`; this will store the maximum requests we can consider.\n2. Initialize an array `indegree` of size $N$ with all values as `0`. This array will store the employee change count for each building.\n3. Start the recursion with `index` and `count` as `0`. The `count` here is the number of requests we have considered in the current combination, for each index:\n\n   i. If we have iterated over all the requests, check if all values in `indegree` are zero. If yes, update the variable `answer` by comparing it to `count`. If all values aren't zero, return.\n\n   ii. For the first option, when we consider this request, update the `indegree` for both the buildings the current request involves. And move on to the next request with count as `count + 1`.\n\n   iii Revert the changes in `indegree` for the  request at `index`; this is the backtracking step.\n\n   iv. For the second option, where we ignore the request, make the recursion call with the following index without changing the `count`.\n4. Return `answer`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/2vVML2oW/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"2vVML2oW\"></iframe>\n\n\n**Complexity Analysis**\n\nHere, $N$ is the number of buildings, and $M$ is the number of requests.\n\n* Time complexity: $O(2^M * N)$.\n\n  We iterate over every two possibilities for each of the $M$ requests; this is equal to $2^M$ possibilities. For the leaf nodes, which are $$O(2^{M-1})$$, we will iterate over $N$ buildings to check if the employee change is zero. Therefore the total time complexity would be $O(2^M * N)$.\n\n* Space complexity: $O(N + M)$.\n\n  The array `indegree` is of size $N$, and there would be some stack space as well for the recursion. The maximum number of active stack calls would equal $M$, i.e. when all the requests call would be active. Hence the total space complexity would be $O(N + M)$.\n  <br/>\n\n---\n### Approach 2: Bitmasking\n\n**Intuition**\n\nWe can solve the problem iteratively as well; all we need is a way to iterate over every possible combination of requests that we can consider. We know the number of requests can only go up to $16$, so we can use $N$ bits to represent the state of $N$ requests. The $i^{th}$ bit will be set in the combinations when we consider it; otherwise, it will be zero. Since the number $2^{16}$ is well within the integer limit, we will use an integer to denote the state of a combination.\n\nAll the integers from $0$ to $2^{16} - 1$ represent all the possible combinations of requests that we can consider. Each number is a possible combination that we can check if it violates the constraints, i.e. the employee change count should be `0` after considering the requests in this number. Therefore, in this approach, we will iterate over these numbers, considering them as the possible combinations of requests we will consider. For all those combinations that don't violate the constraints, we will update the variable `answer` with the number of `1s` (the number of requests we considered) in the bitwise representation.\n\n![fig](../Figures/1601/1601A.png)\n\n**Algorithm**\n\n1. Initialize `answer` to `0`; this will store the maximum request we can consider.\n2. Iterate over the numbers from `0` to `requests.size() - 1`, for each number `mask`:\n\n   i. Initialize the array `indegree` of size $N$ with all values as `0`.\n\n   ii. Store the count of set bits in `mask`  in the variable `bitCount`.\n\n   iii. If `bitCount < answer`, return immediately as this couldn't be a better answer.\n\n   iv. Iterate over the bits in `mask`, and for each set bit, update the array `indegree` for the building it involves.\n\n   v. Iterate over each building and check if the value in the array `indegree` is zero; if it is, then update the variable `answer` to `bitCount`.\n3. Return `bitCount`.\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/MHzTTuRk/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"MHzTTuRk\"></iframe>\n\n\n**Complexity Analysis**\n\nHere, $N$ is the number of buildings, and $M$ is the number of requests.\n\n* Time complexity: $O(2^(M * (M + N))$.\n\n  We iterate over every two possibilities for each of the $M$ requests; this is equal to $2^M$ possibilities. For each bitmask, we may iterate over $N$ buildings and $M$ requests. Therefore the total time complexity would be $O(2^(M * (M + N))$.\n\n* Space complexity: $O(N)$.\n\n  The array `indegree` is of size $N$. Hence the total space complexity would be $O(N)$.\n  <br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

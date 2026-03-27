@@ -24,9 +24,9 @@ def register(subparsers: argparse._SubParsersAction) -> None:  # type: ignore[ty
 
 def run(args: argparse.Namespace, config: ReleaseConfig) -> None:
     dry_run: bool = args.dry_run
-    argocd_token = os.environ.get("ARGOCD_TOKEN", "")
+    argocd_token = os.environ.get("ARGOCD_AUTH_TOKEN", "")
     if not argocd_token and not dry_run:
-        print("Error: ARGOCD_TOKEN required", file=sys.stderr)
+        print("Error: ARGOCD_AUTH_TOKEN required", file=sys.stderr)
         sys.exit(1)
 
     for app_name in args.app:

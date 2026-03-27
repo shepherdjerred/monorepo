@@ -1,0 +1,139 @@
+{
+  "questionId": "1711",
+  "questionFrontendId": "1605",
+  "title": "Find Valid Matrix Given Row and Column Sums",
+  "titleSlug": "find-valid-matrix-given-row-and-column-sums",
+  "difficulty": "Medium",
+  "content": "<p>You are given two arrays <code>rowSum</code> and <code>colSum</code> of non-negative integers where <code>rowSum[i]</code> is the sum of the elements in the <code>i<sup>th</sup></code> row and <code>colSum[j]</code> is the sum of the elements of the <code>j<sup>th</sup></code> column of a 2D matrix. In other words, you do not know the elements of the matrix, but you do know the sums of each row and column.</p>\n\n<p>Find any matrix of <strong>non-negative</strong> integers of size <code>rowSum.length x colSum.length</code> that satisfies the <code>rowSum</code> and <code>colSum</code> requirements.</p>\n\n<p>Return <em>a 2D array representing <strong>any</strong> matrix that fulfills the requirements</em>. It&#39;s guaranteed that <strong>at least one </strong>matrix that fulfills the requirements exists.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> rowSum = [3,8], colSum = [4,7]\n<strong>Output:</strong> [[3,0],\n         [1,7]]\n<strong>Explanation:</strong> \n0<sup>th</sup> row: 3 + 0 = 3 == rowSum[0]\n1<sup>st</sup> row: 1 + 7 = 8 == rowSum[1]\n0<sup>th</sup> column: 3 + 1 = 4 == colSum[0]\n1<sup>st</sup> column: 0 + 7 = 7 == colSum[1]\nThe row and column sums match, and all matrix elements are non-negative.\nAnother possible matrix is: [[1,2],\n                             [3,5]]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> rowSum = [5,7,10], colSum = [8,6,8]\n<strong>Output:</strong> [[0,5,0],\n         [6,1,0],\n         [2,0,8]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= rowSum.length, colSum.length &lt;= 500</code></li>\n\t<li><code>0 &lt;= rowSum[i], colSum[i] &lt;= 10<sup>8</sup></code></li>\n\t<li><code>sum(rowSum) == sum(colSum)</code></li>\n</ul>\n",
+  "hints": [
+    "Find the smallest rowSum or colSum, and let it be x. Place that number in the grid, and subtract x from rowSum and colSum. Continue until all the sums are satisfied."
+  ],
+  "metaData": "{\n  \"name\": \"restoreMatrix\",\n  \"params\": [\n    {\n      \"name\": \"rowSum\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"colSum\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[][]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"161.1K\", \"totalSubmission\": \"195K\", \"totalAcceptedRaw\": 161137, \"totalSubmissionRaw\": 194953, \"acRate\": \"82.7%\"}",
+  "likes": 2198,
+  "dislikes": 98,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Reconstruct a 2-Row Binary Matrix\", \"titleSlug\": \"reconstruct-a-2-row-binary-matrix\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,8]\n[4,7]",
+    "[5,7,10]\n[8,6,8]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"squarepoint-capital\", \"name\": \"Squarepoint Capital\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> restoreMatrix(vector<int>& rowSum, vector<int>& colSum) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[][] restoreMatrix(int[] rowSum, int[] colSum) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def restoreMatrix(self, rowSum: List[int], colSum: List[int]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def restoreMatrix(self, rowSum, colSum):\n        \"\"\"\n        :type rowSum: List[int]\n        :type colSum: List[int]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} rowSum\n * @param {number[]} colSum\n * @return {number[][]}\n */\nvar restoreMatrix = function(rowSum, colSum) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function restoreMatrix(rowSum: number[], colSum: number[]): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[][] RestoreMatrix(int[] rowSum, int[] colSum) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** restoreMatrix(int* rowSum, int rowSumSize, int* colSum, int colSumSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func restoreMatrix(rowSum []int, colSum []int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun restoreMatrix(rowSum: IntArray, colSum: IntArray): Array<IntArray> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func restoreMatrix(_ rowSum: [Int], _ colSum: [Int]) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn restore_matrix(row_sum: Vec<i32>, col_sum: Vec<i32>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} row_sum\n# @param {Integer[]} col_sum\n# @return {Integer[][]}\ndef restore_matrix(row_sum, col_sum)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $rowSum\n     * @param Integer[] $colSum\n     * @return Integer[][]\n     */\n    function restoreMatrix($rowSum, $colSum) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> restoreMatrix(List<int> rowSum, List<int> colSum) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def restoreMatrix(rowSum: Array[Int], colSum: Array[Int]): Array[Array[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec restore_matrix(row_sum :: [integer], col_sum :: [integer]) :: [[integer]]\n  def restore_matrix(row_sum, col_sum) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec restore_matrix(RowSum :: [integer()], ColSum :: [integer()]) -> [[integer()]].\nrestore_matrix(RowSum, ColSum) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (restore-matrix rowSum colSum)\n  (-> (listof exact-integer?) (listof exact-integer?) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2378",
+    "content": "## Solution\n\n---\n\n### Approach 1: Greedy\n\n#### Intuition\n\nImagine there is a non-negative integer matrix `origMatrix` with dimensions $N \\times M$. We have performed a sum operation on each row and column of the matrix, storing the results in two lists: `rowSum` and `colSum`. The list `rowSum` of size $N$ contains the sum of each row of the original matrix, while the list `colSum` of size $M$ contains the sum of each column. Given these two lists, `rowSum` and `colSum`, we need to reconstruct the original matrix `origMatrix`. The inputs are guaranteed to be valid, meaning at least one solution exists, and any valid matrix can be returned in the case of multiple solutions.\n\nLet's think about the value we can assign to a particular cell at row `r` and column `c`. We need to assign such a value that the total sum in the row doesn't exceed `rowSum[r]` and total sum in the column doesn't exceed `colSum[c]`. This is because we can only have non-negative integers in the matrix and hence we cannot exceed the total sum. We can greedily choose the maximum number we can assign to a cell and what should it be? The maximum value we can assign considering only the rows will be `rowSum[r] - sum of all cells we have filled in row r so far`, similarly the maximum value we can assign considering only the columns will be `colSum[c] - sum of all cells we have filled in the column c so far`. As just discussed we cannot exceed the total sum in any of the two constraints (row and column) we will choose the minimum of these two values to assign to the cell at `(r, c)`.\n\nTo achieve this, we iterate over the elements of the matrix, maintaining the cumulative sums of the rows and columns processed so far. Let `currRowSum[i]` represent the sum of the elements in the $i$-th row up to the current element, and `currColSum[j]` represent the sum of the elements in the $j$-th column up to the current element. For the cell `(i, j)`, the value can be determined as:\n\n$$K = \\min(\\text{rowSum}[i] - \\text{currRowSum}[i], \\text{colSum}[j] - \\text{currColSum}[j])$$\n\nThis ensures that the sum of the $i$-th row does not exceed `rowSum[i]` and the sum of the $j$-th column does not exceed `colSum[j]`. After determining $K$, we update `currRowSum[i]` and `currColSum[j]` by adding $K$.\n\nWe initialize `currRowSum` and `currColSum` to zero and proceed from the top left to the bottom right of the matrix, filling in the values and storing them in `origMatrix`.\n\n#### Algorithm\n\n1. Initialize the number of rows and number of columns as $N$ and $M$ respectively.\n2. Initialize two lists `currRowSum` and `currColSum` of size $N$ and $M$ respectively with values as zero.\n3. Initialize the answer matrix `origMatrix` of size $N * M$ with all values as zero.\n4. Iterate over all cells in the matrix and for each cell `(i, j)`, do the following:\n\n    - Store the value in `origMatrix[i][j]` as `min(rowSum[i] - currRowSum[i], colSum[j] - currColSum[j])`.\n    - Add the above value to `currRowSum[i]` and `currColSum[j]`.\n5. Return `origMatrix`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/DxJT7rDW/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"DxJT7rDW\"></iframe>\n\n#### Complexity Analysis\n\nHere,$N$ is the number size of the list `rowSum` and $M$ is the size of the list `colSum`.\n\n* Time complexity: $O(N \\times M)$.\n\n    Initializing the answer matrix `origMatrix` takes $O(N \\times M)$ time. Also, we iterate over each of the $N \\times M$ cells to find the values. Hence, the total time complexity is equal to $O(N \\times M)$.\n\n* Space complexity: $O(N + M)$.\n\n    The space required to store the answer is not considered part of the space complexity. Therefore, the space required for this approach is the two lists to store the current sum of rows and columns. Hence, the total space complexity is equal to $O(N + M)$.\n\n---\n\n### Approach 2: Space Optimized Greedy\n\n#### Intuition\n\n> Note: In an interview setting, an approach that involves changing the input is generally not recommended. This and the next approach will change the input matrix and are added for the sake of completion. While suggesting these approaches in an interview the downside of the changing input must be called out.\n\nIn the previous approach, we used two lists, `currRowSum` and `currColSum`, to keep track of the cumulative sums of elements for each row and column. However, we can eliminate the need for these lists by directly updating the given `rowSum` and `colSum` lists.\n\nInstead of maintaining the cumulative sums, we will now keep track of the remaining sums. For each cell `(i, j)`, we assign a value equal to `min(rowSum[i], colSum[j])`. After assigning this value to `origMatrix[i][j]`, we subtract it from both `rowSum[i]` and `colSum[j]`.\n\nBy updating `rowSum[i]` and `colSum[j]` in this manner, they will always represent the maximum possible value that can be assigned to the current cell `(i, j)`. This approach eliminates the need for additional space to store cumulative sums and simplifies the implementation.\n\n#### Algorithm\n\n1. Initialize the number of rows and number of columns as $N$ and $M$ respectively.\n2. Initialize the answer matrix `origMatrix` of size $N * M$ with all values as zero.\n3. Iterate over all cells in the matrix and for each cell `(i, j)`, do the following:\n\n    - Store the value in `origMatrix[i][j]` as `min(rowSum[i], colSum[j])`.\n    - Subtract the above value from `rowSum[i]` and `colSum[j]`.\n4. Return `origMatrix`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/kDRiBT75/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"kDRiBT75\"></iframe>\n\n#### Complexity Analysis\n\nHere, $N$ is the number size of the list `rowSum` and $M$ is the size of the list `colSum`.\n\n* Time complexity: $O(N * M)$.\n\n    Initializing the answer matrix `origMatrix` takes $O(N \\times M)$ time. Also, we iterate over each of the $N \\times M$ cells to find the values. Hence, the total time complexity is equal to $O(N \\times M)$.\n\n* Space complexity: $O(1)$.\n\n    The space required to store the answer is not considered part of the space complexity. We don't require any extra space other than the matrix to store the answer. Hence, the total space complexity is constant.\n\n---\n\n### Approach 3: Time + Space Optimized Greedy\n\n#### Intuition\n\nIf we observe the previous approach closely, we are assigning the minimum of `(rowSum[i], colSum[j])` to the cell `(i, j)` and then subtracting this minimum value from both `rowSum[i]` and `colSum[j]`. This implies that at each iteration, one of `rowSum[i]` or `colSum[j]` will become zero, i.e., whichever is the minimum will become zero. \n\nWhen `rowSum[i]` becomes zero, all future operations involving `i` as the row index will have `min(rowSum[i], colSum[j])` equal to zero. Similarly, when `colSum[j]` becomes zero, all future operations involving `j` as the column index will also have `min(rowSum[i], colSum[j])` equal to zero.\n\nThis means that we need only one operation for a pair of row and column `(i, j)`. When iterating over the cells, for each pair `(i, j)`, we will either make `rowSum[i]` or `colSum[j]` zero, allowing us to skip subsequent operations for that row or column respectively.\n\nWe will implement this with a while loop that runs while the row index `i` and column index `j` are within their respective sizes. In each iteration, we find the value to assign to the current cell as `min(rowSum[i], colSum[j])`, and subtract this from both `rowSum[i]` and `colSum[j]`. If `rowSum[i]` becomes zero, we increment `i`; otherwise, we increment `j`. Finally, we return the matrix `origMatrix`.\n\n![fig](../Figures/1605/1605A.png)\n\n#### Algorithm\n\n1. Initialize the number of rows and number of columns as $N$ and $M$ respectively.\n2. Initialize the answer matrix `origMatrix` of size $N * M$ with all values as zero.\n3. Initialize the row index `i` and column index `j` to `0`.\n4. Iterate over all cells`(i, j)` while both `i` and `j` are within the boundary, do the following:\n\n    - Store the value in `origMatrix[i][j]` as `min(rowSum[i], colSum[j])`.\n    - Subtract the above value from `rowSum[i]` and `colSum[j]`.\n    - If `rowSum[i]` becomes `0`, increment `i` otherwise increment the variable `j`.\n5. Return `origMatrix`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/3ge9HUJR/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"3ge9HUJR\"></iframe>\n\n#### Complexity Analysis\n\n\nHere, $N$ is the number size of the list `rowSum` and $M$ is the size of the list `colSum`.\n\n* Time complexity: $O(N \\times M)$.\n\n    Initializing the answer matrix `origMatrix` takes $O(N \\times M)$ time. To store the values in the answer matrix we performed $O(N + M)$ operations as we skipped either the row or column at each iteration. Hence, the total time complexity is equal to $O(N \\times M)$.\n\n* Space complexity: $O(1)$.\n\n    The space required to store the answer is not considered part of the space complexity. We don't require any extra space other than the matrix to store the answer. Hence, the total space complexity is constant.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

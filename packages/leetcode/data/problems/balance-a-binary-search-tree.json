@@ -1,0 +1,152 @@
+{
+  "questionId": "1285",
+  "questionFrontendId": "1382",
+  "title": "Balance a Binary Search Tree",
+  "titleSlug": "balance-a-binary-search-tree",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>root</code> of a binary search tree, return <em>a <strong>balanced</strong> binary search tree with the same node values</em>. If there is more than one answer, return <strong>any of them</strong>.</p>\n\n<p>A binary search tree is <strong>balanced</strong> if the depth of the two subtrees of every node never differs by more than <code>1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/08/10/balance1-tree.jpg\" style=\"width: 500px; height: 319px;\" />\n<pre>\n<strong>Input:</strong> root = [1,null,2,null,3,null,4,null,null]\n<strong>Output:</strong> [2,1,3,null,null,null,4]\n<b>Explanation:</b> This is not the only correct answer, [3,1,4,null,2] is also correct.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/08/10/balanced2-tree.jpg\" style=\"width: 224px; height: 145px;\" />\n<pre>\n<strong>Input:</strong> root = [2,1,3]\n<strong>Output:</strong> [2,1,3]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[1, 10<sup>4</sup>]</code>.</li>\n\t<li><code>1 &lt;= Node.val &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Convert the tree to a sorted array using an in-order traversal.",
+    "Construct a new balanced tree from the sorted array recursively."
+  ],
+  "metaData": "{\n  \"name\": \"balanceBST\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"TreeNode\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"TreeNode\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"401.6K\", \"totalSubmission\": \"465.4K\", \"totalAcceptedRaw\": 401605, \"totalSubmissionRaw\": 465404, \"acRate\": \"86.3%\"}",
+  "likes": 4171,
+  "dislikes": 105,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,null,2,null,3,null,4]",
+    "[2,1,3]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Divide and Conquer",
+      "slug": "divide-and-conquer"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Search Tree",
+      "slug": "binary-search-tree"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    TreeNode* balanceBST(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public TreeNode balanceBST(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def balanceBST(self, root: Optional[TreeNode]) -> Optional[TreeNode]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def balanceBST(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: Optional[TreeNode]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {TreeNode}\n */\nvar balanceBST = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction balanceBST(root: TreeNode | null): TreeNode | null {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public TreeNode BalanceBST(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nstruct TreeNode* balanceBST(struct TreeNode* root) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc balanceBST(root *TreeNode) *TreeNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun balanceBST(root: TreeNode?): TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func balanceBST(_ root: TreeNode?) -> TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn balance_bst(root: Option<Rc<RefCell<TreeNode>>>) -> Option<Rc<RefCell<TreeNode>>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {TreeNode}\ndef balance_bst(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return TreeNode\n     */\n    function balanceBST($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  TreeNode? balanceBST(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def balanceBST(root: TreeNode): TreeNode = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec balance_bst(root :: TreeNode.t | nil) :: TreeNode.t | nil\n  def balance_bst(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec balance_bst(Root :: #tree_node{} | null) -> #tree_node{} | null.\nbalance_bst(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (balance-bst root)\n  (-> (or/c tree-node? #f) (or/c tree-node? #f))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2352",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe need to balance a binary search tree rooted at the `root` such that the difference between the depths of the two subtrees of every node never exceeds one. As a reminder, the depth of a given node in a tree is the number of edges from the root of the tree to that node. \n\n> Note: Binary search trees (BSTs) are structured such that the value of each node is greater than all values in its left subtree and less than all values in its right subtree. Please refer to LeetCode's Explore Card on binary trees for a more detailed explanation: [**Binary Trees**](https://leetcode.com/explore/learn/card/data-structure-tree/)\n\nWe call such BSTs balanced BSTs. Balanced BSTs are efficient because they keep the tree height low, usually in logarithmic proportion to the number of nodes. This balance allows operations like insertion, deletion, and lookup to be done in logarithmic time on average. Keeping the tree balanced prevents it from becoming too deep, which would otherwise slow these operations down to linear time. This efficiency makes balanced BSTs ideal for tasks that need fast updates and quick searches.\n\nThere are two main approaches to balance a BST. \n\nThe first approach is to traverse and store all the BST nodes in a sorted array, then reconstruct the BST from scratch. Storing the values in sorted order ensures the new tree maintains the BST properties, where each node's left subtree contains only values less than the node's value, and the right subtree contains only values greater.\n\nThe second approach is to balance the BST in-place by restructuring it without additional storage. This involves performing rotations and rearrangements directly on the existing nodes to achieve balance while preserving BST properties.\n\nThis approach is more complex and is unlikely to be asked in an interview setting. However, it's worth understanding for deeper insights into tree rotations, balancing techniques, and the workings of self-balancing trees like AVL and Red-Black trees.\n\n---\n\n### Approach 1: Inorder Traversal + Recursive Construction\n\n#### Intuition\n\nIn the overview, we mentioned the need to traverse and store the nodes of the BST in increasing order. This can be achieved by iteratively visiting each node in the following order: first the left subtree, then the node itself, and finally the right subtree, known as an inorder traversal.\n\nIf you are not familiar with the three main traversal methods (inorder, preorder, and postorder), we encourage you to read about them here:\n\n* [Inorder Traversal](https://leetcode.com/problems/binary-tree-inorder-traversal/editorial/)\n* [Preorder Traversal](https://leetcode.com/problems/binary-tree-preorder-traversal/editorial/)\n* [Postorder Traversal](https://leetcode.com/problems/binary-tree-postorder-traversal/editorial/)\n\nWe can perform the inorder traversal either recursively or iteratively. In this editorial, we will use the recursive approach for its simplicity and brevity, though you are encouraged to try both methods.\n\nWith the nodes of the BST stored in an array in increasing order, we can now reconstruct the BST to be balanced.\n\nThe stored values in the array have a convenient property: for any given element that serves as the root, all elements to its left belong to the left subtree, and all elements to its right belong to the right subtree. To construct a balanced BST, we pick the middle element of the array as the root, ensuring the number of elements in the left and right subtrees differs by at most one. We then recursively apply the same process to the left and right subarrays to build the left and right subtrees. This approach ensures the balanced property of the BST.\n\n!?!../Documents/1382/slideshow1.json:960,540!?!\n\n#### Algorithm\n\n1. Initialization:\n    - Create an empty list `inorder` to store the nodes' values after the inorder traversal.\n2. Perform inorder traversal:\n    - Traverse the BST and populate the `inorder` list with the node values in sorted order.\n3. Reconstruct the balanced BST:\n    - Define a recursive function `createBalancedBST` that takes the `inorder` list, `start` index, and `end` index as parameters.\n        - If `start` is greater than `end`, return `null` (or equivalent).\n        - Calculate the `mid` index as the middle of the current range.\n        - Create a new tree node with the value at the `mid` index.\n        - Recursively build the left subtree using the left half of the current range.\n        - Recursively build the right subtree using the right half of the current range.\n4. Return the root of the newly constructed balanced BST.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/JcbyAFbA/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"JcbyAFbA\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the BST. \n\n- Time Complexity: $O(n)$\n  \n    The `inorderTraversal` function visits each node exactly once, resulting in a time complexity of $O(n)$.\n  \n    Constructing the balanced BST with the `createBalancedBST` function also involves visiting each node exactly once, resulting in a time complexity of $O(n)$.\n  \n    Therefore, the overall time complexity is $O(n)$.\n\n- Space Complexity: $O(n)$\n  \n    The `inorderTraversal` function uses an additional array to store the inorder traversal, which requires $O(n)$ space.  \n\n    The recursive calls in the `inorderTraversal` and `createBalancedBST` functions contribute to the space complexity. In the worst case, the recursion stack can grow to $O(n)$ for a skewed tree.\n  \n    Therefore, the overall space complexity is $O(n)$.\n\n---\n\n### Approach 2: Day-Stout-Warren Algorithm / In-Place Balancing \n\n#### Intuition\n> **Note:** This approach is very advanced and would not be expected in an interview. We have included it for completeness.\n\nThe Day-Stout-Warren (DSW) algorithm provides an in-place method for balancing Binary Search Trees (BSTs). To understand DSW, we first need to grasp the concept of rotations, which are fundamental operations for restructuring the tree to reduce its height and improve balance.\n\nRotations come in two forms:\n\n* Right Rotation: This operation elevates the left child of a node to take its place, while the original node becomes the right child of its former left child.\n* Left Rotation: Conversely, this operation elevates the right child of a node to take its place, with the original node becoming the left child of its former right child.\n\nIt's important to note that right and left rotations are inverse operations, each undoing the effect of the other.\n\n![rotate1](../Figures/1382/1382_DSW_slides_1_fix.png)\n\nWith this foundation, we can now explore how DSW leverages these rotations. The algorithm employs a three-phase approach to balance a BST:\n\n1. Create the Backbone (vine)\n\nIn this initial phase, DSW transforms the BST into a right-skewed tree, resembling a vine or linked list. This is achieved through a series of right rotations. The process involves traversing the tree and performing a right rotation whenever a node with a left child is encountered, continuing until the entire tree is right-skewed.\n\nThe slideshow is shown below:\n\n!?!../Documents/1382/1382_DSW_slides_Re.json:1320,850!?!\n\n2. Count the nodes\n\nOnce the backbone is created, the next step is to determine the total number of nodes in the vine. This is done by traversing the right-skewed structure and counting each node. Let's denote this count as `n`. This count becomes crucial for the final balancing phase.\n\n3. Balance the vine\n\nThe final phase aims to convert the right-skewed vine into a balanced BST. This is accomplished through a series of left rotations. The process begins by calculating `m`, which is the largest power of 2 less than `n + 1`, minus 1. This calculation is significant as it identifies the largest complete subtree that can be fully balanced.\n\nThe balancing then proceeds in two steps:\n\na) Perform `n - m` left rotations to partially balance the tree. This ensures that the remaining nodes will form a complete binary tree after the first set of rotations.\n\nb) Enter a loop where `m` is halved repeatedly. For each iteration, perform left rotations to balance the next level of the tree. This process continues until the vine is fully transformed into a balanced BST.\n\n!?!../Documents/1382/slideshow3.json:960,540!?!\n\n\n> **Note:** While this approach is space-efficient, it modifies the tree structure during traversal, which might not be suitable in all scenarios, especially if the tree is being accessed concurrently by other processes. The constant modification of tree links may have a slight impact on performance compared to straightforward recursive approaches, especially for smaller trees.\n\n#### Algorithm\n\n1. Initialization:\n    - If the root is `null`, return `null`.\n    - Create a temporary dummy node `vineHead`.\n    - Set the right child of `vineHead` as the root of the BST.\n    - Initialize a pointer `current` to `vineHead`.\n2. Create the Backbone (Vine):\n    - While `current` has a right child:\n        - If `current`'s right child has a left child:\n            - Perform a right rotation on `current` and its right child.\n        - Otherwise:\n            - Move `current` to its right child.\n3. Count the Nodes:\n    - Initialize `nodeCount` to 0.\n    - Set `current` as the right child of `vineHead`.\n    - While `current` is not `null`:\n        - Increment `nodeCount`.\n        - Move `current` to its right child.\n4. Create a Balanced BST:\n    - Calculate `m` as the largest power of 2 less than `nodeCount + 1` minus 1.\n    - Perform `nodeCount - m` left rotations on the vine to partially balance it.\n    - While `m` is greater than 1:\n        - Halve `m`.\n        - Perform `m` left rotations on the vine to further balance it.\n5. Return the Balanced BST:\n    - Set `balancedRoot` to the right child of `vineHead`.\n    - Delete the temporary dummy node `vineHead`.\n    - Return `balancedRoot`.\n- Right Rotation:\n    - Given a parent node and its right child:\n        - Set `tmp` to the left child of the right child.\n        - Set the left child of the right child to the right child of `tmp`.\n        - Set the right child of `tmp` to the right child of the parent node.\n        - Set the right child of the parent node to `tmp`.\n- Left Rotation:\n    - Given a parent node and its right child:\n        - Set `tmp` to the right child of the right child.\n        - Set the right child of the right child to the left child of `tmp`.\n        - Set the left child of `tmp` to the right child of the parent node.\n        - Set the right child of the parent node to `tmp`.\n- Make Rotations:\n    - Given `vineHead` and `count`:\n        - Set `current` to `vineHead`.\n        - For `i` from 0 to `count - 1`:\n            - Set `tmp` to the right child of `current`.\n            - Perform a left rotation on `current` and `tmp`.\n            - Move `current` to its right child.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/TZ3STb7N/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"TZ3STb7N\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the BST at `root`.\n\n- Time Complexity: $O(n)$\n\n    The loop that creates the vine visits each node exactly once, and each right rotation is $O(1)$, resulting in $O(n)$ time.\n    \n    Counting nodes in the vine involves a single traversal of the vine, which is $O(n)$.\n\n    The `makeRotations` function performs a series of left rotations. Each rotation is $O(1)$, and the total number of rotations across all iterations is $O(n)$. Although the number of rotations is bounded by a logarithmic factor due to iteratively halving $m$, the overall complexity remains $O(n)$ due to the linear traversal and rotation steps.\n\n    Therefore, the overall time complexity is $O(n)$.\n\n- Space Complexity: $O(n)$\n\n    The algorithm primarily uses a temporary pointer structure and the original nodes, contributing to $O(1)$ additional space. The vine structure uses the existing nodes in-place, without requiring extra memory.\n    \n    However, the depth of the recursion stack in the worst case can reach $O(n)$ if the tree is skewed.\n\n    Therefore, the overall space complexity is $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

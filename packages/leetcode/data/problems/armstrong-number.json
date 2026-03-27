@@ -1,0 +1,133 @@
+{
+  "questionId": "1090",
+  "questionFrontendId": "1134",
+  "title": "Armstrong Number",
+  "titleSlug": "armstrong-number",
+  "difficulty": "Easy",
+  "content": "<p>Given an integer <code>n</code>, return <code>true</code> <em>if and only if it is an <strong>Armstrong number</strong></em>.</p>\n\n<p>The <code>k</code>-digit number <code>n</code> is an Armstrong number if and only if the <code>k<sup>th</sup></code> power of each digit sums to <code>n</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 153\n<strong>Output:</strong> true\n<strong>Explanation:</strong> 153 is a 3-digit number, and 153 = 1<sup>3</sup> + 5<sup>3</sup> + 3<sup>3</sup>.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 123\n<strong>Output:</strong> false\n<strong>Explanation:</strong> 123 is a 3-digit number, and 123 != 1<sup>3</sup> + 2<sup>3</sup> + 3<sup>3</sup> = 36.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>8</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Check if the given k-digit number equals the sum of the k-th power of it's digits.",
+    "How to compute the sum of the k-th power of the digits of a number ? Can you divide the number into digits using division and modulus operations ?",
+    "You can find the least significant digit of a number by taking it modulus 10. And you can remove it by dividing the number by 10 (integer division). Once you have a digit, you can raise it to the power of k and add it to the sum."
+  ],
+  "metaData": "{\n  \"name\": \"isArmstrong\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"42.6K\", \"totalSubmission\": \"54.8K\", \"totalAcceptedRaw\": 42640, \"totalSubmissionRaw\": 54775, \"acRate\": \"77.8%\"}",
+  "likes": 216,
+  "dislikes": 20,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "153",
+    "123"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool isArmstrong(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean isArmstrong(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def isArmstrong(self, n: int) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def isArmstrong(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {boolean}\n */\nvar isArmstrong = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function isArmstrong(n: number): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool IsArmstrong(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool isArmstrong(int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func isArmstrong(n int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun isArmstrong(n: Int): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func isArmstrong(_ n: Int) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn is_armstrong(n: i32) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Boolean}\ndef is_armstrong(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Boolean\n     */\n    function isArmstrong($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool isArmstrong(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def isArmstrong(n: Int): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec is_armstrong(n :: integer) :: boolean\n  def is_armstrong(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec is_armstrong(N :: integer()) -> boolean().\nis_armstrong(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (is-armstrong n)\n  (-> exact-integer? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1106",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Calculate k by Converting to String\n\n**Intuition**\n\nPer the definition of an Armstrong number, once we have the value of `k` all we need to do is add the **k'th** power of each digit and compare the final result to the original number. A simple way to calculate the length of an integer (number of digits in `n`) is by converting the integer to a string and then getting the length of the string.\n\n**Algorithm**\n\n1. Get the number of digits in `n` by converting it to a string and getting the `length`. Pass these values into the function created below.\n2. Let's create a function `getSumOfKthPowerOfDigits()` that takes in the parameters `n` and `k` and returns the sum of taking the k'th power of each digit. The function works as explained further.\n   1. Create a variable `result` which will store the final result of the operations to be applied on `n`.\n   2. Get the `last_digit` of `n` by using the formula `n % 10`.\n   3. Add `last_digit` raised to the power of `k` to the result.\n   4. Remove the `last_digit` of `n` by using the formula `n /= 10`.\n   5. Repeat steps 1 - 4 until `n != 0`.\n3. Return `true` if `result` equals the original number `n`.\n\n<iframe src=\"https://leetcode.com/playground/8SvNu93E/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"8SvNu93E\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(M)$$, where $$M$$ is the number of digits in integer `n`. Since we need to iterate through all digits in `n`.\n\n* Space complexity : $$O(1)$$\n\n\n<br />\n\n---\n\n### Approach 2: Calculate k by Using Log\n\n**Intuition**\n\nIn the previous approach we saw that we can get the value of `k` by converting `n` to a string. Let's look at a mathematical way to get this value.\n\nRecall that in math, the `log` function can be used to get the number of digits in a number.\n\nLet's see how $${\\log_{10}}$$ works:\n\n$$\n  {\\log_{10} 1} = 0 \\\\\n  {\\log_{10} 2} = 0.301 \\\\\n  {\\log_{10} 9} = 0.954 \\\\\n  {\\log_{10} 10} = 1 \\\\\n  {\\log_{10} 99} = 1.995 \\\\\n  {\\log_{10} 100} = 2 \\\\\n  \\dots \\\\\n  {\\log_{10} 1000} = 3\n$$\n\nThus, we can see that we need the value of $$\\text{floor}(\\log_{10} n) + 1$$ which will be the number of digits in `n`. Below, we have implemented this intuition.\n\n**Algorithm**\n\n1. Get the number of digits in `n` by calculating $$\\text{floor}(\\log_{10} n) + 1$$ and adding $$1$$.\n2. Call `getSumOfKthPowerOfDigits()` (as defined in Approach 1) with `n` and `length` as `k`.\n3. Return `true` if `result` of this function equals the original number `n`.\n\n<iframe src=\"https://leetcode.com/playground/7hBT7eTj/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"7hBT7eTj\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(M)$$, where $$M$$ is the number of digits in integer `n`. Since we need to iterate through all digits in `n`.\n\n* Space complexity : $$O(1)$$\n\n</br>\n\n---\n\n### Approach 3: Calculate k Without Built-in Methods\n\n**Interview Tip:** Often for simple problems such as this one, the interviewer will ask you to solve it *without using any built-in or library functions*. It is important for you to practice solving problems with this constraint.\n\n**Intuition**\n\nIn the previous solutions, we used built-in methods to get the number of digits in `n`. Now let's try to get this value manually. We can use the idea from the previous solutions of dividing `n` by `10` to remove the last digit. All we need to do is keep on dividing `n` by `10` and increasing a `length` counter until `n` is `0`. This will give us the exact number of digits in `n`.\n\n**Algorithm**\n\n1. Store `n` in a temporary variable `tempN`; we'll use this to find the length of `n`.\n2. Initialize the `length` counter to `0`.\n3. Remove the last digit of `tempN` by dividing `tempN` by `10`.\n4. Increment the `length` counter.\n5. Repeat steps 3 and 4 while `tempN != 0`.\n6. `length` should now contain the number of digits in `n`.\n8. Call `getSumOfKthPowerOfDigits()` with `n` and `length` as `k`.\n9. Return `true` if the `result` of this function equals the original number `n`.\n\n<iframe src=\"https://leetcode.com/playground/aKQbYPPr/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"aKQbYPPr\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(M)$$, where $$M$$ is the number of digits in integer `n`. Since we need to iterate through all digits in `n`.\n\n* Space complexity : $$O(1)$$",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

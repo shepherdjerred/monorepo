@@ -96,7 +96,7 @@ export function createStatusPageDeployment(chart: Chart) {
             "status-page-auth-token-secret",
             onePasswordItem.name,
           ),
-          key: "auth-token",
+          key: "AUTH_TOKEN",
         }),
       },
     }),
@@ -132,7 +132,7 @@ export function createStatusPageDeployment(chart: Chart) {
             type: "Bearer",
             credentials: {
               name: onePasswordItem.name,
-              key: "auth-token",
+              key: "AUTH_TOKEN",
             },
           },
         },

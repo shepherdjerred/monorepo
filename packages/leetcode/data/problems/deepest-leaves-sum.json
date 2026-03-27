@@ -1,0 +1,144 @@
+{
+  "questionId": "1254",
+  "questionFrontendId": "1302",
+  "title": "Deepest Leaves Sum",
+  "titleSlug": "deepest-leaves-sum",
+  "difficulty": "Medium",
+  "content": "Given the <code>root</code> of a binary tree, return <em>the sum of values of its deepest leaves</em>.\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/07/31/1483_ex1.png\" style=\"width: 273px; height: 265px;\" />\n<pre>\n<strong>Input:</strong> root = [1,2,3,4,5,null,6,7,null,null,null,null,8]\n<strong>Output:</strong> 15\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> root = [6,7,8,2,7,1,3,9,null,1,4,null,null,null,5]\n<strong>Output:</strong> 19\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[1, 10<sup>4</sup>]</code>.</li>\n\t<li><code>1 &lt;= Node.val &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "Traverse the tree to find the max depth.",
+    "Traverse the tree again to compute the sum required."
+  ],
+  "metaData": "{\n  \"name\": \"deepestLeavesSum\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"TreeNode\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"403.7K\", \"totalSubmission\": \"466.6K\", \"totalAcceptedRaw\": 403669, \"totalSubmissionRaw\": 466560, \"acRate\": \"86.5%\"}",
+  "likes": 4837,
+  "dislikes": 127,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,2,3,4,5,null,6,7,null,null,null,null,8]",
+    "[6,7,8,2,7,1,3,9,null,1,4,null,null,null,5]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"myntra\", \"name\": \"Myntra\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    int deepestLeavesSum(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public int deepestLeavesSum(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def deepestLeavesSum(self, root: Optional[TreeNode]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def deepestLeavesSum(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {number}\n */\nvar deepestLeavesSum = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction deepestLeavesSum(root: TreeNode | null): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public int DeepestLeavesSum(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nint deepestLeavesSum(struct TreeNode* root) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc deepestLeavesSum(root *TreeNode) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun deepestLeavesSum(root: TreeNode?): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func deepestLeavesSum(_ root: TreeNode?) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn deepest_leaves_sum(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {Integer}\ndef deepest_leaves_sum(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return Integer\n     */\n    function deepestLeavesSum($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  int deepestLeavesSum(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def deepestLeavesSum(root: TreeNode): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec deepest_leaves_sum(root :: TreeNode.t | nil) :: integer\n  def deepest_leaves_sum(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec deepest_leaves_sum(Root :: #tree_node{} | null) -> integer().\ndeepest_leaves_sum(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (deepest-leaves-sum root)\n  (-> (or/c tree-node? #f) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "911",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\n**DFS vs BFS**\n\nThere are two ways to traverse the tree: DFS _depth first search_ and BFS _breadth first search_. Here is a small summary \n\n![diff](../Figures/1302/traversals.png)\n\n> Let's use this problem to discuss the difference between _iterative BFS traversal with the queue_ and _iterative DFS preorder traversal with the stack_.\n\nBoth start from the root and go down, both use additional structures, what's the difference? \n\nHere is how it looks at the big scale: BFS traverses level by level, and DFS first goes to the leaves.\n\n![diff](../Figures/1302/dfs_bfs2.png)\n\nNow let's go down to the implementation. The idea is similar:\n\n- Push root into queue (BFS) or stack (DFS).\n\n- At each step pop out one node, and push its children into stack/queue. \n\nFor BFS: pop out from the _left_, first push the _left_ child, and then the _right_ one. \n\nFor DFS: pop out from the _right_, first push the _right_ child, and then the _left_ one. \n\n![diff](../Figures/1302/implem2.png)\n\n<br />\n<br />\n\n\n---\n### Approach 1: Iterative DFS Preorder Traversal.\n\n**Intuition**\n\nHere we implement standard iterative preorder traversal with the stack:\n\n- Push root into the stack.\n\n- While the stack is not empty:\n\n    - Pop out a node from the stack and update the current number.\n    \n    - If the node is a leaf\n    \n        - Update the deepest leaves sum `deepest_sum`.\n    \n    - Push right and left child nodes into the stack.\n    \n- Return `deepest_sum`.  \n\n\n**Implementation**\n\nNote, that \n[Javadocs recommends to use ArrayDeque, and not Stack as a stack implementation](https://docs.oracle.com/javase/8/docs/api/java/util/ArrayDeque.html).\n\n<iframe src=\"https://leetcode.com/playground/QWpTWGB8/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"QWpTWGB8\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$ since one has to visit each node. \n    \n* Space complexity: up to $$\\mathcal{O}(H)$$ to keep the stack, where $$H$$ is a tree height.  \n<br />\n<br />\n\n\n---\n### Approach 2: Iterative BFS Traversal.\n\n**Intuition**\n\nHere we implement standard traversal using a queue:\n\n- Add root into queue.\n\n- While queue is not empty:\n\n    - Pop out a node from queue and update the current number.\n    \n    - If the node is a leaf:\n    \n        - Update the deepest leaves sum `deepest_sum`.\n    \n    - Add first _left_ and then _right_ child node into queue.\n    \n- Return `deepest_sum`.  \n\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/3TQBwntK/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"3TQBwntK\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$ since one has to visit each node. \n    \n* Space complexity: up to $$\\mathcal{O}(N)$$ to keep the queue. Let's use the last level to estimate the queue size. This level could contain up to $$N/2$$ tree nodes in the case of [complete binary tree](https://leetcode.com/problems/count-complete-tree-nodes/).   \n<br />\n<br />\n\n\n---\n### Approach 3: Optimized Iterative BFS Traversal.\n\n**Intuition**\n\nThe code in Approach 2 is not the optimal one. It's done this way to simplify DFS vs BFS comparison but now let's move further. Since we traverse level by level, it's enough just to check if this level is the last one. If it's the case, return the sum of all nodes' values.  \n\n!?!../Documents/1302_LIS.json:1000,416!?!\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/TFT2BQEY/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"TFT2BQEY\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$ since one has to visit each node. \n    \n* Space complexity: up to $$\\mathcal{O}(N)$$ to keep the queues. Let's use the last level to estimate the queue size. This level could contain up to $$N/2$$ tree nodes in the case of [complete binary tree](https://leetcode.com/problems/count-complete-tree-nodes/). \n<br />\n<br />\n\n\n___",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

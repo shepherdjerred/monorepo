@@ -1,0 +1,153 @@
+{
+  "questionId": "1275",
+  "questionFrontendId": "1361",
+  "title": "Validate Binary Tree Nodes",
+  "titleSlug": "validate-binary-tree-nodes",
+  "difficulty": "Medium",
+  "content": "<p>You have <code>n</code> binary tree nodes numbered from <code>0</code> to <code>n - 1</code> where node <code>i</code> has two children <code>leftChild[i]</code> and <code>rightChild[i]</code>, return <code>true</code> if and only if <strong>all</strong> the given nodes form <strong>exactly one</strong> valid binary tree.</p>\n\n<p>If node <code>i</code> has no left child then <code>leftChild[i]</code> will equal <code>-1</code>, similarly for the right child.</p>\n\n<p>Note that the nodes have no values and that we only use the node numbers in this problem.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/08/23/1503_ex1.png\" style=\"width: 195px; height: 287px;\" />\n<pre>\n<strong>Input:</strong> n = 4, leftChild = [1,-1,3,-1], rightChild = [2,-1,-1,-1]\n<strong>Output:</strong> true\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/08/23/1503_ex2.png\" style=\"width: 183px; height: 272px;\" />\n<pre>\n<strong>Input:</strong> n = 4, leftChild = [1,-1,3,-1], rightChild = [2,3,-1,-1]\n<strong>Output:</strong> false\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/08/23/1503_ex3.png\" style=\"width: 82px; height: 174px;\" />\n<pre>\n<strong>Input:</strong> n = 2, leftChild = [1,0], rightChild = [-1,-1]\n<strong>Output:</strong> false\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == leftChild.length == rightChild.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>4</sup></code></li>\n\t<li><code>-1 &lt;= leftChild[i], rightChild[i] &lt;= n - 1</code></li>\n</ul>\n",
+  "hints": [
+    "Find the parent of each node.",
+    "A valid tree must have nodes with only one parent and exactly one node with no parent."
+  ],
+  "metaData": "{\n  \"name\": \"validateBinaryTreeNodes\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"leftChild\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"rightChild\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"manual\": false\n}",
+  "stats": "{\"totalAccepted\": \"135.2K\", \"totalSubmission\": \"306.6K\", \"totalAcceptedRaw\": 135164, \"totalSubmissionRaw\": 306636, \"acRate\": \"44.1%\"}",
+  "likes": 2252,
+  "dislikes": 525,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "4\n[1,-1,3,-1]\n[2,-1,-1,-1]",
+    "4\n[1,-1,3,-1]\n[2,3,-1,-1]",
+    "2\n[1,0]\n[-1,-1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool validateBinaryTreeNodes(int n, vector<int>& leftChild, vector<int>& rightChild) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean validateBinaryTreeNodes(int n, int[] leftChild, int[] rightChild) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def validateBinaryTreeNodes(self, n: int, leftChild: List[int], rightChild: List[int]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def validateBinaryTreeNodes(self, n, leftChild, rightChild):\n        \"\"\"\n        :type n: int\n        :type leftChild: List[int]\n        :type rightChild: List[int]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[]} leftChild\n * @param {number[]} rightChild\n * @return {boolean}\n */\nvar validateBinaryTreeNodes = function(n, leftChild, rightChild) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function validateBinaryTreeNodes(n: number, leftChild: number[], rightChild: number[]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool ValidateBinaryTreeNodes(int n, int[] leftChild, int[] rightChild) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool validateBinaryTreeNodes(int n, int* leftChild, int leftChildSize, int* rightChild, int rightChildSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func validateBinaryTreeNodes(n int, leftChild []int, rightChild []int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun validateBinaryTreeNodes(n: Int, leftChild: IntArray, rightChild: IntArray): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func validateBinaryTreeNodes(_ n: Int, _ leftChild: [Int], _ rightChild: [Int]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn validate_binary_tree_nodes(n: i32, left_child: Vec<i32>, right_child: Vec<i32>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[]} left_child\n# @param {Integer[]} right_child\n# @return {Boolean}\ndef validate_binary_tree_nodes(n, left_child, right_child)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[] $leftChild\n     * @param Integer[] $rightChild\n     * @return Boolean\n     */\n    function validateBinaryTreeNodes($n, $leftChild, $rightChild) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool validateBinaryTreeNodes(int n, List<int> leftChild, List<int> rightChild) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def validateBinaryTreeNodes(n: Int, leftChild: Array[Int], rightChild: Array[Int]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec validate_binary_tree_nodes(n :: integer, left_child :: [integer], right_child :: [integer]) :: boolean\n  def validate_binary_tree_nodes(n, left_child, right_child) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec validate_binary_tree_nodes(N :: integer(), LeftChild :: [integer()], RightChild :: [integer()]) -> boolean().\nvalidate_binary_tree_nodes(N, LeftChild, RightChild) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (validate-binary-tree-nodes n leftChild rightChild)\n  (-> exact-integer? (listof exact-integer?) (listof exact-integer?) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2068",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nBefore we go into the approaches, let's first talk about what makes a binary tree valid.\n\n> Note that while this is not a formal definition of a binary tree, these rules are sufficient for solving the problem.\n\n**A binary tree must have a root. This is a node with no incoming edges - that is, the root has no parent.**\n\n![invalid tree example](../Figures/1361/1.png)\n<br>\n<br>\n\n**Every node other than the root must have exactly one parent.**\n\n![invalid tree example](../Figures/1361/2.png)\n<br>\n<br>\n\n**The tree must be connected - every node must be reachable from one node (the root).**\n\n![invalid tree example](../Figures/1361/3.png)\n<br>\n<br>\n\n**There cannot be a cycle.**\n\n![invalid tree example](../Figures/1361/4.png)\n<br>\n<br>\n\nTo solve this problem, we can check the nodes given to us against these rules.\n\n> You may notice that some of these rules imply each other. For example, if a binary tree had a root, it would have a cycle only if it was not connected, or there was a node with more than one parent.\n\n---\n\n### Approach 1: Depth First Search (DFS)\n\n**Intuition**\n\n> If you are new to Depth First Search, please see our [LeetCode Explore Card](https://leetcode.com/explore/featured/card/graph/619/depth-first-search-in-graph/3882/) for more information on it!\n\nOne way to solve this problem would be to perform a DFS on the tree and check that all the rules are followed. Before we can start a DFS, we need to locate the root. Let's define a function `findRoot` that helps us find the root.\n\nAs mentioned above, the root has no parent - this also means that the root is not the child of any nodes. The input arrays `leftChild` and `rightChild` describe all children, so the root would not appear in these arrays. We can simply use a for loop from `0` to `n - 1` and for each number, check if it is present in `leftChild` or `rightChild`. If it's not present in either, then we can return it as the root. If we don't find any root, we can return `-1`.\n\nTo improve efficiency, we will convert `leftChild` and `rightChild` to a set for $$O(1)$$ checks.\n\n<iframe src=\"https://leetcode.com/playground/iV5vT2dM/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"iV5vT2dM\"></iframe>\n\nWe will start by obtaining `root = findRoot()`. If `root = -1`, there is no node without a parent, and we can immediately return false as the tree is invalid.\n\nOnce we have the root, we can start a DFS from it. We will implement the DFS iteratively with a stack. How can we validate the tree? First of all, if we see a node multiple times during the DFS, it means a node has multiple parents (and there could be a cycle). We will use a set `seen` that keeps track of all the nodes we have seen so far during the traversal. When we move to a `child`, if `child` is already in `seen`, we can immediately return false since we would be visiting `child` for the second time.\n\nOnce the DFS finishes, every node we visited will be in `seen`. If the tree is connected, then the length of `seen` will be equal to `n`. If `seen.length != n`, it means that some nodes were not visited, and thus the tree must be disconnected. Thus, we can return `seen.length == n` at the end of the algorithm.\n\nThis process is sufficient in validating a binary tree: \n\n1. If a binary tree does not have a root, then `findRoot` will return `-1`.\n2. If there is a node with more than one parent, then we will detect it with `seen`.\n3. If the tree is disconnected, then `seen` will hold less than `n` nodes at the end.\n4. If there is a cycle, then we will detect it with `seen`.\n\nAny other scenario we don't explicitly check for will be caught by some other rule. For example, the second rule we stated was:\n\n**Every node other than the root must have exactly one parent.**\n\nYou may be thinking: we are explicitly checking the case when a node has multiple parents with `seen`, but what if there is a node with no parent other than the `root`? That is, what if there are multiple roots? In that scenario, `findRoot` would give us the root with the lowest value. We would perform a DFS from there, and never reach any of the other roots. Then at the end, `seen` would have less than `n` nodes.\n\n**Algorithm**\n\n1. Define a function `findRoot` that gives us the root, as described above.\n2. Obtain `root = findRoot()`. If `root == -1`, then `return false`.\n3. Initialize a `stack` and set `seen` with `root` in them.\n4. While the `stack` is not empty:\n    - Pop the top of the stack as `node`.\n    - Iterate over the children of `node`, given in `leftChild[node]` and `rightChild[node]`. For each `child`:\n        - If `child == -1`, then ignore it as it means there is no child.\n        - If `child` is in `seen`, `return false`.\n        - Push `child` to the stack and add it to `seen`.\n5. After the DFS, `return seen.length == n`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/W65UxZEa/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"W65UxZEa\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(n)$$\n\n    To find the root, we convert `leftChild` and `rightChild` to a set, which costs $$O(n)$$. Then, we iterate over all nodes, which also costs $$O(n)$$.\n\n    Once we have the root, we perform a DFS that costs $$O(n)$$ as we never visit a node more than once.\n\n* Space complexity: $$O(n)$$\n\n    We require $$O(n)$$ space when converting `leftChild` and `rightChild` to a set to find the root. We also require $$O(n)$$ space for `stack` and `seen` during the DFS.\n    \n<br/>\n\n---\n\n### Approach 2: Breadth First Search (BFS)\n\n**Intuition**\n\nSometimes an interviewer may ask you to implement both BFS and DFS. This approach is the same as the previous one, except we will use BFS to perform the traversal instead of DFS.\n\nBFS uses a queue instead of a stack. If you are not familiar with BFS traversal, we suggest you read our relevant [LeetCode Explore Card](https://leetcode.com/explore/learn/card/queue-stack/231/practical-application-queue/1376/).\n\n**Algorithm**\n\n1. Define a function `findRoot` that gives us the root, as described above.\n2. Obtain `root = findRoot()`. If `root == -1`, then `return false`.\n3. Initialize a `queue` and set `seen` with `root` in them.\n4. While the `queue` is not empty:\n    - Pop the front of the queue as `node`.\n    - Iterate over the children of `node`, given in `leftChild[node]` and `rightChild[node]`. For each `child`:\n        - If `child == -1`, then ignore it as it means there is no child.\n        - If `child` is in `seen`, `return false`.\n        - Push `child` to the queue and add it to `seen`.\n5. After the BFS, `return seen.length == n`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/8LE3ZeZN/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"8LE3ZeZN\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(n)$$\n\n    To find the root, we convert `leftChild` and `rightChild` to a set, which costs $$O(n)$$. Then, we iterate over all nodes, which also costs $$O(n)$$.\n\n    Once we have the root, we perform a BFS that costs $$O(n)$$ as we never visit a node more than once. Note that an efficient queue implementation with $$O(1)$$ operations is required to achieve this complexity.\n\n* Space complexity: $$O(n)$$\n\n    We require $$O(n)$$ space when converting `leftChild` and `rightChild` to a set to find the root. We also require $$O(n)$$ space for `queue` and `seen` during the BFS.\n    \n<br/>\n\n---\n\n### Approach 3: Union Find\n\n**Intuition**\n\n> This is a more advanced, but interesting way to approach this problem. We have included it for the sake of completeness. It is unlikely you will be expected to implement this approach in an interview if you have already used one of the previous approaches, so we will not delve into great detail in this approach.\n\nA disjoint-set data structure (also called a union–find), is a data structure that stores a collection of disjoint (non-overlapping) sets. Union-find provides us with the following methods:\n\n1. `find`: Determine which subset a particular element is in. This can be used to determine if two elements are in the same subset.\n2. `union`: Join two subsets into a single subset.\n\nIf you are new to Union-Find, we suggest you read our [Leetcode Explore Card](https://leetcode.com/explore/learn/card/graph/618/disjoint-set/3881/). We will not talk about implementation details in this article, but only about the interface to the data structure.\n\nInitially, all nodes belong to their own subset. We will iterate over all `(parent, child)` pairs given in `leftChild` and `rightChild` and attempt a `union`. We want to assign the subset of `child` to the subset of `parent`. For each call to `union(parent, child)`, we can see if the tree is invalid with the following checks:\n\n1. If `find(child) != child`, then `child` must have been assigned a parent earlier, and thus `child` has multiple parents.\n2. If `parent` and `child` already belong to the same subset, then there must be a directed path from `child` to `parent` as `parent` must have been assigned to the subset of `child` earlier, and thus there exists a cycle.\n\nAfter performing all `union` operations successfully between parents and their children, there should only be one component in the union-find data structure. We can track the number of components by subtracting one from the count on each successful `union` operation, and then check whether the final count of components is equal to 1.\n\n**Algorithm**\n\n1. Create a union-find data structure `uf` that implements `find(node)` and `union(parent, child)`. It should also track the number of `components`.\n    - In `union`, we return a boolean indicating if the union was successful. A union is unsuccessful if the parent of `child` is not `child`, or the parent of `parent` is `child`.\n    - If `union` is successful, we assign the subset of `child` to the subset of `parent` and decrement the number of `components`.\n2. Iterate `node` from `0` until `n`:\n    - Iterate over the children of `node` as `child`:\n        - If `child == - 1`, ignore it.\n        - Otherwise, perform a `union(node, child)`. If it returns false, then `return false`.\n3. Return `uf.components == 1`.\n \n**Implementation**\n\n> Note: In C++, `union` is a reserved keyword and cannot be redefined. Therefore, we need to rename the `union` method, and we call it `join` here.\n\n<iframe src=\"https://leetcode.com/playground/c33bCEGR/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"c33bCEGR\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(n)$$\n\n    For $T$ operations, the amortized time complexity of the union-find algorithm with path compression and union-by rank is $O(\\alpha(T))$. Here, $\\alpha(T)$ is the inverse Ackermann function that grows so slowly, that it doesn't exceed $4$ for all reasonable $T$ (approximately $ T < 10^{600}$). You can read more about the complexity of union-find [here](https://en.wikipedia.org/wiki/Disjoint-set_data_structure#Time_complexity). Because the function grows so slowly, we consider it to be $O(1)$.\n\n    You may have noticed that we didn't use union-by-rank optimization as in other DSU problems. The reason for this is that the structure of this problem is not like a regular graph. More specifically, if a pair of nodes `(parent, child)` is considered valid for union, only the eligible tree root node is considered as the new child, and it will always have a rank of 0. Therefore, during the union process, the rank of all nodes will not exceed 1. As for the possibility of nodes having a rank greater than 1, it would be filtered out as required by the problem statement and won't occur. Therefore, we don't need to use union-by-rank in this problem. We encourage readers to build test cases and try them out.\n\n    Initializing the `UnionFind` data structure costs $$O(n)$$. Then, we simply iterate over each node once and perform some union-find operations at each iteration.\n\n* Space complexity: $$O(n)$$\n\n    The `UnionFind` data structure keeps a `parents` array that takes $$O(n)$$ space.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

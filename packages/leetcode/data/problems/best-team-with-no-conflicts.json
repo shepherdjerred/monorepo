@@ -1,0 +1,141 @@
+{
+  "questionId": "1748",
+  "questionFrontendId": "1626",
+  "title": "Best Team With No Conflicts",
+  "titleSlug": "best-team-with-no-conflicts",
+  "difficulty": "Medium",
+  "content": "<p>You are the manager of a basketball team. For the upcoming tournament, you want to choose the team with the highest overall score. The score of the team is the <strong>sum</strong> of scores of all the players in the team.</p>\n\n<p>However, the basketball team is not allowed to have <strong>conflicts</strong>. A <strong>conflict</strong> exists if a younger player has a <strong>strictly higher</strong> score than an older player. A conflict does <strong>not</strong> occur between players of the same age.</p>\n\n<p>Given two lists, <code>scores</code> and <code>ages</code>, where each <code>scores[i]</code> and <code>ages[i]</code> represents the score and age of the <code>i<sup>th</sup></code> player, respectively, return <em>the highest overall score of all possible basketball teams</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> scores = [1,3,5,10,15], ages = [1,2,3,4,5]\n<strong>Output:</strong> 34\n<strong>Explanation:</strong>&nbsp;You can choose all the players.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> scores = [4,5,6,5], ages = [2,1,2,1]\n<strong>Output:</strong> 16\n<strong>Explanation:</strong>&nbsp;It is best to choose the last 3 players. Notice that you are allowed to choose multiple people of the same age.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> scores = [1,2,3,5], ages = [8,9,10,1]\n<strong>Output:</strong> 6\n<strong>Explanation:</strong>&nbsp;It is best to choose the first 3 players. \n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= scores.length, ages.length &lt;= 1000</code></li>\n\t<li><code>scores.length == ages.length</code></li>\n\t<li><code>1 &lt;= scores[i] &lt;= 10<sup>6</sup></code></li>\n\t<li><code>1 &lt;= ages[i] &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [
+    "First, sort players by age and break ties by their score. You can now consider the players from left to right.",
+    "If you choose to include a player, you must only choose players with at least that score later on."
+  ],
+  "metaData": "{\n  \"name\": \"bestTeamScore\",\n  \"params\": [\n    {\n      \"name\": \"scores\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"ages\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"98.6K\", \"totalSubmission\": \"194.7K\", \"totalAcceptedRaw\": 98605, \"totalSubmissionRaw\": 194715, \"acRate\": \"50.6%\"}",
+  "likes": 3049,
+  "dislikes": 99,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,3,5,10,15]\n[1,2,3,4,5]",
+    "[4,5,6,5]\n[2,1,2,1]",
+    "[1,2,3,5]\n[8,9,10,1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"morgan-stanley\", \"name\": \"Morgan Stanley\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int bestTeamScore(vector<int>& scores, vector<int>& ages) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int bestTeamScore(int[] scores, int[] ages) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def bestTeamScore(self, scores: List[int], ages: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def bestTeamScore(self, scores, ages):\n        \"\"\"\n        :type scores: List[int]\n        :type ages: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} scores\n * @param {number[]} ages\n * @return {number}\n */\nvar bestTeamScore = function(scores, ages) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function bestTeamScore(scores: number[], ages: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int BestTeamScore(int[] scores, int[] ages) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int bestTeamScore(int* scores, int scoresSize, int* ages, int agesSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func bestTeamScore(scores []int, ages []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun bestTeamScore(scores: IntArray, ages: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func bestTeamScore(_ scores: [Int], _ ages: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn best_team_score(scores: Vec<i32>, ages: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} scores\n# @param {Integer[]} ages\n# @return {Integer}\ndef best_team_score(scores, ages)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $scores\n     * @param Integer[] $ages\n     * @return Integer\n     */\n    function bestTeamScore($scores, $ages) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int bestTeamScore(List<int> scores, List<int> ages) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def bestTeamScore(scores: Array[Int], ages: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec best_team_score(scores :: [integer], ages :: [integer]) :: integer\n  def best_team_score(scores, ages) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec best_team_score(Scores :: [integer()], Ages :: [integer()]) -> integer().\nbest_team_score(Scores, Ages) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (best-team-score scores ages)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1635",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach 1: Top-Down Dynamic Programming\n\n#### Intuition\n\nWe are given two lists of integers. These lists represent the score and age, respectively, of each of the $N$ players. We need to find the highest score of the non-conflicting team. A team has conflict if a younger player has a strictly higher score than an older player.\n\nWhether a player stays in the team depends on his age and score, as well as the age and score of other players in the team. So we need to consider these two parameters before making any decision. We can reduce these two considerable parameters to one by sorting the players according to the other parameter, i.e., if we sort by age, then we only need to consider score and vice versa. In this approach, we will sort the players in ascending order of age. The benefit of sorting is that now when we start choosing players from left to right, we know that the age of the player we choose will always be greater than the age of the players we have already chosen. Hence we only need to think about the score of players.\n\nOnce we have sorted the players in ascending order of age, we will iterate them from smallest to largest age. For each player in the iteration, we either:\n- Add this player to the team if he doesn't conflict with the team.\n- Do not add the player to the team.\n\nTo check if the current player makes the team conflicting, we need to have the previous player we have chosen. The reason is that the players we have already chosen are non-conflicting. Since the players are in increasing order of their age, they would also need to be in non-decreasing order of the score (because that's necessary for the team to be non-conflicting). Hence the last player we have chosen will have the highest age and score. Now, if the score of the current player is more than the last player we have chosen, we can add this player to the team; otherwise, not.\n\nFor this recursive approach, what are the parameters that we need to track? The first parameter is the `index` of the player we are currently considering as we traverse the players. Secondly, we must keep track of the last player index `prev` we chose.\n\nIn this approach, we will have to iterate over all the $2^N$ possibilities and hence is not efficient. If we observe the below figure, there are repeated subproblems. Notice the green nodes are repeated subproblems signifying that we have already solved these subproblems before. To avoid recalculating results for previously seen subproblems, we will memoize the result for each subproblem. So the next time we need to calculate the result for the same set of parameters `{index, prev}`, we can simply look up the result in constant time instead of recalculating the result.\n\n![fig](../Figures/1626/1626A.png)\n\n#### Algorithm\n\n1. Store the ages and scores of all the players in the list `ageScorePair`.\n2. Sort the list `ageScorePair` in ascending order of age and then in ascending order of score.\n3. Iterate over the players; start with `index = 0` and `prev = -1`, as we haven't chosen any player yet.\n4. If it's the first player (`prev = -1`) or the player's score at `index` is more than the score of the player at index `prev`. Then we can add this player, and the score will be the maximum of the two choices we have.\n\n    - If we add this player, we will add the score, and the value of `prev` will be the current index `index`, and move on to the next player, i.e., `index + 1`.\n    - If we don't add this player, the value of `prev` won't change and move on to the next player.\n5. If the above two conditions are not satisfied, we only have the option to leave this player and move on to the next one.\n6. Base condition: If we have iterated over all the players, we should return `0`.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/5r2BuVY8/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"5r2BuVY8\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $N$ is the number of players.\n\n* Time complexity: $O(N ^ 2)$.\n\n  Sorting the list `ageScorePair` will take $O(N \\log N)$ time. In the recursion, each state is defined by the `index` and the `prev`. Hence, there will be $O(N * N)$ states, and at worst, we must visit most of the states to solve the original problem. Each recursive call will require $O(1)$ time due to the memoization. Therefore, the total time required equals $O(N * N)$.\n\n* Space complexity: $O(N ^ 2)$.\n\n  The list `ageScorePair` will take $2 * N$ space. The memoization results are stored in the table memo with size `N * N`. Also, stack space in the recursion equals the maximum number of active functions. The maximum number of active functions will be at most $N$, i.e., one function call for every player. Hence, the space complexity is $O(N * N)$.\n\n\n---\n\n### Approach 2: Bottom-Up Dynamic Programming\n\n#### Intuition\n\nIf we observe closely, after sorting the list of pairs (age, score) by age, we need to find the highest sum of a non-decreasing subsequence of scores in the list. This is because after sorting, the list has the ages in ascending order, and in order to be non-conflicting, the score also has to be in non-decreasing order. Therefore we need to find the largest sum of scores in any non-decreasing subsequence of scores in the list of pairs. This is a typical dynamic programming problem very similar to [[309] Longest Increasing Subsequence](https://leetcode.com/problems/longest-increasing-subsequence/).\n\nSimilar to the previous approach, we will first sort the pairs in ascending order of age and then by score. Then we will iterate over the players from left to right. For each player, we will try to find the previous player it could be paired with. We will iterate over the players on the left and find the pairing that provides the maximum score for this player. The maximum score of any player will be the answer.\n\n#### Algorithm\n\n1. Store the ages and scores of all the players in the list `ageScorePair`.\n2. Sort the list `ageScorePair` in ascending order of age and then in ascending order of score.\n3. Initialize the array `dp` of size `N`. The `dp[i]` represents the maximum score possible by taking `ith` player and possible players before it. All values initially will be equal to the score of individual players.\n4. Iterate over players from `0` to `N - 1` for each player at index `i`\n\n    - Iterate over the players on the left, i.e., from `0` to `i - 1`. For each such player, `j`, check if the score of the `ith` player is greater than or equal to the `jth` player's score. If it is, we can add the total score of the `jth` player (`dp[j]`) to the score of the `ith` player and update the maximum score of the `ith` player `dp[i]` accordingly.\n\n5. Store the maximum of all `dp[i]` in the variable `answer`.\n6. Return `answer`.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/5tpYytpm/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"5tpYytpm\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $N$ is the number of players.\n\n* Time complexity: $O(N ^ 2)$.\n\n  Sorting the list `ageScorePair` will take $O(N \\log N)$ time. Then for the `ith` player, we iterate `i - 1` players on the left, hence the total number of operations will be equal to $(0 + 1 + 2 + ...... + N - 1)$, which is equivalent to $((N - 1) * N) / 2$. Therefore the total time complexity equals $O(N * N)$.\n\n* Space complexity: $O(N)$.\n\n  The list `ageScorePair` will take $2 * N$ space. We have another list `dp`, to store the maximum score up to the particular index. Therefore the total space complexity equals $O(N)$.\n\n---\n\n### Approach 3: Binary Indexed Tree (BIT) / Fenwick Tree\n\n**Intuition**\n\n> **Note:** This approach is more advanced and added for the sake of completion. In an interview setting, generally, this approach will not be expected from the candidate.\n\nFor this approach, we will assume you are already familiar with a [Binary Indexed Tree/Fenwick Tree](https://en.wikipedia.org/wiki/Fenwick_tree), and not talk about the detailed inner workings.\n\nIn the binary indexed tree, we store some information which will be the score in our case, corresponding to indices which will be the age here. Hence, a node in the binary indexed tree with index `x` will store the maximum score possible with players with $\\text{age} <= x$.\n\nWe will sort the players in ascending order of their score and then by age. Then we will iterate over each player, and for each player with age `x`, we will find the maximum score with players having age less than or equal to `x` by querying the BIT. This maximum score can be added to the current player score as we have sorted the players, so the current score will be the maximum seen so far and won't cause a conflict.\n\nNow that the maximum score with age `x` is the above addition `currentBest` (current player score and the BIT returned query result), we need to update the BIT so that all the nodes with age greater than `x` have the updated values. The maximum of all the `currentBest` is the maximum score we can get.\n\nThis approach is similar to the previous two where we iterate over the players and for each player, find the maximum non-conflicting score. In the previous two approaches, we needed linear time to find the non-conflicting score, but with a BIT we only need logarithmic time.\n\n**Algorithm**\n\n1. Store the ages and scores of all the players in the list `ageScorePair`.\n2. Sort the list `ageScorePair` in ascending order of score and then in ascending order of age.\n3. Find the maximum age in the list and store it as `highestAge`. Create an array `BIT` with size `highestAge + 1`; this is the binary indexed tree.\n4. Iterate over players from `0` to `N - 1` for each player pair `ageScore`:\n\n    - Store the maximum score possible with this player as the `currentBest`. This will be equal to the sum of the current player score and the score returned by querying BIT with a score up to this age.\n\n    - Update the score in BIT with an age greater than the current player age if their score is smaller than `currentBest`.\n5. Store the maximum of all `currentBest` in the variable `answer`.\n6. Return `answer`.\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/CLhfTDG8/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"CLhfTDG8\"></iframe>\n\n\n**Complexity Analysis**\n\nHere, $N$ is the number of players, and $K$ is the maximum age in the list.\n\n* Time complexity: $(N \\log N + N \\log K)$.\n\n  Sorting the list `ageScorePair` will take $O(N \\log N)$ time. Then for each player, we query and update the BIT, which takes $O(\\log K)$ and therefore will take $(N \\log K)$ for all the players. Hence the total time complexity equals $(N \\log N + N \\log K)$.\n\n* Space complexity: $O(N + K)$.\n\n  The list `ageScorePair` will take $2 * N$ space. BIT array will need $O(K)$ space. Therefore the total space complexity equals $O(N + K)$.\n\n\n\n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

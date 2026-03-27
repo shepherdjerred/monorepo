@@ -1,0 +1,124 @@
+{
+  "questionId": "1544",
+  "questionFrontendId": "1448",
+  "title": "Count Good Nodes in Binary Tree",
+  "titleSlug": "count-good-nodes-in-binary-tree",
+  "difficulty": "Medium",
+  "content": "<p>Given a binary tree <code>root</code>, a node <em>X</em> in the tree is named&nbsp;<strong>good</strong> if in the path from root to <em>X</em> there are no nodes with a value <em>greater than</em> X.</p>\r\n\r\n<p>Return the number of <strong>good</strong> nodes in the binary tree.</p>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong class=\"example\">Example 1:</strong></p>\r\n\r\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/04/02/test_sample_1.png\" style=\"width: 263px; height: 156px;\" /></strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> root = [3,1,4,3,null,1,5]\r\n<strong>Output:</strong> 4\r\n<strong>Explanation:</strong> Nodes in blue are <strong>good</strong>.\r\nRoot Node (3) is always a good node.\r\nNode 4 -&gt; (3,4) is the maximum value in the path starting from the root.\r\nNode 5 -&gt; (3,4,5) is the maximum value in the path\r\nNode 3 -&gt; (3,1,3) is the maximum value in the path.</pre>\r\n\r\n<p><strong class=\"example\">Example 2:</strong></p>\r\n\r\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/04/02/test_sample_2.png\" style=\"width: 157px; height: 161px;\" /></strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> root = [3,3,null,4,2]\r\n<strong>Output:</strong> 3\r\n<strong>Explanation:</strong> Node 2 -&gt; (3, 3, 2) is not good, because &quot;3&quot; is higher than it.</pre>\r\n\r\n<p><strong class=\"example\">Example 3:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> root = [1]\r\n<strong>Output:</strong> 1\r\n<strong>Explanation:</strong> Root is considered as <strong>good</strong>.</pre>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong>Constraints:</strong></p>\r\n\r\n<ul>\r\n\t<li>The number of nodes in the binary tree is in the range&nbsp;<code>[1, 10^5]</code>.</li>\r\n\t<li>Each node&#39;s value is between <code>[-10^4, 10^4]</code>.</li>\r\n</ul>",
+  "hints": [
+    "Use DFS (Depth First Search) to traverse the tree, and constantly keep track of the current path maximum."
+  ],
+  "metaData": "{\n  \"name\": \"goodNodes\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"TreeNode\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"864.4K\", \"totalSubmission\": \"1.2M\", \"totalAcceptedRaw\": 864385, \"totalSubmissionRaw\": 1171316, \"acRate\": \"73.8%\"}",
+  "likes": 6345,
+  "dislikes": 214,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[3,1,4,3,null,1,5]",
+    "[3,3,null,4,2]",
+    "[1]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"docusign\", \"name\": \"Docusign\"}, {\"timesEncountered\": 2, \"slug\": \"josh-technology\", \"name\": \"josh technology\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    int goodNodes(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public int goodNodes(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def goodNodes(self, root: TreeNode) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def goodNodes(self, root):\n        \"\"\"\n        :type root: TreeNode\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {number}\n */\nvar goodNodes = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction goodNodes(root: TreeNode | null): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public int GoodNodes(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\n\n\nint goodNodes(struct TreeNode* root){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc goodNodes(root *TreeNode) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun goodNodes(root: TreeNode?): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func goodNodes(_ root: TreeNode?) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn good_nodes(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {Integer}\ndef good_nodes(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return Integer\n     */\n    function goodNodes($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def goodNodes(root: TreeNode): Int = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "1154",
+    "content": "[TOC]\n\n## Video Solution\n\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/644132580\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n---\n\n### Approach 1: Depth First Search, Recursion\n\n**Intuition**\n\nWhenever you see a tree or graph problem, your first instinct should be Breadth First Search (BFS) or Depth First Search (DFS). For this approach, we'll start with DFS. If you aren't familiar with trees and traversal algorithms, check out this [explore card](https://leetcode.com/explore/learn/card/data-structure-tree/). With tree traversals, algorithms usually follow the same pattern:\n\n1. Do something with the current node\n2. Add the current node's children to the stack or queue being used for the traversal\n3. Move on to the next node\n\nA powerful idea for any tree or graph problem involving BFS/DFS that everybody should learn has to do with the second step - instead of just adding nodes to the stack or queue, we can store extra data to represent state. Depending on the language you're using, this might be something like a tuple or custom object which includes the current node and some information about the current state.\n\nIn this first approach, we'll be using recursion. For this problem, we're concerned about the **greatest value seen**, so instead of the recursive function only taking nodes as an input, such as `dfs(node)`, let's also have each call take an integer as well like `dfs(node, integer)`. This integer will represent the **greatest value on the path from the root to the associated node**. This means that at each node, we can simply check if it is \"good\" by comparing this integer to the node's value.\n\nHow do we calculate this number? For the root, the path from the root contains no other nodes, so we can initially set this value to a very small value (such as INT_MIN). For every call afterwards, we should compare this number with the current node's value. If the current node's value is greater, then set this value equal to the current node's value before visiting this node's children.\n\n<img src=\"../Figures/1448/example.png\" width=\"960\"><br>\n\nUsing the above tree as an example, we will start our DFS by calling `dfs(root, INT_MIN)`. At the root, because the root's value (3) is not less than INT_MIN, the root counts as a good node. Next, we call `dfs` for each of the root's children, passing `max(3, INT_MIN)` as the second argument. This is because, for both children, the path from the root to the child contains only the root, which means to be considered a good node, they only need to have a value greater than or equal to the root's value.\n\nAs we continue to traverse downwards through the tree, the number that we pass along with each node will increase every time it finds a new max value, which allows us to easily check when a node is \"good\".\n\nThe below animation plays through the entire example:\n\n!?!../Documents/1448_Count_Good_Nodes.json:960,540!?! <br>\n\n**Algorithm**\n\n1. Initialize a function `dfs`, as well as a variable `numGoodNodes` that keeps track of how many good nodes are in the tree. The function should take two arguments: a node `node`, and an integer representing the greatest value in the path leading from the root to the current node `maxSoFar`.\n\n2. For each call to the function, first check if `maxSoFar <= node.val`. If so, increment `numGoodNodes`. Next, call `dfs(child, max(node.val, maxSoFar))` for all children of the current node.\n\n3. Call `dfs(root, INT_MIN)` and return `numGoodNodes`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/QdgAnxWx/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"QdgAnxWx\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$N$$ as the number of nodes in the tree,\n\n* Time complexity: $$O(N)$$\n\n    With DFS we visit every node exactly once and do a constant amount of work each time.\n\n* Space complexity: $$O(N)$$\n\n    Because DFS prioritizes depth, our call stack can be as large as the height $$H$$ of the tree. In the worst case scenario, $$H = N$$, if the tree only has one path.\n    \n<br/>\n\n---\n\n### Approach 2: Depth First Search, Iterative\n\n**Intuition**\n\nDFS can also be implemented iteratively. You may be thinking at this point: what kind of DFS should we use, preorder, postorder, or inorder? The answer is that, for this problem, it doesn't matter. For each node, there is only one path from the root to that node, so regardless of the order of our traversal, the integer we use to track the greatest value will always be the largest value between the current node and the root.\n\nThe algorithm works the same as in the previous approach, but we will be using our own stack instead of recursion. We can implement the tracking integer by pairing the nodes with the integer when we push elements onto the stack. Depending on the language you're using, this might be done with a tuple or a custom object.\n\n**Algorithm**\n\n1. Initialize a stack to use for DFS, as well as a variable `numGoodNodes` that keeps track of how many good nodes are in the tree. The stack should initially contain the root and a very small value (like INT_MIN).\n\n2. Execute DFS: while the stack is not empty, pop from the stack.\n\n3. At each node, first check if `node.val` is greater than or equal to the number associated with it `maxSoFar`. If it is, then increment `numGoodNodes`. Next, push the children onto the stack, along with the greater value between `maxSoFar` and `node.val`.\n\n4. Return `numGoodNodes`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/HbUcTgCR/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"HbUcTgCR\"></iframe>\n\n\n**Complexity Analysis**\n\nGiven $$N$$ as the number of nodes in the tree,\n\n* Time complexity: $$O(N)$$\n\n    With DFS we visit every node exactly once and do a constant amount of work each time.\n\n* Space complexity: $$O(N)$$\n\n    In the worst case scenario, where every right child has 2 children and every left child has no children (or vice-versa), our stack will contain $$N / 2$$ nodes at max depth.\n    \n<br/>\n\n---\n\n### Approach 3: Breadth First Search\n\n**Intuition**\n\nAs stated in the previous approach, the order in which we perform DFS does not matter, because the extra state we pass along on each iteration will be correct regardless of traversal order. For this same reason, BFS and DFS are both valid approaches.\n\n**Algorithm**\n\nThe algorithm is identical to the iterative DFS approach, except we are using a queue instead of a stack.\n\n1. Initialize a queue to use for BFS, as well as a variable `numGoodNodes` that keeps track of how many good nodes are in the tree. The BFS should initially contain the root and the a very small value (like INT_MIN).\n\n2. Execute BFS: while the queue is not empty, pop from the front of the queue.\n\n3. At each node, first check if `node.val` is greater than or equal to the value of its largest ancestor `maxSoFar`. If it is, then increment `numGoodNodes`. Next, push the children onto the queue, along with the greater value between `maxSoFar` and `node.val`.\n\n4. Return `numGoodNodes`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/dgGU9ecZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"dgGU9ecZ\"></iframe>\n\n\n**Complexity Analysis**\n\nGiven $$N$$ as the number of nodes in the tree,\n\n* Time complexity: $$O(N)$$\n\n    With BFS we visit every node exactly once and do a constant amount of work each time.\n\n* Space complexity: $$O(N)$$\n\n    The worst case scenario for space with BFS is when the tree is full. In this scenario, the final level contains $$N / 2$$ nodes, and our queue will hold all the nodes in the final level at some point.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

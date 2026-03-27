@@ -1,0 +1,148 @@
+{
+  "questionId": "1553",
+  "questionFrontendId": "1442",
+  "title": "Count Triplets That Can Form Two Arrays of Equal XOR",
+  "titleSlug": "count-triplets-that-can-form-two-arrays-of-equal-xor",
+  "difficulty": "Medium",
+  "content": "<p>Given an array of integers <code>arr</code>.</p>\n\n<p>We want to select three indices <code>i</code>, <code>j</code> and <code>k</code> where <code>(0 &lt;= i &lt; j &lt;= k &lt; arr.length)</code>.</p>\n\n<p>Let&#39;s define <code>a</code> and <code>b</code> as follows:</p>\n\n<ul>\n\t<li><code>a = arr[i] ^ arr[i + 1] ^ ... ^ arr[j - 1]</code></li>\n\t<li><code>b = arr[j] ^ arr[j + 1] ^ ... ^ arr[k]</code></li>\n</ul>\n\n<p>Note that <strong>^</strong> denotes the <strong>bitwise-xor</strong> operation.</p>\n\n<p>Return <em>the number of triplets</em> (<code>i</code>, <code>j</code> and <code>k</code>) Where <code>a == b</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [2,3,1,6,7]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The triplets are (0,1,2), (0,2,2), (2,3,4) and (2,4,4)\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [1,1,1,1,1]\n<strong>Output:</strong> 10\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= arr.length &lt;= 300</code></li>\n\t<li><code>1 &lt;= arr[i] &lt;= 10<sup>8</sup></code></li>\n</ul>\n",
+  "hints": [
+    "We are searching for sub-array of length ≥ 2 and we need to split it to 2 non-empty arrays so that the xor of the first array is equal to the xor of the second array. This is equivalent to searching for sub-array with xor = 0.",
+    "Keep the prefix xor of arr in another array, check the xor of all sub-arrays in O(n^2), if the xor of sub-array of length x is 0 add x-1 to the answer."
+  ],
+  "metaData": "{\n  \"name\": \"countTriplets\",\n  \"params\": [\n    {\n      \"name\": \"arr\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"141.5K\", \"totalSubmission\": \"166.8K\", \"totalAcceptedRaw\": 141512, \"totalSubmissionRaw\": 166820, \"acRate\": \"84.8%\"}",
+  "likes": 2028,
+  "dislikes": 138,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Find The Original Array of Prefix Xor\", \"titleSlug\": \"find-the-original-array-of-prefix-xor\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,3,1,6,7]",
+    "[1,1,1,1,1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countTriplets(vector<int>& arr) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countTriplets(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countTriplets(self, arr: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countTriplets(self, arr):\n        \"\"\"\n        :type arr: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arr\n * @return {number}\n */\nvar countTriplets = function(arr) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countTriplets(arr: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountTriplets(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int countTriplets(int* arr, int arrSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countTriplets(arr []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countTriplets(arr: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countTriplets(_ arr: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_triplets(arr: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} arr\n# @return {Integer}\ndef count_triplets(arr)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $arr\n     * @return Integer\n     */\n    function countTriplets($arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countTriplets(List<int> arr) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countTriplets(arr: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_triplets(arr :: [integer]) :: integer\n  def count_triplets(arr) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_triplets(Arr :: [integer()]) -> integer().\ncount_triplets(Arr) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-triplets arr)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2328",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe need to find triplets of indices $(i, j, k)$ in a given array of integers such that the bitwise **XOR** of elements between indices `i` and `j - 1` is equal to the bitwise **XOR** of elements between indices `j` and `k`.\n\nDefine $a$ and $b$ as follows:\n- $a = \\text{arr}[i] \\oplus \\text{arr}[i + 1] \\oplus \\ldots \\oplus \\text{arr}[j - 1]$\n- $b = \\text{arr}[j] \\oplus \\text{arr}[j + 1] \\oplus \\ldots \\oplus \\text{arr}[k]$\n\nWhere $\\oplus$ denotes the bitwise **XOR** operation.\n\nReturn the number of triplets $(i, j, k)$ where $a == b$.\n\nBefore moving ahead let us discuss a few points about **XOR** operations:\n\n1. **XOR Properties**:\n   - **XOR** is both associative and commutative, meaning the order in which you **XOR** numbers doesn't matter.\n   - $a \\oplus a = 0$ and $a \\oplus 0 = a$.\n\n2. **Equal XOR Condition**:\n    - For $a = b$, this implies:\n    $$\\text{arr}[i] \\oplus \\text{arr}[i + 1] \\oplus \\ldots \\oplus \\text{arr}[j - 1] = \\text{arr}[j] \\oplus \\text{arr}[j + 1] \\oplus \\ldots \\oplus \\text{arr}[k]$$\n    - Using the associative property of **XOR**, we can rewrite the combined **XOR** from $i$ to $k$ as:\n    $$\\text{arr}[i] \\oplus \\text{arr}[i + 1] \\oplus \\ldots \\oplus \\text{arr}[j - 1] \\oplus \\text{arr}[j] \\oplus \\text{arr}[j + 1] \\oplus \\ldots \\oplus \\text{arr}[k] = 0$$\n    - If we let $X(i, k)$ be the **XOR** of elements from $i$ to $k$:\n    $$X(i, k) = 0$$\n    - This means if the total **XOR** from $i$ to $k$ is zero, then any $j$ between $i$ and $k$ (inclusive) create a triplet with $i$ and $k$ that satisfies $a = b$.\n\n3. **Prefix XOR**:\n   - Define $\\text{prefix}[x]$ as the **XOR** of all elements from the start up to index $x$:\n     $$\n     \\text{prefix}[x] = \\text{arr}[0] \\oplus \\text{arr}[1] \\oplus \\ldots \\oplus \\text{arr}[x]\n     $$\n   - Using this, the problem can be reduced to finding indices where:\n     $$\n     \\text{prefix}[i-1] == \\text{prefix}[k]\n     $$\n   - The reason for this is because:\n     $$\n     \\text{prefix}[k] = \\text{prefix}[j-1] \\oplus (\\text{arr}[j] \\oplus \\text{arr}[j+1] \\oplus \\ldots \\oplus \\text{arr}[k])\n     $$\n\n> If you are not familiar with Bitwise operators, we recommend you read our **[Bit Manipulation Explore Card](https://leetcode.com/explore/learn/card/bit-manipulation/)**.\n\n---\n\n### Approach 1: Brute Force With Prefix\n\n#### Intuition\n\nWe can exhaustively iterate through every possible triplet $(i, j, k)$ and check if the **XOR** of the subarrays $(i, j-1)$ and $(j, k)$ is equal.\n\nFirst, we iterate over each possible starting index `start` of the triplet. For each `start`, we initialize a variable `xorA` to store the **XOR** (bitwise exclusive OR) of elements from the `start` index to the index just before the `mid` index. We then iterate over each possible `mid` index, updating `xorA` by **XOR**ing it with the element at the index just before `mid`.\n\nNext, for each `mid` index, we initialize another variable, `xorB`, to store the **XOR** of elements from the `mid` index to the end of the array. We iterate over each possible ending index `end`, starting from `mid`, updating `xorB` by **XOR**ing it with the element at the `end` index.\n\nAfter computing `xorA` and `xorB`, we check if they are equal. If they are, it means that the **XOR** of elements in the first subarray (from `start` to `mid - 1`) is equal to the **XOR** of elements in the second subarray (from `mid` to `end`). In this case, we have found a valid triplet satisfying the condition, so we increment the result counter.\n\n#### Algorithm\n\n- Initialize a result variable `count` to 0 to store the count of valid triplets.\n- Iterate over each possible starting index `start`.\n    - Initialize `xorA` to 0 (**XOR** value for the subarray from `start` to `mid - 1`)\n    - Iterate over each possible middle index `mid`.\n        - Update `xorA` by **XOR**ing it with `arr[mid - 1]` (including the element at `mid - 1` in the **XOR** computation).\n        - Initialize `xorB` to 0 (**XOR** value for the subarray from `mid` to `end`).\n        - Iterate over each possible ending index `end`, starting from `mid`. \n            - Update `xorB` by **XOR**ing it with `arr[end]`. \n            - If we find a valid triplet where the **XOR** of the first subarray is equal to the **XOR** of the second subarray(`xorA == xorB`), increment the count of valid triplets `count`.\n- Return the final count of valid triplets `count`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/HbbretW3/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"HbbretW3\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the input array.  \n\n- Time complexity: $O(n^3)$\n\n    There are three nested loops, each iterating over the entire array, resulting in a time complexity of $O(n \\cdot n \\cdot n) = O(n^3)$.\n\n- Space complexity: $O(1)$\n\n    We only use a few variables (`count`, `xorA`, `xorB`) to store intermediate results, which take constant space.\n\n---\n\n### Approach 2: Nested Prefix **XOR**\n\n#### Intuition\n\nTo improve the time complexity, we can precompute the prefix **XOR** of the array. The prefix **XOR** at an index `i` is the **XOR** of all elements from the beginning of the array up to (and including) index `i`. \n\nFirst, we create a modified copy of the input array and insert 0 at the beginning to facilitate **XOR** operations. We then perform **XOR** operations on consecutive elements in this modified array, effectively storing the prefix **XOR** at each index.\n\nNext, we iterate through the modified array (`prefixXOR`), considering each possible pair of indices `start` and `end`, where `start` is less than `end`. We use the equal **XOR** condition mentioned in the overview. If the prefix **XOR** values at indices `start` and `end` are equal, it means the **XOR** of elements between `start` and `end` (excluding `start` and `end`) is 0. In this case, we increment the result counter by the count of valid triplets that can be formed with `start` as the start index and `end` as the end index, which is `end - start - 1`.\n\nBy precomputing the prefix **XOR**, we became a little more efficient in counting the triplets without explicitly iterating over all possible triplets.\n\n#### Algorithm\n \n- Create a modified copy `prefixXOR` of the input array `arr` to avoid modifying the original array.\n- Insert 0 at the beginning of the modified array `prefixXOR` to handle the case when the **XOR** operation is performed on the first element.\n- Calculate the prefix **XOR** at each position in `prefixXOR` so that we can reference the precomputed **XOR** of elements from the beginning up to each index.\n    - Iterate over `prefixXOR` starting from index 1.\n        - Update `prefixXOR[i]` by **XOR**ing it with `prefixXOR[i - 1]`.\n- Initialize `count` with 0 to store the count of valid triplets.\n- Iterate over `prefixXOR` starting from index 0:\n    - Now, iterate over `prefixXOR` starting from `start + 1`:\n        - If `prefixXOR[start] == prefixXOR[end]` (found a pair of indices `start` and `end` where the **XOR** of elements between them is 0)\n            - Increment `count` by `end - start - 1` (count of valid triplets with `start` as start and `end` as end).\n- Return the final count of valid triplets `count`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/bVmyuRBY/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"bVmyuRBY\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the input array.  \n\n* Time complexity: $O(n^2)$\n\n    There are two nested loops, each iterating over the array, resulting in a time complexity of $O(n \\cdot n) = O(n^2)$.\n\n* Space complexity: $O(n)$\n\n    We create a new array `prefixXOR` of the same size as the input array, taking $O(n)$ space. \n    \n    > Note: This approach could be implemented with $O(1)$ space by modifying the original array.\n\n---\n\n### Approach 3: Two Pass Prefix **XOR** \n\n#### Intuition\n\nBuilding upon the previous approach, we can further optimize the time complexity to $O(n)$ by using two helper data structures: a map `countMap` to store the count of each **XOR** value encountered, and a map `totalMap` to store the total sum of indices for each **XOR** value. \n\nThe key observation is that for a given **XOR** value `x`, the contribution of `x` to the result is the count of occurrences of `x` multiplied by the number of valid triplets that can be formed with `x` as the middle **XOR** value. The number of valid triplets can be calculated as `(i - 1) - totalSum`, where `i` is the current index, and `totalSum` is the sum of indices where `x` occurred previously.\n\nFor example, let's say at index `i = 5`, the **XOR** value `x` is `6`. If `6` occurred previously at indices `1` and `2`, then `countMap[6] = 2` and `totalMap[6] = 3` (the sum of indices `1 + 2`). Now, the number of valid triplets at index `i = 5` is `2 X (5 - 1) - 3 = 2 X 4 - 3 = 5`. So, the contribution of `6` to the total count of valid triplets is `5`. This calculation is performed for each **XOR** value encountered in the array, and the contributions are added up to find the total count of valid triplets.\n\n<details>\n<summary>The 5 valid triplets that can be formed with the XOR value `6` at index `5`, considering the previous indices `1` and `2`, are:\n</summary>\n• (2, 3, 5) • (2, 4, 5) • (2, 5, 5) • (3, 4, 5) • (3, 5, 5)\n\n</details>\n&nbsp;\n\nWe maintain a map `countMap` with a key-value pair `{0: 1}` to handle the case when the **XOR** value is 0. Then, we iterate through the array and consider each index `i`. For the current index `i`, we calculate the contribution of the current **XOR** value (`prefixXOR[i]`) to the result by adding `countMap[prefixXOR[i]] * (i - 1) - totalMap[prefixXOR[i]]` to the result counter.\n\nHow did we develop this approach?\n\nWe want to find the count of triplets $(i, j, k)$ such that the **XOR** of elements from index $i$ to $j-1$ is equal to the **XOR** of elements from index $j$ to $k$. Let's call this common **XOR** value $x$.\n\nNow, consider a specific **XOR** value $x$. We want to find the contribution of $x$ to the total count of triplets. To do this, we need to know two things:\n\n1. The count of occurrences of $x$ in the `prefixXOR` array. Let's call this $countX$.\n2. The number of valid triplets that can be formed with $x$ as the middle **XOR** value.\n\nFor the second part, let's think about what it means for $x$ to be the middle **XOR** value in a triplet $(i, j, k)$. It means that the **XOR** of elements from index $i$ to $j-1$ is $x$, and the **XOR** of elements from index $j$ to $k$ is also $x$.\n\nNow, let's choose a specific starting index $i$. We want to find the number of valid triplets that can be formed with this starting index $i$ and $x$ as the middle **XOR** value. To do this, we need to find the number of possible ending indices $k$ such that the XOR of elements from index $j$ to $k$ is $x$, where $j$ is the index just after $i$.\n\nHere's the key observation: if we know the indices where $x$ has occurred previously, we can calculate the number of valid triplets with $i$ as the starting index and $x$ as the middle **XOR** value.\n\nLet's say $x$ has occurred at indices $idx_1$, $idx_2$, $idx_3$, ..., $idx_m$ before the current index $i$. Then, the number of valid triplets with $i$ as the starting index and $x$ as the middle **XOR** value is:\n\n$(i - 1) - (idx_1 + idx_2 + ... + idx_m)$\n\nHere's why:\n- $(i - 1)$ represents the number of possible middle indices $j$ (since $j$ is just after $i$).\n- $idx_1 + idx_2 + ... + idx_m$ represents the sum of indices where $x$ has occurred previously.\n- Subtracting this sum from $(i - 1)$ gives us the number of valid triplets, because we need to exclude the cases where the middle **XOR** value is $x$, but the ending **XOR** value is not $x$.\n\nSo, the contribution of $x$ to the total count of triplets is:\n\n$countX \\times (i - 1) - (idx_1 + idx_2 + ... + idx_m)$\n\nThis is exactly what the key observation states. By maintaining the count of occurrences of each **XOR** value ($countX$) and the sum of indices where each **XOR** value has occurred ($totalSum = idx_1 + idx_2 + ... + idx_m$), we can efficiently calculate the contribution of each **XOR** value to the total count of triplets.\n\nAfter calculating the contribution, we increment `countMap[prefixXOR[i]]` to count the occurrences of the current **XOR** value. We also update `totalMap[prefixXOR[i]]` by adding `i` to keep track of the total sum of indices for the current **XOR** value.\n\nIn summary, we preprocess the array by inserting a 0 at the beginning and computing the prefix **XOR**. Next, we initialize maps to store counts and totals of **XOR** values encountered during the iteration. While iterating through the array, we calculate the contribution of each element to the result count and update the count and total of each **XOR** value encountered. Finally, we return the total count of valid triplets found.\n\n#### Algorithm\n\n- Create a modified copy `prefixXOR` of the input array `arr` to avoid modifying the original array.\n- Insert 0 at the beginning of the modified array `prefixXOR` to handle the case when the **XOR** operation is performed on the first element.\n- Calculate the prefix **XOR** of `prefixXOR` to precompute the **XOR** of elements from the beginning up to each index.\n    - Iterate over `prefixXOR` starting from index 1:\n        - Update `prefixXOR[i]` by **XOR**ing it with `prefixXOR[i - 1]`.\n- Initialize `count` with 0 to store the count of valid triplets.\n- Initialize `countMap` with `{0: 1}` to store the count of occurrences of each **XOR** value, initialized with the count of 0 as 1.\n- Initialize `totalMap` as an empty map to store the sum of indices where each **XOR** value has occurred.\n- Iterate over `prefixXOR`:\n    - Calculate the contribution of `prefixXOR[i]` to `count` using `countMap[prefixXOR[i]]` and `totalMap[prefixXOR[i]]` (based on the count and sum of indices for the current **XOR** value).\n        - Update `count` with the contribution.\n    - Increment `countMap[prefixXOR[i]]` by updating the count of the current **XOR** value.\n    - Update `totalMap[prefixXOR[i]]` by adding `i` to update the sum of indices for the current **XOR** value.\n- Return the final count of valid triplets `count`.\n\nThe algorithm is visualized below:\n\n!?!../Documents/1442/approach3.json:975,587!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ihEyhKAi/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ihEyhKAi\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the input array.  \n\n- Time complexity: $O(n)$\n\n    There are two different loops iterating over the array, resulting in a time complexity of $O(2 \\cdot n)$, which can be simplified to $O(n)$.\n\n- Space complexity: $O(n)$\n\n    In the worst case, each element in the array can have a unique **XOR** value, requiring $O(n)$ space to store the counts and totals in the maps.\n\n---\n\n### Approach 4: One Pass Prefix **XOR** \n\n#### Intuition\n\nThis approach is a slight variation of the previous one. The main difference is that it combines the prefix **XOR** computation and result calculation in a single pass through the array, whereas the third approach performs these steps separately.\n\nHere we eliminate the need for a separate prefix **XOR** precomputation step. Instead, we maintain a running prefix variable that stores the **XOR** of elements up to the current index. We update this prefix variable as we iterate through the array by **XOR**ing it with the current element: `prefix ^= arr[i]`\n\nBy maintaining this running prefix, we can calculate the contribution of the current **XOR** value (prefix) to the result on the fly, without the need for precomputed prefix **XOR** values.\n\nThe formula for calculating the contribution remains the same as in the third approach: `count += countMap[prefix] * i - totalSum[prefix]`\nThe difference is that we use the running prefix value instead of a precomputed prefix **XOR** array.\n\n#### Algorithm\n \n- Initialize `count` with 0 to store the count of valid triplets.\n- Initialize `prefix` with 0 to store the running **XOR** value.\n- Initialize `countMap` with `{0: 1}` to store the count of occurrences of each **XOR** value, initialized with 0 count as 1.\n- Initialize `totalMap` as an empty map to store the sum of indices where each **XOR** value has occurred.\n- Iterate over `arr`:\n    - Update `prefix` by **XOR**ing it with `arr[i]` (the running **XOR** value).\n    - Calculate the contribution of `prefix` to `count` using `countMap[prefix]` and `totalMap[prefix]` (based on the count and sum of indices for the current **XOR** value).\n        - Update `count` with the contribution.\n    - Increment `countMap[prefix]` by updating the count of the current **XOR** value.\n    - Update `totalMap[prefix]` by adding `i + 1` to update the sum of indices for the current **XOR** value.\n- Return the final count of valid triplets `count`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/gZcVdfhV/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"gZcVdfhV\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the input array.  \n\n* Time complexity: $O(n)$\n\n    There is only a single loop iterating over the array, resulting in a time complexity of $O(n)$.\n\n* Space complexity: $O(n)$\n\n    In the worst case, each element in the array can have a unique **XOR** value, requiring $O(n)$ space to store the counts and totals in the maps.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

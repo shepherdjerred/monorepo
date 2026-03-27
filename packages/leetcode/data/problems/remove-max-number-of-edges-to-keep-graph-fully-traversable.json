@@ -1,0 +1,139 @@
+{
+  "questionId": "1701",
+  "questionFrontendId": "1579",
+  "title": "Remove Max Number of Edges to Keep Graph Fully Traversable",
+  "titleSlug": "remove-max-number-of-edges-to-keep-graph-fully-traversable",
+  "difficulty": "Hard",
+  "content": "<p>Alice and Bob have an undirected graph of <code>n</code> nodes and three types of edges:</p>\n\n<ul>\n\t<li>Type 1: Can be traversed by Alice only.</li>\n\t<li>Type 2: Can be traversed by Bob only.</li>\n\t<li>Type 3: Can be traversed by both Alice and Bob.</li>\n</ul>\n\n<p>Given an array <code>edges</code> where <code>edges[i] = [type<sub>i</sub>, u<sub>i</sub>, v<sub>i</sub>]</code> represents a bidirectional edge of type <code>type<sub>i</sub></code> between nodes <code>u<sub>i</sub></code> and <code>v<sub>i</sub></code>, find the maximum number of edges you can remove so that after removing the edges, the graph can still be fully traversed by both Alice and Bob. The graph is fully traversed by Alice and Bob if starting from any node, they can reach all other nodes.</p>\n\n<p>Return <em>the maximum number of edges you can remove, or return</em> <code>-1</code> <em>if Alice and Bob cannot fully traverse the graph.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/08/19/ex1.png\" style=\"width: 179px; height: 191px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> n = 4, edges = [[3,1,2],[3,2,3],[1,1,3],[1,2,4],[1,1,2],[2,3,4]]\n<strong>Output:</strong> 2\n<strong>Explanation: </strong>If we remove the 2 edges [1,1,2] and [1,1,3]. The graph will still be fully traversable by Alice and Bob. Removing any additional edge will not make it so. So the maximum number of edges we can remove is 2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/08/19/ex2.png\" style=\"width: 178px; height: 190px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> n = 4, edges = [[3,1,2],[3,2,3],[1,1,4],[2,1,4]]\n<strong>Output:</strong> 0\n<strong>Explanation: </strong>Notice that removing any edge will not make the graph fully traversable by Alice and Bob.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/08/19/ex3.png\" style=\"width: 178px; height: 190px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> n = 4, edges = [[3,2,3],[1,1,2],[2,3,4]]\n<strong>Output:</strong> -1\n<b>Explanation: </b>In the current graph, Alice cannot reach node 4 from the other nodes. Likewise, Bob cannot reach 1. Therefore it&#39;s impossible to make the graph fully traversable.</pre>\n\n<p>&nbsp;</p>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= edges.length &lt;= min(10<sup>5</sup>, 3 * n * (n - 1) / 2)</code></li>\n\t<li><code>edges[i].length == 3</code></li>\n\t<li><code>1 &lt;= type<sub>i</sub> &lt;= 3</code></li>\n\t<li><code>1 &lt;= u<sub>i</sub> &lt; v<sub>i</sub> &lt;= n</code></li>\n\t<li>All tuples <code>(type<sub>i</sub>, u<sub>i</sub>, v<sub>i</sub>)</code> are distinct.</li>\n</ul>\n",
+  "hints": [
+    "Build the network instead of removing extra edges.",
+    "Suppose you have the final graph (after removing extra edges). Consider the subgraph with only the edges that Alice can traverse. What structure does this subgraph have? How many edges are there?",
+    "Use disjoint set union data structure for both Alice and Bob.",
+    "Always use Type 3 edges first, and connect the still isolated ones using other edges."
+  ],
+  "metaData": "{\n  \"name\": \"maxNumEdgesToRemove\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"edges\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"144.1K\", \"totalSubmission\": \"205.2K\", \"totalAcceptedRaw\": 144062, \"totalSubmissionRaw\": 205186, \"acRate\": \"70.2%\"}",
+  "likes": 2683,
+  "dislikes": 46,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "4\n[[3,1,2],[3,2,3],[1,1,3],[1,2,4],[1,1,2],[2,3,4]]",
+    "4\n[[3,1,2],[3,2,3],[1,1,4],[2,1,4]]",
+    "4\n[[3,2,3],[1,1,2],[2,3,4]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxNumEdgesToRemove(int n, vector<vector<int>>& edges) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxNumEdgesToRemove(int n, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxNumEdgesToRemove(self, n: int, edges: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxNumEdgesToRemove(self, n, edges):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} edges\n * @return {number}\n */\nvar maxNumEdgesToRemove = function(n, edges) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxNumEdgesToRemove(n: number, edges: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxNumEdgesToRemove(int n, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxNumEdgesToRemove(int n, int** edges, int edgesSize, int* edgesColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxNumEdgesToRemove(n int, edges [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxNumEdgesToRemove(n: Int, edges: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxNumEdgesToRemove(_ n: Int, _ edges: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_num_edges_to_remove(n: i32, edges: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} edges\n# @return {Integer}\ndef max_num_edges_to_remove(n, edges)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $edges\n     * @return Integer\n     */\n    function maxNumEdgesToRemove($n, $edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxNumEdgesToRemove(int n, List<List<int>> edges) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxNumEdgesToRemove(n: Int, edges: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_num_edges_to_remove(n :: integer, edges :: [[integer]]) :: integer\n  def max_num_edges_to_remove(n, edges) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_num_edges_to_remove(N :: integer(), Edges :: [[integer()]]) -> integer().\nmax_num_edges_to_remove(N, Edges) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-num-edges-to-remove n edges)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1797",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach 1: Disjoint Set Union (DSU)\n\n**Intuition**\n\nWe have $N$ nodes connected via bidirectional edges; the edges can be of three types:\n\n- Type 1: Can be traversed by Alice only.\n- Type 2: Can be traversed by Bob only.\n- Type 3: Can be traversed by both Alice and Bob\n\nWe need to find the maximum number of edges that can be removed and still both Alice and Bob can reach any node starting from any node via the remaining edges. We can assume that there are two graphs, one for Alice and another one for Bob, the first graph for Alice has edges only of Type 1 & 3 and the second graph for Bob will have edges only of Type 2 & 3.\n\nAn edge is useful only if it connects two nodes that are not already connected via some other edge or path. How can we find if an edge is useful? The Disjoint Set Union data structure is very useful in solving these kind of problems. If you are not familiar with DSU, please go through our [Explore Card](https://leetcode.com/explore/learn/card/graph/618/disjoint-set/). We will not talk about implementation details here and assume you are already familiar with the interface of DSU. The Disjoint Set Union can detect if two nodes are connected via some path or not in $O(\\alpha (N))$. (Here, $\\alpha (N)$ is the extremely fast inverse Ackermann function).\n\nWe can use DSU to perform the union of two nodes for an edge and if the nodes were not connected earlier i.e. they have a different representative then we will know this edge is needed. For every edge, if the two nodes were not connected earlier, we know this edge is required. To get the answer, we can subtract the number of required edges from the total number of edges. \n\nSince we need the minimum number of edges to connect all the nodes, the Type 3 edges are the most useful as one Type 3 edge adds two edges, one for Alice and one for Bob. Hence, we will first iterate over the edges of Type 3, and for these edges we will add the edge to both graphs.\n\nIn the end, we need to check if the graph for both Alice and Bob is connected or not. If yes, we can say the edges that we didn't connect can be removed. To check if the individual graphs are connected we will check if the number of components in the graph is $1$ or not.\n\n!?!../Documents/1579_Remove_Max_Number_of_Edges_to_Keep_Graph_Fully_Traversable.json:960,720!?! <br>\n\n**Algorithm**\n\n1. Create a class `UnionFind`, this will have the relevant data members and member functions to perform DSU operations:\n\n    1. Data member `representative` stores the immediate parent of nodes in the union find structure, initially each node will be it's own representative.\n    2. Data member `componentSize` stores the number of nodes in the components with the node as the root node, initially the size of component for each node is $1$\n    3. Data member `components` stores the number of components in the graph, initially it will be equal to $N$ as each node is considered\n       a separate component.\n    4. Method `findRepresentative()` returns the root node in the `representative` hierarchy.\n    5. Method `performUnion()`, returns $1$ after performing the union between the components of the two nodes that were not connected before, otherwise returns $0$.\n    6. Method `isConnected()` returns `true` if the graph is connected, i.e. `components = 1`.\n2. Create a `UnionFind` object for both Alice and Bob with $N$ nodes.\n3. Initialize `edgesRequired` to $0$.\n4. Perform union of all edges of Type $3$ for both Alice and Bob, and for each edge increment the value of `edgesRequired` if for any of them `performUnion()` returns $1$.\n5. Perform union of all edges of Type $1$ & $2$ for Alice or Bob respectively and increment the `edgesRequired` if for any of them `performUnion()` returns $1$.\n6. If `isConnected()` returns true for both Alice and Bob, then return `Total Edges - edgesRequired`, otherwise return `-1`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/7pcpX5M6/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"7pcpX5M6\"></iframe>\n\n**Complexity Analysis**\n\nHere, $E$ is the number of edges in the list `edges` and $N$ is the number nodes.\n\n* Time complexity: $O(E *\\alpha(N))$.\n\n  We iterate over edges, and for every edge we call the function `performUnion()`, whose time complexity is equal to $O(\\alpha(N)$ as we have included union by size as well as path compression. Therefore, the total time complexity is equal to $O(E *\\alpha(N))$. Note that $\\alpha$ is the Inverse Ackermann function which grows so slowly that it can be considered as $O(1)$.\n\n\n* Space complexity: $O(N)$.\n\n  For both Alice and Bob we keep two lists in union find data structures, `representative` and `componentSize` of size both $N$. Therefore the total space complexity is equal to $O(N)$.\n\n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

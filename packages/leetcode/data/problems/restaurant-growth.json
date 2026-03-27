@@ -1,0 +1,53 @@
+{
+  "questionId": "1452",
+  "questionFrontendId": "1321",
+  "title": "Restaurant Growth",
+  "titleSlug": "restaurant-growth",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Customer</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| customer_id   | int     |\n| name          | varchar |\n| visited_on    | date    |\n| amount        | int     |\n+---------------+---------+\nIn SQL,(customer_id, visited_on) is the primary key for this table.\nThis table contains data about customer transactions in a restaurant.\nvisited_on is the date on which the customer with ID (customer_id) has visited the restaurant.\namount is the total paid by a customer.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>You are the restaurant owner and you want to analyze a possible expansion (there will be at least one customer every day).</p>\n\n<p>Compute the moving average of how much the customer paid in a seven days window (i.e., current day + 6 days before). <code>average_amount</code> should be <strong>rounded to two decimal places</strong>.</p>\n\n<p>Return the result table ordered by <code>visited_on</code> <strong>in ascending order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nCustomer table:\n+-------------+--------------+--------------+-------------+\n| customer_id | name         | visited_on   | amount      |\n+-------------+--------------+--------------+-------------+\n| 1           | Jhon         | 2019-01-01   | 100         |\n| 2           | Daniel       | 2019-01-02   | 110         |\n| 3           | Jade         | 2019-01-03   | 120         |\n| 4           | Khaled       | 2019-01-04   | 130         |\n| 5           | Winston      | 2019-01-05   | 110         | \n| 6           | Elvis        | 2019-01-06   | 140         | \n| 7           | Anna         | 2019-01-07   | 150         |\n| 8           | Maria        | 2019-01-08   | 80          |\n| 9           | Jaze         | 2019-01-09   | 110         | \n| 1           | Jhon         | 2019-01-10   | 130         | \n| 3           | Jade         | 2019-01-10   | 150         | \n+-------------+--------------+--------------+-------------+\n<strong>Output:</strong> \n+--------------+--------------+----------------+\n| visited_on   | amount       | average_amount |\n+--------------+--------------+----------------+\n| 2019-01-07   | 860          | 122.86         |\n| 2019-01-08   | 840          | 120            |\n| 2019-01-09   | 840          | 120            |\n| 2019-01-10   | 1000         | 142.86         |\n+--------------+--------------+----------------+\n<strong>Explanation:</strong> \n1st moving average from 2019-01-01 to 2019-01-07 has an average_amount of (100 + 110 + 120 + 130 + 110 + 140 + 150)/7 = 122.86\n2nd moving average from 2019-01-02 to 2019-01-08 has an average_amount of (110 + 120 + 130 + 110 + 140 + 150 + 80)/7 = 120\n3rd moving average from 2019-01-03 to 2019-01-09 has an average_amount of (120 + 130 + 110 + 140 + 150 + 80 + 110)/7 = 120\n4th moving average from 2019-01-04 to 2019-01-10 has an average_amount of (130 + 110 + 140 + 150 + 80 + 110 + 130 + 150)/7 = 142.86\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Customer (customer_id int, name varchar(20), visited_on date, amount int)\"], \"mssql\": [\"Create table Customer (customer_id int, name varchar(20), visited_on date, amount int)\"], \"oraclesql\": [\"Create table Customer (customer_id int, name varchar(20), visited_on date, amount int)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"restaurant_growth\", \"pythondata\": [\"Customer = pd.DataFrame([], columns=['customer_id', 'name', 'visited_on', 'amount']).astype({'customer_id':'Int64', 'name':'object', 'visited_on':'datetime64[ns]', 'amount':'Int64'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Customer (customer_id int, name varchar(20), visited_on date, amount int)\"], \"database_schema\": {\"Customer\": {\"customer_id\": \"INT\", \"name\": \"VARCHAR(20)\", \"visited_on\": \"DATE\", \"amount\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"250.5K\", \"totalSubmission\": \"428.9K\", \"totalAcceptedRaw\": 250488, \"totalSubmissionRaw\": 428878, \"acRate\": \"58.4%\"}",
+  "likes": 1162,
+  "dislikes": 385,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Customer\":[\"customer_id\",\"name\",\"visited_on\",\"amount\"]},\"rows\":{\"Customer\":[[1,\"Jhon\",\"2019-01-01\",100],[2,\"Daniel\",\"2019-01-02\",110],[3,\"Jade\",\"2019-01-03\",120],[4,\"Khaled\",\"2019-01-04\",130],[5,\"Winston\",\"2019-01-05\",110],[6,\"Elvis\",\"2019-01-06\",140],[7,\"Anna\",\"2019-01-07\",150],[8,\"Maria\",\"2019-01-08\",80],[9,\"Jaze\",\"2019-01-09\",110],[1,\"Jhon\",\"2019-01-10\",130],[3,\"Jade\",\"2019-01-10\",150]]}}"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"point72\", \"name\": \"Point72\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef restaurant_growth(customer: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

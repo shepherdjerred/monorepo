@@ -65,7 +65,7 @@ Options:
   --limit <n>           Maximum number of results
 
 Environment:
-  PAGERDUTY_API_KEY     Required. Your PagerDuty API token.
+  PAGERDUTY_TOKEN       Required. Your PagerDuty API token.
 
 Examples:
   tools pd incidents

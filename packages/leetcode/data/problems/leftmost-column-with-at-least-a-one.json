@@ -1,0 +1,125 @@
+{
+  "questionId": "1374",
+  "questionFrontendId": "1428",
+  "title": "Leftmost Column with at Least a One",
+  "titleSlug": "leftmost-column-with-at-least-a-one",
+  "difficulty": "Medium",
+  "content": "<p>A <strong>row-sorted binary matrix</strong> means that all elements are <code>0</code> or <code>1</code> and each row of the matrix is sorted in non-decreasing order.</p>\n\n<p>Given a <strong>row-sorted binary matrix</strong> <code>binaryMatrix</code>, return <em>the index (0-indexed) of the <strong>leftmost column</strong> with a 1 in it</em>. If such an index does not exist, return <code>-1</code>.</p>\n\n<p><strong>You can&#39;t access the Binary Matrix directly.</strong> You may only access the matrix using a <code>BinaryMatrix</code> interface:</p>\n\n<ul>\n\t<li><code>BinaryMatrix.get(row, col)</code> returns the element of the matrix at index <code>(row, col)</code> (0-indexed).</li>\n\t<li><code>BinaryMatrix.dimensions()</code> returns the dimensions of the matrix as a list of 2 elements <code>[rows, cols]</code>, which means the matrix is <code>rows x cols</code>.</li>\n</ul>\n\n<p>Submissions making more than <code>1000</code> calls to <code>BinaryMatrix.get</code> will be judged <em>Wrong Answer</em>. Also, any solutions that attempt to circumvent the judge will result in disqualification.</p>\n\n<p>For custom testing purposes, the input will be the entire binary matrix <code>mat</code>. You will not have access to the binary matrix directly.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/10/25/untitled-diagram-5.jpg\" style=\"width: 81px; height: 81px;\" />\n<pre>\n<strong>Input:</strong> mat = [[0,0],[1,1]]\n<strong>Output:</strong> 0\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/10/25/untitled-diagram-4.jpg\" style=\"width: 81px; height: 81px;\" />\n<pre>\n<strong>Input:</strong> mat = [[0,0],[0,1]]\n<strong>Output:</strong> 1\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/10/25/untitled-diagram-3.jpg\" style=\"width: 81px; height: 81px;\" />\n<pre>\n<strong>Input:</strong> mat = [[0,0],[0,0]]\n<strong>Output:</strong> -1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>rows == mat.length</code></li>\n\t<li><code>cols == mat[i].length</code></li>\n\t<li><code>1 &lt;= rows, cols &lt;= 100</code></li>\n\t<li><code>mat[i][j]</code> is either <code>0</code> or <code>1</code>.</li>\n\t<li><code>mat[i]</code> is sorted in non-decreasing order.</li>\n</ul>\n",
+  "hints": [
+    "1. (Binary Search) For each row do a binary search to find the leftmost one on that row and update the answer.",
+    "2. (Optimal Approach) Imagine there is a pointer p(x, y) starting from top right corner. p can only move left or down. If the value at p is 0, move down. If the value at p is 1, move left. Try to figure out the correctness and time complexity of this algorithm."
+  ],
+  "metaData": "{\n  \"name\": \"leftMostColumnWithOne\",\n  \"params\": [\n    {\n      \"name\": \"mat\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"manual\": true, \n\"typescriptCustomType\" : \"class BinaryMatrix {\\n    __mat: number[][];\\n    __m: number;\\n    __n: number;\\n    __guesses: number;\\n    constructor(mat: number[][]) {\\n        this.__mat = mat;\\n        this.__m = mat.length;\\n        this.__n = mat[0].length;\\n        this.__guesses = 0;\\n    }\\n\\n    get(x: number, y: number): number {\\n        this.__guesses += 1;\\n        return this.__mat[x][y];\\n    }\\n\\n    getCount(): number {\\n        return this.__guesses;\\n    }\\n        \\n    dimensions(): number[] {\\n        return [this.__m, this.__n];\\n    }\\n};\"\n}",
+  "stats": "{\"totalAccepted\": \"197.3K\", \"totalSubmission\": \"357.9K\", \"totalAcceptedRaw\": 197333, \"totalSubmissionRaw\": 357914, \"acRate\": \"55.1%\"}",
+  "likes": 1255,
+  "dislikes": 153,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[0,0],[1,1]]",
+    "[[0,0],[0,1]]",
+    "[[0,0],[0,0]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 6, \"slug\": \"uber\", \"name\": \"Uber\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"sap\", \"name\": \"SAP\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    },
+    {
+      "name": "Interactive",
+      "slug": "interactive"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * // This is the BinaryMatrix's API interface.\n * // You should not implement it, or speculate about its implementation\n * class BinaryMatrix {\n *   public:\n *     int get(int row, int col);\n *     vector<int> dimensions();\n * };\n */\n\nclass Solution {\npublic:\n    int leftMostColumnWithOne(BinaryMatrix &binaryMatrix) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * // This is the BinaryMatrix's API interface.\n * // You should not implement it, or speculate about its implementation\n * interface BinaryMatrix {\n *     public int get(int row, int col) {}\n *     public List<Integer> dimensions {}\n * };\n */\n\nclass Solution {\n    public int leftMostColumnWithOne(BinaryMatrix binaryMatrix) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# \"\"\"\n# This is BinaryMatrix's API interface.\n# You should not implement it, or speculate about its implementation\n# \"\"\"\n#class BinaryMatrix(object):\n#    def get(self, row: int, col: int) -> int:\n#    def dimensions(self) -> list[]:\n\nclass Solution:\n    def leftMostColumnWithOne(self, binaryMatrix: 'BinaryMatrix') -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# \"\"\"\n# This is BinaryMatrix's API interface.\n# You should not implement it, or speculate about its implementation\n# \"\"\"\n#class BinaryMatrix(object):\n#    def get(self, row, col):\n#        \"\"\"\n#        :type row : int, col : int\n#        :rtype int\n#        \"\"\"\n#\n#    def dimensions:\n#        \"\"\"\n#        :rtype list[]\n#        \"\"\"\n\nclass Solution(object):\n    def leftMostColumnWithOne(self, binaryMatrix):\n        \"\"\"\n        :type binaryMatrix: BinaryMatrix\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * // This is the BinaryMatrix's API interface.\n * // You should not implement it, or speculate about its implementation\n * function BinaryMatrix() {\n *     @param {integer} row, col\n *     @return {integer}\n *     this.get = function(row, col) {\n *         ...\n *     };\n *\n *     @return {[integer, integer]}\n *     this.dimensions = function() {\n *         ...\n *     };\n * };\n */\n\n/**\n * @param {BinaryMatrix} binaryMatrix\n * @return {number}\n */\nvar leftMostColumnWithOne = function(binaryMatrix) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * // This is the BinaryMatrix's API interface.\n * // You should not implement it, or speculate about its implementation\n * class BinaryMatrix {\n *      get(row: number, col: number): number {}\n *\n *      dimensions(): number[] {}\n * }\n */\n\nfunction leftMostColumnWithOne(binaryMatrix: BinaryMatrix) {\n\t\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * // This is BinaryMatrix's API interface.\n * // You should not implement it, or speculate about its implementation\n * class BinaryMatrix {\n *     public int Get(int row, int col) {}\n *     public IList<int> Dimensions() {}\n * }\n */\n\nclass Solution {\n    public int LeftMostColumnWithOne(BinaryMatrix binaryMatrix) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * // This is the BinaryMatrix's API interface.\n * // You should not implement it, or speculate about its implementation\n * struct BinaryMatrix {\n *     int (*get)(struct BinaryMatrix*, int, int);\n *     int* (*dimensions)(struct BinaryMatrix*);\n * };\n */\n\nint leftMostColumnWithOne(struct BinaryMatrix* matrix) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * // This is the BinaryMatrix's API interface.\n * // You should not implement it, or speculate about its implementation\n * type BinaryMatrix struct {\n *     Get func(int, int) int\n *     Dimensions func() []int\n * }\n */\n\nfunc leftMostColumnWithOne(binaryMatrix BinaryMatrix) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * // This is the BinaryMatrix's API interface.\n * // You should not implement it, or speculate about its implementation\n * class BinaryMatrix {\n *     fun get(row:Int, col:Int):Int {}\n *     fun dimensions():List<Int> {}\n * }\n */\n\nclass Solution {\n    fun leftMostColumnWithOne(binaryMatrix:BinaryMatrix):Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * // This is the BinaryMatrix's API interface.\n * // You should not implement it, or speculate about its implementation\n * public class BinaryMatrix {\n *     public func get(_ row: Int, _ col: Int) -> Int {}\n *     public func dimensions() -> [Int] {}\n * };\n */\n\nclass Solution {\n    func leftMostColumnWithOne(_ binaryMatrix: BinaryMatrix) -> Int {\n\t\t\n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "/**\n * // This is the BinaryMatrix's API interface.\n * // You should not implement it, or speculate about its implementation\n *  struct BinaryMatrix;\n *  impl BinaryMatrix {\n *      fn get(&self, row: i32, col: i32) -> i32;\n *     fn dimensions() -> Vec<i32>;\n * };\n */\n\nimpl Solution {\n    pub fn left_most_column_with_one(binaryMatrix: &BinaryMatrix) -> i32 {\n         \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# \"\"\"\n# This is BinaryMatrix's API interface.\n# You should not implement it, or speculate about its implementation\n# \"\"\"\n# class BinaryMatrix\n# \tdef get(row, col)\n# \t\t@return {Integer}\n# \tend\n#\n# \tdef dimensions()\n# \t\t@return {List[Integer]}\n# \tend\n# end\n\n# @param {BinaryMatrix} binaryMatrix\n# @return {Integer}\ndef leftMostColumnWithOne(binaryMatrix)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * // This is the BinaryMatrix's API interface.\n * // You should not implement it, or speculate about its implementation\n * class BinaryMatrix {\n *     public function get($row, $col) {} @return Integer\n *     public function dimensions() {} @return Integer[]\n * }\n */\n\nclass Solution {\n    /**\n     * @param BinaryMatrix $binaryMatrix\n     * @return Integer\n     */\n    public function leftMostColumnWithOne($binaryMatrix) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * // This is the BinaryMatrix's API interface.\n * // You should not implement it, or speculate about its implementation\n * class BinaryMatrix {\n *     def get(row: Int, col: Int): Int = {}\n *     def dimensions(): Array[Int] = {}\n * }\n */\n\nobject Solution {\n    def leftMostColumnWithOne(binaryMatrix: BinaryMatrix): Int = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "937",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Linear Search Each Row\n\n**Intuition**\n\n*This approach won't pass, but we'll use it as a starting point. Also, it might be helpful to you if you just needed an example of how to use the API, but don't want to see a complete solution yet!*\n\nThe leftmost `1` is the `1` with the lowest *column* index.\n\nThe problem can be broken down into finding the index of the first `1` in each row and then taking the minimum of those indexes.\n\n![Diagram showing a linear search that has uncovered all the zeroes, along with the first 1 in each row.](../Figures/10012/linear_search.png)\n\nThe simplest way of doing this would be a linear search on each row.\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/4G7Zms9J/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"4G7Zms9J\"></iframe>\n\n**Complexity Analysis**\n\nIf you ran this code, you would have gotten the following error.\n\n```text\nYou made too many calls to BinaryMatrix.get().\n```\n\nThe maximum grid size is `100 by 100`, so it would contain `10000` cells. In the worst case, the linear search algorithm we implemented has to check every cell. With the problem description telling us that we can only make up to `1000` API calls, this clearly isn't going to work.\n\nLet $$N$$ be the number of rows, and $$M$$ be the number of columns.\n\n- Time complexity : $$O(N \\cdot M)$$\n\n    We don't know the time complexity of `binaryMatrix.get()` as its implementation isn't our concern. Therefore, we can assume it's $$O(1)$$.\n    \n    In the worst case, we are retrieving a value for each of the $$N \\cdot M$$ cells. At $$O(1)$$ per operation, this gives a total of $$O(N \\cdot M)$$.\n\n- Space complexity : $$O(1)$$.\n\n    We are only using constant extra space.\n\n<br/>\n\n---\n\n### Approach 2: Binary Search Each Row\n\n**Intuition**\n\n*This isn't the best approach, but it passes, and coding it up is a good opportunity to practice binary search.*\n\nWhen linear search is too slow, we should try to find a way to use binary search. If you're not familiar with binary search, [check out this Explore Card!](https://leetcode.com/explore/learn/card/binary-search/). We recommend doing the first couple of binary search questions to get familiar with the algorithm before coming back to this problem.\n\nAlso, have a go at [First Bad Version](https://leetcode.com/problems/first-bad-version/). The only difference between that problem and this one is that instead of `0` and `1`, it uses `false` and `true`.\n\nLike we did with the linear search, we're going to apply binary search independently on each row. The *target element* we're searching for is *the first 1 in the row*.\n\nThe core part of a binary search algorithm is how it decides whether the target element is to the left or the right of the middle element. Let's figure this out by thinking through a couple of examples.\n\nIn the row below, we've determined that the middle element is a `0`. On what side must the target element (first `1`) be? The left, or the right? Don't forget, *all the 0's are before all the 1's*.\n\n![Diagram showing a single uncovered 0 at the \"middle\" index](../Figures/10012/binary_search_example_1.png)\n\nIn this next row, the middle element is a `1`? What side must the target element be on? Could it also possibly be the `1` we just found?\n\n![Diagram showing a single uncovered 1 at the \"middle\" index](../Figures/10012/binary_search_example_2.png)\n\nFor the first example, we can conclude that the target element (*if* it exists) must be to the **right** of the middle element. This is because we know that everything to the left of a `0` must also be a `0`,\n\nFor the second example, we can conclude that the target element is either the middle element itself or it is some other `1` to the **left** of the middle element. We know that everything to the right of a `1` is also a `1`, but these can't possibly be further left than the one we just found.\n\nIn summary, if the middle element is a:\n\n- **0**, then the target must be to the **right**. \n- **1**, then the target is either this element or to the **left**.\n\nWe can then put this together into an algorithm that finds the index of the target element (first `1`) in each row, and then returns the minimum of those indexes. Here is an animation of how that algorithm would look. The light grey numbers are the ones that we could *infer* without needing to make an API call. They are only there to help you understand.\n\n!?!../Documents/10012_binary_search_animation.json:600,400!?!\n\n**Algorithm**\n\n*If you're already quite familiar with binary search, feel free to skip down to the implementation below*. I've decided to include lots of details here, as binary search is one of those algorithms that a lot of people get frustrated with easily and find it difficult to master.\n\nIn a binary search, we always keep track of the range that the target might be in by using two variables: `lo` to represent the lowest possible index it could be, and `hi` to represent the highest possible index it could be. Ignoring the binaryMatrix API details for the moment, here is a rough outline of our binary search in pseudocode.\n\n```text\ndefine function binary_search(input_list):\n    lo = the lowest possible index\n    hi = the highest possible index\n    while the search space contains 2 or more items:\n        mid = the middle index in the remaining search space\n        if the element at input_list[mid] is 0:\n            lo = mid + 1 (the first 1 is *further right*, and can't be mid itself)\n        else:\n            hi = mid (the first 1 is either mid itself, *or is further left*)\n    return the only index remaining in the search space\n```\n\nAs always in binary search, there are a couple more key implementation details we still need to deal with:\n\n1. An even-length search space has two middles. Which do we choose?\n2. The row might be all 0's.\n\nLet's tackle these issues one at a time.\n\nThe first issue, the choice of middle, is important, as otherwise, the search space might stop shrinking when it gets down to two elements. When the search space doesn't shrink, the algorithm does the exact same thing the next loop cycle, resulting in an infinite loop. Remember that when the search space only contains two elements, they are the ones pointed to by `lo` and `hi`. This means that the lower middle equals `lo`, and the upper-middle equals `hi`. We, therefore, need to think about which cases would shrink the search space, and which would not.\n\nIf we use the *lower-middle*\n\n- If it is a `0`, then we set `lo = mid + 1`. Because `hi == mid + 1`, this means that `lo == hi` (search space is of length-one).\n- If it is a `1`, then we set `hi = mid`. Because `mid == lo`, this means that `hi == lo` (search space is of length-one).\n\nIf we use the *upper-middle*\n\n- If it is a `0`, then we set `lo = mid + 1`. Because `hi = mid`, we now have `hi > lo` (search space is of length-zero).\n- If it is a `1`, then we set `hi = mid`. Because `hi == mid` was already true, the search space stays as is (of length-two).\n\nIf we use the *lower-middle*, we know the search space will always shrink. If we use the *upper-middle*, it might not. Therefore, we should go with the *lower-middle*. The formula for this is `mid = (low + high) / 2`.\n\nThe second issue, a row of all zeroes, is solved by recognizing that the algorithm always shrinks down the search space to a single element. This is supposed to be the first `1`, but if that doesn't exist, then it *has* to be a `0`. Therefore, we can detect this case by checking whether or not the last element in the search space is a `1`.\n\nIt is good practice to think these details through carefully so that you can write your binary search algorithm decisively and confidently. Resist the urge to [Program by Permutation](https://en.wikipedia.org/wiki/Programming_by_permutation)!\n\nAnyway, putting this all together, we get the following code.\n\n<iframe src=\"https://leetcode.com/playground/jt6bs9zJ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"jt6bs9zJ\"></iframe>\n\n\n**Complexity Analysis**\n\nLet $$N$$ be the number of rows, and $$M$$ be the number of columns.\n\n- Time complexity : $$O(N \\, \\log \\, M)$$.\n\n    There are $$M$$ items in each row. Therefore, each binary search will have a cost of $$O(\\log \\, M)$$. We are performing $$N$$ of these binary searches, giving a time complexity of $$N \\cdot O(\\log \\, M) = O(N \\, \\log \\, M)$$.\n\n- Space complexity : $$O(1)$$.\n\n    We are using constant extra space.\n\n<br/>\n\n---\n\n### Approach 3: Start at Top Right, Move Only Left and Down\n\n**Intuition**\n\nDid you notice in Approach 2 that we didn't need to finish searching all the rows? One example of this was row 3 on the example in the animation. At the point shown in the image below, it was clear that row 3 *could not possibly be better than the minimum we'd found so far*.\n\n![Diagram showing redundant search in Row 3](../Figures/10012/redundant_search.png)\n\nTherefore, an optimization we could have made was to keep track of the minimum index so far, and then abort the search on any rows where we have discovered a `0` at, or to the right of, that minimum index.\n\nWe can do even better than that; on each search, we can set `hi = smallest_index - 1`, where `smallest_index` is the smallest index of a `1` we've seen so far. In most cases, this is a substantial improvement. It works because we're only interested in finding `1`s at lower indexes than we previously found. Here is an animation of the above example with this optimized algorithm. The algorithm eliminates as many cells as it can with each API call. It also starts by checking the last cell of the row before proceeding with the binary search, to eliminate needless binary searches where the row only had `0`s left in it.\n\n!?!../Documents/10012_optimized_binary_search.json:600,400!?!\n\nHere is what the worst-case looks like. Like before, its time complexity is still $$O(M \\, \\log \\, N)$$.\n\n![The worst case for the optimized algorithm](../Figures/10012/optimized_binary_search_worst_case.png)\n\nWhile this is no worse than Approach 2, there is a better algorithm.\n\n> Start in the top right corner, and if the current value is a `0`, move down. If it is a `1`, then move left.\n\nThe easiest way to see why this works is an example. Here is an animation of it.\n\n!?!../Documents/10012_2D_linear_animation.json:600,400!?!\n\nYou probably gained some intuitive sense as to why this works, just from watching the animation.\n\n- When we encounter a `0`, we know that the leftmost `1` can't be to the left of it. \n- When we encounter a `1`, we should continue the search on that row (move pointer to the left), in order to find an even smaller index.\n\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/gYWYjpYb/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"gYWYjpYb\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the number of rows, and $$M$$ be the number of columns.\n\n- Time complexity : $$O(N + M)$$.\n    \n    At each step, we're moving 1 step left or 1 step down. Therefore, we'll always finish looking at either one of the $$M$$ rows or $$N$$ columns. Therefore, we'll stay in the grid for at most $$N + M$$ steps, and therefore get a time complexity of $$O(N + M)$$.\n\n- Space complexity : $$O(1)$$.\n\n    We are using constant extra space.\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

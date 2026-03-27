@@ -1,0 +1,138 @@
+{
+  "questionId": "1298",
+  "questionFrontendId": "1190",
+  "title": "Reverse Substrings Between Each Pair of Parentheses",
+  "titleSlug": "reverse-substrings-between-each-pair-of-parentheses",
+  "difficulty": "Medium",
+  "content": "<p>You are given a string <code>s</code> that consists of lower case English letters and brackets.</p>\n\n<p>Reverse the strings in each pair of matching parentheses, starting from the innermost one.</p>\n\n<p>Your result should <strong>not</strong> contain any brackets.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;(abcd)&quot;\n<strong>Output:</strong> &quot;dcba&quot;\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;(u(love)i)&quot;\n<strong>Output:</strong> &quot;iloveu&quot;\n<strong>Explanation:</strong> The substring &quot;love&quot; is reversed first, then the whole string is reversed.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;(ed(et(oc))el)&quot;\n<strong>Output:</strong> &quot;leetcode&quot;\n<strong>Explanation:</strong> First, we reverse the substring &quot;oc&quot;, then &quot;etco&quot;, and finally, the whole string.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 2000</code></li>\n\t<li><code>s</code> only contains lower case English characters and parentheses.</li>\n\t<li>It is guaranteed that all parentheses are balanced.</li>\n</ul>\n",
+  "hints": [
+    "Find all brackets in the string.",
+    "Does the order of the reverse matter ?",
+    "The order does not matter."
+  ],
+  "metaData": "{\n  \"name\": \"reverseParentheses\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"243.8K\", \"totalSubmission\": \"338.9K\", \"totalAcceptedRaw\": 243842, \"totalSubmissionRaw\": 338852, \"acRate\": \"72.0%\"}",
+  "likes": 2941,
+  "dislikes": 131,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"(abcd)\"",
+    "\"(u(love)i)\"",
+    "\"(ed(et(oc))el)\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"agoda\", \"name\": \"Agoda\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string reverseParentheses(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String reverseParentheses(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def reverseParentheses(self, s: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def reverseParentheses(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {string}\n */\nvar reverseParentheses = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function reverseParentheses(s: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string ReverseParentheses(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* reverseParentheses(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func reverseParentheses(s string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun reverseParentheses(s: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func reverseParentheses(_ s: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn reverse_parentheses(s: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {String}\ndef reverse_parentheses(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return String\n     */\n    function reverseParentheses($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String reverseParentheses(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def reverseParentheses(s: String): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec reverse_parentheses(s :: String.t) :: String.t\n  def reverse_parentheses(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec reverse_parentheses(S :: unicode:unicode_binary()) -> unicode:unicode_binary().\nreverse_parentheses(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (reverse-parentheses s)\n  (-> string? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2368",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe start with a string `s` composed of lowercase English letters and parentheses. Our goal is to reverse the substrings enclosed within each pair of matching parentheses, starting from the innermost pair and working our way outward. Ultimately, we want to produce a string without any parentheses that reflects these reversals.\n\nTo tackle this problem, we need to simulate the process of reversing characters within the parentheses. This can be approached either iteratively or recursively, but the key challenge is to manage the parentheses and the elements between them effectively.\n\nFirst, let's understand the role of each parenthesis:\n- An opening parenthesis `(` signals the start of a section that will eventually be reversed.\n- A closing parenthesis `)` signals the end of such a section.\n\nGiven that parentheses might be nested, we can't simply reverse the substrings as we encounter them. Instead, we need to start with the innermost pairs. This requires a mechanism to pair each opening parenthesis with its corresponding closing parenthesis and then reverse the substrings when we've identified the innermost pairs.\n\nTo achieve this, we use a stack to keep track of the indices of the opening parentheses. When we encounter a closing parenthesis, we pop the last index from the stack, which gives us the position of the matching opening parenthesis. By keeping track of these positions, we can navigate back and forth within the string.\n\n---\n\n### Approach 1: Straightforward Way\n\n#### Intuition\n\nTo achieve the proper reversal, we use a stack data structure to keep track of the indices of the opening parentheses. Each time we encounter an opening parenthesis `(`, we push the current length of our result string onto the stack. This length serves as a marker, indicating the start position of the substring that will need to be reversed once we find its corresponding closing parenthesis `)`.\n\nWhen we encounter a closing parenthesis `)`, we pop the last index from the stack. This index represents the position of the matching opening parenthesis for the current closing parenthesis. Using this index, we know exactly where the substring that needs to be reversed begins. We then proceed to reverse the substring in the result string from this start position (obtained from the stack) to the current end of the result string.\n\nBy keeping track of these positions using the stack, we can efficiently navigate back and forth within the string to perform the necessary reversals. This approach ensures that we correctly handle nested parentheses by always reversing the innermost pairs first before moving outward, ultimately producing the desired output string.\n\nIn a nutshell, we can summarize the approach into two parts:\n1. Traversal and Processing:\n    - As we iterate through the string `s`, we check each character:\n        - For `(`: We push the current length of the result onto the stack.\n        - For `)`: We pop the top of the stack to get the index of the corresponding `(`, then reverse the substring in the result from this index to the end.\n        - For any other character: We append it to the result.\n\n2. Handle Closing Parentheses:\n    - When we encounter a closing parenthesis, we pop the last index from the stack. This index marks the corresponding opening parenthesis.\n    - We then reverse the substring in the result from this index to the current end. This reversal handles the innermost section of the string first.\n    - After processing all characters in the string `s`, our result contains the desired string.\n\n#### Algorithm\n\n- Initialize an empty stack `openParenthesesIndices` to track reversal start points and an empty string `result` to build the output.\n\n- For each character `currentChar` in the input string:\n   - If `'('`, push `result`'s length to `openParenthesesIndices` to mark a potential reversal start.\n   - If `')'`, pop from `openParenthesesIndices` and reverse `result` from the popped index to perform the required reversal.\n   - Otherwise, append `currentChar` to `result` to build the string.\n\n- Return `result` as the final string with all reversals applied.\n\n> Note: Since this problem uses a stack, you can also try to solve the problem recursively. Recursion and stack-based solutions are often interchangeable because function call stacks can mimic the behavior of explicit stacks.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/8RuEpGhA/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"8RuEpGhA\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the string.\n\n- Time complexity: $O(n^2)$\n\n    The algorithm iterates through each character of the input string once. For each character, we have three cases:\n    - If it's `(`, we push its index or the starting position where the reversal takes place to the stack. This is $O(1)$.\n    - If it's `)`, we pop from the stack and reverse a portion of the `result` string. Popping is $O(1)$.\n        - The reverse operation can take up to $O(n)$ time in the worst case (when we reverse the entire string).\n    - For other characters, we append to the `result` string, which is typically $O(1)$ (amortized).\n\n    The worst-case scenario occurs when we have to reverse large portions of the string multiple times. In the worst case, we might end up reversing the entire string for each closing parenthesis. Therefore, the overall time complexity is $O(n^2)$ in the worst case.\n\n- Space complexity: $O(n)$\n\n    The algorithm uses a stack to store the indices of opening parentheses. In the worst case (when all characters are opening parentheses), this could take $O(n)$ space. The reverse function typically doesn't use extra space proportional to the input size. Therefore, the overall space complexity is $O(n)$.\n\n---\n\n### Approach 2: Wormhole Teleportation technique\n\n#### Intuition\n\nThe previous approach used the reverse function, causing multiple reversals on the same string and resulting in $O(n^2)$ time complexity. To optimize this, we can rethink the problem using the concept of 'wormholes/jumping' for paired parentheses.\n\n> According to Wikipedia, a [wormhole](https://en.wikipedia.org/wiki/Wormhole) can be visualized as a tunnel with two ends at separate points in spacetime (i.e., different locations, different points in time, or both).\n\nTo achieve this, we use two passes through the input string:\n\n1. Pairing Parentheses (First Pass):\nIn the first pass, we use a stack (`opened`) to keep track of the indices of opening parentheses and a pair list to store the indices of matching parentheses.\nAs we iterate through the string, we can come across two scenarios:\n    - When we encounter an opening parenthesis `'('`, we push its index onto the `opened` stack.\n    - When we encounter a closing parenthesis `')'`, we:\n        - Pop the top index from the `opened` stack (this is the index of the matching opening parenthesis).\n        - Create bidirectional links in the pair list between the current closing parenthesis and its matching opening parenthesis.\n\n2. Traversing and Building Result (Second Pass):\nNow, we can traverse the string as we know all the entry and exit points of parenthesis. So, we traverse using two variables:\n`currIndex`: the current position in the string\n`direction`: the direction of traversal (1 for forward, -1 for backward)\n\nAs we iterate through the string:\n- If the current character is a parenthesis (either `'('` or `')'`):\n    - We \"teleport/jump\" to its matching parenthesis using the pair list.\n    - We reverse the direction of traversal.\n- If the current character is not a parenthesis:\n    - We add it to our result string.\n- We move to the next position by adding the current direction (`direction`) to our position (`currIndex`).\n\nThe key concept in this approach is treating paired parentheses as 'wormholes'. When encountering a parenthesis, we imagine jumping through a wormhole to its match and reversing our direction. This effectively reverses the order of characters within each pair of parentheses without actually reversing the string.\n\n```\nforward ->  ( ... ( ... ) ... )  <- backward\n             ^     ^    ^     ^\n             |     |    |     |\n             A-----B----b-----a\n                  wormholes\n```\n\nSee the above art and observe: When we hit the opening parenthesis(`A`), we jump to its closing pair(`a`) and start moving backward. When we hit the closing parenthesis(`b`) while moving backward, we jump to its opening pair and start moving forward again(`B`). This motion will ultimately lead to our result string without using the reverse function. Reducing the time complexity to $O(n)$.\n\n#### Algorithm\n\n- First Pass: Pair up parentheses\n   - Initialize `openParenthesesIndices` stack and `pair` vector to establish \"wormhole\" connections.\n   - For each character:\n     - If `'('`, push its index to `openParenthesesIndices` to remember its position.\n     - If `')'`, pop from `openParenthesesIndices` and link both indices in `pair` to create the \"wormhole\".\n\n- Second Pass: Build the result string\n   - Initialize `result` string, `currIndex`, and `direction` to traverse and build the result.\n   - While `currIndex` < input length:\n     - If `'('` or `')'`, jump through the \"wormhole\" using `pair` and reverse `direction` to simulate reversal.\n     - Otherwise, append the character to `result` to build the result.\n     - Move `currIndex` by `direction` to continue traversal.\n\n- Return `result` as the final string with all reversals simulated.\n\nThe algorithm is visualized below:\n\n!?!../Documents/1190/approach2.json:975,652!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/WmYTuZxs/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"WmYTuZxs\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the string.\n\n* Time complexity: $O(n)$\n\n    We iterate through the string once to pair up parentheses using a stack. Each character is processed once, resulting in $O(n)$ time complexity.\n\n    After pairing, we iterate through the string again to construct the final result string. During this pass, each character is processed once, and we navigate through pairs in constant time. This results in another $O(n)$ time complexity.\n\n    Converting a `StringBuilder` to a `String` in Java using `toString()` takes $O(n)$ time, where `n` is the length of the `StringBuilder`. Joining elements of a list into a string in Python using `''.join()` also takes $O(n)$ time. Combined, the total time complexity is $O(n)$.\n\n* Space complexity: $O(n)$\n\n    We use a stack to track indices of opening parentheses. In the worst case, the stack may hold up to $O(n/2)$ elements (when all are opening parentheses), resulting in $O(n)$ space complexity. An array `pair` of size `n` is used to store indices of matching parentheses. This contributes $O(n)$ space complexity.\n\n    Converting a `StringBuilder` to a `String` in Java generally does not increase space complexity beyond the size of the resulting string itself. However, `StringBuilder` internally manages a character array whose size might be slightly larger than the resulting string due to its capacity management strategy. The additional space complexity for `''.join()` in Python is $O(n)$, accounting for the space needed to store the new string object.\n\n    Therefore, the total space complexity is $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

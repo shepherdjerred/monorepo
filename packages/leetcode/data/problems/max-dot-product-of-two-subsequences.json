@@ -1,0 +1,136 @@
+{
+  "questionId": "1569",
+  "questionFrontendId": "1458",
+  "title": "Max Dot Product of Two Subsequences",
+  "titleSlug": "max-dot-product-of-two-subsequences",
+  "difficulty": "Hard",
+  "content": "<p>Given two arrays <code>nums1</code>&nbsp;and <code><font face=\"monospace\">nums2</font></code><font face=\"monospace\">.</font></p>\n\n<p>Return the maximum dot product&nbsp;between&nbsp;<strong>non-empty</strong> subsequences of nums1 and nums2 with the same length.</p>\n\n<p>A subsequence of an array is a new array which is formed from the original array by deleting some (can be none) of the characters without disturbing the relative positions of the remaining characters. (ie,&nbsp;<code>[2,3,5]</code>&nbsp;is a subsequence of&nbsp;<code>[1,2,3,4,5]</code>&nbsp;while <code>[1,5,3]</code>&nbsp;is not).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [2,1,-2,5], nums2 = [3,0,-6]\n<strong>Output:</strong> 18\n<strong>Explanation:</strong> Take subsequence [2,-2] from nums1 and subsequence [3,-6] from nums2.\nTheir dot product is (2*3 + (-2)*(-6)) = 18.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [3,-2], nums2 = [2,-6,7]\n<strong>Output:</strong> 21\n<strong>Explanation:</strong> Take subsequence [3] from nums1 and subsequence [7] from nums2.\nTheir dot product is (3*7) = 21.</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [-1,-1], nums2 = [1,1]\n<strong>Output:</strong> -1\n<strong>Explanation: </strong>Take subsequence [-1] from nums1 and subsequence [1] from nums2.\nTheir dot product is -1.</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums1.length, nums2.length &lt;= 500</code></li>\n\t<li><code>-1000 &lt;= nums1[i], nums2[i] &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [
+    "Use dynamic programming, define DP[i][j] as the maximum dot product of two subsequences starting in the position i of nums1 and position j of nums2."
+  ],
+  "metaData": "{\n  \"name\": \"maxDotProduct\",\n  \"params\": [\n    {\n      \"name\": \"nums1\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"nums2\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"manual\": false\n}",
+  "stats": "{\"totalAccepted\": \"185.1K\", \"totalSubmission\": \"266.9K\", \"totalAcceptedRaw\": 185137, \"totalSubmissionRaw\": 266947, \"acRate\": \"69.4%\"}",
+  "likes": 2158,
+  "dislikes": 51,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[2,1,-2,5]\n[3,0,-6]",
+    "[3,-2]\n[2,-6,7]",
+    "[-1,-1]\n[1,1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxDotProduct(vector<int>& nums1, vector<int>& nums2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxDotProduct(int[] nums1, int[] nums2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxDotProduct(self, nums1: List[int], nums2: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxDotProduct(self, nums1, nums2):\n        \"\"\"\n        :type nums1: List[int]\n        :type nums2: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums1\n * @param {number[]} nums2\n * @return {number}\n */\nvar maxDotProduct = function(nums1, nums2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxDotProduct(nums1: number[], nums2: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxDotProduct(int[] nums1, int[] nums2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxDotProduct(int* nums1, int nums1Size, int* nums2, int nums2Size) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxDotProduct(nums1 []int, nums2 []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxDotProduct(nums1: IntArray, nums2: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxDotProduct(_ nums1: [Int], _ nums2: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_dot_product(nums1: Vec<i32>, nums2: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums1\n# @param {Integer[]} nums2\n# @return {Integer}\ndef max_dot_product(nums1, nums2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums1\n     * @param Integer[] $nums2\n     * @return Integer\n     */\n    function maxDotProduct($nums1, $nums2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxDotProduct(List<int> nums1, List<int> nums2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxDotProduct(nums1: Array[Int], nums2: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_dot_product(nums1 :: [integer], nums2 :: [integer]) :: integer\n  def max_dot_product(nums1, nums2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_dot_product(Nums1 :: [integer()], Nums2 :: [integer()]) -> integer().\nmax_dot_product(Nums1, Nums2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-dot-product nums1 nums2)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2075",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Top-Down Dynamic Programming\n\n**Intuition**\n\n> **Note.** For this approach, we assume that you already know the fundamentals of dynamic programming and are figuring out how to apply it to a wide range of problems, such as this one. If you are not yet at this stage, we recommend checking out our relevant [Explore Card content on dynamic programming](https://leetcode.com/explore/featured/card/dynamic-programming/) before coming back to this problem.\n\nIn this problem, we need to make decisions regarding which numbers to multiply with each other. If we use a pair of numbers, we cannot use them anymore in the future. We also must make the operations in a certain order. This is a perfect problem for dynamic programming because every decision we make will affect future decisions.\n\nLet's define a function `dp(i, j)`. It will return the maximum dot product possible when considering:\n- the suffix of `nums1` starting at index `i`.\n- the suffix of `nums2` starting at index `j`.\n\nThe base case to this function is when `i == nums1.length` or `j == nums2.length`. In this case, one of the arrays has been exhausted and it is impossible to have any dot product. Thus, we will `return 0`.\n\nNow, how do we calculate a given state `dp(i, j)`? There are 3 options at each state.\n\n1. We can multiply the numbers at `nums[i]` and `nums[j]` together. This will give us `nums1[i] * nums2[j]`, and then we move to the next indices. Thus, this option gives us a dot product of `nums1[i] * nums2[j] + dp(i + 1, j + 1)`.\n2. We can move forward in `nums1`. This gives us a dot product of `dp(i + 1, j)`.\n3. We can move forward in `nums2`. This gives us a dot product of `dp(i, j + 1)`.\n\nWe should take the maximum of these three options.\n\n> You may recognize this process - this problem is very similar to [Longest Common Subsequence](https://leetcode.com/problems/longest-common-subsequence/)!\n\nThis recursive solution will work, but it is inefficient because each call to `dp` generates 3 more calls to `dp`, resulting in an exponential time complexity. In the following image, each node represents a function call, and nodes of the same color denote repeated computation.\n\n![memoization](../Figures/1458/1.png)\n<br>\n\nTo solve this, we will use **memoization**. The first time we calculate a given state `(i, j)`, we will store the result. In the future, we can simply refer to this stored value instead of having to re-calculate the state.\n\nWe are still missing something! Notice that in the problem description, it states that we must have **non-empty** subsequences. What would happen if we had an input like this:\n\n- `nums1 = [-1, -4, -7]`\n- `nums2 = [6, 2, 52]`\n\nWhen all the elements in `nums1` are negative and all the elements in `nums2` are positive (or vice-versa), and no matter what operation is performed we get a negative value, then we would prefer to not perform any operation and get 0! However, the problem forces us to do at least one operation. We should try to minimize the \"damage\" (maximize this negative value) by choosing the largest negative value and the smallest positive value (choose the element with the smallest absolute value from each array).\n\n**Algorithm**\n\n1. Check the following special cases:\n    - If `max(nums1) < 0` and `min(nums2) > 0`, then `return max(nums1) * min(nums2)`.\n    - If `min(nums1) > 0` and `max(nums2) < 0`, then `return min(nums1) * max(nums2)`.\n2. Define a memoized function `dp(i, j)`:\n    - If `i == nums1.length` or `j == nums2.length`, then `return 0`.\n    - Set `use = nums1[i] * nums2[j] + dp(i + 1, j + 1)`. This is the dot product from using the current numbers.\n    - Return the maximum of `use, dp(i + 1, j), dp(i, j + 1)`.\n3. Return `dp(0, 0)`, the answer to the original problem.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/g5hzkx52/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"g5hzkx52\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `nums1` and $$m$$ as the length of `nums2`,\n\n* Time complexity: $$O(n \\cdot m)$$\n\n    Due to memoization, we only calculate each state `(i, j)` once. There are $$n \\cdot m$$ states of `(i, j)`. To calculate a state, we simply take the maximum of three options, which costs $$O(1)$$.\n\n* Space complexity: $$O(n \\cdot m)$$\n\n    We memoize `dp`, which requires us to store the answer to $$O(n \\cdot m)$$ states.\n    \n<br/>\n\n---\n\n### Approach 2: Bottom-Up Dynamic Programming\n\n**Intuition**\n\nIn the previous approach, we used recursion to start at the answer state `(0, 0)` and we made calls toward the base cases. The same algorithm can be implemented iteratively. \n\nIn bottom-up, we will start at the base cases and iterate toward the answer state. We do this by using a nested for loop over the state variables. We will start iterating `i` from the base case (`i = nums1.length - 1`) and within that loop, we will iterate `j` starting from `nums2.length - 1`.\n\nEach inner loop iteration represents a state, and we can calculate the state the same way we did in the previous approach. We keep a 2d array called `dp`. Note that here, `dp[i][j]` is equal to `dp(i, j)` from the previous approach.\n\nWe first consider using both the current numbers, resulting in `use = nums1[i] * nums2[j] + dp[i + 1][j + 1]`. Then, we consider skipping in both ways, resulting in `dp[i + 1][j]` and `dp[i][j + 1]`. We set `dp[i][j]` to the maximum of these three choices.\n\nAt the end, we simply return the value in `dp[0][0]`.\n\n**Algorithm**\n\n1. Check the following special cases:\n    - If `max(nums1) < 0` and `min(nums2) > 0`, then `return max(nums1) * min(nums2)`.\n    - If `min(nums1) > 0` and `max(nums2) < 0`, then `return min(nums1) * max(nums2)`.\n2. Create a 2d table `dp` of size `(nums1.length + 1) * (nums2.length + 1)`.\n3. Iterate `i` from `nums1.length - 1` until `0`:\n    - Iterate `j` from `nums2.length - 1` until `0`:\n        - Set `use = nums1[i] * nums2[j] + dp[i + 1][j + 1]`. This is the dot product from using the current numbers.\n        - Find maximum of `use, dp[i + 1][j], dp[i][j + 1]`. Store it in `dp[i][j]`.\n4. Return `dp[0][0]`, the answer to the original problem.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/5shfoGR3/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"5shfoGR3\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `nums1` and $$m$$ as the length of `nums2`,\n\n* Time complexity: $$O(n \\cdot m)$$\n\n    We only calculate each state `(i, j)` once - one state per inner for loop iteration. There are $$n \\cdot m$$ states of `(i, j)`. To calculate a state, we simply take the maximum of three options, which costs $$O(1)$$.\n\n* Space complexity: $$O(n \\cdot m)$$\n\n    The table `dp` takes $$O(n \\cdot m)$$ space.\n    \n<br/>\n\n---\n\n### Approach 3: Space Optimized Dynamic Programming\n\n**Intuition**\n\nNotice that in the previous approach, each outer loop iteration focuses on calculating all values for `dp[i]`. However, we only rely on the values of `dp[i + 1]` in this calculation. For example, let's say we have `i = 4`. We only reference `dp[4][...]` and `dp[5][...]`, while the values in `dp[6]`, `dp[7]`, `dp[8]` and so forth, become irrelevant to the current calculation.\n\nThus, we can save some space since we only need the results of the current and previous rows. We will flatten `dp` so it is a 1d array of length `nums2.length + 1`. We will also use a similarly sized array `prevDp`.\n\nHere, `dp` is analogous to `dp[i]`, and `prevDp` is analogous to `dp[i + 1]`, since `prevDp` represents the previous row. In each outer loop iteration, we start by resetting `dp` to a clean state. Then, we calculate `dp` (like we would calculate `dp[i]` in the previous approach) using the exact same process. \n\n1. If we `use` the current numbers, the dot product is `nums1[i] * nums2[j] + prevDp[j + 1]`, since `prevDp[j + 1]` is analogous to `dp[i + 1][j + 1]` from the previous approach.\n2. If we move forward in `nums1`, the dot product is `prevDp[j]`, analogous to `dp[i + 1][j]` from the previous approach.\n3. If we move forward in `nums2`, the dot product is `dp[j + 1]`, analogous to `dp[i][j + 1]` from the previous approach.\n\nAfter we finish calculating `dp`, we set `prevDp = dp` so that in the next iteration, `prevDp` correctly represents `dp[i + 1]`.\n\n**Algorithm**\n\n1. Check the following special cases:\n    - If `max(nums1) < 0` and `min(nums2) > 0`, then `return max(nums1) * min(nums2)`.\n    - If `min(nums1) > 0` and `max(nums2) < 0`, then `return min(nums1) * max(nums2)`.\n2. Create an array `dp` and an array `prevDp`, both of size `m = (nums2.length + 1)`.\n3. Iterate `i` from `nums1.length - 1` until `0`:\n    - Reset `dp`.\n    - Iterate `j` from `nums2.length - 1` until `0`:\n        - Set `use = nums1[i] * nums2[j] + prevDp[j + 1]`. This is the dot product from using the current numbers.\n        - Find maximum of `use, prevDp[j], dp[j + 1]`. Store it in `dp[j]`.\n    - Update `prevDp = dp`.\n4. Return `dp[0]`, the answer to the original problem.\n\n**Implementation**\n\n> Implementation tip: first, implement the previous approach. Now, to convert it to the space-optimized version, make the following replacements in the code:\n>\n> `dp[i] -> dp`\n>\n> `dp[i + 1] -> prevDp`\n>\n> Then you just need to reset `dp` at the start of each outer loop iteration and update `prevDp` at the end of each outer loop iteration.\n\n<iframe src=\"https://leetcode.com/playground/VoGCyVfm/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"VoGCyVfm\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `nums1` and $$m$$ as the length of `nums2`,\n\n* Time complexity: $$O(n \\cdot m)$$\n\n    We only calculate each state `(i, j)` once - one state per inner for loop iteration. There are $$n \\cdot m$$ states of `(i, j)`. To calculate a state, we simply take the maximum of three options, which costs $$O(1)$$.\n\n* Space complexity: $$O(m)$$\n\n    We reduced space complexity by only requiring two 1d arrays of length $$m$$. Note that you could further improve it to $$O(\\min(n, m))$$ if you were to compare the lengths of `nums1` and `nums2` before starting the algorithm, and then build `dp` along the shorter edge.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

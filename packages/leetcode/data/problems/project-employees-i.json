@@ -1,0 +1,58 @@
+{
+  "questionId": "1161",
+  "questionFrontendId": "1075",
+  "title": "Project Employees I",
+  "titleSlug": "project-employees-i",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Project</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| project_id  | int     |\n| employee_id | int     |\n+-------------+---------+\n(project_id, employee_id) is the primary key of this table.\nemployee_id is a foreign key to <code>Employee</code> table.\nEach row of this table indicates that the employee with employee_id is working on the project with project_id.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Employee</code></p>\n\n<pre>\n+------------------+---------+\n| Column Name      | Type    |\n+------------------+---------+\n| employee_id      | int     |\n| name             | varchar |\n| experience_years | int     |\n+------------------+---------+\nemployee_id is the primary key of this table. It&#39;s guaranteed that experience_years is not NULL.\nEach row of this table contains information about one employee.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write an SQL query that reports the <strong>average</strong> experience years of all the employees for each project, <strong>rounded to 2 digits</strong>.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The query result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nProject table:\n+-------------+-------------+\n| project_id  | employee_id |\n+-------------+-------------+\n| 1           | 1           |\n| 1           | 2           |\n| 1           | 3           |\n| 2           | 1           |\n| 2           | 4           |\n+-------------+-------------+\nEmployee table:\n+-------------+--------+------------------+\n| employee_id | name   | experience_years |\n+-------------+--------+------------------+\n| 1           | Khaled | 3                |\n| 2           | Ali    | 2                |\n| 3           | John   | 1                |\n| 4           | Doe    | 2                |\n+-------------+--------+------------------+\n<strong>Output:</strong> \n+-------------+---------------+\n| project_id  | average_years |\n+-------------+---------------+\n| 1           | 2.00          |\n| 2           | 2.50          |\n+-------------+---------------+\n<strong>Explanation:</strong> The average experience years for the first project is (3 + 2 + 1) / 3 = 2.00 and for the second project is (3 + 2) / 2 = 2.50\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Project (project_id int, employee_id int)\", \"Create table If Not Exists Employee (employee_id int, name varchar(10), experience_years int)\"], \"mssql\": [\"Create table Project (project_id int, employee_id int)\", \"Create table Employee (employee_id int, name varchar(10), experience_years int)\"], \"oraclesql\": [\"Create table Project (project_id int, employee_id int)\", \"Create table Employee (employee_id int, name varchar(10), experience_years int)\"], \"database\": true, \"name\": \"project_employees_i\", \"pythondata\": [\"Project = pd.DataFrame([], columns=['project_id', 'employee_id']).astype({'project_id':'Int64', 'employee_id':'Int64'})\", \"Employee = pd.DataFrame([], columns=['employee_id', 'name', 'experience_years']).astype({'employee_id':'Int64', 'name':'object', 'experience_years':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Project (project_id int, employee_id int)\", \"Create table If Not Exists Employee (employee_id int, name varchar(10), experience_years int)\"], \"database_schema\": {\"Project\": {\"project_id\": \"INT\", \"employee_id\": \"INT\"}, \"Employee\": {\"employee_id\": \"INT\", \"name\": \"VARCHAR(10)\", \"experience_years\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"664.3K\", \"totalSubmission\": \"997.1K\", \"totalAcceptedRaw\": 664309, \"totalSubmissionRaw\": 997100, \"acRate\": \"66.6%\"}",
+  "likes": 1039,
+  "dislikes": 206,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Project Employees II\", \"titleSlug\": \"project-employees-ii\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Project\":[\"project_id\",\"employee_id\"],\"Employee\":[\"employee_id\",\"name\",\"experience_years\"]},\"rows\":{\"Project\":[[1,1],[1,2],[1,3],[2,1],[2,4]],\"Employee\":[[1,\"Khaled\",3],[2,\"Ali\",2],[3,\"John\",1],[4,\"Doe\",2]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"tcs\", \"name\": \"tcs\"}]}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef project_employees_i(project: pd.DataFrame, employee: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "2257",
+    "content": "[TOC]\n\n# Solution\n\n---\n\n## pandas\n\n### Approach: Merge and Calculate\n\n#### Intuition\n\nSince the project assignment and employee information are stored in two separate DataFrames, this approach starts by merging them on the shared column `employee_id` so we can later calculate the average experience years for each project. \n\n```python\ndf = project.merge(employee, on='employee_id')\n```\n\nWe now have the information we need to to calculate the average experience years saved in the same DataFrame. \n\n| project_id | employee_id | name   | experience_years |\n| ---------- | ----------- | ------ | ---------------- |\n| 1          | 1           | Khaled | 3                |\n| 2          | 1           | Khaled | 3                |\n| 1          | 2           | Ali    | 2                |\n| 1          | 3           | John   | 1                |\n| 2          | 4           | Doe    | 2                |\n\nWe can now calculate the average `experience_years` for each project using `mean()`. Since more than one employee is working on the same project, the aggregate average is grouped at the `project_id` level using `groupby()`.\n\n```python\ndf = df.groupby('project_id', as_index=False)['experience_years'].mean()\n```\n\nBelow is the output from this step.\n\n| project_id | experience_years |\n| ---------- | ---------------- |\n| 1          | 2                |\n| 2          | 2.5              |\n\nTo get the final output, we need to rename the column from `experience_years` to `average_years` and round the result to 2 decimal places using `round()`.\n\n```python\nreturn df.rename(columns={'experience_years': 'average_years'}).round(2)\n```\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ZRfBYgrZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"208\" name=\"ZRfBYgrZ\"></iframe>\n\n---\n\n## Database\n\n### Approach: JOIN and Calculate\n\n#### Intuition\n\nSince the project assignment and employee information are stored in two separate tables, we need to join the table `Project` to `Employee` to calculate the average `experience_years` of all the employees associated with each project. Since multiple employees are working on the same project, the aggregate average `experience_years` is grouped at the `project_id` level. The result is rounded to 2 digits using the function `ROUND()` and renamed as `average_years` for the final output. \n\n#### Implementation\n\n```mysql []\nSELECT \n    project_id,\n    ROUND(AVG(experience_years), 2) AS average_years\nFROM \n    Project p\nJOIN \n    Employee e\nON \n    p.employee_id = e.employee_id\nGROUP BY \n    project_id\n```",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

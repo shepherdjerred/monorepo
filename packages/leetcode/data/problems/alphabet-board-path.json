@@ -1,0 +1,111 @@
+{
+  "questionId": "1238",
+  "questionFrontendId": "1138",
+  "title": "Alphabet Board Path",
+  "titleSlug": "alphabet-board-path",
+  "difficulty": "Medium",
+  "content": "<p>On an alphabet board, we start at position <code>(0, 0)</code>, corresponding to character&nbsp;<code>board[0][0]</code>.</p>\r\n\r\n<p>Here, <code>board = [&quot;abcde&quot;, &quot;fghij&quot;, &quot;klmno&quot;, &quot;pqrst&quot;, &quot;uvwxy&quot;, &quot;z&quot;]</code>, as shown in the diagram below.</p>\r\n\r\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/07/28/azboard.png\" style=\"width: 250px; height: 317px;\" /></p>\r\n\r\n<p>We may make the following moves:</p>\r\n\r\n<ul>\r\n\t<li><code>&#39;U&#39;</code> moves our position up one row, if the position exists on the board;</li>\r\n\t<li><code>&#39;D&#39;</code> moves our position down one row, if the position exists on the board;</li>\r\n\t<li><code>&#39;L&#39;</code> moves our position left one column, if the position exists on the board;</li>\r\n\t<li><code>&#39;R&#39;</code> moves our position right one column, if the position exists on the board;</li>\r\n\t<li><code>&#39;!&#39;</code>&nbsp;adds the character <code>board[r][c]</code> at our current position <code>(r, c)</code>&nbsp;to the&nbsp;answer.</li>\r\n</ul>\r\n\r\n<p>(Here, the only positions that exist on the board are positions with letters on them.)</p>\r\n\r\n<p>Return a sequence of moves that makes our answer equal to <code>target</code>&nbsp;in the minimum number of moves.&nbsp; You may return any path that does so.</p>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong class=\"example\">Example 1:</strong></p>\r\n<pre><strong>Input:</strong> target = \"leet\"\r\n<strong>Output:</strong> \"DDR!UURRR!!DDD!\"\r\n</pre><p><strong class=\"example\">Example 2:</strong></p>\r\n<pre><strong>Input:</strong> target = \"code\"\r\n<strong>Output:</strong> \"RR!DDRR!UUL!R!\"\r\n</pre>\r\n<p>&nbsp;</p>\r\n<p><strong>Constraints:</strong></p>\r\n\r\n<ul>\r\n\t<li><code>1 &lt;= target.length &lt;= 100</code></li>\r\n\t<li><code>target</code> consists only of English lowercase letters.</li>\r\n</ul>",
+  "hints": [
+    "Create a hashmap from letter to position on the board.",
+    "Now for each letter, try moving there in steps, where at each step you check if it is inside the boundaries of the board."
+  ],
+  "metaData": "{\n  \"name\": \"alphabetBoardPath\",\n  \"params\": [\n    {\n      \"name\": \"target\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"59.3K\", \"totalSubmission\": \"114.4K\", \"totalAcceptedRaw\": 59298, \"totalSubmissionRaw\": 114394, \"acRate\": \"51.8%\"}",
+  "likes": 936,
+  "dislikes": 187,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"leet\"",
+    "\"code\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string alphabetBoardPath(string target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String alphabetBoardPath(String target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def alphabetBoardPath(self, target: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def alphabetBoardPath(self, target):\n        \"\"\"\n        :type target: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} target\n * @return {string}\n */\nvar alphabetBoardPath = function(target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function alphabetBoardPath(target: string): string {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string AlphabetBoardPath(string target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\nchar * alphabetBoardPath(char * target){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func alphabetBoardPath(target string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun alphabetBoardPath(target: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func alphabetBoardPath(_ target: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn alphabet_board_path(target: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} target\n# @return {String}\ndef alphabet_board_path(target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $target\n     * @return String\n     */\n    function alphabetBoardPath($target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def alphabetBoardPath(target: String): String = {\n        \n    }\n}"
+    }
+  ],
+  "solution": null
+}

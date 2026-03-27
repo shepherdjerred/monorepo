@@ -1,0 +1,146 @@
+{
+  "questionId": "1770",
+  "questionFrontendId": "1647",
+  "title": "Minimum Deletions to Make Character Frequencies Unique",
+  "titleSlug": "minimum-deletions-to-make-character-frequencies-unique",
+  "difficulty": "Medium",
+  "content": "<p>A string <code>s</code> is called <strong>good</strong> if there are no two different characters in <code>s</code> that have the same <strong>frequency</strong>.</p>\n\n<p>Given a string <code>s</code>, return<em> the <strong>minimum</strong> number of characters you need to delete to make </em><code>s</code><em> <strong>good</strong>.</em></p>\n\n<p>The <strong>frequency</strong> of a character in a string is the number of times it appears in the string. For example, in the string <code>&quot;aab&quot;</code>, the <strong>frequency</strong> of <code>&#39;a&#39;</code> is <code>2</code>, while the <strong>frequency</strong> of <code>&#39;b&#39;</code> is <code>1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;aab&quot;\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> <code>s</code> is already good.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;aaabbbcc&quot;\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> You can delete two &#39;b&#39;s resulting in the good string &quot;aaabcc&quot;.\nAnother way it to delete one &#39;b&#39; and one &#39;c&#39; resulting in the good string &quot;aaabbc&quot;.</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;ceabaacb&quot;\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> You can delete both &#39;c&#39;s resulting in the good string &quot;eabaab&quot;.\nNote that we only care about characters that are still in the string at the end (i.e. frequency of 0 is ignored).\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s</code>&nbsp;contains only lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "As we can only delete characters, if we have multiple characters having the same frequency, we must decrease all the frequencies of them, except one.",
+    "Sort the alphabet characters by their frequencies non-increasingly.",
+    "Iterate on the alphabet characters, keep decreasing the frequency of the current character until it reaches a value that has not appeared before."
+  ],
+  "metaData": "{\n  \"name\": \"minDeletions\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"300.2K\", \"totalSubmission\": \"488.4K\", \"totalAcceptedRaw\": 300185, \"totalSubmissionRaw\": 488395, \"acRate\": \"61.5%\"}",
+  "likes": 5059,
+  "dislikes": 76,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Deletions to Make Array Beautiful\", \"titleSlug\": \"minimum-deletions-to-make-array-beautiful\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Removing Minimum and Maximum From Array\", \"titleSlug\": \"removing-minimum-and-maximum-from-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Remove Letter To Equalize Frequency\", \"titleSlug\": \"remove-letter-to-equalize-frequency\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum Deletions to Make String K-Special\", \"titleSlug\": \"minimum-deletions-to-make-string-k-special\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"aab\"",
+    "\"aaabbbcc\"",
+    "\"ceabaacb\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"american-express\", \"name\": \"American Express\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"intuit\", \"name\": \"Intuit\"}, {\"timesEncountered\": 2, \"slug\": \"smartnews\", \"name\": \"smartnews\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minDeletions(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minDeletions(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minDeletions(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minDeletions(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar minDeletions = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minDeletions(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinDeletions(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minDeletions(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minDeletions(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minDeletions(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minDeletions(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_deletions(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef min_deletions(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function minDeletions($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minDeletions(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minDeletions(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_deletions(s :: String.t) :: integer\n  def min_deletions(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_deletions(S :: unicode:unicode_binary()) -> integer().\nmin_deletions(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-deletions s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1315",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nWe are given a string `s` of lowercase English letters. We need to delete some characters so that the frequency of each character is unique and the length of the remaining string is as long as possible. We can rephrase the question to \"Given a list of `26` numbers (where each number represents the frequency of a different lowercase English letter) make these numbers unique by decrementing some of the frequencies.\"\n\nNote that we can only decrement a number and cannot increment it. Hence, if we have two equal numbers, we will have to make one of these numbers smaller to make them unique. This is the key observation that we will use in the next three approaches.\n</br>\n\n---\n\n### Approach 1: Decrement Each Duplicate Until it is Unique\n\n**Intuition**\n\nIn each approach, we will first start by calculating the frequency of each character.  Then, in this approach, we will iterate over the frequencies, and for each frequency, we will check to see if this frequency has already been seen.  If it has, we will decrement the frequency until it becomes unique or it becomes zero (signifying that we have deleted all occurrences of this character).  Thus, as we iterate over the frequencies, we will need to store each frequency we have seen.\n\nThis approach will ensure that we get unique frequencies, but how do we know that the number of characters we delete in the process is the minimum possible? The reason is for each frequency, we reduce it as few times as possible. When we have multiple occurrences of a frequency, we will reduce each frequency only until it becomes an unused frequency, and then we will stop. If the maximum frequency is $$x$$, then all the frequencies have to be decremented (if needed) to be in the range $$[0, x]$$.\n\nNote that the processing order does not matter. For example, if we have the frequencies `[4, 4, 5, 5]`, the final result will be `[2, 3, 4, 5]` or one of several other possible combinations of the frequencies `2`, `3`, `4`, and `5` that can be obtained by decrementing the values in `[4, 4, 5, 5]`. And the cost will be `(4 + 4 + 5 + 5) - (2 + 3 + 4 + 5) = 4` deletions. Since the number of deletions is just the difference in the sum of frequencies before and after making all frequencies unique, we would get the same result if our final frequencies were say `[4, 2, 3, 5]`. From this, we can conclude that the order in which we decrement frequencies, does not affect the number of deletions.\n\nThe following slideshow demonstrates this algorithm:\n\n!?!../Documents/1647_Minimum_Deletions_to_Make_Character_Frequencies_Unique1.json:960,720!?! <br>\n\n**Algorithm**\n\n1. Store the frequency for each character in the given string `s` in a frequency array called `frequency`. We store the frequency for a character `c` at index `c - 'a'`. Thus, we will need `26` indices (from `0` to `25`) to store the frequencies of the characters.\n2. Initialize the variable `deleteCount` to `0`, which stores the count of characters that need to be deleted. Also, initialize a HashSet `seenFrequencies` that stores the frequencies that have been occupied.\n3. Iterate over the characters from `a` to `z` as `0` to `25`, for each character:\n    - Keep decrementing its frequency until it becomes a number that is not present in set `seenFrequencies` or it becomes zero. Every time we decrement the frequency we increment the variable `deleteCount` to mark the deletion of the character.\n    - When the frequency becomes unique (or zero) insert it into the set `seenFrequencies`.\n4. Return `deleteCount`.\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/Z27Zn3hL/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"Z27Zn3hL\"></iframe>\n\n\n**Complexity Analysis**\n\nHere, $$N$$ is the length of the given string, and $$K$$ is the maximum possible number of distinct characters in `s`.\n\n* Time complexity: $$O(N + K^2)$$\n\n  To store the frequencies, we need to traverse the string, which will take $$O(N)$$ time. The maximum number of operations will occur when the frequencies for all the $$K$$ characters are the same. In that case, for the $$i_{th}$$ character, we would need to decrement the frequency by $$i - 1$$ to make it unique. Hence the total number of operations would be $$0 + 1 + 2 + .... + K - 1 = ((K - 1) * K )/2$$. Hence, the total time complexity is $$O(N + K^2)$$.\n\n* Space complexity: $$O(K)$$\n    \n   We need $$K$$ indices in the list `frequency` to store the frequencies. Also, there can be at most $$K$$ unique frequencies, and hence the space required for the HashSet `seenFrequencies` is $$O(K)$$. Hence, the space complexity is equal to $$O(K)$$.\n<br/>\n\n---\n\n### Approach 2: Priority Queue\n\n**Intuition**\n\nThis approach is based on the observation that if multiple characters have the same frequency, then only one character can keep all of its instances. All other characters must have one or more of their instances deleted.\n\nIn this approach, we will push the frequency of each number into a max heap. Then, at each step, we will compare the top two elements in the heap. If they are the same, we will decrement one of them and push it back into the heap. Every time we detect that the two top elements are equal, we will increment the variable `deleteCount`.\n\nAn important point here is that when we compare the top two elements, we do so by popping the top element and comparing it to the new top element in the heap. Then, if the top two elements are equal, we will decrement the popped element by $$1$$ so that the two elements are no longer equal, and then we can push the popped element back into the heap. Only when the top two elements are not equal can we say that the top element is unique and can be removed from the heap.\n\nThe following slideshow demonstrates this algorithm:\n\n!?!../Documents/1647_Minimum_Deletions_to_Make_Character_Frequencies_Unique2.json:960,720!?! <br>\n\n**Algorithm**\n\n1. Store the frequency for each character in the given string `s` in a frequency array called `frequency`. We store the frequency for a character `c` at index `c - 'a'`. Thus, we will need `26` indices (from `0` to `25`) to store the frequencies of the characters.\n2. Store the frequencies in the max heap `pq`. Only insert non-zero frequencies into the priority queue.\n3. While the priority queue `pq` has more than one element:\n    - Store the top element in the variable `topElement` and pop it.\n    - If `topElement` and the new top element in `pq` are the same, decrement the value `topElement` and increment `deleteCount`. If `topElement` is still greater than zero, then push it back into `pq`.\n4. Return `deleteCount`.\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/JxseTjMH/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"JxseTjMH\"></iframe>\n\n\n**Complexity Analysis**\n\nHere, $$N$$ is the length of the given string, and $$K$$ is the maximum possible number of distinct characters in `s`.\n\n* Time complexity: $$O(N + K^2 \\log K)$$\n\n  To store the frequency, we need to traverse the string, which will take $$O(N)$$ time. Also, we keep popping elements from the heap until there is only one element left; each time we push or pop an element requires $$O(\\log K)$$ time. At each step, the size of the heap may either remain the same (when the top two elements are equal) or it may decrease (when the top two elements are not equal). Hence, the number of operations in the while loop will equal $$K$$ plus the number of characters that we need to delete i.e., `deleteCount`.\n\n  In the worst case, we can have all $$K$$ characters with the same frequency and in such case, the number of characters that need to be deleted would be equal to $$0 + 1 + 2 + 3 + ....... + K-1 = ((K - 1) * K )/2$$. Hence, the time complexity is equal to $$O(N + K^2 \\log K)$$.\n   \n* Space complexity: $$O(K)$$\n    \n  We need $$K$$ indices in the list `frequency` to store the frequency. Also, as we just discussed the maximum size of the heap can be equal to $$K$$. Hence, the space complexity is equal to $$O(K)$$.\n<br/>\n\n---\n\n### Approach 3: Sorting\n\n**Intuition**\n\nIn the previous approaches, each time we found a duplicate element, we would repeatedly decrement it by $$1$$, until it became unique. It would be more efficient if we could change it to that unique number in just one step. This is possible if we know the largest unoccupied number that is less than the current number. We could store all unoccupied numbers in a list and then for a particular frequency say $$x$$, find the greatest number in that list which is less than or equal to $$x$$. However, this way is not very space-efficient since we would need to store all of the possible frequencies (which scales with the string length).\n\nWe can circumvent the need to have a list of unoccupied frequencies by iterating over the frequencies in descending order and keeping track of only the maximum frequency that is allowed. Remember that for each frequency, if it is unique, we want to keep it as is, and if it is not unique, we want to decrement it as little as possible. Therefore, if we know the maximum number a frequency can be converted to, then we can simply change any duplicate frequency to that value instead of decrementing the frequency one step at a time.\n\nSo, in this approach, we will iterate over the frequencies in descending order and before we iterate over an element we would have the maximum frequency that this number can be converted to. This maximum frequency `maxFreqAllowed` is just the maximum possible number that is not occupied yet. If the `maxFreqAllowed` is greater than or equal to the frequency we are considering then we don't need to delete any characters. If the frequency we are considering is greater than `maxFreqAllowed`, we need to delete the excess characters and add the number of deleted characters to `deleteCount`. After each step, we will update the maximum frequency allowed `maxFreqAllowed` to be one less than the frequency we used for the last element.\n\nThe following slideshow demonstrates this algorithm:\n\n!?!../Documents/1647_Minimum_Deletions_to_Make_Character_Frequencies_Unique3.json:960,720!?! <br>\n\n**Algorithm**\n\n1. Store the frequency for each character in the given string `s` in a frequency array called `frequency`. We store the frequency for a character `c` at index `c - 'a'`. Thus, we will need `26` indices (from `0` to `25`) to store the frequencies of the characters.\n2. Sort the frequencies (`frequency`) in descending order.\n3. Set `maxFreqAllowed` equal to the length of `s` because this is the maximum frequency a character can have.\n3. Iterate over the frequencies in descending order, for each frequency:\n    - If `frequency[i] > maxFreqAllowed`, add the difference of these two in the variable `deleteCount`. Change frequency of the current character `frequency[i]` to `maxFreqAllowed`.\n    - Update the `maxFreqAllowed` to `frequency[i] - 1` (or `0` if the value is negative).\n4. Return `deleteCount`\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/UQhWBW8D/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"UQhWBW8D\"></iframe>\n\n\n**Complexity Analysis**\n\nHere, $$N$$ is the length of the given string, and $$K$$ is the maximum possible number of distinct characters in `s`.\n\n* Time complexity: $$O(N + K \\log K)$$\n\n   To calculate the frequency of each character, we need to traverse the string which will take $$O(N)$$ time. Note that in this approach, we are sorting the frequencies (not the characters), and there will only be $$K$$ frequencies. Hence the time required for sorting will be $$O(K \\log K)$$. Thus, the time complexity equals $$O(N + K \\log K)$$.\n\n* Space complexity: $$O(K)$$\n    \n  We need $$K$$ indices in the list `frequency` to store the frequency. Some space will be used for sorting the list `frequency`. The space complexity of the sorting algorithm depends on the implementation of each programming language. For instance, in Java, the Arrays.sort() for primitives is implemented as a variant of quicksort algorithm whose space complexity is $$O(\\log K)$$. In C++ sort() function provided by STL is a hybrid of Quick Sort, Heap Sort, and Insertion Sort and has a worst-case space complexity of $$O(\\log K)$$. Thus, the use of the inbuilt sort() function might add up to $$O(\\log K)$$ to space complexity. Hence, the space complexity is equal to $$O(K)$$.\n---\n**Note:** For this problem, we are given that the string will have only lowercase English letters and hence $$K = 26$$. Since, for this problem, $$ 1 \\leq N \\leq 10^5 $$, we could consider each of the above approaches to have time complexity as approximately $$O(N)$$ and space complexity as approximately $$O(1)$$.\n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

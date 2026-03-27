@@ -1,0 +1,141 @@
+{
+  "questionId": "1675",
+  "questionFrontendId": "1552",
+  "title": "Magnetic Force Between Two Balls",
+  "titleSlug": "magnetic-force-between-two-balls",
+  "difficulty": "Medium",
+  "content": "<p>In the universe Earth C-137, Rick discovered a special form of magnetic force between two balls if they are put in his new invented basket. Rick has <code>n</code> empty baskets, the <code>i<sup>th</sup></code> basket is at <code>position[i]</code>, Morty has <code>m</code> balls and needs to distribute the balls into the baskets such that the <strong>minimum magnetic force</strong> between any two balls is <strong>maximum</strong>.</p>\n\n<p>Rick stated that magnetic force between two different balls at positions <code>x</code> and <code>y</code> is <code>|x - y|</code>.</p>\n\n<p>Given the integer array <code>position</code> and the integer <code>m</code>. Return <em>the required force</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/08/11/q3v1.jpg\" style=\"width: 562px; height: 195px;\" />\n<pre>\n<strong>Input:</strong> position = [1,2,3,4,7], m = 3\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> Distributing the 3 balls into baskets 1, 4 and 7 will make the magnetic force between ball pairs [3, 3, 6]. The minimum magnetic force is 3. We cannot achieve a larger minimum magnetic force than 3.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> position = [5,4,3,2,1,1000000000], m = 2\n<strong>Output:</strong> 999999999\n<strong>Explanation:</strong> We can use baskets 1 and 1000000000.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == position.length</code></li>\n\t<li><code>2 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= position[i] &lt;= 10<sup>9</sup></code></li>\n\t<li>All integers in <code>position</code> are <strong>distinct</strong>.</li>\n\t<li><code>2 &lt;= m &lt;= position.length</code></li>\n</ul>\n",
+  "hints": [
+    "If you can place balls such that the answer is x then you can do it for y where y < x.",
+    "Similarly if you cannot place balls such that the answer is x then you can do it for y where y > x.",
+    "Binary search on the answer and greedily see if it is possible."
+  ],
+  "metaData": "{\n  \"name\": \"maxDistance\",\n  \"params\": [\n    {\n      \"name\": \"position\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"m\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"219.8K\", \"totalSubmission\": \"305.4K\", \"totalAcceptedRaw\": 219800, \"totalSubmissionRaw\": 305418, \"acRate\": \"72.0%\"}",
+  "likes": 3198,
+  "dislikes": 273,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimized Maximum of Products Distributed to Any Store\", \"titleSlug\": \"minimized-maximum-of-products-distributed-to-any-store\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,4,7]\n3",
+    "[5,4,3,2,1,1000000000]\n2"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 3, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 2, \"slug\": \"roblox\", \"name\": \"Roblox\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxDistance(vector<int>& position, int m) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxDistance(int[] position, int m) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxDistance(self, position: List[int], m: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxDistance(self, position, m):\n        \"\"\"\n        :type position: List[int]\n        :type m: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} position\n * @param {number} m\n * @return {number}\n */\nvar maxDistance = function(position, m) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxDistance(position: number[], m: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxDistance(int[] position, int m) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxDistance(int* position, int positionSize, int m) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxDistance(position []int, m int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxDistance(position: IntArray, m: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxDistance(_ position: [Int], _ m: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_distance(position: Vec<i32>, m: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} position\n# @param {Integer} m\n# @return {Integer}\ndef max_distance(position, m)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $position\n     * @param Integer $m\n     * @return Integer\n     */\n    function maxDistance($position, $m) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxDistance(List<int> position, int m) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxDistance(position: Array[Int], m: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_distance(position :: [integer], m :: integer) :: integer\n  def max_distance(position, m) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_distance(Position :: [integer()], M :: integer()) -> integer().\nmax_distance(Position, M) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-distance position m)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2346",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nIn this problem, our goal is to place $m$ balls in $n$ positions to maximize the minimum magnetic force between any two balls.\n\nThe magnetic force between two balls is calculated as $| x - y |$, where $x$ and $y$ are the positions of the two balls. Essentially, this means the magnetic force is the gap between the two respective balls.\n\nWhat does it mean to maximize the minimum magnetic force between any two balls?  \nConsider the following three configurations for placing 3 balls:\n\n![config_1](../Figures/1552/Slide1.png)\n\n![config_2_3](../Figures/1552/Slide2.png)\n\nThe minimum magnetic forces for each configuration are $1$, $3$, and $2$, respectively. The optimal configuration, which maximizes the minimum magnetic force, is the second (ii) configuration.\n\nWe will start with a naive approach and progressively optimize it.\n\n> **Note:** This article assumes you understand how binary search in sorted arrays works. If not we recommend you read our [explore card (click here)](https://leetcode.com/explore/featured/card/leetcodes-interview-crash-course-data-structures-and-algorithms/710/binary-search/) and try out some similar problems.\n\n---\n\n### Approach: Binary Search\n\n#### Intuition\n\nIf we place all the balls with at least a gap of $x$ between any two consecutive balls, $x$ will be the minimum magnetic force.\n\nTo find the maximum possible value of $x$, we can start with the smallest possible value and attempt to place all the balls with at least this gap. If successful, we increase $x$ by $1$ and try again. This process continues until we reach a point where it is no longer possible to place all the balls with the current gap $x$. At this stage, it won't be feasible to place the balls with any larger gap than $x$ (we recommend you try to reason out it before reading the explanation provided later).\n\n![linear_search](../Figures/1552/Slide3.png)\n\nThis method can be further optimized. When we try a given gap $x$, two outcomes are possible: (i) we can successfully place all the balls with at least a gap of $x$ between them, or (ii) we cannot place all the balls.\n\ni) If we can place all the balls with at least a gap of $x$ between them, then trying smaller gaps is unnecessary, as it will always be possible to place the balls with a smaller gap.\n\n![small_gap](../Figures/1552/Slide4.png)\n\nii) If we cannot place all the balls with at least a gap of $x$ between them, then trying gaps larger than $x$ is futile, as it would also be impossible to place the balls with a larger gap.\n\n![large_gap](../Figures/1552/Slide5.png)\n\nThis suggests we can use a binary search-like algorithm, we can take the decision of discarding some part of the search space at each step.\n\n\n\n\nOur search space for the gap values starts with $low = 1$, since there will be at least a gap of $1$ between any two adjacent balls, and extends to $high = \\lceil \\frac{maxPosition}{m - 1} \\rceil$, the maximum gap between $m$ balls if all positions from $1$ to $position[n - 1]$ are available.\n\nTo determine if we can place the balls with a given gap $x = mid$ we will use another function `canPlaceBalls(x, positions, m)`, where $mid = low + \\frac{(high - low)}{2}$.  \nIf placing the balls is possible with this gap, we discard all gaps smaller than $mid$ from our search space. Conversely, if we cannot place the balls, we discard all gaps greater than $mid$. We repeat this process in the reduced search space until we find the maximum gap value.\n\nIn `canPlaceBalls(x, positions, m)` function, we check if we can place $m$ balls in the given $position$ array with at least $x$ gap between them. We iterate through the $position$ array, checking if each position is suitable for placing a ball by maintaining a gap of at least $x$from the previous ball's position. If the current position meets the requirement, we place the ball there and move to the next position. We stop once we either run out of positions or successfully place all $m$ balls.\n\nHere's an example to illustrate ball placement:\n\n![placing_example](../Figures/1552/Slide13.png)\n\nIt's important to note that for this approach to work, the $position$ array must be sorted. Thus, we will sort the array in the beginning.\n\n<br />\n\nTo better understand how the binary search works in this context, refer to the following slideshow.\n\n!?!../Documents/1552/slideshow.json:1360,960!?!\n\n\n#### Algorithm\n\n1. Create a helper function called `canPlaceBalls` which takes in the gap `x`, positions array `position`, and the number of balls `m` as parameters.\n    - Initialize, `prevBallPos` to `position[0]`, `ballsPlaced` count to `1`.\n    - Iterate on all positions from index `i = 0` till `position.size() - 1` or if we placed all `m` balls:\n        - Place the ball at the current position `position[i]` if it maintains a gap of `x` with the previous ball.\n        - Update `prevBallPos` to `position[i]`.\n        - Increment `ballsPlaced` count by `1`.\n    - Return if `ballsPlaced` is equal to `m`.\n2. Initialize `answer` to `0`, denoting maximum minimum magnetic force, and `n` to `position` array's size.\n3. Sort the `position` array.\n4. Initilize the initial search space for the gap:\n    - `low` to `1`.\n    - `high` to `ceil(position[n - 1] / (m - 1))`.\n5. Start a while loop until the search space is exhausted, i.e. till `low <= high`, at each iteration:\n    - Calculate the `mid = low + (high - low) / 2`.\n    - If we can place all the balls at a gap of `mid`, then update `answer = mid`, and discard the left half search space, `left = mid + 1`.\n    - Otherwise, discard the right half search space, `right = mid - 1`. \n\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/UCAGenJ9/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"UCAGenJ9\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $n$ is the number of elements, and $k$ is the maximum position value in the `position` array.\n\n* Time complexity: $O(n \\log \\frac{n * k}{m})$          \n\n    Sorting the `position` array takes $O(n \\log n)$ time.\n    \n    Checking if we can place the balls in the position array takes $O(n)$ time. This operation is repeated until we reduce our search space to one element. The search space is halved in each step until only one element remains, resulting in $O(\\log \\frac{k}{m})$ steps.  \n    $a \\rarr a/2 \\rarr a/4 \\rarr ... \\rarr 1 \\space (\\text{b steps})$   \n    $a / 2^{(b - 1)} = 1 \\implies b \\approx \\log a$\n\n    Therefore, the overall time complexity is $O(n \\log \\frac{n * k}{m})$.\n\n* Space complexity: $O( \\log n )$ or $O(n)$    \n\n    Apart from sorting, we do not use any additional space. \n\n    The space complexity of the sorting algorithm depends on the programming language.\n    - In Python, the sort method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has $O(n)$ additional space.\n    - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n )$ for sorting two arrays.\n    - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worse-case space complexity of $O( \\log n )$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

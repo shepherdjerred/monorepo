@@ -1,0 +1,135 @@
+{
+  "questionId": "1342",
+  "questionFrontendId": "1222",
+  "title": "Queens That Can Attack the King",
+  "titleSlug": "queens-that-can-attack-the-king",
+  "difficulty": "Medium",
+  "content": "<p>On a <strong>0-indexed</strong> <code>8 x 8</code> chessboard, there can be multiple black queens and one white king.</p>\n\n<p>You are given a 2D integer array <code>queens</code> where <code>queens[i] = [xQueen<sub>i</sub>, yQueen<sub>i</sub>]</code> represents the position of the <code>i<sup>th</sup></code> black queen on the chessboard. You are also given an integer array <code>king</code> of length <code>2</code> where <code>king = [xKing, yKing]</code> represents the position of the white king.</p>\n\n<p>Return <em>the coordinates of the black queens that can directly attack the king</em>. You may return the answer in <strong>any order</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/12/21/chess1.jpg\" style=\"width: 400px; height: 400px;\" />\n<pre>\n<strong>Input:</strong> queens = [[0,1],[1,0],[4,0],[0,4],[3,3],[2,4]], king = [0,0]\n<strong>Output:</strong> [[0,1],[1,0],[3,3]]\n<strong>Explanation:</strong> The diagram above shows the three queens that can directly attack the king and the three queens that cannot attack the king (i.e., marked with red dashes).\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/12/21/chess2.jpg\" style=\"width: 400px; height: 400px;\" />\n<pre>\n<strong>Input:</strong> queens = [[0,0],[1,1],[2,2],[3,4],[3,5],[4,4],[4,5]], king = [3,3]\n<strong>Output:</strong> [[2,2],[3,4],[4,4]]\n<strong>Explanation:</strong> The diagram above shows the three queens that can directly attack the king and the three queens that cannot attack the king (i.e., marked with red dashes).\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= queens.length &lt; 64</code></li>\n\t<li><code>queens[i].length == king.length == 2</code></li>\n\t<li><code>0 &lt;= xQueen<sub>i</sub>, yQueen<sub>i</sub>, xKing, yKing &lt; 8</code></li>\n\t<li>All the given positions are <strong>unique</strong>.</li>\n</ul>\n",
+  "hints": [
+    "Check 8 directions around the King.",
+    "Find the nearest queen in each direction."
+  ],
+  "metaData": "{\n  \"name\": \"queensAttacktheKing\",\n  \"params\": [\n    {\n      \"name\": \"queens\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"king\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<list<integer>>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"51K\", \"totalSubmission\": \"70.3K\", \"totalAcceptedRaw\": 51032, \"totalSubmissionRaw\": 70261, \"acRate\": \"72.6%\"}",
+  "likes": 1005,
+  "dislikes": 154,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Moves to Capture The Queen\", \"titleSlug\": \"minimum-moves-to-capture-the-queen\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[0,1],[1,0],[4,0],[0,4],[3,3],[2,4]]\n[0,0]",
+    "[[0,0],[1,1],[2,2],[3,4],[3,5],[4,4],[4,5]]\n[3,3]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"medianet\", \"name\": \"Media.net\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> queensAttacktheKing(vector<vector<int>>& queens, vector<int>& king) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<List<Integer>> queensAttacktheKing(int[][] queens, int[] king) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def queensAttacktheKing(self, queens: List[List[int]], king: List[int]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def queensAttacktheKing(self, queens, king):\n        \"\"\"\n        :type queens: List[List[int]]\n        :type king: List[int]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} queens\n * @param {number[]} king\n * @return {number[][]}\n */\nvar queensAttacktheKing = function(queens, king) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function queensAttacktheKing(queens: number[][], king: number[]): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<IList<int>> QueensAttacktheKing(int[][] queens, int[] king) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** queensAttacktheKing(int** queens, int queensSize, int* queensColSize, int* king, int kingSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func queensAttacktheKing(queens [][]int, king []int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun queensAttacktheKing(queens: Array<IntArray>, king: IntArray): List<List<Int>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func queensAttacktheKing(_ queens: [[Int]], _ king: [Int]) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn queens_attackthe_king(queens: Vec<Vec<i32>>, king: Vec<i32>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} queens\n# @param {Integer[]} king\n# @return {Integer[][]}\ndef queens_attackthe_king(queens, king)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $queens\n     * @param Integer[] $king\n     * @return Integer[][]\n     */\n    function queensAttacktheKing($queens, $king) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> queensAttacktheKing(List<List<int>> queens, List<int> king) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def queensAttacktheKing(queens: Array[Array[Int]], king: Array[Int]): List[List[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec queens_attackthe_king(queens :: [[integer]], king :: [integer]) :: [[integer]]\n  def queens_attackthe_king(queens, king) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec queens_attackthe_king(Queens :: [[integer()]], King :: [integer()]) -> [[integer()]].\nqueens_attackthe_king(Queens, King) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (queens-attackthe-king queens king)\n  (-> (listof (listof exact-integer?)) (listof exact-integer?) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": null
+}

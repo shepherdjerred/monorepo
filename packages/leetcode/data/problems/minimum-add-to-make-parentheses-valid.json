@@ -1,0 +1,137 @@
+{
+  "questionId": "957",
+  "questionFrontendId": "921",
+  "title": "Minimum Add to Make Parentheses Valid",
+  "titleSlug": "minimum-add-to-make-parentheses-valid",
+  "difficulty": "Medium",
+  "content": "<p>A parentheses string is valid if and only if:</p>\n\n<ul>\n\t<li>It is the empty string,</li>\n\t<li>It can be written as <code>AB</code> (<code>A</code> concatenated with <code>B</code>), where <code>A</code> and <code>B</code> are valid strings, or</li>\n\t<li>It can be written as <code>(A)</code>, where <code>A</code> is a valid string.</li>\n</ul>\n\n<p>You are given a parentheses string <code>s</code>. In one move, you can insert a parenthesis at any position of the string.</p>\n\n<ul>\n\t<li>For example, if <code>s = &quot;()))&quot;</code>, you can insert an opening parenthesis to be <code>&quot;(<strong>(</strong>)))&quot;</code> or a closing parenthesis to be <code>&quot;())<strong>)</strong>)&quot;</code>.</li>\n</ul>\n\n<p>Return <em>the minimum number of moves required to make </em><code>s</code><em> valid</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;())&quot;\n<strong>Output:</strong> 1\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;(((&quot;\n<strong>Output:</strong> 3\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 1000</code></li>\n\t<li><code>s[i]</code> is either <code>&#39;(&#39;</code> or <code>&#39;)&#39;</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"minAddToMakeValid\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"695.8K\", \"totalSubmission\": \"935K\", \"totalAcceptedRaw\": 695797, \"totalSubmissionRaw\": 934976, \"acRate\": \"74.4%\"}",
+  "likes": 4945,
+  "dislikes": 248,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Number of Swaps to Make the String Balanced\", \"titleSlug\": \"minimum-number-of-swaps-to-make-the-string-balanced\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"())\"",
+    "\"(((\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 2, \"slug\": \"siemens\", \"name\": \"Siemens\"}]}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minAddToMakeValid(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minAddToMakeValid(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minAddToMakeValid(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minAddToMakeValid(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar minAddToMakeValid = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minAddToMakeValid(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinAddToMakeValid(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minAddToMakeValid(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minAddToMakeValid(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minAddToMakeValid(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minAddToMakeValid(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_add_to_make_valid(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef min_add_to_make_valid(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function minAddToMakeValid($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minAddToMakeValid(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minAddToMakeValid(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_add_to_make_valid(s :: String.t) :: integer\n  def min_add_to_make_valid(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_add_to_make_valid(S :: unicode:unicode_binary()) -> integer().\nmin_add_to_make_valid(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-add-to-make-valid s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2459",
+    "content": "## Solution\n\n---\n\n### Approach: Open Bracket Counter\n\n#### Intuition\n\nWe are given a string `s` that consists only of open (`(`) and close (`)`) parentheses. This string may not be valid, meaning that an open parenthesis might not have a corresponding close parenthesis, or vice versa. Our goal is to determine the minimum number of operations required to make the string valid. In each operation, we can add either an open or close parenthesis at any position in the string.\n\nThe key observation is to match as many parentheses as possible to minimize the number of additional parentheses needed. We will iterate over the string from left to right and track the parentheses as we encounter them. Open parentheses should appear before their corresponding close parentheses. We will keep a count of open parentheses, and when we encounter a close parenthesis, we check if there is an unmatched open parenthesis available. If there is, we match them by reducing the open parenthesis count.\n\nIf we encounter a close parenthesis but no open parenthesis is available to match it, this means that we need to add an open parenthesis to balance the string, so we increment the `minAddsRequired` counter. After iterating through the entire string, there may still be unmatched open parentheses left. In this case, we need to add a close parenthesis for each remaining unmatched open parenthesis. Therefore, the total number of operations required to make the string valid is the sum of `minAddsRequired` and the remaining unmatched open parentheses.\n\nIn problems involving parentheses matching, a stack is often useful for storing open parentheses, and when encountering a close parenthesis, we can check if a matching open parenthesis exists at the top of the stack. Although we could use a stack in this problem to find the remaining open parentheses by checking its size, a simpler approach is possible here. Since there is only one type of parenthesis, we can efficiently handle the matching process with a counter.\n\nWhile the stack-based approach is more generic and preferred for cases involving multiple types of parentheses, it is not necessary here. We can use a counter variable, `openBrackets`, to track the number of unmatched open parentheses. We increment it for every open parenthesis and decrement it when encountering a close parenthesis. By the end, this counter will reflect the number of unmatched open parentheses.\n\n![fig](../Figures/921/921-Steps-Demonstration.png)\n\n#### Algorithm\n\n1. Create two variables: `openBrackets` (to track unmatched open brackets) and `minAddsRequired` both initialized to `0`.\n2. Loop through each character in the string `s`:\n    - If the current character is an open bracket `(`, increment the `openBrackets` counter, as it is unmatched for now.\n    - If the current character is a close bracket `)`:\n        - Check if there are any unmatched open brackets (`openBrackets` > 0).\n        - If an unmatched open bracket exists, decrement `openBrackets` to indicate that a matching pair has been formed.\n        - If no unmatched open brackets are available, increment `minAddsRequired` as we need to add an open bracket to make this close bracket valid.\n3. The total number of additions required will be the sum of `minAddsRequired` and any remaining unmatched open brackets (`openBrackets`). Return this value as the result.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/8cBrGdG9/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"8cBrGdG9\"></iframe>\n\n#### Complexity Analysis\nHere, $N$ is the number of characters in the string `s`.\n\n- Time complexity: $O(N)$\n\n  We iterate over each character in the string `s` once. For each character, we either increment, decrement, or compare a counter. These operations take constant time. Therefore, the overall time complexity is linear, $O(N)$.\n\n- Space complexity: $O(1)$\n\n  We use only two variables, `openBrackets` and `minAddsRequired`, to count unmatched brackets. These variables require constant space, and we do not use any extra data structures that depend on the input size. Thus, the space complexity is constant.\n\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

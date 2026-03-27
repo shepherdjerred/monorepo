@@ -279,7 +279,7 @@ Required environment variables by component:
 | ---------------- | --------- | ---------------------- |
 | `DISCORD_TOKEN`  | Backend   | Yes                    |
 | `APPLICATION_ID` | Backend   | Yes                    |
-| `RIOT_API_TOKEN` | Backend   | Yes                    |
+| `RIOT_API_KEY`   | Backend   | Yes                    |
 | `DATABASE_URL`   | Backend   | Yes                    |
 | `OPENAI_API_KEY` | Backend   | No (disables AI)       |
 | `S3_BUCKET_NAME` | Backend   | No (disables storage)  |

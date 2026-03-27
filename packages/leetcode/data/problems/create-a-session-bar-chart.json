@@ -1,0 +1,53 @@
+{
+  "questionId": "1564",
+  "questionFrontendId": "1435",
+  "title": "Create a Session Bar Chart",
+  "titleSlug": "create-a-session-bar-chart",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Sessions</code></p>\n\n<pre>\n+---------------------+---------+\n| Column Name         | Type    |\n+---------------------+---------+\n| session_id          | int     |\n| duration            | int     |\n+---------------------+---------+\nsession_id is the column of unique values for this table.\nduration is the time in seconds that a user has visited the application.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>You want to know how long a user visits your application. You decided to create bins of <code>&quot;[0-5&gt;&quot;</code>, <code>&quot;[5-10&gt;&quot;</code>, &quot;[10-15&gt;&quot;, and <code>&quot;15 minutes or more&quot;</code> and count the number of sessions on it.</p>\n\n<p>Write a solution to report the <code>(bin, total)</code>.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nSessions table:\n+-------------+---------------+\n| session_id  | duration      |\n+-------------+---------------+\n| 1           | 30            |\n| 2           | 199           |\n| 3           | 299           |\n| 4           | 580           |\n| 5           | 1000          |\n+-------------+---------------+\n<strong>Output:</strong> \n+--------------+--------------+\n| bin          | total        |\n+--------------+--------------+\n| [0-5&gt;        | 3            |\n| [5-10&gt;       | 1            |\n| [10-15&gt;      | 0            |\n| 15 or more   | 1            |\n+--------------+--------------+\n<strong>Explanation:</strong> \nFor session_id 1, 2, and 3 have a duration greater or equal than 0 minutes and less than 5 minutes.\nFor session_id 4 has a duration greater or equal than 5 minutes and less than 10 minutes.\nThere is no session with a duration greater than or equal to 10 minutes and less than 15 minutes.\nFor session_id 5 has a duration greater than or equal to 15 minutes.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Sessions (session_id int, duration int)\"], \"mssql\": [\"Create table Sessions (session_id int, duration int)\"], \"oraclesql\": [\"Create table Sessions (session_id int, duration int)\"], \"database\": true, \"name\": \"create_bar_chart\", \"pythondata\": [\"Sessions = pd.DataFrame([], columns=['session_id', 'duration']).astype({'session_id':'Int64', 'duration':'Int64'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Sessions (session_id int, duration int)\"], \"database_schema\": {\"Sessions\": {\"session_id\": \"INT\", \"duration\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"27.3K\", \"totalSubmission\": \"36.7K\", \"totalAcceptedRaw\": 27280, \"totalSubmissionRaw\": 36671, \"acRate\": \"74.4%\"}",
+  "likes": 158,
+  "dislikes": 265,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Count Salary Categories\", \"titleSlug\": \"count-salary-categories\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Sessions\": [\"session_id\", \"duration\"]}, \"rows\": {\"Sessions\": [[1, 30], [2, 199], [3, 299], [4, 580], [5, 1000]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"twitch\", \"name\": \"Twitch\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef create_bar_chart(sessions: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,134 @@
+{
+  "questionId": "1031",
+  "questionFrontendId": "989",
+  "title": "Add to Array-Form of Integer",
+  "titleSlug": "add-to-array-form-of-integer",
+  "difficulty": "Easy",
+  "content": "<p>The <strong>array-form</strong> of an integer <code>num</code> is an array representing its digits in left to right order.</p>\n\n<ul>\n\t<li>For example, for <code>num = 1321</code>, the array form is <code>[1,3,2,1]</code>.</li>\n</ul>\n\n<p>Given <code>num</code>, the <strong>array-form</strong> of an integer, and an integer <code>k</code>, return <em>the <strong>array-form</strong> of the integer</em> <code>num + k</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = [1,2,0,0], k = 34\n<strong>Output:</strong> [1,2,3,4]\n<strong>Explanation:</strong> 1200 + 34 = 1234\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = [2,7,4], k = 181\n<strong>Output:</strong> [4,5,5]\n<strong>Explanation:</strong> 274 + 181 = 455\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = [2,1,5], k = 806\n<strong>Output:</strong> [1,0,2,1]\n<strong>Explanation:</strong> 215 + 806 = 1021\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= num.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= num[i] &lt;= 9</code></li>\n\t<li><code>num</code> does not contain any leading zeros except for the zero itself.</li>\n\t<li><code>1 &lt;= k &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"addToArrayForm\",\n  \"params\": [\n    {\n      \"name\": \"num\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<integer>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"337.4K\", \"totalSubmission\": \"742.5K\", \"totalAcceptedRaw\": 337421, \"totalSubmissionRaw\": 742459, \"acRate\": \"45.4%\"}",
+  "likes": 3689,
+  "dislikes": 316,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Add Two Numbers\", \"titleSlug\": \"add-two-numbers\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Plus One\", \"titleSlug\": \"plus-one\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Add Binary\", \"titleSlug\": \"add-binary\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Add Strings\", \"titleSlug\": \"add-strings\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,0,0]\n34",
+    "[2,7,4]\n181",
+    "[2,1,5]\n806"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> addToArrayForm(vector<int>& num, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<Integer> addToArrayForm(int[] num, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def addToArrayForm(self, num: List[int], k: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def addToArrayForm(self, num, k):\n        \"\"\"\n        :type num: List[int]\n        :type k: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} num\n * @param {number} k\n * @return {number[]}\n */\nvar addToArrayForm = function(num, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function addToArrayForm(num: number[], k: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<int> AddToArrayForm(int[] num, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* addToArrayForm(int* num, int numSize, int k, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func addToArrayForm(num []int, k int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun addToArrayForm(num: IntArray, k: Int): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func addToArrayForm(_ num: [Int], _ k: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn add_to_array_form(num: Vec<i32>, k: i32) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} num\n# @param {Integer} k\n# @return {Integer[]}\ndef add_to_array_form(num, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $num\n     * @param Integer $k\n     * @return Integer[]\n     */\n    function addToArrayForm($num, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> addToArrayForm(List<int> num, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def addToArrayForm(num: Array[Int], k: Int): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec add_to_array_form(num :: [integer], k :: integer) :: [integer]\n  def add_to_array_form(num, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec add_to_array_form(Num :: [integer()], K :: integer()) -> [integer()].\nadd_to_array_form(Num, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (add-to-array-form num k)\n  (-> (listof exact-integer?) exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "688",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach 1: Schoolbook Addition\n\n**Intuition**\n\nLet's add numbers in a schoolbook way, column by column.  For example, to add 123 and 912, we add 3+2, then 2+1, then 1+9.  Whenever our addition result is more than 10, we carry the 1 into the next column.  The result is 1035.\n\n**Algorithm**\n\nWe can do a variant of the above idea that is easier to implement - we put the entire addend in the first column from the right.\n\nContinuing the example of 123 + 912, we start with [1, 2, 3+912].  Then we perform the addition 3+912, leaving 915.  The 5 stays as the digit, while we 'carry' 910 into the next column which becomes 91.\n\nWe repeat this process with [1, 2+91, 5].  We have 93, where 3 stays and 90 is carried over as 9.  Again, we have [1+9, 3, 5] which transforms into [1, 0, 3, 5].\n\n<iframe src=\"https://leetcode.com/playground/EiHJVJrK/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"EiHJVJrK\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(\\max(N, \\log K))$$ where $$N$$ is the length of `A`.\n\n* Space Complexity:  $$O(\\max(N, \\log K))$$.\n<br />\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

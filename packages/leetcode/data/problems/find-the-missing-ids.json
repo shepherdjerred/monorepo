@@ -1,0 +1,53 @@
+{
+  "questionId": "1759",
+  "questionFrontendId": "1613",
+  "title": "Find the Missing IDs",
+  "titleSlug": "find-the-missing-ids",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Customers</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| customer_id   | int     |\n| customer_name | varchar |\n+---------------+---------+\ncustomer_id is the column with unique values for this table.\nEach row of this table contains the name and the id customer.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to find the missing customer IDs. The missing IDs are ones that are not in the <code>Customers</code> table but are in the range between <code>1</code> and the <strong>maximum</strong> <code>customer_id</code> present in the table.</p>\n\n<p><strong>Notice</strong> that the maximum <code>customer_id</code> will not exceed <code>100</code>.</p>\n\n<p>Return the result table ordered by <code>ids</code> in <strong>ascending order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nCustomers table:\n+-------------+---------------+\n| customer_id | customer_name |\n+-------------+---------------+\n| 1           | Alice         |\n| 4           | Bob           |\n| 5           | Charlie       |\n+-------------+---------------+\n<strong>Output:</strong> \n+-----+\n| ids |\n+-----+\n| 2   |\n| 3   |\n+-----+\n<strong>Explanation:</strong> \nThe maximum customer_id present in the table is 5, so in the range [1,5], IDs 2 and 3 are missing from the table.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Customers (customer_id int, customer_name varchar(20))\"], \"mssql\": [\"Create table Customers (customer_id int, customer_name varchar(20))\\n\"], \"oraclesql\": [\"Create table Customers (customer_id int, customer_name varchar(20))\\n\"], \"database\": true, \"name\": \"find_missing_ids\", \"pythondata\": [\"Customers = pd.DataFrame([], columns=['customer_id', 'customer_name']).astype({'customer_id':'Int64', 'customer_name':'object'})\"], \"postgresql\": [\"Create table If Not Exists Customers (customer_id int, customer_name varchar(20))\"], \"database_schema\": {\"Customers\": {\"customer_id\": \"INT\", \"customer_name\": \"VARCHAR(20)\"}}}",
+  "stats": "{\"totalAccepted\": \"23.2K\", \"totalSubmission\": \"31.8K\", \"totalAcceptedRaw\": 23217, \"totalSubmissionRaw\": 31824, \"acRate\": \"73.0%\"}",
+  "likes": 238,
+  "dislikes": 31,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Report Contiguous Dates\", \"titleSlug\": \"report-contiguous-dates\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find the Start and End Number of Continuous Ranges\", \"titleSlug\": \"find-the-start-and-end-number-of-continuous-ranges\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Transactions per Visit\", \"titleSlug\": \"number-of-transactions-per-visit\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Customers\": [\"customer_id\", \"customer_name\"]}, \"rows\": {\"Customers\": [[1, \"Alice\"], [4, \"Bob\"], [5, \"Charlie\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_missing_ids(customers: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

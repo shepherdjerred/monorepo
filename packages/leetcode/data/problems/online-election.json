@@ -1,0 +1,135 @@
+{
+  "questionId": "947",
+  "questionFrontendId": "911",
+  "title": "Online Election",
+  "titleSlug": "online-election",
+  "difficulty": "Medium",
+  "content": "<p>You are given two integer arrays <code>persons</code> and <code>times</code>. In an election, the <code>i<sup>th</sup></code> vote was cast for <code>persons[i]</code> at time <code>times[i]</code>.</p>\n\n<p>For each query at a time <code>t</code>, find the person that was leading the election at time <code>t</code>. Votes cast at time <code>t</code> will count towards our query. In the case of a tie, the most recent vote (among tied candidates) wins.</p>\n\n<p>Implement the <code>TopVotedCandidate</code> class:</p>\n\n<ul>\n\t<li><code>TopVotedCandidate(int[] persons, int[] times)</code> Initializes the object with the <code>persons</code> and <code>times</code> arrays.</li>\n\t<li><code>int q(int t)</code> Returns the number of the person that was leading the election at time <code>t</code> according to the mentioned rules.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;TopVotedCandidate&quot;, &quot;q&quot;, &quot;q&quot;, &quot;q&quot;, &quot;q&quot;, &quot;q&quot;, &quot;q&quot;]\n[[[0, 1, 1, 0, 0, 1, 0], [0, 5, 10, 15, 20, 25, 30]], [3], [12], [25], [15], [24], [8]]\n<strong>Output</strong>\n[null, 0, 1, 1, 0, 0, 1]\n\n<strong>Explanation</strong>\nTopVotedCandidate topVotedCandidate = new TopVotedCandidate([0, 1, 1, 0, 0, 1, 0], [0, 5, 10, 15, 20, 25, 30]);\ntopVotedCandidate.q(3); // return 0, At time 3, the votes are [0], and 0 is leading.\ntopVotedCandidate.q(12); // return 1, At time 12, the votes are [0,1,1], and 1 is leading.\ntopVotedCandidate.q(25); // return 1, At time 25, the votes are [0,1,1,0,0,1], and 1 is leading (as ties go to the most recent vote.)\ntopVotedCandidate.q(15); // return 0\ntopVotedCandidate.q(24); // return 0\ntopVotedCandidate.q(8); // return 1\n\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= persons.length &lt;= 5000</code></li>\n\t<li><code>times.length == persons.length</code></li>\n\t<li><code>0 &lt;= persons[i] &lt; persons.length</code></li>\n\t<li><code>0 &lt;= times[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>times</code> is sorted in a strictly increasing order.</li>\n\t<li><code>times[0] &lt;= t &lt;= 10<sup>9</sup></code></li>\n\t<li>At most <code>10<sup>4</sup></code> calls will be made to <code>q</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n    \"classname\": \"TopVotedCandidate\",\r\n    \"maxbytesperline\": 200000,\r\n    \"constructor\": {\r\n        \"params\": [\r\n            { \"type\": \"integer[]\",\r\n              \"name\": \"persons\"\r\n            },\r\n            { \"type\": \"integer[]\",\r\n              \"name\": \"times\"\r\n            }\r\n            ]\r\n    },\r\n    \"methods\": [\r\n        {\r\n            \"name\" : \"q\",\r\n            \"params\": [\r\n                {\r\n                    \"type\": \"integer\",\r\n                    \"name\": \"t\"\r\n                }\r\n            ],\r\n            \"return\": {\r\n                \"type\": \"integer\"\r\n            }\r\n        }\r\n    ],\r\n    \"systemdesign\": true,\r\n    \"params\": [\r\n        {\r\n            \"name\": \"inputs\",\r\n            \"type\": \"integer[]\"\r\n        },\r\n        {\r\n            \"name\": \"inputs\",\r\n            \"type\": \"integer[]\"\r\n        }\r\n    ],\r\n    \"return\": {\r\n        \"type\": \"list<String>\",\r\n        \"dealloc\": true\r\n    }\r\n}",
+  "stats": "{\"totalAccepted\": \"77.7K\", \"totalSubmission\": \"147.4K\", \"totalAcceptedRaw\": 77706, \"totalSubmissionRaw\": 147380, \"acRate\": \"52.7%\"}",
+  "likes": 1087,
+  "dislikes": 684,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Rank Teams by Votes\", \"titleSlug\": \"rank-teams-by-votes\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"TopVotedCandidate\",\"q\",\"q\",\"q\",\"q\",\"q\",\"q\"]\n[[[0,1,1,0,0,1,0],[0,5,10,15,20,25,30]],[3],[12],[25],[15],[24],[8]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 2, \"slug\": \"atlassian\", \"name\": \"Atlassian\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class TopVotedCandidate {\npublic:\n    TopVotedCandidate(vector<int>& persons, vector<int>& times) {\n        \n    }\n    \n    int q(int t) {\n        \n    }\n};\n\n/**\n * Your TopVotedCandidate object will be instantiated and called as such:\n * TopVotedCandidate* obj = new TopVotedCandidate(persons, times);\n * int param_1 = obj->q(t);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class TopVotedCandidate {\n\n    public TopVotedCandidate(int[] persons, int[] times) {\n        \n    }\n    \n    public int q(int t) {\n        \n    }\n}\n\n/**\n * Your TopVotedCandidate object will be instantiated and called as such:\n * TopVotedCandidate obj = new TopVotedCandidate(persons, times);\n * int param_1 = obj.q(t);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class TopVotedCandidate:\n\n    def __init__(self, persons: List[int], times: List[int]):\n        \n\n    def q(self, t: int) -> int:\n        \n\n\n# Your TopVotedCandidate object will be instantiated and called as such:\n# obj = TopVotedCandidate(persons, times)\n# param_1 = obj.q(t)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class TopVotedCandidate(object):\n\n    def __init__(self, persons, times):\n        \"\"\"\n        :type persons: List[int]\n        :type times: List[int]\n        \"\"\"\n        \n\n    def q(self, t):\n        \"\"\"\n        :type t: int\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your TopVotedCandidate object will be instantiated and called as such:\n# obj = TopVotedCandidate(persons, times)\n# param_1 = obj.q(t)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} persons\n * @param {number[]} times\n */\nvar TopVotedCandidate = function(persons, times) {\n    \n};\n\n/** \n * @param {number} t\n * @return {number}\n */\nTopVotedCandidate.prototype.q = function(t) {\n    \n};\n\n/** \n * Your TopVotedCandidate object will be instantiated and called as such:\n * var obj = new TopVotedCandidate(persons, times)\n * var param_1 = obj.q(t)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class TopVotedCandidate {\n    constructor(persons: number[], times: number[]) {\n        \n    }\n\n    q(t: number): number {\n        \n    }\n}\n\n/**\n * Your TopVotedCandidate object will be instantiated and called as such:\n * var obj = new TopVotedCandidate(persons, times)\n * var param_1 = obj.q(t)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class TopVotedCandidate {\n\n    public TopVotedCandidate(int[] persons, int[] times) {\n        \n    }\n    \n    public int Q(int t) {\n        \n    }\n}\n\n/**\n * Your TopVotedCandidate object will be instantiated and called as such:\n * TopVotedCandidate obj = new TopVotedCandidate(persons, times);\n * int param_1 = obj.Q(t);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} TopVotedCandidate;\n\n\nTopVotedCandidate* topVotedCandidateCreate(int* persons, int personsSize, int* times, int timesSize) {\n    \n}\n\nint topVotedCandidateQ(TopVotedCandidate* obj, int t) {\n    \n}\n\nvoid topVotedCandidateFree(TopVotedCandidate* obj) {\n    \n}\n\n/**\n * Your TopVotedCandidate struct will be instantiated and called as such:\n * TopVotedCandidate* obj = topVotedCandidateCreate(persons, personsSize, times, timesSize);\n * int param_1 = topVotedCandidateQ(obj, t);\n \n * topVotedCandidateFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type TopVotedCandidate struct {\n    \n}\n\n\nfunc Constructor(persons []int, times []int) TopVotedCandidate {\n    \n}\n\n\nfunc (this *TopVotedCandidate) Q(t int) int {\n    \n}\n\n\n/**\n * Your TopVotedCandidate object will be instantiated and called as such:\n * obj := Constructor(persons, times);\n * param_1 := obj.Q(t);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class TopVotedCandidate(persons: IntArray, times: IntArray) {\n\n    fun q(t: Int): Int {\n        \n    }\n\n}\n\n/**\n * Your TopVotedCandidate object will be instantiated and called as such:\n * var obj = TopVotedCandidate(persons, times)\n * var param_1 = obj.q(t)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass TopVotedCandidate {\n\n    init(_ persons: [Int], _ times: [Int]) {\n        \n    }\n    \n    func q(_ t: Int) -> Int {\n        \n    }\n}\n\n/**\n * Your TopVotedCandidate object will be instantiated and called as such:\n * let obj = TopVotedCandidate(persons, times)\n * let ret_1: Int = obj.q(t)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct TopVotedCandidate {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl TopVotedCandidate {\n\n    fn new(persons: Vec<i32>, times: Vec<i32>) -> Self {\n        \n    }\n    \n    fn q(&self, t: i32) -> i32 {\n        \n    }\n}\n\n/**\n * Your TopVotedCandidate object will be instantiated and called as such:\n * let obj = TopVotedCandidate::new(persons, times);\n * let ret_1: i32 = obj.q(t);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class TopVotedCandidate\n\n=begin\n    :type persons: Integer[]\n    :type times: Integer[]\n=end\n    def initialize(persons, times)\n        \n    end\n\n\n=begin\n    :type t: Integer\n    :rtype: Integer\n=end\n    def q(t)\n        \n    end\n\n\nend\n\n# Your TopVotedCandidate object will be instantiated and called as such:\n# obj = TopVotedCandidate.new(persons, times)\n# param_1 = obj.q(t)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class TopVotedCandidate {\n    /**\n     * @param Integer[] $persons\n     * @param Integer[] $times\n     */\n    function __construct($persons, $times) {\n        \n    }\n  \n    /**\n     * @param Integer $t\n     * @return Integer\n     */\n    function q($t) {\n        \n    }\n}\n\n/**\n * Your TopVotedCandidate object will be instantiated and called as such:\n * $obj = TopVotedCandidate($persons, $times);\n * $ret_1 = $obj->q($t);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class TopVotedCandidate {\n\n  TopVotedCandidate(List<int> persons, List<int> times) {\n    \n  }\n  \n  int q(int t) {\n    \n  }\n}\n\n/**\n * Your TopVotedCandidate object will be instantiated and called as such:\n * TopVotedCandidate obj = TopVotedCandidate(persons, times);\n * int param1 = obj.q(t);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class TopVotedCandidate(_persons: Array[Int], _times: Array[Int]) {\n\n    def q(t: Int): Int = {\n        \n    }\n\n}\n\n/**\n * Your TopVotedCandidate object will be instantiated and called as such:\n * val obj = new TopVotedCandidate(persons, times)\n * val param_1 = obj.q(t)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule TopVotedCandidate do\n  @spec init_(persons :: [integer], times :: [integer]) :: any\n  def init_(persons, times) do\n    \n  end\n\n  @spec q(t :: integer) :: integer\n  def q(t) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# TopVotedCandidate.init_(persons, times)\n# param_1 = TopVotedCandidate.q(t)\n\n# TopVotedCandidate.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec top_voted_candidate_init_(Persons :: [integer()], Times :: [integer()]) -> any().\ntop_voted_candidate_init_(Persons, Times) ->\n  .\n\n-spec top_voted_candidate_q(T :: integer()) -> integer().\ntop_voted_candidate_q(T) ->\n  .\n\n\n%% Your functions will be called as such:\n%% top_voted_candidate_init_(Persons, Times),\n%% Param_1 = top_voted_candidate_q(T),\n\n%% top_voted_candidate_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define top-voted-candidate%\n  (class object%\n    (super-new)\n    \n    ; persons : (listof exact-integer?)\n    ; times : (listof exact-integer?)\n    (init-field\n      persons\n      times)\n    \n    ; q : exact-integer? -> exact-integer?\n    (define/public (q t)\n      )))\n\n;; Your top-voted-candidate% object will be instantiated and called as such:\n;; (define obj (new top-voted-candidate% [persons persons] [times times]))\n;; (define param_1 (send obj q t))"
+    }
+  ],
+  "solution": null
+}

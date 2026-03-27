@@ -1,0 +1,136 @@
+{
+  "questionId": "1081",
+  "questionFrontendId": "1024",
+  "title": "Video Stitching",
+  "titleSlug": "video-stitching",
+  "difficulty": "Medium",
+  "content": "<p>You are given a series of video clips from a sporting event that lasted <code>time</code> seconds. These video clips can be overlapping with each other and have varying lengths.</p>\n\n<p>Each video clip is described by an array <code>clips</code> where <code>clips[i] = [start<sub>i</sub>, end<sub>i</sub>]</code> indicates that the ith clip started at <code>start<sub>i</sub></code> and ended at <code>end<sub>i</sub></code>.</p>\n\n<p>We can cut these clips into segments freely.</p>\n\n<ul>\n\t<li>For example, a clip <code>[0, 7]</code> can be cut into segments <code>[0, 1] + [1, 3] + [3, 7]</code>.</li>\n</ul>\n\n<p>Return <em>the minimum number of clips needed so that we can cut the clips into segments that cover the entire sporting event</em> <code>[0, time]</code>. If the task is impossible, return <code>-1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> clips = [[0,2],[4,6],[8,10],[1,9],[1,5],[5,9]], time = 10\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> We take the clips [0,2], [8,10], [1,9]; a total of 3 clips.\nThen, we can reconstruct the sporting event as follows:\nWe cut [1,9] into segments [1,2] + [2,8] + [8,9].\nNow we have segments [0,2] + [2,8] + [8,10] which cover the sporting event [0, 10].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> clips = [[0,1],[1,2]], time = 5\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> We cannot cover [0,5] with only [0,1] and [1,2].\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> clips = [[0,1],[6,8],[0,2],[5,6],[0,4],[0,3],[6,7],[1,3],[4,7],[1,4],[2,5],[2,6],[3,4],[4,5],[5,7],[6,9]], time = 9\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> We can take clips [0,4], [4,7], and [6,9].\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= clips.length &lt;= 100</code></li>\n\t<li><code>0 &lt;= start<sub>i</sub> &lt;= end<sub>i</sub> &lt;= 100</code></li>\n\t<li><code>1 &lt;= time &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "What if we sort the intervals?  Considering the sorted intervals, how can we solve the problem with dynamic programming?",
+    "Let's consider a DP(pos, limit) where pos represents the position of the current interval we are gonna take the decision and limit is the current covered area from [0 - limit]. This DP returns the minimum number of taken intervals or infinite if it's not possible to cover the [0 - T] section."
+  ],
+  "metaData": "{\n  \"name\": \"videoStitching\",\n  \"params\": [\n    {\n      \"name\": \"clips\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"name\": \"time\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"87.6K\", \"totalSubmission\": \"166.7K\", \"totalAcceptedRaw\": 87640, \"totalSubmissionRaw\": 166690, \"acRate\": \"52.6%\"}",
+  "likes": 1862,
+  "dislikes": 64,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[0,2],[4,6],[8,10],[1,9],[1,5],[5,9]]\n10",
+    "[[0,1],[1,2]]\n5",
+    "[[0,1],[6,8],[0,2],[5,6],[0,4],[0,3],[6,7],[1,3],[4,7],[1,4],[2,5],[2,6],[3,4],[4,5],[5,7],[6,9]]\n9"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"anduril\", \"name\": \"Anduril\"}, {\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"verily\", \"name\": \"Verily\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int videoStitching(vector<vector<int>>& clips, int time) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int videoStitching(int[][] clips, int time) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def videoStitching(self, clips: List[List[int]], time: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def videoStitching(self, clips, time):\n        \"\"\"\n        :type clips: List[List[int]]\n        :type time: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} clips\n * @param {number} time\n * @return {number}\n */\nvar videoStitching = function(clips, time) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function videoStitching(clips: number[][], time: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int VideoStitching(int[][] clips, int time) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int videoStitching(int** clips, int clipsSize, int* clipsColSize, int time) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func videoStitching(clips [][]int, time int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun videoStitching(clips: Array<IntArray>, time: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func videoStitching(_ clips: [[Int]], _ time: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn video_stitching(clips: Vec<Vec<i32>>, time: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} clips\n# @param {Integer} time\n# @return {Integer}\ndef video_stitching(clips, time)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $clips\n     * @param Integer $time\n     * @return Integer\n     */\n    function videoStitching($clips, $time) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int videoStitching(List<List<int>> clips, int time) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def videoStitching(clips: Array[Array[Int]], time: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec video_stitching(clips :: [[integer]], time :: integer) :: integer\n  def video_stitching(clips, time) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec video_stitching(Clips :: [[integer()]], Time :: integer()) -> integer().\nvideo_stitching(Clips, Time) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (video-stitching clips time)\n  (-> (listof (listof exact-integer?)) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

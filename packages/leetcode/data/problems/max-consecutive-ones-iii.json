@@ -1,0 +1,146 @@
+{
+  "questionId": "1046",
+  "questionFrontendId": "1004",
+  "title": "Max Consecutive Ones III",
+  "titleSlug": "max-consecutive-ones-iii",
+  "difficulty": "Medium",
+  "content": "<p>Given a binary array <code>nums</code> and an integer <code>k</code>, return <em>the maximum number of consecutive </em><code>1</code><em>&#39;s in the array if you can flip at most</em> <code>k</code> <code>0</code>&#39;s.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,1,1,0,0,0,1,1,1,1,0], k = 2\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> [1,1,1,0,0,<u><strong>1</strong>,1,1,1,1,<strong>1</strong></u>]\nBolded numbers were flipped from 0 to 1. The longest subarray is underlined.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [0,0,1,1,0,0,1,1,1,0,1,1,0,0,0,1,1,1,1], k = 3\n<strong>Output:</strong> 10\n<strong>Explanation:</strong> [0,0,<u>1,1,<strong>1</strong>,<strong>1</strong>,1,1,1,<strong>1</strong>,1,1</u>,0,0,0,1,1,1,1]\nBolded numbers were flipped from 0 to 1. The longest subarray is underlined.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>nums[i]</code> is either <code>0</code> or <code>1</code>.</li>\n\t<li><code>0 &lt;= k &lt;= nums.length</code></li>\n</ul>\n",
+  "hints": [
+    "One thing's for sure, we will only flip a zero if it extends an existing window of 1s. Otherwise, there's no point in doing it, right? Think Sliding Window!",
+    "Since we know this problem can be solved using the sliding window construct, we might as well focus in that direction for hints. Basically, in a given window, we can never have > K zeros, right?",
+    "We don't have a fixed size window in this case. The window size can grow and shrink depending upon the number of zeros we have (we don't actually have to flip the zeros here!).",
+    "The way to shrink or expand a window would be based on the number of zeros that can still be flipped and so on."
+  ],
+  "metaData": "{\n  \"name\": \"longestOnes\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"1.4M\", \"totalSubmission\": \"2M\", \"totalAcceptedRaw\": 1357719, \"totalSubmissionRaw\": 2012520, \"acRate\": \"67.5%\"}",
+  "likes": 10426,
+  "dislikes": 188,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Longest Substring with At Most K Distinct Characters\", \"titleSlug\": \"longest-substring-with-at-most-k-distinct-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Repeating Character Replacement\", \"titleSlug\": \"longest-repeating-character-replacement\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Max Consecutive Ones\", \"titleSlug\": \"max-consecutive-ones\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Max Consecutive Ones II\", \"titleSlug\": \"max-consecutive-ones-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Subarray of 1's After Deleting One Element\", \"titleSlug\": \"longest-subarray-of-1s-after-deleting-one-element\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximize the Confusion of an Exam\", \"titleSlug\": \"maximize-the-confusion-of-an-exam\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Recolors to Get K Consecutive Black Blocks\", \"titleSlug\": \"minimum-recolors-to-get-k-consecutive-black-blocks\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Longest Nice Subarray\", \"titleSlug\": \"longest-nice-subarray\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Sum of Distinct Subarrays With Length K\", \"titleSlug\": \"maximum-sum-of-distinct-subarrays-with-length-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Enemy Forts That Can Be Captured\", \"titleSlug\": \"maximum-enemy-forts-that-can-be-captured\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,1,1,0,0,0,1,1,1,1,0]\n2",
+    "[0,0,1,1,0,0,1,1,1,0,1,1,0,0,0,1,1,1,1]\n3"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 9, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 2, \"slug\": \"yandex\", \"name\": \"Yandex\"}], \"more_than_six_months\": [{\"timesEncountered\": 30, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 4, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 3, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"sigmoid\", \"name\": \"Sigmoid\"}, {\"timesEncountered\": 2, \"slug\": \"roku\", \"name\": \"Roku\"}, {\"timesEncountered\": 2, \"slug\": \"keeptruckin\", \"name\": \"Motive\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int longestOnes(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int longestOnes(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def longestOnes(self, nums: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def longestOnes(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number}\n */\nvar longestOnes = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function longestOnes(nums: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int LongestOnes(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int longestOnes(int* nums, int numsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func longestOnes(nums []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun longestOnes(nums: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func longestOnes(_ nums: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn longest_ones(nums: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Integer}\ndef longest_ones(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Integer\n     */\n    function longestOnes($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int longestOnes(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def longestOnes(nums: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec longest_ones(nums :: [integer], k :: integer) :: integer\n  def longest_ones(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec longest_ones(Nums :: [integer()], K :: integer()) -> integer().\nlongest_ones(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (longest-ones nums k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "799",
+    "content": "[TOC]\n\n## Solution\n\nThe problem is asking for the longest contiguous subarray that contains only 1s. What makes this problem a little trickier is that `k` flips are allowed from `0` --> `1`. This means a valid subarray might not just contain `1`'s but also may contain some `0`'s. The number of `0`'s allowed in a given subarray is given by `k`.\n\n  <center>\n  <img src=\"../Figures/1004/1004_Max_Consecutive_Ones_1.png\" width=\"500\"/>\n  </center>\n  <br>\nThe above diagram shows the `flip` which helped us to get the longest contiguous subarray if only one flip was allowed.\n\n### Approach: Sliding Window\n\n**Intuition**\n\nThis problem is equivalent to finding the longest subarray with at most `k` zeroes.\n\nWe can use a simple sliding window approach to solve this problem.\n\nIn any sliding window based problem we have two pointers. One right pointer whose job is to expand the current window and then we have the left pointer whose job is to contract a given window. At any point in time only one of these pointers move and the other one remains fixed.\n\nThe solution is pretty intuitive. We keep expanding the window by moving the right pointer. When the window has reached the limit of `0`'s allowed, we contract (if possible) and save the longest window till now.\n\nThe answer is the longest desirable window.\n\n**Algorithm**\n\n1. Initialize two pointers. The two pointers help us to mark the left and right end of the window/subarray with contiguous `1`'s. Also initialize `curr` to keep track of how many zeroes are in the window.\n\n    > left = 0, right = 0, curr = 0\n\n2. We use the `right` pointer to expand the window until the window/subarray is desirable. i.e. number of `0`'s in the window are in the allowed range of [0, k].\n\n3. Once we have a window which has more than the allowed number of `0`'s, we can move the left pointer ahead until the window is valid again.\n\n<center>\n<img src=\"../Figures/1004/1004_Max_Consecutive_Ones_2.png\" width=\"500\"/>\n</center>\n<br>\n\n\n<iframe src=\"https://leetcode.com/playground/8TKAZveL/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"8TKAZveL\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(N)$$, where $$N$$ is the number of elements in the array. In worst case we might end up visiting every element of array twice, once by left pointer and once by right pointer.\n\n* Space Complexity: $$O(1)$$. We do not use any extra space.\n<br/>\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -68,11 +68,11 @@ export function createPokemonDeployment(chart: Chart) {
         REFRESH: EnvValue.fromValue("60"),
         PASSWD: EnvValue.fromSecretValue({
           secret,
-          key: "password",
+          key: "PASSWORD",
         }),
         BASIC_AUTH_PASSWORD: EnvValue.fromSecretValue({
           secret,
-          key: "password",
+          key: "PASSWORD",
         }),
         SELKIES_ENCODER: EnvValue.fromValue("vah264enc"),
         KASMVNC_ENABLE: EnvValue.fromValue("true"),

@@ -1,0 +1,145 @@
+{
+  "questionId": "1309",
+  "questionFrontendId": "1203",
+  "title": "Sort Items by Groups Respecting Dependencies",
+  "titleSlug": "sort-items-by-groups-respecting-dependencies",
+  "difficulty": "Hard",
+  "content": "<p>There are&nbsp;<code>n</code>&nbsp;items each&nbsp;belonging to zero or one of&nbsp;<code>m</code>&nbsp;groups where <code>group[i]</code>&nbsp;is the group that the <code>i</code>-th item belongs to and it&#39;s equal to <code>-1</code>&nbsp;if the <code>i</code>-th item belongs to no group. The items and the groups are zero indexed. A group can have no item belonging to it.</p>\n\n<p>Return a sorted list of the items such that:</p>\n\n<ul>\n\t<li>The items that belong to the same group are next to each other in the sorted list.</li>\n\t<li>There are some&nbsp;relations&nbsp;between these items where&nbsp;<code>beforeItems[i]</code>&nbsp;is a list containing all the items that should come before the&nbsp;<code>i</code>-th item in the sorted array (to the left of the&nbsp;<code>i</code>-th item).</li>\n</ul>\n\n<p>Return any solution if there is more than one solution and return an <strong>empty list</strong>&nbsp;if there is no solution.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/09/11/1359_ex1.png\" style=\"width: 191px; height: 181px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> n = 8, m = 2, group = [-1,-1,1,0,0,1,0,-1], beforeItems = [[],[6],[5],[6],[3,6],[],[],[]]\n<strong>Output:</strong> [6,3,4,1,5,2,0,7]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 8, m = 2, group = [-1,-1,1,0,0,1,0,-1], beforeItems = [[],[6],[5],[6],[3],[],[4],[]]\n<strong>Output:</strong> []\n<strong>Explanation:</strong>&nbsp;This is the same as example 1 except that 4 needs to be before 6 in the sorted list.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= m &lt;= n &lt;= 3 * 10<sup>4</sup></code></li>\n\t<li><code>group.length == beforeItems.length == n</code></li>\n\t<li><code>-1 &lt;= group[i] &lt;= m - 1</code></li>\n\t<li><code>0 &lt;= beforeItems[i].length &lt;= n - 1</code></li>\n\t<li><code>0 &lt;= beforeItems[i][j] &lt;= n - 1</code></li>\n\t<li><code>i != beforeItems[i][j]</code></li>\n\t<li><code>beforeItems[i]&nbsp;</code>does not contain&nbsp;duplicates elements.</li>\n</ul>\n",
+  "hints": [
+    "Think of it as a graph problem.",
+    "We need to find a topological order on the dependency graph.",
+    "Build two graphs, one for the groups and another for the items."
+  ],
+  "metaData": "{\n  \"name\": \"sortItems\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"m\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"group\"\n    },\n    {\n      \"type\": \"list<list<integer>>\",\n      \"name\": \"beforeItems\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"66K\", \"totalSubmission\": \"100.5K\", \"totalAcceptedRaw\": 66010, \"totalSubmissionRaw\": 100499, \"acRate\": \"65.7%\"}",
+  "likes": 1908,
+  "dislikes": 321,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "8\n2\n[-1,-1,1,0,0,1,0,-1]\n[[],[6],[5],[6],[3,6],[],[],[]]",
+    "8\n2\n[-1,-1,1,0,0,1,0,-1]\n[[],[6],[5],[6],[3],[],[4],[]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Topological Sort",
+      "slug": "topological-sort"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> sortItems(int n, int m, vector<int>& group, vector<vector<int>>& beforeItems) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] sortItems(int n, int m, int[] group, List<List<Integer>> beforeItems) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def sortItems(self, n: int, m: int, group: List[int], beforeItems: List[List[int]]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def sortItems(self, n, m, group, beforeItems):\n        \"\"\"\n        :type n: int\n        :type m: int\n        :type group: List[int]\n        :type beforeItems: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number} m\n * @param {number[]} group\n * @param {number[][]} beforeItems\n * @return {number[]}\n */\nvar sortItems = function(n, m, group, beforeItems) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function sortItems(n: number, m: number, group: number[], beforeItems: number[][]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] SortItems(int n, int m, int[] group, IList<IList<int>> beforeItems) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* sortItems(int n, int m, int* group, int groupSize, int** beforeItems, int beforeItemsSize, int* beforeItemsColSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func sortItems(n int, m int, group []int, beforeItems [][]int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun sortItems(n: Int, m: Int, group: IntArray, beforeItems: List<List<Int>>): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func sortItems(_ n: Int, _ m: Int, _ group: [Int], _ beforeItems: [[Int]]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn sort_items(n: i32, m: i32, group: Vec<i32>, before_items: Vec<Vec<i32>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer} m\n# @param {Integer[]} group\n# @param {Integer[][]} before_items\n# @return {Integer[]}\ndef sort_items(n, m, group, before_items)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer $m\n     * @param Integer[] $group\n     * @param Integer[][] $beforeItems\n     * @return Integer[]\n     */\n    function sortItems($n, $m, $group, $beforeItems) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> sortItems(int n, int m, List<int> group, List<List<int>> beforeItems) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def sortItems(n: Int, m: Int, group: Array[Int], beforeItems: List[List[Int]]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec sort_items(n :: integer, m :: integer, group :: [integer], before_items :: [[integer]]) :: [integer]\n  def sort_items(n, m, group, before_items) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec sort_items(N :: integer(), M :: integer(), Group :: [integer()], BeforeItems :: [[integer()]]) -> [integer()].\nsort_items(N, M, Group, BeforeItems) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (sort-items n m group beforeItems)\n  (-> exact-integer? exact-integer? (listof exact-integer?) (listof (listof exact-integer?)) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1987",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach: Topological Sorting \n\n#### Intuition   \n\n> If you are not familiar with topological sorting, please refer to our explore cards [Topological Sorting Explore Card](https://leetcode.com/explore/learn/card/graph/623/kahns-algorithm-for-topological-sorting/). We will focus on the usage in this article and not the underlying principles or implementation details.\n\nTopological sorting is an algorithm used to arrange a set of nodes with directed edges in a linear order, such that for every directed edge `(u, v)`, node `u` appears before node `v` in the ordering. \n\n![img](../Figures/1203/1.png)\n\nThe key idea behind topological sorting is to identify nodes that have no incoming edges (indegree = 0), indicating they have no dependencies on other nodes. These nodes are placed at the beginning of the ordering. Subsequently, we iteratively process the remaining nodes, eliminating their incoming edges and adding them to the order. This process continues until all nodes are placed in the final order.\n\n\n![img](../Figures/1203/2.png)\n\nHowever, if the number of visited nodes is less than the total number of nodes, it indicates the presence of a cycle in the graph.\n\n![img](../Figures/1203/2_2.png)\n\n<br>\n\nIn this problem, we are dealing with a more complex variation of the topological sorting algorithm. The directed edges are described by `beforeItems`, but we have an additional requirement. Specifically, we need to consider the condition that nodes within the same group must be next to each other. For instance, in the following scenario, there are several nodes belonging to different groups, making it impossible to find a valid arrangement.\n\n\n![img](../Figures/1203/3.png)\n\nSince the problem statement specifies that nodes within the same group must be grouped together, during the sorting process, if one of the nodes belongs to a particular group `i`, it implies that we also have dependencies with all the nodes within the group `i`.\n\n\n![img](../Figures/1203/4.png)\n\nTherefore, when performing topological sorting, it is crucial to gather all nodes belonging to the same group and ensure their relative order based on their dependencies. A rough example demonstrating this concept is depicted in the diagram below.\n\n![img](../Figures/1203/5.png)\n\nConsequently, the objective is to achieve two levels of sorting: \n\n- sorting the groups based on the group dependencies, \n- sorting the items within each group according to the item dependencies. \n\nAs a preliminary step, it is important to consider items that do not belong to any group (`group[i] = -1`) as separate groups, each consisting of only a single item.\n\n![img](../Figures/1203/6.png)\n\n<br>\n\nFirstly, we perform a topological sort on the items. The topological sort ensures that items are processed in an order that respects their dependencies, regardless of the groups they belong to.\n\nIt's important to note that this sorted order may **not** always be correct for items that belong to different groups, as depicted by items with red marks, since this topological sort only considers the dependencies of items. For instance, in the picture below, the items belonging to the green group are not interconnected, but we can infer that their order, if connected within the green group, should be `I, II, III`.\n\n![img](../Figures/1203/ig.png)\n\nAfterward, we take into account the dependencies between groups. Whenever we encounter two nodes from different groups, it signifies a precedence relationship between the respective groups. As a result, we sort these groups accordingly, establishing the relationship that determines the order in which they should be processed.\n\n![img](../Figures/1203/sg.png)\n\nFinally, let's combine both the sorted groups and sorted items. Note that if the topological sort on either the groups or items detects a cycle, then the task is impossible. This ensures that groups are processed in an order that respects their dependencies, and within each group, the items are processed in an order that respects their dependencies.\n\n\n![img](../Figures/1203/combine.png)\n\n<br>\n\nTo be more specific, when sorting all the items (without group dependencies), we iterate through them and assign each item to its corresponding group. By doing so, at the end of the iteration, the items within each group will be properly ordered based on their dependencies within that particular group.\n\n![img](../Figures/1203/cb2.png)\n\nAfter the iteration, we successfully collect all items in each group with correct order. We then refer to the previously established sorted order of the groups and arrange the items within each group accordingly.\n\n![img](../Figures/1203/cb3.png)\n\nFinally, the groups are sorted based on the group dependencies, and items within each group are also sorted based on the their individual dependencies. \n\n\n<br>\n\n#### Algorithm\n\n1) Initialize `group_id` as `m`. Iterate over each item `i`, if it does not belong to any group, assign it a unique group id `group_id`, and increment `group_id` by 1.\n\n2) Construct two adjacency maps `item_graph` and `group_graph` for all items and groups, respectively. Build two in degree list `item_indegree` and `group_indegree` for all items and groups, respectively.\n\n3) Traverse through `beforeItems`, add every pair of items dependency `(prev, curr)` as a dependency to `item_graph`, and increment the indegree of `curr` by 1. If two items belong to different groups `group[prev]` and `group[curr]`, add the group dependency to `group_graph`, and increment the indegree of `group[curr]` by 1.\n\n\n4) Perform a topological sorting of items according to `item_graph` and `item_indegree`. If there is a cycle, the task is impossible.\n\n\n5) Perform a topological sorting of groups based on `group_graph` and `group_indegree`. If there is a cycle, the task is impossible.\n\n\n6) Create an empty list `answer` to store the final order and a hash map `ordered_groups` to store the sorted items within each group.\n\n7) Iterate over the sorted items, and for each item `i`, add it to `ordered_groups` while preserving its original order within the group: `ordered_groups[group[i]].append(i)`.\n\n8) Traverse through the sorted groups, and for each group `group_index`, add all its items `order_groups[group_index]` to `answer` while maintaining their original order.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/DFUVYLJ4/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"DFUVYLJ4\"></iframe>\n\n\n#### Complexity Analysis\n\n* Time complexity: $O(n^2)$\n\n    To topological sort $n$ items:\n    - We build an adjacency list that contains all item dependencies. There are at most $O(n^2)$ distinct item dependencies `(prev, curr)` stored in `beforeItem`, which takes $O(n^2)$ time.\n    - Next, we repeatedly visit each item with an in degree of zero and decrement the in degree of all items that have this item as a preceding item. In the worst-case scenario, we might visit every vertex in the graph and decrement every outgoing edge once, which takes $O(n^2)$ time.\n\n    The maximum number of groups is $n$, so the time complexity of topological sorting the groups is also $O(n^2)$.\n\n\n* Space complexity: $O(n)$\n    \n    - Both adjacency lists take $O(n^2)$ space in the worst-case scenario.\n    - Storing the in degree for each item or group requires $O(n)$ space.\n    - The stack can contain at most $n$ items or $n$ groups, which takes $O(n)$ space.\n\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

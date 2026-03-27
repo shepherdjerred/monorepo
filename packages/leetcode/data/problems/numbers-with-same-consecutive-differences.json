@@ -1,0 +1,133 @@
+{
+  "questionId": "1007",
+  "questionFrontendId": "967",
+  "title": "Numbers With Same Consecutive Differences",
+  "titleSlug": "numbers-with-same-consecutive-differences",
+  "difficulty": "Medium",
+  "content": "<p>Given two integers n and k, return <em>an array of all the integers of length </em><code>n</code><em> where the difference between every two consecutive digits is </em><code>k</code>. You may return the answer in <strong>any order</strong>.</p>\n\n<p>Note that the integers should not have leading zeros. Integers as <code>02</code> and <code>043</code> are not allowed.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 3, k = 7\n<strong>Output:</strong> [181,292,707,818,929]\n<strong>Explanation:</strong> Note that 070 is not a valid number, because it has leading zeroes.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 2, k = 1\n<strong>Output:</strong> [10,12,21,23,32,34,43,45,54,56,65,67,76,78,87,89,98]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 9</code></li>\n\t<li><code>0 &lt;= k &lt;= 9</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"numsSameConsecDiff\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"155.9K\", \"totalSubmission\": \"263.7K\", \"totalAcceptedRaw\": 155911, \"totalSubmissionRaw\": 263653, \"acRate\": \"59.1%\"}",
+  "likes": 2886,
+  "dislikes": 200,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "3\n7",
+    "2\n1"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> numsSameConsecDiff(int n, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] numsSameConsecDiff(int n, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numsSameConsecDiff(self, n: int, k: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numsSameConsecDiff(self, n, k):\n        \"\"\"\n        :type n: int\n        :type k: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number} k\n * @return {number[]}\n */\nvar numsSameConsecDiff = function(n, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numsSameConsecDiff(n: number, k: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] NumsSameConsecDiff(int n, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* numsSameConsecDiff(int n, int k, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numsSameConsecDiff(n int, k int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numsSameConsecDiff(n: Int, k: Int): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numsSameConsecDiff(_ n: Int, _ k: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn nums_same_consec_diff(n: i32, k: i32) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer} k\n# @return {Integer[]}\ndef nums_same_consec_diff(n, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer $k\n     * @return Integer[]\n     */\n    function numsSameConsecDiff($n, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> numsSameConsecDiff(int n, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numsSameConsecDiff(n: Int, k: Int): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec nums_same_consec_diff(n :: integer, k :: integer) :: [integer]\n  def nums_same_consec_diff(n, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec nums_same_consec_diff(N :: integer(), K :: integer()) -> [integer()].\nnums_same_consec_diff(N, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (nums-same-consec-diff n k)\n  (-> exact-integer? exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "982",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Overview\n\nThe problem asks us to come up a list of digit combinations that follow the defined pattern.\nBefore jumping to the implementation, it is always helpful to _manually_ deduce some examples.\n\nSuppose that we have `N=3` and `K=2`, _i.e._ we should come up a series of 3-digits numbers, where for each number the difference between each adjacent digits is 2.\n\nLet us try to build the number _**digit by digit**_. Starting from the highest digit (in the image), we can pick the digit `1`.\nThen for the next digit, we need to pick `3` (_i.e._ $$1+2$$).\nFinally, for the last digit, we could have two choices: `5` and `1` (_i.e._ $$3+2, 3-2$$).\nWe illustrate the process in the following graph, where each **_node_** represents a digit that we pick, and the **_level_** of the node corresponds to the position that the digit situates in the final number.\n\n![tree illustration](../Figures/967/967_tree_illustration.png)\n\n>As one might notice that, we just converted the problem into a tree traversal problem, where each path from the root to a leaf forms a solution for the problem.\n\nAs we know, the common algorithms for the tree traversal problem would be _**DFS**_ (Depth-First Search) and _**BFS**_ (Breadth-First Search), which are exactly what we will present in the following sections.\n\n\n---\n### Approach 1: DFS (Depth-First Search)\n\n**Intuition**\n\nIf one is not familiar with the concepts of DFS and BFS, we have an Explore card called [Queue & Stack](https://leetcode.com/explore/learn/card/queue-stack/) where we cover the [DFS traversal](https://leetcode.com/explore/learn/card/queue-stack/232/practical-application-stack/) as well as the [BFS traversal](https://leetcode.com/explore/learn/card/queue-stack/231/practical-application-queue/).\n\nIn this section, we will start from the DFS strategy, which arguably is more intuitive for this problem.\n\nAs we stated in the overview section, we could build a valid digit combination _digit by digit_ or (node by node in terms of tree).\n\nFor a number consisting of `N` digits, we start from the highest digit and walk through to the lowest digit.\nAt each step, we might have several candidates that are eligible to be explored.\n\nWith the DFS strategy, we prioritize the _depth_ over the _breadth_, _i.e._ we pick one of the candidates and continue the exploration before moving on to the other candidates that are of the same level.\n\n**Algorithm**\n\nIntuitively we could implement the DFS algorithm with recursion. Here we define a recursive function `DFS(N, num)` (in Python) whose goal is to come up the combinations for the remaining `N` digits, starting from the current `num`.\nNote that, the signature of the function is slightly different in our Java implementation. Yet, the semantics of the function remains the same.\n\n![DFS example](../Figures/967/967_dfs_example.png)\n\nFor instance, in the previous examples, where `N=3` and `K=2`, and there is a moment we would invoke `DFS(1, 13)` which is to add another digit to the existing number `13` so that the final number meets the requirements.\nIf the DFS function works properly, we should have the numbers of `135` and `131` as results after the invocation.\n\nWe could implement the recursive function in the following steps:\n\n- As a base case, when `N=0` _i.e._ no more remaining digits to complete, we could return the current `num` as the result.\n\n- Otherwise, there are still some remaining digits to be added to the current number, _e.g._ `13`. There are two potential cases to explore, based on the last digit of the current number which we denote as `tail_digit`.\n\n    - Adding the difference `K` to the last digit, _i.e._ `tail_digit + K`.\n\n    - Deducting the difference `K` from the last digit, _i.e._ `tail_digit - K`.\n\n- If the result of either above case falls into the valid digit range (_i.e._ $$[0, 9]$$), we then continue the exploration by invoking the function itself.\n\nOnce we implement the `DFS(N, num)` function, we then simply call this function over the scope of $$[1, 9]$$, _i.e._ the valid digits for the highest position.\n\n**Note**: _If we are asked to return numbers of a single digit (_i.e._ `N=1`), then regardless of `K`, all digits are valid, including zero._\nWe treat this as a special case in the code, since in our implementation of DFS function, we will never return zero as the result.\n\n<iframe src=\"https://leetcode.com/playground/o99eFuUT/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"o99eFuUT\"></iframe>\n\n\n**Complexity Analysis**\n\nLet $$N$$ be the number of digits for a valid combination, and $$K$$ be the difference between digits.\n\nFirst of all, let us estimate the number of potential solutions.\nFor the highest digit, we could have 9 potential candidates.\nStarting from the second highest position, we could have at most 2 candidates for each position.\nTherefore, at most, we could have $$9 \\cdot 2^{N-1}$$ solutions, for $$N > 1$$.\n\n- Time Complexity: $$\\mathcal{O}(2^{N})$$\n\n    - Essentially, the execution of the algorithm will unfolder itself as a binary tree, where each node in the tree represents an invocation of the `DFS()` function.\n    The execution of the `DFS()` function itself takes a constant time.\n    Therefore, the overall time complexity is proportional to the number of nodes in the execution binary tree.\n\n    - In the worst case, the total number of nodes in a binary tree of depth $$N-1$$ is $$2^N$$.\n    Hence, the overall time complexity of the algorithm is $$\\mathcal{O}(2^{N})$$.\n\n    - Note that, when $$K = 0$$, at each position, there is only one possible candidate, _e.g._ $$333$$.\n    In total, we would have 9 numbers in the result set, and each number is of $$N$$ digits. The time complexity would then be reduced down to $$\\mathcal{O}(N)$$.\n\n- Space Complexity: $$\\mathcal{O}(2^{N})$$\n\n    - Since we adopt a recursive solution, we would have some additional memory consumption on the function call stack. The maximum number of consecutive calls on the recursion function is $$N$$. Hence, the space complexity for the call stack is $$\\mathcal{O}(N)$$.\n\n    - We use a list to keep all the solutions, which could amount to $$9 \\cdot 2^{N-1}$$ number of elements.\n\n    - To sum up, the overall space complexity of the algorithm is $$\\mathcal{O}(N) + \\mathcal{O}(9 \\cdot 2^{N-1}) = \\mathcal{O}(2^{N})$$.\n\n\n---\n### Approach 2: BFS (Breadth-First Search)\n\n**Intuition**\n\nIt might be more intuitive to come up a DFS solution as we presented before.\nHowever, it is also viable to solve this problem with _BFS_ (Breadth-First Search) traversal strategy.\n\n>Rather than building the solution one by one, we could do it _batch by batch_, _i.e._ level by level.\n\nEach level contains the numbers that are of the same amount of digits.\nAlso, each level corresponds to the solutions with a specific number of digits.\n\n![BFS](../Figures/967/967_BFS.png)\n\nFor example, given `N=3` and `K=7`, at the first level, we would have potentially 9 candidates (_i.e._ `[1, 2, 3, 4, 5, 7, 8, 9]`).\nWhen we move on to the second level, the candidates are reduced down to `[18, 29, 70, 81, 92]`.\nFinally, at the last level, we would have the solutions as `[181, 292, 707, 818, 929]`.\n\n**Algorithm**\n\nHere are a few steps to implement the BFS algorithm for this problem.\n\n- We could implement the algorithm with nested two-levels loops, where the outer loop iterates through levels and the inner loop handles the elements within each level.\n\n- We could use a list data structure to keep the numbers for a single level, _i.e._ here we name the variable as `queue`.\n\n- For each number in the queue, we could apply the same logics as in the DFS approach, except the last step, rather than making a recursive call for the next number we simply append the number to the queue for the next level.\n\n<iframe src=\"https://leetcode.com/playground/5ajtXWDv/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"5ajtXWDv\"></iframe>\n\n\n\n**Complexity Analysis**\n\nLet $$N$$ be the number of digits for a valid combination, and $$K$$ be the difference between digits.\n\n- Time Complexity: $$\\mathcal{O}(2^{N})$$\n\n    - Essentially with the BFS approach, all the intermeidate candidates form a binary tree, same as the execution tree as in the DFS approach.\n    Only this time, we traverse in a breadth-first manner, rather than the depth-first.\n\n    - Therefore, the overall time complexity of the algorithm would be $$\\mathcal{O}(2^{N})$$.\n\n- Space Complexity: $$\\mathcal{O}(2^{N})$$\n\n    - We use two queues to maintain the intermediate solutions, which contain no more than two levels of elements.\n    The number of elements at the level of $$i$$ is up to $$9 \\cdot 2^{i-1}$$.\n\n    - To sum up, the space complexity of the algorithm would be $$\\mathcal{O}(9 \\cdot 2^{N-1} + 9 \\cdot 2^{N-2}) = \\mathcal{O}(2^N)$$.\n\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

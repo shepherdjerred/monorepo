@@ -1,0 +1,135 @@
+{
+  "questionId": "1642",
+  "questionFrontendId": "1518",
+  "title": "Water Bottles",
+  "titleSlug": "water-bottles",
+  "difficulty": "Easy",
+  "content": "<p>There are <code>numBottles</code> water bottles that are initially full of water. You can exchange <code>numExchange</code> empty water bottles from the market with one full water bottle.</p>\n\n<p>The operation of drinking a full water bottle turns it into an empty bottle.</p>\n\n<p>Given the two integers <code>numBottles</code> and <code>numExchange</code>, return <em>the <strong>maximum</strong> number of water bottles you can drink</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/07/01/sample_1_1875.png\" style=\"width: 500px; height: 245px;\" />\n<pre>\n<strong>Input:</strong> numBottles = 9, numExchange = 3\n<strong>Output:</strong> 13\n<strong>Explanation:</strong> You can exchange 3 empty bottles to get 1 full water bottle.\nNumber of water bottles you can drink: 9 + 3 + 1 = 13.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/07/01/sample_2_1875.png\" style=\"width: 500px; height: 183px;\" />\n<pre>\n<strong>Input:</strong> numBottles = 15, numExchange = 4\n<strong>Output:</strong> 19\n<strong>Explanation:</strong> You can exchange 4 empty bottles to get 1 full water bottle. \nNumber of water bottles you can drink: 15 + 3 + 1 = 19.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= numBottles &lt;= 100</code></li>\n\t<li><code>2 &lt;= numExchange &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "Simulate the process until there are not enough empty bottles for even one full bottle of water."
+  ],
+  "metaData": "{\n  \"name\": \"numWaterBottles\",\n  \"params\": [\n    {\n      \"name\": \"numBottles\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"numExchange\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"437K\", \"totalSubmission\": \"602.1K\", \"totalAcceptedRaw\": 436967, \"totalSubmissionRaw\": 602074, \"acRate\": \"72.6%\"}",
+  "likes": 2278,
+  "dislikes": 177,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Water Bottles II\", \"titleSlug\": \"water-bottles-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "9\n3",
+    "15\n4"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 6, \"slug\": \"ibm\", \"name\": \"IBM\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 6, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"hilabs\", \"name\": \"HiLabs\"}]}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numWaterBottles(int numBottles, int numExchange) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numWaterBottles(int numBottles, int numExchange) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numWaterBottles(self, numBottles: int, numExchange: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numWaterBottles(self, numBottles, numExchange):\n        \"\"\"\n        :type numBottles: int\n        :type numExchange: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} numBottles\n * @param {number} numExchange\n * @return {number}\n */\nvar numWaterBottles = function(numBottles, numExchange) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numWaterBottles(numBottles: number, numExchange: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumWaterBottles(int numBottles, int numExchange) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numWaterBottles(int numBottles, int numExchange) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numWaterBottles(numBottles int, numExchange int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numWaterBottles(numBottles: Int, numExchange: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numWaterBottles(_ numBottles: Int, _ numExchange: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn num_water_bottles(num_bottles: i32, num_exchange: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} num_bottles\n# @param {Integer} num_exchange\n# @return {Integer}\ndef num_water_bottles(num_bottles, num_exchange)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $numBottles\n     * @param Integer $numExchange\n     * @return Integer\n     */\n    function numWaterBottles($numBottles, $numExchange) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numWaterBottles(int numBottles, int numExchange) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numWaterBottles(numBottles: Int, numExchange: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec num_water_bottles(num_bottles :: integer, num_exchange :: integer) :: integer\n  def num_water_bottles(num_bottles, num_exchange) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec num_water_bottles(NumBottles :: integer(), NumExchange :: integer()) -> integer().\nnum_water_bottles(NumBottles, NumExchange) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (num-water-bottles numBottles numExchange)\n  (-> exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2363",
+    "content": "## Solution\n\n---\n\n### Approach 1: Simulation\n\n#### Intuition\n\nWe are given two integers, `numBottles` and `numExchange`. `numBottles` represents the number of full water bottles, and `numExchange` is the number of empty bottles needed to exchange for one full bottle. We need to determine the total number of water bottles we can drink. For example, if `numBottles` is 3 and `numExchange` is 3, we can drink 4 bottles of water: first drinking all 3 full bottles and then exchanging the 3 empty bottles for 1 more full bottle. Note that `numExchange` must be greater than 1 because if `numExchange = 1`, we would get one full bottle for each empty one, resulting in an infinite number of bottles.\n\nThe key observation here is that once you have the `numExchange` number of empty bottles you can exchange them with one full bottle at that point. It's equivalent to keeping the empty bottles and exchanging them at some later point. This is because the number of full bottles you will get from them won't change. This observation also clarifies that the decision we make doesn't depend on the previous decision we have made and it's not a dynamic programming problem.\n\nIn this approach, we simulate the process to find the number of bottles we can drink. We keep consuming bottles until we have consumed `numExchange` bottles, then exchange them for one full bottle. We repeat this until the number of full bottles is less than `numExchange` and can no longer be exchanged. Finally, we consume the remaining bottles until we have none left.\n\nNote that while we have more than `numExchange` full bottles, we can consume them in batches of `numExchange` instead of one by one, because we can only get one full bottle after exchanging `numExchange` empty bottles. In the end, we will add the remaining `numBottles` (which would be less than `numExchange`) to our answer.\n\n#### Algorithm\n\n1. Initialize the answer variable `consumedBottles` to `0`.\n2. Keep doing the following until we have less `numBottles` than the `numExchange`:\n\n    - Consume the `numExchange` number of full bottles, i.e. add `numExchange` to `consumedBottles`.\n    - Decrement `numExchange`  from the available full bottles `numBottles`.\n    - Exchange the empty bottles with one full bottle, i.e., increment `numBottles` by one.\n3. Return `consumedBottles + numBottles`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/VofkZu9c/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"VofkZu9c\"></iframe>\n\n#### Complexity Analysis\n\nHere, $N$ is the number of initial full bottles.\n\n* Time complexity: $O(N)$.\n\n  The maximum number of operations in the while loop will be when the value of `numExchange` is minimum, i.e., `2`. In this case, we will keep consuming the `2` bottles and add `1` as an exchange. Hence, the `numBottles` will be decreased by one after each iteration. Hence, the time complexity is equal to $O(N)$.\n\n* Space complexity: $O(1)$.\n\n  No extra space is required apart from a few variables, hence the space complexity is constant.\n---\n\n### Approach 2: Optimized Simulation\n\n#### Intuition\n\nIn the previous approach, we consumed `numExchange` bottles in each iteration. By using math operations, we can do this more efficiently. We can consume `numExchange * K` bottles in one go, where $K$ is the largest integer such that `numExchange * K < numBottles`. $K$ is calculated as integer division `numBottles / numExchange`. After consuming `numExchange * K` bottles, we exchange them for $K$ full bottles (one for each set of `numExchange` empty bottles).\n\nThe key difference from the previous approach is that instead of consuming `numExchange` bottles and then exchanging them, we first consume the maximum possible number of bottles and then exchange them. This method remains optimal as the order of exchanging empty bottles doesn't matter. As in the previous approach, we still need to add the remaining full bottles that are less than `numExchange` at the end.\n\n![fig](../Figures/1518/1518A.png)\n\n#### Algorithm\n\n1. Initialize the answer variable `consumedBottles` to `0`.\n2. Keep doing the following until we have less `numBottles` than the `numExchange`:\n\n    - Find `K` as `numBottles / numExchange`.\n    - Consume `numExchange * K` number of full bottles, i.e. add `numExchange * K` to `consumedBottles`.\n    - Decrement `numExchange * K`  from the available full bottles `numBottles`.\n    - Exchange the empty bottles with `K` full bottle, i.e., increment `numBottles` by `K`\n3. Return `consumedBottles + numBottles`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/DUDFrWC9/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"DUDFrWC9\"></iframe>\n\n#### Complexity Analysis\n\nHere, $N$ is the number of initial full bottles, and $M$ is equal to `numExchange`.\n\n* Time complexity: $O(\\log_{M} N)$.\n\n  We divide the number of full bottles `numBottles` by `numExchange` at each iteration. Hence, the time complexity is equal to  $O(\\log N)$.\n\n* Space complexity: $O(1)$.\n\n  No extra space is required apart from a few variables, hence the space complexity is constant.\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

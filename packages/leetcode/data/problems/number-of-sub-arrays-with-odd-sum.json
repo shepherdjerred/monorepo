@@ -1,0 +1,145 @@
+{
+  "questionId": "1631",
+  "questionFrontendId": "1524",
+  "title": "Number of Sub-arrays With Odd Sum",
+  "titleSlug": "number-of-sub-arrays-with-odd-sum",
+  "difficulty": "Medium",
+  "content": "<p>Given an array of integers <code>arr</code>, return <em>the number of subarrays with an <strong>odd</strong> sum</em>.</p>\n\n<p>Since the answer can be very large, return it modulo <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [1,3,5]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> All subarrays are [[1],[1,3],[1,3,5],[3],[3,5],[5]]\nAll sub-arrays sum are [1,4,9,3,8,5].\nOdd sums are [1,9,3,5] so the answer is 4.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [2,4,6]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> All subarrays are [[2],[2,4],[2,4,6],[4],[4,6],[6]]\nAll sub-arrays sum are [2,6,12,4,10,6].\nAll sub-arrays have even sum and the answer is 0.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [1,2,3,4,5,6,7]\n<strong>Output:</strong> 16\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= arr.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= arr[i] &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "Can we use the accumulative sum to keep track of all the odd-sum sub-arrays ?",
+    "if the current accu sum is odd, we care only about previous even accu sums and vice versa."
+  ],
+  "metaData": "{\n  \"name\": \"numOfSubarrays\",\n  \"params\": [\n    {\n      \"name\": \"arr\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"175.6K\", \"totalSubmission\": \"315.2K\", \"totalAcceptedRaw\": 175649, \"totalSubmissionRaw\": 315152, \"acRate\": \"55.7%\"}",
+  "likes": 2073,
+  "dislikes": 102,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Subsequence of Size K With the Largest Even Sum\", \"titleSlug\": \"subsequence-of-size-k-with-the-largest-even-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,3,5]",
+    "[2,4,6]",
+    "[1,2,3,4,5,6,7]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"directi\", \"name\": \"Directi\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numOfSubarrays(vector<int>& arr) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numOfSubarrays(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numOfSubarrays(self, arr: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numOfSubarrays(self, arr):\n        \"\"\"\n        :type arr: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arr\n * @return {number}\n */\nvar numOfSubarrays = function(arr) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numOfSubarrays(arr: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumOfSubarrays(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numOfSubarrays(int* arr, int arrSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numOfSubarrays(arr []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numOfSubarrays(arr: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numOfSubarrays(_ arr: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn num_of_subarrays(arr: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} arr\n# @return {Integer}\ndef num_of_subarrays(arr)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $arr\n     * @return Integer\n     */\n    function numOfSubarrays($arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numOfSubarrays(List<int> arr) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numOfSubarrays(arr: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec num_of_subarrays(arr :: [integer]) :: integer\n  def num_of_subarrays(arr) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec num_of_subarrays(Arr :: [integer()]) -> integer().\nnum_of_subarrays(Arr) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (num-of-subarrays arr)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2683",
+    "content": "## Solution\n\n---\n\n### Overview\n\nWe are given an array of integers, and our task is to count the number of subarrays whose sums are odd. Since the number of possible subarrays can be large, we return the count modulo $10^9 + 7$.  \n\nA subarray is a contiguous portion of the array, meaning we must consider all possible starting and ending indices. The sum of a subarray is simply the sum of its elements.\n\nFor example, given `arr = [1,3,5]`, the possible subarrays are:  \n- `[1] → sum = 1 (odd)`  \n- `[1,3] → sum = 4 (even)`  \n- `[1,3,5] → sum = 9 (odd)`  \n- `[3] → sum = 3 (odd)`  \n- `[3,5] → sum = 8 (even)`  \n- `[5] → sum = 5 (odd)`  \n\nHere, the subarrays with an odd sum are `[1]`, `[1,3,5]`, `[3]`, and `[5]`, giving us the answer `4`.  \n\nA sliding window approach is generally useful when dealing with subarrays, but in this case, we cannot use it effectively. The problem requires counting all valid subarrays, not just maintaining a fixed window of size `k` or optimizing a contiguous segment. Since the valid subarrays are scattered across different positions and lengths, sliding window techniques do not provide any direct optimization here.\n\n---\n\n### Approach 1: Brute Force (TLE)\n\n#### Intuition\n\nThe most direct way to solve this problem is to explicitly generate all possible subarrays and check which ones have an odd sum. \n\nTo do this, we iterate over every possible starting index in the array. For each start, we extend the subarray one element at a time, maintaining a running sum as we go. Each time we add a new element to the sum, we check if it is odd. If it is, we increment our count.\n\nSince we check all possible start and end pairs, the number of subarrays we examine is proportional to the square of the array size, leading to a time complexity of $O(n^2)$. This means that for large arrays, the approach becomes too slow to be practical, leading to a Time Limit Exceeded (TLE) error.\n\n#### Algorithm\n\n- Define a constant `MOD` with a value of $10^9 + 7$ to handle large numbers.\n- Initialize `n` to store the size of the array and `count` to keep track of the number of subarrays with an odd sum.\n\n- Iterate over each possible starting index `startIndex` in the array:\n  - Initialize `currentSum` to `0`, which will store the sum of the current subarray.\n\n  - Iterate over each possible ending index `endIndex`, extending the subarray:\n    - Add `arr[endIndex]` to `currentSum`.\n    - If `currentSum` is odd, increment `count`.\n\n- Return `count % MOD` to ensure the result stays within bounds.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/4WosmSxk/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"4WosmSxk\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the input array `arr`.\n\n- Time complexity: $O(n^2)$\n\n    The algorithm uses a nested loop to generate all possible subarrays. The outer loop runs $n$ times, and for each iteration of the outer loop, the inner loop runs up to $n$ times in the worst case. Therefore, the total number of iterations is $n \\times n = n^2$. Each iteration involves a constant amount of work (addition and modulo operation), so the time complexity is $O(n^2)$.\n\n- Space complexity: $O(1)$\n\n    The space used by the algorithm is constant, as it only uses a few integer variables (`count`, `currentSum`, `startIndex`, `endIndex`, and `MOD`). No additional data structures that scale with the input size are used. Therefore, the space complexity is $O(1)$.\n\n---\n\n### Approach 2: Dynamic Programming\n\n#### Intuition\n\nThe key insight is that we do not need to compute the sum of every subarray explicitly. Instead, we only need to track the counts for the previous index and update them accordingly.\n\nTo achieve this, we observe how adding a number affects the parity of a sum:\n- Adding an odd number flips the parity (even sum becomes odd, odd sum becomes even).\n- Adding an even number preserves the parity (even sum stays even, odd sum stays odd).\n\nTo implement this efficiently, we use a 2×2 DP table, `dp[2][2]`, where `dp[0][idx]` represents the number of subarrays ending at index `i` with an even sum, and `dp[1][idx]` represents the number of subarrays ending at index `i` with an odd sum. As we iterate through the array, we determine the parity of the current element and update these counts accordingly. If the element is odd, it flips the parity of previous subarrays, meaning that the count of new odd subarrays comes from the number of even subarrays from the previous index plus the current element itself. If the element is even, it preserves the parity, meaning that the count of even and odd subarrays remains the same as before, except for the inclusion of the new single-element subarray.\n\nAt the end of our iteration, the total number of subarrays with an odd sum is simply the sum of all values in `dp[1][idx]`, since these represent subarrays that end at various indices and have an odd sum.\n\n> For a more comprehensive understanding of dynamic programming, check out the [Dynamic Programming Explore Card 🔗](https://leetcode.com/explore/learn/card/dynamic-programming/).\n\n#### Algorithm\n\n- Define `MOD` as `1e9 + 7` for handling large numbers modulo constraint.\n- Initialize `n` as the size of `arr`.\n- Use a 2x2 `dp` array to track counts of even and odd sum subarrays.\n- Initialize `count` to track the total number of odd sum subarrays.\n\n- Iterate over `arr` using index `i`:\n  - Compute `idx` as `i & 1` to alternate between 0 and 1 for even/odd index tracking.\n  - Compute `parity` as `arr[i] & 1` to determine if the current element is odd (`1`) or even (`0`).\n  - If the element is odd, update `dp[1][idx]` to `1 + dp[0][!idx]` since an odd element flips the sum parity.\n  - If the element is even, update `dp[0][idx]` to `dp[1][!idx]` since an even element maintains the previous sum parity.\n  - Accumulate `dp[1][idx]` into `count` since it represents the number of subarrays ending at `i` with an odd sum.\n\n- Return `count`, which holds the total count of odd sum subarrays modulo `MOD`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/KKHpiikZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"KKHpiikZ\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the input array `arr`.\n\n- Time complexity: $O(n)$\n\n    The algorithm processes the array in a single pass, iterating through each element exactly once. During each iteration, we perform constant-time operations, including updating the `dp` table and computing the count of odd-sum subarrays. Since all operations inside the loop are $O(1)$, the overall time complexity remains $O(n)$.\n\n- Space complexity: $O(n)$\n\n    The algorithm maintains only a fixed-size `dp[2][2]` table. Since this table occupies only constant space regardless of $n$, the overall space complexity is $O(1)$. All other variables also use constant space.\n \n---\n\n### Approach 3: Prefix Sum with Odd-Even Counting\n\n#### Intuition\n\nInstead of computing the sum of every possible subarray from scratch, we can leverage prefix sums to speed things up. The key insight is that the sum of any subarray can be determined by the difference between two prefix sums.\n\nTo understand this, consider the prefix sum at an index, which represents the cumulative sum of elements from the start of the array up to that index. The sum of a subarray starting at index `i` and ending at `j` is simply the difference between the prefix sum at `j` and the prefix sum at `i - 1`. This means that whether a subarray sum is odd or even depends only on the parity (odd/even property) of these two prefix sums.\n\nFrom this, we can make a crucial observation:  \n- If two prefix sums have the same parity (both even or both odd), their difference will be **even**, meaning the subarray sum is even.  \n- If two prefix sums have different parity (one is even, the other is odd), their difference will be **odd**, meaning the subarray sum is odd.  \n\nThis leads to an efficient way to count odd subarrays as we traverse the array. We maintain a cumulative `prefixSum` while keeping track of how many times we've seen an even or odd prefix sum before the current index. As we process each element:\n- If `prefixSum` is even, it means the subarray sum from the start to the current index is even. To form an odd subarray, we need to subtract a previously seen **odd** prefix sum. So, we add the count of previously seen odd prefix sums to our answer.\n- If `prefixSum` is odd, the subarray sum from the start to the current index is odd. To form another odd subarray, we need to subtract a previously seen **even** prefix sum. So, we add the count of previously seen even prefix sums to our answer.\n\nFinally, after each update, we apply the modulo operation to ensure the result stays within the bounds.\n\nThe algorithm is visualized below: \n\n![1524_odd_even_count](../Figures/1524/1524_odd_even_count.png)\n\n#### Algorithm\n\n- Initialize constants and variables:\n  - `MOD` is set to $10^9 + 7$ to handle large results.\n  - `count` is initialized to `0`, which will store the result.\n  - `prefixSum` is initialized to `0`, which will hold the running sum of the elements.\n  - `oddCount` is initialized to `0`, to count the number of subarrays with odd prefix sums.\n  - `evenCount` is initialized to `1`, since the sum starting at `0` is even.\n\n- Iterate through each number `num` in the array `arr`:\n  - Add `num` to `prefixSum`.\n  - If `prefixSum` is even, add `oddCount` to `count` and increment `evenCount` (since the sum is now even).\n  - If `prefixSum` is odd, add `evenCount` to `count` and increment `oddCount` (since the sum is now odd).\n  - Apply modulo operation `count %= MOD` to prevent overflow.\n\n- Return the final value of `count`, which represents the total number of subarrays with odd sums.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/NWyLdBoY/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"NWyLdBoY\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the input array `arr`.\n\n- Time complexity: $O(n)$\n\n    The algorithm processes the array in a single pass. For each element in the array, it updates the `prefixSum`, checks whether the current prefix sum is even or odd, and updates the `count`, `oddCount`, and `evenCount` variables accordingly. Each of these operations takes constant time. Since the loop iterates through the array once, the overall time complexity is $O(n)$.\n\n- Space complexity: $O(1)$\n\n    The algorithm uses a constant amount of extra space. It only maintains a few integer variables (`count`, `prefixSum`, `oddCount`, and `evenCount`), regardless of the size of the input array. No additional data structures that scale with the input size are used. Therefore, the space complexity is $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

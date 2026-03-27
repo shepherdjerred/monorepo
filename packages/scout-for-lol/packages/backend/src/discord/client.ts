@@ -20,6 +20,7 @@ const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildVoiceStates, // Required for voice
+    GatewayIntentBits.GuildModeration, // Required for audit log (installer tracking)
   ],
 });
 

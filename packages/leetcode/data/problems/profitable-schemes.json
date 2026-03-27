@@ -1,0 +1,133 @@
+{
+  "questionId": "911",
+  "questionFrontendId": "879",
+  "title": "Profitable Schemes",
+  "titleSlug": "profitable-schemes",
+  "difficulty": "Hard",
+  "content": "<p>There is a group of <code>n</code> members, and a list of various crimes they could commit. The <code>i<sup>th</sup></code> crime generates a <code>profit[i]</code> and requires <code>group[i]</code> members to participate in it. If a member participates in one crime, that member can&#39;t participate in another crime.</p>\n\n<p>Let&#39;s call a <strong>profitable scheme</strong> any subset of these crimes that generates at least <code>minProfit</code> profit, and the total number of members participating in that subset of crimes is at most <code>n</code>.</p>\n\n<p>Return the number of schemes that can be chosen. Since the answer may be very large, <strong>return it modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 5, minProfit = 3, group = [2,2], profit = [2,3]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> To make a profit of at least 3, the group could either commit crimes 0 and 1, or just crime 1.\nIn total, there are 2 schemes.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 10, minProfit = 5, group = [2,3,5], profit = [6,7,8]\n<strong>Output:</strong> 7\n<strong>Explanation:</strong> To make a profit of at least 5, the group could commit any crimes, as long as they commit one.\nThere are 7 possible schemes: (0), (1), (2), (0,1), (0,2), (1,2), and (0,1,2).</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 100</code></li>\n\t<li><code>0 &lt;= minProfit &lt;= 100</code></li>\n\t<li><code>1 &lt;= group.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= group[i] &lt;= 100</code></li>\n\t<li><code>profit.length == group.length</code></li>\n\t<li><code>0 &lt;= profit[i] &lt;= 100</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"profitableSchemes\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"minProfit\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"group\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"profit\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"77.9K\", \"totalSubmission\": \"161.4K\", \"totalAcceptedRaw\": 77887, \"totalSubmissionRaw\": 161446, \"acRate\": \"48.2%\"}",
+  "likes": 1948,
+  "dislikes": 126,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "5\n3\n[2,2]\n[2,3]",
+    "10\n5\n[2,3,5]\n[6,7,8]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int profitableSchemes(int n, int minProfit, vector<int>& group, vector<int>& profit) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int profitableSchemes(int n, int minProfit, int[] group, int[] profit) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def profitableSchemes(self, n: int, minProfit: int, group: List[int], profit: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def profitableSchemes(self, n, minProfit, group, profit):\n        \"\"\"\n        :type n: int\n        :type minProfit: int\n        :type group: List[int]\n        :type profit: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number} minProfit\n * @param {number[]} group\n * @param {number[]} profit\n * @return {number}\n */\nvar profitableSchemes = function(n, minProfit, group, profit) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function profitableSchemes(n: number, minProfit: number, group: number[], profit: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int ProfitableSchemes(int n, int minProfit, int[] group, int[] profit) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int profitableSchemes(int n, int minProfit, int* group, int groupSize, int* profit, int profitSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func profitableSchemes(n int, minProfit int, group []int, profit []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun profitableSchemes(n: Int, minProfit: Int, group: IntArray, profit: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func profitableSchemes(_ n: Int, _ minProfit: Int, _ group: [Int], _ profit: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn profitable_schemes(n: i32, min_profit: i32, group: Vec<i32>, profit: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer} min_profit\n# @param {Integer[]} group\n# @param {Integer[]} profit\n# @return {Integer}\ndef profitable_schemes(n, min_profit, group, profit)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer $minProfit\n     * @param Integer[] $group\n     * @param Integer[] $profit\n     * @return Integer\n     */\n    function profitableSchemes($n, $minProfit, $group, $profit) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int profitableSchemes(int n, int minProfit, List<int> group, List<int> profit) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def profitableSchemes(n: Int, minProfit: Int, group: Array[Int], profit: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec profitable_schemes(n :: integer, min_profit :: integer, group :: [integer], profit :: [integer]) :: integer\n  def profitable_schemes(n, min_profit, group, profit) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec profitable_schemes(N :: integer(), MinProfit :: integer(), Group :: [integer()], Profit :: [integer()]) -> integer().\nprofitable_schemes(N, MinProfit, Group, Profit) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (profitable-schemes n minProfit group profit)\n  (-> exact-integer? exact-integer? (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1818",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nWe have two lists, each of size $M$; the first list, `group`, represents the number of members that each of the $M$ crimes needs, and the second list `profits`, represents the profit that each crime generates. We need to find the number of subsets of these crimes such that a subset has no more than $N$ criminals in it, and the total profit has to be at least `minProfit`. Also, since the number could be huge, we need to return it modulo $10^9 + 7$.\n</br>\n\n---\n\n### Approach 1: Top-Down Dynamic Programming\n\n**Intuition**\n\nEach of the $M$ crimes in the list has two options, either we consider it in the current subset, or we don't. If we add this crime to the subset, we need to ensure first that the number of members doesn't exceed $N$; also, the total profit will be increased by the profit of this crime. If we don't consider this crime, there would be no change in the number of members or the total profit. The total number of such subsets would be the sum of the count of these two choices for each crime. Let's consider what parameters we need to have in this recursive approach:\n\n1. `index`: The index of the crime that we are considering currently.\n2. `count`: The total number of members we have in the current subset we have selected.\n3. `profit`: The total profit we have generated so far with the current subset we selected.\n\nWe start with `index = 0`, i.e. from the first crime, `count  = 0` denotes we have used no members so far, and `profit = 0` as the total profit so far is zero. Now, for each crime, we make one of the two choices that we discussed before and sum the count of both these choices modulo $10^9 + 7$.\n\nThe only problem with this approach is that we are iterating over each of the two possibilities, and for $M$ crimes, there could be $2^M$ possible scenarios. Hence, this approach isn't efficient. If we observe the below figure, there are repeated subproblems. Notice the green nodes are repeated subproblems signifying that we have already solved these subproblems before. To avoid recalculating results for previously seen subproblems, we will memoize the result for each subproblem. The next time we need to calculate the result for the same set of parameters `{index, count, profit}`, we can look up the result in constant time instead of recalculating the result.\n\n![fig](../Figures/879/879A.png)\n\nOne more observation that could help us reduce the number of states is that once the total profit exceeds `minProfit`, it doesn't matter what the actual profit is anymore because we only care about making **at least** `minProfit`. If the profit is at least `minProfit`, we will mark the current selection as a profitable scheme; otherwise, not. Therefore, the `profit` in the states can be stored as `min(profit, minProfit)` so that the possible values for `profit` always remains less than or equal to`minProfit`, which can potentially save us many states in the memoization.\n\n**Algorithm**\n\n1. Initialize the array `memo` with `-1`; this array will keep the calculated results, and `-1` represents that the answer has not been calculated for these states yet.\n2. Start with all the parameters `index`, `count` and `profit` as `0`.\n3. If we have already calculated the answer for these parameters, i.e. the value in `memo` is `-1` then return that value. If not, then go into the recursion.\n4. First, store the number of ways to get a profitable scheme if we don't consider this crime into the variable `totalWays`, in this case, the new recursion state would be `{index + 1, count, profit}`.\n5. If we have enough criminals remaining, add the number of ways to get a profitable scheme by considering the crime at `index` to `totalWays`. The new recursion state would be `{index + 1, count + group[index], min(profit + profits[index], minProfit)}`.\n6. The base condition would be, if we reach the end of the list, i.e. the `index` is equal to $M$, then we can return `1` if the `profit` is more than `minProfit` otherwise we return `0`.\n7. Return `totalWays`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/oRJsYqin/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"oRJsYqin\"></iframe>\n\n**Complexity Analysis**\n\nHere, $N$ is the maximum number of criminals allowed in a scheme, $M$ is the size of the list `group`, and $K$ is the value of `minProfit`.\n\n* Time complexity: $O(N \\cdot M  \\cdot K)$.\n\n  We have three parameters `index`, `count` and `profit`. The `index` can vary from `0` to `M - 1`, and the `count` can again vary from `0` to `N - 1` (as we consider crime only if it doesn't exceed the limit of $N$), the last param `profit` can vary largely but since we cap its value to `minProfit` it values can vary from `0` to `minProfit`. We need to calculate the answer to each of these states to solve the original problem; hence the total computation would be $O(N \\cdot M  \\cdot K)$.\n\n* Space complexity: $O(N \\cdot M  \\cdot K)$.\n\n  The size of `memo` would equal the number of states as $(N \\cdot M  \\cdot K)$. Although we used the maximum value of $101$ in the code to simplify things, we can also use the original values in the input as the size of `memo`. Also, there would be some space in the recursion as well, the total number of active recursion calls could be $N$ one for each crime, and hence the total recursion space would be $O(N)$.\n\n### Approach 2: Bottom-Up Dynamic Programming\n\n**Intuition**\n\nIn the previous approach, the recursive calls incurred stack space. This can be avoided by applying the same approach iteratively, which is generally faster than the top-down approach. We will follow a similar approach as the previous one, just in a reverse manner.\n\n\nWe will start with the previous approach's base case and build up the answers for the remaining states using the recursive equation that we will derive from the previous approach.\n\nThe previous approach had three states `{index, count, profit}`, and the value for these states is stored in, let's say, `dp[index][count][profit]`, now according to our previous solution, the number of ways to get profitable scheme by not including the crime at `index` is equal to `dp[index + 1][count][profit]`. Similarly, the number of ways to get a profitable scheme by including the crime at `index` (only if it doesn't make the member count more than $N$) is equal to `dp[index + 1][count + group[index]][min(profit + profits[index], minProfit)]`.\n\nHence the recursive equation could be written as:\n\n> dp[index][count][profit] = dp[index + 1][count][profit] + take\n>\n> Where `take = dp[index + 1][count + group[index]][min(profit + profits[index], minProfit)]` if `count + group[index] <= N`, otherwise `0`\n\nSince we need to start from the previous approach's base condition, we will initialize the values `dp[M][count][minProfit]` as `1s` and the rest as `0s`. This is because if we reach the end of the list (`index` is `M`), and the count is any value less than $N$ with profit `minProfit`, this is a profitable scheme; otherwise, it is not.\n\n**Algorithm**\n\n1. Initialize the `dp` array with states as  `index = group.size`, `profit = minProfit`, and count with any value from `0` to `N` as `1`; the remaining values would be `0`.\n2. Loop over `index` from `group.size()` to `0`, nested with `count` from `0` to $N$ and nested with `profit` from `0` to `minProfit`, for each state:\n\n    - The number of ways to get a profitable scheme without including this crime would be = `dp[index + 1][count][profit]`; hence initialize `dp[index][count][profit] ` with this.\n    - If adding crime at `index` won't exceed the member's threshold of $N$, add the ways\n      `dp[index + 1][count + group[index]][min(minProfit, profit + profits[index])]`.\n3. Return `dp[0][0][0]`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/cvyNQmKv/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"cvyNQmKv\"></iframe>\n\n**Complexity Analysis**\n\nHere, $N$ is the maximum member allowed in the subset, $M$ is the size of the list `group`, $K$ is the maximum value of `minProfit`.\n\n* Time complexity: $O(N \\cdot M  \\cdot K)$.\n\n  Similar to the previous approach, we would still need to process each of the states to solve the problem, and hence the total time complexity would remain the same as $O(N \\cdot M  \\cdot K)$.\n\n* Space complexity: $O(N \\cdot M  \\cdot K)$.\n\n  This time there won't be any stack space consumption, but the array `dp` would still be of the size $(N \\cdot M  \\cdot K)$ and hence the space complexity would be $O(N \\cdot M  \\cdot K)$.\n  <br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

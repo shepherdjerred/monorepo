@@ -16,7 +16,7 @@
       "args": ["-y", "@modelcontextprotocol/server-github"],
       "type": "stdio",
       "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GH_TOKEN}"
       }
     }
   }

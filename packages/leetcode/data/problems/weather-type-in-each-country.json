@@ -1,0 +1,53 @@
+{
+  "questionId": "1425",
+  "questionFrontendId": "1294",
+  "title": "Weather Type in Each Country",
+  "titleSlug": "weather-type-in-each-country",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Countries</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| country_id    | int     |\n| country_name  | varchar |\n+---------------+---------+\ncountry_id is the primary key (column with unique values) for this table.\nEach row of this table contains the ID and the name of one country.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Weather</code></p>\n\n<pre>\n+---------------+------+\n| Column Name   | Type |\n+---------------+------+\n| country_id    | int  |\n| weather_state | int  |\n| day           | date |\n+---------------+------+\n(country_id, day) is the primary key (combination of columns with unique values) for this table.\nEach row of this table indicates the weather state in a country for one day.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to find the type of weather in each country for <strong>November 2019</strong>.</p>\n\n<p>The type of weather is:</p>\n\n<ul>\n\t<li><strong>Cold</strong> if the average <code>weather_state</code> is less than or equal <code>15</code>,</li>\n\t<li><strong>Hot</strong> if the average <code>weather_state</code> is greater than or equal to <code>25</code>, and</li>\n\t<li><strong>Warm</strong> otherwise.</li>\n</ul>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nCountries table:\n+------------+--------------+\n| country_id | country_name |\n+------------+--------------+\n| 2          | USA          |\n| 3          | Australia    |\n| 7          | Peru         |\n| 5          | China        |\n| 8          | Morocco      |\n| 9          | Spain        |\n+------------+--------------+\nWeather table:\n+------------+---------------+------------+\n| country_id | weather_state | day        |\n+------------+---------------+------------+\n| 2          | 15            | 2019-11-01 |\n| 2          | 12            | 2019-10-28 |\n| 2          | 12            | 2019-10-27 |\n| 3          | -2            | 2019-11-10 |\n| 3          | 0             | 2019-11-11 |\n| 3          | 3             | 2019-11-12 |\n| 5          | 16            | 2019-11-07 |\n| 5          | 18            | 2019-11-09 |\n| 5          | 21            | 2019-11-23 |\n| 7          | 25            | 2019-11-28 |\n| 7          | 22            | 2019-12-01 |\n| 7          | 20            | 2019-12-02 |\n| 8          | 25            | 2019-11-05 |\n| 8          | 27            | 2019-11-15 |\n| 8          | 31            | 2019-11-25 |\n| 9          | 7             | 2019-10-23 |\n| 9          | 3             | 2019-12-23 |\n+------------+---------------+------------+\n<strong>Output:</strong> \n+--------------+--------------+\n| country_name | weather_type |\n+--------------+--------------+\n| USA          | Cold         |\n| Australia    | Cold         |\n| Peru         | Hot          |\n| Morocco      | Hot          |\n| China        | Warm         |\n+--------------+--------------+\n<strong>Explanation:</strong> \nAverage weather_state in USA in November is (15) / 1 = 15 so weather type is Cold.\nAverage weather_state in Austraila in November is (-2 + 0 + 3) / 3 = 0.333 so weather type is Cold.\nAverage weather_state in Peru in November is (25) / 1 = 25 so the weather type is Hot.\nAverage weather_state in China in November is (16 + 18 + 21) / 3 = 18.333 so weather type is Warm.\nAverage weather_state in Morocco in November is (25 + 27 + 31) / 3 = 27.667 so weather type is Hot.\nWe know nothing about the average weather_state in Spain in November so we do not include it in the result table. \n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Countries (country_id int, country_name varchar(20))\", \"Create table If Not Exists Weather (country_id int, weather_state int, day date)\"], \"mssql\": [\"Create table Countries (country_id int, country_name varchar(20))\", \"Create table Weather (country_id int, weather_state int, day date)\"], \"oraclesql\": [\"Create table Countries (country_id int, country_name varchar(20))\", \"Create table Weather (country_id int, weather_state int, day date)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"weather_type\", \"pythondata\": [\"Countries = pd.DataFrame([], columns=['country_id', 'country_name']).astype({'country_id':'Int64', 'country_name':'object'})\", \"Weather = pd.DataFrame([], columns=['country_id', 'weather_state', 'day']).astype({'country_id':'Int64', 'weather_state':'Int64', 'day':'datetime64[ns]'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Countries (country_id int, country_name varchar(20))\\n\", \"Create table If Not Exists Weather (country_id int, weather_state int, day date)\"], \"database_schema\": {\"Countries\": {\"country_id\": \"INT\", \"country_name\": \"VARCHAR(20)\"}, \"Weather\": {\"country_id\": \"INT\", \"weather_state\": \"INT\", \"day\": \"DATE\"}}}",
+  "stats": "{\"totalAccepted\": \"45.7K\", \"totalSubmission\": \"68.1K\", \"totalAcceptedRaw\": 45673, \"totalSubmissionRaw\": 68130, \"acRate\": \"67.0%\"}",
+  "likes": 147,
+  "dislikes": 30,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Countries\":[\"country_id\",\"country_name\"],\"Weather\":[\"country_id\",\"weather_state\",\"day\"]},\"rows\":{\"Countries\":[[2,\"USA\"],[3,\"Australia\"],[7,\"Peru\"],[5,\"China\"],[8,\"Morocco\"],[9,\"Spain\"]],\"Weather\":[[2,15,\"2019-11-01\"],[2,12,\"2019-10-28\"],[2,12,\"2019-10-27\"],[3,-2,\"2019-11-10\"],[3,0,\"2019-11-11\"],[3,3,\"2019-11-12\"],[5,16,\"2019-11-07\"],[5,18,\"2019-11-09\"],[5,21,\"2019-11-23\"],[7,25,\"2019-11-28\"],[7,22,\"2019-12-01\"],[7,20,\"2019-12-02\"],[8,25,\"2019-11-05\"],[8,27,\"2019-11-15\"],[8,31,\"2019-11-25\"],[9,7,\"2019-10-23\"],[9,3,\"2019-12-23\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"point72\", \"name\": \"Point72\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef weather_type(countries: pd.DataFrame, weather: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

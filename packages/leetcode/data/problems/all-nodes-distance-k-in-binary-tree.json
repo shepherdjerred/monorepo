@@ -1,0 +1,125 @@
+{
+  "questionId": "893",
+  "questionFrontendId": "863",
+  "title": "All Nodes Distance K in Binary Tree",
+  "titleSlug": "all-nodes-distance-k-in-binary-tree",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>root</code> of a binary tree, the value of a target node <code>target</code>, and an integer <code>k</code>, return <em>an array of the values of all nodes that have a distance </em><code>k</code><em> from the target node.</em></p>\n\n<p>You can return the answer in <strong>any order</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://s3-lc-upload.s3.amazonaws.com/uploads/2018/06/28/sketch0.png\" style=\"width: 500px; height: 429px;\" />\n<pre>\n<strong>Input:</strong> root = [3,5,1,6,2,0,8,null,null,7,4], target = 5, k = 2\n<strong>Output:</strong> [7,4,1]\nExplanation: The nodes that are a distance 2 from the target node (with value 5) have values 7, 4, and 1.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> root = [1], target = 1, k = 3\n<strong>Output:</strong> []\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[1, 500]</code>.</li>\n\t<li><code>0 &lt;= Node.val &lt;= 500</code></li>\n\t<li>All the values <code>Node.val</code> are <strong>unique</strong>.</li>\n\t<li><code>target</code> is the value of one of the nodes in the tree.</li>\n\t<li><code>0 &lt;= k &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"distanceK\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"TreeNode\"\n    },\n    {\n      \"name\": \"target\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<integer>\"\n  },\n  \"manual\": true,\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"c\",\n    \"csharp\",\n    \"javascript\",\n    \"ruby\",\n    \"swift\",\n    \"golang\",\n    \"python3\",\n    \"scala\",\n    \"kotlin\",\n    \"rust\",\n    \"php\",\n    \"typescript\"\n  ]\n}",
+  "stats": "{\"totalAccepted\": \"684.2K\", \"totalSubmission\": \"1M\", \"totalAcceptedRaw\": 684203, \"totalSubmissionRaw\": 1013296, \"acRate\": \"67.5%\"}",
+  "likes": 12098,
+  "dislikes": 277,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Amount of Time for Binary Tree to Be Infected\", \"titleSlug\": \"amount-of-time-for-binary-tree-to-be-infected\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,5,1,6,2,0,8,null,null,7,4]\n5\n2",
+    "[1]\n1\n3"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"okta\", \"name\": \"Okta\"}, {\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 2, \"slug\": \"wix\", \"name\": \"Wix\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}\n * };\n */\nclass Solution {\npublic:\n    vector<int> distanceK(TreeNode* root, TreeNode* target, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode(int x) { val = x; }\n * }\n */\nclass Solution {\n    public List<Integer> distanceK(TreeNode root, TreeNode target, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, x):\n#         self.val = x\n#         self.left = None\n#         self.right = None\n\nclass Solution:\n    def distanceK(self, root: TreeNode, target: TreeNode, k: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, x):\n#         self.val = x\n#         self.left = None\n#         self.right = None\n\nclass Solution(object):\n    def distanceK(self, root, target, k):\n        \"\"\"\n        :type root: TreeNode\n        :type target: TreeNode\n        :type k: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val) {\n *     this.val = val;\n *     this.left = this.right = null;\n * }\n */\n/**\n * @param {TreeNode} root\n * @param {TreeNode} target\n * @param {number} k\n * @return {number[]}\n */\nvar distanceK = function(root, target, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction distanceK(root: TreeNode | null, target: TreeNode | null, k: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int x) { val = x; }\n * }\n */\npublic class Solution {\n    public IList<int> DistanceK(TreeNode root, TreeNode target, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\n\n\n/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* distanceK(struct TreeNode* root, struct TreeNode* target, int k, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc distanceK(root *TreeNode, target *TreeNode, k int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int = 0) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun distanceK(root: TreeNode?, target: TreeNode?, k: Int): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init(_ val: Int) {\n *         self.val = val\n *         self.left = nil\n *         self.right = nil\n *     }\n * }\n */\nclass Solution {\n    func distanceK(_ root: TreeNode?, _ target: TreeNode?, _ k: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn distance_k(root: Option<Rc<RefCell<TreeNode>>>, target: Option<Rc<RefCell<TreeNode>>>, k: i32) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val)\n#         @val = val\n#         @left, @right = nil, nil\n#     end\n# end\n# @param {TreeNode} root\n# @param {TreeNode} target\n# @param {Integer} k\n# @return {Integer[]}\ndef distance_k(root, target, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($value) { $this->val = $value; }\n * }\n */\nclass Solution {\n    /**\n     * @param TreeNode $root\n     * @param TreeNode $target\n     * @param Integer $k\n     * @return Integer[]\n     */\n    function distanceK($root, $target, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(var _value: Int) {\n *   var value: Int = _value\n *   var left: TreeNode = null\n *   var right: TreeNode = null\n * }\n */\nobject Solution {\n    def distanceK(root: TreeNode, target: TreeNode, k: Int): List[Int] = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "1903",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nIn the given tree, each node only has pointers to its left and right child nodes, making the typical tree traversal approach only applicable to the subtree rooted at the target node. We cannot access other parts of the tree beyond the subtree as we can't access the parent, which implies the need to establish additional connections beyond the child node pointers.\n\n\n![img](../Figures/863/1.png)\n\n---\n\n### Approach 1: Implementing Parent Pointers\n\n#### Intuition   \n\n> If you are not familiar with depth-first (DFS) search, please refer to our explore cards [Depth-First Search Explore Card](https://leetcode.com/explore/learn/card/graph/619/depth-first-search-in-graph/). We will focus on the usage in this article and not the implementation details.\n\nIn this problem, nodes in the given binary tree only have pointers to the left and right children and we can't search in the ancestor nodes of `target`. We will implement a parent pointer to each node (apart from the root node) recursively.\n\n![img](../Figures/863/2.png)\n\n> In Python, we can add attributes (in our case a parent pointer) to an instance of a class at any time, even if the attribute is not defined in the class. However, this can also lead to mistakes and hard-to-debug errors. Consequently, **this approach does not reflect good coding practices**, but we have included it for completeness.\n\n\nNow, we have created an undirected graph. We define a recursive function to explore nodes as far as possible along each branch. Upon reaching the end of the current branch, we backtrack to the next possible branch and continue exploring. Once we encounter an unvisited node, we take one of its neighbor nodes (left child, right child, or parent) as the next node on this branch. Recursively call the function to the next node and solve the subproblem. If we reach the end of this branch, we backtrack to the previous node and visit the next neighbor node, and repeat the process. If we reach a node with a distance of `k` to `target`, it denotes that this node is one of the destination nodes. Since continuing on with this branch leads to nodes with a distance larger than `k`, we will also backtrack to the previous node and try visiting the next neighbor node.\n\n\n![img](../Figures/863/3.png)\n\nWe can use a hash set to keep track of all the visited nodes. Whenever we find an unvisited neighbor node, we add it to the hash set so it won't be visited anymore.\n\n<br>\n\n#### Algorithm\n\n1) Define a recursive function `add_parent(cur, parent)` to recursively add a parent pointer to node `cur`: If `cur` is not empty, add a pointer from `cur` to `parent`: `cur.parent = parent`. Then recursively call `add_parent` on the left and right children of `cur`:\n    - `add_parent(cur.left, cur)`\n    - `add_parent(cur.right, cur)`\n\n2) Call `add_parent(root, None)` to add all parent pointers, note that the root node does not have a parent node.\n\n3) Initialize an empty array `answer` and an empty hash set `visited`.\n\n4) Define another recursive function `dfs(cur, distance)` to recursively find all nodes with a distance of `k` to node `target`:\n    - If `root` is empty or has been visited before, return.\n    - Add `cur` to `visited` so it won't be revisited later.\n    - If `distance = k`, it means `cur` is one of the destination nodes, add it to `answer`, and return.\n    - Recursively call `dfs` on the children and parent of `cur`.\n\n5) Call `dfs(target, 0)` to find all destination nodes with a distance of `k`.\n\n6) Return `answer` when the DFS is complete.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/KESSoTta/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"KESSoTta\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the binary tree.\n\n* Time complexity: $O(n)$\n\n    - Both `add_parent` and `dfs` recursively call themselves to process the left and right subtrees of the current node `cur`. Each node is visited once by each function.\n    \n* Space complexity: $O(n)$\n    - `visited` stores a maximum of $O(n)$ visited nodes.\n    - The recursive solution uses the call stack to keep track of the current subtree being processed. The maximum depth of the call stack is equal to the height of the given tree. In the worst-case scenario, the given binary tree may be a degenerate binary tree and the stack can hold up to $n$ calls, resulting in a space complexity of $O(n)$.\n\n\n<br/>\n\n---\n\n### Approach 2: Depth-First Search on Equivalent Graph\n\n#### Intuition   \n\nThe previous approach of dynamically adding attributes is not a recommended practice. A safer method is to transform the given binary tree into an equivalent graph, where each pointer is treated as an undirected edge. Hence, the graph retains all the connected nodes from the original binary tree, including the pointers from children to parents. Consequently, we can perform a regular search in this graph, starting with depth-first search algorithm as an example.\n\n![img](../Figures/863/5.png)\n\nIn the equivalent graph, we only need to recursively visit all unvisited neighboring nodes of the current node, which include nodes that are equivalent to the left and right children and the parent in the original tree.\n\nSimilarly, we can use a hash set to keep track of all the visited nodes. Whenever we find an unvisited neighbor node, we add it to the hash set so it won't be visited anymore.\n\n<br>\n\n#### Algorithm\n\n1) We will build a hash map `graph`. Define a recursive function `build_graph(cur, parent)` to recursively build the equivalent graph: If both `cur` and `parent` are not empty, add an edge that connects `cur` and `parent` in the hash map `graph`. Then recursively call `build_graph` on the left and right children of `cur`:\n\n    - If `cur.left` is not empty, call `build_graph(cur.left, cur)`\n    - If `cur.right` is not empty, call `build_graph(cur.right, cur)`\n\n2) Call `build_graph(root, None)` to build the equivalent graph, note that the root node does not have a parent node.\n\n3) Initialize an empty array `answer` and an empty hash set `visited`.\n\n4) Define another recursive function `dfs(cur, distance)` to recursively find all nodes with a distance of `k` to node `target`:\n    - Add `cur` to `visited` so it won't be revisited later.\n    - If `distance = k`, it means `cur` is one of the destination nodes, add it to `answer`, and return.\n    - Recursively call `dfs` on the unvisited neighbors of `cur`.\n\n5) Add `target.val` to `visited`. Call `dfs(target.val, 0)` to find all destination nodes with a distance of `k` to the target node.\n\n6) Return `answer` when the DFS is complete.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/PWV39PPN/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"PWV39PPN\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the binary tree.\n\n* Time complexity: $O(n)$\n    - `build_graph` recursively calls itself to process the left and right subtrees of the current node `cur`. Each node is visited once.\n    - `dfs` recursively calls itself to process the unvisited neighbors of the current node `cur`. Each node is visited once.\n    \n\n* Space complexity: $O(n)$\n    - We use a hash map `graph` to store all edges, which requires $O(n)$ space for $n - 1$ edges.\n    - We use a hash set `visited` to record the visited nodes, which takes $O(n)$ space.\n    - The recursive solution uses the call stack to keep track of the current subtree being processed. The maximum depth of the call stack is equal to the height of the given tree. In the worst-case scenario, it may be a degenerate binary tree and the stack can hold up to $n$ calls, resulting in a space complexity of $O(n)$.\n\n\n<br/>\n\n\n\n---\n\n### Approach 3: Breadth-First Search on Equivalent Graph\n\n#### Intuition   \n\n> If you are not familiar with breadth-first search, please refer to our explore cards [Breadth-First Search Explore Card](https://leetcode.com/explore/learn/card/graph/620/breadth-first-search-in-graph/). We will focus on the usage in this article and not the implementation details.\n\nBack to this problem, we start with the node `target` with `distance = 0`, then we mark all its unvisited neighbor nodes with `distance = 1` to be visited soon, once we visit a node with `distance = 1`, we mark all its unvisited neighbor nodes with `distance = 2` as well. \n\nWe can use a queue `queue` as a container to store all nodes to be visited without mixing the order. Since the operation on the queue is done in First In, First Out (FIFO) order, it allows us to explore all nodes with the current distance to the target node, before moving on to the nodes with larger distances.\n\n![img](../Figures/863/6.png)\n\nSimilarly, we use a hash set to keep track of all the visited nodes. Whenever we find an unvisited neighbor node, we add it to the hash set so it won't be visited anymore.\n\n<br>\n\n#### Algorithm\n\n1) Define a recursive function `build_graph(cur, parent)` to recursively build the equivalent graph: If both `cur` and `parent` are not empty, add an edge that connects `cur` and `parent` in the hash map `graph`. Then recursively call `build_graph` on the left and right children of `cur`:\n    - If `cur.left` is not empty, call `build_graph(cur.left, cur)`\n    - If `cur.right` is not empty, call `build_graph(cur.right, cur)`\n\n2) Call `build_graph(root, None)` to build the equivalent graph, note that the root node does not have a parent node.\n\n3) Initialize an empty array `answer` and an empty hash set `visited`.\n\n4) Initialize an empty queue `queue` to store the nodes to be visited. Enqueue the target node, in the format of `(target.value, distance = 0)`\n\n5) If `queue` has nodes, dequeue the first node `(cur, distance)`. If `distance` is equal to k, add it to `answer`. Otherwise, enqueue all **unvisited** neighbor nodes of `cur` to `queue` in the format of `(neighbor, distance + 1)`, and mark them as **visited**, then repeat step 5.\n\n6) Return `answer` when the BFS is complete.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/jYKxCFa5/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"jYKxCFa5\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes.\n\n* Time complexity: $O(n)$\n    - `build_graph` recursively calls itself to process the left and right subtrees of the current node `cur`. Each node is visited once.\n    - In a typical BFS search, the time complexity is $O(V + E)$ where $V$ is the number of vertices and $E$ is the number of edges. There are $n$ nodes and $n - 1$ edges in this problem. Each node is added to the queue and popped from the queue once, it takes $O(n)$ to handle all nodes. \n    \n* Space complexity: $O(n)$\n\n    - We use a hash map `graph` to store all edges, which requires $O(n)$ space for $n - 1$ edges.\n    - We use a hash set `visited` to record the visited nodes, which takes $O(n)$ space.\n    - There may be up to $n$ nodes stored in `queue` and $O(n)$ space is required.\n    - Therefore, the space complexity is $O(n)$.\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

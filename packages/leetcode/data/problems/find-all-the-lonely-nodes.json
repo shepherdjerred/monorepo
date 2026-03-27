@@ -1,0 +1,144 @@
+{
+  "questionId": "1609",
+  "questionFrontendId": "1469",
+  "title": "Find All The Lonely Nodes",
+  "titleSlug": "find-all-the-lonely-nodes",
+  "difficulty": "Easy",
+  "content": "<p>In a binary tree, a <strong>lonely</strong> node is a node that is the only child of its parent node. The root of the tree is not lonely because it does not have a parent node.</p>\n\n<p>Given the <code>root</code> of a binary tree, return <em>an array containing the values of all lonely nodes</em> in the tree. Return the list <strong>in any order</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/06/03/e1.png\" style=\"width: 203px; height: 202px;\" />\n<pre>\n<strong>Input:</strong> root = [1,2,3,null,4]\n<strong>Output:</strong> [4]\n<strong>Explanation:</strong> Light blue node is the only lonely node.\nNode 1 is the root and is not lonely.\nNodes 2 and 3 have the same parent and are not lonely.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/06/03/e2.png\" style=\"width: 442px; height: 282px;\" />\n<pre>\n<strong>Input:</strong> root = [7,1,4,6,null,5,3,null,null,null,null,null,2]\n<strong>Output:</strong> [6,2]\n<strong>Explanation:</strong> Light blue nodes are lonely nodes.\nPlease remember that order doesn&#39;t matter, [2,6] is also an acceptable answer.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/06/03/tree.png\" style=\"width: 363px; height: 202px;\" />\n<pre>\n<strong>\nInput:</strong> root = [11,99,88,77,null,null,66,55,null,null,44,33,null,null,22]\n<strong>Output:</strong> [77,55,33,66,44,22]\n<strong>Explanation:</strong> Nodes 99 and 88 share the same parent. Node 11 is the root.\nAll other nodes are lonely.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the <code>tree</code> is in the range <code>[1, 1000].</code></li>\n\t<li><code>1 &lt;= Node.val &lt;= 10<sup>6</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Do a simple tree traversal, try to check if the current node is lonely or not."
+  ],
+  "metaData": "{\n  \"name\": \"getLonelyNodes\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"TreeNode\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<integer>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"61.4K\", \"totalSubmission\": \"73K\", \"totalAcceptedRaw\": 61396, \"totalSubmissionRaw\": 72987, \"acRate\": \"84.1%\"}",
+  "likes": 519,
+  "dislikes": 11,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Binary Tree Tilt\", \"titleSlug\": \"binary-tree-tilt\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Univalued Binary Tree\", \"titleSlug\": \"univalued-binary-tree\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,null,4]",
+    "[7,1,4,6,null,5,3,null,null,null,null,null,2]",
+    "[11,99,88,77,null,null,66,55,null,null,44,33,null,null,22]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    vector<int> getLonelyNodes(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public List<Integer> getLonelyNodes(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def getLonelyNodes(self, root: Optional[TreeNode]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def getLonelyNodes(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {number[]}\n */\nvar getLonelyNodes = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction getLonelyNodes(root: TreeNode | null): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public IList<int> GetLonelyNodes(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\n/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* getLonelyNodes(struct TreeNode* root, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc getLonelyNodes(root *TreeNode) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun getLonelyNodes(root: TreeNode?): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func getLonelyNodes(_ root: TreeNode?) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn get_lonely_nodes(root: Option<Rc<RefCell<TreeNode>>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {Integer[]}\ndef get_lonely_nodes(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return Integer[]\n     */\n    function getLonelyNodes($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  List<int> getLonelyNodes(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def getLonelyNodes(root: TreeNode): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec get_lonely_nodes(root :: TreeNode.t | nil) :: [integer]\n  def get_lonely_nodes(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec get_lonely_nodes(Root :: #tree_node{} | null) -> [integer()].\nget_lonely_nodes(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (get-lonely-nodes root)\n  (-> (or/c tree-node? #f) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2267",
+    "content": "## Solution\n\n---\n\n### Approach 1: Depth-First Search (DFS)\n\n#### Intuition\n\nThe lonely nodes in the given binary tree are nodes whose parent node has only one child. We need a way to visit each node and check if it has a sibling or not. If not, then we should add the value to the answer list.\n\n> If you are not familiar with tree traversal, check out our [Explore Card](https://leetcode.com/explore/learn/card/data-structure-tree/134/traverse-a-tree/)\n\nThere are two ways to traverse the binary tree, depth-first search (DFS) and breadth-first search (BFS). In this approach, we will use DFS to recursively visit each node to check if it's lonely or not. We will assign a boolean flag `isLonely` a value of `true` if the current node has no siblings, and `false` if it does. If we are calling DFS for the right child of the current node, we will set `isLonely` to `true` if the left child of the current node is `null` and `false` otherwise. Similarly, when we are calling DFS for the left child of the current node, we will assign the value `true` to `isLonely` if the right child is `null`, and `false` otherwise. This way we can check if a node is lonely and then accordingly add it to the answer list.\n\n![Nodes with their isLonely value](../Figures/1469/1469A.png)\n\n#### Algorithm\n\n1. Define the recursive function `DFS` that takes `root`, a boolean variable `isLonely`, and a list of lonely nodes `ans` as arguments.\n2. Return from `DFS` if `root` is `NULL`.\n3. We will call `DFS` with `isLonely` value as `false` because the root node is not lonely, as it does not have a parent node.\n4. Add the `root` value to `ans` if the flag `isLonely` is `true`.\n5. Recursively handle the left child of `root` and mark the flag as `true` if the right child is `NULL`.\n6. Recursively handle the right child of `root` and mark the flag as `true` if the left child is `NULL`.\n7. Call `DFS` with root and `false` as `isLonely`.\n8. Return `ans`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/7p9gCfPU/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"7p9gCfPU\"></iframe>\n\n#### Complexity Analysis\n\nHere $N$ is the number of nodes in the tree.\n\n* Time complexity: $O(N)$\n\n  Visiting each node only once results in a total time complexity of $O(N)$.\n\n* Space complexity: $O(N)$\n\n  The main space required is the recursion stack space. The maximum number of active function calls will be equal to the height of the tree and that can be at max equal to $N$ in the case of skewed tree. This makes the space complexity $O(N)$.\n\n---\n\n### Approach 2: Breadth-First Search (BFS)\n\n#### Intuition\n\nThe other way to traverse the nodes in the tree is the breadth-first search (BFS). We will implement BFS iteratively. Similar to the previous approach, we will store a boolean variable `isLonely` along with the current node in the queue, which will denote if this node has a sibling or not. When we iterate over a node, we will check the value of the boolean flag and add it to the answer list if the flag is `true`.\n\n#### Algorithm\n\n1. Initialize a queue of `{node, flag}` pairs and add a pair with `root` as the node and `false` as the flag value.\n2. Iterate over the pairs in the queue until the queue is empty.\n3. Pop the pair from the queue and store the current node as `currNode` and flag it as `isLonely`.\n4. If `isLonely` is `true` then add the node's value to the list `ans`.\n5. Enqueue the left and right child in the queue with the updated value of the boolean flag.\n6. After iterating over all nodes return `ans`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/LP3PBmzC/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"LP3PBmzC\"></iframe>\n\n#### Complexity Analysis\n\nHere $N$ is the number of nodes in the tree.\n\n* Time complexity: $O(N)$\n\n  We will be iterating over each node only once and hence the total time complexity is equal to $O(N)$.\n\n* Space complexity: $O(N)$\n\n  The queue can grow to size $N$. So the space complexity is $O(N)$.\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

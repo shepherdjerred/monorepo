@@ -1,0 +1,147 @@
+{
+  "questionId": "1144",
+  "questionFrontendId": "1168",
+  "title": "Optimize Water Distribution in a Village",
+  "titleSlug": "optimize-water-distribution-in-a-village",
+  "difficulty": "Hard",
+  "content": "<p>There are <code>n</code> houses in a village. We want to supply water for all the houses by building wells and laying pipes.</p>\n\n<p>For each house <code>i</code>, we can either build a well inside it directly with cost <code>wells[i - 1]</code> (note the <code>-1</code> due to <strong>0-indexing</strong>), or pipe in water from another well to it. The costs to lay pipes between houses are given by the array <code>pipes</code> where each <code>pipes[j] = [house1<sub>j</sub>, house2<sub>j</sub>, cost<sub>j</sub>]</code> represents the cost to connect <code>house1<sub>j</sub></code> and <code>house2<sub>j</sub></code> together using a pipe. Connections are bidirectional, and there could be multiple valid connections between the same two houses with different costs.</p>\n\n<p>Return <em>the minimum total cost to supply water to all houses</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/05/22/1359_ex1.png\" style=\"width: 189px; height: 196px;\" />\n<pre>\n<strong>Input:</strong> n = 3, wells = [1,2,2], pipes = [[1,2,1],[2,3,1]]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The image shows the costs of connecting houses using pipes.\nThe best strategy is to build a well in the first house with cost 1 and connect the other houses to it with cost 2 so the total cost is 3.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 2, wells = [1,1], pipes = [[1,2,1],[1,2,2]]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> We can supply water with cost two using one of the three options:\nOption 1:\n  - Build a well inside house 1 with cost 1.\n  - Build a well inside house 2 with cost 1.\nThe total cost will be 2.\nOption 2:\n  - Build a well inside house 1 with cost 1.\n  - Connect house 2 with house 1 with cost 1.\nThe total cost will be 2.\nOption 3:\n  - Build a well inside house 2 with cost 1.\n  - Connect house 1 with house 2 with cost 1.\nThe total cost will be 2.\nNote that we can connect houses 1 and 2 with cost 1 or with cost 2 but we will always choose <strong>the cheapest option</strong>. \n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 10<sup>4</sup></code></li>\n\t<li><code>wells.length == n</code></li>\n\t<li><code>0 &lt;= wells[i] &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= pipes.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>pipes[j].length == 3</code></li>\n\t<li><code>1 &lt;= house1<sub>j</sub>, house2<sub>j</sub> &lt;= n</code></li>\n\t<li><code>0 &lt;= cost<sub>j</sub> &lt;= 10<sup>5</sup></code></li>\n\t<li><code>house1<sub>j</sub> != house2<sub>j</sub></code></li>\n</ul>\n",
+  "hints": [
+    "What if we model this problem as a graph problem?",
+    "A house is a node and a pipe is a weighted edge.",
+    "How to represent building wells in the graph model?",
+    "Add a virtual node, connect it to houses with edges weighted by the costs to build wells in these houses.",
+    "The problem is now reduced to a Minimum Spanning Tree problem."
+  ],
+  "metaData": "{\n  \"name\": \"minCostToSupplyWater\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"wells\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"pipes\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"59.4K\", \"totalSubmission\": \"90.7K\", \"totalAcceptedRaw\": 59425, \"totalSubmissionRaw\": 90722, \"acRate\": \"65.5%\"}",
+  "likes": 1207,
+  "dislikes": 40,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "3\n[1,2,2]\n[[1,2,1],[2,3,1]]",
+    "2\n[1,1]\n[[1,2,1],[1,2,2]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Minimum Spanning Tree",
+      "slug": "minimum-spanning-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minCostToSupplyWater(int n, vector<int>& wells, vector<vector<int>>& pipes) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minCostToSupplyWater(int n, int[] wells, int[][] pipes) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minCostToSupplyWater(self, n: int, wells: List[int], pipes: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minCostToSupplyWater(self, n, wells, pipes):\n        \"\"\"\n        :type n: int\n        :type wells: List[int]\n        :type pipes: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[]} wells\n * @param {number[][]} pipes\n * @return {number}\n */\nvar minCostToSupplyWater = function(n, wells, pipes) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minCostToSupplyWater(n: number, wells: number[], pipes: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinCostToSupplyWater(int n, int[] wells, int[][] pipes) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minCostToSupplyWater(int n, int* wells, int wellsSize, int** pipes, int pipesSize, int* pipesColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minCostToSupplyWater(n int, wells []int, pipes [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minCostToSupplyWater(n: Int, wells: IntArray, pipes: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minCostToSupplyWater(_ n: Int, _ wells: [Int], _ pipes: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_cost_to_supply_water(n: i32, wells: Vec<i32>, pipes: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[]} wells\n# @param {Integer[][]} pipes\n# @return {Integer}\ndef min_cost_to_supply_water(n, wells, pipes)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[] $wells\n     * @param Integer[][] $pipes\n     * @return Integer\n     */\n    function minCostToSupplyWater($n, $wells, $pipes) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minCostToSupplyWater(int n, List<int> wells, List<List<int>> pipes) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minCostToSupplyWater(n: Int, wells: Array[Int], pipes: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_cost_to_supply_water(n :: integer, wells :: [integer], pipes :: [[integer]]) :: integer\n  def min_cost_to_supply_water(n, wells, pipes) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_cost_to_supply_water(N :: integer(), Wells :: [integer()], Pipes :: [[integer()]]) -> integer().\nmin_cost_to_supply_water(N, Wells, Pipes) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-cost-to-supply-water n wells pipes)\n  (-> exact-integer? (listof exact-integer?) (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1150",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Overview\n\nSince the problem description involves connecting houses (vertices) using pipes (edges), we can tell that this problem is a variant of graph problems.\nMore precisely, we can convert it into a standard [minimum spanning tree (MST)](https://en.wikipedia.org/wiki/Minimum_spanning_tree) problem, which we will discuss in detail how to do so in this article.\n\nConcerning the MST problem, there exist several classic algorithms.\nIn particular, we will demonstrate two of them, namely [Prim's algorithm](https://en.wikipedia.org/wiki/Prim%27s_algorithm) and [Kruskal's algorithm](https://en.wikipedia.org/wiki/Kruskal%27s_algorithm), which are arguably the most popular ones and feasible to implement during an interview.\n\n**Intuition**\n\nFirst of all, let us introduce the problem of the minimum spanning tree.\n\n>Given a _connected_, _edge-weighted_ and _undirected_ graph, a minimum spanning tree is a **_subset_** of edges that connect all vertices while the total weights of these edges are minimum among all possible subsets.\n\nOne can draw some similarities between the above definition and our problem here.\nSpecifically, we can consider each house as a vertex in a graph, and the pipes between the houses as edges in the graph.\n\nHowever, there is one major **difference** between them.\nIn our problem, every vertex and every edge comes with a cost.\nWhile in the setting of MST, only the edges are associated with the costs.\n\n>To bridge the **_gap_**, as suggested in the hints, the trick is to add **one virtual vertex** to the existing graph. Along with the addition of vertex, we also add edges between the virtual vertex and the rest of the vertices.\nFinally, we reassign the cost of each vertex to the corresponding newly-added edge.\n\nHere is an illustration showing how we convert the graph in the example with the above trick.\n\n![graph conversion](../Figures/1168/1168_graph_conversion.png)\n\nWith the converted graph, we then can take into account the costs from the vertex, via the additional edges.\nWe can focus entirely on selecting the appropriate edges to create an MST.\nThus, our problem is simplified to creating an MST from a list of weighted edges.\n\n![MST solution](../Figures/1168/1168_mst_solution.png)\n\nIn the above graph, we demonstrate the solution that we will find after solving the MST problem, which we can translate as _\"to minimize the cost, we should dig a well in the house indexed with `1` (denoted by the edge between indices `1` and `0`), and then supply the water to the rest of the houses_.\"\n\n\n---\n### Approach 1: Prim's Algorithm with Heap\n\n**Intuition**\n\n[Prim's](https://en.wikipedia.org/wiki/Prim%27s_algorithm) (also known as Jarník's) algorithm is a **_greedy_** algorithm used to find the minimum spanning tree in a _weighted_ and _undirected_ graph.\n\n>The algorithm operates by building the tree one vertex at a time, from an arbitrary starting vertex, at each step adding the **_cheapest_** possible connection from any vertex in the tree to a vertex that is not in the tree.\n\n![Prim Demo](../Figures/1168/PrimAlgDemo.gif)\n\n\nThe above illustration demonstrates how Prim's algorithm works.\nStarting from an arbitrary vertex, Prim's algorithm **_grows_** the minimum spanning tree by adding one vertex at a time to the tree.\nThe choice of a vertex is based on the **_greedy_** strategy, _i.e._ the addition of the new vertex incurs the minimum cost.\n\n\n**Algorithm**\n\nTo implement Prim's algorithm, essentially we will need the following three data structures:\n\n- **adjacency list**: we need this to represent the graph, _i.e._ vertices and edges. The adjacency list can be a list of lists or a dictionary of lists.\n\n- **set**: we need a set to maintain all the vertices that we have added to the final minimum spanning tree, during the construction of the tree.\nWith the help of set, we can determine whether a vertex has been added or not.\n\n- **heap**: due to the nature of the greedy strategy, at each step, we can determine the best edge to be added based on the cost it will add to the tree.\n[Heap](https://en.wikipedia.org/wiki/Heap_(data_structure)) (also known as a priority queue) is a data structure that allows us to retrieve the minimum element in constant time and to remove the minimum element in logarithmic time. This fits our need to repeatedly find the lowest cost edge perfectly.\n\n**Implementation**\n\nBy applying the above three data structures, the following steps can be used to implement Prim's algorithm.\n\n- First of all, given the input, we need to build a graph representation with the adjacency list.\n    - Note that, since the graph is undirected (_i.e._ bidirectional), for each pipe, we need to add two entries in the adjacency list, with each end of the pipe as a starting vertex.\n    - Also, to convert our problem into the MST problem, we need to add a virtual vertex (we index it as `0`) together with the additional `n` edges to each house.\n\n- Starting from the virtual vertex, we build the MST by **_iteratively_** adding one vertex at a time.\n    - Note, when using Prim's algorithm, we can use any vertex as a starting point.\n    Here, for the sake of convenience, we start from the newly-added virtual vertex.\n\n- The process of building MST consists of a loop with the following substeps:\n\n  - Each iteration, we pop an element from the heap. This element contains a vertex along with the cost that is associated with the edge that connecting the vertex to the tree.\n  The vertex is chosen if it is not already in the tree.\n  We know that the cost of this vertex is minimal among all choices because it was popped from the heap.\n\n  - Once the vertex is added, we then examine its neighboring vertices.\n  Specifically, we add these vertices along with their edges into the heap as the candidates for the next round of selection.\n\n  - The loop **terminates** when we have added all the vertices from the graph into the MST.\n\n\n<iframe src=\"https://leetcode.com/playground/nEJsc5Mf/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"nEJsc5Mf\"></iframe>\n\n\n**Complexity Analysis**\n\nLet $$N$$ be the number of houses, and $$M$$ be the number of pipes from the input.\n\n- Time Complexity: $$O\\big( (N+M) \\cdot \\log(N+M) \\big)$$\n\n    - To build the graph, we iterate through the houses and pipes in the input, which takes $$O(N + M)$$ time.\n\n    - While building the MST, we might need to iterate through all the edges in the graph in the worst case, which amounts to $$N + M$$ in total.\n    For each edge, it would enter and exit the heap data structure at most once. The enter of edge into heap (_i.e._ `push` operation) takes $$\\log(N+M)$$ time, while the exit of edge (_i.e._ `pop` operation) takes a constant time.\n    Therefore, the time complexity of the MST construction process is $$O\\big( (N+M) \\cdot \\log(N+M) \\big)$$.\n\n    - To sum up, the overall time complexity of the algorithm is $$O\\big( (N+M) \\cdot \\log(N+M) \\big)$$.\n\n\n- Space Complexity: $$O(N+M)$$\n\n    - We break down the analysis accordingly into the three major data structures that we used in the algorithm.\n\n    - The graph that we built consists of $$N+1$$ vertices and $$2 \\cdot M$$ edges (_i.e._ pipes are bidirectional).\n    Therefore, the space complexity of graph is $$O(N + 1 + 2 \\cdot M) = O(N + M)$$.\n\n    - The space complexity of the set that is used to hold the vertices in MST is $$O(N)$$.\n\n    - Finally, in the worst case, the heap we used might hold all the edges in the graph which is $$(N+M)$$.\n\n    - To summarize, the overall space complexity of the algorithm is $$O(N+M)$$.\n\n\n---\n### Approach 2: Kruskal's Algorithm with Union-Find\n\n**Intuition**\n\nAnother classical algorithm to solve the MST problem is called [Kruskal's algorithm](https://en.wikipedia.org/wiki/Kruskal%27s_algorithm).\n\n>Similiar to Prim's algorithm, Kruskal's algorithm applies the **_greedy_** strategy to **_incrementally_** add new edges to the final solution.\n\n![Kruskal Demo](../Figures/1168/KruskalDemo.gif)\n\n\nThe above animation shows how Kruskal's algorithm **_grows_** the minimum spanning tree.\n\n>A major difference between them is that in Prim's algorithm the MST (minimal spanning tree) remains **_connected_** as a whole throughout the entire process, while in Kruskal's algorithm, the tree is formed by _merging_ the _**disjoint components**_ together.\n\n\n**Algorithm**\n\nRather than adding vertices as in Prim's algorithm, the Kruskal's algorithm focuses on adding edges.\nFurthermore, in Kruskal's algorithm, we consider **_all edges at once_** ranked by their costs, while in Prim's algorithm, although edges are ranked by costs in a heap or priority queue, at each iteration, we only explore **_edges that are connected to the vertices that are already in the MST_**.\n\n>The overall idea of Kruskal's algorithm is that we **_iterate_** through all the edges *ordered* by their costs. For each edge, we decide whether to add it to the final MST. The decision is based on whether this new addition will help to **_connect_** more dots (_i.e._ vertices).\n\n![Union-Find examples](../Figures/1168/1168_union_find_examples.png)\n\n\n*Add or Not to Add ?*\n\n\nThe above diagram shows three example scenarios and for each scenario, specifies whether a new edge should be added or not.\nThe solid edges have already been added to the MST, while the dashed edges have yet to be decided.\n\n- In the example on the left, we should add the new edge, since the edge **_bridges_** the gap between the two disjoint components.\n- In the middle example, we should also add the new edge, since it **_connects_** to an unseen vertex (_i.e._ connecting more dots).\n- In the example on the right, we should **not** add the new edge. Because it does not help us to make the current MST more **_connected_**, since all vertices are connected already.\n\n>A more concise **_criteria_** to determine whether we should add a new edge in Kruskal's algorithm is that whether both ends of the edge belong to the same component (group).\n\n**Implementation**\n\nIn order to determine the membership for a collection of elements, we often apply the data structure called [Disjoint Set](https://en.wikipedia.org/wiki/Disjoint-set_data_structure) which is also known as **Union-Find** data structure.\n\nEssentially, the Union-Find data structure provides two interfaces:\n\n- `find(a)`: the function returns the id of the group where the element `a` belongs to.\n- `union(a, b)`: the function joins the two groups that the element `a` and `b` belong to. If they belong to the same group already, then the function does nothing.\n\nWe provide a full-fledged version of the Union-Find data structure with *path compression* and *link-by-rank* in the sample implementation.\n\nIf one would like to know more about how the Union-Find data structure works, one can refer to the solution for the problem of [323. Number of Connected Components in an Undirected Graph](https://leetcode.com/problems/number-of-connected-components-in-an-undirected-graph/) and a [tutorial](https://www.cs.princeton.edu/~wayne/kleinberg-tardos/pdf/UnionFind.pdf) from Princeton University.\n\nGiven the Union-Find data structure, we can implement Kruskal's algorithm with the following two steps:\n\n- First of all, we __sort__ all the edges based on their costs, including the additional edges that are added with the virtual vertex.\n\n- We then **iterate** through the _sorted_ edges. For each edge, if both ends of the edge belong to different groups, with the help of the Union-Find data structure, we then add this edge into the final MST.\n\n\n<iframe src=\"https://leetcode.com/playground/9tWn8pus/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"9tWn8pus\"></iframe>\n\n**Note:** in the above implementation, we **tweak** the `union(a, b)` a bit to make the code more efficient and concise.\n\nIn most implementations of Union-Find data structure, we do not return anything for the function of `union(a, b)`.\nHowever, in our case, we return a flag to indicate whether the joining actually happens within the function.\nWith this tweak, we only need to invoke the `union(a,b)` function in our iteration, rather than invoking `find(a) == find(b)` functions in addition.\n\n\n**Complexity Analysis**\n\nSince we applied the Union-Find data structure in our algorithm, let's begin with a statement on the time complexity of the data structure:\n\n>If $$K$$ operations, either Union or Find, are applied to $$L$$ elements, the total run time is $$\\mathcal{O}(K \\cdot \\log^{*}{L})$$, where $$\\log^{*}$$ is the [iterated logarithm](https://en.wikipedia.org/wiki/Iterated_logarithm).\n\nOne can refer to the [proof of Union-Find complexity](https://en.wikipedia.org/wiki/Proof_of_O(log*n)_time_complexity_of_union%E2%80%93find) and the [tutorial](https://www.cs.princeton.edu/~wayne/kleinberg-tardos/pdf/UnionFind.pdf) from Princeton University for more details.\n\n\nLet $$N$$ be the number of houses, and $$M$$ be the number of pipes from the input.\n\n- Time Complexity: $$O\\big((N+M) \\cdot \\log(N+M) \\big)$$\n\n    - First, we build a list of edges, which takes $$O(N + M)$$ time.\n\n    - We then sort the list of edges, which takes $$O\\big((N+M) \\cdot \\log(N+M) \\big)$$ time.\n\n    - At the end, we iterate through the sorted edges. For each iteration, we invoke a Union-Find operation. Hence, the time complexity for iteration is $$O\\big( (N+M) * \\log^{*}(N) \\big)$$.\n\n    - To sum up, the overall time complexity of the algorithm is $$O\\big((N+M) \\cdot \\log(N+M) \\big)$$ which is dominated by the sorting step.\n\n\n- Space Complexity: $$O(N+M)$$\n\n    - The space complexity of our Union-Find data structure is $$O(N)$$.\n\n    - The space required by the list of edges is $$O(N+M)$$.\n\n    - Finally, the space complexity of the sorting algorithm depends on the implementation of each programming language. For instance, the `list.sort()` function in Python is implemented with the [Timsort](https://en.wikipedia.org/wiki/Timsort) algorithm whose space complexity is $$\\mathcal{O}(n)$$ where $$n$$ is the number of the elements.\n    While in Java, the [Collections.sort()](https://docs.oracle.com/javase/7/docs/api/java/util/Collections.html#sort(java.util.List)) is implemented as a variant of quicksort algorithm whose space complexity is $$\\mathcal{O}(\\log{n})$$.\n\n    - To sum up, the overall space complexity of the algorithm is $$O(N+M)$$ which is dominated by the list of edges.\n\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

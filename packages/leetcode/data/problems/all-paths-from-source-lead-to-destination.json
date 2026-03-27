@@ -1,0 +1,138 @@
+{
+  "questionId": "511",
+  "questionFrontendId": "1059",
+  "title": "All Paths from Source Lead to Destination",
+  "titleSlug": "all-paths-from-source-lead-to-destination",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>edges</code> of a directed graph where <code>edges[i] = [a<sub>i</sub>, b<sub>i</sub>]</code> indicates there is an edge between nodes <code>a<sub>i</sub></code> and <code>b<sub>i</sub></code>, and two nodes <code>source</code> and <code>destination</code> of this graph, determine whether or not all paths starting from <code>source</code> eventually, end at <code>destination</code>, that is:</p>\n\n<ul>\n\t<li>At least one path exists from the <code>source</code> node to the <code>destination</code> node</li>\n\t<li>If a path exists from the <code>source</code> node to a node with no outgoing edges, then that node is equal to <code>destination</code>.</li>\n\t<li>The number of possible paths from <code>source</code> to <code>destination</code> is a finite number.</li>\n</ul>\n\n<p>Return <code>true</code> if and only if all roads from <code>source</code> lead to <code>destination</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/03/16/485_example_1.png\" style=\"width: 200px; height: 208px;\" />\n<pre>\n<strong>Input:</strong> n = 3, edges = [[0,1],[0,2]], source = 0, destination = 2\n<strong>Output:</strong> false\n<strong>Explanation:</strong> It is possible to reach and get stuck on both node 1 and node 2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/03/16/485_example_2.png\" style=\"width: 200px; height: 230px;\" />\n<pre>\n<strong>Input:</strong> n = 4, edges = [[0,1],[0,3],[1,2],[2,1]], source = 0, destination = 3\n<strong>Output:</strong> false\n<strong>Explanation:</strong> We have two possibilities: to end at node 3, or to loop over node 1 and node 2 indefinitely.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/03/16/485_example_3.png\" style=\"width: 200px; height: 183px;\" />\n<pre>\n<strong>Input:</strong> n = 4, edges = [[0,1],[0,2],[1,3],[2,3]], source = 0, destination = 3\n<strong>Output:</strong> true\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= edges.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>edges.length == 2</code></li>\n\t<li><code>0 &lt;= a<sub>i</sub>, b<sub>i</sub> &lt;= n - 1</code></li>\n\t<li><code>0 &lt;= source &lt;= n - 1</code></li>\n\t<li><code>0 &lt;= destination &lt;= n - 1</code></li>\n\t<li>The given graph may have self-loops and parallel edges.</li>\n</ul>\n",
+  "hints": [
+    "What if we can reach to a cycle from the source node?",
+    "Then the answer will be false, because we eventually get trapped in the cycle forever.",
+    "What if the we can't reach to a cycle from the source node? Then we need to ensure that from all visited nodes from source the unique node with indegree = 0 is the destination node."
+  ],
+  "metaData": "{\r\n  \"name\": \"leadsToDestination\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"n\",\r\n      \"type\": \"integer\"\r\n    },\r\n    {\r\n      \"name\": \"edges\",\r\n      \"type\": \"integer[][]\"\r\n    },\r\n    {\r\n      \"name\": \"source\",\r\n      \"type\": \"integer\"\r\n    },\r\n    {\r\n      \"name\": \"destination\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"74.9K\", \"totalSubmission\": \"202.4K\", \"totalAcceptedRaw\": 74929, \"totalSubmissionRaw\": 202447, \"acRate\": \"37.0%\"}",
+  "likes": 764,
+  "dislikes": 433,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "3\n[[0,1],[0,2]]\n0\n2",
+    "4\n[[0,1],[0,3],[1,2],[2,1]]\n0\n3",
+    "4\n[[0,1],[0,2],[1,3],[2,3]]\n0\n3"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Topological Sort",
+      "slug": "topological-sort"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool leadsToDestination(int n, vector<vector<int>>& edges, int source, int destination) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean leadsToDestination(int n, int[][] edges, int source, int destination) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def leadsToDestination(self, n: int, edges: List[List[int]], source: int, destination: int) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def leadsToDestination(self, n, edges, source, destination):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :type source: int\n        :type destination: int\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} edges\n * @param {number} source\n * @param {number} destination\n * @return {boolean}\n */\nvar leadsToDestination = function(n, edges, source, destination) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function leadsToDestination(n: number, edges: number[][], source: number, destination: number): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool LeadsToDestination(int n, int[][] edges, int source, int destination) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool leadsToDestination(int n, int** edges, int edgesSize, int* edgesColSize, int source, int destination) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func leadsToDestination(n int, edges [][]int, source int, destination int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun leadsToDestination(n: Int, edges: Array<IntArray>, source: Int, destination: Int): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func leadsToDestination(_ n: Int, _ edges: [[Int]], _ source: Int, _ destination: Int) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn leads_to_destination(n: i32, edges: Vec<Vec<i32>>, source: i32, destination: i32) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} edges\n# @param {Integer} source\n# @param {Integer} destination\n# @return {Boolean}\ndef leads_to_destination(n, edges, source, destination)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $edges\n     * @param Integer $source\n     * @param Integer $destination\n     * @return Boolean\n     */\n    function leadsToDestination($n, $edges, $source, $destination) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool leadsToDestination(int n, List<List<int>> edges, int source, int destination) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def leadsToDestination(n: Int, edges: Array[Array[Int]], source: Int, destination: Int): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec leads_to_destination(n :: integer, edges :: [[integer]], source :: integer, destination :: integer) :: boolean\n  def leads_to_destination(n, edges, source, destination) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec leads_to_destination(N :: integer(), Edges :: [[integer()]], Source :: integer(), Destination :: integer()) -> boolean().\nleads_to_destination(N, Edges, Source, Destination) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (leads-to-destination n edges source destination)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer? exact-integer? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1102",
+    "content": "[TOC]\n\n## Video Solution\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/846416890\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n---\n\n### Overview\n\nLet's try to boil the problem down to simpler, more commonly understandable terms.\n\n* We are given a directed graph.\n* Also, as inputs we are provided a `source` and a `destination`.\n* We need to tell if all the paths from the `source` lead to the `destination` and and we can split this into a few criteria.\n    - If a path exists from the `source` node to a node with no outgoing edges, then that node must be equal to `destination`. Here, we simply need to see that if a node does not have any neighbors in the `adjacency list` structure, then it has to be the `destination` or else we return `false`.\n    - The number of possible paths from `source` to `destination` is a finite number. This simply means that the graph is actually a `tree`. Or in other words, there are no cycles in the graph. If there is a cycle in the graph, there would be an infinite number of paths from the source to the destination, as each would go around the cycle a different number of times.\n\n> Thus, the problem simply boils down to two things which we need to check during our graph traversal algorithm. We need to detect any cycles in the traversal and return false if there are any. Also, we need to ensure that if there is a leaf node encountered during the traversal, it is the destination node.\n\nThe common strategies to traverse a graph are Breadth-First Search (a.k.a. BFS) and Depth-First Search (a.k.a. DFS). If one is not familiar with the concepts of BFS and DFS, we have an Explore card called [Queue & Stack](https://leetcode.com/explore/learn/card/queue-stack/) where we cover the [BFS traversal](https://leetcode.com/explore/learn/card/queue-stack/231/practical-application-queue/) as well as the [DFS traversal](https://leetcode.com/explore/learn/card/queue-stack/232/practical-application-stack/). In this article, we'll be assuming that you're already familiar with these concepts.\n\n### Approach: Depth First Search\n\n**Intuition**\n\nThis is one of the most common graph traversal techniques out there which makes use of the _stack_ data structure. As mentioned in the overview section above, we simply need to run a graph traversal algorithm and check for two basic conditions. It is easy enough to check for a leaf node since the adjacency list entry for that node would not contain any neighbors. So our first condition can be easily checked i.e. if we encounter a leaf node, we check its equality to the _destination_ node.\n\nAs for cycle detection, there are multiple ways one can go about modifying the standard DFS algorithm. We will be following the _node-coloring variant_ of the algorithm which is explained in the [Introduction to Algorithms (CLRS)](https://en.wikipedia.org/wiki/Introduction_to_Algorithms) book. The idea is to do DFS of a given graph and while doing traversal, assign one of the below three colors to every vertex. According to the algorithm mentioned in the book, there are three different colors we can assign a node:\n\n***WHITE*** ~ Vertex is not processed yet. Initially, all vertices are `WHITE`.\n\n***GRAY*** ~ Vertex is being processed (DFS for this vertex has started, but not finished which means that all descendants (in DFS tree) of this vertex are not processed yet (or this vertex is in the function call stack).\n\n![](../Figures/1059/img2.png)\n\n\n*Figure 1. Highlighting an edge to a GRAY node thus creating a cycle in the graph.*\n\n\n***BLACK*** ~ Vertex and all its descendants are processed. \n\n![](../Figures/1059/img1.png)\n\n\n*Figure 2. Highlighting an edge to a BLACK node.*\n\n\n> While doing DFS, if an edge is encountered from current vertex to a GRAY vertex, then this edge is a back edge and hence there is a cycle. A GRAY node represents a node whose processing is still ongoing. Thus, if a descendent eventually leads back to a node whose processing is ongoing, it ends up creating a cycle in the directed graph and we call the edge leading back to a GRAY node as a backward edge.\n\n**Algorithm**\n\n1. Create a recursive function `leadsToDest` that takes the current node that needs to be processed and the `color array`.\n2.  We check if this node has any neighbors or not. If it doesn't then we return `true` or `false` based on whether this node equals the `destination` node.\n3. There are three possibilities for the color of this current node. \n    - If it is `BLACK`, do nothing; we've already processed it.\n    - If it is `WHITE`, then mark it as `GRAY` since we are starting the processing of the graph rooted at this node.\n    - Otherwise, if it is `GRAY`, then return `false` as we have discovered a backward edge, and hence a cycle. \n4. Traverse all the adjacent nodes and for each of them call the recursive function for that node. If the function returns false, return `false`.\n5. Mark the current Node as `BLACK` and return `true`.\n\n<iframe src=\"https://leetcode.com/playground/mt5oXGZA/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"mt5oXGZA\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: Typically for an entire DFS over an input graph, it takes $$\\mathcal{O}(V + E)$$ where $$V$$ represents the number of vertices in the graph and likewise, $$E$$ represents the number of edges in the graph. In the worst case $$E$$ can be $$\\mathcal{O}(V^2)$$ in case each vertex is connected to every other vertex in the graph. However even in the worst case, we will end up discovering a cycle very early on and prune the recursion tree. If we were to traverse the entire graph, then the complexity would be $$\\mathcal{O}(V^2)$$ as the $$\\mathcal{O}(E)$$ part would dominate. However, due to pruning and backtracking in case of cycle detection, we end up with an overall time complexity of $$\\mathcal{O}(V)$$.\n* Space Complexity: $$\\mathcal{O}(V + E)$$ where $$\\mathcal{O}(E)$$ is occupied by the adjacency list and $$\\mathcal{O}(V)$$ is occupied by the recursion stack and the color states.\n\n**Why not Breadth-First Search?**\n\nFrom this [Stack Overflow](https://stackoverflow.com/questions/2869647/why-dfs-and-not-bfs-for-finding-cycle-in-graphs) answer:\n\n>A BFS could be reasonable if the graph is undirected (be my guest at showing an efficient algorithm using BFS that would report the cycles in a directed graph!), where each _cross edge_ defines a cycle (edge going from a node to an already visited node). If the cross edge is `{v1, v2}`, and the root (in the BFS tree) that contains those nodes is `r`, then the cycle is `r ~ v1 - v2 ~ r` (~ is a path, - a single edge), which can be reported almost as easily as in DFS.\n\n>The only reason to use a BFS would be if you know your (undirected) graph is going to have long paths and small path cover (in other words, deep and narrow). In that case, BFS would require proportionally less memory for its queue than DFS' stack (both still linear of course).\n\n> In all other cases, DFS is clearly the winner.\n\nThere are some approaches mentioned in the discussion section that make use of BFS and Topological sorting. However, they don't cover all the test cases and also, they involve a lot of modification to these standard algorithms. Therefore, they aren't sensible approaches to take in an interview setting.\n\n<br/>\n<br/>\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

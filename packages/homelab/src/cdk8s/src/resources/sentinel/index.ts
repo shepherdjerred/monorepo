@@ -107,7 +107,7 @@ export function createSentinelDeployment(chart: Chart) {
             "sentinel-anthropic-api-key-secret",
             onePasswordItem.name,
           ),
-          key: "anthropic-api-key",
+          key: "ANTHROPIC_API_KEY",
         }),
 
         // Discord configuration
@@ -117,7 +117,7 @@ export function createSentinelDeployment(chart: Chart) {
             "sentinel-discord-token-secret",
             onePasswordItem.name,
           ),
-          key: "discord-token",
+          key: "DISCORD_TOKEN",
         }),
         DISCORD_CHANNEL_ID: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
@@ -125,7 +125,7 @@ export function createSentinelDeployment(chart: Chart) {
             "sentinel-discord-channel-id-secret",
             onePasswordItem.name,
           ),
-          key: "discord-channel-id",
+          key: "DISCORD_CHANNEL_ID",
         }),
         DISCORD_GUILD_ID: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
@@ -133,17 +133,17 @@ export function createSentinelDeployment(chart: Chart) {
             "sentinel-discord-guild-id-secret",
             onePasswordItem.name,
           ),
-          key: "discord-guild-id",
+          key: "DISCORD_GUILD_ID",
         }),
 
         // GitHub token for PR creation and CI status
-        GITHUB_TOKEN: EnvValue.fromSecretValue({
+        GH_TOKEN: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
             chart,
             "sentinel-github-token-secret",
             onePasswordItem.name,
           ),
-          key: "github-token",
+          key: "GH_TOKEN",
         }),
 
         // Webhook secrets
@@ -153,7 +153,7 @@ export function createSentinelDeployment(chart: Chart) {
             "sentinel-github-webhook-secret",
             onePasswordItem.name,
           ),
-          key: "github-webhook-secret",
+          key: "GITHUB_WEBHOOK_SECRET",
         }),
         PAGERDUTY_WEBHOOK_SECRET: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
@@ -161,7 +161,7 @@ export function createSentinelDeployment(chart: Chart) {
             "sentinel-pagerduty-webhook-secret",
             onePasswordItem.name,
           ),
-          key: "pagerduty-webhook-secret",
+          key: "PAGERDUTY_WEBHOOK_SECRET",
         }),
 
         BUGSINK_WEBHOOK_SECRET: EnvValue.fromSecretValue({
@@ -170,7 +170,7 @@ export function createSentinelDeployment(chart: Chart) {
             "sentinel-bugsink-webhook-secret",
             onePasswordItem.name,
           ),
-          key: "bugsink-webhook-secret",
+          key: "BUGSINK_WEBHOOK_SECRET",
         }),
         BUILDKITE_WEBHOOK_TOKEN: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
@@ -178,7 +178,7 @@ export function createSentinelDeployment(chart: Chart) {
             "sentinel-buildkite-webhook-token-secret",
             onePasswordItem.name,
           ),
-          key: "buildkite-webhook-token",
+          key: "BUILDKITE_WEBHOOK_TOKEN",
         }),
 
         // API tokens for agent access to external services
@@ -188,23 +188,23 @@ export function createSentinelDeployment(chart: Chart) {
             "sentinel-buildkite-api-token-secret",
             onePasswordItem.name,
           ),
-          key: "buildkite-api-token",
+          key: "BUILDKITE_API_TOKEN",
         }),
-        PAGERDUTY_API_TOKEN: EnvValue.fromSecretValue({
+        PAGERDUTY_TOKEN: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
             chart,
             "sentinel-pagerduty-api-token-secret",
             onePasswordItem.name,
           ),
-          key: "pagerduty-api-token",
+          key: "PAGERDUTY_TOKEN",
         }),
-        BUGSINK_API_TOKEN: EnvValue.fromSecretValue({
+        BUGSINK_TOKEN: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
             chart,
             "sentinel-bugsink-api-token-secret",
             onePasswordItem.name,
           ),
-          key: "bugsink-api-token",
+          key: "BUGSINK_TOKEN",
         }),
 
         // Database path
@@ -222,7 +222,7 @@ export function createSentinelDeployment(chart: Chart) {
             "sentinel-sentry-dsn-secret",
             onePasswordItem.name,
           ),
-          key: "sentry-dsn",
+          key: "SENTRY_DSN",
         }),
         SENTRY_ENVIRONMENT: EnvValue.fromValue("production"),
         SENTRY_RELEASE: EnvValue.fromValue(

@@ -1,0 +1,136 @@
+{
+  "questionId": "1242",
+  "questionFrontendId": "1314",
+  "title": "Matrix Block Sum",
+  "titleSlug": "matrix-block-sum",
+  "difficulty": "Medium",
+  "content": "<p>Given a <code>m x n</code> matrix <code>mat</code> and an integer <code>k</code>, return <em>a matrix</em> <code>answer</code> <em>where each</em> <code>answer[i][j]</code> <em>is the sum of all elements</em> <code>mat[r][c]</code> <em>for</em>:</p>\n\n<ul>\n\t<li><code>i - k &lt;= r &lt;= i + k,</code></li>\n\t<li><code>j - k &lt;= c &lt;= j + k</code>, and</li>\n\t<li><code>(r, c)</code> is a valid position in the matrix.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> mat = [[1,2,3],[4,5,6],[7,8,9]], k = 1\n<strong>Output:</strong> [[12,21,16],[27,45,33],[24,39,28]]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> mat = [[1,2,3],[4,5,6],[7,8,9]], k = 2\n<strong>Output:</strong> [[45,45,45],[45,45,45],[45,45,45]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m ==&nbsp;mat.length</code></li>\n\t<li><code>n ==&nbsp;mat[i].length</code></li>\n\t<li><code>1 &lt;= m, n, k &lt;= 100</code></li>\n\t<li><code>1 &lt;= mat[i][j] &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "How to calculate the required sum for a cell (i,j) fast ?",
+    "Use the concept of cumulative sum array.",
+    "Create a cumulative sum matrix where dp[i][j] is the sum of all cells in the rectangle from (0,0) to (i,j), use inclusion-exclusion idea."
+  ],
+  "metaData": "{\n  \"name\": \"matrixBlockSum\",\n  \"params\": [\n    {\n      \"name\": \"mat\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[][]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"110K\", \"totalSubmission\": \"143.9K\", \"totalAcceptedRaw\": 110015, \"totalSubmissionRaw\": 143902, \"acRate\": \"76.5%\"}",
+  "likes": 2512,
+  "dislikes": 400,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Stamping the Grid\", \"titleSlug\": \"stamping-the-grid\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Sum of an Hourglass\", \"titleSlug\": \"maximum-sum-of-an-hourglass\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Design Neighbor Sum Service\", \"titleSlug\": \"design-neighbor-sum-service\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,2,3],[4,5,6],[7,8,9]]\n1",
+    "[[1,2,3],[4,5,6],[7,8,9]]\n2"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"visa\", \"name\": \"Visa\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> matrixBlockSum(vector<vector<int>>& mat, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[][] matrixBlockSum(int[][] mat, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def matrixBlockSum(self, mat: List[List[int]], k: int) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def matrixBlockSum(self, mat, k):\n        \"\"\"\n        :type mat: List[List[int]]\n        :type k: int\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} mat\n * @param {number} k\n * @return {number[][]}\n */\nvar matrixBlockSum = function(mat, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function matrixBlockSum(mat: number[][], k: number): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[][] MatrixBlockSum(int[][] mat, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** matrixBlockSum(int** mat, int matSize, int* matColSize, int k, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func matrixBlockSum(mat [][]int, k int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun matrixBlockSum(mat: Array<IntArray>, k: Int): Array<IntArray> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func matrixBlockSum(_ mat: [[Int]], _ k: Int) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn matrix_block_sum(mat: Vec<Vec<i32>>, k: i32) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} mat\n# @param {Integer} k\n# @return {Integer[][]}\ndef matrix_block_sum(mat, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $mat\n     * @param Integer $k\n     * @return Integer[][]\n     */\n    function matrixBlockSum($mat, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> matrixBlockSum(List<List<int>> mat, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def matrixBlockSum(mat: Array[Array[Int]], k: Int): Array[Array[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec matrix_block_sum(mat :: [[integer]], k :: integer) :: [[integer]]\n  def matrix_block_sum(mat, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec matrix_block_sum(Mat :: [[integer()]], K :: integer()) -> [[integer()]].\nmatrix_block_sum(Mat, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (matrix-block-sum mat k)\n  (-> (listof (listof exact-integer?)) exact-integer? (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": null
+}

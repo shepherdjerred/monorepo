@@ -1,0 +1,131 @@
+{
+  "questionId": "1401",
+  "questionFrontendId": "1276",
+  "title": "Number of Burgers with No Waste of Ingredients",
+  "titleSlug": "number-of-burgers-with-no-waste-of-ingredients",
+  "difficulty": "Medium",
+  "content": "<p>Given two integers <code>tomatoSlices</code> and <code>cheeseSlices</code>. The ingredients of different burgers are as follows:</p>\n\n<ul>\n\t<li><strong>Jumbo Burger:</strong> <code>4</code> tomato slices and <code>1</code> cheese slice.</li>\n\t<li><strong>Small Burger:</strong> <code>2</code> Tomato slices and <code>1</code> cheese slice.</li>\n</ul>\n\n<p>Return <code>[total_jumbo, total_small]</code> so that the number of remaining <code>tomatoSlices</code> equal to <code>0</code> and the number of remaining <code>cheeseSlices</code> equal to <code>0</code>. If it is not possible to make the remaining <code>tomatoSlices</code> and <code>cheeseSlices</code> equal to <code>0</code> return <code>[]</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> tomatoSlices = 16, cheeseSlices = 7\n<strong>Output:</strong> [1,6]\n<strong>Explantion:</strong> To make one jumbo burger and 6 small burgers we need 4*1 + 2*6 = 16 tomato and 1 + 6 = 7 cheese.\nThere will be no remaining ingredients.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> tomatoSlices = 17, cheeseSlices = 4\n<strong>Output:</strong> []\n<strong>Explantion:</strong> There will be no way to use all ingredients to make small and jumbo burgers.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> tomatoSlices = 4, cheeseSlices = 17\n<strong>Output:</strong> []\n<strong>Explantion:</strong> Making 1 jumbo burger there will be 16 cheese remaining and making 2 small burgers there will be 15 cheese remaining.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= tomatoSlices, cheeseSlices &lt;= 10<sup>7</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Can we have an answer if the number of tomatoes is odd ?",
+    "If we have answer will be there multiple answers or just one answer ?",
+    "Let us define number of jumbo burgers as X and number of small burgers as Y\r\nWe have to find an x and y in this equation",
+    "1. 4X + 2Y = tomato",
+    "2. X + Y = cheese"
+  ],
+  "metaData": "{\n  \"name\": \"numOfBurgers\",\n  \"params\": [\n    {\n      \"name\": \"tomatoSlices\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"cheeseSlices\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<integer>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"32.7K\", \"totalSubmission\": \"64.2K\", \"totalAcceptedRaw\": 32676, \"totalSubmissionRaw\": 64195, \"acRate\": \"50.9%\"}",
+  "likes": 345,
+  "dislikes": 239,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "16\n7",
+    "17\n4",
+    "4\n17"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> numOfBurgers(int tomatoSlices, int cheeseSlices) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<Integer> numOfBurgers(int tomatoSlices, int cheeseSlices) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numOfBurgers(self, tomatoSlices: int, cheeseSlices: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numOfBurgers(self, tomatoSlices, cheeseSlices):\n        \"\"\"\n        :type tomatoSlices: int\n        :type cheeseSlices: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} tomatoSlices\n * @param {number} cheeseSlices\n * @return {number[]}\n */\nvar numOfBurgers = function(tomatoSlices, cheeseSlices) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numOfBurgers(tomatoSlices: number, cheeseSlices: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<int> NumOfBurgers(int tomatoSlices, int cheeseSlices) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* numOfBurgers(int tomatoSlices, int cheeseSlices, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numOfBurgers(tomatoSlices int, cheeseSlices int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numOfBurgers(tomatoSlices: Int, cheeseSlices: Int): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numOfBurgers(_ tomatoSlices: Int, _ cheeseSlices: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn num_of_burgers(tomato_slices: i32, cheese_slices: i32) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} tomato_slices\n# @param {Integer} cheese_slices\n# @return {Integer[]}\ndef num_of_burgers(tomato_slices, cheese_slices)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $tomatoSlices\n     * @param Integer $cheeseSlices\n     * @return Integer[]\n     */\n    function numOfBurgers($tomatoSlices, $cheeseSlices) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> numOfBurgers(int tomatoSlices, int cheeseSlices) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numOfBurgers(tomatoSlices: Int, cheeseSlices: Int): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec num_of_burgers(tomato_slices :: integer, cheese_slices :: integer) :: [integer]\n  def num_of_burgers(tomato_slices, cheese_slices) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec num_of_burgers(TomatoSlices :: integer(), CheeseSlices :: integer()) -> [integer()].\nnum_of_burgers(TomatoSlices, CheeseSlices) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (num-of-burgers tomatoSlices cheeseSlices)\n  (-> exact-integer? exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": null
+}

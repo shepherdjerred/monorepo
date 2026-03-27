@@ -1,0 +1,141 @@
+{
+  "questionId": "891",
+  "questionFrontendId": "861",
+  "title": "Score After Flipping Matrix",
+  "titleSlug": "score-after-flipping-matrix",
+  "difficulty": "Medium",
+  "content": "<p>You are given an <code>m x n</code> binary matrix <code>grid</code>.</p>\n\n<p>A <strong>move</strong> consists of choosing any row or column and toggling each value in that row or column (i.e., changing all <code>0</code>&#39;s to <code>1</code>&#39;s, and all <code>1</code>&#39;s to <code>0</code>&#39;s).</p>\n\n<p>Every row of the matrix is interpreted as a binary number, and the <strong>score</strong> of the matrix is the sum of these numbers.</p>\n\n<p>Return <em>the highest possible <strong>score</strong> after making any number of <strong>moves</strong> (including zero moves)</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/07/23/lc-toogle1.jpg\" style=\"width: 500px; height: 299px;\" />\n<pre>\n<strong>Input:</strong> grid = [[0,0,1,1],[1,0,1,0],[1,1,0,0]]\n<strong>Output:</strong> 39\n<strong>Explanation:</strong> 0b1111 + 0b1001 + 0b1111 = 15 + 9 + 15 = 39\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> grid = [[0]]\n<strong>Output:</strong> 1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == grid.length</code></li>\n\t<li><code>n == grid[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 20</code></li>\n\t<li><code>grid[i][j]</code> is either <code>0</code> or <code>1</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"matrixScore\",\n  \"params\": [\n    {\n      \"name\": \"grid\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"167.1K\", \"totalSubmission\": \"208.2K\", \"totalAcceptedRaw\": 167127, \"totalSubmissionRaw\": 208162, \"acRate\": \"80.3%\"}",
+  "likes": 2488,
+  "dislikes": 226,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Remove All Ones With Row and Column Flips\", \"titleSlug\": \"remove-all-ones-with-row-and-column-flips\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[0,0,1,1],[1,0,1,0],[1,1,0,0]]",
+    "[[0]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"iit-bombay\", \"name\": \"IIT Bombay\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int matrixScore(vector<vector<int>>& grid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int matrixScore(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def matrixScore(self, grid: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def matrixScore(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} grid\n * @return {number}\n */\nvar matrixScore = function(grid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function matrixScore(grid: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MatrixScore(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int matrixScore(int** grid, int gridSize, int* gridColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func matrixScore(grid [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun matrixScore(grid: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func matrixScore(_ grid: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn matrix_score(grid: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} grid\n# @return {Integer}\ndef matrix_score(grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $grid\n     * @return Integer\n     */\n    function matrixScore($grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int matrixScore(List<List<int>> grid) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def matrixScore(grid: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec matrix_score(grid :: [[integer]]) :: integer\n  def matrix_score(grid) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec matrix_score(Grid :: [[integer()]]) -> integer().\nmatrix_score(Grid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (matrix-score grid)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2310",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a matrix containing only `0`'s and `1`'s, and we have the ability to flip the values of any row or column of the matrix. Our goal is to find the maximum sum (`score`) that can be obtained by summing the integer values created by each row of the matrix.\n\n**Key Observations:**\n1. Flipping a row or a column consists of changing all the `1`'s to `0`'s and vice versa.\n2. The value of each row of the matrix is the integer value of the row when interpreted as a binary number.\n3. We can flip a row or column any number of times (possibly 0).\n    \n---\n\n### Approach 1: Greedy Way (Modifying Input)\n\n#### Intuition\n\nSince our goal is to maximize the sum of the matrix's rows, our initial focus should be on maximizing the integer value of each row.\n\nIn a binary number, the bits in higher-order positions carry more weight in determining the decimal value than those in lower-order positions. Therefore, a single `1` in the leftmost position always contributes more to the decimal value than any combination of `1`'s in less significant positions. This concept is illustrated in the diagram below.\n\n![Binary to Decimal](../Figures/861/binary_decimal.png)\n\nSince higher-order bits contribute more significantly to the value, our initial strategy will focus on maximizing them. Ideally, we want all bits in the first column of the matrix (first digit) to be `1`. This can be achieved using the row modification operation. If the first value of a row is `0`, we traverse the row and toggle each element. This effectively ensures the first digit is `1`, increasing the overall integer value of the row.\n\nNow that we have optimized each row, let's shift our focus to optimizing the columns. The contribution of a column to the score of the matrix depends solely on the number of `1`'s in the column. So, it would be ideal for us to maximize the number of `1`'s in each column. To do so, we can use the column modification operation. We flip a column if it has more `0`'s than `1`'s, effectively interchanging the number of `0`'s and `1`'s in the column.\n\nThe entire process is illustrated in the slideshow below.\n\n!?!../Documents/861/flip_slideshow.json:782,582!?!\n\nFinally, to calculate the score of the matrix, we need to accumulate the integer equivalent of each row. Since the integer value of a row is the sum of the decimal values of each bit, the total score can be obtained by summing the decimal equivalent of every element in the matrix. To determine the contribution of a bit, we left-shift it by its position within the row, representing its place value. This effectively assigns the correct weight (power of 2) to each bit. \n\nFor example, consider a row `[1, 1, 0, 0]`. The third `1` from the right needs to be left shifted by 2, which effectively multiples it with $2^2$ (its place value). The resultant value is the contribution of this `1` to the score of the matrix.\n\nIn summary, the maximal score for a matrix is obtained by following two key steps:\n1. Flip rows to ensure all elements in the first column of the matrix are `1`'s.\n2. Flip a column if it contains more `0`'s than `1`'s.\n\n> Note: In binary numbers, each digit represents a power of $2$, with the rightmost digit being $2^0$ (one's place), the next digit being $2^1$ (two's place), and so on. The decimal value of a bit in a binary number can be represented by left shifting the bit by its place value. For example, in the binary number $100101$, the decimal contribution of the third bit from the left is $1<<2$, which is equivalent to $4$.\n\n#### Algorithm\n\n1. Initialize variables:\n   - `m` and `n` as the number of rows and columns in `grid` respectively.\n   - `score` to store the maximum score of the matrix\n2. Iterate through the first column of the matrix.\n   - If the element is `0`, flip the entire row.\n3. Iterate from the second column to the last column of the matrix. For each column:\n   - Count the number of `0`'s and store it in `countZero`.\n   - If number of `0`'s is greater, flip the entire column.\n4. Iterate over the modified matrix.\n    - For each element, add it to `score` by left shifting it by the place value of the current column.\n5. Return `score`, which stores the highest possible score of the matrix.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/6Ns9FkMb/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"6Ns9FkMb\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ and $n$ be the number of rows and columns of the matrix, respectively.\n\n- Time complexity: $O(m \\cdot n)$\n\n    In the worst case, we traverse the entire matrix twice. The total number of cells in the matrix is $m \\cdot n$. Thus, the time complexity is $O(2 \\cdot m \\cdot n)$, which simplifies to $O(m \\cdot n)$.\n\n- Space complexity: $O(1)$\n\n    We do not use any additional data structures in our implementation. Therefore, the space complexity remains $O(1)$.\n\n---\n\n### Approach 2: Greedy Way (Without Modifying Input)\n\n#### Intuition\n\nIt is often not recommended to modify the input data in place. Therefore, let us try to solve the problem without modifying the matrix.\n\nLet `m` and `n` be the number of rows and columns in the matrix, respectively. As we saw previously, to maximize the score, the first element of each row has to be `1`. Thus, we can add $1<<(n-1)$ to the result `m` times to account for the first element of each row. This adds the contribution of the first column to the result.\n\nNow, we need to maximize the contribution of the remaining columns in the matrix. Similar to our previous approach, we need to count the total number of `0`'s and `1`'s in each column and flip the column if the number of `0`'s is greater. However, if the first element in a particular row is `0`, it means that the row has been flipped previously to make the first element `1`. Let us consider all possible scenarios in this regard:\n\n| First Element | Current Element | Current Element (after potential flip) |\n|:---:|:---:|:---:|\n| 0             | 0              | 1                                 |\n| 0             | 1              | 0                                 |\n| 1             | 0              | 0                                 |\n| 1             | 1              | 1                                 |\n\nWe can see that an element resolves to `1` only when it matches the first element in its row. Thus, to count the number of `1`'s in the column, we can simply count the instances where the first element is equal to the current element.\n\nOnce we have the total number of `1`'s in the column, we can decide whether it is profitable to flip the column or not. We will get the maximum contribution from the column if the number of `1`'s is greater than the number of `0`'s. Thus, the number of `1`'s contributing to the score from that particular column would be the higher value between the counts of `0`'s and `1`'s. \n\n#### Algorithm\n \n1. Initialize `m` and `n` as the number of rows and columns in `grid` respectively.\n2. Initialize `score` to `(1<<(n-1))*m` to account for the first column of `1`'s.\n3. Iterate from the second column to the last column of the matrix. For each column:\n   - Initialize `countSameBits` as `0`. \n   - For each element, check if it matches with the first element of the row.\n     - If it matches, increment `countSameBits`.\n   - Left shift `1` by the place value of the column and add it to the result `max(countSameBits, m-countSameBits)` times.\n4. Return `score`, which is our required result.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/3BCUNdNL/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"3BCUNdNL\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ and $n$ be the number of rows and columns of the matrix, respectively.\n\n* Time complexity: $O(m \\cdot n)$\n\n    We traverse the entire matrix only once. The total number of cells in the matrix is $m \\cdot n$, resulting in a time complexity of $O(m \\cdot n)$.\n\n* Space complexity: $O(1)$\n\n    We do not use any additional space in our implementation. Therefore, our space complexity remains $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

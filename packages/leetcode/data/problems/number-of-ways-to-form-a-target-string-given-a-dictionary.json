@@ -1,0 +1,140 @@
+{
+  "questionId": "1744",
+  "questionFrontendId": "1639",
+  "title": "Number of Ways to Form a Target String Given a Dictionary",
+  "titleSlug": "number-of-ways-to-form-a-target-string-given-a-dictionary",
+  "difficulty": "Hard",
+  "content": "<p>You are given a list of strings of the <strong>same length</strong> <code>words</code> and a string <code>target</code>.</p>\n\n<p>Your task is to form <code>target</code> using the given <code>words</code> under the following rules:</p>\n\n<ul>\n\t<li><code>target</code> should be formed from left to right.</li>\n\t<li>To form the <code>i<sup>th</sup></code> character (<strong>0-indexed</strong>) of <code>target</code>, you can choose the <code>k<sup>th</sup></code> character of the <code>j<sup>th</sup></code> string in <code>words</code> if <code>target[i] = words[j][k]</code>.</li>\n\t<li>Once you use the <code>k<sup>th</sup></code> character of the <code>j<sup>th</sup></code> string of <code>words</code>, you <strong>can no longer</strong> use the <code>x<sup>th</sup></code> character of any string in <code>words</code> where <code>x &lt;= k</code>. In other words, all characters to the left of or at index <code>k</code> become unusuable for every string.</li>\n\t<li>Repeat the process until you form the string <code>target</code>.</li>\n</ul>\n\n<p><strong>Notice</strong> that you can use <strong>multiple characters</strong> from the <strong>same string</strong> in <code>words</code> provided the conditions above are met.</p>\n\n<p>Return <em>the number of ways to form <code>target</code> from <code>words</code></em>. Since the answer may be too large, return it <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;acca&quot;,&quot;bbbb&quot;,&quot;caca&quot;], target = &quot;aba&quot;\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> There are 6 ways to form target.\n&quot;aba&quot; -&gt; index 0 (&quot;<u>a</u>cca&quot;), index 1 (&quot;b<u>b</u>bb&quot;), index 3 (&quot;cac<u>a</u>&quot;)\n&quot;aba&quot; -&gt; index 0 (&quot;<u>a</u>cca&quot;), index 2 (&quot;bb<u>b</u>b&quot;), index 3 (&quot;cac<u>a</u>&quot;)\n&quot;aba&quot; -&gt; index 0 (&quot;<u>a</u>cca&quot;), index 1 (&quot;b<u>b</u>bb&quot;), index 3 (&quot;acc<u>a</u>&quot;)\n&quot;aba&quot; -&gt; index 0 (&quot;<u>a</u>cca&quot;), index 2 (&quot;bb<u>b</u>b&quot;), index 3 (&quot;acc<u>a</u>&quot;)\n&quot;aba&quot; -&gt; index 1 (&quot;c<u>a</u>ca&quot;), index 2 (&quot;bb<u>b</u>b&quot;), index 3 (&quot;acc<u>a</u>&quot;)\n&quot;aba&quot; -&gt; index 1 (&quot;c<u>a</u>ca&quot;), index 2 (&quot;bb<u>b</u>b&quot;), index 3 (&quot;cac<u>a</u>&quot;)\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;abba&quot;,&quot;baab&quot;], target = &quot;bab&quot;\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> There are 4 ways to form target.\n&quot;bab&quot; -&gt; index 0 (&quot;<u>b</u>aab&quot;), index 1 (&quot;b<u>a</u>ab&quot;), index 2 (&quot;ab<u>b</u>a&quot;)\n&quot;bab&quot; -&gt; index 0 (&quot;<u>b</u>aab&quot;), index 1 (&quot;b<u>a</u>ab&quot;), index 3 (&quot;baa<u>b</u>&quot;)\n&quot;bab&quot; -&gt; index 0 (&quot;<u>b</u>aab&quot;), index 2 (&quot;ba<u>a</u>b&quot;), index 3 (&quot;baa<u>b</u>&quot;)\n&quot;bab&quot; -&gt; index 1 (&quot;a<u>b</u>ba&quot;), index 2 (&quot;ba<u>a</u>b&quot;), index 3 (&quot;baa<u>b</u>&quot;)\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= words.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= words[i].length &lt;= 1000</code></li>\n\t<li>All strings in <code>words</code> have the same length.</li>\n\t<li><code>1 &lt;= target.length &lt;= 1000</code></li>\n\t<li><code>words[i]</code> and <code>target</code> contain only lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "For each index i, store the frequency of each character in the ith row.",
+    "Use dynamic programing to calculate the number of ways to get the target string using the frequency array."
+  ],
+  "metaData": "{\n  \"name\": \"numWays\",\n  \"params\": [\n    {\n      \"name\": \"words\",\n      \"type\": \"string[]\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"target\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"133.6K\", \"totalSubmission\": \"236.1K\", \"totalAcceptedRaw\": 133579, \"totalSubmissionRaw\": 236124, \"acRate\": \"56.6%\"}",
+  "likes": 2067,
+  "dislikes": 120,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"acca\",\"bbbb\",\"caca\"]\n\"aba\"",
+    "[\"abba\",\"baab\"]\n\"bab\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 8, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"meesho\", \"name\": \"Meesho\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}, {\"timesEncountered\": 2, \"slug\": \"dunzo\", \"name\": \"Dunzo\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numWays(vector<string>& words, string target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numWays(String[] words, String target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numWays(self, words: List[str], target: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numWays(self, words, target):\n        \"\"\"\n        :type words: List[str]\n        :type target: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} words\n * @param {string} target\n * @return {number}\n */\nvar numWays = function(words, target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numWays(words: string[], target: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumWays(string[] words, string target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numWays(char** words, int wordsSize, char* target) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numWays(words []string, target string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numWays(words: Array<String>, target: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numWays(_ words: [String], _ target: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn num_ways(words: Vec<String>, target: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} words\n# @param {String} target\n# @return {Integer}\ndef num_ways(words, target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $words\n     * @param String $target\n     * @return Integer\n     */\n    function numWays($words, $target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numWays(List<String> words, String target) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numWays(words: Array[String], target: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec num_ways(words :: [String.t], target :: String.t) :: integer\n  def num_ways(words, target) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec num_ways(Words :: [unicode:unicode_binary()], Target :: unicode:unicode_binary()) -> integer().\nnum_ways(Words, Target) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (num-ways words target)\n  (-> (listof string?) string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2626",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a list of equal-length strings, `words`, and a `target` string. The task is to count the number of ways we can form the `target` by selecting characters from `words`.\n\nTo construct the `target`:\n\n- Start with the first character of `target` and find a matching character in any of the strings in `words`.\n- For each subsequent character in `target`, pick characters from higher indices in the strings of `words` without revisiting previous ones.\n\n>Note: For this problem, we assume that you already know the fundamentals of dynamic programming and are figuring out how to apply it to a wide range of problems, such as this one. If you are not yet at this stage, we recommend checking out our relevant [Explore Card content on dynamic programming](https://leetcode.com/explore/featured/card/dynamic-programming/) before coming back to this article.\n\n---\n\n### Approach 1: Top-down Dynamic Programming\n\n#### Intuition\n\nLet's say we match the first character of `target` with the first character of a `word` in words. We then move to the next character in `target` and search for it in the remaining words. This creates a subproblem where the `target` becomes shorter by one character, and the search space in `words` is reduced. We also have the option to skip the current match and search for another match in subsequent words. This branching of choices makes the problem recursive.\n\nThe recursion tracks two indices: `wordsIndex` for the position in `words` and `targetIndex` for the position in `target`. \n\nThe base cases are:\n- If all characters in `target` are matched, return `1` (successful match).\n- If `words` is exhausted or the remaining `target` characters exceed available `words`, return `0` (no match).\n\nAt each step, two options are explored:\n1. Match the current character: If `target[targetIndex]` matches any character in `words[wordsIndex]`, recursively proceed with the next character of `target` and the next word. Contributions from multiple matches are summed. \n2. Skip the current word: Continue searching with the same `target` position but move to the next word. \n\nThis generates a recursive tree with exponential complexity in the worst case ($(\\text{number of words})^{\\text{target.length}}$), making it inefficient for large inputs.\n\nHowever, since we have `wordsIndex` and `targetIndex` as independent states in the recursion, we can optimize the solution using memoization. The total number of states would remain limited to `words.length * target.length`. By storing the results of each state in a `dp` matrix, we can avoid redundant calculations and significantly reduce the time complexity.\n\n#### Algorithm\n\nMain function - `numWays(words, target)`\n\n1. Initialize the data structures:\n    - Create a 2D `dp` array with dimensions `[words[0].size()][target.size()]` and initialize all values to `-1` (used for memoization).\n    - Create a 2D `charFrequency` array with dimensions `[words[0].size()][26]` to store the frequency of characters at each index across all words.\n\n2. Populate the `charFrequency` matrix:\n    - Iterate over all the words in the `words` list.\n    - For each character at index `j` in each word, increment the corresponding frequency count in `charFrequency[j][character]`.\n\n3. Call the recursive function `getWords(words, target, 0, 0, dp, charFrequency)` to calculate the number of ways to match the target string with the words matrix.\n\nRecursive Function - `getWords(words, target, wordsIndex, targetIndex, dp, charFrequency)`\n\n1. Base case:\n    - If `targetIndex == target.size()`, return `1`, indicating all characters of the target have been successfully matched.\n    - If `wordsIndex == words[0].size()` or there are fewer remaining characters in words than needed by target, return `0`, indicating it's not possible to match the target.\n\n2. Memoization check:\n    - If `dp[wordsIndex][targetIndex] != -1`, return the stored result from the `dp` array.\n\n3. Recursive calculation:\n    - Initialize `countWays = 0`.\n    - Calculate `curPos = target[targetIndex] - 'a'` to get the target character position.\n    - Two choices:\n        - Option 1: Do not match the current character of target with the current word at `wordsIndex`. Recursively call `getWords` with `wordsIndex + 1` and the same `targetIndex`.\n        - Option 2: Match the current character of `target` with a character at `wordsIndex`. Multiply the number of valid choices at `charFrequency[wordsIndex][curPos]` with the result of recursively calling `getWords` with `wordsIndex + 1` and `targetIndex + 1`.\n\n4. Store the calculated countWays in `dp[wordsIndex][targetIndex]`, modulo $1000000007$ to avoid overflow.\n\n5. Return the value stored in `dp[wordsIndex][targetIndex]`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/joe2QLyc/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"joe2QLyc\"></iframe>\n\n#### Complexity Analysis\n\nLet $\\text{totalWords}$ be the total number of words in the `words` matrix, and $\\text{wordLength}$ and $\\text{targetLength}$ represent the length of any word in `words` and the `target` string, respectively.\n\n- Time Complexity: $O(wordLength \\cdot targetLength + wordLength \\cdot totalWords)$\n\n    We first calculate the frequency of characters in the `words` matrix, which takes $O(wordLength \\cdot totalWords)$ time. \n    \n    The `getWords` function is called recursively for each combination of `word` index and `target` index, leading to $O(wordLength \\cdot targetLength)$ recursive calls. Each call involves constant-time operations, and memoization ensures that each combination is computed once, making the recursion time complexity $O(wordLength \\cdot targetLength)$. \n    \n    Thus, the total time complexity is $O(wordLength \\cdot targetLength + wordLength \\cdot totalWords)$.\n\n- Space Complexity: $O(wordLength \\cdot targetLength)$\n\n    The space complexity is dominated by two factors:\n\n    - Memoization (`dp` table): The dp table stores the intermediate results for every combination of `wordIndex` and `targetIndex`. This table has dimensions of `wordLength x targetLength`, so its space complexity is $O(wordLength \\cdot targetLength)$.\n\n    - Character Frequency Matrix (`charFrequency`): The `charFrequency` matrix stores the frequency of each character at each column of the `words` matrix. This matrix has dimensions of `wordLength x 26`, where 26 corresponds to the number of possible characters (assuming lowercase English letters), resulting in a space complexity of $O(wordLength \\cdot 26)$, which simplifies to $O(wordLength)$.\n    \n    Combining both, the overall space complexity is given by $O(wordLength \\cdot targetLength + wordLength) \\approx O(wordLength \\cdot targetLength)$.\n\n---\n\n### Approach 2: Bottom-up Dynamic Programming\n\n#### Intuition\n\nTabulation is a dynamic programming technique that iteratively computes solutions for all combinations of parameters. Unlike memoization, it avoids recursive stack overhead by using a iterative way, making it more efficient. We have two variables that change as we progress through the matrix: the current word index (`currWord`) and the current `target` string index (`currTarget`). To thoroughly explore the combinations, we use two nested loops to iterate through these variables.\n\nFirst, we establish the base case: if `currTarget` is `0`, then `dp[currWord][0] = 1`, meaning there is exactly one way to form an empty `target` string, regardless of the number of columns in `words`.\n\nNow to achieve the goal we will fill the DP table with two main steps:\n\n1. Skip the current column of `words`:\n   Carry over the value from the previous row: $dp[currWord][currTarget] = dp[currWord - 1][currTarget]$\n2. Include the current character if it matches:\n   If `target[currTarget - 1]` matches a character in the current column of `words`, add its contribution: $dp[currWord][currTarget] += \\text{charFrequency}[currWord - 1][\\text{target}[currTarget - 1] - 'a'] \\cdot dp[currWord - 1][currTarget - 1]$\n\nFinally, we take the result modulo $10^9 + 7$ at every step to prevent overflow.\n\nAt the end, the total number of ways to form the `target` string is stored in `dp[wordLength][targetLength]`.\n\n#### Algorithm\n\n1. Create a 2D array `charFrequency` of size `wordLength x 26` to store the frequency of each character at every index in `words`.\n2. Fill `charFrequency` by iterating over each string in `words`:\n   - For each string, increment the count of the respective character for the corresponding column.\n3. Initialize a DP table `dp` of size `(wordLength + 1) x (targetLength + 1)` and set all values to `0`.\n4. Set the base case:\n   - For all `currWord` from `0` to `wordLength`, set `dp[currWord][0] = 1`.\n5. Iterate `currWord` from `1` to `wordLength`:\n   - Iterate `currTarget` from `1` to `targetLength`:\n     - Set `dp[currWord][currTarget] = dp[currWord - 1][currTarget]`.\n     - If the character at `target[currTarget - 1]` matches a character in `words` at `currWord - 1`, add the contribution:  \n       $dp[currWord][currTarget] += charFrequency[currWord - 1][target[currTarget - 1] - 'a'] * dp[currWord - 1][currTarget - 1]$\n     - Apply modulo `10^9 + 7` to prevent overflow.\n6. Return the value in `dp[wordLength][targetLength]`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/VVU6dKu9/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"VVU6dKu9\"></iframe>\n\n#### Complexity Analysis\n\nLet $\\text{totalWords}$ be the total number of words in the `words` matrix, and $\\text{wordLength}$ and $\\text{targetLength}$ represent the length of any word in `words` and the `target` string, respectively.\n\n- Time Complexity: $O(wordLength \\cdot targetLength + wordLength \\cdot totalWords)$\n\n    To find the frequency of all the characters in the `words` matrix, we iterate through all the characters in the matrix. This takes $O(wordLength \\cdot totalWords)$ time.\n\n    The dynamic programming table `dp` is filled by iterating over each combination of `word` index and `target` index, leading to a total of $O(wordLength \\cdot targetLength)$ iterations. Each iteration performs constant-time operations such as looking up values in the `charFrequency` matrix and updating the `dp` table.\n\n    Therefore, the total time complexity is given by $O(wordLength \\cdot targetLength + wordLength \\cdot totalWords)$.\n\n- Space Complexity: $O(wordLength \\cdot targetLength)$\n\n    The space complexity is dominated by two factors:\n\n    - `dp` table: The `dp` table stores the intermediate results for every combination of `wordIndex` and `targetIndex`. This table has dimensions of `wordLength x targetLength`, so its space complexity is $O(wordLength \\cdot targetLength)$.\n\n    - Character Frequency Matrix (`charFrequency`): The `charFrequency` matrix stores the frequency of each character at each column of the `words` matrix. This matrix has dimensions of `wordLength x 26`, where 26 corresponds to the number of possible characters (assuming lowercase English letters). The space complexity of this matrix is $O(wordLength \\cdot 26)$, which simplifies to $O(wordLength)$.\n\n    Combining both, the overall space complexity is $O(wordLength \\cdot targetLength)$.\n\n---\n\n### Approach 3: Optimized Bottom-up Dynamic Programming\n\n#### Intuition\n\nFrom the previous approach, we see that calculating the number of ways to form the target string at position `(currWord, currTarget)` depends only on two values: `(currWord-1, currTarget)` and `(currWord-1, currTarget-1)`. This relationship is expressed as:\n\n$currCount[currTarget] = currCount[currTarget] + (charFrequency[currWord-1][target[currTarget-1] - 'a'] \\cdot prevCount[currTarget-1]) \\mod MOD$\n\nHere:\n- `currCount[currTarget]` accumulates the count of ways to form the target string up to `currTarget`.\n- `charFrequency[currWord-1][target[currTarget-1] - 'a']` gives the frequency of the current target character in the previous word.\n- `prevCount[currTarget-1]` provides the count of ways to form the target string up to the previous position before the current update.\n\nThis relationship ensures that each character from the `target` is considered while accounting for its frequency in the available words.\n\nUsing this insight, we can optimize the 2D DP table to a 1D array `currCount`, where each element represents the ways to form the target string up to a specific index. To manage the dependency on values from the previous row, we maintain an additional variable, `prevCount`, which temporarily stores the value of `currCount` before it is updated in the current iteration. Once all iterations are complete, the result is stored in `currCount[target.length()]`.\n\n#### Algorithm\n\n1. Create a 2D array `charFrequency` of size `wordLength x 26` to store the frequency of each character at every index in `words`. Iterate over each string in `words`, and for each string, increment the count of the respective character for the corresponding column in `charFrequency`.\n2. Initialize two DP arrays: `prevCount` and `currCount`. Both arrays are of size `targetLength + 1`, and are initially set to `0`. Set `prevCount[0] = 1` because there is one way to form an empty target string.\n3. Iterate `currWord` from `1` to `wordLength`:\n    - Copy the values from `prevCount` to `currCount` to carry over the previous row.\n    - Iterate `currTarget` from `1` to `targetLength`:\n        - First, carry over the previous value without using the current column of words by setting `currCount[currTarget] = prevCount[currTarget]`.\n        - Then, if the character at `target[currTarget - 1]` matches a character in words at `currWord - 1`, add the contribution from `charFrequency[currWord - 1][target[currTarget - 1] - 'a'] * prevCount[currTarget - 1]` to `currCount[currTarget]`.\n        - Apply modulo `10^9 + 7` to the `result` to prevent overflow.\n        - After processing each `currWord`, copy the values of `currCount` to `prevCount` for the next iteration.\n4. Finally, return the value in `currCount[targetLength]`, which stores the number of ways to form the target string using the entire words matrix.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/8UukZEqX/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"8UukZEqX\"></iframe>\n\n#### Complexity Analysis\n\nLet $\\text{totalWords}$ be the total number of words in the `words` matrix, and $\\text{wordLength}$ and $\\text{targetLength}$ represent the length of any word in `words` and the `target` string, respectively.\n\n- Time Complexity: $O(wordLength \\cdot targetLength + wordLength \\cdot totalWords)$\n\n    To find the frequency of all the characters in the `words` matrix, we iterate through all the characters in the matrix. This takes $O(wordLength \\cdot totalWords)$ time.\n\n    The dynamic programming arrays `prevCount` and `currCount` are filled by iterating over each combination of `word` index and `target` index, leading to a total of $O(wordLength \\cdot targetLength)$ iterations. Each iteration performs constant-time operations such as looking up values in the `charFrequency` matrix and updating the dp table.\n\n    Therefore, the total time complexity is given by $O(wordLength \\cdot targetLength + wordLength \\cdot totalWords)$.\n\n- Space Complexity: $O(wordLength)$\n\n    The space complexity is dominated by two factors:\n\n    1. The dp arrays `prevCount` and `currCount`: These arrays store the results for every combination of `wordIndex` and `targetIndex`. Each array has a size of $(targetLength + 1)$, but since `targetLength` can't be larger than `wordLength`, the space complexity is effectively $O(wordLength)$.\n    \n    2. Character Frequency Matrix (`charFrequency`): The `charFrequency` matrix stores the frequency of each character at each column of the `words` matrix. This matrix has dimensions of `wordLength x 26`, where 26 corresponds to the number of possible characters (assuming lowercase English letters). The space complexity of this matrix is $O(wordLength \\cdot 26)$, which simplifies to $O(wordLength)$.\n\n    Combining both, the overall space complexity is $O(wordLength)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

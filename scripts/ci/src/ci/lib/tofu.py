@@ -30,16 +30,16 @@ def _tofu_env() -> dict[str, str]:
     """Build env dict with CI env var mappings for tofu."""
     env = {**os.environ}
     # S3 backend credentials
-    if "S3_ACCESS_KEY_ID" in env:
-        env.setdefault("AWS_ACCESS_KEY_ID", env["S3_ACCESS_KEY_ID"])
-    if "S3_SECRET_ACCESS_KEY" in env:
-        env.setdefault("AWS_SECRET_ACCESS_KEY", env["S3_SECRET_ACCESS_KEY"])
+    if "SEAWEEDFS_ACCESS_KEY_ID" in env:
+        env.setdefault("AWS_ACCESS_KEY_ID", env["SEAWEEDFS_ACCESS_KEY_ID"])
+    if "SEAWEEDFS_SECRET_ACCESS_KEY" in env:
+        env.setdefault("AWS_SECRET_ACCESS_KEY", env["SEAWEEDFS_SECRET_ACCESS_KEY"])
     # TF_VAR_ mappings for tofu variables
     if "CLOUDFLARE_ACCOUNT_ID" in env:
         env.setdefault("TF_VAR_cloudflare_account_id", env["CLOUDFLARE_ACCOUNT_ID"])
     # GitHub provider token
     if "TOFU_GITHUB_TOKEN" in env:
-        env.setdefault("GITHUB_TOKEN", env["TOFU_GITHUB_TOKEN"])
+        env.setdefault("GH_TOKEN", env["TOFU_GITHUB_TOKEN"])
     return env
 
 

@@ -1,0 +1,137 @@
+{
+  "questionId": "1751",
+  "questionFrontendId": "1629",
+  "title": "Slowest Key",
+  "titleSlug": "slowest-key",
+  "difficulty": "Easy",
+  "content": "<p>A newly designed keypad was tested, where a tester pressed a sequence of <code>n</code> keys, one at a time.</p>\n\n<p>You are given a string <code>keysPressed</code> of length <code>n</code>, where <code>keysPressed[i]</code> was the <code>i<sup>th</sup></code> key pressed in the testing sequence, and a sorted list <code>releaseTimes</code>, where <code>releaseTimes[i]</code> was the time the <code>i<sup>th</sup></code> key was released. Both arrays are <strong>0-indexed</strong>. The <code>0<sup>th</sup></code> key was pressed at the time <code>0</code>,&nbsp;and every subsequent key was pressed at the <strong>exact</strong> time the previous key was released.</p>\n\n<p>The tester wants to know the key of the keypress that had the <strong>longest duration</strong>. The <code>i<sup>th</sup></code><sup> </sup>keypress had a <strong>duration</strong> of <code>releaseTimes[i] - releaseTimes[i - 1]</code>, and the <code>0<sup>th</sup></code> keypress had a duration of <code>releaseTimes[0]</code>.</p>\n\n<p>Note that the same key could have been pressed multiple times during the test, and these multiple presses of the same key <strong>may not</strong> have had the same <strong>duration</strong>.</p>\n\n<p><em>Return the key of the keypress that had the <strong>longest duration</strong>. If there are multiple such keypresses, return the lexicographically largest key of the keypresses.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> releaseTimes = [9,29,49,50], keysPressed = &quot;cbcd&quot;\n<strong>Output:</strong> &quot;c&quot;\n<strong>Explanation:</strong> The keypresses were as follows:\nKeypress for &#39;c&#39; had a duration of 9 (pressed at time 0 and released at time 9).\nKeypress for &#39;b&#39; had a duration of 29 - 9 = 20 (pressed at time 9 right after the release of the previous character and released at time 29).\nKeypress for &#39;c&#39; had a duration of 49 - 29 = 20 (pressed at time 29 right after the release of the previous character and released at time 49).\nKeypress for &#39;d&#39; had a duration of 50 - 49 = 1 (pressed at time 49 right after the release of the previous character and released at time 50).\nThe longest of these was the keypress for &#39;b&#39; and the second keypress for &#39;c&#39;, both with duration 20.\n&#39;c&#39; is lexicographically larger than &#39;b&#39;, so the answer is &#39;c&#39;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> releaseTimes = [12,23,36,46,62], keysPressed = &quot;spuda&quot;\n<strong>Output:</strong> &quot;a&quot;\n<strong>Explanation:</strong> The keypresses were as follows:\nKeypress for &#39;s&#39; had a duration of 12.\nKeypress for &#39;p&#39; had a duration of 23 - 12 = 11.\nKeypress for &#39;u&#39; had a duration of 36 - 23 = 13.\nKeypress for &#39;d&#39; had a duration of 46 - 36 = 10.\nKeypress for &#39;a&#39; had a duration of 62 - 46 = 16.\nThe longest of these was the keypress for &#39;a&#39; with duration 16.</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>releaseTimes.length == n</code></li>\n\t<li><code>keysPressed.length == n</code></li>\n\t<li><code>2 &lt;= n &lt;= 1000</code></li>\n\t<li><code>1 &lt;= releaseTimes[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>releaseTimes[i] &lt; releaseTimes[i+1]</code></li>\n\t<li><code>keysPressed</code> contains only lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Get for each press its key and amount of time taken.",
+    "Iterate on the presses, maintaining the answer so far.",
+    "The current press will change the answer if and only if its amount of time taken is longer than that of the previous answer, or they are equal but the key is larger than that of the previous answer."
+  ],
+  "metaData": "{\n  \"name\": \"slowestKey\",\n  \"params\": [\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"releaseTimes\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"keysPressed\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"character\"\n  },\n  \"manual\": false\n}",
+  "stats": "{\"totalAccepted\": \"116.4K\", \"totalSubmission\": \"195.5K\", \"totalAcceptedRaw\": 116410, \"totalSubmissionRaw\": 195465, \"acRate\": \"59.6%\"}",
+  "likes": 796,
+  "dislikes": 113,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[9,29,49,50]\n\"cbcd\"",
+    "[12,23,36,46,62]\n\"spuda\""
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"jpmorgan\", \"name\": \"J.P. Morgan\"}], \"three_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    char slowestKey(vector<int>& releaseTimes, string keysPressed) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public char slowestKey(int[] releaseTimes, String keysPressed) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def slowestKey(self, releaseTimes: List[int], keysPressed: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def slowestKey(self, releaseTimes, keysPressed):\n        \"\"\"\n        :type releaseTimes: List[int]\n        :type keysPressed: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} releaseTimes\n * @param {string} keysPressed\n * @return {character}\n */\nvar slowestKey = function(releaseTimes, keysPressed) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function slowestKey(releaseTimes: number[], keysPressed: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public char SlowestKey(int[] releaseTimes, string keysPressed) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char slowestKey(int* releaseTimes, int releaseTimesSize, char* keysPressed) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func slowestKey(releaseTimes []int, keysPressed string) byte {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun slowestKey(releaseTimes: IntArray, keysPressed: String): Char {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func slowestKey(_ releaseTimes: [Int], _ keysPressed: String) -> Character {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn slowest_key(release_times: Vec<i32>, keys_pressed: String) -> char {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} release_times\n# @param {String} keys_pressed\n# @return {Character}\ndef slowest_key(release_times, keys_pressed)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $releaseTimes\n     * @param String $keysPressed\n     * @return String\n     */\n    function slowestKey($releaseTimes, $keysPressed) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String slowestKey(List<int> releaseTimes, String keysPressed) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def slowestKey(releaseTimes: Array[Int], keysPressed: String): Char = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec slowest_key(release_times :: [integer], keys_pressed :: String.t) :: char\n  def slowest_key(release_times, keys_pressed) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec slowest_key(ReleaseTimes :: [integer()], KeysPressed :: unicode:unicode_binary()) -> char().\nslowest_key(ReleaseTimes, KeysPressed) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (slowest-key releaseTimes keysPressed)\n  (-> (listof exact-integer?) string? char?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1157",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Overview\n\nThe problem is to find the slowest key, i.e. the key which was pressed for the longest duration.\n\nThis can be solved using simple array traversal. Given the `keysPressed` and their respective `releaseTimes`, we can find the duration for each keypress. Once we know this, we can find the longest duration among all key presses and return the slowest key.\n\nLet's look at different approaches to solve the problem.\n\n---\n### Approach 1: Using Map\n\n**Intuition**\n\nLet's split the problem into 2 parts:\n\n1. _Find the duration of all keypresses_\n\n   We will traverse the array `releaseTimes` and find the keypress duration for each corresponding key in `keysPressed`. For each key at $$i^{th}$$ position in string `keysPressed`, the keypress duration can be calculated as\n\n       Duration for $$i^{th}$$ key = releaseTimes[i] - releaseTimes[i - 1]  //if i > 0\n       Duration for $$0^{th}$$ key = releaseTimes[0]                                       \n\n\n   The following figure illustrates the calculation of press duration for `keysPressed = cbcd` and `releaseTimes = [9, 29, 49, 50]`\n\n ![Calculation of release times for each keypress duration](../Figures/1629/Approach1_durationCalculation.png)\n\n\n2. _Find the key with longest press duration_\n\n   For this, we must first store the press duration that we calculated for each key in the first part. Once we retrieve and store all the durations, the longest press duration can be calculated as:\n\n    > Longest keypress duration = maximum(longest keypress duration found so far, current keypress duration)\n\n    However, the important question is \"_What is the best way to store the duration of each keypress_?\"\n     Let's evaluate different data structures for this.\n    - We can store the durations for each keypress in a _List_.  Each element in the list will store the key and its press duration.   `(key, duration)`.\n\n      The following figure illustrates the list structure for `keysPressed = cbcd` and `releaseTimes = [9, 29, 49, 50]`.\n\n      ![Store the keypress durations in List Data Structure](../Figures/1629/Approach1_listStorage.png)\n\n      > Do you notice any problems in this implementation?\n\n      We know that a key can be pressed multiple times. In the above example, the key `c` is pressed twice. Using lists, we are storing all the press durations of a key. But we are only concerned about the longest keypress duration of each unique key.\n\n     In the above example, we can replace the first entry for `key = c` and `duration = 9` from the list when we encounter `key = c` and `duration = 20`, as we found a new keypress duration for key `c` that is greater than `9`.\n     However, checking the list to see if `c` has been pressed before requires linear time, because a list is a _Linear_ data structure.\n\n      > Linear Data Structures store elements in _Sequential_ order. When the data structure is not sorted, locating a specific element may require iterating over every element in the data structure.\n\n    - We can use a _map_ having key-value pair. For each key, the value will be the press duration. Using the map, we can find if the current key has already been encountered in constant time. We can choose to store only the value with the longest keypress duration seen so far for the key.\n\n        The following figure illustrates the idea for `key = c`.\n\n       ![Store the keypress durations in Map Data Structure](../Figures/1629/Approach1_mapStorage.png)\n\n\n**Algorithm**\n\n1. Iterate over the array `releaseTimes` to find the press duration `currentDuration` for each key `currentKey`.\n\n2. Build a map `durationMap` to store the keypress duration of each key in the form of key-value pair, `currentKey -> currentDuration`.  If the key is already present in the map, store the duration with the maximum value.\n\n3. Iterate over each element in `durationMap`. Track the maximum duration in the variable `longestPressDuration` and the corresponding key in the variable  `slowestKey`. For each entry of the map, get the `duration` and `key` and check for the following conditions:\n\n   - If the value of `duration` is greater than the `longestPressDuration` found so far, then update the `longestPressDuration` with the value of `duration`. Also, the `slowestKey` will be updated with the corresponding `key` value.\n\n   - If the value of `duration` is equal to the `longestPressDuration`, check if the `key` is lexicographically larger than the `slowestKey`. If so, update the `slowestKey` with the `key` value.\n\n     > Lexicographically larger key denotes the key that is larger than the other key in alphabetical order. For example, `b` is lexicographically larger than `a`, `c` is larger than `b`, and so on.\n\t\n4. At the end, return the `slowestKey` found after iterating over all the elements in the map.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/dtu3e8Wo/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"dtu3e8Wo\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the size of array `releaseTimes` and $$K$$ be the number of distinct characters in `keysPressed`.\n\n* Time Complexity: $$O(N)$$. Let's find the time complexity of each step.\n\n    We iterate over the array `releaseTimes` of size $$N$$ to find the duration of each key. The time complexity of each iteration is constant, so the overall time complexity of iterating over the array is $$O(N)$$.\n\n    Next, we iterate over all elements of `durationMap`. In the worst case, if all the keys are unique, the size of `durationMap` would be equal to $$K$$. Thus, the time complexity is $$O(K)$$.\n\n    This gives us total time complexity is $$O(N) + O(K)$$.  Since, in this problem, $$K$$ is at most 26 and must be less than or equal to $$N$$ the time complexity simplifies to $$O(N)$$.\n\n* Space Complexity: $$O(K)$$, as we are using additional space for `durationMap` which can have maximum $$K$$ elements.\n\n---\n### Approach 2: Fixed Size Array\n\n**Intuition**\n\nIn the previous approach, we were able to efficiently store only the longest keypress duration for each key by using a `map`.\n\nHowever, we know that the `keysPressed` contains only the lowercase English letters. We can simplify our solution even further by using a fixed-size array, where each element in the array represents each key. As there are `26` lowercase letters in the English alphabet, we will use an array of size `26`.\n\n> The advantage of using an array is that it takes slightly less time to access elements in an array compared to a hashmap.  Also, when the array is dense (all elements are sequential and the first element starts at index 0 as shown below) it uses slightly less space than a hashmap.\n\nThe following figure illustrates how the press duration would be stored for each key.\n\n ![Store the keypress durations in Fixed Size Array](../Figures/1629/Approach2_arrayStorage.png)\n\nThis implementation has one additional benefit. When two keys have been pressed for the same duration, we will consider the lexicographically largest key. Unlike in the unordered map, where we can't access the keys in sorted order, in the list we can traverse values in descending order. Therefore, we no longer need to check for cases when the current keypress duration is equal to the longest keypress duration found so far.\n\n**Algorithm**\n\n1. Build an array `durationArray` of size `26` to store the keypress duration of each key and initialize all the values in the array to `0`.\n\n2. Iterate over the array `releaseTime` to calculate the longest press duration `currentDuration` for each key `currentKey`.\n\n   Each iteration, find the index for `currentKey` in `durationArray` and store its press duration at that location.\n\n   For example, if `currentKey` is `d`, it is at $$4^{th}$$ position in alphabetical order (`a`, `b`, `c`,`d`, ..., `z`). Hence, store the press duration `currentDuration` for `d` at position `durationArray[3]`(since array is 0-indexed).\n\n   > The easiest way to find the position for any key `currentKey` in its alphabetical order is by subtracting the ASCII value of `a` from the `currentKey`. This will give us the distance of the `currentKey` from `a` in alphabetical order.\n     We will always store the maximum press duration seen so far for each key as we did in _Approach 1_.\n\n3. Next, iterate over `durationArray` and find the key with the longest press duration. As discussed above, we will start from the lexicographically largest key. Hence, we will iterate over `durationArray` in reverse order.\n\n   Initially, assume the slowest key is `z` at position `durationArray[25]`. We will only keep track of the index of the slowest key found so far in the `slowestKeyIndex` variable. Iterate from `y` to `a` and update the `slowestKeyIndex` when `currentDuration` is greater than the keypress duration of the slowest key found so far.\n\n4. At the end, return the slowest key.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/kkGdWzUg/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"kkGdWzUg\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the size of array `releaseTimes` and $$M$$ be the maximum possible number of distinct characters.  The value of $$M$$ is fixed as 26 for this problem because `keysPressed` contains only lowercase English letters.\n\n* Time Complexity: $$O(N + M)$$. Let's find the time complexity of each step.\n\n    We iterate over the array `releaseTimes` of size $$N$$ to find the duration of each key. The time complexity of each iteration is constant, so the overall time complexity of iterating over the array is $$O(N)$$.\n\n    Next, we iterate over all elements of `durationArray` of size $$M$$ which takes $$O(M)$$ time.\n\n    This gives us total time complexity is $$O(N) + O(M)$$.  Since, in this problem, the value of $$M$$ is fixed at 26, $$O(M)$$ may be considered as constant and the total time complexity would simplify to $$O(N)$$.\n\n* Space Complexity: $$O(M)$$, as we are using $$O(M)$$ extra space for `durationArray`.  However, since the value of $$M$$ is fixed at 26, the space complexity may be considered as $$O(1)$$.\n\n---\n### Approach 3: Constant Extra Space\n\n**Intuition**\n\nIn the above approaches, we implemented the problem in 2 steps. First, we calculated the press duration for each key and stored the results. Then we iterated over the stored results to find the slowest key.\n\nWe can combine this into a single step. As we are iterating over the `releaseTimes` to calculate the duration for each key, we can also keep track of the `slowestKey` found so far. In this way, the solution can be implemented in a single iteration without the need for an additional data structure.\nLet's look at the algorithm in detail.\n\n**Algorithm**\n\n1. Initially, assume the slowest key is the first key in the string `keysPressed`. The press duration for this slowest key is initialized to `releaseTimes[0]`. Let's use the variables `slowestKey` and `longestPress` to track the slowest key and its corresponding press duration.\n\n2. As we iterate over the `releaseTimes`, calculate the press duration `currentDuration` for each key. The new slowest key is found if either of the following 2 conditions is satisfied:\n\n   1. The value of `currentDuration` is larger than `longestPress`.\n\n   2. The value of `currentDuration` is equal to `longestPress` and the current key is lexicographically larger than the slowest key found so far.\n\n   Update the `longestPress` and `slowestKey` if either of the above conditions is satisfied.\n\n3. At the end, return the `slowestKey`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/BypEcNmH/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"BypEcNmH\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the size of array `releaseTimes`.\n\n* Time Complexity: $$O(N)$$. We iterate over the array `releaseTimes` of size $$N$$ once to find the slowest key and each iteration requires only constant time.\n\n* Space Complexity: $$O(1)$$, as we are using only constant extra space.\n\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

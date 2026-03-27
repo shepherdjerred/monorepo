@@ -1,0 +1,139 @@
+{
+  "questionId": "1486",
+  "questionFrontendId": "1385",
+  "title": "Find the Distance Value Between Two Arrays",
+  "titleSlug": "find-the-distance-value-between-two-arrays",
+  "difficulty": "Easy",
+  "content": "<p>Given two integer arrays <code>arr1</code> and <code>arr2</code>, and the integer <code>d</code>, <em>return the distance value between the two arrays</em>.</p>\n\n<p>The distance value is defined as the number of elements <code>arr1[i]</code> such that there is not any element <code>arr2[j]</code> where <code>|arr1[i]-arr2[j]| &lt;= d</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr1 = [4,5,8], arr2 = [10,9,1,8], d = 2\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> \nFor arr1[0]=4 we have: \n|4-10|=6 &gt; d=2 \n|4-9|=5 &gt; d=2 \n|4-1|=3 &gt; d=2 \n|4-8|=4 &gt; d=2 \nFor arr1[1]=5 we have: \n|5-10|=5 &gt; d=2 \n|5-9|=4 &gt; d=2 \n|5-1|=4 &gt; d=2 \n|5-8|=3 &gt; d=2\nFor arr1[2]=8 we have:\n<strong>|8-10|=2 &lt;= d=2</strong>\n<strong>|8-9|=1 &lt;= d=2</strong>\n|8-1|=7 &gt; d=2\n<strong>|8-8|=0 &lt;= d=2</strong>\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr1 = [1,4,2,3], arr2 = [-4,-3,6,10,20,30], d = 3\n<strong>Output:</strong> 2\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr1 = [2,1,100,3], arr2 = [-5,-2,10,-3,7], d = 6\n<strong>Output:</strong> 1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= arr1.length, arr2.length &lt;= 500</code></li>\n\t<li><code>-1000 &lt;= arr1[i], arr2[j] &lt;= 1000</code></li>\n\t<li><code>0 &lt;= d &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "Sort 'arr2' and use binary search to get the closest element for each 'arr1[i]', it gives a time complexity of O(nlogn)."
+  ],
+  "metaData": "{\n  \"name\": \"findTheDistanceValue\",\n  \"params\": [\n    {\n      \"name\": \"arr1\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"arr2\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"d\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"146.2K\", \"totalSubmission\": \"204.3K\", \"totalAcceptedRaw\": 146195, \"totalSubmissionRaw\": 204288, \"acRate\": \"71.6%\"}",
+  "likes": 1026,
+  "dislikes": 3164,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[4,5,8]\n[10,9,1,8]\n2",
+    "[1,4,2,3]\n[-4,-3,6,10,20,30]\n3",
+    "[2,1,100,3]\n[-5,-2,10,-3,7]\n6"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"zepto\", \"name\": \"Zepto\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findTheDistanceValue(vector<int>& arr1, vector<int>& arr2, int d) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findTheDistanceValue(int[] arr1, int[] arr2, int d) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findTheDistanceValue(self, arr1: List[int], arr2: List[int], d: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findTheDistanceValue(self, arr1, arr2, d):\n        \"\"\"\n        :type arr1: List[int]\n        :type arr2: List[int]\n        :type d: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arr1\n * @param {number[]} arr2\n * @param {number} d\n * @return {number}\n */\nvar findTheDistanceValue = function(arr1, arr2, d) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findTheDistanceValue(arr1: number[], arr2: number[], d: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindTheDistanceValue(int[] arr1, int[] arr2, int d) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findTheDistanceValue(int* arr1, int arr1Size, int* arr2, int arr2Size, int d) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findTheDistanceValue(arr1 []int, arr2 []int, d int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findTheDistanceValue(arr1: IntArray, arr2: IntArray, d: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findTheDistanceValue(_ arr1: [Int], _ arr2: [Int], _ d: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_the_distance_value(arr1: Vec<i32>, arr2: Vec<i32>, d: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} arr1\n# @param {Integer[]} arr2\n# @param {Integer} d\n# @return {Integer}\ndef find_the_distance_value(arr1, arr2, d)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $arr1\n     * @param Integer[] $arr2\n     * @param Integer $d\n     * @return Integer\n     */\n    function findTheDistanceValue($arr1, $arr2, $d) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findTheDistanceValue(List<int> arr1, List<int> arr2, int d) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findTheDistanceValue(arr1: Array[Int], arr2: Array[Int], d: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_the_distance_value(arr1 :: [integer], arr2 :: [integer], d :: integer) :: integer\n  def find_the_distance_value(arr1, arr2, d) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_the_distance_value(Arr1 :: [integer()], Arr2 :: [integer()], D :: integer()) -> integer().\nfind_the_distance_value(Arr1, Arr2, D) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-the-distance-value arr1 arr2 d)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

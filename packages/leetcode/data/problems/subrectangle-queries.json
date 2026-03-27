@@ -1,0 +1,119 @@
+{
+  "questionId": "1572",
+  "questionFrontendId": "1476",
+  "title": "Subrectangle Queries",
+  "titleSlug": "subrectangle-queries",
+  "difficulty": "Medium",
+  "content": "<p>Implement the class <code>SubrectangleQueries</code>&nbsp;which receives a <code>rows x cols</code> rectangle as a matrix of integers in the constructor and supports two methods:</p>\n\n<p>1.<code>&nbsp;updateSubrectangle(int row1, int col1, int row2, int col2, int newValue)</code></p>\n\n<ul>\n\t<li>Updates all values with <code>newValue</code> in the subrectangle whose upper left coordinate is <code>(row1,col1)</code> and bottom right coordinate is <code>(row2,col2)</code>.</li>\n</ul>\n\n<p>2.<code>&nbsp;getValue(int row, int col)</code></p>\n\n<ul>\n\t<li>Returns the current value of the coordinate <code>(row,col)</code> from&nbsp;the rectangle.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;SubrectangleQueries&quot;,&quot;getValue&quot;,&quot;updateSubrectangle&quot;,&quot;getValue&quot;,&quot;getValue&quot;,&quot;updateSubrectangle&quot;,&quot;getValue&quot;,&quot;getValue&quot;]\n[[[[1,2,1],[4,3,4],[3,2,1],[1,1,1]]],[0,2],[0,0,3,2,5],[0,2],[3,1],[3,0,3,2,10],[3,1],[0,2]]\n<strong>Output</strong>\n[null,1,null,5,5,null,10,5]\n<strong>Explanation</strong>\nSubrectangleQueries subrectangleQueries = new SubrectangleQueries([[1,2,1],[4,3,4],[3,2,1],[1,1,1]]);  \n// The initial rectangle (4x3) looks like:\n// 1 2 1\n// 4 3 4\n// 3 2 1\n// 1 1 1\nsubrectangleQueries.getValue(0, 2); // return 1\nsubrectangleQueries.updateSubrectangle(0, 0, 3, 2, 5);\n// After this update the rectangle looks like:\n// 5 5 5\n// 5 5 5\n// 5 5 5\n// 5 5 5 \nsubrectangleQueries.getValue(0, 2); // return 5\nsubrectangleQueries.getValue(3, 1); // return 5\nsubrectangleQueries.updateSubrectangle(3, 0, 3, 2, 10);\n// After this update the rectangle looks like:\n// 5   5   5\n// 5   5   5\n// 5   5   5\n// 10  10  10 \nsubrectangleQueries.getValue(3, 1); // return 10\nsubrectangleQueries.getValue(0, 2); // return 5\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;SubrectangleQueries&quot;,&quot;getValue&quot;,&quot;updateSubrectangle&quot;,&quot;getValue&quot;,&quot;getValue&quot;,&quot;updateSubrectangle&quot;,&quot;getValue&quot;]\n[[[[1,1,1],[2,2,2],[3,3,3]]],[0,0],[0,0,2,2,100],[0,0],[2,2],[1,1,2,2,20],[2,2]]\n<strong>Output</strong>\n[null,1,null,100,100,null,20]\n<strong>Explanation</strong>\nSubrectangleQueries subrectangleQueries = new SubrectangleQueries([[1,1,1],[2,2,2],[3,3,3]]);\nsubrectangleQueries.getValue(0, 0); // return 1\nsubrectangleQueries.updateSubrectangle(0, 0, 2, 2, 100);\nsubrectangleQueries.getValue(0, 0); // return 100\nsubrectangleQueries.getValue(2, 2); // return 100\nsubrectangleQueries.updateSubrectangle(1, 1, 2, 2, 20);\nsubrectangleQueries.getValue(2, 2); // return 20\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>There will be at most <code><font face=\"monospace\">500</font></code>&nbsp;operations considering both methods:&nbsp;<code>updateSubrectangle</code> and <code>getValue</code>.</li>\n\t<li><code>1 &lt;= rows, cols &lt;= 100</code></li>\n\t<li><code>rows ==&nbsp;rectangle.length</code></li>\n\t<li><code>cols == rectangle[i].length</code></li>\n\t<li><code>0 &lt;= row1 &lt;= row2 &lt; rows</code></li>\n\t<li><code>0 &lt;= col1 &lt;= col2 &lt; cols</code></li>\n\t<li><code>1 &lt;= newValue, rectangle[i][j] &lt;= 10^9</code></li>\n\t<li><code>0 &lt;= row &lt; rows</code></li>\n\t<li><code>0 &lt;= col &lt; cols</code></li>\n</ul>\n",
+  "hints": [
+    "Use brute force to update a rectangle and, response to the queries in O(1)."
+  ],
+  "metaData": "{\n  \"classname\": \"SubrectangleQueries\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer[][]\",\n        \"name\": \"rectangle\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"row1\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"col1\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"row2\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"col2\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"newValue\"\n        }\n      ],\n      \"name\": \"updateSubrectangle\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"row\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"col\"\n        }\n      ],\n      \"name\": \"getValue\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true,\n  \"manual\": false\n}",
+  "stats": "{\"totalAccepted\": \"127.7K\", \"totalSubmission\": \"148K\", \"totalAcceptedRaw\": 127742, \"totalSubmissionRaw\": 147994, \"acRate\": \"86.3%\"}",
+  "likes": 668,
+  "dislikes": 1461,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"SubrectangleQueries\",\"getValue\",\"updateSubrectangle\",\"getValue\",\"getValue\",\"updateSubrectangle\",\"getValue\",\"getValue\"]\r\n[[[[1,2,1],[4,3,4],[3,2,1],[1,1,1]]],[0,2],[0,0,3,2,5],[0,2],[3,1],[3,0,3,2,10],[3,1],[0,2]]\r",
+    "[\"SubrectangleQueries\",\"getValue\",\"updateSubrectangle\",\"getValue\",\"getValue\",\"updateSubrectangle\",\"getValue\"]\r\n[[[[1,1,1],[2,2,2],[3,3,3]]],[0,0],[0,0,2,2,100],[0,0],[2,2],[1,1,2,2,20],[2,2]]\r"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"info-edge\", \"name\": \"Info Edge\"}, {\"timesEncountered\": 2, \"slug\": \"nuro\", \"name\": \"Nuro\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class SubrectangleQueries {\npublic:\n    SubrectangleQueries(vector<vector<int>>& rectangle) {\n        \n    }\n    \n    void updateSubrectangle(int row1, int col1, int row2, int col2, int newValue) {\n        \n    }\n    \n    int getValue(int row, int col) {\n        \n    }\n};\n\n/**\n * Your SubrectangleQueries object will be instantiated and called as such:\n * SubrectangleQueries* obj = new SubrectangleQueries(rectangle);\n * obj->updateSubrectangle(row1,col1,row2,col2,newValue);\n * int param_2 = obj->getValue(row,col);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class SubrectangleQueries {\n\n    public SubrectangleQueries(int[][] rectangle) {\n        \n    }\n    \n    public void updateSubrectangle(int row1, int col1, int row2, int col2, int newValue) {\n        \n    }\n    \n    public int getValue(int row, int col) {\n        \n    }\n}\n\n/**\n * Your SubrectangleQueries object will be instantiated and called as such:\n * SubrectangleQueries obj = new SubrectangleQueries(rectangle);\n * obj.updateSubrectangle(row1,col1,row2,col2,newValue);\n * int param_2 = obj.getValue(row,col);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class SubrectangleQueries:\n\n    def __init__(self, rectangle: List[List[int]]):\n        \n\n    def updateSubrectangle(self, row1: int, col1: int, row2: int, col2: int, newValue: int) -> None:\n        \n\n    def getValue(self, row: int, col: int) -> int:\n        \n\n\n# Your SubrectangleQueries object will be instantiated and called as such:\n# obj = SubrectangleQueries(rectangle)\n# obj.updateSubrectangle(row1,col1,row2,col2,newValue)\n# param_2 = obj.getValue(row,col)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class SubrectangleQueries(object):\n\n    def __init__(self, rectangle):\n        \"\"\"\n        :type rectangle: List[List[int]]\n        \"\"\"\n        \n\n    def updateSubrectangle(self, row1, col1, row2, col2, newValue):\n        \"\"\"\n        :type row1: int\n        :type col1: int\n        :type row2: int\n        :type col2: int\n        :type newValue: int\n        :rtype: None\n        \"\"\"\n        \n\n    def getValue(self, row, col):\n        \"\"\"\n        :type row: int\n        :type col: int\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your SubrectangleQueries object will be instantiated and called as such:\n# obj = SubrectangleQueries(rectangle)\n# obj.updateSubrectangle(row1,col1,row2,col2,newValue)\n# param_2 = obj.getValue(row,col)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} rectangle\n */\nvar SubrectangleQueries = function(rectangle) {\n    \n};\n\n/** \n * @param {number} row1 \n * @param {number} col1 \n * @param {number} row2 \n * @param {number} col2 \n * @param {number} newValue\n * @return {void}\n */\nSubrectangleQueries.prototype.updateSubrectangle = function(row1, col1, row2, col2, newValue) {\n    \n};\n\n/** \n * @param {number} row \n * @param {number} col\n * @return {number}\n */\nSubrectangleQueries.prototype.getValue = function(row, col) {\n    \n};\n\n/** \n * Your SubrectangleQueries object will be instantiated and called as such:\n * var obj = new SubrectangleQueries(rectangle)\n * obj.updateSubrectangle(row1,col1,row2,col2,newValue)\n * var param_2 = obj.getValue(row,col)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class SubrectangleQueries {\n    constructor(rectangle: number[][]) {\n\n    }\n\n    updateSubrectangle(row1: number, col1: number, row2: number, col2: number, newValue: number): void {\n\n    }\n\n    getValue(row: number, col: number): number {\n\n    }\n}\n\n/**\n * Your SubrectangleQueries object will be instantiated and called as such:\n * var obj = new SubrectangleQueries(rectangle)\n * obj.updateSubrectangle(row1,col1,row2,col2,newValue)\n * var param_2 = obj.getValue(row,col)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class SubrectangleQueries {\n\n    public SubrectangleQueries(int[][] rectangle) {\n        \n    }\n    \n    public void UpdateSubrectangle(int row1, int col1, int row2, int col2, int newValue) {\n        \n    }\n    \n    public int GetValue(int row, int col) {\n        \n    }\n}\n\n/**\n * Your SubrectangleQueries object will be instantiated and called as such:\n * SubrectangleQueries obj = new SubrectangleQueries(rectangle);\n * obj.UpdateSubrectangle(row1,col1,row2,col2,newValue);\n * int param_2 = obj.GetValue(row,col);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} SubrectangleQueries;\n\n\nSubrectangleQueries* subrectangleQueriesCreate(int** rectangle, int rectangleSize, int* rectangleColSize) {\n    \n}\n\nvoid subrectangleQueriesUpdateSubrectangle(SubrectangleQueries* obj, int row1, int col1, int row2, int col2, int newValue) {\n  \n}\n\nint subrectangleQueriesGetValue(SubrectangleQueries* obj, int row, int col) {\n  \n}\n\nvoid subrectangleQueriesFree(SubrectangleQueries* obj) {\n    \n}\n\n/**\n * Your SubrectangleQueries struct will be instantiated and called as such:\n * SubrectangleQueries* obj = subrectangleQueriesCreate(rectangle, rectangleSize, rectangleColSize);\n * subrectangleQueriesUpdateSubrectangle(obj, row1, col1, row2, col2, newValue);\n \n * int param_2 = subrectangleQueriesGetValue(obj, row, col);\n \n * subrectangleQueriesFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type SubrectangleQueries struct {\n    \n}\n\n\nfunc Constructor(rectangle [][]int) SubrectangleQueries {\n    \n}\n\n\nfunc (this *SubrectangleQueries) UpdateSubrectangle(row1 int, col1 int, row2 int, col2 int, newValue int)  {\n    \n}\n\n\nfunc (this *SubrectangleQueries) GetValue(row int, col int) int {\n    \n}\n\n\n/**\n * Your SubrectangleQueries object will be instantiated and called as such:\n * obj := Constructor(rectangle);\n * obj.UpdateSubrectangle(row1,col1,row2,col2,newValue);\n * param_2 := obj.GetValue(row,col);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class SubrectangleQueries(rectangle: Array<IntArray>) {\n\n    fun updateSubrectangle(row1: Int, col1: Int, row2: Int, col2: Int, newValue: Int) {\n        \n    }\n\n    fun getValue(row: Int, col: Int): Int {\n        \n    }\n\n}\n\n/**\n * Your SubrectangleQueries object will be instantiated and called as such:\n * var obj = SubrectangleQueries(rectangle)\n * obj.updateSubrectangle(row1,col1,row2,col2,newValue)\n * var param_2 = obj.getValue(row,col)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass SubrectangleQueries {\n\n    init(_ rectangle: [[Int]]) {\n        \n    }\n    \n    func updateSubrectangle(_ row1: Int, _ col1: Int, _ row2: Int, _ col2: Int, _ newValue: Int) {\n        \n    }\n    \n    func getValue(_ row: Int, _ col: Int) -> Int {\n        \n    }\n}\n\n/**\n * Your SubrectangleQueries object will be instantiated and called as such:\n * let obj = SubrectangleQueries(rectangle)\n * obj.updateSubrectangle(row1, col1, row2, col2, newValue)\n * let ret_2: Int = obj.getValue(row, col)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct SubrectangleQueries {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl SubrectangleQueries {\n\n    fn new(rectangle: Vec<Vec<i32>>) -> Self {\n        \n    }\n    \n    fn update_subrectangle(&self, row1: i32, col1: i32, row2: i32, col2: i32, new_value: i32) {\n        \n    }\n    \n    fn get_value(&self, row: i32, col: i32) -> i32 {\n        \n    }\n}\n\n/**\n * Your SubrectangleQueries object will be instantiated and called as such:\n * let obj = SubrectangleQueries::new(rectangle);\n * obj.update_subrectangle(row1, col1, row2, col2, newValue);\n * let ret_2: i32 = obj.get_value(row, col);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class SubrectangleQueries\n\n=begin\n    :type rectangle: Integer[][]\n=end\n    def initialize(rectangle)\n        \n    end\n\n\n=begin\n    :type row1: Integer\n    :type col1: Integer\n    :type row2: Integer\n    :type col2: Integer\n    :type new_value: Integer\n    :rtype: Void\n=end\n    def update_subrectangle(row1, col1, row2, col2, new_value)\n        \n    end\n\n\n=begin\n    :type row: Integer\n    :type col: Integer\n    :rtype: Integer\n=end\n    def get_value(row, col)\n        \n    end\n\n\nend\n\n# Your SubrectangleQueries object will be instantiated and called as such:\n# obj = SubrectangleQueries.new(rectangle)\n# obj.update_subrectangle(row1, col1, row2, col2, new_value)\n# param_2 = obj.get_value(row, col)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class SubrectangleQueries {\n    /**\n     * @param Integer[][] $rectangle\n     */\n    function __construct($rectangle) {\n        \n    }\n  \n    /**\n     * @param Integer $row1\n     * @param Integer $col1\n     * @param Integer $row2\n     * @param Integer $col2\n     * @param Integer $newValue\n     * @return NULL\n     */\n    function updateSubrectangle($row1, $col1, $row2, $col2, $newValue) {\n        \n    }\n  \n    /**\n     * @param Integer $row\n     * @param Integer $col\n     * @return Integer\n     */\n    function getValue($row, $col) {\n        \n    }\n}\n\n/**\n * Your SubrectangleQueries object will be instantiated and called as such:\n * $obj = SubrectangleQueries($rectangle);\n * $obj->updateSubrectangle($row1, $col1, $row2, $col2, $newValue);\n * $ret_2 = $obj->getValue($row, $col);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class SubrectangleQueries(_rectangle: Array[Array[Int]]) {\n\n    def updateSubrectangle(row1: Int, col1: Int, row2: Int, col2: Int, newValue: Int) {\n        \n    }\n\n    def getValue(row: Int, col: Int): Int = {\n        \n    }\n\n}\n\n/**\n * Your SubrectangleQueries object will be instantiated and called as such:\n * var obj = new SubrectangleQueries(rectangle)\n * obj.updateSubrectangle(row1,col1,row2,col2,newValue)\n * var param_2 = obj.getValue(row,col)\n */"
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define subrectangle-queries%\n  (class object%\n    (super-new)\n\n    ; rectangle : (listof (listof exact-integer?))\n    (init-field\n      rectangle)\n    \n    ; update-subrectangle : exact-integer? exact-integer? exact-integer? exact-integer? exact-integer? -> void?\n    (define/public (update-subrectangle row1 col1 row2 col2 newValue)\n\n      )\n    ; get-value : exact-integer? exact-integer? -> exact-integer?\n    (define/public (get-value row col)\n\n      )))\n\n;; Your subrectangle-queries% object will be instantiated and called as such:\n;; (define obj (new subrectangle-queries% [rectangle rectangle]))\n;; (send obj update-subrectangle row1 col1 row2 col2 new-value)\n;; (define param_2 (send obj get-value row col))"
+    }
+  ],
+  "solution": null
+}

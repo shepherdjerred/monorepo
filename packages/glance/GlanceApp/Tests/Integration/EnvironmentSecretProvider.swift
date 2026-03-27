@@ -9,11 +9,11 @@ final class EnvironmentSecretProvider: SecretProvider, @unchecked Sendable {
     init() {
         // Map environment variable names to logical secret keys.
         let envMappings: [(envVar: String, key: String)] = [
-            ("GLANCE_TEST_ARGOCD_TOKEN", SecretRefs.argoCD),
-            ("GLANCE_TEST_GRAFANA_TOKEN", SecretRefs.grafana),
+            ("GLANCE_TEST_ARGOCD_AUTH_TOKEN", SecretRefs.argoCD),
+            ("GLANCE_TEST_GRAFANA_API_KEY", SecretRefs.grafana),
             ("GLANCE_TEST_BUGSINK_TOKEN", SecretRefs.bugsink),
-            ("GLANCE_TEST_GITHUB_TOKEN", SecretRefs.github),
-            ("GLANCE_TEST_BUILDKITE_TOKEN", SecretRefs.buildkite),
+            ("GLANCE_TEST_GH_TOKEN", SecretRefs.github),
+            ("GLANCE_TEST_BUILDKITE_API_TOKEN", SecretRefs.buildkite),
             ("GLANCE_TEST_CLOUDFLARE_TOKEN", SecretRefs.cloudflareToken),
             ("GLANCE_TEST_CLOUDFLARE_ACCOUNT_ID", SecretRefs.cloudflareAccountId),
             ("GLANCE_TEST_PAGERDUTY_TOKEN", SecretRefs.pagerDuty),

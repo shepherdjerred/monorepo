@@ -3,7 +3,7 @@
 Usage: uv run -m ci.homelab_argocd_health [--app apps] [--timeout 300]
 
 Required env vars:
-  ARGOCD_TOKEN - ArgoCD API bearer token
+  ARGOCD_AUTH_TOKEN - ArgoCD API bearer token
   BUILDKITE_BUILD_NUMBER, BUILDKITE_BRANCH, BUILDKITE_COMMIT
 """
 
@@ -28,9 +28,9 @@ def main() -> None:
         print("Not on main branch, skipping ArgoCD health check", flush=True)
         return
 
-    argocd_token = os.environ.get("ARGOCD_TOKEN", "")
+    argocd_token = os.environ.get("ARGOCD_AUTH_TOKEN", "")
     if not argocd_token:
-        print("ARGOCD_TOKEN not set, cannot check ArgoCD health", flush=True)
+        print("ARGOCD_AUTH_TOKEN not set, cannot check ArgoCD health", flush=True)
         sys.exit(1)
 
     print(f"--- Waiting for ArgoCD app '{args.app}' to be healthy (timeout: {args.timeout}s) ---", flush=True)

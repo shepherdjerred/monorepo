@@ -45,9 +45,9 @@ export function createGolinkDeployment(chart: Chart) {
     withCommonProps({
       image: `ghcr.io/shepherdjerred/golink:${versions["shepherdjerred/golink"]}`,
       envVariables: {
-        TS_AUTH_KEY: EnvValue.fromSecretValue({
+        TS_AUTHKEY: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(chart, "tailscale-auth-key", item.name),
-          key: "client_secret",
+          key: "TS_AUTHKEY",
         }),
         TS_ADVERTISE_TAGS: EnvValue.fromValue("tag:k8s-operator"),
       },

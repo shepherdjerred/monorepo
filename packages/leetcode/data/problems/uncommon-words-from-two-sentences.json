@@ -1,0 +1,137 @@
+{
+  "questionId": "920",
+  "questionFrontendId": "884",
+  "title": "Uncommon Words from Two Sentences",
+  "titleSlug": "uncommon-words-from-two-sentences",
+  "difficulty": "Easy",
+  "content": "<p>A <strong>sentence</strong> is a string of single-space separated words where each word consists only of lowercase letters.</p>\n\n<p>A word is <strong>uncommon</strong> if it appears exactly once in one of the sentences, and <strong>does not appear</strong> in the other sentence.</p>\n\n<p>Given two <strong>sentences</strong> <code>s1</code> and <code>s2</code>, return <em>a list of all the <strong>uncommon words</strong></em>. You may return the answer in <strong>any order</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s1 = &quot;this apple is sweet&quot;, s2 = &quot;this apple is sour&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[&quot;sweet&quot;,&quot;sour&quot;]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The word <code>&quot;sweet&quot;</code> appears only in <code>s1</code>, while the word <code>&quot;sour&quot;</code> appears only in <code>s2</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s1 = &quot;apple apple&quot;, s2 = &quot;banana&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[&quot;banana&quot;]</span></p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s1.length, s2.length &lt;= 200</code></li>\n\t<li><code>s1</code> and <code>s2</code> consist of lowercase English letters and spaces.</li>\n\t<li><code>s1</code> and <code>s2</code> do not have leading or trailing spaces.</li>\n\t<li>All the words in <code>s1</code> and <code>s2</code> are separated by a single space.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"uncommonFromSentences\",\n  \"params\": [\n    {\n      \"name\": \"s1\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"s2\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"337.6K\", \"totalSubmission\": \"446.4K\", \"totalAcceptedRaw\": 337621, \"totalSubmissionRaw\": 446426, \"acRate\": \"75.6%\"}",
+  "likes": 1900,
+  "dislikes": 209,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count Common Words With One Occurrence\", \"titleSlug\": \"count-common-words-with-one-occurrence\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"this apple is sweet\"\n\"this apple is sour\"",
+    "\"apple apple\"\n\"banana\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> uncommonFromSentences(string s1, string s2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String[] uncommonFromSentences(String s1, String s2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def uncommonFromSentences(self, s1: str, s2: str) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def uncommonFromSentences(self, s1, s2):\n        \"\"\"\n        :type s1: str\n        :type s2: str\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s1\n * @param {string} s2\n * @return {string[]}\n */\nvar uncommonFromSentences = function(s1, s2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function uncommonFromSentences(s1: string, s2: string): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string[] UncommonFromSentences(string s1, string s2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** uncommonFromSentences(char* s1, char* s2, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func uncommonFromSentences(s1 string, s2 string) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun uncommonFromSentences(s1: String, s2: String): Array<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func uncommonFromSentences(_ s1: String, _ s2: String) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn uncommon_from_sentences(s1: String, s2: String) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s1\n# @param {String} s2\n# @return {String[]}\ndef uncommon_from_sentences(s1, s2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s1\n     * @param String $s2\n     * @return String[]\n     */\n    function uncommonFromSentences($s1, $s2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> uncommonFromSentences(String s1, String s2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def uncommonFromSentences(s1: String, s2: String): Array[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec uncommon_from_sentences(s1 :: String.t, s2 :: String.t) :: [String.t]\n  def uncommon_from_sentences(s1, s2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec uncommon_from_sentences(S1 :: unicode:unicode_binary(), S2 :: unicode:unicode_binary()) -> [unicode:unicode_binary()].\nuncommon_from_sentences(S1, S2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (uncommon-from-sentences s1 s2)\n  (-> string? string? (listof string?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "530",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Counting \n\n**Intuition and Algorithm**\n\nEvery uncommon word occurs exactly once in total.  We can count the number of occurrences of every word, then return ones that occur exactly once.\n\n<iframe src=\"https://leetcode.com/playground/K9coviyW/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"K9coviyW\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(M + N)$$, where $$M, N$$ are the lengths of `A` and `B` respectively.\n\n* Space Complexity:  $$O(M + N)$$, the space used by `count`.\n<br />\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

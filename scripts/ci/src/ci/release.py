@@ -8,7 +8,7 @@ communicates results to downstream Buildkite steps via metadata.
 Ported from .dagger/src/index-release-helpers.ts.
 
 Required env vars:
-  GITHUB_TOKEN - GitHub personal access token
+  GH_TOKEN - GitHub personal access token
 """
 
 from __future__ import annotations
@@ -45,9 +45,9 @@ def _run_release_please(subcommand: str, token: str) -> tuple[bool, str]:
 
 
 def main() -> None:
-    token = os.environ.get("GITHUB_TOKEN", "")
+    token = os.environ.get("GH_TOKEN", "")
     if not token:
-        print("GITHUB_TOKEN not set, skipping release-please", flush=True)
+        print("GH_TOKEN not set, skipping release-please", flush=True)
         buildkite.set_metadata("release_created", "false")
         return
 

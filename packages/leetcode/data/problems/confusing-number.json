@@ -1,0 +1,132 @@
+{
+  "questionId": "1069",
+  "questionFrontendId": "1056",
+  "title": "Confusing Number",
+  "titleSlug": "confusing-number",
+  "difficulty": "Easy",
+  "content": "<p>A <strong>confusing number</strong> is a number that when rotated <code>180</code> degrees becomes a different number with <strong>each digit valid</strong>.</p>\n\n<p>We can rotate digits of a number by <code>180</code> degrees to form new digits.</p>\n\n<ul>\n\t<li>When <code>0</code>, <code>1</code>, <code>6</code>, <code>8</code>, and <code>9</code> are rotated <code>180</code> degrees, they become <code>0</code>, <code>1</code>, <code>9</code>, <code>8</code>, and <code>6</code> respectively.</li>\n\t<li>When <code>2</code>, <code>3</code>, <code>4</code>, <code>5</code>, and <code>7</code> are rotated <code>180</code> degrees, they become <strong>invalid</strong>.</li>\n</ul>\n\n<p>Note that after rotating a number, we can ignore leading zeros.</p>\n\n<ul>\n\t<li>For example, after rotating <code>8000</code>, we have <code>0008</code> which is considered as just <code>8</code>.</li>\n</ul>\n\n<p>Given an integer <code>n</code>, return <code>true</code><em> if it is a <strong>confusing number</strong>, or </em><code>false</code><em> otherwise</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/03/23/1268_1.png\" style=\"width: 281px; height: 121px;\" />\n<pre>\n<strong>Input:</strong> n = 6\n<strong>Output:</strong> true\n<strong>Explanation:</strong> We get 9 after rotating 6, 9 is a valid number, and 9 != 6.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/03/23/1268_2.png\" style=\"width: 312px; height: 121px;\" />\n<pre>\n<strong>Input:</strong> n = 89\n<strong>Output:</strong> true\n<strong>Explanation:</strong> We get 68 after rotating 89, 68 is a valid number and 68 != 89.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/03/26/1268_3.png\" style=\"width: 301px; height: 121px;\" />\n<pre>\n<strong>Input:</strong> n = 11\n<strong>Output:</strong> false\n<strong>Explanation:</strong> We get 11 after rotating 11, 11 is a valid number but the value remains the same, thus 11 is not a confusing number\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= n &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Reverse each digit with their corresponding new digit if an invalid digit is found the return -1. After reversing the digits just compare the reversed number with the original number."
+  ],
+  "metaData": "{\n  \"name\": \"confusingNumber\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"55.4K\", \"totalSubmission\": \"112.2K\", \"totalAcceptedRaw\": 55367, \"totalSubmissionRaw\": 112246, \"acRate\": \"49.3%\"}",
+  "likes": 332,
+  "dislikes": 185,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Strobogrammatic Number\", \"titleSlug\": \"strobogrammatic-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Confusing Number II\", \"titleSlug\": \"confusing-number-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "6",
+    "89",
+    "11"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool confusingNumber(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean confusingNumber(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def confusingNumber(self, n: int) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def confusingNumber(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {boolean}\n */\nvar confusingNumber = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function confusingNumber(n: number): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool ConfusingNumber(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool confusingNumber(int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func confusingNumber(n int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun confusingNumber(n: Int): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func confusingNumber(_ n: Int) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn confusing_number(n: i32) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Boolean}\ndef confusing_number(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Boolean\n     */\n    function confusingNumber($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool confusingNumber(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def confusingNumber(n: Int): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec confusing_number(n :: integer) :: boolean\n  def confusing_number(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec confusing_number(N :: integer()) -> boolean().\nconfusing_number(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (confusing-number n)\n  (-> exact-integer? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1646",
+    "content": "[TOC]\n\n## Video Solution\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/824223297\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n---\n\n### Overview\n\n\nTake the following picture as an example.\n\n![img](../Figures/1056/1.png)\n\n- `868` is a confusing number, since the rotated number (`898`) is still valid and is not equal to `868`.\n\n\n- `1691` is not a confusing number, since the rotated number is still `1691`.\n\n\n- `345` is not a confusing number, since some digits become invalid after the rotation.\n\n\n---\n\n### Approach 1: Invert and Reverse\n\n#### Intuition   \n\nBy looking at the above examples, we can see that after rotating a string, not only is each digit inverted, but also the mutual position of the digits is reversed. Specifically, the first digit of `n` is inverted and is moved to the last digit, the second digit of `n` is inverted and is moved to the second last digit, and so on. \n\nTherefore, we can split the process into two separate steps, that is, invert each digit and reverse the entire number of inverted digits.\n\nWe would convert integer `n` into a string which is iterable and contains every digit in the same order. Note that some of the digits become invalid after rotation, so if we encounter one of these digits, we can return `false` as in example 3 in the picture above. After inverting all the valid digits, we need to reverse the string and compare it with the string representation of `n`. If they are the same, then it's not a confusing number, otherwise, it is a confusing number.\n\n\n\n\n![img](../Figures/1056/2.png)\n\n\n<br>\n\n#### Algorithm\n\n1) Initialize a hashmap `invertMap` that converts each valid digit to its inverted digit, and an empty string `rotatedNumber`.\n\n2) Iterate over each digit `res` of `n`. If `res` is not in `invertMap`, return `false`. \n    Otherwise, find the inverted digit of `res` and append it to the end of `rotatedNumber` by setting `rotatedNumber += invertMap[res]`.\n3) Reverse `rotatedNumber`.\n3) Check if `rotatedNumber` equals the string representation of `n`, return `true` if not.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/hUBkXA7X/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"hUBkXA7X\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $L$ be the maximum number of digits `n` can have ($L = \\log_{10} n$).\n\n\n* Time complexity: $O(L)$\n\n    - Since the input number `n` has $L$ digits, it requires $O(L)$ time to iterate over and convert each digit of `n`, then $O(L)$ again to reverse the result. Note that string is **immutable** in python, so we add each digit to a list, and convert the final list of digits to the string, which is a process that costs $O(L)$.\n\n\n    \n\n* Space complexity: $O(L)$\n    - We create an object of length $L$, same as the number of digits of `n`.\n\n<br/>\n\n\n\n---\n\n### Approach 2: Use the remainder\n\n#### Intuition   \n\nIn the previous approach, we converted the integer `n` to a string for traversal. As `n` is an integer, we have a mathematical way to iterate over each digit without needing to convert it to a string.\n\n\nWe get the last digit (which we call `res`) of number `n` by taking the remainder of `n` after dividing by `10` (`n % 10`, where `%` is the [modulo operation](https://en.wikipedia.org/wiki/Modulo_operation)). How about the second last digit? We take the floor division of `n` with `10`, so the original second last digit now becomes the last digit. For each last digit `res`, we invert it according to `invert_map` and append it to the end of `rotated_number`. Note the order of how we make up `rotated_number`: we get the digits of `n` from back to front, but attach them to `rotated_number` from front to back! This LIFO (Last-In-First-Out)-like pattern reverses all digits so we don't need to reverse `rotated_number` ourselves at the end! Once `n` becomes `0`, it means we are done iterating and we just need to compare whether `rotated_number` is equal to `n`, and the job is done!\n\n\n![img](../Figures/1056/3.png)\n\nAs shown in the picture above, we start with `n = 166908`:\n- The remainder of `n` to `10` is `8`, so we append `inv_map[8]` to `rotated_number`. Then we move on to the second last digit of `n`, by taking the floor division of `n` to `10`.\n\n- The remainder of `n` to `10` is `0`, so we append `inv_map[0]` to `rotated_number`. Then we move on to the next last digit of `n`, by taking the floor division of `n` to `10`.\n\n\n- and so on.\n\n\n<br>\n\n#### Algorithm\n\n1) Initialize a hashmap `invertMap` that converts each valid digit to its inverted digit, set `rotatedNumber = 0`.\n\n2) Keep getting the last digit `res` of `n` by taking the modulo of `n` to `10`: \n\n    - If `res` is not in `invertMap`, return `false`. \n    - Otherwise, append `res` to the end of `rotatedNumber` by setting `rotatedNumber = rotatedNumber * 10 + invertMap[res]`. When we multiply `rotatedNumber` by `10`, that is equivalent to adding a `0` to the end. Then, adding `invertMap[res]` will set the last digit.\n\n\n- Move to the next digit by floor dividing `n` by 10, then repeat from step 2 until `n = 0`.\n\n3) Check if `rotatedNumber` equals `n`, return `true` if not.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/JGEWkxUY/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"JGEWkxUY\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $L$ be the maximum number of digits `n` can have.\n\n\n* Time complexity: $O(L)$\n\n    - Since the input number `n` has $L$ digits, it requires $O(L)$ floor divisions and modulo operations, and a floor division/modulo operation of `n` to `10` takes constant time.\n\n\n    - To sum up, the overall time complexity is $O(L)$.\n    \n\n* Space complexity: $O(L)$\n    - We create a new integer which will have the same number of digits as `n`. In memory, the number of bits needed to store this integer is logarithmic with `n`. Since we defined $L = \\log_{10} n$, the space complexity is $O(L)$, because all logarithms are related by a constant factor.\n\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

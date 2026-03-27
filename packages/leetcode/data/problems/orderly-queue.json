@@ -1,0 +1,137 @@
+{
+  "questionId": "935",
+  "questionFrontendId": "899",
+  "title": "Orderly Queue",
+  "titleSlug": "orderly-queue",
+  "difficulty": "Hard",
+  "content": "<p>You are given a string <code>s</code> and an integer <code>k</code>. You can choose one of the first <code>k</code> letters of <code>s</code> and append it at the end of the string.</p>\n\n<p>Return <em>the lexicographically smallest string you could have after applying the mentioned step any number of moves</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;cba&quot;, k = 1\n<strong>Output:</strong> &quot;acb&quot;\n<strong>Explanation:</strong> \nIn the first move, we move the 1<sup>st</sup> character &#39;c&#39; to the end, obtaining the string &quot;bac&quot;.\nIn the second move, we move the 1<sup>st</sup> character &#39;b&#39; to the end, obtaining the final result &quot;acb&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;baaca&quot;, k = 3\n<strong>Output:</strong> &quot;aaabc&quot;\n<strong>Explanation:</strong> \nIn the first move, we move the 1<sup>st</sup> character &#39;b&#39; to the end, obtaining the string &quot;aacab&quot;.\nIn the second move, we move the 3<sup>rd</sup> character &#39;c&#39; to the end, obtaining the final result &quot;aaabc&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= k &lt;= s.length &lt;= 1000</code></li>\n\t<li><code>s</code> consist of lowercase English letters.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"orderlyQueue\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"83.8K\", \"totalSubmission\": \"125.4K\", \"totalAcceptedRaw\": 83793, \"totalSubmissionRaw\": 125362, \"acRate\": \"66.8%\"}",
+  "likes": 1831,
+  "dislikes": 620,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"cba\"\n1",
+    "\"baaca\"\n3"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string orderlyQueue(string s, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String orderlyQueue(String s, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def orderlyQueue(self, s: str, k: int) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def orderlyQueue(self, s, k):\n        \"\"\"\n        :type s: str\n        :type k: int\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {number} k\n * @return {string}\n */\nvar orderlyQueue = function(s, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function orderlyQueue(s: string, k: number): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string OrderlyQueue(string s, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* orderlyQueue(char* s, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func orderlyQueue(s string, k int) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun orderlyQueue(s: String, k: Int): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func orderlyQueue(_ s: String, _ k: Int) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn orderly_queue(s: String, k: i32) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {Integer} k\n# @return {String}\ndef orderly_queue(s, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param Integer $k\n     * @return String\n     */\n    function orderlyQueue($s, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String orderlyQueue(String s, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def orderlyQueue(s: String, k: Int): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec orderly_queue(s :: String.t, k :: integer) :: String.t\n  def orderly_queue(s, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec orderly_queue(S :: unicode:unicode_binary(), K :: integer()) -> unicode:unicode_binary().\norderly_queue(S, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (orderly-queue s k)\n  (-> string? exact-integer? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "544",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach 1: Mathematical\n\n**Intuition**\n\nLet's call the move that takes the $$k^{th}$$ letter from the beginning and puts it on the end a \"*`k`-kick*\" move.\n\nExamining 1-kick moves, they let us consider the string as a \"necklace\" that may be rotated freely, where each bead of the necklace corresponds to a letter in the string.  (Formally, this is the equivalence class under 1-kick moves.)\n\nExamining 2-kick moves (in the context of treating the string as a necklace), they allow us to swap the positions of two adjacent beads.  Thus, with 2-kick moves, every permutation of necklace is possible.  (To actually construct the necklace, we bring the second smallest bead to be after the smallest, then the third smallest to be after the second smallest, and so on.)\n\nThe previous insight may be difficult to find.  Another strategy is to write a brute force program to examine the result of 2-kick moves - then we might notice that 2-kick moves allow any permutation of the string.\n\nYet another strategy might be to explicitly construct new moves based on previous moves.  If we perform a 2-kick move followed by many 1-kick moves, we can transform a string like `\"xyzzzzzz\"` -> `\"xzzzzzzy\"` -> `\"yxzzzzzz\"`, proving that we can swap the positions of any two adjacent letters.\n\n**Algorithm**\n\nIf `k = 1`, only rotations of `s` are possible, and the answer is the lexicographically smallest rotation.\n\nIf `k > 1`, any permutation of `s` is possible, and the answer is the letters of `s` written in lexicographic order.\n\n<iframe src=\"https://leetcode.com/playground/VVut2ECm/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"VVut2ECm\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N^2)$$, where $$N$$ is the length of `s`. \n    - If `k = 1`, we need $$O(N)$$ time to build each new string and $$O(N)$$ time to check whether it's the lexicographically smallest string among the strings generated so far. In total, there are $$N$$ such different strings to build and check. Therefore, the time complexity for this case is $$O(N^2)$$. \n    - If `k > 1`, we need to convert our given string to an array of characters (this costs $$O(N)$$ time), then sort the newly obtained array (sorting takes $$O(N \\log N)$$ time), and build the output string from the sorted array which takes $$O(N)$$ time. \n    - Thus, the worst-case scenario is when `k` is `1`, so the overall time complexity of the solution is $$O(N^2)$$. \n\n* Space Complexity: $$O(N)$$.\n    - If `k = 1`, we need the space to store only two strings: the lexicographically smallest string found so far and a newly built string, that will be compared to the lexicographically smallest string. This requires $$O(N)$$ space. \n    - If `k > 1`, we need $$O(N)$$ space to store the character array. Other than that, sorting the array requires $$O(\\log N)$$ additional space for Java and $$O(N)$$ additional space for Python. \n    - Therefore, the overall space complexity of the solution is $$O(N)$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,133 @@
+{
+  "questionId": "1200",
+  "questionFrontendId": "1272",
+  "title": "Remove Interval",
+  "titleSlug": "remove-interval",
+  "difficulty": "Medium",
+  "content": "<p>A set of real numbers can be represented as the union of several disjoint intervals, where each interval is in the form <code>[a, b)</code>. A real number <code>x</code> is in the set if one of its intervals <code>[a, b)</code> contains <code>x</code> (i.e. <code>a &lt;= x &lt; b</code>).</p>\n\n<p>You are given a <strong>sorted</strong> list of disjoint intervals <code>intervals</code> representing a set of real numbers as described above, where <code>intervals[i] = [a<sub>i</sub>, b<sub>i</sub>]</code> represents the interval <code>[a<sub>i</sub>, b<sub>i</sub>)</code>. You are also given another interval <code>toBeRemoved</code>.</p>\n\n<p>Return <em>the set of real numbers with the interval </em><code>toBeRemoved</code><em> <strong>removed</strong> from</em><em> </em><code>intervals</code><em>. In other words, return the set of real numbers such that every </em><code>x</code><em> in the set is in </em><code>intervals</code><em> but <strong>not</strong> in </em><code>toBeRemoved</code><em>. Your answer should be a <strong>sorted</strong> list of disjoint intervals as described above.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/12/24/removeintervalex1.png\" style=\"width: 510px; height: 319px;\" />\n<pre>\n<strong>Input:</strong> intervals = [[0,2],[3,4],[5,7]], toBeRemoved = [1,6]\n<strong>Output:</strong> [[0,1],[6,7]]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/12/24/removeintervalex2.png\" style=\"width: 410px; height: 318px;\" />\n<pre>\n<strong>Input:</strong> intervals = [[0,5]], toBeRemoved = [2,3]\n<strong>Output:</strong> [[0,2],[3,5]]\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> intervals = [[-5,-4],[-3,-2],[1,2],[3,5],[8,9]], toBeRemoved = [-1,4]\n<strong>Output:</strong> [[-5,-4],[-3,-2],[4,5],[8,9]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= intervals.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>-10<sup>9</sup> &lt;= a<sub>i</sub> &lt; b<sub>i</sub> &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Solve the problem for every interval alone.",
+    "Divide the problem into cases according to the position of the two intervals."
+  ],
+  "metaData": "{\n  \"name\": \"removeInterval\",\n  \"params\": [\n    {\n      \"name\": \"intervals\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"toBeRemoved\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<list<integer>>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"42.3K\", \"totalSubmission\": \"63K\", \"totalAcceptedRaw\": 42304, \"totalSubmissionRaw\": 62955, \"acRate\": \"67.2%\"}",
+  "likes": 480,
+  "dislikes": 36,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[0,2],[3,4],[5,7]]\n[1,6]",
+    "[[0,5]]\n[2,3]",
+    "[[-5,-4],[-3,-2],[1,2],[3,5],[8,9]]\n[-1,4]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> removeInterval(vector<vector<int>>& intervals, vector<int>& toBeRemoved) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<List<Integer>> removeInterval(int[][] intervals, int[] toBeRemoved) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def removeInterval(self, intervals: List[List[int]], toBeRemoved: List[int]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def removeInterval(self, intervals, toBeRemoved):\n        \"\"\"\n        :type intervals: List[List[int]]\n        :type toBeRemoved: List[int]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} intervals\n * @param {number[]} toBeRemoved\n * @return {number[][]}\n */\nvar removeInterval = function(intervals, toBeRemoved) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function removeInterval(intervals: number[][], toBeRemoved: number[]): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<IList<int>> RemoveInterval(int[][] intervals, int[] toBeRemoved) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** removeInterval(int** intervals, int intervalsSize, int* intervalsColSize, int* toBeRemoved, int toBeRemovedSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func removeInterval(intervals [][]int, toBeRemoved []int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun removeInterval(intervals: Array<IntArray>, toBeRemoved: IntArray): List<List<Int>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func removeInterval(_ intervals: [[Int]], _ toBeRemoved: [Int]) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn remove_interval(intervals: Vec<Vec<i32>>, to_be_removed: Vec<i32>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} intervals\n# @param {Integer[]} to_be_removed\n# @return {Integer[][]}\ndef remove_interval(intervals, to_be_removed)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $intervals\n     * @param Integer[] $toBeRemoved\n     * @return Integer[][]\n     */\n    function removeInterval($intervals, $toBeRemoved) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> removeInterval(List<List<int>> intervals, List<int> toBeRemoved) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def removeInterval(intervals: Array[Array[Int]], toBeRemoved: Array[Int]): List[List[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec remove_interval(intervals :: [[integer]], to_be_removed :: [integer]) :: [[integer]]\n  def remove_interval(intervals, to_be_removed) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec remove_interval(Intervals :: [[integer()]], ToBeRemoved :: [integer()]) -> [[integer()]].\nremove_interval(Intervals, ToBeRemoved) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (remove-interval intervals toBeRemoved)\n  (-> (listof (listof exact-integer?)) (listof exact-integer?) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "841",
+    "content": "[TOC]\n\n## Video Solution\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/479459715\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n---\n\n### Approach 1: Sweep Line, One Pass.\n\n**Best Possible Time Complexity**\n\n> What is the best possible time complexity here?\n\nThe input is sorted, which usually means _at least_ linear time complexity. Is it possible to do $$\\mathcal{O}(\\log N)$$? No, because to copy input elements into output still requires $$\\mathcal{O}(N)$$ time.\n\n**Sweep Line**\n\n[Sweep Line algorithm](https://en.wikipedia.org/wiki/Sweep_line_algorithm) is a sort of geometrical visualization. Let's imagine a vertical line that is swept across the plane, stopping at some points. That could create various situations, and the decision to make depends on the stop point.\n\n![line](../Figures/1272/sweep2.png)\n\n**Algorithm**\n\nLet's sweep the line by iterating over input intervals and consider what it could bring to us.\n\n- Current interval has no overlaps with toBeRemoved one. That means there is nothing to take care of, just update the output.\n\n![line](../Figures/1272/no_overlaps.png)\n\n- The second situation is when toBeRemoved interval is inside of the current interval. Then one has to add two non-overlapping parts of the current interval in the output.\n\n![line](../Figures/1272/inside2.png)\n\n- \"Left\" overlap.\n\n![line](../Figures/1272/left_overlap.png)\n\n- \"Right\" overlap.\n\n![line](../Figures/1272/right_overlap.png)\n\nAnd here we are, all situations are covered, and the job is done.\n\n**Implementation**\n\nOne way of converting the above into code would be to check for each of the four situations described above. A better way though is to recognize that *if there is any overlap*, then the overlapped interval will be broken into *up to two new intervals*; a left interval and a right interval. We can, therefore, treat situation 2 as being both situation 3 and situation 4.\n\n<iframe src=\"https://leetcode.com/playground/8zsxMCkA/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"8zsxMCkA\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}(N)$$ since it's one pass along the input array.\n\n* Space complexity : $$\\mathcal{O}(1)$$ without considering $$\\mathcal{O}(N)$$ space for the output list.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

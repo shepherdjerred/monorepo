@@ -1,0 +1,145 @@
+{
+  "questionId": "1262",
+  "questionFrontendId": "1157",
+  "title": "Online Majority Element In Subarray",
+  "titleSlug": "online-majority-element-in-subarray",
+  "difficulty": "Hard",
+  "content": "<p>Design a data structure that efficiently finds the <strong>majority element</strong> of a given subarray.</p>\n\n<p>The <strong>majority element</strong> of a subarray is an element that occurs <code>threshold</code> times or more in the subarray.</p>\n\n<p>Implementing the <code>MajorityChecker</code> class:</p>\n\n<ul>\n\t<li><code>MajorityChecker(int[] arr)</code> Initializes the instance of the class with the given array <code>arr</code>.</li>\n\t<li><code>int query(int left, int right, int threshold)</code> returns the element in the subarray <code>arr[left...right]</code> that occurs at least <code>threshold</code> times, or <code>-1</code> if no such element exists.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;MajorityChecker&quot;, &quot;query&quot;, &quot;query&quot;, &quot;query&quot;]\n[[[1, 1, 2, 2, 1, 1]], [0, 5, 4], [0, 3, 3], [2, 3, 2]]\n<strong>Output</strong>\n[null, 1, -1, 2]\n\n<strong>Explanation</strong>\nMajorityChecker majorityChecker = new MajorityChecker([1, 1, 2, 2, 1, 1]);\nmajorityChecker.query(0, 5, 4); // return 1\nmajorityChecker.query(0, 3, 3); // return -1\nmajorityChecker.query(2, 3, 2); // return 2\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= arr.length &lt;= 2 * 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= arr[i] &lt;= 2 * 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= left &lt;= right &lt; arr.length</code></li>\n\t<li><code>threshold &lt;= right - left + 1</code></li>\n\t<li><code>2 * threshold &gt; right - left + 1</code></li>\n\t<li>At most <code>10<sup>4</sup></code> calls will be made to <code>query</code>.</li>\n</ul>\n",
+  "hints": [
+    "What's special about a majority element ?",
+    "A majority element appears more than half the length of the array number of times.",
+    "If we tried a random index of the array, what's the probability that this index has a majority element ?",
+    "It's more than 50% if that array has a majority element.",
+    "Try a random index for a proper number of times so that the probability of not finding the answer tends to zero."
+  ],
+  "metaData": "{\n  \"classname\": \"MajorityChecker\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer[]\",\n        \"name\": \"arr\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"left\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"right\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"threshold\"\n        }\n      ],\n      \"name\": \"query\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"21.1K\", \"totalSubmission\": \"52.3K\", \"totalAcceptedRaw\": 21071, \"totalSubmissionRaw\": 52271, \"acRate\": \"40.3%\"}",
+  "likes": 663,
+  "dislikes": 66,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"MajorityChecker\",\"query\",\"query\",\"query\"]\n[[[1,1,2,2,1,1]],[0,5,4],[0,3,3],[2,3,2]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"nutanix\", \"name\": \"Nutanix\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Binary Indexed Tree",
+      "slug": "binary-indexed-tree"
+    },
+    {
+      "name": "Segment Tree",
+      "slug": "segment-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class MajorityChecker {\npublic:\n    MajorityChecker(vector<int>& arr) {\n        \n    }\n    \n    int query(int left, int right, int threshold) {\n        \n    }\n};\n\n/**\n * Your MajorityChecker object will be instantiated and called as such:\n * MajorityChecker* obj = new MajorityChecker(arr);\n * int param_1 = obj->query(left,right,threshold);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class MajorityChecker {\n\n    public MajorityChecker(int[] arr) {\n        \n    }\n    \n    public int query(int left, int right, int threshold) {\n        \n    }\n}\n\n/**\n * Your MajorityChecker object will be instantiated and called as such:\n * MajorityChecker obj = new MajorityChecker(arr);\n * int param_1 = obj.query(left,right,threshold);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class MajorityChecker:\n\n    def __init__(self, arr: List[int]):\n        \n\n    def query(self, left: int, right: int, threshold: int) -> int:\n        \n\n\n# Your MajorityChecker object will be instantiated and called as such:\n# obj = MajorityChecker(arr)\n# param_1 = obj.query(left,right,threshold)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class MajorityChecker(object):\n\n    def __init__(self, arr):\n        \"\"\"\n        :type arr: List[int]\n        \"\"\"\n        \n\n    def query(self, left, right, threshold):\n        \"\"\"\n        :type left: int\n        :type right: int\n        :type threshold: int\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your MajorityChecker object will be instantiated and called as such:\n# obj = MajorityChecker(arr)\n# param_1 = obj.query(left,right,threshold)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arr\n */\nvar MajorityChecker = function(arr) {\n    \n};\n\n/** \n * @param {number} left \n * @param {number} right \n * @param {number} threshold\n * @return {number}\n */\nMajorityChecker.prototype.query = function(left, right, threshold) {\n    \n};\n\n/** \n * Your MajorityChecker object will be instantiated and called as such:\n * var obj = new MajorityChecker(arr)\n * var param_1 = obj.query(left,right,threshold)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class MajorityChecker {\n    constructor(arr: number[]) {\n        \n    }\n\n    query(left: number, right: number, threshold: number): number {\n        \n    }\n}\n\n/**\n * Your MajorityChecker object will be instantiated and called as such:\n * var obj = new MajorityChecker(arr)\n * var param_1 = obj.query(left,right,threshold)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class MajorityChecker {\n\n    public MajorityChecker(int[] arr) {\n        \n    }\n    \n    public int Query(int left, int right, int threshold) {\n        \n    }\n}\n\n/**\n * Your MajorityChecker object will be instantiated and called as such:\n * MajorityChecker obj = new MajorityChecker(arr);\n * int param_1 = obj.Query(left,right,threshold);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} MajorityChecker;\n\n\nMajorityChecker* majorityCheckerCreate(int* arr, int arrSize) {\n    \n}\n\nint majorityCheckerQuery(MajorityChecker* obj, int left, int right, int threshold) {\n    \n}\n\nvoid majorityCheckerFree(MajorityChecker* obj) {\n    \n}\n\n/**\n * Your MajorityChecker struct will be instantiated and called as such:\n * MajorityChecker* obj = majorityCheckerCreate(arr, arrSize);\n * int param_1 = majorityCheckerQuery(obj, left, right, threshold);\n \n * majorityCheckerFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type MajorityChecker struct {\n    \n}\n\n\nfunc Constructor(arr []int) MajorityChecker {\n    \n}\n\n\nfunc (this *MajorityChecker) Query(left int, right int, threshold int) int {\n    \n}\n\n\n/**\n * Your MajorityChecker object will be instantiated and called as such:\n * obj := Constructor(arr);\n * param_1 := obj.Query(left,right,threshold);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class MajorityChecker(arr: IntArray) {\n\n    fun query(left: Int, right: Int, threshold: Int): Int {\n        \n    }\n\n}\n\n/**\n * Your MajorityChecker object will be instantiated and called as such:\n * var obj = MajorityChecker(arr)\n * var param_1 = obj.query(left,right,threshold)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass MajorityChecker {\n\n    init(_ arr: [Int]) {\n        \n    }\n    \n    func query(_ left: Int, _ right: Int, _ threshold: Int) -> Int {\n        \n    }\n}\n\n/**\n * Your MajorityChecker object will be instantiated and called as such:\n * let obj = MajorityChecker(arr)\n * let ret_1: Int = obj.query(left, right, threshold)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct MajorityChecker {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl MajorityChecker {\n\n    fn new(arr: Vec<i32>) -> Self {\n        \n    }\n    \n    fn query(&self, left: i32, right: i32, threshold: i32) -> i32 {\n        \n    }\n}\n\n/**\n * Your MajorityChecker object will be instantiated and called as such:\n * let obj = MajorityChecker::new(arr);\n * let ret_1: i32 = obj.query(left, right, threshold);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class MajorityChecker\n\n=begin\n    :type arr: Integer[]\n=end\n    def initialize(arr)\n        \n    end\n\n\n=begin\n    :type left: Integer\n    :type right: Integer\n    :type threshold: Integer\n    :rtype: Integer\n=end\n    def query(left, right, threshold)\n        \n    end\n\n\nend\n\n# Your MajorityChecker object will be instantiated and called as such:\n# obj = MajorityChecker.new(arr)\n# param_1 = obj.query(left, right, threshold)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class MajorityChecker {\n    /**\n     * @param Integer[] $arr\n     */\n    function __construct($arr) {\n        \n    }\n  \n    /**\n     * @param Integer $left\n     * @param Integer $right\n     * @param Integer $threshold\n     * @return Integer\n     */\n    function query($left, $right, $threshold) {\n        \n    }\n}\n\n/**\n * Your MajorityChecker object will be instantiated and called as such:\n * $obj = MajorityChecker($arr);\n * $ret_1 = $obj->query($left, $right, $threshold);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class MajorityChecker {\n\n  MajorityChecker(List<int> arr) {\n    \n  }\n  \n  int query(int left, int right, int threshold) {\n    \n  }\n}\n\n/**\n * Your MajorityChecker object will be instantiated and called as such:\n * MajorityChecker obj = MajorityChecker(arr);\n * int param1 = obj.query(left,right,threshold);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class MajorityChecker(_arr: Array[Int]) {\n\n    def query(left: Int, right: Int, threshold: Int): Int = {\n        \n    }\n\n}\n\n/**\n * Your MajorityChecker object will be instantiated and called as such:\n * val obj = new MajorityChecker(arr)\n * val param_1 = obj.query(left,right,threshold)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule MajorityChecker do\n  @spec init_(arr :: [integer]) :: any\n  def init_(arr) do\n    \n  end\n\n  @spec query(left :: integer, right :: integer, threshold :: integer) :: integer\n  def query(left, right, threshold) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# MajorityChecker.init_(arr)\n# param_1 = MajorityChecker.query(left, right, threshold)\n\n# MajorityChecker.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec majority_checker_init_(Arr :: [integer()]) -> any().\nmajority_checker_init_(Arr) ->\n  .\n\n-spec majority_checker_query(Left :: integer(), Right :: integer(), Threshold :: integer()) -> integer().\nmajority_checker_query(Left, Right, Threshold) ->\n  .\n\n\n%% Your functions will be called as such:\n%% majority_checker_init_(Arr),\n%% Param_1 = majority_checker_query(Left, Right, Threshold),\n\n%% majority_checker_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define majority-checker%\n  (class object%\n    (super-new)\n    \n    ; arr : (listof exact-integer?)\n    (init-field\n      arr)\n    \n    ; query : exact-integer? exact-integer? exact-integer? -> exact-integer?\n    (define/public (query left right threshold)\n      )))\n\n;; Your majority-checker% object will be instantiated and called as such:\n;; (define obj (new majority-checker% [arr arr]))\n;; (define param_1 (send obj query left right threshold))"
+    }
+  ],
+  "solution": null
+}

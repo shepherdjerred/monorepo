@@ -1,0 +1,107 @@
+{
+  "questionId": "1287",
+  "questionFrontendId": "1184",
+  "title": "Distance Between Bus Stops",
+  "titleSlug": "distance-between-bus-stops",
+  "difficulty": "Easy",
+  "content": "<p>A bus&nbsp;has <code>n</code> stops numbered from <code>0</code> to <code>n - 1</code> that form&nbsp;a circle. We know the distance between all pairs of neighboring stops where <code>distance[i]</code> is the distance between the stops number&nbsp;<code>i</code> and <code>(i + 1) % n</code>.</p>\r\n\r\n<p>The bus goes along both directions&nbsp;i.e. clockwise and counterclockwise.</p>\r\n\r\n<p>Return the shortest distance between the given&nbsp;<code>start</code>&nbsp;and <code>destination</code>&nbsp;stops.</p>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong class=\"example\">Example 1:</strong></p>\r\n\r\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/09/03/untitled-diagram-1.jpg\" style=\"width: 388px; height: 240px;\" /></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> distance = [1,2,3,4], start = 0, destination = 1\r\n<strong>Output:</strong> 1\r\n<strong>Explanation:</strong> Distance between 0 and 1 is 1 or 9, minimum is 1.</pre>\r\n\r\n<p>&nbsp;</p>\r\n\r\n<p><strong class=\"example\">Example 2:</strong></p>\r\n\r\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/09/03/untitled-diagram-1-1.jpg\" style=\"width: 388px; height: 240px;\" /></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> distance = [1,2,3,4], start = 0, destination = 2\r\n<strong>Output:</strong> 3\r\n<strong>Explanation:</strong> Distance between 0 and 2 is 3 or 7, minimum is 3.\r\n</pre>\r\n\r\n<p>&nbsp;</p>\r\n\r\n<p><strong class=\"example\">Example 3:</strong></p>\r\n\r\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/09/03/untitled-diagram-1-2.jpg\" style=\"width: 388px; height: 240px;\" /></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> distance = [1,2,3,4], start = 0, destination = 3\r\n<strong>Output:</strong> 4\r\n<strong>Explanation:</strong> Distance between 0 and 3 is 6 or 4, minimum is 4.\r\n</pre>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong>Constraints:</strong></p>\r\n\r\n<ul>\r\n\t<li><code>1 &lt;= n&nbsp;&lt;= 10^4</code></li>\r\n\t<li><code>distance.length == n</code></li>\r\n\t<li><code>0 &lt;= start, destination &lt; n</code></li>\r\n\t<li><code>0 &lt;= distance[i] &lt;= 10^4</code></li>\r\n</ul>",
+  "hints": [
+    "Find the distance between the two stops if the bus moved in clockwise or counterclockwise directions."
+  ],
+  "metaData": "{\n  \"name\": \"distanceBetweenBusStops\",\n  \"params\": [\n    {\n      \"name\": \"distance\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"start\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"destination\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"78.5K\", \"totalSubmission\": \"142K\", \"totalAcceptedRaw\": 78476, \"totalSubmissionRaw\": 141984, \"acRate\": \"55.3%\"}",
+  "likes": 817,
+  "dislikes": 96,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Costs Using the Train Line\", \"titleSlug\": \"minimum-costs-using-the-train-line\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,4]\n0\n1",
+    "[1,2,3,4]\n0\n2",
+    "[1,2,3,4]\n0\n3"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int distanceBetweenBusStops(vector<int>& distance, int start, int destination) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int distanceBetweenBusStops(int[] distance, int start, int destination) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def distanceBetweenBusStops(self, distance: List[int], start: int, destination: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def distanceBetweenBusStops(self, distance, start, destination):\n        \"\"\"\n        :type distance: List[int]\n        :type start: int\n        :type destination: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} distance\n * @param {number} start\n * @param {number} destination\n * @return {number}\n */\nvar distanceBetweenBusStops = function(distance, start, destination) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function distanceBetweenBusStops(distance: number[], start: number, destination: number): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int DistanceBetweenBusStops(int[] distance, int start, int destination) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\nint distanceBetweenBusStops(int* distance, int distanceSize, int start, int destination){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func distanceBetweenBusStops(distance []int, start int, destination int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun distanceBetweenBusStops(distance: IntArray, start: Int, destination: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func distanceBetweenBusStops(_ distance: [Int], _ start: Int, _ destination: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn distance_between_bus_stops(distance: Vec<i32>, start: i32, destination: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} distance\n# @param {Integer} start\n# @param {Integer} destination\n# @return {Integer}\ndef distance_between_bus_stops(distance, start, destination)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $distance\n     * @param Integer $start\n     * @param Integer $destination\n     * @return Integer\n     */\n    function distanceBetweenBusStops($distance, $start, $destination) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def distanceBetweenBusStops(distance: Array[Int], start: Int, destination: Int): Int = {\n        \n    }\n}"
+    }
+  ],
+  "solution": null
+}

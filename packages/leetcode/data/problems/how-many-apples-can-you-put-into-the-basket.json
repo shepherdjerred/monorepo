@@ -1,0 +1,141 @@
+{
+  "questionId": "1141",
+  "questionFrontendId": "1196",
+  "title": "How Many Apples Can You Put into the Basket",
+  "titleSlug": "how-many-apples-can-you-put-into-the-basket",
+  "difficulty": "Easy",
+  "content": "<p>You have some apples and a basket that can carry up to <code>5000</code> units of weight.</p>\n\n<p>Given an integer array <code>weight</code> where <code>weight[i]</code> is the weight of the <code>i<sup>th</sup></code> apple, return <em>the maximum number of apples you can put in the basket</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> weight = [100,200,150,1000]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> All 4 apples can be carried by the basket since their sum of weights is 1450.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> weight = [900,950,800,1000,700,800]\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> The sum of weights of the 6 apples exceeds 5000 so we choose any 5 of them.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= weight.length &lt;= 10<sup>3</sup></code></li>\n\t<li><code>1 &lt;= weight[i] &lt;= 10<sup>3</sup></code></li>\n</ul>\n",
+  "hints": [
+    "What if you think in a greedy approach?",
+    "The best apple to take in one step is the one with the smallest weight.",
+    "Sort the array and take apples with smaller weight first."
+  ],
+  "metaData": "{\n  \"name\": \"maxNumberOfApples\",\n  \"params\": [\n    {\n      \"name\": \"weight\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"51.5K\", \"totalSubmission\": \"76.8K\", \"totalAcceptedRaw\": 51469, \"totalSubmissionRaw\": 76790, \"acRate\": \"67.0%\"}",
+  "likes": 230,
+  "dislikes": 17,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[100,200,150,1000]",
+    "[900,950,800,1000,700,800]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"virtu\", \"name\": \"Virtu Financial\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxNumberOfApples(vector<int>& weight) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxNumberOfApples(int[] weight) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxNumberOfApples(self, weight: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxNumberOfApples(self, weight):\n        \"\"\"\n        :type weight: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} weight\n * @return {number}\n */\nvar maxNumberOfApples = function(weight) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxNumberOfApples(weight: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxNumberOfApples(int[] weight) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxNumberOfApples(int* weight, int weightSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxNumberOfApples(weight []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxNumberOfApples(weight: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxNumberOfApples(_ weight: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_number_of_apples(weight: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} weight\n# @return {Integer}\ndef max_number_of_apples(weight)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $weight\n     * @return Integer\n     */\n    function maxNumberOfApples($weight) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxNumberOfApples(List<int> weight) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxNumberOfApples(weight: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_number_of_apples(weight :: [integer]) :: integer\n  def max_number_of_apples(weight) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_number_of_apples(Weight :: [integer()]) -> integer().\nmax_number_of_apples(Weight) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-number-of-apples weight)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1074",
+    "content": "[TOC]\n\n## Video Solution\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/844727153\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n---\n\n### Approach 1: Sort\n\n**Intuition**\n\nTo put as many apples in the basket as possible, we would want to choose the apple with the smallest weight each time in a greedy manner, until we reach `5000` units of weights or we've taken all apples.\n\nThe most straightforward approach would be sorting the input array `arr` first.\nThen we can iterate through it, and count how many apples we can put in the basket until it reaches the weight limit.\n\n**Algorithm**\n\n- Sort `arr`, and initialize two integer variables: `apples` to count the number of apples we have put in the basket and `units` to record the current weight of the basket.\n- Iterate through `arr` until `units` reaches `5000`:\n    - increment `apple` by `1`;\n    - increment `units` by the weight of the current apple.\n\n\n<iframe src=\"https://leetcode.com/playground/JNCJHhkM/shared\" frameBorder=\"0\" width=\"100%\" height=\"259\" name=\"JNCJHhkM\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$\\mathcal{O}(N \\log N)$$, where $$N$$ is the length of the input array.\nThis is determined by the sorting.\n* Space Complexity: $$\\mathcal{O}(1)$$.\nThis is because we do not use additional data structures.\n<br/>\n---\n\n### Approach 2: Min-Heap\n\n**Intuition**\n\nAnother approach to select the lightest apple at each time is using a min-heap.\nWe can transform the input array `arr` into a min-heap;\nwe then keep popping the first element from it, which is the lightest apple due to min-heap's nature.\n\n**Algorithm**\n\n- Transform `arr` into a min-heap, and initialize two integer variables: `apples` to count the number of apples we have put in the basket and `units` to record the current weight of the basket.\n- Before `units` reaches `5000` and while there are remaining elements in the min-heap:\n    - increment `apples` by `1`;\n    - increment `units` by the popped element from the min-heap;\n    \n> **Note:** We will creat a heap using the heapify method. To create a heap using the heapify method requires O(N) time. More details can be found [here](https://stackoverflow.com/questions/9755721/how-can-building-a-heap-be-on-time-complexity).\n\n<iframe src=\"https://leetcode.com/playground/JseRwmmz/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"JseRwmmz\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$\\mathcal{O}(N + k \\log N)$$, where $$N$$ is the length of the input array and $$k$$ is the number of apples that will be put into the basket. This is because: transforming an array into a heap takes $$\\mathcal{O}(N)$$ time; each pop operation on the heap takes $$\\mathcal{O}(\\log N)$$, and it will called for $$k$$ times.\n* Space Complexity: $$\\mathcal{O}(N)$$, as we construct a min-heap and put all apples into it. Note that for Python, the space complexity is $$\\mathcal{O}(1)$$ because, as stated in the Python docs, `heapify(x)` transforms list `x` into a heap, in-place, in linear time.\n<br/>\n---\n\n### Approach 3: Counting Sort\n\n**Intuition**\n\nNotably, this question has the constraint that $$1 \\leq \\text{arr[i].length} \\leq 10^{3}$$, and taking advantage of this we can improve the time complexity to $$\\mathcal{O}(n)$$ using [Counting Sort](https://leetcode.com/explore/learn/card/sorting/695/non-comparison-based-sorts/4437/). However, this approach should be used with caution. It is safe to use here because the heaviest apple is guaranteed to weigh no more than $$10^{3}$$, but this approach would not perform well on a test case such as $$\\text{weight} = [1, 2, 3, 10^{9}]$$. \n\n**Algorithm**\n\n- Create an array `counts` with the length of `max(arr) + 1`, where `counts[i]` represents the number of apples with weight `i`.\n- Iterate through `arr`:\n    - for each `arr[i]`, increment `counts[arr[i]]` by `1`;\n- Initialize two integer variables: `apples` to count the number of apples we have put in the basket and `units` to record the current weight of the basket.\n- Iterate through `counts`:\n    - to make sure it will not exceed `5000` units of weight, the number of apples we take is  `take = min{counts[i], (5000-units)/i}`;\n    - increment `units` by `take * i`;\n    - increment `apples` by `take`;\n\n\n!?!../Documents/1196_How_Many_Apples_Can_You_Put_into_the_Basket.json:661,191!?!\n\n\n<iframe src=\"https://leetcode.com/playground/DvHm4vCy/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"DvHm4vCy\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$\\mathcal{O}(N + W)$$, where $$N$$ is the length of `arr` and $$W$$ is the largest element in `arr`. This is because we iterate through `arr` and `counts` once and the lengths are $$N$$ and $$W$$ accordingly.\n* Space Complexity: $$\\mathcal{O}(W)$$. This is because we initialize an array `counts` with the size of `max(arr)`.\n<br/>\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

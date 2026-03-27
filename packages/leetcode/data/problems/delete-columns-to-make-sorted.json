@@ -1,0 +1,134 @@
+{
+  "questionId": "981",
+  "questionFrontendId": "944",
+  "title": "Delete Columns to Make Sorted",
+  "titleSlug": "delete-columns-to-make-sorted",
+  "difficulty": "Easy",
+  "content": "<p>You are given an array of <code>n</code> strings <code>strs</code>, all of the same length.</p>\n\n<p>The strings can be arranged such that there is one on each line, making a grid.</p>\n\n<ul>\n\t<li>For example, <code>strs = [&quot;abc&quot;, &quot;bce&quot;, &quot;cae&quot;]</code> can be arranged as follows:</li>\n</ul>\n\n<pre>\nabc\nbce\ncae\n</pre>\n\n<p>You want to <strong>delete</strong> the columns that are <strong>not sorted lexicographically</strong>. In the above example (<strong>0-indexed</strong>), columns 0 (<code>&#39;a&#39;</code>, <code>&#39;b&#39;</code>, <code>&#39;c&#39;</code>) and 2 (<code>&#39;c&#39;</code>, <code>&#39;e&#39;</code>, <code>&#39;e&#39;</code>) are sorted, while column 1 (<code>&#39;b&#39;</code>, <code>&#39;c&#39;</code>, <code>&#39;a&#39;</code>) is not, so you would delete column 1.</p>\n\n<p>Return <em>the number of columns that you will delete</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> strs = [&quot;cba&quot;,&quot;daf&quot;,&quot;ghi&quot;]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The grid looks as follows:\n  cba\n  daf\n  ghi\nColumns 0 and 2 are sorted, but column 1 is not, so you only need to delete 1 column.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> strs = [&quot;a&quot;,&quot;b&quot;]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> The grid looks as follows:\n  a\n  b\nColumn 0 is the only column and is sorted, so you will not delete any columns.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> strs = [&quot;zyx&quot;,&quot;wvu&quot;,&quot;tsr&quot;]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The grid looks as follows:\n  zyx\n  wvu\n  tsr\nAll 3 columns are not sorted, so you will delete all 3.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == strs.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 100</code></li>\n\t<li><code>1 &lt;= strs[i].length &lt;= 1000</code></li>\n\t<li><code>strs[i]</code> consists of lowercase English letters.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"minDeletionSize\",\n  \"params\": [\n    {\n      \"name\": \"strs\",\n      \"type\": \"string[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"319.5K\", \"totalSubmission\": \"409.2K\", \"totalAcceptedRaw\": 319482, \"totalSubmissionRaw\": 409160, \"acRate\": \"78.1%\"}",
+  "likes": 2062,
+  "dislikes": 3017,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"cba\",\"daf\",\"ghi\"]",
+    "[\"a\",\"b\"]",
+    "[\"zyx\",\"wvu\",\"tsr\"]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"garmin\", \"name\": \"Garmin\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minDeletionSize(vector<string>& strs) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minDeletionSize(String[] strs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minDeletionSize(self, strs: List[str]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minDeletionSize(self, strs):\n        \"\"\"\n        :type strs: List[str]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} strs\n * @return {number}\n */\nvar minDeletionSize = function(strs) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minDeletionSize(strs: string[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinDeletionSize(string[] strs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minDeletionSize(char** strs, int strsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minDeletionSize(strs []string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minDeletionSize(strs: Array<String>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minDeletionSize(_ strs: [String]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_deletion_size(strs: Vec<String>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} strs\n# @return {Integer}\ndef min_deletion_size(strs)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $strs\n     * @return Integer\n     */\n    function minDeletionSize($strs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minDeletionSize(List<String> strs) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minDeletionSize(strs: Array[String]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_deletion_size(strs :: [String.t]) :: integer\n  def min_deletion_size(strs) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_deletion_size(Strs :: [unicode:unicode_binary()]) -> integer().\nmin_deletion_size(Strs) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-deletion-size strs)\n  (-> (listof string?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1630",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n\n### Approach 1: Matrix Traversing\n\n#### Intuition\n\nWe have $N$ strings, each of the same length, say $K$, in a list `strs`. If we make a grid or matrix using these strings with one on each line, we want to find the number of columns in the matrix that are not in lexicographic order.\n\nTo be in lexicographic order, each character in the column should be equal to or greater than the corresponding character in the previous row. Therefore, we will iterate over the columns and for each column, we will iterate over the rows starting from index `1` (not zero, as we will compare the character to the character in the previous row). We will then increment the count of unsorted columns every time we observe a character smaller than the character in the previous row.\n\nThe figure below demonstrates three cases, each with four rows and a single column. The first two columns are sorted as the characters are in lexicographic order. However, the last one is not as the smaller character `e` comes after `g`.\n\n![fig](../Figures/944/944A.png)\n\n#### Algorithm\n\n1. Iterate over the columns from `0` to `K - 1`, for each column `col`:\n\n    - Iterate over the rows `row` from `1` to `N - 1`:\n\n        - If the character at index `col` in the string `strs[row]` is smaller than the character at index `col` in the string `strs[row - 1]`, then increment the counter variable `answer`. Also, we can break the inner loop here as we find the current column unsorted.\n        - Otherwise, we check the next `row`.\n\n2. Return `answer`.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/hotTRvdq/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"hotTRvdq\"></iframe>\n\n\n#### Complexity Analysis\n\nHere $N$ is the number of strings in the given list `strs`, and $K$ is the length of each string.\n\n* Time complexity: $O(N * K)$.\n\n  We are iterating over each of the $K$ characters in all the $N$ strings. Although we break early in the case where we find the column unsorted, in the worst case when there is no unsorted column, we will have to iterate over each character. Hence, the total time complexity is $O(N * K)$.\n\n* Space complexity: $O(1)$.\n\n  We don't need any extra space apart from the variable `answer` used to store the count of unsorted columns.\n\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

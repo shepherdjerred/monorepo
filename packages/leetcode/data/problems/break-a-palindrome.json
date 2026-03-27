@@ -1,0 +1,138 @@
+{
+  "questionId": "1252",
+  "questionFrontendId": "1328",
+  "title": "Break a Palindrome",
+  "titleSlug": "break-a-palindrome",
+  "difficulty": "Medium",
+  "content": "<p>Given a palindromic string of lowercase English letters <code>palindrome</code>, replace <strong>exactly one</strong> character with any lowercase English letter so that the resulting string is <strong>not</strong> a palindrome and that it is the <strong>lexicographically smallest</strong> one possible.</p>\n\n<p>Return <em>the resulting string. If there is no way to replace a character to make it not a palindrome, return an <strong>empty string</strong>.</em></p>\n\n<p>A string <code>a</code> is lexicographically smaller than a string <code>b</code> (of the same length) if in the first position where <code>a</code> and <code>b</code> differ, <code>a</code> has a character strictly smaller than the corresponding character in <code>b</code>. For example, <code>&quot;abcc&quot;</code> is lexicographically smaller than <code>&quot;abcd&quot;</code> because the first position they differ is at the fourth character, and <code>&#39;c&#39;</code> is smaller than <code>&#39;d&#39;</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> palindrome = &quot;abccba&quot;\n<strong>Output:</strong> &quot;aaccba&quot;\n<strong>Explanation:</strong> There are many ways to make &quot;abccba&quot; not a palindrome, such as &quot;<u>z</u>bccba&quot;, &quot;a<u>a</u>ccba&quot;, and &quot;ab<u>a</u>cba&quot;.\nOf all the ways, &quot;aaccba&quot; is the lexicographically smallest.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> palindrome = &quot;a&quot;\n<strong>Output:</strong> &quot;&quot;\n<strong>Explanation:</strong> There is no way to replace a single character to make &quot;a&quot; not a palindrome, so return an empty string.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= palindrome.length &lt;= 1000</code></li>\n\t<li><code>palindrome</code> consists of only lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "How to detect if there is impossible to perform the replacement? Only when the length = 1.",
+    "Change the first non 'a' character to 'a'.",
+    "What if the string has only 'a'?",
+    "Change the last character to 'b'."
+  ],
+  "metaData": "{\n  \"name\": \"breakPalindrome\",\n  \"params\": [\n    {\n      \"name\": \"palindrome\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"196.1K\", \"totalSubmission\": \"380.4K\", \"totalAcceptedRaw\": 196089, \"totalSubmissionRaw\": 380373, \"acRate\": \"51.6%\"}",
+  "likes": 2441,
+  "dislikes": 755,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"abccba\"",
+    "\"a\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"dell\", \"name\": \"Dell\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"workday\", \"name\": \"Workday\"}, {\"timesEncountered\": 2, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"vmware\", \"name\": \"VMware\"}, {\"timesEncountered\": 2, \"slug\": \"expedia\", \"name\": \"Expedia\"}, {\"timesEncountered\": 2, \"slug\": \"mathworks\", \"name\": \"MathWorks\"}]}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string breakPalindrome(string palindrome) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String breakPalindrome(String palindrome) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def breakPalindrome(self, palindrome: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def breakPalindrome(self, palindrome):\n        \"\"\"\n        :type palindrome: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} palindrome\n * @return {string}\n */\nvar breakPalindrome = function(palindrome) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function breakPalindrome(palindrome: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string BreakPalindrome(string palindrome) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* breakPalindrome(char* palindrome) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func breakPalindrome(palindrome string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun breakPalindrome(palindrome: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func breakPalindrome(_ palindrome: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn break_palindrome(palindrome: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} palindrome\n# @return {String}\ndef break_palindrome(palindrome)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $palindrome\n     * @return String\n     */\n    function breakPalindrome($palindrome) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String breakPalindrome(String palindrome) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def breakPalindrome(palindrome: String): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec break_palindrome(palindrome :: String.t) :: String.t\n  def break_palindrome(palindrome) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec break_palindrome(Palindrome :: unicode:unicode_binary()) -> unicode:unicode_binary().\nbreak_palindrome(Palindrome) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (break-palindrome palindrome)\n  (-> string? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1167",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach 1: Greedy\n\n**Intuition**\n\nWe want to change the given non-empty palindromic string into the lexicographically smallest non-palindromic string by changing exactly one character. First, let's see if we can always change a non-empty palindromic string into a non-palindromic string. A non-empty palindromic string can be represented in two forms that are shown below. The first one has an even length (greater than or equal to 2) and the second one has an odd length.\n\n![fig](../Figures/1328/1328A.png)\n- Let's consider the first case, where the given string is a non-empty palindrome and has an even length. Since the length is even, we can divide the string into two halves. As shown in the figure above, the characters in the first half are in reverse order of the second half. The first character matches with the last character, the second character matches with the second last character, and so on. To change the string into a non-palindromic string, we only need to change a character in one of the two halves so that the two halves no longer match. This is always possible since we can always pick some character, change it, and the resulting string will no longer be a palindrome.\n\n![fig](../Figures/1328/1328B.png)\n- In the second scenario, the given string is a non-empty palindrome and has an odd length. As shown in the figure above, there will always be a single character in the middle along with the two halves. As in the previous case, the characters in the first half are in reverse order of the second half. It seems like we should always be able to change a character in either half, as we did previously, to make the string non-palindromic. However, the catch here is that the two halves could be empty, and in that case, we will be left with only the middle character, and changing it to any other character will not break the palindrome.\n\nSo the conclusion is that we can change a non-empty palindromic string into a non-palindromic string by changing one character only if the length of the string is greater than one.\n\nSo, now that we know when it is possible for us to return a non-palindromic string, let's try to find and return the lexicographically smallest one. One approach, which is quite intuitive, is to try changing each character in the string to all $$25$$ of the other characters. Changing each letter in a string of length $$N$$ into the other $$25$$ English lowercase letters gives us $$25*N$$ new strings. Then we can return the lexicographically smallest string. To do that, we would compare each string with the smallest string found so far. Thus, the time complexity of this solution is $$O(M \\cdot N^2)$$ where $$M$$ is the number of letters we can change every character to, in this problem, that is $$25$$, but we can do better.\n\nIf we observe closely, we don't need to change each character to all $$25$$ other characters. Imagine we are currently looking at the character, say $$X$$, and we are changing it to all the letters from $$a$$ to $$z$$ except for $$X$$. The point to note here is if character $$b$$ is not equal to $$X$$, then there is no need to change the character $$X$$ to any other character from $$c$$ to $$z$$ because the string with character $$b$$ is going to be lexicographically smaller than the other strings with the letter from $$c$$ to $$z$$ at that position. So, we can greedily change every character of the string to the smallest different character and find the smallest string among all of the resulting strings. However, the time complexity will still be $$O(N^2)$$ because we need to compare $$N$$ strings of length $$N$$.\n\nThe last greedy optimization to improve the complexity of our algorithm relies on an observation similar to the one we just made. If we observe even more closely, for every character except $$a$$, the lexicographically smallest character is $$a$$. Therefore, all the characters except $$a$$ will be converted to $$a$$. Now, since we are changing the characters to $$a$$ and $$a$$ is the lexicographically smallest character, then among all the $$N$$ conversions of the string, which will be the lexicographically smallest? It will be the one in which $$a$$ is placed at the leftmost position. Thus, we need to change the first character in the string to $$a$$, and that will be the answer.\n\nBut what about the case when we cannot change any of the characters to $$a$$? For the strings made up of only character $$a$$ like $$aaa$$ or strings made up of exactly `N - 1` $$a$$'s (where `N` is the string length) and one different character in the middle, like $$aazaa$$, we need to discover another way. In the first case, there is no point in substituting $$a$$ for another $$a$$. In the second case, we cannot replace $$z$$ with some other character between $$a$$ and $$y$$ because the string will remain a palindrome. In this case, we must replace $$a$$, and the optimal character choice is $$b$$ because that's the smallest among all other letters. Since the character that we are replacing the existing character with is not the smallest, we should do the swap in the rightmost position.\n\nFinally, one last improvement to the algorithm: instead of traversing over all the characters, we can only traverse the left half as the corresponding characters in the right half will be the same.\n\n**Algorithm**\n\n1. If the length of the string is $$1$$, return an empty string since we cannot create a non-palindromic string in this case.\n2. Iterate over the string from left to the middle of the string: if the character is not $$a$$, change it to $$a$$ and return the string.\n3. If we traversed over the whole left part of the string and still haven't got a non-palindromic string, it means the string has only $$a$$'s. Hence, change the last character to $$b$$ and return the obtained string.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/SPYTi75E/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"SPYTi75E\"></iframe>\n\n**Complexity Analysis**\n\n Let $$N$$ be the length of the given palindromic string.\n\n* Time complexity: $$O(N)$$\n\n    We traverse over $$N/2$$ characters and if we fail to find an answer during the traversal, then we change the last character of the string to $$b$$. Hence, the time complexity is $$O(N)$$.\n\n* Space complexity: $$O(N)$$\n\n    In Java, we need to change the string to a character array; hence the space complexity is $$O(N)$$. However, in C++, strings are mutable; hence the space complexity for the C++ solution is $$O(1)$$.\n    \n\n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

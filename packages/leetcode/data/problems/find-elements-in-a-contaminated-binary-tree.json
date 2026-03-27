@@ -1,0 +1,153 @@
+{
+  "questionId": "1387",
+  "questionFrontendId": "1261",
+  "title": "Find Elements in a Contaminated Binary Tree",
+  "titleSlug": "find-elements-in-a-contaminated-binary-tree",
+  "difficulty": "Medium",
+  "content": "<p>Given a binary tree with the following rules:</p>\n\n<ol>\n\t<li><code>root.val == 0</code></li>\n\t<li>For any <code>treeNode</code>:\n\t<ol type=\"a\">\n\t\t<li>If <code>treeNode.val</code> has a value <code>x</code> and <code>treeNode.left != null</code>, then <code>treeNode.left.val == 2 * x + 1</code></li>\n\t\t<li>If <code>treeNode.val</code> has a value <code>x</code> and <code>treeNode.right != null</code>, then <code>treeNode.right.val == 2 * x + 2</code></li>\n\t</ol>\n\t</li>\n</ol>\n\n<p>Now the binary tree is contaminated, which means all <code>treeNode.val</code> have been changed to <code>-1</code>.</p>\n\n<p>Implement the <code>FindElements</code> class:</p>\n\n<ul>\n\t<li><code>FindElements(TreeNode* root)</code> Initializes the object with a contaminated binary tree and recovers it.</li>\n\t<li><code>bool find(int target)</code> Returns <code>true</code> if the <code>target</code> value exists in the recovered binary tree.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/11/06/untitled-diagram-4-1.jpg\" style=\"width: 320px; height: 119px;\" />\n<pre>\n<strong>Input</strong>\n[&quot;FindElements&quot;,&quot;find&quot;,&quot;find&quot;]\n[[[-1,null,-1]],[1],[2]]\n<strong>Output</strong>\n[null,false,true]\n<strong>Explanation</strong>\nFindElements findElements = new FindElements([-1,null,-1]); \nfindElements.find(1); // return False \nfindElements.find(2); // return True </pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/11/06/untitled-diagram-4.jpg\" style=\"width: 400px; height: 198px;\" />\n<pre>\n<strong>Input</strong>\n[&quot;FindElements&quot;,&quot;find&quot;,&quot;find&quot;,&quot;find&quot;]\n[[[-1,-1,-1,-1,-1]],[1],[3],[5]]\n<strong>Output</strong>\n[null,true,true,false]\n<strong>Explanation</strong>\nFindElements findElements = new FindElements([-1,-1,-1,-1,-1]);\nfindElements.find(1); // return True\nfindElements.find(3); // return True\nfindElements.find(5); // return False</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/11/07/untitled-diagram-4-1-1.jpg\" style=\"width: 306px; height: 274px;\" />\n<pre>\n<strong>Input</strong>\n[&quot;FindElements&quot;,&quot;find&quot;,&quot;find&quot;,&quot;find&quot;,&quot;find&quot;]\n[[[-1,null,-1,-1,null,-1]],[2],[3],[4],[5]]\n<strong>Output</strong>\n[null,true,false,false,true]\n<strong>Explanation</strong>\nFindElements findElements = new FindElements([-1,null,-1,-1,null,-1]);\nfindElements.find(2); // return True\nfindElements.find(3); // return False\nfindElements.find(4); // return False\nfindElements.find(5); // return True\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>TreeNode.val == -1</code></li>\n\t<li>The height of the binary tree is less than or equal to <code>20</code></li>\n\t<li>The total number of nodes is between <code>[1, 10<sup>4</sup>]</code></li>\n\t<li>Total calls of <code>find()</code> is between <code>[1, 10<sup>4</sup>]</code></li>\n\t<li><code>0 &lt;= target &lt;= 10<sup>6</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Use DFS to traverse the binary tree and recover it.",
+    "Use a hashset to store TreeNode.val for finding."
+  ],
+  "metaData": "{\n  \"classname\": \"FindElements\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"TreeNode\",\n        \"name\": \"root\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"target\"\n        }\n      ],\n      \"name\": \"find\",\n      \"return\": {\n        \"type\": \"boolean\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true,\n  \"manual\": false\n}",
+  "stats": "{\"totalAccepted\": \"203.5K\", \"totalSubmission\": \"242K\", \"totalAcceptedRaw\": 203519, \"totalSubmissionRaw\": 241973, \"acRate\": \"84.1%\"}",
+  "likes": 1431,
+  "dislikes": 127,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"FindElements\",\"find\",\"find\"]\n[[[-1,null,-1]],[1],[2]]",
+    "[\"FindElements\",\"find\",\"find\",\"find\"]\n[[[-1,-1,-1,-1,-1]],[1],[3],[5]]",
+    "[\"FindElements\",\"find\",\"find\",\"find\",\"find\"]\n[[[-1,null,-1,-1,null,-1]],[2],[3],[4],[5]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass FindElements {\npublic:\n    FindElements(TreeNode* root) {\n        \n    }\n    \n    bool find(int target) {\n        \n    }\n};\n\n/**\n * Your FindElements object will be instantiated and called as such:\n * FindElements* obj = new FindElements(root);\n * bool param_1 = obj->find(target);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass FindElements {\n\n    public FindElements(TreeNode root) {\n        \n    }\n    \n    public boolean find(int target) {\n        \n    }\n}\n\n/**\n * Your FindElements object will be instantiated and called as such:\n * FindElements obj = new FindElements(root);\n * boolean param_1 = obj.find(target);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass FindElements:\n\n    def __init__(self, root: Optional[TreeNode]):\n        \n\n    def find(self, target: int) -> bool:\n        \n\n\n# Your FindElements object will be instantiated and called as such:\n# obj = FindElements(root)\n# param_1 = obj.find(target)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass FindElements(object):\n\n    def __init__(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        \"\"\"\n        \n\n    def find(self, target):\n        \"\"\"\n        :type target: int\n        :rtype: bool\n        \"\"\"\n        \n\n\n# Your FindElements object will be instantiated and called as such:\n# obj = FindElements(root)\n# param_1 = obj.find(target)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n */\nvar FindElements = function(root) {\n    \n};\n\n/** \n * @param {number} target\n * @return {boolean}\n */\nFindElements.prototype.find = function(target) {\n    \n};\n\n/** \n * Your FindElements object will be instantiated and called as such:\n * var obj = new FindElements(root)\n * var param_1 = obj.find(target)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nclass FindElements {\n    constructor(root: TreeNode | null) {\n        \n    }\n\n    find(target: number): boolean {\n        \n    }\n}\n\n/**\n * Your FindElements object will be instantiated and called as such:\n * var obj = new FindElements(root)\n * var param_1 = obj.find(target)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class FindElements {\n\n    public FindElements(TreeNode root) {\n        \n    }\n    \n    public bool Find(int target) {\n        \n    }\n}\n\n/**\n * Your FindElements object will be instantiated and called as such:\n * FindElements obj = new FindElements(root);\n * bool param_1 = obj.Find(target);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\n\n\n\ntypedef struct {\n    \n} FindElements;\n\n\nFindElements* findElementsCreate(struct TreeNode* root) {\n    \n}\n\nbool findElementsFind(FindElements* obj, int target) {\n    \n}\n\nvoid findElementsFree(FindElements* obj) {\n    \n}\n\n/**\n * Your FindElements struct will be instantiated and called as such:\n * FindElements* obj = findElementsCreate(root);\n * bool param_1 = findElementsFind(obj, target);\n \n * findElementsFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\ntype FindElements struct {\n    \n}\n\n\nfunc Constructor(root *TreeNode) FindElements {\n    \n}\n\n\nfunc (this *FindElements) Find(target int) bool {\n    \n}\n\n\n/**\n * Your FindElements object will be instantiated and called as such:\n * obj := Constructor(root);\n * param_1 := obj.Find(target);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass FindElements(root: TreeNode?) {\n\n    fun find(target: Int): Boolean {\n        \n    }\n\n}\n\n/**\n * Your FindElements object will be instantiated and called as such:\n * var obj = FindElements(root)\n * var param_1 = obj.find(target)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\n\nclass FindElements {\n\n    init(_ root: TreeNode?) {\n        \n    }\n    \n    func find(_ target: Int) -> Bool {\n        \n    }\n}\n\n/**\n * Your FindElements object will be instantiated and called as such:\n * let obj = FindElements(root)\n * let ret_1: Bool = obj.find(target)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nstruct FindElements {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl FindElements {\n\n    fn new(root: Option<Rc<RefCell<TreeNode>>>) -> Self {\n        \n    }\n    \n    fn find(&self, target: i32) -> bool {\n        \n    }\n}\n\n/**\n * Your FindElements object will be instantiated and called as such:\n * let obj = FindElements::new(root);\n * let ret_1: bool = obj.find(target);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\nclass FindElements\n\n=begin\n    :type root: TreeNode\n=end\n    def initialize(root)\n        \n    end\n\n\n=begin\n    :type target: Integer\n    :rtype: Boolean\n=end\n    def find(target)\n        \n    end\n\n\nend\n\n# Your FindElements object will be instantiated and called as such:\n# obj = FindElements.new(root)\n# param_1 = obj.find(target)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass FindElements {\n    /**\n     * @param TreeNode $root\n     */\n    function __construct($root) {\n        \n    }\n  \n    /**\n     * @param Integer $target\n     * @return Boolean\n     */\n    function find($target) {\n        \n    }\n}\n\n/**\n * Your FindElements object will be instantiated and called as such:\n * $obj = FindElements($root);\n * $ret_1 = $obj->find($target);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass FindElements {\n\n  FindElements(TreeNode? root) {\n    \n  }\n  \n  bool find(int target) {\n    \n  }\n}\n\n/**\n * Your FindElements object will be instantiated and called as such:\n * FindElements obj = FindElements(root);\n * bool param1 = obj.find(target);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nclass FindElements(_root: TreeNode) {\n\n    def find(target: Int): Boolean = {\n        \n    }\n\n}\n\n/**\n * Your FindElements object will be instantiated and called as such:\n * val obj = new FindElements(root)\n * val param_1 = obj.find(target)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule FindElements do\n  @spec init_(root :: TreeNode.t | nil) :: any\n  def init_(root) do\n    \n  end\n\n  @spec find(target :: integer) :: boolean\n  def find(target) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# FindElements.init_(root)\n# param_1 = FindElements.find(target)\n\n# FindElements.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec find_elements_init_(Root :: #tree_node{} | null) -> any().\nfind_elements_init_(Root) ->\n  .\n\n-spec find_elements_find(Target :: integer()) -> boolean().\nfind_elements_find(Target) ->\n  .\n\n\n%% Your functions will be called as such:\n%% find_elements_init_(Root),\n%% Param_1 = find_elements_find(Target),\n\n%% find_elements_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define find-elements%\n  (class object%\n    (super-new)\n    \n    ; root : (or/c tree-node? #f)\n    (init-field\n      root)\n    \n    ; find : exact-integer? -> boolean?\n    (define/public (find target)\n      )))\n\n;; Your find-elements% object will be instantiated and called as such:\n;; (define obj (new find-elements% [root root]))\n;; (define param_1 (send obj find target))"
+    }
+  ],
+  "solution": {
+    "id": "2688",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview \n\nWe are given a binary tree `root` which follows the following 3 rules:\n\n1. The value of the root node `root` is always 0\n2. Given a node in the tree with value `x`, the value of its left child (if it exists) is always `x * 2 + 1`\n3. Given a node in the tree with value `x`, the value of its right child (if it exists) is always `x * 2 + 2`\n\nThis tree is then \"contaminated\", which means the values of all nodes are overwritten to `-1`. We now have to find out what values existed in the tree before it was contaminated. We do this by implementing two functions:\n\n1. `FindElements(TreeNode* root)` is our constructor that gives us the contaminated binary tree `root`\n2. `bool find(int target)` should return whether or not `target` is one of the original values in `root` before contamination\n\n### Approach 1: Tree Traversal (DFS)\n\n#### Intuition\n\nOur goal is to restore the original values of the tree before it was contaminated. The problem gives us three key rules that define how values are assigned to nodes based on their parent. If we carefully analyze these rules, we can see that the root node always has a value of `0`. From this starting point, we can apply the second rule to determine that the left child (if it exists) must have a value of `0 * 2 + 1 = 1`, and the third rule tells us that the right child must have a value of `0 * 2 + 2 = 2`. Once we establish these values, we can continue applying the same logic to the children of these nodes, propagating the correct values throughout the tree.\n\nThis observation naturally leads to a recursive approach. Since each node's value is determined by its parent, we can traverse the tree while applying these rules at every step, ensuring that each node is assigned its correct value. To keep track of the values we recover, we store them in a set called `seen`. This allows us to efficiently check whether a given value exists in the tree whenever needed.\n\nThe best way to traverse the tree in this scenario is [depth-first search (DFS)](https://leetcode.com/explore/learn/card/graph/619/depth-first-search-in-graph/). DFS is particularly useful here because it allows us to fully process one branch of the tree before moving to the next, making it a straightforward way to assign values as we traverse. The DFS process follows a simple structure:  \n\n1. If we reach a `null` node, we stop and return immediately, as there’s nothing left to explore.  \n2. For each valid node, we store its recovered value in our `seen` set.  \n3. We then move to the left child, using rule 2 (`currentValue * 2 + 1`) to compute its value before making a recursive DFS call.  \n4. We move to the right child next, using rule 3 (`currentValue * 2 + 2`) before making another recursive DFS call.  \n\nTo implement this, we define a function `DFS(currentNode, currentValue)`, where `currentNode` represents the node we are currently processing, and `currentValue` is its correct original value. This function will handle the recursive traversal and ensure each node gets assigned its correct value.\n\nSince we always know the parent’s value, we can immediately compute the child's values and pass them into the next recursive call. By the end of this process, we will have fully reconstructed the tree’s original values, and since all recovered values are stored in `seen`, checking for the existence of a number in the tree becomes a simple lookup operation.\n\n#### Algorithm\n\n- Declare a HashSet `seen` as a  member of the `FindElements` class\n- For `FindElements(root)` constructor:\n    - Initialize `seen` to an empty set.\n    - Call the helper function `dfs(root, 0)`.\n- For helper function `dfs(currentNode, currentValue, seen)`:\n    - If the `currentNode` is `null`, then we return.\n    - Otherwise, we process the value of `currentNode` by adding `currentValue` to `seen`.\n    - We then recurse to the left and right children:\n        - For left child, we call `dfs(currentNode.left, currentValue * 2 + 1, seen)`.\n        - For right child, we call `dfs(currentNode.right, currentValue * 2 + 2, seen)`.\n- For `find(target)` function:\n    - We return whether or not `seen` contains `target`: return `seen.contains(target)`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/LSchxPfd/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"LSchxPfd\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the number of nodes in `root`.\n\n* Time Complexity: $O(N)$ for `FindElements`, $O(1)$ for `find`\n\n    For the `FindElements` constructor, traversing through `root` and processing all nodes takes $O(N)$ time. Afterwards, each call of `find` looks up a value in our set, which takes $O(1)$ time.\n\n* Space Complexity: $O(N)$\n\n    After the `FindElements` constructor is called, our set contains the values of all the nodes of `root`, which takes $O(N)$ space. \n\n---\n\n### Approach 2: Tree Traversal (BFS)\n\n#### Intuition\n\nIn our previous approach, we used depth-first search (DFS) to traverse the tree, assigning the correct values to nodes and storing these values in a set. Now, we will take a different approach using [breadth-first search (BFS)](https://leetcode.com/explore/featured/card/graph/620/breadth-first-search-in-graph/), which follows a different traversal pattern but ultimately achieves the same goal.\n\nTo understand the difference, recall that DFS explores a tree by going as deep as possible along one branch before backtracking to explore others. BFS, on the other hand, processes nodes **level by level**, meaning it explores all nodes at a given depth before moving to the next level. This fundamental difference in traversal order leads to a different way of structuring our solution.\n\nTo implement BFS, we use a queue, which allows us to control the flow of traversal systematically. We start by inserting the root node into the queue, using it as our initial entry point. Then, as long as the queue is not empty, we repeatedly take the front node, determine its correct original value, and store it in a set for quick lookups later.\n\nOnce a node has been processed, we compute the values of its children based on the given rules. If the node has a left child, we use **rule 2** (`n.val * 2 + 1`) to compute its value and enqueue it for future processing. Similarly, if the node has a right child, we use **rule 3** (`n.val * 2 + 2`) and enqueue it as well. This ensures that by the time these children are processed, they already hold their correct recovered values.\n\nUnlike DFS, where we explicitly pass the recovered value through recursive calls, BFS allows us to overwrite the node values directly as we process them. This means that when we remove a node from the queue, its left and right children already have their correct values assigned.\n\nSince BFS naturally ensures that nodes are visited in level order, this guarantees a systematic reconstruction of the entire tree. By the end of the traversal, every node will hold its correct original value, and checking whether a number exists in the tree becomes a simple lookup operation in our set.\n\n#### Algorithm\n\n- Declare a HashSet `seen` as a member of the `FindElements` class\n- For `FindElements(root)` constructor:\n    - Initialize `seen` to an empty set.\n    - Call the helper function `bfs(root)`.\n- For helper function `bfs(TreeNode root)`:\n    - Initialize a queue which first contains `root`. `root.val` should be set to `0`.\n    - While the queue is not empty:\n        - Pop the front element of the queue: `currentNode = queue.pop()`.\n        - Save the recovered value by adding `currentNode.val` into `seen`.\n        - If left child exists, overwrite its value `currentNode.left.val = currentNode.val * 2 + 1` and then enqueue it.\n        - If right child exists, overwrite its value `currentNode.right.val = currentNode.val * 2 + 2` and then enqueue it.\n- For `find(target)` function:\n    - We return whether or not `seen` contains `target`: return `seen.contains(target)`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/aUjXxUTe/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"aUjXxUTe\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the number of nodes in `root`.\n\n* Time Complexity: $O(N)$ for `FindElements`, $O(1)$ for `find`\n\n    For the `FindElements` constructor, traversing through `root` and processing all nodes takes $O(N)$ time. Afterwards, each call of `find` looks up a value in our set, which takes $O(1)$ time.\n\n* Space Complexity: $O(N)$\n\n    After the `FindElements` constructor is called, our set contains the values of all the nodes of `root`, which takes $O(N)$ space. \n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

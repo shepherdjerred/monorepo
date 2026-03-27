@@ -1,0 +1,112 @@
+{
+  "questionId": "1441",
+  "questionFrontendId": "1318",
+  "title": "Minimum Flips to Make a OR b Equal to c",
+  "titleSlug": "minimum-flips-to-make-a-or-b-equal-to-c",
+  "difficulty": "Medium",
+  "content": "<p>Given 3 positives numbers <code>a</code>, <code>b</code> and <code>c</code>. Return the minimum flips required in some bits of <code>a</code> and <code>b</code> to make (&nbsp;<code>a</code> OR <code>b</code> == <code>c</code>&nbsp;). (bitwise OR operation).<br />\r\nFlip operation&nbsp;consists of change&nbsp;<strong>any</strong>&nbsp;single bit 1 to 0 or change the bit 0 to 1&nbsp;in their binary representation.</p>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong class=\"example\">Example 1:</strong></p>\r\n\r\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/01/06/sample_3_1676.png\" style=\"width: 260px; height: 87px;\" /></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> a = 2, b = 6, c = 5\r\n<strong>Output:</strong> 3\r\n<strong>Explanation: </strong>After flips a = 1 , b = 4 , c = 5 such that (<code>a</code> OR <code>b</code> == <code>c</code>)</pre>\r\n\r\n<p><strong class=\"example\">Example 2:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> a = 4, b = 2, c = 7\r\n<strong>Output:</strong> 1\r\n</pre>\r\n\r\n<p><strong class=\"example\">Example 3:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> a = 1, b = 2, c = 3\r\n<strong>Output:</strong> 0\r\n</pre>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong>Constraints:</strong></p>\r\n\r\n<ul>\r\n\t<li><code>1 &lt;= a &lt;= 10^9</code></li>\r\n\t<li><code>1 &lt;= b&nbsp;&lt;= 10^9</code></li>\r\n\t<li><code>1 &lt;= c&nbsp;&lt;= 10^9</code></li>\r\n</ul>",
+  "hints": [
+    "Check the bits one by one whether they need to be flipped."
+  ],
+  "metaData": "{\n  \"name\": \"minFlips\",\n  \"params\": [\n    {\n      \"name\": \"a\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"b\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"c\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"195.9K\", \"totalSubmission\": \"272.4K\", \"totalAcceptedRaw\": 195881, \"totalSubmissionRaw\": 272350, \"acRate\": \"71.9%\"}",
+  "likes": 2144,
+  "dislikes": 111,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Bit Flips to Convert Number\", \"titleSlug\": \"minimum-bit-flips-to-convert-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "2\n6\n5",
+    "4\n2\n7",
+    "1\n2\n3"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minFlips(int a, int b, int c) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minFlips(int a, int b, int c) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minFlips(self, a: int, b: int, c: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minFlips(self, a, b, c):\n        \"\"\"\n        :type a: int\n        :type b: int\n        :type c: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} a\n * @param {number} b\n * @param {number} c\n * @return {number}\n */\nvar minFlips = function(a, b, c) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minFlips(a: number, b: number, c: number): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinFlips(int a, int b, int c) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\nint minFlips(int a, int b, int c){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minFlips(a int, b int, c int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minFlips(a: Int, b: Int, c: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minFlips(_ a: Int, _ b: Int, _ c: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_flips(a: i32, b: i32, c: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} a\n# @param {Integer} b\n# @param {Integer} c\n# @return {Integer}\ndef min_flips(a, b, c)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $a\n     * @param Integer $b\n     * @param Integer $c\n     * @return Integer\n     */\n    function minFlips($a, $b, $c) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minFlips(a: Int, b: Int, c: Int): Int = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "1880",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\n\n<details>\n    <summary>\n        <b> &ensp; If you are not aware of bit manipulation first, let's get a brief idea about it and look at some basic bitwise operators. (click to expand) </b>\n    </summary>\n\n<br />\n\nBit manipulation is the act of manipulating bits, like changing bits of an integer.      \nAt the heart of bit manipulation are the bit-wise operators:     \n\n**NOT (~):** Bitwise NOT is a unary operator that flips the bits of the number i.e., if the current bit is $0$, it will change it to $1$ and vice versa. \n```text\nN = 5 = 101 (in binary)\n~N = ~(101) = 010 = 2 (in decimal)\n```\n\n**AND (&):** In bitwise AND if both bits in the compared position of the bit patterns are $1$, the bit in the resulting bit pattern is $1$, otherwise $0$.\n```text\nA = 5 = 101 (in binary) \nB = 1 = 001 (in binary) \nA & B = 101 & 001 = 001 = 1 (in decimal)\n```\n\n**OR ( | ):** Bitwise OR is also similar to bitwise AND. If both bits in the compared position of the bit patterns are $0$, the bit in the resulting bit pattern is $0$, otherwise $1$.\n```text\nA = 5 = 101 (in binary) \nB = 1 = 001 (in binary) \nA | B = 101 | 001 = 101 = 5 (in decimal)\n```\n\n**XOR (^):** In bitwise XOR if both bits are $0$ or $1$, the result will be $0$, otherwise $1$.\n```text\nA = 5 = 101 (in binary) \nB = 1 = 001 (in binary) \nA ^ B = 101 ^ 001 = 100 = 4 (in decimal)\n```\n\n**Left Shift (<<):** Left shift operator is a binary operator which shifts some number of bits to the left and appends $0$ at the end. One left shift is equivalent to multiplying the bit pattern with $2$.\n```text\nA = 1 = 001 (in binary) \nA << 1 = 001 << 1 = 010 = 2 (in decimal)\nA << 2 = 001 << 2 = 100 = 4 (in decimal)\n\nB = 5 = 00101 (in binary)\nB << 1 = 00101 << 1 = 01010 = 10 (in decimal)\nB << 2 = 00101 << 2 = 10100 = 20 (in decimal)\n```\n\n**Right Shift (>>):** Right shift operator is a binary operator which shifts some number of bits to the right and appends $0$ at the left side. One right shift is equivalent to dividing the bit pattern with $2$.\n```text\nA = 4 = 100 (in binary) \nA >> 1 = 100 >> 1 = 010 = 2 (in decimal)\nA >> 2 = 100 >> 2 = 001 = 1 (in decimal)\nA >> 3 = 100 >> 3 = 000 = 0 (in decimal)\n\nB = 5 = 00101 (in binary)\nB >> 1 = 00101 >> 1 = 00010 = 2 (in decimal)\n```\n</details>\n\n---\n\n### Approach 1: Bit Manipulation\n\n#### Intuition   \n\n\nTo determine the minimum number of bit flips required in `a` and `b` to achieve their bitwise OR equal to `c`, we can manipulate each bit of `a` and `b`. This can be implemented by iterating over the bits of the numbers from the least significant (the rightmost) bit to the most significant (the leftmost) bit.\n\n> To obtain the least significant bit of `P`, we can use bitwise AND operator `P & 1`\n\nDuring the iteration, we will keep track of `answer`, the number of bit flips required in `a` and `b`. For each bit position, we need to consider two cases:\n\n\n- Case 1: `(c & 1) = 1`: In this case, we need at least one bit of `1` in either `a & 1` or `b & 1`. If either `a & 1` or `b & 1` is `1`, we can move on to the next bit, otherwise, we need to flip a bit in either `a` or `b`.\n\n\n- Case 2: `(c & 1) = 0`: In this case, both `a & 1` and `b & 1` should be equal to `0`, if either `a & 1` or `b & 1` is equal to `1`, we need one flip to make it equal to `0`. Therefore, the number of flips equals the sum of `a & 1` and `b & 1`.\n\n\n\nAfter each bit position, we update `answer` with the number of bit flips required in `a` and `b`. We then shift the bits of `a`, `b` and `c` to the right to check the next bit.\n\n> After shifting `a` to the right (`a >>= 1`), `a & 1` will represent the second least significant bit.\n\n\nWe repeat the above process until all numbers are equal to `0`, and return `answer`.\n\n<br>\n\nPlease refer to the following example, where the least significant bits are shown in the box. \n\nStart with initializing `answer = 0` and examining the least significant bits, we find that `(a & 1) = 0`, `(b & 1) = 0`, and `(c & 1) = 1`, which correspond to case 1 previously mentioned. Thus we need one flip on the least significant bit in either `a` or `b`.\n\n\n![img](../Figures/1318/2.png)\n\nWe then shift all numbers to the right and examine the second least significant bits. We observe that `(a & 1) = 1`, `(b & 1) = 1`, and `(c & 1) = 0`, which is consistent with case 2, we need to flip both the least significant bits of `a` and `b`, requiring a total of two flips.\n\n\n![img](../Figures/1318/3.png)\n\nWe then shift all numbers to the right and examine the next bits, which are `(a & 1) = 0`, `(b & 1) = 1` and `(c & 1) = 1`. However, since `(b & 1) = 1`, we do not need to flip any bits this time.\n\n![img](../Figures/1318/4.png)\n\nAll numbers are equal to `0` after shifting them to the right, so we can return `answer = 3`.\n\n\n<br>\n\n#### Algorithm\n\n1) Initialize a variable `answer` as 0, which will be used to keep track of the minimum number of flips needed.\n\n2) Iterate over each bit of the binary representation of `a`, `b`, and `c` simultaneously:\n\n\n3) If `(c & 1) = 0`, update answer as `answer += (a & 1) + (b & 1)`.\n\n4) If `(c & 1) = 1`, if both `a & 1` and `b & 1` equal `0`, increment `answer` by 1.\n\n5) Shift all numbers to the right by `a >>= 1`, `b >>= 1`, `c >>= 1`. If all numbers are equal to `0`, return `answer`, otherwise, repeat steps 3 and 4.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/kgHTUBVH/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"kgHTUBVH\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the maximum length in the binary representation of `a`, `b` or `c`.\n\n* Time complexity: $$O(n)$$\n\n    - We need to iterate over the bits of the numbers. Note that we have $$n$$ as the number of bits, which is logarithmic with the actual values.\n\n    \n\n* Space complexity: $$O(1)$$\n\n    - We only need to update `answer` and modify `a`, `b` and `c`.\n\n<br/>\n\n\n\n---\n\n### Approach 2: Count the Number of Set Bits Using Built-in Function\n\n\n#### Intuition   \n\nThe `XOR` operation returns a bit with the value of `1` only if the corresponding bits of its operands are **different**. In other words, if two bits are the same, the XOR operation returns `0`, otherwise, it returns `1`. We can take advantage of this property to solve the problem without iterating over each bit.\n\n![img](../Figures/1318/5.png)\n\nThe problem is asking us to have `a | b` equal to `c`. If we do `(a | b) ^ c`, then every bit that is different (and thus we need to flip) will have a value of `1`. Therefore we can just do `(a | b) ^ c` and count the bits that are set.\n\n\n![img](../Figures/1318/6.png)\n\n\n> However, there is one exception, which is when `(c & 1) = 0` and both `a & 1` and `b & 1` equal `1`. In this case, we need an additional flip.\n\nTo find all these cases, we need to identify all the bits where both `a` and `b` are equal to `1`. \n\nTo achieve this, we can use the bitwise `&` operator. The `&` operator only returns `1` when operands are both equal to `1`. As shown in the picture below, only the third least significant bit of `a` and `b` is `1` at the same time. Therefore, we can find all the bits that \"need an extra flip\" from `(a & b) & ((a | b) ^ c)`, where each bit with value `1` stands for an extra flip.\n\n\n![img](../Figures/1318/8.png)\n\nThe final step is to count the number of digits `1` in the binary representation of the two numbers `(a | b) ^ c` and `(a & b) & ((a | b) ^ c)`.\n\n> The population count, also known as *popcount*, of a specific value is the number of set bits (bits with value `1`) in that value. \n> Many programming languages have a built-in function to count the *popcount* of a binary number, including C++, Java, Python, and many others.\n\n<br>\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/5yiavf4N/shared\" frameBorder=\"0\" width=\"100%\" height=\"208\" name=\"5yiavf4N\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the maximum length in the binary representation of `a`, `b` or `c`.\n\n* Time complexity: $$O(n)$$ or $$O(1)$$.\n\n    The time complexity of popcount depends on the specific language.\n    - In C++, `__builtin_popcount()` is a built-in function in GCC (and other compliers) which uses a precomputed lookup table to perform the operation in $$O(1)$$ time.\n    - In Java, `Integer.bitCount()` also uses a precomputed table of bit counts for every possible 16-bit integer value, and the bit count of a 32-bit integer can be computed by summing the bit counts of the two 16-bit halves of the integer, which takes $$O(1)$$ time.\n    - In Python (3.9 or earlier), we use `bin(a).count(\"1\")` to count the number of set bits in the binary representation of `a`, which is equivalent to `int.bit_count(a)` in 3.10 or later. Both take $$O(n)$$ time. \n    \n\n* Space complexity: $$O(n)$$ or $$O(1)$$\n\n    - In C++ or Java, the space complexity is constant.\n    - In Python, we use `bin(a).count(\"1\")` to convert `a` into its binary representation, which is a string of length $$n$$.  \n\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

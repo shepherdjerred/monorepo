@@ -1,0 +1,82 @@
+{
+  "questionId": "1498",
+  "questionFrontendId": "1379",
+  "title": "Find a Corresponding Node of a Binary Tree in a Clone of That Tree",
+  "titleSlug": "find-a-corresponding-node-of-a-binary-tree-in-a-clone-of-that-tree",
+  "difficulty": "Easy",
+  "content": "<p>Given two binary trees <code>original</code> and <code>cloned</code> and given a reference to a node <code>target</code> in the original tree.</p>\n\n<p>The <code>cloned</code> tree is a <strong>copy of</strong> the <code>original</code> tree.</p>\n\n<p>Return <em>a reference to the same node</em> in the <code>cloned</code> tree.</p>\n\n<p><strong>Note</strong> that you are <strong>not allowed</strong> to change any of the two trees or the <code>target</code> node and the answer <strong>must be</strong> a reference to a node in the <code>cloned</code> tree.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/02/21/e1.png\" style=\"width: 544px; height: 426px;\" />\n<pre>\n<strong>Input:</strong> tree = [7,4,3,null,null,6,19], target = 3\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> In all examples the original and cloned trees are shown. The target node is a green node from the original tree. The answer is the yellow node from the cloned tree.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/02/21/e2.png\" style=\"width: 221px; height: 159px;\" />\n<pre>\n<strong>Input:</strong> tree = [7], target =  7\n<strong>Output:</strong> 7\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/02/21/e3.png\" style=\"width: 459px; height: 486px;\" />\n<pre>\n<strong>Input:</strong> tree = [8,null,6,null,5,null,4,null,3,null,2,null,1], target = 4\n<strong>Output:</strong> 4\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the <code>tree</code> is in the range <code>[1, 10<sup>4</sup>]</code>.</li>\n\t<li>The values of the nodes of the <code>tree</code> are unique.</li>\n\t<li><code>target</code> node is a node from the <code>original</code> tree and is not <code>null</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> Could you solve the problem if repeated values on the tree are allowed?</p>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"getTargetCopy\",\n  \"params\": [\n    {\n      \"name\": \"tree\",\n      \"type\": \"TreeNode\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"target\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"TreeNode\"\n  },\n  \"manual\": true,\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"csharp\",\n    \"javascript\",\n    \"python3\",\n    \"typescript\"\n  ]\n}",
+  "stats": "{\"totalAccepted\": \"264.3K\", \"totalSubmission\": \"307.8K\", \"totalAcceptedRaw\": 264275, \"totalSubmissionRaw\": 307829, \"acRate\": \"85.9%\"}",
+  "likes": 1810,
+  "dislikes": 2018,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[7,4,3,null,null,6,19]\n3",
+    "[7]\n7",
+    "[8,null,6,null,5,null,4,null,3,null,2,null,1]\n4"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}\n * };\n */\n\nclass Solution {\npublic:\n    TreeNode* getTargetCopy(TreeNode* original, TreeNode* cloned, TreeNode* target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode(int x) { val = x; }\n * }\n */\n\nclass Solution {\n    public final TreeNode getTargetCopy(final TreeNode original, final TreeNode cloned, final TreeNode target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, x):\n#         self.val = x\n#         self.left = None\n#         self.right = None\n\nclass Solution:\n    def getTargetCopy(self, original: TreeNode, cloned: TreeNode, target: TreeNode) -> TreeNode:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, x):\n#         self.val = x\n#         self.left = None\n#         self.right = None\n\nclass Solution(object):\n    def getTargetCopy(self, original, cloned, target):\n        \"\"\"\n        :type original: TreeNode\n        :type cloned: TreeNode\n        :type target: TreeNode\n        :rtype: TreeNode\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val) {\n *     this.val = val;\n *     this.left = this.right = null;\n * }\n */\n/**\n * @param {TreeNode} original\n * @param {TreeNode} cloned\n * @param {TreeNode} target\n * @return {TreeNode}\n */\n\nvar getTargetCopy = function(original, cloned, target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction getTargetCopy(original: TreeNode | null, cloned: TreeNode | null, target: TreeNode | null): TreeNode | null {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int x) { val = x; }\n * }\n */\n\npublic class Solution {\n    public TreeNode GetTargetCopy(TreeNode original, TreeNode cloned, TreeNode target) {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "1075",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\n**How to Solve**\n\nLet's traverse both trees in parallel, and once the target node is identified in the first tree, return the corresponding node from the second tree.\n\n**How to Traverse the Tree: DFS vs BFS**\n\nThere are two ways to traverse the tree: DFS _depth first search_ and BFS _breadth first search_. Here is a small summary \n\n![diff](../Figures/1379/traversals.png)\n\nBoth start from the root and go down, both use additional structures, what's the difference? Here is how it looks at the big scale: BFS traverses level by level, and DFS first goes to the leaves.\n\n![diff](../Figures/1379/dfs_bfs_2.png)\n\n> Description doesn't give us any clue which traversal is better to use here. Interview-simple solutions are DFS in order traversals.\n\nIn Approach 1 and Approach 2, we're going to discuss recursively inorder DFS and iterative inorder DFS traversals. They both need up to $$\\mathcal{O}(H)$$ space to keep stack, where $$H$$ is a tree height.\n\nIn Approach 3, we provide a BFS solution. Normally, it's a bad idea to use BFS during the interview, unless the interviewer would push for it by adding new details into the problem description. \n\n**Could We Solve in Constant Space?**\n\nNo. The problem could be solved in constant space using the DFS Morris inorder traversal algorithm, but it modifies the tree, and that isn't allowed here.\n\n**Follow up: Repeated Values are Allowed**\n\nIf duplicate values are not allowed, one could compare node values:\n\n<iframe src=\"https://leetcode.com/playground/XvE3tVVZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"106\" name=\"XvE3tVVZ\"></iframe>\n\nOtherwise, one has to compare the nodes:\n\n<iframe src=\"https://leetcode.com/playground/gdNRDRYo/shared\" frameBorder=\"0\" width=\"100%\" height=\"106\" name=\"gdNRDRYo\"></iframe>\n\n<br />\n<br />\n\n\n---\n### Approach 1: DFS: Recursive Inorder Traversal.\n\nRecursive inorder traversal is extremely simple: follow `Left->Node->Right` direction, _i.e._, do the recursive call for the _left_ child, then do all the business with the node (= check if the node is a target one or not), and then do the recursive call for the _right_ child.\n\n![diff](../Figures/1379/dfs.png)\n*Figure 1. The nodes are enumerated in the order of visits. To compare different DFS strategies, follow `1-2-3-4-5` direction.*\n\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/8CVVBmSp/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"8CVVBmSp\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$. Since one has to visit each node, where $$N$$ is the number of nodes. \n    \n* Space complexity: $$\\mathcal{O}(N)$$. In the degenerative tree case (where the tree is shaped like a linked list), all nodes will be on the run-time stack while the deepest node is being processed. If the tree is balanced, the space complexity will be nearer to $$\\mathcal{O}(\\log N)$$, but remember that for the purposes of complexity analysis, we mostly consider the worst case.\n\n<br />\n<br />\n\n\n---\n### Approach 2: DFS: Iterative Inorder Traversal.\n\nIterative inorder traversal is straightforward: go left as far as you can, then one step right. Repeat till the end of nodes in the tree.  \n\n!?!../Documents/1379_LIS.json:1000,310!?!\n\n**Implementation**\n\n[Don't use Stack in Java, use ArrayDeque instead](https://docs.oracle.com/javase/8/docs/api/java/util/Stack.html).\n\n<iframe src=\"https://leetcode.com/playground/2UFXYe3o/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"2UFXYe3o\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$. Since one has to visit each node.\n    \n* Space complexity: $$\\mathcal{O}(N)$$. In the degenerative tree case (where the tree is shaped like a linked list), all nodes will be on the stack while the deepest node is being processed. If the tree is balanced, the space complexity will be nearer to $$\\mathcal{O}(\\log N)$$, but remember that for the purposes of complexity analysis, we mostly consider the worst case.\n\n\n<br />\n\n---\n\n### Approach 3: BFS: Iterative Traversal.\n\n**Algorithm**\n\nHere we implement standard BFS traversal with the queue:\n\n- Add root into queue.\n\n- While queue is not empty:\n\n    - Pop out a node from queue.\n    \n    - If the node is a target, we're done.\n    \n    - Add first _left_ and then _right_ child node into queue.\n\n**Implementation**\n\n[Don't use Stack in Java, use ArrayDeque instead](https://docs.oracle.com/javase/8/docs/api/java/util/Stack.html).\n\n<iframe src=\"https://leetcode.com/playground/mnfHHeRK/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"mnfHHeRK\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$ since one has to visit each node.\n    \n* Space complexity: up to $$\\mathcal{O}(N)$$ to keep the queue. Let's use the last level to estimate the queue size. This level could contain up to $$N/2$$ tree nodes in the case of [complete binary tree](https://leetcode.com/problems/count-complete-tree-nodes/).",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

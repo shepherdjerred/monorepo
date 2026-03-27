@@ -1,0 +1,136 @@
+{
+  "questionId": "1513",
+  "questionFrontendId": "1397",
+  "title": "Find All Good Strings",
+  "titleSlug": "find-all-good-strings",
+  "difficulty": "Hard",
+  "content": "<p>Given the strings <code>s1</code> and <code>s2</code> of size <code>n</code> and the string <code>evil</code>, return <em>the number of <strong>good</strong> strings</em>.</p>\n\n<p>A <strong>good</strong> string has size <code>n</code>, it is alphabetically greater than or equal to <code>s1</code>, it is alphabetically smaller than or equal to <code>s2</code>, and it does not contain the string <code>evil</code> as a substring. Since the answer can be a huge number, return this <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 2, s1 = &quot;aa&quot;, s2 = &quot;da&quot;, evil = &quot;b&quot;\n<strong>Output:</strong> 51 \n<strong>Explanation:</strong> There are 25 good strings starting with &#39;a&#39;: &quot;aa&quot;,&quot;ac&quot;,&quot;ad&quot;,...,&quot;az&quot;. Then there are 25 good strings starting with &#39;c&#39;: &quot;ca&quot;,&quot;cc&quot;,&quot;cd&quot;,...,&quot;cz&quot; and finally there is one good string starting with &#39;d&#39;: &quot;da&quot;.&nbsp;\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 8, s1 = &quot;leetcode&quot;, s2 = &quot;leetgoes&quot;, evil = &quot;leet&quot;\n<strong>Output:</strong> 0 \n<strong>Explanation:</strong> All strings greater than or equal to s1 and smaller than or equal to s2 start with the prefix &quot;leet&quot;, therefore, there is not any good string.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 2, s1 = &quot;gx&quot;, s2 = &quot;gz&quot;, evil = &quot;x&quot;\n<strong>Output:</strong> 2\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>s1.length == n</code></li>\n\t<li><code>s2.length == n</code></li>\n\t<li><code>s1 &lt;= s2</code></li>\n\t<li><code>1 &lt;= n &lt;= 500</code></li>\n\t<li><code>1 &lt;= evil.length &lt;= 50</code></li>\n\t<li>All strings consist of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Use DP with 4 states (pos: Int, posEvil: Int, equalToS1: Bool, equalToS2: Bool) which compute the number of valid strings of size \"pos\" where the maximum common suffix with string \"evil\" has size \"posEvil\". When \"equalToS1\" is \"true\", the current valid string is equal to \"S1\" otherwise it is greater. In a similar way when equalToS2 is \"true\" the current valid string is equal to \"S2\" otherwise it is smaller.",
+    "To update the maximum common suffix with string \"evil\" use KMP preprocessing."
+  ],
+  "metaData": "{\n  \"name\": \"findGoodStrings\",\n  \"params\": [\n    {\n      \"type\": \"integer\",\n      \"name\": \"n\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"s1\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"s2\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"evil\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"9.3K\", \"totalSubmission\": \"20.6K\", \"totalAcceptedRaw\": 9309, \"totalSubmissionRaw\": 20595, \"acRate\": \"45.2%\"}",
+  "likes": 533,
+  "dislikes": 130,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "2\n\"aa\"\n\"da\"\n\"b\"",
+    "8\n\"leetcode\"\n\"leetgoes\"\n\"leet\"",
+    "2\n\"gx\"\n\"gz\"\n\"x\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"dunzo\", \"name\": \"Dunzo\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "String Matching",
+      "slug": "string-matching"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findGoodStrings(int n, string s1, string s2, string evil) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findGoodStrings(int n, String s1, String s2, String evil) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findGoodStrings(self, n: int, s1: str, s2: str, evil: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findGoodStrings(self, n, s1, s2, evil):\n        \"\"\"\n        :type n: int\n        :type s1: str\n        :type s2: str\n        :type evil: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {string} s1\n * @param {string} s2\n * @param {string} evil\n * @return {number}\n */\nvar findGoodStrings = function(n, s1, s2, evil) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findGoodStrings(n: number, s1: string, s2: string, evil: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindGoodStrings(int n, string s1, string s2, string evil) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findGoodStrings(int n, char* s1, char* s2, char* evil) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findGoodStrings(n int, s1 string, s2 string, evil string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findGoodStrings(n: Int, s1: String, s2: String, evil: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findGoodStrings(_ n: Int, _ s1: String, _ s2: String, _ evil: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_good_strings(n: i32, s1: String, s2: String, evil: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {String} s1\n# @param {String} s2\n# @param {String} evil\n# @return {Integer}\ndef find_good_strings(n, s1, s2, evil)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param String $s1\n     * @param String $s2\n     * @param String $evil\n     * @return Integer\n     */\n    function findGoodStrings($n, $s1, $s2, $evil) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findGoodStrings(int n, String s1, String s2, String evil) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findGoodStrings(n: Int, s1: String, s2: String, evil: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_good_strings(n :: integer, s1 :: String.t, s2 :: String.t, evil :: String.t) :: integer\n  def find_good_strings(n, s1, s2, evil) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_good_strings(N :: integer(), S1 :: unicode:unicode_binary(), S2 :: unicode:unicode_binary(), Evil :: unicode:unicode_binary()) -> integer().\nfind_good_strings(N, S1, S2, Evil) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-good-strings n s1 s2 evil)\n  (-> exact-integer? string? string? string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,134 @@
+{
+  "questionId": "963",
+  "questionFrontendId": "927",
+  "title": "Three Equal Parts",
+  "titleSlug": "three-equal-parts",
+  "difficulty": "Hard",
+  "content": "<p>You are given an array <code>arr</code> which consists of only zeros and ones, divide the array into <strong>three non-empty parts</strong> such that all of these parts represent the same binary value.</p>\n\n<p>If it is possible, return any <code>[i, j]</code> with <code>i + 1 &lt; j</code>, such that:</p>\n\n<ul>\n\t<li><code>arr[0], arr[1], ..., arr[i]</code> is the first part,</li>\n\t<li><code>arr[i + 1], arr[i + 2], ..., arr[j - 1]</code> is the second part, and</li>\n\t<li><code>arr[j], arr[j + 1], ..., arr[arr.length - 1]</code> is the third part.</li>\n\t<li>All three parts have equal binary values.</li>\n</ul>\n\n<p>If it is not possible, return <code>[-1, -1]</code>.</p>\n\n<p>Note that the entire part is used when considering what binary value it represents. For example, <code>[1,1,0]</code> represents <code>6</code> in decimal, not <code>3</code>. Also, leading zeros <strong>are allowed</strong>, so <code>[0,1,1]</code> and <code>[1,1]</code> represent the same value.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> arr = [1,0,1,0,1]\n<strong>Output:</strong> [0,3]\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> arr = [1,1,0,1,1]\n<strong>Output:</strong> [-1,-1]\n</pre><p><strong class=\"example\">Example 3:</strong></p>\n<pre><strong>Input:</strong> arr = [1,1,0,0,1]\n<strong>Output:</strong> [0,2]\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>3 &lt;= arr.length &lt;= 3 * 10<sup>4</sup></code></li>\n\t<li><code>arr[i]</code> is <code>0</code> or <code>1</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"threeEqualParts\",\n  \"params\": [\n    {\n      \"name\": \"arr\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"35K\", \"totalSubmission\": \"84.7K\", \"totalAcceptedRaw\": 34983, \"totalSubmissionRaw\": 84714, \"acRate\": \"41.3%\"}",
+  "likes": 856,
+  "dislikes": 126,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,0,1,0,1]",
+    "[1,1,0,1,1]",
+    "[1,1,0,0,1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"hotstar\", \"name\": \"Hotstar\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> threeEqualParts(vector<int>& arr) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] threeEqualParts(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def threeEqualParts(self, arr: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def threeEqualParts(self, arr):\n        \"\"\"\n        :type arr: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arr\n * @return {number[]}\n */\nvar threeEqualParts = function(arr) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function threeEqualParts(arr: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] ThreeEqualParts(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* threeEqualParts(int* arr, int arrSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func threeEqualParts(arr []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun threeEqualParts(arr: IntArray): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func threeEqualParts(_ arr: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn three_equal_parts(arr: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} arr\n# @return {Integer[]}\ndef three_equal_parts(arr)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $arr\n     * @return Integer[]\n     */\n    function threeEqualParts($arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> threeEqualParts(List<int> arr) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def threeEqualParts(arr: Array[Int]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec three_equal_parts(arr :: [integer]) :: [integer]\n  def three_equal_parts(arr) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec three_equal_parts(Arr :: [integer()]) -> [integer()].\nthree_equal_parts(Arr) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (three-equal-parts arr)\n  (-> (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "590",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach 1: Equal Ones\n\n**Intuition**\n\nEach part has to have the same number of ones in their representation.  The algorithm given below is the natural continuation of this idea.\n\n**Algorithm**\n\nSay `totalOnes` is the number of ones in `arr`.  Since every part has the same number of ones, they all should have `targetOnes = totalOnes / 3` ones.\n\nIf `totalOnes` isn't divisible by 3, the task is impossible.\n\nLet T stand for `targetOnes`. We can find the position of the $$1^{st}$$, $$T^{th}$$, $$(T+1)^{th}$$, $$2T^{th}$$, $$(2T+1)^{th}$$, and $$3T^{th}$$ one.  The positions of these ones form 3 intervals: `[i1, j1]`, `[i2, j2]`, and `[i3, j3]`.  If there are only 3 ones, then the intervals are each length 1.\n\nBetween them, there may be some number of zeros.  The zeros after `j3` must be included in each part: say there are `trailingZeros` of them `(trailingZeros = arr.length - j3)`.\n\nSo the first part, `[i1, j1]`, is now `[i1, j1+trailingZeros]`.  Similarly, the second part, `[i2, j2]`, is now `[i2, j2+trailingZeros]`.\n\nIf all this is actually possible, then the final answer is `[j1+trailingZeros, j2+trailingZeros+1]`.\n\n<iframe src=\"https://leetcode.com/playground/7HZa9N4j/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"7HZa9N4j\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N)$$, where $$N$$ is the length of `arr`.\n\n* Space Complexity:  $$O(N)$$ because $$O(N)$$ space is used when checking if the three intervals of ones are the same.\n<br />\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

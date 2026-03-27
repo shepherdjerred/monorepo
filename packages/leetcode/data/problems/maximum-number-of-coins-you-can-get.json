@@ -1,0 +1,149 @@
+{
+  "questionId": "1683",
+  "questionFrontendId": "1561",
+  "title": "Maximum Number of Coins You Can Get",
+  "titleSlug": "maximum-number-of-coins-you-can-get",
+  "difficulty": "Medium",
+  "content": "<p>There are <code>3n</code> piles of coins of varying size, you and your friends will take piles of coins as follows:</p>\n\n<ul>\n\t<li>In each step, you will choose <strong>any </strong><code>3</code> piles of coins (not necessarily consecutive).</li>\n\t<li>Of your choice, Alice will pick the pile with the maximum number of coins.</li>\n\t<li>You will pick the next pile with the maximum number of coins.</li>\n\t<li>Your friend Bob will pick the last pile.</li>\n\t<li>Repeat until there are no more piles of coins.</li>\n</ul>\n\n<p>Given an array of integers <code>piles</code> where <code>piles[i]</code> is the number of coins in the <code>i<sup>th</sup></code> pile.</p>\n\n<p>Return the maximum number of coins that you can have.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> piles = [2,4,1,2,7,8]\n<strong>Output:</strong> 9\n<strong>Explanation: </strong>Choose the triplet (2, 7, 8), Alice Pick the pile with 8 coins, you the pile with <strong>7</strong> coins and Bob the last one.\nChoose the triplet (1, 2, 4), Alice Pick the pile with 4 coins, you the pile with <strong>2</strong> coins and Bob the last one.\nThe maximum number of coins which you can have are: 7 + 2 = 9.\nOn the other hand if we choose this arrangement (1, <strong>2</strong>, 8), (2, <strong>4</strong>, 7) you only get 2 + 4 = 6 coins which is not optimal.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> piles = [2,4,5]\n<strong>Output:</strong> 4\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> piles = [9,8,7,6,5,1,2,3,4]\n<strong>Output:</strong> 18\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>3 &lt;= piles.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>piles.length % 3 == 0</code></li>\n\t<li><code>1 &lt;= piles[i] &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Which pile of coins will you never be able to pick up?",
+    "Bob is forced to take the last pile of coins, no matter what it is. Which pile should you give to him?"
+  ],
+  "metaData": "{\n  \"name\": \"maxCoins\",\n  \"params\": [\n    {\n      \"name\": \"piles\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"198.8K\", \"totalSubmission\": \"234.5K\", \"totalAcceptedRaw\": 198757, \"totalSubmissionRaw\": 234501, \"acRate\": \"84.8%\"}",
+  "likes": 1976,
+  "dislikes": 224,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[2,4,1,2,7,8]",
+    "[2,4,5]",
+    "[9,8,7,6,5,1,2,3,4]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Game Theory",
+      "slug": "game-theory"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxCoins(vector<int>& piles) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxCoins(int[] piles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxCoins(self, piles: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxCoins(self, piles):\n        \"\"\"\n        :type piles: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} piles\n * @return {number}\n */\nvar maxCoins = function(piles) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxCoins(piles: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxCoins(int[] piles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxCoins(int* piles, int pilesSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxCoins(piles []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxCoins(piles: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxCoins(_ piles: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_coins(piles: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} piles\n# @return {Integer}\ndef max_coins(piles)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $piles\n     * @return Integer\n     */\n    function maxCoins($piles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxCoins(List<int> piles) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxCoins(piles: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_coins(piles :: [integer]) :: integer\n  def max_coins(piles) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_coins(Piles :: [integer()]) -> integer().\nmax_coins(Piles) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-coins piles)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2162",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Greedy Simulation With Deque\n\n**Intuition**\n\nIn this game, we pick three numbers at a time and gain score equal to the element with the middle value. Note that at the end:\n\n$$\\text{score}_\\text{Alice} + \\text{score}_\\text{Bob} + \\text{score}_\\text{Us} = \\text{SUM}(\\text{piles})$$\n\nBecause the sum of `piles` is a constant for a given test case, we can maximize our score by minimizing the score of the other two players.\n\nLet's think: at the start of the game, what are the most points we can gain with our first move? Is it possible for us to take the pile with the most coins?\n\nNo, it is impossible for us to **ever** take this pile. On any choice of piles that contains the maximum pile, the maximum pile will necessarily be the largest pile chosen, and thus will go to Alice.\n\nThus, the best we can do is to take the pile with the second most coins, after giving the pile with the most coins to Alice. Which pile should we choose for Bob? As mentioned above, we want to minimize $$\\text{score}_\\text{Bob}$$, so we will give Bob the smallest pile.\n\nIn our first choice, we removed the smallest pile and the two largest piles. This resulted in us gaining the maximum possible score while minimizing the score that Bob would gain and was an optimal first choice. What should we do for our second choice?\n\nAs every choice is independent of each other (except for the fact that we remove some piles), there is no reason for us to use a different strategy. Again, of the remaining piles, we should give Alice the largest pile, Bob the smallest pile, and take the second largest pile for ourselves.\n\nThe reason this greedy strategy works is because, at any given moment, it is **impossible** for us to ever claim the largest pile. In fact, this pile will **always** go to Alice. The largest pile we can claim is the second largest pile, but we can only accomplish this by giving Alice the largest pile. While increasing Alice's final score decreases our final score (from the equation above), **Alice will inevitably obtain the largest pile anyway**.\n\nSince Alice will inevitably claim the largest pile regardless of our choices, we may as well use her to obtain the second-largest pile. This maximizes our own score. Then, we hand Bob the smallest pile to minimize his score. While unintuitive, this is also minimizing Alice's score (since she will take the largest pile regardless, but we take the second largest pile so that she can't later).\n\nTo implement this strategy, we will sort `piles` and then put the sorted piles into a double-ended queue (deque) `queue`. At each step, we pop from the back of `queue` and give the pile to Alice. Then we pop from the back again and take this pile for ourselves. Finally, we pop from the front of `queue` and give this pile to Bob. The above process will continue until we have emptied all the piles in `queue`.\n\nNote that the problem only wants our score, so we don't need to track Alice's or Bob's score.\n\n**Algorithm**\n\n1. Sort `piles`.\n2. Create a deque `queue` with the elements of `piles`.\n3. Initialize the answer `ans = 0`.\n4. While the `queue` is not empty:\n    - Pop from the back of `queue`.\n    - Pop from the back of `queue` and add the element to `ans`.\n    - Pop from the front of `queue`.\n5. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/eUWreGof/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"eUWreGof\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$3n$$ as the length of `piles`,\n\n* Time complexity: $$O(n \\cdot \\log{}n)$$\n\n    We sort `piles`, which costs $$O(n \\cdot \\log{}n)$$. Then, we convert it to a `queue` and pop each element from `queue`, which would cost $$O(n)$$ in total.\n\n* Space complexity: $$O(n)$$\n\n    `queue` uses $$O(n)$$ space.\n    \n    The space complexity of the sorting algorithm depends on the implementation of each programming language:\n    * In Java, Arrays.sort() for primitives is implemented using a variant of the Quick Sort algorithm, which has a space complexity of $$O(\\log n)$$\n    * In C++, the sort() function provided by STL uses a hybrid of Quick Sort, Heap Sort and Insertion Sort, with a worst case space complexity of $$O(\\log n)$$\n    * In Python, the sort() function is implemented using the Timsort algorithm, which has a worst-case space complexity of $$O(n)$$\n    \n<br/>\n\n---\n\n### Approach 2: No Queue\n\n**Intuition**\n\nWe don't actually need to simulate the process, because our choice is the same at every step. Notice that Bob will always get the $$n$$ smallest piles, and the remaining piles alternate between us and Alice. Of the remaining piles, Alice gets the largest one, then we get the second largest one. Then Alice would get the third largest one, and we would get the fourth largest one, and so on. When we sort `piles`, we get the following pattern:\n\n![img](../Figures/1561/1.png)\n<br>\n\nHere, B stands for piles that Bob will get, A stands for piles Alice will get, and US are the piles that we will get.\n\nAs such, we can find the piles that we will claim by iterating over `piles`. We will start iterating at index $$n$$ as this is the first pile after Bob's piles. We iterate two indices at a time, as every other index belongs to Alice.\n\n> Recall that in the problem description, the length of the array is given as `3n`. That's why we say we start iterating at index `n`, not `n / 3`.\n\n**Algorithm**\n\n1. Sort `piles`.\n2. Initialize `ans = 0`.\n3. Iterate `i` over the indices of `piles`, starting from `piles.length / 3` and incrementing `i` by `2` per iteration:\n    - Add `piles[i]` to `ans`.\n4. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/dVW5TyM4/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"dVW5TyM4\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$3n$$ as the length of `piles`,\n\n* Time complexity: $$O(n \\cdot \\log{}n)$$\n\n    We sort `piles`, which costs $$O(n \\cdot \\log{}n)$$. Then, we iterate over `piles`, which costs $$O(n)$$.\n\n* Space Complexity: $$O(\\log n)$$ or $$O(n)$$\n\n    We aren't explicitly allocating any extra space. However, sorting may use some space.\n\n    The space complexity of the sorting algorithm depends on the implementation of each programming language:\n    * In Java, Arrays.sort() for primitives is implemented using a variant of the Quick Sort algorithm, which has a space complexity of $$O(\\log n)$$\n    * In C++, the sort() function provided by STL uses a hybrid of Quick Sort, Heap Sort and Insertion Sort, with a worst case space complexity of $$O(\\log n)$$\n    * In Python, the sort() function is implemented using the Timsort algorithm, which has a worst-case space complexity of $$O(n)$$\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

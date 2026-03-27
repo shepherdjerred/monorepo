@@ -1,0 +1,141 @@
+{
+  "questionId": "982",
+  "questionFrontendId": "945",
+  "title": "Minimum Increment to Make Array Unique",
+  "titleSlug": "minimum-increment-to-make-array-unique",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>nums</code>. In one move, you can pick an index <code>i</code> where <code>0 &lt;= i &lt; nums.length</code> and increment <code>nums[i]</code> by <code>1</code>.</p>\n\n<p>Return <em>the minimum number of moves to make every value in </em><code>nums</code><em> <strong>unique</strong></em>.</p>\n\n<p>The test cases are generated so that the answer fits in a 32-bit integer.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,2]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> After 1 move, the array could be [1, 2, 3].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [3,2,1,2,1,7]\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> After 6 moves, the array could be [3, 4, 1, 2, 5, 7].\nIt can be shown that it is impossible for the array to have all unique values with 5 or less moves.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"minIncrementForUnique\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"269.2K\", \"totalSubmission\": \"444.1K\", \"totalAcceptedRaw\": 269153, \"totalSubmissionRaw\": 444092, \"acRate\": \"60.6%\"}",
+  "likes": 2780,
+  "dislikes": 86,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Operations to Make the Array Increasing\", \"titleSlug\": \"minimum-operations-to-make-the-array-increasing\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Maximum Product After K Increments\", \"titleSlug\": \"maximum-product-after-k-increments\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Number of Operations to Make Elements in Array Distinct\", \"titleSlug\": \"minimum-number-of-operations-to-make-elements-in-array-distinct\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,2]",
+    "[3,2,1,2,1,7]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"paypal\", \"name\": \"PayPal\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"zscaler\", \"name\": \"ZScaler\"}, {\"timesEncountered\": 2, \"slug\": \"coursera\", \"name\": \"Coursera\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minIncrementForUnique(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minIncrementForUnique(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minIncrementForUnique(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minIncrementForUnique(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar minIncrementForUnique = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minIncrementForUnique(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinIncrementForUnique(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minIncrementForUnique(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minIncrementForUnique(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minIncrementForUnique(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minIncrementForUnique(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_increment_for_unique(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef min_increment_for_unique(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function minIncrementForUnique($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minIncrementForUnique(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minIncrementForUnique(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_increment_for_unique(nums :: [integer]) :: integer\n  def min_increment_for_unique(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_increment_for_unique(Nums :: [integer()]) -> integer().\nmin_increment_for_unique(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-increment-for-unique nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2341",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Sorting\n\n#### Intuition\n\nOur first strategy to make every element in the array unique is to identify the duplicates, which we can do more efficiently by sorting the array. If an element is a duplicate of the one before it, we increment it just enough to make it larger. The total number of increments will be the minimum number of moves needed to make each character unique.\n\nThe following slideshow demonstrates this process. \n\n!?!../Documents/945/slideshow.json:1242,922!?!\n\n#### Algorithm\n\n- Initialize a variable `minIncrements` to store the total number of increments needed.\n- Sort `nums`.\n- Iterate through `nums` starting from the second element to the last. For each element:\n  - If the current element is less than or equal to the previous element:\n    - Set `increment` to the difference between the previous and the current element, plus one.\n    - Add `increment` to `minIncrements`.\n    - Update the current element to be one more than the previous element.\n- Return `minIncrements`, which holds the minimum number of increments.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/nBqMWNrX/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"nBqMWNrX\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the array `nums`.\n\n- Time complexity: $O(n \\cdot \\log n)$\n\n    Sorting the array requires $O(n \\cdot \\log n)$ time and a single traversal over the entire array takes $O(n)$ time. This leads to an overall time complexity of $O(n \\cdot \\log n) + O(n)$, which simplifies to a $O(n \\cdot \\log n)$ time complexity.\n\n- Space complexity: $O(n)$ or $O(\\log n)$ \n\n    Sorting arrays in place requires some additional space. The space complexity of sorting algorithms varies depending on the programming language being used:\n\n    - Python's sort method employs the Tim Sort algorithm, which is a combination of Merge Sort and Insertion Sort. This algorithm has a space complexity of O(n).\n    - In C++, the sort() function is a hybrid implementation that incorporates Quick Sort, Heap Sort, and Insertion Sort. Its worst-case space complexity is O(log n).\n    - Java's Arrays.sort() method uses a variation of the Quick Sort algorithm. When sorting two arrays, it has a space complexity of O(log n).\n\n---\n\n### Approach 2: Counting\n\n#### Intuition\n\nAnother way to track duplicates is to use an array called `frequencyCount`. In this array, each index represents a unique value from our given array, `nums`, and the value at each index represents the count of occurrences of that value in `nums`.\n\nFor example: if `3` appears in `nums` twice, `frequencyCount[3]` would equal `2`.\n```\nnums = [1,3,3,5,5]\nfrequencyCount = [0, 1, 0, 2, 0, 2]\n```\n\nWe know `nums` contains all unique values when none of the values in `frequencyCount` is greater than `1`.\n\nOnce we've created the `frequencyCount` array from `nums`, we can iterate through it and simulate the process used in Approach 1 to increment each duplicate value until all values become unique.\n\nSo elements with a count of 1 or less will remain unchanged. Upon encountering a duplicate, we'll calculate the surplus of elements with that value, carry that count to the next index, and set the current index value to `1`.\n\nWe'll keep a running count for the number that we carry over to the next index; that equals how many moves it will take to make each value of `nums` unique.\n\nWe want to initialize `frequencyCount` with the largest possible range that could be needed to solve the problem. How do we determine this range? \n\nThe minimum length of `frequencyCount` would be the largest value in `nums`, and it must be long enough to hold the new values we get from incrementing any duplicates. Keep in mind that the maximum number of duplicates that we could possibly have is equal to the length of `nums`.\n\nIn problems like this, we can determine the longest possible length needed by considering a worst-case scenario. For instance, take the edge case where `nums = [4, 4, 4, 4, 4]`.\n\nThe `frequencyCount` array for this would be:  \n```\nfrequencyCount = [0, 0, 0, 0, 5]\n```\nIf we make every element unique, the `frequencyCount` array transforms to:\n```\nfrequencyCount = [0, 0, 0, 0, 1, 1, 1, 1, 1]\n```\n\nAs you can observe, the size of the `frequencyCount` array is 9, which equals the length of the original `nums`(5) array plus the largest value found in `nums`(4).\n\n\n#### Algorithm\n \n - Initialize variables:\n   - `n` as the length of `nums`.\n   - `max` to store the maximum value in `nums`.\n   - `minIncrements` to store the total number of increments needed.\n - Find the maximum value in `nums`.\n - Create an array `frequencyCount` to store the frequency of each element.\n - Loop over `nums` and populate `frequencyCount`.\n - Loop over the `frequencyCount` array. For each element:\n   - If the frequency is less than or equal to one, continue with the next iteration.\n   - Add the duplicates to the frequency of the next element.\n   - Set the frequency of the current element to one.\n   - Update `minIncrements` to account for the movement of the duplicates.\n - Return `minIncrements`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/XhiwKJTT/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"XhiwKJTT\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of `nums` and $max$ be the maximum element in `nums`.\n\n* Time complexity: $O(n+max)$\n\n    The algorithm initially iterates over `nums` twice, each iteration taking $O(n)$ time. To find the number of increments, it then loops over the `frequencyCount` array, which has a time complexity of $O(n + \\text{max})$. Thus, the total time complexity is $2 \\cdot O(n) + O(n + \\text{max})$, simplifying to $O(n + \\text{max})$.\n\n* Space complexity: $O(n+max)$\n\n    The only additional space used by the algorithm is the `frequencyCount` array, which has a size of $n + \\text{max}$. Therefore, the space complexity is $O(n + \\text{max})$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

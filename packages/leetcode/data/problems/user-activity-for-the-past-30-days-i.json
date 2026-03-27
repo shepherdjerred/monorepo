@@ -1,0 +1,58 @@
+{
+  "questionId": "1245",
+  "questionFrontendId": "1141",
+  "title": "User Activity for the Past 30 Days I",
+  "titleSlug": "user-activity-for-the-past-30-days-i",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Activity</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| user_id       | int     |\n| session_id    | int     |\n| activity_date | date    |\n| activity_type | enum    |\n+---------------+---------+\nThis table may have duplicate rows.\nThe activity_type column is an ENUM (category) of type (&#39;open_session&#39;, &#39;end_session&#39;, &#39;scroll_down&#39;, &#39;send_message&#39;).\nThe table shows the user activities for a social media website. \nNote that each session belongs to exactly one user.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to find the daily active user count for a period of <code>30</code> days ending <code>2019-07-27</code> inclusively. A user was active on someday if they made at least one activity on that day.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>Note: <strong>Any</strong> activity from (<code>&#39;open_session&#39;</code>, <code>&#39;end_session&#39;</code>, <code>&#39;scroll_down&#39;</code>, <code>&#39;send_message&#39;</code>) will be considered valid activity for a user to be considered active on a day.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nActivity table:\n+---------+------------+---------------+---------------+\n| user_id | session_id | activity_date | activity_type |\n+---------+------------+---------------+---------------+\n| 1       | 1          | 2019-07-20    | open_session  |\n| 1       | 1          | 2019-07-20    | scroll_down   |\n| 1       | 1          | 2019-07-20    | end_session   |\n| 2       | 4          | 2019-07-20    | open_session  |\n| 2       | 4          | 2019-07-21    | send_message  |\n| 2       | 4          | 2019-07-21    | end_session   |\n| 3       | 2          | 2019-07-21    | open_session  |\n| 3       | 2          | 2019-07-21    | send_message  |\n| 3       | 2          | 2019-07-21    | end_session   |\n| 4       | 3          | 2019-06-25    | open_session  |\n| 4       | 3          | 2019-06-25    | end_session   |\n+---------+------------+---------------+---------------+\n<strong>Output:</strong> \n+------------+--------------+ \n| day        | active_users |\n+------------+--------------+ \n| 2019-07-20 | 2            |\n| 2019-07-21 | 2            |\n+------------+--------------+ \n<strong>Explanation:</strong> Note that we do not care about days with zero active users.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Activity (user_id int, session_id int, activity_date date, activity_type ENUM('open_session', 'end_session', 'scroll_down', 'send_message'))\"], \"mssql\": [\"create table Activity (user_id int, session_id int, activity_date date, activity_type varchar(15) not null check(activity_type in ('open_session', 'end_session', 'scroll_down', 'send_message')))\"], \"oraclesql\": [\"create table Activity (user_id int, session_id int, activity_date date, activity_type varchar(15) not null check(activity_type in ('open_session', 'end_session', 'scroll_down', 'send_message')))\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"user_activity\", \"pythondata\": [\"Activity = pd.DataFrame([], columns=['user_id', 'session_id', 'activity_date', 'activity_type']).astype({'user_id':'Int64', 'session_id':'Int64', 'activity_date':'datetime64[ns]', 'activity_type':'object'})\"], \"postgresql\": [\"Create table If Not Exists Activity (user_id int, session_id int, activity_date date, activity_type VARCHAR(20) CHECK (activity_type IN ('open_session', 'end_session', 'scroll_down', 'send_message')))\\n\"], \"database_schema\": {\"Activity\": {\"user_id\": \"INT\", \"session_id\": \"INT\", \"activity_date\": \"DATE\", \"activity_type\": \"ENUM('open_session', 'end_session', 'scroll_down', 'send_message')\"}}}",
+  "stats": "{\"totalAccepted\": \"537K\", \"totalSubmission\": \"1.1M\", \"totalAcceptedRaw\": 536985, \"totalSubmissionRaw\": 1061020, \"acRate\": \"50.6%\"}",
+  "likes": 1088,
+  "dislikes": 1018,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Activity\":[\"user_id\",\"session_id\",\"activity_date\",\"activity_type\"]},\"rows\":{\"Activity\":[[1,1,\"2019-07-20\",\"open_session\"],[1,1,\"2019-07-20\",\"scroll_down\"],[1,1,\"2019-07-20\",\"end_session\"],[2,4,\"2019-07-20\",\"open_session\"],[2,4,\"2019-07-21\",\"send_message\"],[2,4,\"2019-07-21\",\"end_session\"],[3,2,\"2019-07-21\",\"open_session\"],[3,2,\"2019-07-21\",\"send_message\"],[3,2,\"2019-07-21\",\"end_session\"],[4,3,\"2019-06-25\",\"open_session\"],[4,3,\"2019-06-25\",\"end_session\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"zoom\", \"name\": \"Zoom\"}]}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef user_activity(activity: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "1931",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\n\nThe two keys for solving this question are:\n\n1. select a specific date range\n2. count only distinct users as there are users having more than one activity per day, and the final results are grouped by day. \n\nThere are several ways to select a specific range of dates:\n\n1. manually calculate the date and use this date in the filter to get the range. For this question, the result is looking for a period of 30 days ending 2019-07-27, which is all the days between 2019-06-28 and 2019-07-27:\n\n```\nactivity_date > '2019-06-27' AND activity_date <= '2019-07-27' \n```\nor using `BETWEEN`:\n\n```\nactivity_day BETWEEN '2019-06-28' AND '2019-07-27'\n```\nThe date '2019-06-28' is used here because the BETWEEN operator is inclusive, and the begin and end values are included. \n\n\n2. [DATEDIFF(date1, date2)](https://dev.mysql.com/doc/refman/5.7/en/date-and-time-functions.html#function_datediff): this function returns date1 - date2 expressed as a value in days from one date to the other, so there is no need to calculate the exact date for the filter:\n```\nDATEDIFF('2019-07-27', activity_date)<30 \nAND \nDATEDIFF('2019-07-27', activity_date)>=0 \n```\nthe first condition checks that `date2` is within `30` days of `date1`. The second condition checks that `date2` does not occur after `date1`. Without the second condition, a negative difference is also '<30', and we will get dates after 2019-07-27 in this case\n\nAnother way to use DATEDIFF:\n```\nDATEDIFF('2019-07-27', activity_date) BETWEEN 0 AND 29\n```\n\n3. [DATE_SUB(date, INTERVAL expr unit)](https://dev.mysql.com/doc/refman/5.7/en/date-and-time-functions.html#function_date-add): this function performs date arithmetic, if the syntax does not support adding or subtracting days directly using operators such as '+' or '-': \n```\nactivity_date BETWEEN date_sub('2019-07-27', INTERVAL 29 DAY) \nAND '2019-07-27'\n```\n\n---\n\n### Approach: \n\n#### Algorithm\n\n1. Select the columns needed for the final output: the dates, and the number of distinct users for each date.\n2. Add the filter for the date range. Make sure you are familiar with at least one method to pull the date range correctly with minimum calculation. \n3. Group the results by the activity date.\n\n\n##### MySQL\n\n```sql\nSELECT \n    activity_date AS day, \n    COUNT(DISTINCT user_id) AS active_users\nFROM \n    Activity\nWHERE \n    DATEDIFF('2019-07-27', activity_date) < 30 AND DATEDIFF('2019-07-27', activity_date)>=0\nGROUP BY 1\n```\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

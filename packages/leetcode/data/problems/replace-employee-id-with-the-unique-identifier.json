@@ -1,0 +1,58 @@
+{
+  "questionId": "1509",
+  "questionFrontendId": "1378",
+  "title": "Replace Employee ID With The Unique Identifier",
+  "titleSlug": "replace-employee-id-with-the-unique-identifier",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Employees</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| id            | int     |\n| name          | varchar |\n+---------------+---------+\nid is the primary key (column with unique values) for this table.\nEach row of this table contains the id and the name of an employee in a company.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>EmployeeUNI</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| id            | int     |\n| unique_id     | int     |\n+---------------+---------+\n(id, unique_id) is the primary key (combination of columns with unique values) for this table.\nEach row of this table contains the id and the corresponding unique id of an employee in the company.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to show the <strong>unique ID </strong>of each user, If a user does not have a unique ID replace just show <code>null</code>.</p>\n\n<p>Return the result table in <strong>any</strong> order.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nEmployees table:\n+----+----------+\n| id | name     |\n+----+----------+\n| 1  | Alice    |\n| 7  | Bob      |\n| 11 | Meir     |\n| 90 | Winston  |\n| 3  | Jonathan |\n+----+----------+\nEmployeeUNI table:\n+----+-----------+\n| id | unique_id |\n+----+-----------+\n| 3  | 1         |\n| 11 | 2         |\n| 90 | 3         |\n+----+-----------+\n<strong>Output:</strong> \n+-----------+----------+\n| unique_id | name     |\n+-----------+----------+\n| null      | Alice    |\n| null      | Bob      |\n| 2         | Meir     |\n| 3         | Winston  |\n| 1         | Jonathan |\n+-----------+----------+\n<strong>Explanation:</strong> \nAlice and Bob do not have a unique ID, We will show null instead.\nThe unique ID of Meir is 2.\nThe unique ID of Winston is 3.\nThe unique ID of Jonathan is 1.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Employees (id int, name varchar(20))\", \"Create table If Not Exists EmployeeUNI (id int, unique_id int)\"], \"mssql\": [\"Create table Employees (id int, name varchar(20))\", \"Create table EmployeeUNI (id int, unique_id int)\"], \"oraclesql\": [\"Create table Employees (id int, name varchar(20))\", \"Create table EmployeeUNI (id int, unique_id int)\"], \"database\": true, \"name\": \"replace_employee_id\", \"pythondata\": [\"Employees = pd.DataFrame([], columns=['id', 'name']).astype({'id':'int64', 'name':'object'})\", \"EmployeeUNI = pd.DataFrame([], columns=['id', 'unique_id']).astype({'id':'int64', 'unique_id':'int64'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Employees (id int, name varchar(20))\\n\", \"Create table If Not Exists EmployeeUNI (id int, unique_id int)\"], \"database_schema\": {\"Employees\": {\"id\": \"INT\", \"name\": \"VARCHAR(20)\"}, \"EmployeeUNI\": {\"id\": \"INT\", \"unique_id\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"1.3M\", \"totalSubmission\": \"1.6M\", \"totalAcceptedRaw\": 1297328, \"totalSubmissionRaw\": 1552998, \"acRate\": \"83.5%\"}",
+  "likes": 2036,
+  "dislikes": 161,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Employees\":[\"id\",\"name\"],\"EmployeeUNI\":[\"id\",\"unique_id\"]},\"rows\":{\"Employees\":[[1,\"Alice\"],[7,\"Bob\"],[11,\"Meir\"],[90,\"Winston\"],[3,\"Jonathan\"]],\"EmployeeUNI\":[[3,1],[11,2],[90,3]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 12, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 10, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"cognizant\", \"name\": \"Cognizant\"}, {\"timesEncountered\": 2, \"slug\": \"point72\", \"name\": \"Point72\"}]}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef replace_employee_id(employees: pd.DataFrame, employee_uni: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "2017",
+    "content": "<!-- Don't delete this -->\n[TOC]\n\n# Solution\n\n---\n\n## pandas\n\n### Approach: Left Join on ID\n\n#### Algorithm\n\nTo combine employee names with their unique ids and get the related data from two DataFrames, let's merge `employees` and `employee_uni` based on the common column `id`. This can be implemented using the `merge()` function in Pandas. Note that we need to set some parameters in `merge`:\n- `employees` and `employee_uni`: these are the two DataFrames that we want to merge.\n- `on='id'`, this specifies the column on which the merge operation will be performed. Both DataFrames contain the column `id`.\n- `how='left'`: this defines the type of merge to be performed. The `left` merge means that all the rows from the `employees` DataFrame will be included in the result, and any matching rows from the `employee_uni` DataFrame will also be included. Hence, employees without unique IDs will also be retained, but their corresponding columns from `employee_uni` will be filled with `NaN` (Not a Number) values.\n\n```python\nemployee_name_uni = pd.merge(employees, employee_uni, on='id', how='left')\n```\n\nThis creates the `employee_name_uni` DataFrame as shown below, where all the rows from `employees` are preserved and additional information from `employee_uni` is included for the matching `id` values. For rows that don't have a matching `id` in `employee_uni`, the corresponding columns from `employee_uni` are filled with `NaN`. \n\n|   id | name     |   unique_id |\n|-----|---------|------------|\n|    1 | Alice    |         NaN |\n|    7 | Bob      |         NaN |\n|   11 | Meir     |         2.0 |\n|   90 | Winston  |         3.0 |\n|    3 | Jonathan |         1.0 |\n\n<br>\n\nThe merged information from two DataFrames contains the `name` and `unique_id` for each employee (if they have one). Next, we will create a new DataFrame containing only the required columns `unique_id` and `name`, which can be accomplished by selecting the columns `unique_id` and `name` from the `employee_name_uni` DataFrame using double square brackets.\n\n\n```python\nanswer = employee_name_uni[['unique_id', 'name']]\n```\n\nWe will obtain the DataFrame `answer` as follows:\n\n| unique_id | name     |\n| --------- | -------- |\n| null      | Alice    |\n| null      | Bob      |\n| 2         | Meir     |\n| 3         | Winston  |\n| 1         | Jonathan |\n\n<br>\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/EZrPUswc/shared\" frameBorder=\"0\" width=\"100%\" height=\"174\" name=\"EZrPUswc\"></iframe>\n\n<br>\n\n---\n\n## Database\n\n### Approach: Left Join on ID\n\n#### Algorithm\n\nWe first perform a LEFT JOIN operation to combine data from both tables based on the `id` column. Similarly, we use LEFT JOIN to ensure that all the rows from the `Employees` table are included in the result, even if there are no matching rows in the `EmployeeUNI` table.\n\n```sql\nSELECT \n    * \nFROM\n    Employees \nLEFT JOIN \n    EmployeeUNI \nON \n    Employees.id = EmployeeUNI.id;\n```\n\n\n| id | name     | id   | unique_id |\n| -- | -------- | ---- | --------- |\n| 1  | Alice    | null | null      |\n| 7  | Bob      | null | null      |\n| 11 | Meir     | 11   | 2         |\n| 90 | Winston  | 90   | 3         |\n| 3  | Jonathan | 3    | 1         |\n\n<br>\n\nSince we want to retrieve the columns `unique_id` and `name` from the combined table, we will select the `unique_id` column from the `EmployeeUNI` table and the `name` column from the `Employees` table. The complete code is as follows:\n\n#### Implementation\n\n```sql\nSELECT \n    EmployeeUNI.unique_id, Employees.name\nFROM \n    Employees\nLEFT JOIN \n    EmployeeUNI \nON \n    Employees.id = EmployeeUNI.id;\n```",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

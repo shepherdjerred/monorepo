@@ -1,0 +1,144 @@
+{
+  "questionId": "1217",
+  "questionFrontendId": "1122",
+  "title": "Relative Sort Array",
+  "titleSlug": "relative-sort-array",
+  "difficulty": "Easy",
+  "content": "<p>Given two arrays <code>arr1</code> and <code>arr2</code>, the elements of <code>arr2</code> are distinct, and all elements in <code>arr2</code> are also in <code>arr1</code>.</p>\n\n<p>Sort the elements of <code>arr1</code> such that the relative ordering of items in <code>arr1</code> are the same as in <code>arr2</code>. Elements that do not appear in <code>arr2</code> should be placed at the end of <code>arr1</code> in <strong>ascending</strong> order.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr1 = [2,3,1,3,2,4,6,7,9,2,19], arr2 = [2,1,4,3,9,6]\n<strong>Output:</strong> [2,2,2,1,4,3,3,9,6,7,19]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr1 = [28,6,22,8,44,17], arr2 = [22,28,8,6]\n<strong>Output:</strong> [22,28,8,6,17,44]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= arr1.length, arr2.length &lt;= 1000</code></li>\n\t<li><code>0 &lt;= arr1[i], arr2[i] &lt;= 1000</code></li>\n\t<li>All the elements of <code>arr2</code> are <strong>distinct</strong>.</li>\n\t<li>Each&nbsp;<code>arr2[i]</code> is in <code>arr1</code>.</li>\n</ul>\n",
+  "hints": [
+    "Using a hashmap, we can map the values of arr2 to their position in arr2.",
+    "After, we can use a custom sorting function."
+  ],
+  "metaData": "{\n  \"name\": \"relativeSortArray\",\n  \"params\": [\n    {\n      \"name\": \"arr1\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"arr2\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"402.6K\", \"totalSubmission\": \"535.6K\", \"totalAcceptedRaw\": 402566, \"totalSubmissionRaw\": 535629, \"acRate\": \"75.2%\"}",
+  "likes": 3354,
+  "dislikes": 199,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[2,3,1,3,2,4,6,7,9,2,19]\n[2,1,4,3,9,6]",
+    "[28,6,22,8,44,17]\n[22,28,8,6]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 2, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Counting Sort",
+      "slug": "counting-sort"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> relativeSortArray(vector<int>& arr1, vector<int>& arr2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] relativeSortArray(int[] arr1, int[] arr2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def relativeSortArray(self, arr1: List[int], arr2: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def relativeSortArray(self, arr1, arr2):\n        \"\"\"\n        :type arr1: List[int]\n        :type arr2: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arr1\n * @param {number[]} arr2\n * @return {number[]}\n */\nvar relativeSortArray = function(arr1, arr2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function relativeSortArray(arr1: number[], arr2: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] RelativeSortArray(int[] arr1, int[] arr2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* relativeSortArray(int* arr1, int arr1Size, int* arr2, int arr2Size, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func relativeSortArray(arr1 []int, arr2 []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun relativeSortArray(arr1: IntArray, arr2: IntArray): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func relativeSortArray(_ arr1: [Int], _ arr2: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn relative_sort_array(arr1: Vec<i32>, arr2: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} arr1\n# @param {Integer[]} arr2\n# @return {Integer[]}\ndef relative_sort_array(arr1, arr2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $arr1\n     * @param Integer[] $arr2\n     * @return Integer[]\n     */\n    function relativeSortArray($arr1, $arr2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> relativeSortArray(List<int> arr1, List<int> arr2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def relativeSortArray(arr1: Array[Int], arr2: Array[Int]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec relative_sort_array(arr1 :: [integer], arr2 :: [integer]) :: [integer]\n  def relative_sort_array(arr1, arr2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec relative_sort_array(Arr1 :: [integer()], Arr2 :: [integer()]) -> [integer()].\nrelative_sort_array(Arr1, Arr2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (relative-sort-array arr1 arr2)\n  (-> (listof exact-integer?) (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2339",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Using Two Loops and Sorting\n\n#### Intuition\n\nOne way to solve this problem is to use nested loops to find the elements in `arr1` that are present in `arr2`, and then sort the remaining elements. \n\nTo start, we will create a new array `result` to store the sorted elements. The first step is to identify the elements present in both `arr1` and `arr2`. We iterate through `arr2` using a loop, and for each element in `arr2`, we check if the same element exists in `arr1`. If it does, we add that element to the result array and mark its position in `arr1` as -1 to avoid duplicates.\n\nAfter this step, the result array will contain all the elements from `arr1` that were present in `arr2`, in the order they appeared in `arr2`. Now, we need to add the remaining elements from `arr1` that were not present in `arr2`. We sort the `arr1` array which brings all the unmarked elements (-1) to the left end of the array. Then, we iterate through `arr1` again and add all the non-negative elements to the result array.\n\nAfter both steps, we return the result array, which now contains all the elements from `arr1` sorted according to the relative order specified by `arr2`, followed by the remaining elements in ascending order.\n\n#### Algorithm\n\n- Initialize an empty `result` array.\n- Iterate through the relative order array (`arr2`).\n   - For each element in `arr2`, iterate through the target array (`arr1`).\n       - If the element in `arr1` matches the current element in `arr2`.\n           - Add the element to the `result` array.\n           - Mark the element in `arr1` as visited (-1).\n- Sort the remaining elements in `arr1` (elements not marked as visited).\n- Iterate through `arr1` again.\n   - If the element is not marked as visited, add it to the `result` array.\n- Return the `result` array.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/MhcSKxtd/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"MhcSKxtd\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of `arr1` and $m$ be the size of `arr2`.\n\n- Time complexity: $O(m \\cdot n + n \\log n)$\n\n    We iterate through each element of `arr2` and for each element, we iterate through `arr1`. This results in $O(m \\cdot n)$ time complexity.\n   \n    Sorting `arr1` has a time complexity of $O(n \\log n)$.\n\n    Iterating through `arr1` to add non-marked elements to the result has a time complexity of $O(n)$.\n\n    Combining these steps, the overall time complexity is $O(m \\cdot n + n \\log n + n)$, which we can simplify to $O(m \\cdot n + n \\log n)$.\n\n- Space complexity: $O(n)$ or $O( \\log n )$\n\n    Apart from the `result` array and a few variables, the algorithm doesn't use any additional data structures that scale with input size. We do not count `result` array in the space complexity as it's only used to store the output.\n\n    Note that some extra space is used when we sort arrays in place. The space complexity of the sorting algorithm depends on the programming language.\n    - In Python, the sort method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has $O(n)$ additional space.\n    - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n )$ for sorting two arrays.\n    - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worse-case space complexity of $O( \\log n )$.\n\n---\n\n### Approach 2: Using Hash Map for Counting and Sorting\n\n#### Intuition\n\nWe can improve upon the first approach by using a map to store the elements from `arr2` and their frequencies in `arr1`. This eliminates the need for nested loops and reduces the time complexity to $O(m + n \\log n)$. Also, we can use a temporary array `remaining` to store the remaining elements, avoiding the need for sorting the entire `arr1`, further improving efficiency. \n\nWe will use a map to store the elements from `arr2` as keys and their frequencies in `arr1` as values. We will also create a temporary array `remaining` to store elements from `arr1` that are not present in `arr2`.\n\nThen, we will iterate through `arr1` and update the frequencies in the map for elements present in `arr2`. If an element is not present in `arr2`, we will add it to the `remaining` array. After processing all elements from `arr1`, we sort the `remaining` array in ascending order.\n\nNext, we create the final `result` array. We iterate through `arr2` and add each element to the result based on its frequency stored in the map. After processing all elements from `arr2`, we will add the elements from the `remaining` array to the `result`.\n\n#### Algorithm\n \n- Initialize an empty `result` array and an empty `remaining` array.\n- Initialize an unordered map (`countMap`) with elements from `arr2` as keys and initial count as 0.\n- Iterate through `arr1`.\n   - If the element is present in `countMap` (i.e., present in `arr2`).\n       - Increment the count in `countMap` for that element.\n   - Else (element not present in `arr2`).\n       - Add the element to the `remaining` array.\n- Sort the `remaining` array.\n- Iterate through `arr2`.\n   - For each element in `arr2`.\n       - Add the element to the `result` array, `countMap[element]` times.\n- Iterate through the `remaining` array.\n   - Add all elements from the `remaining` array to the `result` array.\n- Return the `result` array.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/byQXHNt3/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"byQXHNt3\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of `arr1` and $m$ be the size of `arr2`.\n\n* Time complexity: $O(m + n \\log n)$ \n\n    Initializing the map with elements from `arr2` takes $O(m)$ time.\n\n    Counting occurrences of elements in `arr1` and updating the map or adding to the `remaining` array takes $O(n)$ time.\n\n    Sorting the `remaining` array takes $O(n \\log n)$ time.\n\n    Adding elements to the `result` array based on the map and the relative order of `arr2` takes $O(n)$ time.\n\n    Adding the sorted remaining elements to the result list takes $O(n)$ time. \n\n    Combining these steps, the overall time complexity is $O(m + n + n \\log n + n)$, which we can simplify to $O(m + n \\log n)$.\n    \n* Space complexity: $O(n + m)$\n\n    We use an unordered map to store the frequencies of elements in `arr2`. Since `arr2` has `m` unique elements, the space required is $O(m)$.\n\n    We store elements from `arr1` that are not present in `arr2`. In the worst case, all `n` elements of `arr1` are unique and not in `arr2`, requiring $O(n)$ space.\n\n    Additionally some extra space is used when we sort arrays in place. The space complexity of the sorting algorithm depends on the programming language.\n    - In Python, the sort method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has $O(n)$ additional space.\n    - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n )$ for sorting two arrays.\n    - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worse-case space complexity of $O( \\log n )$.\n\n    Therefore, the overall space complexity depends on the language used for sorting: \n    Python: $O(n + m)$\n    Java/C++: $O(n + m + \\log n)$, which simplifies to $O(n + m)$\n \n---\n\n### Approach 3: Using Counting Sort\n\n#### Intuition\n\nIn Approach 2, we used an unordered map to store the elements from `arr2` as keys and their frequencies in `arr1` as values. In this approach, we can use an array `count` to store the frequencies of elements in `arr1`. This is more memory-efficient than using an unordered map, as the elements in `arr1` are guaranteed to be in the range of 0 to 1000.\n\nWe will find the maximum element in `arr1` and use an array `count` of size `maxElement + 1` to store the frequencies of elements in `arr1`. We iterate through `arr1` and update the frequencies in the `count` array.\n\nNext, we create the final result array. Then, we iterate through `arr2`, and for each element in `arr2`, we add it to the result as many times as its frequency in `count[element]`. We decrement `count[element]` after each addition to keep accurate track of the elements we still need to add.\n\nAfter processing all elements from `arr2`, we iterate through the remaining elements in the `count` array. For each index `num` where `count[num]` is non-zero, we add the element `num` to the result as many times as its frequency (`count[num]`).\n\nFinally, we return the result array, which now contains all the elements from the original `arr1`, sorted according to the relative order specified by `arr2`, followed by the remaining elements in ascending order.\n\nThe approach is visualized below:\n\n!?!../Documents/1122/approach3.json:976,627!?!\n\n#### Algorithm\n \n- Find the `maxElement` in `arr1`.\n- Initialize a `count` array of size `maxElement + 1` to store the count of occurrences of each element.\n- Iterate through `arr1`.\n   - Increment the count in the `count` array for each element.\n- Initialize an empty `result` array.\n- Iterate through `arr2`.\n   - For each element in `arr2`.\n       - Add the element to the `result` array, `count[element]` times.\n       - Decrement the count in the `count` array for that element.\n- Iterate from 0 to `maxElement`.\n   - For each index `i`.\n       - Add the element i to the `result` array, `count[i]` times.\n- Return the `result` array.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/8zYFp6ww/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"8zYFp6ww\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of `arr1` and $m$ be the size of `arr2`. Let $k$ be the maximum element in `arr1`.\n\n* Time complexity: $O(n + m + k)$\n\n    Finding the maximum element in `arr1` takes $O(n)$ time.\n\n    Counting occurrences of each element in `arr1` using the count array takes $O(n)$ time.\n\n    Adding elements to the `result` array based on the relative order of arr2 takes $O(m + n)$ time.\n\n    Iterating through the count array to add remaining elements to the `result` array takes $O(n + k)$ time.\n\n    Combining these steps, the overall time complexity is $O(n + n + m + n + k) = O(n + m + k)$.\n\n* Space complexity: $O(k)$\n\n    The count array has a size of `maxElement + 1`, resulting in $O(k)$ space, where $k$ is the maximum element in `arr1`.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

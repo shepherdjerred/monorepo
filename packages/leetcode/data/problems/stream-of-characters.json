@@ -1,0 +1,146 @@
+{
+  "questionId": "1097",
+  "questionFrontendId": "1032",
+  "title": "Stream of Characters",
+  "titleSlug": "stream-of-characters",
+  "difficulty": "Hard",
+  "content": "<p>Design an algorithm that accepts a stream of characters and checks if a suffix of these characters is a string of a given array of strings <code>words</code>.</p>\n\n<p>For example, if <code>words = [&quot;abc&quot;, &quot;xyz&quot;]</code>&nbsp;and the stream added the four characters (one by one) <code>&#39;a&#39;</code>, <code>&#39;x&#39;</code>, <code>&#39;y&#39;</code>, and <code>&#39;z&#39;</code>, your algorithm should detect that the suffix <code>&quot;xyz&quot;</code> of the characters <code>&quot;axyz&quot;</code> matches <code>&quot;xyz&quot;</code> from <code>words</code>.</p>\n\n<p>Implement the <code>StreamChecker</code> class:</p>\n\n<ul>\n\t<li><code>StreamChecker(String[] words)</code> Initializes the object with the strings array <code>words</code>.</li>\n\t<li><code>boolean query(char letter)</code> Accepts a new character from the stream and returns <code>true</code> if any non-empty suffix from the stream forms a word that is in <code>words</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;StreamChecker&quot;, &quot;query&quot;, &quot;query&quot;, &quot;query&quot;, &quot;query&quot;, &quot;query&quot;, &quot;query&quot;, &quot;query&quot;, &quot;query&quot;, &quot;query&quot;, &quot;query&quot;, &quot;query&quot;, &quot;query&quot;]\n[[[&quot;cd&quot;, &quot;f&quot;, &quot;kl&quot;]], [&quot;a&quot;], [&quot;b&quot;], [&quot;c&quot;], [&quot;d&quot;], [&quot;e&quot;], [&quot;f&quot;], [&quot;g&quot;], [&quot;h&quot;], [&quot;i&quot;], [&quot;j&quot;], [&quot;k&quot;], [&quot;l&quot;]]\n<strong>Output</strong>\n[null, false, false, false, true, false, true, false, false, false, false, false, true]\n\n<strong>Explanation</strong>\nStreamChecker streamChecker = new StreamChecker([&quot;cd&quot;, &quot;f&quot;, &quot;kl&quot;]);\nstreamChecker.query(&quot;a&quot;); // return False\nstreamChecker.query(&quot;b&quot;); // return False\nstreamChecker.query(&quot;c&quot;); // return False\nstreamChecker.query(&quot;d&quot;); // return True, because &#39;cd&#39; is in the wordlist\nstreamChecker.query(&quot;e&quot;); // return False\nstreamChecker.query(&quot;f&quot;); // return True, because &#39;f&#39; is in the wordlist\nstreamChecker.query(&quot;g&quot;); // return False\nstreamChecker.query(&quot;h&quot;); // return False\nstreamChecker.query(&quot;i&quot;); // return False\nstreamChecker.query(&quot;j&quot;); // return False\nstreamChecker.query(&quot;k&quot;); // return False\nstreamChecker.query(&quot;l&quot;); // return True, because &#39;kl&#39; is in the wordlist\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= words.length &lt;= 2000</code></li>\n\t<li><code>1 &lt;= words[i].length &lt;= 200</code></li>\n\t<li><code>words[i]</code> consists of lowercase English letters.</li>\n\t<li><code>letter</code> is a lowercase English letter.</li>\n\t<li>At most <code>4 * 10<sup>4</sup></code> calls will be made to query.</li>\n</ul>\n",
+  "hints": [
+    "Put the words into a trie, and manage a set of pointers within that trie."
+  ],
+  "metaData": "{\n    \"classname\": \"StreamChecker\",\n    \"maxbytesperline\": 500000,\n    \"constructor\": {\n        \"params\": [\n            {\n                \"type\": \"string[]\",\n                \"name\": \"words\"\n            }]\n    },\n    \"methods\": [\n        {\n            \"name\" : \"query\",\n            \"params\": [\n                {\n                    \"type\": \"character\",\n                    \"name\": \"letter\"\n                }\n            ],\n            \"return\": {\n                \"type\": \"boolean\"\n            }\n        }\n    ],\n    \"systemdesign\": true,\n    \"params\": [\n        {\n            \"name\": \"starts\",\n            \"type\": \"integer[]\"\n        },\n        {\n            \"name\": \"ends\",\n            \"type\": \"integer[]\"\n        }\n    ],\n    \"return\": {\n        \"type\": \"list<boolean>\",\n        \"dealloc\": true\n    }\n}",
+  "stats": "{\"totalAccepted\": \"107.3K\", \"totalSubmission\": \"206.1K\", \"totalAcceptedRaw\": 107309, \"totalSubmissionRaw\": 206077, \"acRate\": \"52.1%\"}",
+  "likes": 1878,
+  "dislikes": 186,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"StreamChecker\",\"query\",\"query\",\"query\",\"query\",\"query\",\"query\",\"query\",\"query\",\"query\",\"query\",\"query\",\"query\"]\n[[[\"cd\",\"f\",\"kl\"]],[\"a\"],[\"b\"],[\"c\"],[\"d\"],[\"e\"],[\"f\"],[\"g\"],[\"h\"],[\"i\"],[\"j\"],[\"k\"],[\"l\"]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"jane-street\", \"name\": \"Jane Street\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Trie",
+      "slug": "trie"
+    },
+    {
+      "name": "Data Stream",
+      "slug": "data-stream"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class StreamChecker {\npublic:\n    StreamChecker(vector<string>& words) {\n        \n    }\n    \n    bool query(char letter) {\n        \n    }\n};\n\n/**\n * Your StreamChecker object will be instantiated and called as such:\n * StreamChecker* obj = new StreamChecker(words);\n * bool param_1 = obj->query(letter);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class StreamChecker {\n\n    public StreamChecker(String[] words) {\n        \n    }\n    \n    public boolean query(char letter) {\n        \n    }\n}\n\n/**\n * Your StreamChecker object will be instantiated and called as such:\n * StreamChecker obj = new StreamChecker(words);\n * boolean param_1 = obj.query(letter);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class StreamChecker:\n\n    def __init__(self, words: List[str]):\n        \n\n    def query(self, letter: str) -> bool:\n        \n\n\n# Your StreamChecker object will be instantiated and called as such:\n# obj = StreamChecker(words)\n# param_1 = obj.query(letter)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class StreamChecker(object):\n\n    def __init__(self, words):\n        \"\"\"\n        :type words: List[str]\n        \"\"\"\n        \n\n    def query(self, letter):\n        \"\"\"\n        :type letter: str\n        :rtype: bool\n        \"\"\"\n        \n\n\n# Your StreamChecker object will be instantiated and called as such:\n# obj = StreamChecker(words)\n# param_1 = obj.query(letter)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} words\n */\nvar StreamChecker = function(words) {\n    \n};\n\n/** \n * @param {character} letter\n * @return {boolean}\n */\nStreamChecker.prototype.query = function(letter) {\n    \n};\n\n/** \n * Your StreamChecker object will be instantiated and called as such:\n * var obj = new StreamChecker(words)\n * var param_1 = obj.query(letter)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class StreamChecker {\n    constructor(words: string[]) {\n        \n    }\n\n    query(letter: string): boolean {\n        \n    }\n}\n\n/**\n * Your StreamChecker object will be instantiated and called as such:\n * var obj = new StreamChecker(words)\n * var param_1 = obj.query(letter)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class StreamChecker {\n\n    public StreamChecker(string[] words) {\n        \n    }\n    \n    public bool Query(char letter) {\n        \n    }\n}\n\n/**\n * Your StreamChecker object will be instantiated and called as such:\n * StreamChecker obj = new StreamChecker(words);\n * bool param_1 = obj.Query(letter);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} StreamChecker;\n\n\nStreamChecker* streamCheckerCreate(char** words, int wordsSize) {\n    \n}\n\nbool streamCheckerQuery(StreamChecker* obj, char letter) {\n    \n}\n\nvoid streamCheckerFree(StreamChecker* obj) {\n    \n}\n\n/**\n * Your StreamChecker struct will be instantiated and called as such:\n * StreamChecker* obj = streamCheckerCreate(words, wordsSize);\n * bool param_1 = streamCheckerQuery(obj, letter);\n \n * streamCheckerFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type StreamChecker struct {\n    \n}\n\n\nfunc Constructor(words []string) StreamChecker {\n    \n}\n\n\nfunc (this *StreamChecker) Query(letter byte) bool {\n    \n}\n\n\n/**\n * Your StreamChecker object will be instantiated and called as such:\n * obj := Constructor(words);\n * param_1 := obj.Query(letter);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class StreamChecker(words: Array<String>) {\n\n    fun query(letter: Char): Boolean {\n        \n    }\n\n}\n\n/**\n * Your StreamChecker object will be instantiated and called as such:\n * var obj = StreamChecker(words)\n * var param_1 = obj.query(letter)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass StreamChecker {\n\n    init(_ words: [String]) {\n        \n    }\n    \n    func query(_ letter: Character) -> Bool {\n        \n    }\n}\n\n/**\n * Your StreamChecker object will be instantiated and called as such:\n * let obj = StreamChecker(words)\n * let ret_1: Bool = obj.query(letter)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct StreamChecker {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl StreamChecker {\n\n    fn new(words: Vec<String>) -> Self {\n        \n    }\n    \n    fn query(&self, letter: char) -> bool {\n        \n    }\n}\n\n/**\n * Your StreamChecker object will be instantiated and called as such:\n * let obj = StreamChecker::new(words);\n * let ret_1: bool = obj.query(letter);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class StreamChecker\n\n=begin\n    :type words: String[]\n=end\n    def initialize(words)\n        \n    end\n\n\n=begin\n    :type letter: Character\n    :rtype: Boolean\n=end\n    def query(letter)\n        \n    end\n\n\nend\n\n# Your StreamChecker object will be instantiated and called as such:\n# obj = StreamChecker.new(words)\n# param_1 = obj.query(letter)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class StreamChecker {\n    /**\n     * @param String[] $words\n     */\n    function __construct($words) {\n        \n    }\n  \n    /**\n     * @param String $letter\n     * @return Boolean\n     */\n    function query($letter) {\n        \n    }\n}\n\n/**\n * Your StreamChecker object will be instantiated and called as such:\n * $obj = StreamChecker($words);\n * $ret_1 = $obj->query($letter);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class StreamChecker {\n\n  StreamChecker(List<String> words) {\n    \n  }\n  \n  bool query(String letter) {\n    \n  }\n}\n\n/**\n * Your StreamChecker object will be instantiated and called as such:\n * StreamChecker obj = StreamChecker(words);\n * bool param1 = obj.query(letter);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class StreamChecker(_words: Array[String]) {\n\n    def query(letter: Char): Boolean = {\n        \n    }\n\n}\n\n/**\n * Your StreamChecker object will be instantiated and called as such:\n * val obj = new StreamChecker(words)\n * val param_1 = obj.query(letter)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule StreamChecker do\n  @spec init_(words :: [String.t]) :: any\n  def init_(words) do\n    \n  end\n\n  @spec query(letter :: char) :: boolean\n  def query(letter) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# StreamChecker.init_(words)\n# param_1 = StreamChecker.query(letter)\n\n# StreamChecker.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec stream_checker_init_(Words :: [unicode:unicode_binary()]) -> any().\nstream_checker_init_(Words) ->\n  .\n\n-spec stream_checker_query(Letter :: char()) -> boolean().\nstream_checker_query(Letter) ->\n  .\n\n\n%% Your functions will be called as such:\n%% stream_checker_init_(Words),\n%% Param_1 = stream_checker_query(Letter),\n\n%% stream_checker_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define stream-checker%\n  (class object%\n    (super-new)\n    \n    ; words : (listof string?)\n    (init-field\n      words)\n    \n    ; query : char? -> boolean?\n    (define/public (query letter)\n      )))\n\n;; Your stream-checker% object will be instantiated and called as such:\n;; (define obj (new stream-checker% [words words]))\n;; (define param_1 (send obj query letter))"
+    }
+  ],
+  "solution": {
+    "id": "978",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Prerequisites\n\nThis design article uses [data structure Trie](https://leetcode.com/articles/add-and-search-word/). If you never worked with trie before, you might want to check [this introduction article](https://leetcode.com/articles/add-and-search-word/) first to simplify the further reading.\n\n### Approach 1: Trie\n\n**Trie**\n\nTrie is widely used in real life: autocomplete search, spell checker, T9 predictive text, [IP routing (longest prefix matching)](https://www.researchgate.net/figure/An-example-routing-table-and-the-corresponding-binary-trie-built-from-it_fig3_4236637), [some GCC containers](https://gcc.gnu.org/onlinedocs/libstdc++/ext/pb_ds/trie_based_containers.html).\n\nTrie is something to think about if you're asked to design a structure to dynamically add and search strings.\n\n**Intuition**\n\nThe first idea is to add all input words in the trie and then implement a standard search.\n\n![fig](../Figures/1032/naive4.png)\n\n\n*Figure 1. Naive implementation.*\n\n\nThe problem is we don't know how many characters to match. In the example above, should we try to match the last three stream characters \"jkl\", the last two \"kl\", or the last one \"l\"?  \n\nThe way to solve the problem is to notice that we always know the last character to match. That gives us an idea to build a trie of _reversed_ words, and try to match the _reversed_ stream of characters.\n\n![fig](../Figures/1032/reverse.png)\n\n\n*Figure 2. Trie of the reversed words and the reversed stream of characters.*\n\n\nThis way, instead of multiple choices to match, we always have one path: to match character by character starting from the end of the stream. We could stop once we meet the \"end of word\" label, which means success. If we can't match a character before we meet that label, that means fail.\n\n**Constructor StreamChecker**\n\nTrie is usually implemented as nested hashmaps.\nAt each step, one has to verify if the child node to add is already present. If yes, we go one level down. If not, we add the node into a trie and then go one step down. The particularity of the current problem is that we add in the trie the _reversed_ words. \n\nThe last thing to discuss is how to store the reversed stream of characters. For that, we need a structure for which `appendleft` / `addFirst` operation takes a constant time. The good choice here is _double ended queue_, it's implemented as [deque](https://docs.python.org/3/library/collections.html#collections.deque) in Python, and as [ArrayDeque](https://docs.oracle.com/javase/8/docs/api/java/util/ArrayDeque.html) in Java.\n\n<iframe src=\"https://leetcode.com/playground/gqzRmtuF/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"gqzRmtuF\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the number of input words, and $$M$$ be the word length. \n\n* Time complexity: $$\\mathcal{O}(N \\cdot M)$$.\nWe have $$N$$ words to process. At each step, we either examine or create a node in the trie. That takes only $$M$$ operations.\n\n* Space complexity: $$\\mathcal{O}(N \\cdot M)$$. \n\nIn the worst case, the newly inserted key doesn't share a prefix with the keys already added in the trie. We have to add $$N \\cdot M$$ new nodes, which takes $$\\mathcal{O}(N \\cdot M)$$ space. \n\n**Query Implementation**\n\nThe search is very straightforward: we start from the end of the stream and check character by character, going down in trie. \n\n![fig](../Figures/1032/query.png)\n\n\n*Figure 3. Search in trie.*\n\n\n<iframe src=\"https://leetcode.com/playground/i8eUeiVq/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"i8eUeiVq\"></iframe>\n\nLet $$M$$ be the maximum length of a word length. _i.e._ the depth of trie.\n\n* Time complexity: $$\\mathcal{O}(M)$$\n\n* Space complexity: $$\\mathcal{O}(M)$$ to keep a stream of characters.\nOne could limit the size of the deque to be equal to the length of the longest input word. \n\n**Implementation**\n\nLet's bring everything together. \n\n<iframe src=\"https://leetcode.com/playground/bUuixPSQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"bUuixPSQ\"></iframe>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "questionId": "1450",
+  "questionFrontendId": "1325",
+  "title": "Delete Leaves With a Given Value",
+  "titleSlug": "delete-leaves-with-a-given-value",
+  "difficulty": "Medium",
+  "content": "<p>Given a binary tree <code>root</code> and an integer <code>target</code>, delete all the <strong>leaf nodes</strong> with value <code>target</code>.</p>\n\n<p>Note that once you delete a leaf node with value <code>target</code><strong>, </strong>if its parent node becomes a leaf node and has the value <code>target</code>, it should also be deleted (you need to continue doing that until you cannot).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/01/09/sample_1_1684.png\" style=\"width: 500px; height: 112px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> root = [1,2,3,2,null,2,4], target = 2\n<strong>Output:</strong> [1,null,3,null,4]\n<strong>Explanation:</strong> Leaf nodes in green with value (target = 2) are removed (Picture in left). \nAfter removing, new nodes become leaf nodes with value (target = 2) (Picture in center).\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/01/09/sample_2_1684.png\" style=\"width: 400px; height: 154px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> root = [1,3,3,3,2], target = 3\n<strong>Output:</strong> [1,3,null,null,2]\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/01/15/sample_3_1684.png\" style=\"width: 500px; height: 166px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> root = [1,2,null,2,null,2], target = 2\n<strong>Output:</strong> [1]\n<strong>Explanation:</strong> Leaf nodes in green with value (target = 2) are removed at each step.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[1, 3000]</code>.</li>\n\t<li><code>1 &lt;= Node.val, target &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [
+    "Use the DFS to reconstruct the tree such that no leaf node is equal to the target. If the leaf node is equal to the target, return an empty object instead."
+  ],
+  "metaData": "{\n  \"name\": \"removeLeafNodes\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"TreeNode\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"target\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"TreeNode\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"255.1K\", \"totalSubmission\": \"330.2K\", \"totalAcceptedRaw\": 255127, \"totalSubmissionRaw\": 330225, \"acRate\": \"77.3%\"}",
+  "likes": 2900,
+  "dislikes": 59,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,2,3,2,null,2,4]\n2",
+    "[1,3,3,3,2]\n3",
+    "[1,2,null,2,null,2]\n2"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"josh-technology\", \"name\": \"josh technology\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    TreeNode* removeLeafNodes(TreeNode* root, int target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public TreeNode removeLeafNodes(TreeNode root, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def removeLeafNodes(self, root: Optional[TreeNode], target: int) -> Optional[TreeNode]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def removeLeafNodes(self, root, target):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :type target: int\n        :rtype: Optional[TreeNode]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @param {number} target\n * @return {TreeNode}\n */\nvar removeLeafNodes = function(root, target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction removeLeafNodes(root: TreeNode | null, target: number): TreeNode | null {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public TreeNode RemoveLeafNodes(TreeNode root, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nstruct TreeNode* removeLeafNodes(struct TreeNode* root, int target) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc removeLeafNodes(root *TreeNode, target int) *TreeNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun removeLeafNodes(root: TreeNode?, target: Int): TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func removeLeafNodes(_ root: TreeNode?, _ target: Int) -> TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn remove_leaf_nodes(root: Option<Rc<RefCell<TreeNode>>>, target: i32) -> Option<Rc<RefCell<TreeNode>>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @param {Integer} target\n# @return {TreeNode}\ndef remove_leaf_nodes(root, target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @param Integer $target\n     * @return TreeNode\n     */\n    function removeLeafNodes($root, $target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  TreeNode? removeLeafNodes(TreeNode? root, int target) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def removeLeafNodes(root: TreeNode, target: Int): TreeNode = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec remove_leaf_nodes(root :: TreeNode.t | nil, target :: integer) :: TreeNode.t | nil\n  def remove_leaf_nodes(root, target) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec remove_leaf_nodes(Root :: #tree_node{} | null, Target :: integer()) -> #tree_node{} | null.\nremove_leaf_nodes(Root, Target) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (remove-leaf-nodes root target)\n  (-> (or/c tree-node? #f) exact-integer? (or/c tree-node? #f))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2312",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a binary tree `root` and an integer `target`. Our objective is to delete all the leaf nodes of the binary tree with the value `target`. \n\n> Note: Leaf nodes are the nodes in the tree that do not have children.\n\n**Key Observations:**\n\n1. While deleting nodes, it's important to maintain the structure of the binary tree. Deleting a leaf node may require updating its parent's pointer to null, potentially affecting the entire structure of the tree.\n2. Deleting a leaf node will alter the binary tree, potentially causing the parent node to become a leaf node. \n\n---\n\n### Approach 1: Recursion (Postorder Traversal)\n\n#### Intuition\n\nSince deleting a child node might transform a parent node into a new leaf node, we should start checking and removing qualifying leaf nodes from the bottom of the tree. We will examine each level as we ascend the tree to ensure we identify all nodes requiring removal. This process of checking from the bottom to the top sets our traversal order.\n\nPostorder traversal efficiently deletes targeted nodes in a binary tree by starting at the deepest leaves and moving upward. This ensures that each node is assessed for deletion only after its descendants, recursively capturing any new leaf nodes created by prior deletions. The process continues until the entire tree is covered, systematically eliminating all nodes with the target value.\n\nThe following is an illustration demonstrating the postorder traversal approach:  \n\n!?!../Documents/1325/slideshow.json:960,540!?!\n\n#### Algorithm\n\n1. Base Case: If `root` is `null`, return `null`, to handle the conditions of an empty tree or traversing beyond the leaf nodes.\n2. Recursive Traversal: Perform a postorder traversal to ensure that we process all descendant nodes before the current node (`root`):\n    - Recursively call `removeLeafNodes` for the left child of the `root` and update the left child with the return value.\n    - Similarly, recursively call `removeLeafNodes` for the right child of `root` and update the right child with the return value.\n3. Node Evaluation: \n    - Check if the current `root` node is a leaf node and if its value equals the `target`. If both conditions are satisfied, return `null` to effectively delete the node by not reconnecting it to its parent.\n    - If the node is neither a leaf nor matches `target`, return the `root` itself.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Wk6ubdQn/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"Wk6ubdQn\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the binary tree `root`.  \n\n- Time Complexity: $O(n)$ \n\n    We recursively visit each node of the binary tree exactly once, which takes $O(n)$ time.\n\n    At each node, operations such as checking if the node is a leaf, verifying if its value matches the target, and potentially setting the node to `null` are executed in constant time.\n\n    Since each node in the tree is visited exactly once, and a constant amount of work is done per node, the overall time complexity remains $O(n)$.\n\n- Space Complexity: $O(n)$\n\n    For each recursive call to the `removeLeafNodes` function, a frame is allocated on the call stack. This frame is used to store function parameters, local variables, and the return address.  \n\n    The maximum number of frames on the call stack depends on the height of the binary tree. The height of a binary tree is defined as the maximum distance from the root to any leaf node. \n\n    In an unbalanced tree, such as a linear tree where each node has only one child, the height of the tree is equal to the number of nodes, denoted as $n$. Consequently, the call stack may grow to a depth of $n$ frames, leading to a space complexity of $O(n)$.  \n\n    Beyond the recursive call stack, the algorithm uses a constant amount of auxiliary space for local variables, adding an extra space complexity of $O(1)$.  \n    \n--- \n\n### Approach 2: Iterative (PostOrder Traversal)\n\n#### Intuition\n\nIn the previous approach, we traversed the nodes of the binary tree `root` recursively using the postorder traversal algorithm. Alternatively, we can use an iterative approach. While the recursive approach is simpler to implement, understanding the iterative method is advantageous, as it avoids the need for numerous recursive function calls. \n\nNotice that we need a data structure to keep track of the nodes encountered on our path to the leaf nodes. This is essential because in the postorder traversal algorithm, we must visit the children before visiting the parents.\n\nThe stack's LIFO property makes it a suitable choice for this task. Nodes encountered earlier can be stored on the stack and later accessed as we ascend from leaf nodes toward the root during processing.   \n\nWe can leverage the stack by continuously pushing the leftmost nodes of the tree onto it. Once a node with no left child is encountered, we then explore any right children, pushing these onto the stack as well. This method ensures that we visit all child nodes before their parent node, aligning with the requirements of postorder traversal.\n\nThe stack's role is to store nodes during the exploration of their subtrees to the left and right, facilitating revisiting as we ascend towards the `root`. \n\nTo prevent revisiting right subtrees and potentially causing infinite loops, we use a variable to track whether a right subtree has been recently visited. This check is performed before moving to a right child and prevents re-entry into subtrees that have already been processed.\n\nWhen revisiting a node from the stack, we can be certain that both its left and right subtrees have been fully explored. If, at this point, the node is a leaf and its value matches the target, it is removed by updating the parent's reference to it to nullptr. We can access the parent of any current node immediately by querying the top of the stack at that instant.\n\n#### Algorithm\n\n1. Initialize an empty `stack` to hold nodes during traversal.\n2. Set `currentNode` to `root` to start traversal from the `root`.\n3. Use `lastRightNode` as a marker to remember the last right subtree visited to avoid revisiting and potential infinite loops.\n4. Continuously push the left children of `currentNode` onto the `stack` until a `null` is reached, ensuring that the traversal reaches the leftmost node first.\n5. At each node, after popping from the stack, check if there is an unexplored right subtree that has not been recently visited, using `lastRightNode` for comparison. If there is, move to the right subtree and repeat the left push process for this subtree.\n6. After ensuring no unexplored right subtrees are left, consider the current node for removal: \n7. Determine if the current node is a leaf and check if the leaf node's value equals `target`.\n    - If both conditions are met, disconnect the node from the tree by updating its parent's child reference to `null`:\n        - If `stack` is empty, it means `root` itself is a target leaf node. Return `null` to indicate the entire tree should be removed.\n        - Otherwise, identify the parent of `currentNode` (the next node in the stack) and set the appropriate child reference (left or right) to `null` to disconnect the leaf.\n8. Continue the loop until both `stack` is empty and `currentNode` is `null`, which indicates that all nodes have been processed.\n9. Finally, return `root`, representing the modified tree with the target leaves removed.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/QJ7ZvGXX/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"QJ7ZvGXX\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the binary tree `root`.\n\n- Time Complexity: $O(n)$\n\n    Each of the above operations—such as pushing, popping, checking node conditions, updating references, and managing the `prev` variable—is executed at a constant time for each node. \n    \n    Since every node in the tree undergoes these operations exactly once, the dominant factor in the time complexity is the number of nodes $n$. Therefore, the combined time complexity of all these operations is $O(n)$.\n\n- Space Complexity: $O(n)$\n\n    The stack is used to simulate the depth-first traversal of the tree, specifically mimicking a postorder traversal in this case.\n\n    A few auxiliary variables (such as `cur`, `prev`, and `parent`) are used, but they occupy constant space, $O(1)$.\n\n    In an unbalanced tree, like a skewed tree where each node has only one child, the height of the tree equals the number of nodes, denoted as $n$. Therefore, the call stack may grow to a depth of $n$ frames, resulting in a space complexity of $O(n)$.\n    \n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

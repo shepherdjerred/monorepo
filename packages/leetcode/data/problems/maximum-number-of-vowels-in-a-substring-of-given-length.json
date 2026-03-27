@@ -1,0 +1,137 @@
+{
+  "questionId": "1567",
+  "questionFrontendId": "1456",
+  "title": "Maximum Number of Vowels in a Substring of Given Length",
+  "titleSlug": "maximum-number-of-vowels-in-a-substring-of-given-length",
+  "difficulty": "Medium",
+  "content": "<p>Given a string <code>s</code> and an integer <code>k</code>, return <em>the maximum number of vowel letters in any substring of </em><code>s</code><em> with length </em><code>k</code>.</p>\n\n<p><strong>Vowel letters</strong> in English are <code>&#39;a&#39;</code>, <code>&#39;e&#39;</code>, <code>&#39;i&#39;</code>, <code>&#39;o&#39;</code>, and <code>&#39;u&#39;</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abciiidef&quot;, k = 3\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The substring &quot;iii&quot; contains 3 vowel letters.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;aeiou&quot;, k = 2\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> Any substring of length 2 contains 2 vowels.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;leetcode&quot;, k = 3\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> &quot;lee&quot;, &quot;eet&quot; and &quot;ode&quot; contain 2 vowels.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s</code> consists of lowercase English letters.</li>\n\t<li><code>1 &lt;= k &lt;= s.length</code></li>\n</ul>\n",
+  "hints": [
+    "Keep a window of size k and maintain the number of vowels in it.",
+    "Keep moving the window and update the number of vowels while moving. Answer is max number of vowels of any window."
+  ],
+  "metaData": "{\n  \"name\": \"maxVowels\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"674.4K\", \"totalSubmission\": \"1.1M\", \"totalAcceptedRaw\": 674353, \"totalSubmissionRaw\": 1092777, \"acRate\": \"61.7%\"}",
+  "likes": 3939,
+  "dislikes": 152,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum White Tiles Covered by a Carpet\", \"titleSlug\": \"maximum-white-tiles-covered-by-a-carpet\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Recolors to Get K Consecutive Black Blocks\", \"titleSlug\": \"minimum-recolors-to-get-k-consecutive-black-blocks\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Length of the Longest Alphabetical Continuous Substring\", \"titleSlug\": \"length-of-the-longest-alphabetical-continuous-substring\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"abciiidef\"\n3",
+    "\"aeiou\"\n2",
+    "\"leetcode\"\n3"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxVowels(string s, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxVowels(String s, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxVowels(self, s: str, k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxVowels(self, s, k):\n        \"\"\"\n        :type s: str\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {number} k\n * @return {number}\n */\nvar maxVowels = function(s, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxVowels(s: string, k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxVowels(string s, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxVowels(char* s, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxVowels(s string, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxVowels(s: String, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxVowels(_ s: String, _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_vowels(s: String, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {Integer} k\n# @return {Integer}\ndef max_vowels(s, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param Integer $k\n     * @return Integer\n     */\n    function maxVowels($s, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxVowels(String s, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxVowels(s: String, k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_vowels(s :: String.t, k :: integer) :: integer\n  def max_vowels(s, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_vowels(S :: unicode:unicode_binary(), K :: integer()) -> integer().\nmax_vowels(S, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-vowels s k)\n  (-> string? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1837",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nAs shown in the picture below, given `s = abciiidef` and `k = 3`, we can find all substrings of length `k = 3` and count the number of vowel letters in each of them. \n\n\n![img](../Figures/1456/intro.png)\n\n \n\n---\n\n### Approach: Sliding Window\n\n\n#### Intuition   \n\nWe can use a sliding window to solve this problem. The term \"subarray of length k\" in the problem is actually equivalent to \"window of length k\". Since the length of the window (substring) is fixed as `k`, we only need to create a window at the leftmost side of the string `s`, and move it one character to the right each time. This way, the window can cover all subarrays of length `k`. Then, we simply count the number of vowels in each window and record the maximum count according to the requirement. As shown in the picture below, the window of length `3` is represented by the red box.\n\n\n![img](../Figures/1456/1.png)\n\nThe problem is that if we count the number of vowels in each window by iteration every time, it would result in a time complexity of $$O(\\text{length\\_of\\_s}\\cdot k)$$ which could be expensive. However, by observation, we can see that two adjacent windows only differ by two characters. When we move the index of the right boundary of the window from `i - 1` to `i`, only one character is added to the window while one is removed, Therefore, we can represent the new window by keeping track of the changes between adjacent windows\n\n> Let `count` be the number of vowels in the current window `[i - k, i - 1]`. If we move the window one character to the right as `[i - k + 1, i]`.\n> - If the newly added character `s[i]` is a vowel, we increase `count` by 1.\n> - If the newly removed character `s[i - k]` is a vowel, we reduce `count` by 1.\n\n\n![img](../Figures/1456/2.png)\n\nThat's it. While moving the window, we keep track of the changes between adjacent windows and count the number of vowels `count` in the current window as shown above, and update `answer` as the maximum `count` we have encountered.\n\n<br>\n\n#### Algorithm\n\n1) Build a hash set `vowels` that contains all 5 vowel letters, initialize `answer` as 0.\n2) Record the number of vowel letters in the first `k` letters as `count`.\n3) Now we move the \"window\" to the right, let `i` be the index of its right boundary:\n    - If `s[i]` is in `vowels`, increment `count` by `1.`\n    - If `s[i - k]` is in `vowels`, reduce `count` by `1.`\n    - Update `answer` as the maximum `count` we have encountered.\n\n4) Return `answer` after the iteration ends.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/cStZpwXy/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"cStZpwXy\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of the input string `s`.\n\n* Time complexity: $$O(n)$$\n\n    - We apply 1 iteration over `s`.\n    - At each step in the iteration, we check if the newly added character and the removed character are in `vowels`, which takes constant time.\n    - To sum up, the time complexity is $$O(n)$$.\n    \n\n* Space complexity: $$O(1)$$\n\n    - We need to record several parameters, `count` and `answer`, which takes $$O(1)$$ space.\n    - The set `vowels` contains 5 vowel letters which takes $$O(1)$$ space.\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

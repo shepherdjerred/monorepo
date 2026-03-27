@@ -1,0 +1,138 @@
+{
+  "questionId": "906",
+  "questionFrontendId": "874",
+  "title": "Walking Robot Simulation",
+  "titleSlug": "walking-robot-simulation",
+  "difficulty": "Medium",
+  "content": "<p>A robot on an infinite XY-plane starts at point <code>(0, 0)</code> facing north. The robot receives an array of integers <code>commands</code>, which represents a sequence of moves that it needs to execute. There are only three possible types of instructions the robot can receive:</p>\n\n<ul>\n\t<li><code>-2</code>: Turn left <code>90</code> degrees.</li>\n\t<li><code>-1</code>: Turn right <code>90</code> degrees.</li>\n\t<li><code>1 &lt;= k &lt;= 9</code>: Move forward <code>k</code> units, one unit at a time.</li>\n</ul>\n\n<p>Some of the grid squares are <code>obstacles</code>. The <code>i<sup>th</sup></code> obstacle is at grid point <code>obstacles[i] = (x<sub>i</sub>, y<sub>i</sub>)</code>. If the robot runs into an obstacle, it will stay in its current location (on the block adjacent to the obstacle) and move onto the next command.</p>\n\n<p>Return the <strong>maximum squared Euclidean distance</strong> that the robot reaches at any point in its path (i.e. if the distance is <code>5</code>, return <code>25</code>).</p>\n\n<p><strong>Note:</strong></p>\n\n<ul>\n\t<li>There can be an obstacle at <code>(0, 0)</code>. If this happens, the robot will ignore the obstacle until it has moved off the origin. However, it will be unable to return to <code>(0, 0)</code> due to the obstacle.</li>\n\t<li>North means +Y direction.</li>\n\t<li>East means +X direction.</li>\n\t<li>South means -Y direction.</li>\n\t<li>West means -X direction.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">commands = [4,-1,3], obstacles = []</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">25</span></p>\n\n<p><strong>Explanation: </strong></p>\n\n<p>The robot starts at <code>(0, 0)</code>:</p>\n\n<ol>\n\t<li>Move north 4 units to <code>(0, 4)</code>.</li>\n\t<li>Turn right.</li>\n\t<li>Move east 3 units to <code>(3, 4)</code>.</li>\n</ol>\n\n<p>The furthest point the robot ever gets from the origin is <code>(3, 4)</code>, which squared is <code>3<sup>2</sup> + 4<sup>2 </sup>= 25</code> units away.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">commands = [4,-1,4,-2,4], obstacles = [[2,4]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">65</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The robot starts at <code>(0, 0)</code>:</p>\n\n<ol>\n\t<li>Move north 4 units to <code>(0, 4)</code>.</li>\n\t<li>Turn right.</li>\n\t<li>Move east 1 unit and get blocked by the obstacle at <code>(2, 4)</code>, robot is at <code>(1, 4)</code>.</li>\n\t<li>Turn left.</li>\n\t<li>Move north 4 units to <code>(1, 8)</code>.</li>\n</ol>\n\n<p>The furthest point the robot ever gets from the origin is <code>(1, 8)</code>, which squared is <code>1<sup>2</sup> + 8<sup>2</sup> = 65</code> units away.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">commands = [6,-1,-1,6], obstacles = [[0,0]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">36</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The robot starts at <code>(0, 0)</code>:</p>\n\n<ol>\n\t<li>Move north 6 units to <code>(0, 6)</code>.</li>\n\t<li>Turn right.</li>\n\t<li>Turn right.</li>\n\t<li>Move south 5 units and get blocked by the obstacle at <code>(0,0)</code>, robot is at <code>(0, 1)</code>.</li>\n</ol>\n\n<p>The furthest point the robot ever gets from the origin is <code>(0, 6)</code>, which squared is <code>6<sup>2</sup> = 36</code> units away.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= commands.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>commands[i]</code> is either <code>-2</code>, <code>-1</code>, or an integer in the range <code>[1, 9]</code>.</li>\n\t<li><code>0 &lt;= obstacles.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>-3 * 10<sup>4</sup> &lt;= x<sub>i</sub>, y<sub>i</sub> &lt;= 3 * 10<sup>4</sup></code></li>\n\t<li>The answer is guaranteed to be less than <code>2<sup>31</sup></code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"robotSim\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"commands\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"obstacles\",\r\n      \"type\": \"integer[][]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"169.8K\", \"totalSubmission\": \"290.9K\", \"totalAcceptedRaw\": 169839, \"totalSubmissionRaw\": 290852, \"acRate\": \"58.4%\"}",
+  "likes": 901,
+  "dislikes": 200,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Walking Robot Simulation II\", \"titleSlug\": \"walking-robot-simulation-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[4,-1,3]\n[]",
+    "[4,-1,4,-2,4]\n[[2,4]]",
+    "[6,-1,-1,6]\n[[0,0]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 25, \"slug\": \"shopify\", \"name\": \"Shopify\"}, {\"timesEncountered\": 4, \"slug\": \"jane-street\", \"name\": \"Jane Street\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int robotSim(vector<int>& commands, vector<vector<int>>& obstacles) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int robotSim(int[] commands, int[][] obstacles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def robotSim(self, commands: List[int], obstacles: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def robotSim(self, commands, obstacles):\n        \"\"\"\n        :type commands: List[int]\n        :type obstacles: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} commands\n * @param {number[][]} obstacles\n * @return {number}\n */\nvar robotSim = function(commands, obstacles) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function robotSim(commands: number[], obstacles: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int RobotSim(int[] commands, int[][] obstacles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int robotSim(int* commands, int commandsSize, int** obstacles, int obstaclesSize, int* obstaclesColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func robotSim(commands []int, obstacles [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun robotSim(commands: IntArray, obstacles: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func robotSim(_ commands: [Int], _ obstacles: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn robot_sim(commands: Vec<i32>, obstacles: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} commands\n# @param {Integer[][]} obstacles\n# @return {Integer}\ndef robot_sim(commands, obstacles)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $commands\n     * @param Integer[][] $obstacles\n     * @return Integer\n     */\n    function robotSim($commands, $obstacles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int robotSim(List<int> commands, List<List<int>> obstacles) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def robotSim(commands: Array[Int], obstacles: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec robot_sim(commands :: [integer], obstacles :: [[integer]]) :: integer\n  def robot_sim(commands, obstacles) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec robot_sim(Commands :: [integer()], Obstacles :: [[integer()]]) -> integer().\nrobot_sim(Commands, Obstacles) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (robot-sim commands obstacles)\n  (-> (listof exact-integer?) (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2425",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe have a robot facing north at the origin `(0, 0)` of an infinite 2D grid. The robot receives a series of instructions from a given list of `commands`, where instruction can be of three types:\n\n1. `-2`: Turn left 90 degrees while staying at the current coordinate.\n2. `-1`: Turn right 90 degrees while staying at the current coordinate.\n3. Any positive integer `k` from 1 to 9: Advance `k` units in the current direction.\n\nAdditionally, we are given a list of `obstacles` containing the coordinates of various obstacles on the grid. If the robot encounters an obstacle while moving forward, it stops its motion at the coordinate just before the obstacle and proceeds to the next command.\n\nOur goal is to find the farthest squared distance from the origin that the robot reaches during its journey. In other words, we need to find the maximum value of $x \\times x + y \\times y$ that can be achieved at any point `(x, y)` visited by the robot.\n\nKeep in mind when planning your approach that the farthest traveled distance during the robot's journey is not the same as its distance from the origin at the end of its journey.\n\n> Note: An obstacle may exist at the origin (0, 0). In this case, the robot can move away from the starting point but will be unable to return to (0, 0).\n  \n---\n\n### Approach: Simulation\n\n#### Intuition\n\nThe robot's state is defined by two factors:\n1. The coordinates of the robot's position: we can use a simple integer array `[x, y]`.\n2. The direction the robot is facing: we can use an integer value (0, 1, 2, 3) representing North, East, South, and West respectively. Consequently, we need a `directions` array representing the direction of motion of the robot, where each index corresponds to [North, East, South, West].\n\nThe presence of obstacles prevents us from being able to simply loop over each command and simulate the robot's motion on the grid. A naive approach would be to loop through the obstacle array to check if the next attempted move is blocked by an obstacle. However, this results in quadratic complexity, which is inefficient given our constraints.\n\nChecking whether a given coordinate is an obstacle using hash sets allows for constant-time lookups. If you're unfamiliar with hash sets, this LeetCode [Explore Card](https://leetcode.com/explore/learn/card/hash-table/183/combination-with-other-algorithms/1130/) provides an in-depth explanation. \n\nOur challenge becomes how to look up coordinates in a hash set. \n\nWe solve this by hashing the coordinates of each obstacle to a unique integer value and storing these values in the hash set. To check if a coordinate contains an obstacle, we hash the coordinates using the same function and check if the value is present in the hash set.\n\nThere are various methods to create [hashing functions](https://en.wikipedia.org/wiki/List_of_hash_functions). For this problem, we'll create a simple one that generates a unique integer value for all coordinates within the given problem constraints.\n\n```\nhash(x, y) = x + HASH_MULTIPLIER * y\n```\n\nWhere `HASH_MULTIPLIER` is a constant slightly larger than twice the maximum possible coordinate value. In this case, we choose `60013`.\n\n> We choose `60013` because it is the smallest prime number greater than 60000 (twice the maximum possible coordinate). This helps reduce the number of potential collisions in our hash function.\n\nThe below slideshow visualizes the robot's journey for Example 2 of the problem description:\n\n!?!../Documents/874/slideshow.json:1332,1236!?!\n\n#### Algorithm\n\n- Create a constant `HASH_MULTIPLIER` to use in the hashing function.\n\n`robotSim` Function:\n\n- Convert the list of obstacles into a set of hashed coordinates for quick lookup during the simulation.\n- Define the four possible movement directions corresponding to North, East, South, and West.\n- Initialize the robot's starting position at the origin `(0, 0)` and set the initial maximum distance squared to zero.\n- Initialize the current direction of the robot facing North.\n- Iterate through the list of commands:\n  - If the command is `-1`, turn the robot 90 degrees to the right by adjusting the current direction index.\n  - If the command is `-2`, turn the robot 90 degrees to the left by adjusting the current direction index.\n  - Otherwise, for a positive command, move the robot forward step by step:\n    - Calculate the next potential position by adding the current direction vector to the robot's position.\n    - If the next position is an obstacle, stop moving forward.\n    - Otherwise, update the robot's position to the new coordinates.\n  - Update the maximum distance squared if the current position is farther from the origin than before.\n- Return the maximum distance squared as the result of the simulation.\n\n`hashCoordinates` Function:\n\n- Combine the `x` and `y` coordinates into a unique hash value by multiplying the `y` coordinate by a constant multiplier and adding the `x` coordinate.\n- Return the computed hash value to be used for obstacle lookup.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/akVkpuwr/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"akVkpuwr\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ and $n$ be the length of `commands` and `obstacles`, respectively.\n\n- Time complexity: $O(m + n)$\n\n    The algorithm initially iterates over the `obstacles` array and hashes each obstacle’s coordinates, taking $O(n)$ time.\n\n    The algorithm then loops over the `commands` array. In the worst case, each command is a positive integer `k`. Since the maximum value of `k` is limited to $9$, this step has a time complexity of $O(9 \\cdot m) = O(m)$.\n\n    Thus, the overall time complexity of the algorithm is $O(n) + O(m) = O(m + n)$.\n\n- Space complexity: $O(n)$\n\n    The only additional space used by the algorithm is the `obstacleSet`, which stores up to $n$ hashed obstacle positions. The `directions` and `currentPosition` arrays and all other primitive variables use constant space.\n\n    Thus, the space complexity of the algorithm is $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

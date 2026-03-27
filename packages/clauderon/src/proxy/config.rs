@@ -230,16 +230,13 @@ impl Credentials {
         };
         codex_tokens.fill_account_id_from_id_token();
         Self {
-            github_token: std::env::var("GITHUB_TOKEN").ok(),
+            github_token: std::env::var("GH_TOKEN").ok(),
             anthropic_oauth_token: std::env::var("CLAUDE_CODE_OAUTH_TOKEN").ok(),
             openai_api_key: std::env::var("OPENAI_API_KEY")
                 .or_else(|_| std::env::var("CODEX_API_KEY"))
                 .ok(),
             codex_tokens: Arc::new(RwLock::new(codex_tokens)),
-            // Support both PAGERDUTY_TOKEN and PAGERDUTY_API_KEY for compatibility
-            pagerduty_token: std::env::var("PAGERDUTY_TOKEN")
-                .or_else(|_| std::env::var("PAGERDUTY_API_KEY"))
-                .ok(),
+            pagerduty_token: std::env::var("PAGERDUTY_TOKEN").ok(),
             sentry_auth_token: std::env::var("SENTRY_AUTH_TOKEN").ok(),
             grafana_api_key: std::env::var("GRAFANA_API_KEY").ok(),
             npm_token: std::env::var("NPM_TOKEN").ok(),
@@ -396,12 +393,11 @@ impl Credentials {
 
         // Add from environment variables with op:// references
         let env_mappings = [
-            ("GITHUB_TOKEN", "github_token"),
+            ("GH_TOKEN", "github_token"),
             ("CLAUDE_CODE_OAUTH_TOKEN", "anthropic_oauth_token"),
             ("OPENAI_API_KEY", "openai_api_key"),
             ("CODEX_API_KEY", "openai_api_key"),
             ("PAGERDUTY_TOKEN", "pagerduty_token"),
-            ("PAGERDUTY_API_KEY", "pagerduty_token"),
             ("SENTRY_AUTH_TOKEN", "sentry_auth_token"),
             ("GRAFANA_API_KEY", "grafana_api_key"),
             ("NPM_TOKEN", "npm_token"),
@@ -787,7 +783,7 @@ mod tests {
         // Just verify load_from_env runs without panic
         // We can't easily set env vars in tests since unsafe is forbidden
         let creds = Credentials::load_from_env();
-        // If GITHUB_TOKEN happens to be set, it should be loaded
+        // If GH_TOKEN happens to be set, it should be loaded
         // Otherwise it should be None - both are valid
         assert!(creds.github_token.is_some() || creds.github_token.is_none());
     }

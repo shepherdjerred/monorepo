@@ -1,0 +1,53 @@
+{
+  "questionId": "1480",
+  "questionFrontendId": "1341",
+  "title": "Movie Rating",
+  "titleSlug": "movie-rating",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Movies</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| movie_id      | int     |\n| title         | varchar |\n+---------------+---------+\nmovie_id is the primary key (column with unique values) for this table.\ntitle is the name of the movie.\nEach movie has a unique title.</pre>\n\n<p>Table: <code>Users</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| user_id       | int     |\n| name          | varchar |\n+---------------+---------+\nuser_id is the primary key (column with unique values) for this table.\nThe column &#39;name&#39; has unique values.\n</pre>\n\n<p>Table: <code>MovieRating</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| movie_id      | int     |\n| user_id       | int     |\n| rating        | int     |\n| created_at    | date    |\n+---------------+---------+\n(movie_id, user_id) is the primary key (column with unique values) for this table.\nThis table contains the rating of a movie by a user in their review.\ncreated_at is the user&#39;s review date. \n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to:</p>\n\n<ul>\n\t<li>Find the name of the user who has rated the greatest number of movies. In case of a tie, return the lexicographically smaller user name.</li>\n\t<li>Find the movie name with the <strong>highest average</strong> rating in <code>February 2020</code>. In case of a tie, return the lexicographically smaller movie name.</li>\n</ul>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nMovies table:\n+-------------+--------------+\n| movie_id    |  title       |\n+-------------+--------------+\n| 1           | Avengers     |\n| 2           | Frozen 2     |\n| 3           | Joker        |\n+-------------+--------------+\nUsers table:\n+-------------+--------------+\n| user_id     |  name        |\n+-------------+--------------+\n| 1           | Daniel       |\n| 2           | Monica       |\n| 3           | Maria        |\n| 4           | James        |\n+-------------+--------------+\nMovieRating table:\n+-------------+--------------+--------------+-------------+\n| movie_id    | user_id      | rating       | created_at  |\n+-------------+--------------+--------------+-------------+\n| 1           | 1            | 3            | 2020-01-12  |\n| 1           | 2            | 4            | 2020-02-11  |\n| 1           | 3            | 2            | 2020-02-12  |\n| 1           | 4            | 1            | 2020-01-01  |\n| 2           | 1            | 5            | 2020-02-17  | \n| 2           | 2            | 2            | 2020-02-01  | \n| 2           | 3            | 2            | 2020-03-01  |\n| 3           | 1            | 3            | 2020-02-22  | \n| 3           | 2            | 4            | 2020-02-25  | \n+-------------+--------------+--------------+-------------+\n<strong>Output:</strong> \n+--------------+\n| results      |\n+--------------+\n| Daniel       |\n| Frozen 2     |\n+--------------+\n<strong>Explanation:</strong> \nDaniel and Monica have rated 3 movies (&quot;Avengers&quot;, &quot;Frozen 2&quot; and &quot;Joker&quot;) but Daniel is smaller lexicographically.\nFrozen 2 and Joker have a rating average of 3.5 in February but Frozen 2 is smaller lexicographically.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Movies (movie_id int, title varchar(30))\", \"Create table If Not Exists Users (user_id int, name varchar(30))\", \"Create table If Not Exists MovieRating (movie_id int, user_id int, rating int, created_at date)\"], \"mssql\": [\"Create table Movies (movie_id int, title varchar(30))\", \"Create table Users (user_id int, name varchar(30))\", \"Create table MovieRating (movie_id int, user_id int, rating int, created_at date)\"], \"oraclesql\": [\"Create table Movies (movie_id int, title varchar(30))\", \"Create table Users (user_id int, name varchar(30))\", \"Create table MovieRating (movie_id int, user_id int, rating int, created_at date)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"movie_rating\", \"pythondata\": [\"Movies = pd.DataFrame([], columns=['movie_id', 'title']).astype({'movie_id':'Int64', 'title':'object'})\", \"Users = pd.DataFrame([], columns=['user_id', 'name']).astype({'user_id':'Int64', 'name':'object'})\", \"MovieRating = pd.DataFrame([], columns=['movie_id', 'user_id', 'rating', 'created_at']).astype({'movie_id':'Int64', 'user_id':'Int64', 'rating':'Int64', 'created_at':'datetime64[ns]'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Movies (movie_id int, title varchar(30))\", \"Create table If Not Exists Users (user_id int, name varchar(30))\", \"Create table If Not Exists MovieRating (movie_id int, user_id int, rating int, created_at date)\"], \"database_schema\": {\"Movies\": {\"movie_id\": \"INT\", \"title\": \"VARCHAR(30)\"}, \"Users\": {\"user_id\": \"INT\", \"name\": \"VARCHAR(30)\"}, \"MovieRating\": {\"movie_id\": \"INT\", \"user_id\": \"INT\", \"rating\": \"INT\", \"created_at\": \"DATE\"}}}",
+  "stats": "{\"totalAccepted\": \"285.7K\", \"totalSubmission\": \"664.3K\", \"totalAcceptedRaw\": 285668, \"totalSubmissionRaw\": 664291, \"acRate\": \"43.0%\"}",
+  "likes": 987,
+  "dislikes": 242,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Movies\": [\"movie_id\", \"title\"], \"Users\": [\"user_id\", \"name\"], \"MovieRating\": [\"movie_id\", \"user_id\", \"rating\", \"created_at\"]}, \"rows\": {\"Movies\": [[1, \"Avengers\"], [2, \"Frozen 2\"], [3, \"Joker\"]], \"Users\": [[1, \"Daniel\"], [2, \"Monica\"], [3, \"Maria\"], [4, \"James\"]], \"MovieRating\": [[1, 1, 3, \"2020-01-12\"], [1, 2, 4, \"2020-02-11\"], [1, 3, 2, \"2020-02-12\"], [1, 4, 1, \"2020-01-01\"], [2, 1, 5, \"2020-02-17\"], [2, 2, 2, \"2020-02-01\"], [2, 3, 2, \"2020-03-01\"], [3, 1, 3, \"2020-02-22\"], [3, 2, 4, \"2020-02-25\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"sap\", \"name\": \"SAP\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef movie_rating(movies: pd.DataFrame, users: pd.DataFrame, movie_rating: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

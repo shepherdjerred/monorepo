@@ -137,7 +137,7 @@ function getGitHubHeaders(): Record<string, string> {
     "User-Agent": "homelab-dependency-summary",
   };
 
-  const token = Bun.env["GITHUB_TOKEN"];
+  const token = Bun.env["GH_TOKEN"];
   if (token != null && token !== "") {
     headers["Authorization"] = `Bearer ${token}`;
   }

@@ -85,7 +85,7 @@ No config file setting for default image; pass `--image` each time.
 docker login
 
 # GHCR
-echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
+echo $GH_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
 
 # AWS ECR
 aws ecr get-login-password --region us-east-1 | \

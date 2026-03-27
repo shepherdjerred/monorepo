@@ -1,0 +1,128 @@
+{
+  "questionId": "1604",
+  "questionFrontendId": "1481",
+  "title": "Least Number of Unique Integers after K Removals",
+  "titleSlug": "least-number-of-unique-integers-after-k-removals",
+  "difficulty": "Medium",
+  "content": "<p>Given an array of integers&nbsp;<code>arr</code>&nbsp;and an integer <code>k</code>.&nbsp;Find the <em>least number of unique integers</em>&nbsp;after removing <strong>exactly</strong> <code>k</code> elements<b>.</b></p>\r\n\r\n<ol>\r\n</ol>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong class=\"example\">Example 1:</strong></p>\r\n\r\n<pre>\r\n<strong>Input: </strong>arr = [5,5,4], k = 1\r\n<strong>Output: </strong>1\r\n<strong>Explanation</strong>: Remove the single 4, only 5 is left.\r\n</pre>\r\n<strong class=\"example\">Example 2:</strong>\r\n\r\n<pre>\r\n<strong>Input: </strong>arr = [4,3,1,1,3,3,2], k = 3\r\n<strong>Output: </strong>2\r\n<strong>Explanation</strong>: Remove 4, 2 and either one of the two 1s or three 3s. 1 and 3 will be left.</pre>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong>Constraints:</strong></p>\r\n\r\n<ul>\r\n\t<li><code>1 &lt;= arr.length&nbsp;&lt;= 10^5</code></li>\r\n\t<li><code>1 &lt;= arr[i] &lt;= 10^9</code></li>\r\n\t<li><code>0 &lt;= k&nbsp;&lt;= arr.length</code></li>\r\n</ul>",
+  "hints": [
+    "Use a map to count the frequencies of the numbers in the array.",
+    "An optimal strategy is to remove the numbers with the smallest count first."
+  ],
+  "metaData": "{\n  \"name\": \"findLeastNumOfUniqueInts\",\n  \"params\": [\n    {\n      \"name\": \"arr\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"281.5K\", \"totalSubmission\": \"441.3K\", \"totalAcceptedRaw\": 281484, \"totalSubmissionRaw\": 441331, \"acRate\": \"63.8%\"}",
+  "likes": 2338,
+  "dislikes": 234,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Number of Distinct Elements After Operations\", \"titleSlug\": \"maximum-number-of-distinct-elements-after-operations\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[5,5,4]\n1",
+    "[4,3,1,1,3,3,2]\n3"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"fivetran\", \"name\": \"fivetran\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"morgan-stanley\", \"name\": \"Morgan Stanley\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 2, \"slug\": \"expedia\", \"name\": \"Expedia\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\r\npublic:\r\n    int findLeastNumOfUniqueInts(vector<int>& arr, int k) {\r\n        \r\n    }\r\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\r\n    public int findLeastNumOfUniqueInts(int[] arr, int k) {\r\n        \r\n    }\r\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\r\n    def findLeastNumOfUniqueInts(self, arr: List[int], k: int) -> int:"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\r\n    def findLeastNumOfUniqueInts(self, arr, k):\r\n        \"\"\"\r\n        :type arr: List[int]\r\n        :type k: int\r\n        :rtype: int\r\n        \"\"\""
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\r\n * @param {number[]} arr\r\n * @param {number} k\r\n * @return {number}\r\n */\r\nvar findLeastNumOfUniqueInts = function(arr, k) {\r\n    \r\n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findLeastNumOfUniqueInts(arr: number[], k: number): number {\r\n\r\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\r\n    public int FindLeastNumOfUniqueInts(int[] arr, int k) {\r\n        \r\n    }\r\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findLeastNumOfUniqueInts(int* arr, int arrSize, int k){\r\n\r\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findLeastNumOfUniqueInts(arr []int, k int) int {\r\n    \r\n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\r\n    fun findLeastNumOfUniqueInts(arr: IntArray, k: Int): Int {\r\n        \r\n    }\r\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\r\n    func findLeastNumOfUniqueInts(_ arr: [Int], _ k: Int) -> Int {\r\n        \r\n    }\r\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\r\n    pub fn find_least_num_of_unique_ints(arr: Vec<i32>, k: i32) -> i32 {\r\n        \r\n    }\r\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} arr\r\n# @param {Integer} k\r\n# @return {Integer}\r\ndef find_least_num_of_unique_ints(arr, k)\r\n    \r\nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\r\n\r\n    /**\r\n     * @param Integer[] $arr\r\n     * @param Integer $k\r\n     * @return Integer\r\n     */\r\n    function findLeastNumOfUniqueInts($arr, $k) {\r\n        \r\n    }\r\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\r\n    def findLeastNumOfUniqueInts(arr: Array[Int], k: Int): Int = {\r\n        \r\n    }\r\n}"
+    }
+  ],
+  "solution": {
+    "id": "2244",
+    "content": "## Solution\n\n---\n\n### Overview\nEvery element will have some frequency of occurrence in the array, i.e., the number of times it occurs in the array. Let us try to rephrase the problem in these terms. We want to end up with the least possible number of unique elements after `k` removals. In other words, we want to maximize the number of elements we can remove wholly (all occurrences of the element) in at most `k` removals. Let us figure out what is the most optimal way to do this.\n\nSay we had to remove all occurrences of one element from an array such that it took the least number of removals. In this case, we'd remove the element with the least frequency! If there are multiple elements with the least frequency of occurrence, we could remove any. \nTherefore, to maximize the number of unique elements removed, the initial focus should be on elements with the lowest frequencies. By starting with the removal of the least frequent element and progressing to the next least frequent ones iteratively until we have at most 'k' removals, we would end up removing the maximum number of elements we could remove wholly!​\n\nTo summarize the idea, we need to greedily remove elements starting with the element with the lowest frequency. This way, we will ensure that we remove the maximum number of elements wholly and end up with the least number of unique elements.\n\n---\n\n### Approach 1: Sorting the Frequencies\n\n#### Intuition\nWe need to find an efficient way of removing the lowest frequency element in the array, repeatedly till we have `k` removals. If we created a list of the frequencies of all elements, how could we utilize it? If we sort our list, we could start from the smallest frequency and remove elements till we have `k` removals. The number of remaining frequencies would represent the number of unique elements left in the array after `k` removals!\n\n#### Algorithm\nFirstly, we need to build our `frequencies` array. To do this, we'll need to determine the frequencies of all elements. A hashmap can do this efficiently. Once we have our `frequencies` array, we can sort it and iterate over it, removing elements, till the sum of the removed elements does not exceed `k`. We'll track the number of elements removed in a variable `elementsRemoved`. We'll keep iterating over `frequencies` till `elementsRemoved` becomes greater than `k` or we've fully iterated over `frequencies`. The number of remaining elements in the `frequencies` array would be our answer!\n\nNote that `frequencies` contains the frequencies, but not the values, of the given array `arr.` This is because the value of the elements does not matter in the final answer; we simply need the number of unique elements.\n\nLet us summarize the algorithm.\n\n1. Initialize a hashmap `map` which maps `element` to its `frequency`.\n2. Iterate over the given `arr` and increment the frequency of its elements in `map`.\n3. Create an array `frequencies` and populate it with the frequencies obtained from `map`.\n4. Sort `frequencies`.\n5. Create a variable `elementsRemoved` which will track the number of elements that are removed.\n6. Iterate over `frequencies` and add its elements to `elementsRemoved`.\n7. When `elementsRemoved` becomes greater than `k`, we can stop iterating and return the remaining number of integers in `frequencies` (including the present index).\n8. Return `0` if we iterated over the entire `frequencies` array. This means that we removed all elements from the original array `arr`.\n\n!?!../Documents/1481/slideshow1.json:960,540!?!​\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/5am8whDM/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"5am8whDM\"></iframe>\n\n#### Complexity Analysis\n​Let $$n$$ be the length of `arr` and $$m$$ be the number of unique elements in it. $$k$$ represents the number of elements to be removed.\n​\n* Time complexity: $$O(n \\log n)$$\n  +  We traverse `arr` once and populate `map`. Since inserting in a hashmap takes $$O(1)$$ time, the entire operation takes $$O(n)$$. Since there are $$m$$ unique elements in `arr`, `frequencies` will be of size $$m$$, and sorting it would take $$O(m \\log m)$$. Finally, traversing `frequencies` and removing at most $$k$$ elements will take $$O(k)$$ time (since we break from the loop once we have removed $$k$$ elements). This makes the total complexity $$O(n + m \\log m + k)$$. However, in the worst case, where all elements are unique, $$m = n$$. Also, in the case where we're asked to remove all elements, $$k = n$$. This makes the complexity $$O(n + n \\log n + n)$$. The dominating term is $$O(n \\log n)$$.\n​\n* Space complexity: $$O(n)$$\n  + We use auxiliary space in creating `map` and `frequencies`, both of which will have $$m$$ elements. As discussed, in the worst case, $$m = n$$. This results in a space complexity of $$O(n)$$. Note that some extra space is used when we sort `frequencies` in place. The space complexity of the sorting algorithm depends on the programming language.\n    - In Python, the `sort` method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has $$O(n)$$ additional space. \n    - In Java, Arrays.sort() is implemented using a variant of the Quick Sort algorithm which has a space complexity of $$O( \\log n)$$ for sorting two arrays.\n    - In C++, the sort() function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worse-case space complexity of $O( \\log n )$.\n    \n---\n​\n### Approach 2: Min-heap\n\n#### Intuition\nA heap is a very powerful data structure that allows us to efficiently find the maximum or minimum value in a dynamic dataset.\n\nIf you are not familiar with heaps, we recommend checking out the [Heap Explore Card](https://leetcode.com/explore/learn/card/heap/). \n\nWe can use a heap to store all the frequencies and pop out the smallest frequency sequentially till we have removed at most `k` elements. The difference in this approach is that instead of explicitly sorting a list of frequencies, we're using a min-heap to ensure we always get the smallest frequency every time we remove an element from it. We'll add all the frequencies to a min-heap and remove elements from it till we have `k` removals. The number of remaining frequencies, which in this case would be the size of the heap, would represent the number of unique elements left in the array after `k` removals! \n\n#### Algorithm\nLike the previous approach, we'll create a hashmap to determine all the frequencies, but instead of using a vector to store all frequencies, we'll instead use a min-heap. We'll start popping elements out of the heap and store the sum in `elementsRemoved`. We'll keep repeating this process till either `elementsRemoved` becomes greater than `k` or the heap becomes empty. We'll return the size of the heap as our answer (*0* in case the heap is empty).\n\nLet us summarize the algorithm.\n\n1. Initialize a hashmap `map` which maps `element` to its `frequency`.\n2. Iterate over the given `arr` and increment the frequency of its elements in `map`.\n3. Create a min-heap `frequencies` and populate it with the frequencies obtained from `map`.\n4. Create a variable `elementsRemoved` which will track the number of elements that are removed.\n5. Remove elements from `frequencies` and increment `elementsRemoved` while there are still elements in `frequencies`.\n6. If `elementsRemoved` becomes greater than `k`, we can stop iterating and return the number of remaining elements in the heap.\n7. Return `0` if the heap becomes empty. This means we removed all elements from the original array `arr`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/drhrSmFh/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"drhrSmFh\"></iframe>\n\n#### Complexity Analysis\n​Let $$n$$ be the length of `arr` and $$m$$ be the number of unique elements in it. $$k$$ represents the number of elements to be removed.\n​\n* Time complexity: $$O(n \\log n)$$\n  +  We traverse `arr` once and populate `map`. Since inserting in a hashmap takes $$O(1)$$ time, the entire operation takes $$O(n)$$. Since there are $$m$$ unique elements in `arr` and inserting and removing elements from a min-heap of size $$m$$ takes $$O( \\log m)$$ time, inserting $$m$$ elements will take $$O(m \\log m)$$. Finally, traversing `frequencies` and removing at most $$k$$ elements will take $$O(k \\log k)$$ time (since we break from the loop once we have removed $$k$$ elements). This makes the total complexity $$O(n + m \\log m + k \\log k)$$. However, in the worst case, where all elements are unique, $$m = n$$. Also, in the case where we're asked to remove all elements, $$k = n$$. This makes the complexity $$O(n + n \\log n + n \\log n)$$, where the dominating term is $$O(n \\log n)$$.\n​\n* Space complexity: $$O(n)$$\n  + We use auxiliary space in creating `map` and `frequencies`, both of which will have $$m$$ elements. As discussed, in the worst case, $$m = n$$. This results in a space complexity of $$O(n)$$.\n\n---\n​\n### Approach 3: Counting Sort\n\n#### Intuition\nNote that this is a more challenging approach but can be asked as a follow-up in an interview to improve the time complexity further or fetch brownie points! In the first two approaches, we discussed two ways to store and process frequencies - using an array and sorting it, and using a min-heap (which internally uses heap-sort). There is yet another way to sort the frequencies - [Counting Sort](https://leetcode.com/explore/learn/card/sorting/695/non-comparison-based-sorts/4437/)! We can *count* the frequencies and store this count in an array. In other words, we're storing the frequency of frequencies! We can use this array to process the frequencies in order.\n\nRecall that Counting Sort is dependent on the range of input elements, i.e., it relies on the assumption that the range of input elements is not significantly larger than the number of elements to be sorted. In our case, we can leverage the fact that the maximum possible frequency of any element in an array will be equal to the size of the array itself. This will be when all elements of the array are the same, i.e., there is only one unique element. This value will not exceed `10^5` as mentioned in the constraints; hence, we can use Counting Sort.\n\n\n#### Algorithm\nLike the previous approaches, we'll create a hashmap to determine all the frequencies. We'll initialize an array `countOfFrequencies` with size `n + 1` where `n` is the size of the given array `arr`. Since the largest possible value of a frequency is `n`, we'll need an array of size `n + 1` to store the value in its nth index. `countOfFrequencies` will be initialized with *0* for all its indices. We'll then traverse the hashmap and increment the count of frequencies we encounter in `countOfFrequencies`. Once done, `countOfFrequencies[i]` would represent the number of elements in `arr` with frequency `i`. We'll also initialize a variable `remainingUniqueElements` with the size of our hashmap. This would track the remaining number of unique elements. Now we'll traverse `countOfFrequencies` in order, process each index, and update `k` accordingly. For each index `i`, we can remove a maximum of `k / i` unique elements. However, this is limited by the actual number of elements with frequency `i`. Hence, we'll find the *min* of `k / i` and `countOfFrequences[i]`. Let this be `numElementsToRemove`. This will be the maximum number of unique elements with frequency `i` that can be removed. `k` will be decremented by `i * numElementsToRemove`, and `remainingUniqueElements` will be decremented by `numElementsToRemove`. Now if the updated `k` is less than the current frequency `i`, it'll show that we can no longer remove any more elements with greater frequencies, and we'll return `numElementsToRemove`.\n\nLet us summarize the algorithm.\n\n1. Initialize a hashmap `map` which maps `element` to its `frequency`.\n2. Iterate over the given `arr` and increment the frequency of its elements in `map`.\n3. Create an array `countOfFrequencies` of size `n + 1` where `n` is the size of `arr`. Initialize all elements of this array with `0`.\n4. Traverse over `map` and increment the frequencies of all frequencies in `countOfFrequencies`.\n5. Initialize a variable `numElementsToRemove` with the size of `map`. This tracks the remaining number of unique elements.\n6. Traverse over `countOfFrequencies` and for each frequency `i`, determine the maximum number of elements that can be removed with that frequency. This value will be `min(k / i, countOfFrequencies[i])`. Initialize a variable `numElementsToRemove` with this value.\n7. Decrement `k` by `i * numElementsToRemove` and decrement `remainingUniqueElements` by `numElementsToRemove`.\n8. Check if `k < i`. If so, return `numElementsToRemove`.\n9. Return `0` if we iterated over all the frequencies. This means we removed all elements from the original array `arr`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/UJ8mrPep/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"UJ8mrPep\"></iframe>\n\n#### Complexity Analysis\n​Let $$n$$ be the length of `arr`. \n\n* Time complexity: $$O(n)$$\n  +  We traverse `arr` once and populate `map`, which is a linear operation. Then we traverse `map` and populate `countOfFrequencies`. `map` can have a maximum size of $$n$$ so this is also a linear operation. Finally, traversing `countOfFrequencies` is also a linear operation since the size of `countOfFrequencies` is `n + 1`. \n​\n* Space complexity: $$O(n)$$\n  + We create a hashmap that can have a maximum size of $$n$$ and an array with size `n + 1`.\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

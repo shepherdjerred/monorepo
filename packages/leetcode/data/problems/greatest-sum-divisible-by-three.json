@@ -1,0 +1,144 @@
+{
+  "questionId": "1388",
+  "questionFrontendId": "1262",
+  "title": "Greatest Sum Divisible by Three",
+  "titleSlug": "greatest-sum-divisible-by-three",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code>, return <em>the <strong>maximum possible sum </strong>of elements of the array such that it is divisible by three</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [3,6,5,1,8]\n<strong>Output:</strong> 18\n<strong>Explanation:</strong> Pick numbers 3, 6, 1 and 8 their sum is 18 (maximum sum divisible by 3).</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [4]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> Since 4 is not divisible by 3, do not pick any number.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,4,4]\n<strong>Output:</strong> 12\n<strong>Explanation:</strong> Pick numbers 1, 3, 4 and 4 their sum is 12 (maximum sum divisible by 3).\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 4 * 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Represent the state as DP[pos][mod]: maximum possible sum starting in the position \"pos\" in the array where the current sum modulo 3 is equal to mod."
+  ],
+  "metaData": "{\n  \"name\": \"maxSumDivThree\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"162.6K\", \"totalSubmission\": \"285K\", \"totalAcceptedRaw\": 162630, \"totalSubmissionRaw\": 285004, \"acRate\": \"57.1%\"}",
+  "likes": 2418,
+  "dislikes": 65,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[3,6,5,1,8]",
+    "[4]",
+    "[1,2,3,4,4]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxSumDivThree(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxSumDivThree(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxSumDivThree(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxSumDivThree(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar maxSumDivThree = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxSumDivThree(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxSumDivThree(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxSumDivThree(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxSumDivThree(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxSumDivThree(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxSumDivThree(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_sum_div_three(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef max_sum_div_three(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function maxSumDivThree($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxSumDivThree(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxSumDivThree(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_sum_div_three(nums :: [integer]) :: integer\n  def max_sum_div_three(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_sum_div_three(Nums :: [integer()]) -> integer().\nmax_sum_div_three(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-sum-div-three nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2882",
+    "content": "### Approach 1: Greedy + Forward Thinking\n\n#### Intuition\n\nWe divide the numbers in the array into three groups $a$, $b$, and $c$, containing elements whose remainders modulo $3$ are $0$, $1$, and $2$, respectively. It is straightforward to take all numbers from group $a$, while the counts chosen from groups $b$ and $c$ depend on the situation.\n\nSuppose we choose $\\textit{cnt}_b$ elements from $b$ and $\\textit{cnt}_c$ elements from $c$. The remainder of their combined sum modulo $3$ is\n\n$$\n(\\textit{cnt}_b + 2 \\times \\textit{cnt}_c) \\bmod 3 = (\\textit{cnt}_b - \\textit{cnt}_c) \\bmod 3\n$$\n\nWe want this value to be $0$, so $\\textit{cnt}_b$ and $\\textit{cnt}_c$ must be congruent modulo $3$. Observe that $\\textit{cnt}_b$ must be at least $|b|-2$, where $|b|$ denotes the size of group $b$. If $\\textit{cnt}_b \\le |b|-3$, we could add three more elements from $b$ and preserve the modulo constraint. The same argument implies $\\textit{cnt}_c \\ge |c|-2$.\n\nTherefore the possible values of $\\textit{cnt}_b$ are $\\{\\,|b|-2,\\;|b|-1,\\;|b|\\,\\}$, and similarly for $\\textit{cnt}_c$. We need only check at most $3\\times 3=9$ combinations. When selecting elements from $b$ or $c$ we take the largest ones first, so $b$ and $c$ should be sorted in descending order.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/2ocRGbdq/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"2ocRGbdq\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of $\\textit{nums}$.\n\n- Time complexity: $O(n \\log n)$.\n  \n  Sorting groups $b$ and $c$ requires $O(n\\log n)$. The nine combinations form a constant factor and each case uses linear-time summation.\n\n- Space complexity: $O(n)$.\n  \n  This is the space required for $a$, $b$, and $c$.\n\n### Approach 2: Greedy + Backward Thinking\n\n#### Intuition\n\nIn the first method we reason forward by deciding how many elements to select from $b$ and $c$. Here we instead think in reverse by deciding how many elements to discard from those groups.\n\nLet $\\textit{tot}$ be the sum of all elements in $nums$. There are three cases:\n\n- If $\\textit{tot}\\bmod 3 = 0$, nothing needs to be removed.\n\n- If $\\textit{tot}\\bmod 3 = 1$, we can either remove the smallest element in $b$ or the two smallest elements in $c$.\n\n- If $\\textit{tot}\\bmod 3 = 2$, we can either remove the two smallest elements in $b$ or the smallest element in $c$.\n\nWe sort $b$ and $c$ and remove the required smallest elements depending on the value of $\\textit{tot}$.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/4DdRXaWd/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"4DdRXaWd\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of $\\textit{nums}$.\n\n- Time complexity: $O(n \\log n)$.\n  \n  Sorting $b$ and $c$ dominates the runtime. This can be improved to $O(n)$ by tracking the smallest required values without sorting.\n\n- Space complexity: $O(n)$.\n  \n  This is the space required for $a,b,c$. If not sorted, you can avoid calculating $a,b,c$ by directly traversing the array $\\textit{nums}$ once to find the two smallest numbers that give a remainder of 1 and 2 when divided by 3, thus optimizing the space complexity to $O(1)$.\n\n### Approach 3: Dynamic Programming\n\n#### Intuition\n\nThe previous methods rely on greedy selection or discarding. Here we apply dynamic programming to avoid sorting or greedy rules.\n\nLet $f(i, j)$ be the maximum sum achievable using the first $i$ elements such that the sum modulo $3$ equals $j$. For the current number $nums[i]$, if we pick it we transition from $f(i-1, (j-nums[i])\\bmod 3)$, and if we skip it we transition from $f(i-1, j)$. The relation is\n\n$$\nf(i, j) = \\max\\big\\{ f(i-1, j), f(i-1, (j-\\textit{nums}[i]) \\bmod 3) + \\textit{nums}[i] \\big\\}\n$$\n\nThe initial state is $f(0, 0)=0$ and $f(0, 1)=f(0, 2)=-\\infty$. This reflects that selecting nothing yields a sum of zero with remainder zero, while the other two remainders are invalid.\n\nSince some languages may produce negative values in $(j-nums[i])\\bmod 3$, it is convenient to write the transitions as\n\n$$\n\\begin{cases}\nf(i-1, j) \\to f(i, j) \\\\\nf(i-1, j) + \\textit{nums}[i] \\to f(i, (j + \\textit{nums}[i]) \\bmod 3)\n\\end{cases}\n$$\n\nEach row depends only on the previous row, so we store only two rows and reduce space usage.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/UCLFUKnL/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"UCLFUKnL\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of $\\textit{nums}$.\n\n- Time complexity: $O(n)$.\n\n- Space complexity: $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

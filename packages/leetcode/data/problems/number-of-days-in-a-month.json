@@ -1,0 +1,128 @@
+{
+  "questionId": "1088",
+  "questionFrontendId": "1118",
+  "title": "Number of Days in a Month",
+  "titleSlug": "number-of-days-in-a-month",
+  "difficulty": "Easy",
+  "content": "<p>Given a year <code>year</code> and a month <code>month</code>, return <em>the number of days of that month</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> year = 1992, month = 7\n<strong>Output:</strong> 31\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> year = 2000, month = 2\n<strong>Output:</strong> 29\n</pre><p><strong class=\"example\">Example 3:</strong></p>\n<pre><strong>Input:</strong> year = 1900, month = 2\n<strong>Output:</strong> 28\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1583 &lt;= year &lt;= 2100</code></li>\n\t<li><code>1 &lt;= month &lt;= 12</code></li>\n</ul>\n",
+  "hints": [
+    "Does February have 28 days or 29 days?",
+    "Think of Leap years."
+  ],
+  "metaData": "{\n  \"name\": \"numberOfDays\",\n  \"params\": [\n    {\n      \"name\": \"year\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"month\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"9.7K\", \"totalSubmission\": \"16.3K\", \"totalAcceptedRaw\": 9692, \"totalSubmissionRaw\": 16326, \"acRate\": \"59.4%\"}",
+  "likes": 47,
+  "dislikes": 180,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "1992\n7",
+    "2000\n2",
+    "1900\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numberOfDays(int year, int month) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numberOfDays(int year, int month) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numberOfDays(self, year: int, month: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numberOfDays(self, year, month):\n        \"\"\"\n        :type year: int\n        :type month: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} year\n * @param {number} month\n * @return {number}\n */\nvar numberOfDays = function(year, month) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numberOfDays(year: number, month: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumberOfDays(int year, int month) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numberOfDays(int year, int month) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numberOfDays(year int, month int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numberOfDays(year: Int, month: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numberOfDays(_ year: Int, _ month: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn number_of_days(year: i32, month: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} year\n# @param {Integer} month\n# @return {Integer}\ndef number_of_days(year, month)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $year\n     * @param Integer $month\n     * @return Integer\n     */\n    function numberOfDays($year, $month) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numberOfDays(int year, int month) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numberOfDays(year: Int, month: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec number_of_days(year :: integer, month :: integer) :: integer\n  def number_of_days(year, month) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec number_of_days(Year :: integer(), Month :: integer()) -> integer().\nnumber_of_days(Year, Month) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (number-of-days year month)\n  (-> exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

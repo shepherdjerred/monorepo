@@ -1,0 +1,144 @@
+{
+  "questionId": "1220",
+  "questionFrontendId": "1125",
+  "title": "Smallest Sufficient Team",
+  "titleSlug": "smallest-sufficient-team",
+  "difficulty": "Hard",
+  "content": "<p>In a project, you have a list of required skills <code>req_skills</code>, and a list of people. The <code>i<sup>th</sup></code> person <code>people[i]</code> contains a list of skills that the person has.</p>\n\n<p>Consider a sufficient team: a set of people such that for every required skill in <code>req_skills</code>, there is at least one person in the team who has that skill. We can represent these teams by the index of each person.</p>\n\n<ul>\n\t<li>For example, <code>team = [0, 1, 3]</code> represents the people with skills <code>people[0]</code>, <code>people[1]</code>, and <code>people[3]</code>.</li>\n</ul>\n\n<p>Return <em>any sufficient team of the smallest possible size, represented by the index of each person</em>. You may return the answer in <strong>any order</strong>.</p>\n\n<p>It is <strong>guaranteed</strong> an answer exists.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> req_skills = [\"java\",\"nodejs\",\"reactjs\"], people = [[\"java\"],[\"nodejs\"],[\"nodejs\",\"reactjs\"]]\n<strong>Output:</strong> [0,2]\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> req_skills = [\"algorithms\",\"math\",\"java\",\"reactjs\",\"csharp\",\"aws\"], people = [[\"algorithms\",\"math\",\"java\"],[\"algorithms\",\"math\",\"reactjs\"],[\"java\",\"csharp\",\"aws\"],[\"reactjs\",\"csharp\"],[\"csharp\",\"math\"],[\"aws\",\"java\"]]\n<strong>Output:</strong> [1,2]\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= req_skills.length &lt;= 16</code></li>\n\t<li><code>1 &lt;= req_skills[i].length &lt;= 16</code></li>\n\t<li><code>req_skills[i]</code> consists of lowercase English letters.</li>\n\t<li>All the strings of <code>req_skills</code> are <strong>unique</strong>.</li>\n\t<li><code>1 &lt;= people.length &lt;= 60</code></li>\n\t<li><code>0 &lt;= people[i].length &lt;= 16</code></li>\n\t<li><code>1 &lt;= people[i][j].length &lt;= 16</code></li>\n\t<li><code>people[i][j]</code> consists of lowercase English letters.</li>\n\t<li>All the strings of <code>people[i]</code> are <strong>unique</strong>.</li>\n\t<li>Every skill in <code>people[i]</code> is a skill in <code>req_skills</code>.</li>\n\t<li>It is guaranteed a sufficient team exists.</li>\n</ul>\n",
+  "hints": [
+    "Do a bitmask DP.",
+    "For each person, for each set of skills, we can update our understanding of a minimum set of people needed to perform this set of skills."
+  ],
+  "metaData": "{\n  \"name\": \"smallestSufficientTeam\",\n  \"params\": [\n    {\n      \"name\": \"req_skills\",\n      \"type\": \"string[]\"\n    },\n    {\n      \"type\": \"list<list<string>>\",\n      \"name\": \"people\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"72.6K\", \"totalSubmission\": \"131.1K\", \"totalAcceptedRaw\": 72611, \"totalSubmissionRaw\": 131089, \"acRate\": \"55.4%\"}",
+  "likes": 2275,
+  "dislikes": 57,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"The Number of Good Subsets\", \"titleSlug\": \"the-number-of-good-subsets\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Number of Work Sessions to Finish the Tasks\", \"titleSlug\": \"minimum-number-of-work-sessions-to-finish-the-tasks\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Rows Covered by Columns\", \"titleSlug\": \"maximum-rows-covered-by-columns\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"java\",\"nodejs\",\"reactjs\"]\n[[\"java\"],[\"nodejs\"],[\"nodejs\",\"reactjs\"]]",
+    "[\"algorithms\",\"math\",\"java\",\"reactjs\",\"csharp\",\"aws\"]\n[[\"algorithms\",\"math\",\"java\"],[\"algorithms\",\"math\",\"reactjs\"],[\"java\",\"csharp\",\"aws\"],[\"reactjs\",\"csharp\"],[\"csharp\",\"math\"],[\"aws\",\"java\"]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"tcs\", \"name\": \"tcs\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Bitmask",
+      "slug": "bitmask"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> smallestSufficientTeam(vector<string>& req_skills, vector<vector<string>>& people) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] smallestSufficientTeam(String[] req_skills, List<List<String>> people) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def smallestSufficientTeam(self, req_skills: List[str], people: List[List[str]]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def smallestSufficientTeam(self, req_skills, people):\n        \"\"\"\n        :type req_skills: List[str]\n        :type people: List[List[str]]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} req_skills\n * @param {string[][]} people\n * @return {number[]}\n */\nvar smallestSufficientTeam = function(req_skills, people) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function smallestSufficientTeam(req_skills: string[], people: string[][]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] SmallestSufficientTeam(string[] req_skills, IList<IList<string>> people) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* smallestSufficientTeam(char** req_skills, int req_skillsSize, char*** people, int peopleSize, int* peopleColSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func smallestSufficientTeam(req_skills []string, people [][]string) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun smallestSufficientTeam(req_skills: Array<String>, people: List<List<String>>): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func smallestSufficientTeam(_ req_skills: [String], _ people: [[String]]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn smallest_sufficient_team(req_skills: Vec<String>, people: Vec<Vec<String>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} req_skills\n# @param {String[][]} people\n# @return {Integer[]}\ndef smallest_sufficient_team(req_skills, people)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $req_skills\n     * @param String[][] $people\n     * @return Integer[]\n     */\n    function smallestSufficientTeam($req_skills, $people) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> smallestSufficientTeam(List<String> req_skills, List<List<String>> people) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def smallestSufficientTeam(req_skills: Array[String], people: List[List[String]]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec smallest_sufficient_team(req_skills :: [String.t], people :: [[String.t]]) :: [integer]\n  def smallest_sufficient_team(req_skills, people) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec smallest_sufficient_team(Req_skills :: [unicode:unicode_binary()], People :: [[unicode:unicode_binary()]]) -> [integer()].\nsmallest_sufficient_team(Req_skills, People) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (smallest-sufficient-team req_skills people)\n  (-> (listof string?) (listof (listof string?)) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1892",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\n>**Note.** For this problem, we assume that you already know the fundamentals of dynamic programming and are figuring out how to apply it to a wide range of problems, such as this one. If you are not yet at this stage, we recommend checking out our relevant [Explore Card content on dynamic programming](https://leetcode.com/explore/featured/card/dynamic-programming/) before coming back to this article.\n\nOne of the first things you should notice in the statement are the constraints – they may hint at the time complexity of the intended algorithm.\n\n---\n\n### Approach 1: Bottom-Up Dynamic Programming with Bitmasks\n\n#### Intuition\n\nLet $n$ be the number of people and $m$ be the number of required skills.\n\nIn this problem, $m$ is very small – up to $16$. It alludes to track which skills have been covered so far, which is possible to do efficiently with a bitmask.\n\nFirst, let's make our lives easier by dealing with indices instead of strings for the required skills. We use a hash map `skillId` that keeps the index for each skill. We initialize $\\text{skillId}[\\text{req\\_skills}[i]] = i$ for all $i$ from $0$ to $m - 1$.\n\nNow, when each skill has its number, we can represent every set of skills with a bitmask – an integer between $0$ and $2^m - 1$.\n\nHow do we associate a set and an integer exactly? We look at the binary representation of the integer. If the $i^\\text{th}$ bit is $1$, element $i$ belongs to the set. Otherwise, it does not.\n\n>**Examples**\n>* $101111_2=2^0+2^1+2^2+2^3+2^5=47$ represents the set $\\{0, 1, 2, 3, 5\\}$.\n>* $1001010_2=2^1+2^3+2^6=74$ represents the set $\\{1, 3, 6\\}$.\n>* $0$ represents an empty set.\n>* $2^0+2^1+2^2+\\dots+2^{m-1}=2^m-1$ represents $\\{0, 1, 2, \\dots, m - 1\\}$.\n\nThe problem asks to find the smallest team such that the union of the skill sets of its members is the set of all required skills $\\{0, 1, 2, \\dots, m - 1\\}$.\n\nOne can reformulate the statement in terms of bitmasks: we need to find the smallest team such that the bitwise OR of the bitmasks representing the skill sets of its members is $2^m - 1$ (which is the representation of $\\{0, 1, 2, \\dots, m - 1\\}$).\n\nWe will solve this problem using dynamic programming.\n\n\nLet $\\text{dp}[\\text{skillsMask}]$ be a bitmask representing the smallest team that possesses all the skills from $\\text{skillsMask}$. The value of $\\text{dp}[\\text{skillsMask}]$ is a bitmask that represents the set of team members. If there are multiple smallest teams, $\\text{dp}[\\text{skillsMask}]$ may represent any of them.\n\nWe are using bitmasks to represent `skillsMask`, but we can also use bitmasks to represent a set of people. $\\text{skillsMask}$ represents the set of skills, and $\\text{dp}[\\text{skillsMask}]$ represents the set of people on the team. Similar to how we treat the `skillsMask` bitmask, the bitmask representing people has the $i^\\text{th}$ bit set if the $i^\\text{th}$ person is on the team.\n\n> See an example with five people having the following skills masks.\n>* Person $0$: $0110$.\n>* Person $1$: $1010$.\n>* Person $2$: $0001$.\n>* Person $3$: $0101$.\n>* Person $4$: $0100$.\n>\n> Consider values of $\\text{dp}$ for several different $\\text{skillsMask}$.\n>* To obtain $\\text{skillsMask} = 0110$, it is sufficient to take only the person $0$ to a team. The mask representing the team containing only the person $0$ is $00001_2 = 2^0 = 1$. Thus $\\text{dp}[0110] = 00001$.\n>* Similarly, $\\text{dp}[0101] = 01000_2 = 2^3 = 8$ – the person $3$ can cover the skills mask $0101$ by themselves.\n>* To cover $1110$, one person is insufficient, and we need two people with indices $0$ and $1$: $\\text{dp}[1110] = 00011_2 = 2^0 + 2^1 = 3$.\n>* Two people $1$ and $3$ can cover $1111$ together which implies $\\text{dp}[1111] = 01010_2 = 2^1 + 2^3 = 10$.\n\n\nThe base case of this dynamic programming (DP) problem is when $\\text{skillsMask} = 0$, which represents an empty set of skills. When no skills are required, we can form an empty team, and thus, we set $\\text{dp}[0] = 0$ – a bitmask representing an empty set of people.\n\nNow we need to write down the transitions of this DP.\n\nFor a given $\\text{skillsMask} \\ne 0$, there must be at least one person in a team. Since we need to find the minimal team, we initialize $\\text{dp}[\\text{skillsMask}]$ with a large value, like the team of all people $2^n - 1$.\n\nThen we iterate over all people and for each person, try to update $\\text{dp}[\\text{skillsMask}]$ with a team containing this person.\n\nThe $i^\\text{th}$ person or at least one other team member must possess the skills in $\\text{skillsMask}$.\n\nLet $\\text{skillsMaskOfPerson}[i]$ denote the bitmask representing the skills set of the $i^\\text{th}$ person. We can precompute this to make the algorithm more efficient.\n\n> To summarize, we have 3 types of bitmasks. First, the keys to `dp`, which is `skillsMask`. This represents the set of skills that a team covers. Next, the `dp` values represent a set of people on a team. Finally, we are using `skillsMaskOfPerson` to represent the skills that a given person possesses, which is given in the input – we just need to convert it using `skillId`, which we defined at the start.\n\nAlthough the other team members may possess the skills from $\\text{skillsMaskOfPerson}[i]$, it is not necessary. However, they must have the skills from $\\text{skillsMask}$ that are not present in $\\text{skillsMaskOfPerson}[i]$.\n\nThe set $\\text{smallerSkillsMask} = \\text{skillsMask} \\setminus \\text{skillsMaskOfPerson}[i]$, where $\\setminus$ denotes the set difference, contains the required skills that the $i^\\text{th}$ person does not possess. The other team members must possess these skills.\n\nIn a code, a neat trick to calculate $\\text{smallerSkillsMask}$ is `skills_mask & ~skills_mask_of_person[i]`. Alternatively, one could calculate it manually by checking each bit one by one, but this trick is cleaner.\n\nWe will update $\\text{dp}[\\text{skillsMask}]$ with the bitmask $\\text{dp}[\\text{smallerSkillsMask}] \\text{ OR } 2^i$ – add the $i^\\text{th}$ person to the team and cover the remaining skills with the smallest possible set of people, which is defined as  $\\text{dp}[\\text{smallerSkillsMask}]$. This update only makes sense if $\\text{smallerSkillsMask} \\ne \\text{skillsMask}$ because otherwise, the $i^\\text{th}$ person would not contribute any new skills to the team.\n\nThe answer to the problem is $\\text{dp}[2^m - 1]$ – the smallest team that possesses all the required skills.\n\n#### Algorithm\n\n1. Set $n$ to the number of people.\n2. Set $m$ to the number of required skills.\n3. Declare the hash map $\\text{skillId}$.\n4. Iterate $i$ from $0$ to $m - 1$.\n\t* Set $\\text{skillId}[\\text{req\\_skills}[i]] = i$.\n5. Declare and initialize the array $\\text{skillsMaskOfPerson}$.\n6. Iterate $i$ from $0$ to $n - 1$.\n\t* Iterate $\\text{skill}$ over $\\text{people}[i]$.\n\t\t* Set the bit $\\text{skillId}[\\text{skill}]$ in the bitmask $\\text{skillsMaskOfPerson}[i]$.\n7. Declare the array $\\text{dp}$ of size $2^m$ and initialize it with the values of $2^n - 1$.\n8. Set $\\text{dp}[0] = 0$. (The base case of the DP.)\n9. Iterate $\\text{skillsMask}$ from $1$ to $2^m - 1$.\n\t* Iterate $i$ from $0$ to $n - 1$.\n\t\t* Set $\\text{smallerSkillsMask} = \\text{skillsMask} \\setminus \\text{skillsMaskOfPerson}[i]$.\n\t\t* If $\\text{smallerSkillsMask} \\ne \\text{skillsMask}$.\n\t\t\t* Set $\\text{peopleMask}$ to $\\text{dp}[\\text{smallerSkillsMask}] \\text{ OR } 2^i$. This is the mask that represents the new team once you add the current person.\n\t\t\t* Update $\\text{dp}[\\text{skillsMask}]$ with $\\text{peopleMask}$, if it is better (has fewer bits set).\n10. Return the array containing the elements from the bitmask $\\text{dp}[2^m - 1]$.\n\n#### Implementation\n\n> Note that in Java and C++ we need to use long for the masks representing teams because according to the constraints, there could be at most 60 people, and $2^{60}$ is too large for int.\n\n<iframe src=\"https://leetcode.com/playground/HeDnwKSJ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"HeDnwKSJ\"></iframe>\n\n\n#### Complexity Analysis\n\n* Time complexity: $O(2^m \\cdot n)$.\n\nThere are two nested for loops: `for skillsMask`, which performs $O(2^m)$ iterations, and `for i`, which performs $O(n)$ iterations. We process each transition inside these loops in $O(1)$.\n\n* Space complexity: $O(2^m)$.\n\nWe store a DP array of size $2^m$.\n\n---\n\n### Approach 2: Top-Down Dynamic Programming (Memoization)\n\n#### Intuition\n\nIn this approach, we will calculate the same DP as in the previous one, but the manner of organizing computations will differ.\n\nWe will use the recursive function $f(\\text{skillsMask})$ that returns the value of $\\text{dp}[\\text{skillsMask}]$.\n\nOne can rewrite the DP recurrence relation in terms of $f$ as follows. For all $i$ from $0$ to $n - 1$, update $\\text{dp}[\\text{skillsMask}]$ with the bitmask $f(\\text{smallerSkillsMask}) \\text{ OR } 2^i$.\n\nWhen we call $f(\\text{skillsMask})$ for the first time, we calculate the result for $\\text{skillsMask}$ and write it into $\\text{dp}[\\text{skillsMask}]$. When we call $f(\\text{skillsMask})$ after that, we immediately return $\\text{dp}[\\text{skillsMask}]$ computed earlier.\n\nThe answer to the problem is the team $f(2^m - 1) = \\text{dp}[2^m - 1]$.\n\nThere remains one small technical question: how to know whether we call $f(\\text{skillsMask})$ for the first time and need to compute the result, or we call it later and can return $\\text{dp}[\\text{skillsMask}]$ found earlier? One can handle this by initializing the $\\text{dp}$ array with the value of $-1$. Then $\\text{dp}[\\text{skillsMask}] = -1$ will mean that we have not calculated $f(\\text{skillsMask})$ yet. As soon as we find the result of $f(\\text{skillsMask})$, we will write it into $\\text{dp}[\\text{skillsMask}]$, and this value will not be $-1$ anymore.\n\n#### Algorithm\n\nThe function $f$ takes a parameter $\\text{skillsMask}$.\n1. If $\\text{dp}[\\text{skillsMask}] \\ne -1$, return $\\text{dp}[\\text{skillsMask}]$ (the value computed earlier).\n2. Iterate $i$ from $0$ to $n - 1$. Try to update $\\text{dp}[\\text{skillsMask}]$ with a team containing the $i^\\text{th}$ person.\n\t* Set $\\text{smallerSkillsMask} = \\text{skillsMask} \\setminus \\text{skillsMaskOfPerson}[i]$.\n\t* If $\\text{smallerSkillsMask} \\ne \\text{skillsMask}$.\n\t\t* Set $\\text{peopleMask} = f(\\text{smallerSkillsMask})$.\n\t\t* If $\\text{dp}[\\text{skillsMask}] = -1$ (we have not found any team for $\\text{skillsMask}$ yet) or $\\text{peopleMask} \\text{ OR } 2^i$ is smaller than the current team $\\text{dp}[\\text{skillsMask}]$, update $\\text{dp}[\\text{skillsMask}]$ with $\\text{peopleMask} \\text{ OR } 2^i$.\n3. Return $\\text{dp}[\\text{skillsMask}]$.\n\nBefore calling $f$ we need to precalculate $\\text{skillsMaskOfPerson}[i]$ for all $i$. Also, we initialize $\\text{dp}[0] = 0$ as the base case and all other elements to `-1`.\n\nThe answer to the problem is $f(2^m - 1)$.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ErDF2hwQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ErDF2hwQ\"></iframe>\n\n\n#### Complexity Analysis\n\n* Time complexity: $O(2^m \\cdot n)$.\n\nEven though we changed the order of calculating DP, the time complexity is the same as in the previous approach: for each $\\text{skillsMask}$, we compute $\\text{dp}[\\text{skillsMask}]$ in $O(n)$. Since we store the results in memory, we will calculate each $\\text{dp}[\\text{skillsMask}]$ only once.\n\n* Space complexity: $O(2^m)$.\n\nWe store a DP array of size $2^m$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

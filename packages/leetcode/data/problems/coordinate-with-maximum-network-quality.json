@@ -1,0 +1,131 @@
+{
+  "questionId": "1726",
+  "questionFrontendId": "1620",
+  "title": "Coordinate With Maximum Network Quality",
+  "titleSlug": "coordinate-with-maximum-network-quality",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array of network towers <code>towers</code>, where <code>towers[i] = [x<sub>i</sub>, y<sub>i</sub>, q<sub>i</sub>]</code> denotes the <code>i<sup>th</sup></code> network tower with location <code>(x<sub>i</sub>, y<sub>i</sub>)</code> and quality factor <code>q<sub>i</sub></code>. All the coordinates are <strong>integral coordinates</strong> on the X-Y plane, and the distance between the two coordinates is the <strong>Euclidean distance</strong>.</p>\n\n<p>You are also given an integer <code>radius</code> where a tower is <strong>reachable</strong> if the distance is <strong>less than or equal to</strong> <code>radius</code>. Outside that distance, the signal becomes garbled, and the tower is <strong>not reachable</strong>.</p>\n\n<p>The signal quality of the <code>i<sup>th</sup></code> tower at a coordinate <code>(x, y)</code> is calculated with the formula <code>&lfloor;q<sub>i</sub> / (1 + d)&rfloor;</code>, where <code>d</code> is the distance between the tower and the coordinate. The <strong>network quality</strong> at a coordinate is the sum of the signal qualities from all the <strong>reachable</strong> towers.</p>\n\n<p>Return <em>the array </em><code>[c<sub>x</sub>, c<sub>y</sub>]</code><em> representing the <strong>integral</strong> coordinate </em><code>(c<sub>x</sub>, c<sub>y</sub>)</code><em> where the <strong>network quality</strong> is maximum. If there are multiple coordinates with the same <strong>network quality</strong>, return the lexicographically minimum <strong>non-negative</strong> coordinate.</em></p>\n\n<p><strong>Note:</strong></p>\n\n<ul>\n\t<li>A coordinate <code>(x1, y1)</code> is lexicographically smaller than <code>(x2, y2)</code> if either:\n\n\t<ul>\n\t\t<li><code>x1 &lt; x2</code>, or</li>\n\t\t<li><code>x1 == x2</code> and <code>y1 &lt; y2</code>.</li>\n\t</ul>\n\t</li>\n\t<li><code>&lfloor;val&rfloor;</code> is the greatest integer less than or equal to <code>val</code> (the floor function).</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/22/untitled-diagram.png\" style=\"width: 176px; height: 176px;\" />\n<pre>\n<strong>Input:</strong> towers = [[1,2,5],[2,1,7],[3,1,9]], radius = 2\n<strong>Output:</strong> [2,1]\n<strong>Explanation:</strong> At coordinate (2, 1) the total quality is 13.\n- Quality of 7 from (2, 1) results in &lfloor;7 / (1 + sqrt(0)&rfloor; = &lfloor;7&rfloor; = 7\n- Quality of 5 from (1, 2) results in &lfloor;5 / (1 + sqrt(2)&rfloor; = &lfloor;2.07&rfloor; = 2\n- Quality of 9 from (3, 1) results in &lfloor;9 / (1 + sqrt(1)&rfloor; = &lfloor;4.5&rfloor; = 4\nNo other coordinate has a higher network quality.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> towers = [[23,11,21]], radius = 9\n<strong>Output:</strong> [23,11]\n<strong>Explanation:</strong> Since there is only one tower, the network quality is highest right at the tower&#39;s location.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> towers = [[1,2,13],[2,1,7],[0,1,9]], radius = 2\n<strong>Output:</strong> [1,2]\n<strong>Explanation:</strong> Coordinate (1, 2) has the highest network quality.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= towers.length &lt;= 50</code></li>\n\t<li><code>towers[i].length == 3</code></li>\n\t<li><code>0 &lt;= x<sub>i</sub>, y<sub>i</sub>, q<sub>i</sub> &lt;= 50</code></li>\n\t<li><code>1 &lt;= radius &lt;= 50</code></li>\n</ul>\n",
+  "hints": [
+    "The constraints are small enough to consider every possible coordinate and calculate its quality."
+  ],
+  "metaData": "{\n  \"name\": \"bestCoordinate\",\n  \"params\": [\n    {\n      \"name\": \"towers\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"radius\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"11.5K\", \"totalSubmission\": \"29.2K\", \"totalAcceptedRaw\": 11536, \"totalSubmissionRaw\": 29230, \"acRate\": \"39.5%\"}",
+  "likes": 92,
+  "dislikes": 276,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[1,2,5],[2,1,7],[3,1,9]]\n2",
+    "[[23,11,21]]\n9",
+    "[[1,2,13],[2,1,7],[0,1,9]]\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"lyft\", \"name\": \"Lyft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> bestCoordinate(vector<vector<int>>& towers, int radius) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] bestCoordinate(int[][] towers, int radius) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def bestCoordinate(self, towers: List[List[int]], radius: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def bestCoordinate(self, towers, radius):\n        \"\"\"\n        :type towers: List[List[int]]\n        :type radius: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} towers\n * @param {number} radius\n * @return {number[]}\n */\nvar bestCoordinate = function(towers, radius) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function bestCoordinate(towers: number[][], radius: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] BestCoordinate(int[][] towers, int radius) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* bestCoordinate(int** towers, int towersSize, int* towersColSize, int radius, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func bestCoordinate(towers [][]int, radius int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun bestCoordinate(towers: Array<IntArray>, radius: Int): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func bestCoordinate(_ towers: [[Int]], _ radius: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn best_coordinate(towers: Vec<Vec<i32>>, radius: i32) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} towers\n# @param {Integer} radius\n# @return {Integer[]}\ndef best_coordinate(towers, radius)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $towers\n     * @param Integer $radius\n     * @return Integer[]\n     */\n    function bestCoordinate($towers, $radius) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> bestCoordinate(List<List<int>> towers, int radius) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def bestCoordinate(towers: Array[Array[Int]], radius: Int): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec best_coordinate(towers :: [[integer]], radius :: integer) :: [integer]\n  def best_coordinate(towers, radius) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec best_coordinate(Towers :: [[integer()]], Radius :: integer()) -> [integer()].\nbest_coordinate(Towers, Radius) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (best-coordinate towers radius)\n  (-> (listof (listof exact-integer?)) exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,149 @@
+{
+  "questionId": "1643",
+  "questionFrontendId": "1519",
+  "title": "Number of Nodes in the Sub-Tree With the Same Label",
+  "titleSlug": "number-of-nodes-in-the-sub-tree-with-the-same-label",
+  "difficulty": "Medium",
+  "content": "<p>You are given a tree (i.e. a connected, undirected graph that has no cycles) consisting of <code>n</code> nodes numbered from <code>0</code> to <code>n - 1</code> and exactly <code>n - 1</code> <code>edges</code>. The <strong>root</strong> of the tree is the node <code>0</code>, and each node of the tree has <strong>a label</strong> which is a lower-case character given in the string <code>labels</code> (i.e. The node with the number <code>i</code> has the label <code>labels[i]</code>).</p>\n\n<p>The <code>edges</code> array is given on the form <code>edges[i] = [a<sub>i</sub>, b<sub>i</sub>]</code>, which means there is an edge between nodes <code>a<sub>i</sub></code> and <code>b<sub>i</sub></code> in the tree.</p>\n\n<p>Return <em>an array of size <code>n</code></em> where <code>ans[i]</code> is the number of nodes in the subtree of the <code>i<sup>th</sup></code> node which have the same label as node <code>i</code>.</p>\n\n<p>A subtree of a tree <code>T</code> is the tree consisting of a node in <code>T</code> and all of its descendant nodes.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/07/01/q3e1.jpg\" style=\"width: 400px; height: 291px;\" />\n<pre>\n<strong>Input:</strong> n = 7, edges = [[0,1],[0,2],[1,4],[1,5],[2,3],[2,6]], labels = &quot;abaedcd&quot;\n<strong>Output:</strong> [2,1,1,1,1,1,1]\n<strong>Explanation:</strong> Node 0 has label &#39;a&#39; and its sub-tree has node 2 with label &#39;a&#39; as well, thus the answer is 2. Notice that any node is part of its sub-tree.\nNode 1 has a label &#39;b&#39;. The sub-tree of node 1 contains nodes 1,4 and 5, as nodes 4 and 5 have different labels than node 1, the answer is just 1 (the node itself).\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/07/01/q3e2.jpg\" style=\"width: 300px; height: 253px;\" />\n<pre>\n<strong>Input:</strong> n = 4, edges = [[0,1],[1,2],[0,3]], labels = &quot;bbbb&quot;\n<strong>Output:</strong> [4,2,1,1]\n<strong>Explanation:</strong> The sub-tree of node 2 contains only node 2, so the answer is 1.\nThe sub-tree of node 3 contains only node 3, so the answer is 1.\nThe sub-tree of node 1 contains nodes 1 and 2, both have label &#39;b&#39;, thus the answer is 2.\nThe sub-tree of node 0 contains nodes 0, 1, 2 and 3, all with label &#39;b&#39;, thus the answer is 4.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/07/01/q3e3.jpg\" style=\"width: 300px; height: 253px;\" />\n<pre>\n<strong>Input:</strong> n = 5, edges = [[0,1],[0,2],[1,3],[0,4]], labels = &quot;aabab&quot;\n<strong>Output:</strong> [3,2,1,1,1]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>edges.length == n - 1</code></li>\n\t<li><code>edges[i].length == 2</code></li>\n\t<li><code>0 &lt;= a<sub>i</sub>, b<sub>i</sub> &lt; n</code></li>\n\t<li><code>a<sub>i</sub> != b<sub>i</sub></code></li>\n\t<li><code>labels.length == n</code></li>\n\t<li><code>labels</code> is consisting of only of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Start traversing the tree and each node should return a vector to its parent node.",
+    "The vector should be of length 26 and have the count of all the labels in the sub-tree of this node."
+  ],
+  "metaData": "{\n  \"name\": \"countSubTrees\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"edges\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"labels\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"94.1K\", \"totalSubmission\": \"169.9K\", \"totalAcceptedRaw\": 94092, \"totalSubmissionRaw\": 169874, \"acRate\": \"55.4%\"}",
+  "likes": 2377,
+  "dislikes": 813,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "7\n[[0,1],[0,2],[1,4],[1,5],[2,3],[2,6]]\n\"abaedcd\"",
+    "4\n[[0,1],[1,2],[0,3]]\n\"bbbb\"",
+    "5\n[[0,1],[0,2],[1,3],[0,4]]\n\"aabab\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"samsung\", \"name\": \"Samsung\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> countSubTrees(int n, vector<vector<int>>& edges, string labels) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] countSubTrees(int n, int[][] edges, String labels) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countSubTrees(self, n: int, edges: List[List[int]], labels: str) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countSubTrees(self, n, edges, labels):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :type labels: str\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} edges\n * @param {string} labels\n * @return {number[]}\n */\nvar countSubTrees = function(n, edges, labels) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countSubTrees(n: number, edges: number[][], labels: string): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] CountSubTrees(int n, int[][] edges, string labels) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* countSubTrees(int n, int** edges, int edgesSize, int* edgesColSize, char* labels, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countSubTrees(n int, edges [][]int, labels string) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countSubTrees(n: Int, edges: Array<IntArray>, labels: String): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countSubTrees(_ n: Int, _ edges: [[Int]], _ labels: String) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_sub_trees(n: i32, edges: Vec<Vec<i32>>, labels: String) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} edges\n# @param {String} labels\n# @return {Integer[]}\ndef count_sub_trees(n, edges, labels)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $edges\n     * @param String $labels\n     * @return Integer[]\n     */\n    function countSubTrees($n, $edges, $labels) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> countSubTrees(int n, List<List<int>> edges, String labels) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countSubTrees(n: Int, edges: Array[Array[Int]], labels: String): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_sub_trees(n :: integer, edges :: [[integer]], labels :: String.t) :: [integer]\n  def count_sub_trees(n, edges, labels) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_sub_trees(N :: integer(), Edges :: [[integer()]], Labels :: unicode:unicode_binary()) -> [integer()].\ncount_sub_trees(N, Edges, Labels) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-sub-trees n edges labels)\n  (-> exact-integer? (listof (listof exact-integer?)) string? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1624",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nThe problem presents an undirected tree with `n` nodes. Each node of the tree has a label associated to it. Our task is to return an array `ans` of size `n` where `ans[i]` is the number of nodes in the subtree of $i^{th}$ node that have the same label as node `i`.\n\n---\n\n### Approach 1: Depth First Search\n\n#### Intuition\n\nOne brute force approach that we might think of is to explore every subtree of each node and count how many labels similar to the node exist in its subtree. However, this would take $O(N^2)$ time because we would have to traverse the entire subtree of each node.\n\nIntuitively, we can consider computing the answer of a parent node from its child nodes. Let's say there is a node `p`, that has two children, `c1` and `c2`. If nodes `c1` and `c2` have the total count of each label (`a` to `z`) in their respective subtrees, then it would be easy to compute the answer for node `p`. Using the count of each label in `c1` and `c2`, we can compute the count in `p`'s subtree.\n\nSo, to compute the answer of a node, first we have to find the count of each label in every child node subtree. Then, we use it to find the answer for the parent node.\n\nA depth-first search is a good algorithm for such a situation. In DFS, we explore nodes as far as possible along each branch. Upon reaching the end of the current branch, we backtrack to the next possible branch and continue exploring.\n\nOnce we encounter an unvisited node, we will take one of its neighbor nodes (if exists) as the next node on this branch. Recursively call the function to take the next node as the 'starting node' and solve the subproblem. If we reach the end of this branch, we backtrack to the previous node and visit the next neighbor node (if exists), and repeat the process. \n\nIf you are new to DFS, please see our [Leetcode Explore Card](https://leetcode.com/explore/featured/card/graph/619/depth-first-search-in-graph/3882/) for more information on it!\n\nFollowing from the above discussion, the idea is to visit all the children of every node recursively, compute the count of each label in every child's subtree, and use it to compute the answer of the parent node.\n\nLet's take an example. Let's say we have a node `c` which is a child of a node `p`. Let's also create an array `nodeCount[26]` to store the count of each label in the subtree of `p`. `nodeCount[0]` will store the count of label `a`, `nodeCount[1]` will store the count for `b` and so on. We count one for the node label itself, i.e., `nodeCount[labels[p] - `a`] = 1`.\n\nNow, we iterate over the child `c` and get the count of each label in the subtree of `c`, let's store it in another array `childCount[26]`. For each label, we add the count in the subtree of `c` to the count in the subtree of `p` i.e., `nodeCount[i] += childCount[i]`. After iterating over all the children (if there are more) of `p`, the answer of node `p` would be `nodeCount[labels[p] - 'a']`.\n\nRefer to the following slides for a step-by-step visual example:\n\n!?!../Documents/1519_number_of_nodes_with_same_label.json:601,301!?!\n\n\n#### Algorithm\n\n1. Create an adjacency list where `adj[X]` contains all the neighbors of node `X`.\n2. Initialize an array `ans`, storing the answer of each node. Initialize it with `0` for every node.\n3. Start a DFS traversal.\n    - We use a `dfs` function to perform the traversal. For each call, pass `node`, `parent`, `adj`, `labels` and `ans` as the parameters. It returns an array which stores the count of each label in the `node`'s subtree. We start with node `0`. We also keep track of the `parent` node of the current `node` so that we don’t visit the node’s parent as it has already been visited.\n    - Initialize an array `nodeCounts` to store the count of each label in the `node`'s subtree. Initialize it with `0` except for the `node` label, which should be `1`.\n    - Iterate over all the children of the `node` (nodes that share an edge) and check if any `child` is equal to the `parent`. If the `child` is equal to the `parent`, we will not visit it again.\n    - If the `child` is not equal to the `parent`, recursively call the dfs function with the node as `child` and the parent as `node`. Store the count of all labels in its subtree in `childCounts`.\n    - Add `childCounts` to `nodeCounts`.\n    - After looping through all the children, set the `ans[node]` to  `ans[node] = nodeCounts[labels[node]]`.\n    - Return `nodeCounts`.\n4. Return `ans`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Rgsa6QY4/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Rgsa6QY4\"></iframe>\n\n#### Complexity Analysis\n\nHere, $n$ is the number of nodes.\n\n* Time complexity: $O(26 * n) = O(n)$\n\n    - Each node is visited by the `dfs` function once, which takes $O(n)$ time in total. We also iterate over the edges of every node once (since we don't visit a node more than once, we don't iterate its edges more than once), which adds $O(n)$ time since we have $n - 1$ edges.\n    - For each child of a node, we also add the counts of each label in the child's subtree to the node, which comes with a $26$ factor. Since there are $n - 1$ edges, there are $n - 1$ children. So, we would take up $O(26 * n)$ time to perform all these operations.\n    - Additionally, we need $O(n)$ time to initialize the adjacency list and the `ans` array.\n\n* Space complexity: $O(26 * n) = O(n)$\n\n    - The recursion call stack used by `dfs` can have no more than $n$ elements in the worst-case scenario. Storing each element comes with a $26$ factor because we create an array `nodeCounts` of size $26$ for each node. So, we would take up $O(26 * n)$ space in the worst case.\n    - We also need $O(n)$ memory for the adjacency list and the `ans` array.\n\n---\n\n### Approach 2: Breadth First Search\n\n#### Intuition\n\nAs we discussed in the first approach, the idea is to visit all the children of every node, compute the count of each label in every child's subtree, and use it to compute the answer of the parent node.\n\nWe can use a modified breadth-first search (BFS) traversal over the graph to compute the count of each label in the parent node from its children.\n\nA breadth-first search (BFS) is an algorithm for traversing or searching a graph. It traverses in a level-wise manner, i.e., all the nodes at the present level (say `l`) are explored before moving on to the nodes at the next level (`l + 1`), where a level's number is the distance from a starting node. BFS is implemented with a queue.\n\nIf you are not familiar with BFS traversal, we suggest you read our [Leetcode Explore Card](https://leetcode.com/explore/featured/card/graph/620/breadth-first-search-in-graph/) for more information on it!\n\nIn this approach, we traverse from the leaf nodes to the root node. Rather than visiting all the nodes at the present level (say `l`) and then moving on to the nodes at the next level (`l + 1`), we move from level `l+1` to `l` i.e., bottom to top. \n\nWe start a traversal from all the leaf nodes, then move to their parents, then to their parents, and so on till the root. If we are at level `l`, we must have the count of each label in the subtrees of all the nodes at level `l + 1`.\n\nAs we know, BFS is implemented with a queue, so we initialize a queue storing the next nodes to be visited. We start by inserting all the leaf nodes into the queue. A leaf node can be figured out by checking the number of nodes it is connected to. If the node is not a root node and the number of nodes to which it is connected is one (leaf nodes just have a parent and no children), it is a leaf node.\n\nWe also initialize a count array `count[n][26]`, where `count[i]` stores the count of each label in the subtree of node `i`.\n\nNext, we perform the BFS traversal until the queue is empty. We pop out the first element, say `node` from the queue. We fetch the parent of the node, let's call it `parent`. \n\nWe add the count of each label in the subtree of `node` to that of the `parent` (`count[parent] += count[node]`). Similarly, we pop other elements and count of each label in the children to their parents. After traversing over all the children of the `parent`, the `count[parent]` stores the count of each label in the subtree of the `parent`. Next, we push the `parent` into the queue and repeat the process until the queue is empty.\n\nOnce the queue is empty, we iterate over all the nodes, and for each `node` answer is `count[node][labels[node] - 'a']`.\n\nThe important thing in this approach is to figure out the parent of a node and how to compute the count of each label in its subtree using its children. Let's understand this a bit more. We declare a map called adj, where `adj[X]` contains a set of all the neighbors (nodes that share an edge) of node `X`. As we know, we start with leaf nodes by pushing them into the queue first. The leaf nodes will have just one node in the set `adj[leaf_node]` which is the parent since they have no children. Let's say we start with leaf node `lf` and its parent is `p`. Parent node `p` will be obtained from `adj[lf]`. We will add the count of each label in `lf` to that of `p`. \n\nNow, we will delete `lf` from `p`, so that we don't traverse back to `lf` from `p`. Similarly, if there are other leaf nodes that are children of node `p`, we will pop them out of the queue, add the count of each label in them in `p` and delete them from `adj[p]`. Finally, `adj[p]` would not have any children and just have a parent of `p`. This means we have added the count of each label in all the children of `p`. Node `p` would behave as a leaf node and can be pushed into the queue to help its parent compute the count of each label.\n\n#### Algorithm\n\n1. Create a mapping `adj` where `adj[X]` contains a set of all the neighbors of node `X`.\n2. Initialize an array `counts[26]` for every node, storing the count of each label in the node's subtree. Initialize it with `0` for every node.\n3. Initialize a queue.\n4. Iterate over all the nodes and for each `node` mark `counts[node][labels[node] - 'a'] = 1`. Also, check if `node` is a leaf node. It is a leaf node, if `node != 0 && adj[node].size() == 1`. Push `node` into the queue.\n5. Then, while the queue is not empty:\n    - Dequeue the first `node` from the queue.\n    - Get the `parent` of the `node` from `adj[node]`.\n    - For the `parent`, we remove `node` from `adj[parent]` to avoid traversing back to `node` from `parent`.\n    - Add `counts[node]` to `counts[parent]`.\n    - If the size of `adj[parent] == 1 && parent != 0` (root has no parent), which means we added the count of each label in all subtrees of its children and deleted the children. The node present in `adj[parent]` is its parent. In such a case, push the `parent` into the queue.\n6. Iterate over all the nodes and for each `node` return `counts[node][labels[node] - `a`]`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Bny8fhny/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Bny8fhny\"></iframe>\n\n#### Complexity Analysis\n\nHere, $n$ is the number of nodes.\n\n* Time complexity: $O(26 * n) = O(n)$\n\n    - Each node is only queued once, which takes $O(1)$ time for each node. We also iterate over the edges of every node once. Since we only visit each node once, we won't iterate over a node's edges multiple times. There are $n - 1$ edges, so we need $O(n)$ time.\n    - For each child of a node, we also add the count of each label in the child's subtree to the parent node, which comes with a $26$ factor. Since there are $n - 1$ edges, there are $n - 1$ children. So, we would take up $O(26 * n)$ time to perform all these operations.\n    - Additionally, we need $O(n)$ time to initialize the adjacency list `adj` and the `ans` array. On average, the unordered map and unordered set take $O(1)$ time for each operation.\n\n* Space complexity: $O(26 * n) = O(n)$\n\n    - In the worst case, the queue can grow to a size linear with `N`.\n    - We also need $O(26 * n)$ memory for the `counts` array.\n    - We also need $O(n)$ memory for the adjacency list and the `ans` array.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

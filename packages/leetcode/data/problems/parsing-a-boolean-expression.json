@@ -1,0 +1,140 @@
+{
+  "questionId": "1197",
+  "questionFrontendId": "1106",
+  "title": "Parsing A Boolean Expression",
+  "titleSlug": "parsing-a-boolean-expression",
+  "difficulty": "Hard",
+  "content": "<p>A <strong>boolean expression</strong> is an expression that evaluates to either <code>true</code> or <code>false</code>. It can be in one of the following shapes:</p>\n\n<ul>\n\t<li><code>&#39;t&#39;</code> that evaluates to <code>true</code>.</li>\n\t<li><code>&#39;f&#39;</code> that evaluates to <code>false</code>.</li>\n\t<li><code>&#39;!(subExpr)&#39;</code> that evaluates to <strong>the logical NOT</strong> of the inner expression <code>subExpr</code>.</li>\n\t<li><code>&#39;&amp;(subExpr<sub>1</sub>, subExpr<sub>2</sub>, ..., subExpr<sub>n</sub>)&#39;</code> that evaluates to <strong>the logical AND</strong> of the inner expressions <code>subExpr<sub>1</sub>, subExpr<sub>2</sub>, ..., subExpr<sub>n</sub></code> where <code>n &gt;= 1</code>.</li>\n\t<li><code>&#39;|(subExpr<sub>1</sub>, subExpr<sub>2</sub>, ..., subExpr<sub>n</sub>)&#39;</code> that evaluates to <strong>the logical OR</strong> of the inner expressions <code>subExpr<sub>1</sub>, subExpr<sub>2</sub>, ..., subExpr<sub>n</sub></code> where <code>n &gt;= 1</code>.</li>\n</ul>\n\n<p>Given a string <code>expression</code> that represents a <strong>boolean expression</strong>, return <em>the evaluation of that expression</em>.</p>\n\n<p>It is <strong>guaranteed</strong> that the given expression is valid and follows the given rules.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> expression = &quot;&amp;(|(f))&quot;\n<strong>Output:</strong> false\n<strong>Explanation:</strong> \nFirst, evaluate |(f) --&gt; f. The expression is now &quot;&amp;(f)&quot;.\nThen, evaluate &amp;(f) --&gt; f. The expression is now &quot;f&quot;.\nFinally, return false.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> expression = &quot;|(f,f,f,t)&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> The evaluation of (false OR false OR false OR true) is true.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> expression = &quot;!(&amp;(f,t))&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> \nFirst, evaluate &amp;(f,t) --&gt; (false AND true) --&gt; false --&gt; f. The expression is now &quot;!(f)&quot;.\nThen, evaluate !(f) --&gt; NOT false --&gt; true. We return true.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= expression.length &lt;= 2 * 10<sup>4</sup></code></li>\n\t<li>expression[i] is one following characters: <code>&#39;(&#39;</code>, <code>&#39;)&#39;</code>, <code>&#39;&amp;&#39;</code>, <code>&#39;|&#39;</code>, <code>&#39;!&#39;</code>, <code>&#39;t&#39;</code>, <code>&#39;f&#39;</code>, and <code>&#39;,&#39;</code>.</li>\n</ul>\n",
+  "hints": [
+    "Write a function \"parse\" which calls helper functions \"parse_or\", \"parse_and\", \"parse_not\"."
+  ],
+  "metaData": "{\n  \"name\": \"parseBoolExpr\",\n  \"params\": [\n    {\n      \"name\": \"expression\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"147.4K\", \"totalSubmission\": \"211.1K\", \"totalAcceptedRaw\": 147352, \"totalSubmissionRaw\": 211083, \"acRate\": \"69.8%\"}",
+  "likes": 1927,
+  "dislikes": 86,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"&(|(f))\"",
+    "\"|(f,f,f,t)\"",
+    "\"!(&(f,t))\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"hilabs\", \"name\": \"HiLabs\"}, {\"timesEncountered\": 2, \"slug\": \"affinity\", \"name\": \"Affinity\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Recursion",
+      "slug": "recursion"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool parseBoolExpr(string expression) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean parseBoolExpr(String expression) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def parseBoolExpr(self, expression: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def parseBoolExpr(self, expression):\n        \"\"\"\n        :type expression: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} expression\n * @return {boolean}\n */\nvar parseBoolExpr = function(expression) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function parseBoolExpr(expression: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool ParseBoolExpr(string expression) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool parseBoolExpr(char* expression) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func parseBoolExpr(expression string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun parseBoolExpr(expression: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func parseBoolExpr(_ expression: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn parse_bool_expr(expression: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} expression\n# @return {Boolean}\ndef parse_bool_expr(expression)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $expression\n     * @return Boolean\n     */\n    function parseBoolExpr($expression) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool parseBoolExpr(String expression) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def parseBoolExpr(expression: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec parse_bool_expr(expression :: String.t) :: boolean\n  def parse_bool_expr(expression) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec parse_bool_expr(Expression :: unicode:unicode_binary()) -> boolean().\nparse_bool_expr(Expression) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (parse-bool-expr expression)\n  (-> string? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2531",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nWe need to evaluate a boolean expression that follows specific rules. These rules allow for expressions that include literals for `true` ('t') and `false` ('f'), as well as logical operations like NOT ('!'), AND ('&'), and OR ('|'). The goal is to reduce the expression by applying these operations step by step until we arrive at either `true` or `false`.\n\nFor example, consider the expression `&(|(f))`. We first evaluate the OR expression inside the parentheses. Since it's `|(f)`, it results in `false`. Now, the expression becomes `&(f)`, which is an AND operation. Since there's only one `f`, the result is `false`.\n\n<details> \n\n<summary> HINT </summary>\n\nStart by identifying the innermost expression enclosed in parentheses and work your way outward, applying the relevant logical operation each time.\n\n</details>\n\n---\n\n### Approach 1: String Manipulation\n\n#### Intuition\n\nWe need to find the deepest part of the expression, which is usually within the innermost parentheses. We search for the last operator in the string because it likely corresponds to the most nested part. Once we locate it, we grab everything between that operator and its closing parenthesis. This forms a subexpression that we can evaluate independently.\n\nFor example, in `&(t, |(f, t))`, we first look inside the `|` operator since it is nested within the `&`. Evaluating `|(f, t)` tells us that, because one of the values is `t`, the result of this subexpression is `t`. We then replace `|(f, t)` with `t`, reducing the problem to `&(t, t)`. Finally, we evaluate the `&`, which returns `t` since both values are true.\n\nThis makes sense in smaller steps, but since we are creating new strings each time we reduce an expression, it becomes slow as the expression grows. Each time we replace a subexpression, we are dealing with the entire string again, which is inefficient.\n\n#### Algorithm\n\n- Start a loop that continues until the length of `expression` is greater than 1:\n  - Find the position of the last logical operator (`!`, `&`, or `|`) in the `expression` and store it in `start`.\n  - Find the position of the corresponding closing parenthesis `)` that matches the last operator, and store it in `end`.\n  - Extract the substring `subExpr` from `expression` that includes the operator and the values enclosed in parentheses.\n\n- Call `evaluateSubExpr(subExpr)` to evaluate the subexpression:\n  - In `evaluateSubExpr`, extract the operator from `subExpr`.\n  - Get the values by taking the substring from index 2 to the second-to-last character.\n  - Depending on the operator:\n    - If it’s `!`, return `'f'` if the first value is `'t'`, otherwise return `'t'`.\n    - If it’s `&`, return `'f'` if any value is `'f'`, otherwise return `'t'`.\n    - If it’s `|`, return `'t'` if any value is `'t'`, otherwise return `'f'`.\n\n- Replace the evaluated `subExpr` in `expression` with the result (either `'t'` or `'f'`).\n\n- After simplifying the expression completely, return `true` if the remaining character in `expression` is `'t'`; otherwise, return `false`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/cgASQu5Z/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"cgASQu5Z\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `expression` string.\n\n- Time complexity: $O(n^2)$\n\n    The while loop continues while the length of the `expression` is greater than 1. In the worst case, we might evaluate every subexpression multiple times, leading to a total of $O(n)$ iterations. Within each iteration, the operations `find_last_of`, `find`, and `substr` each can take up to $O(n)$ time in the worst case. Hence, the overall time complexity becomes $O(n^2)$.\n\n- Space complexity: $O(n)$\n\n    The space complexity primarily comes from the storage of substrings created during the evaluation of subexpressions. The `subExpr` variable holds a substring of the `expression`, and the maximum length of `subExpr` can be up to $O(n)$. Additionally, the recursive calls to `evaluateSubExpr` can lead to stack space usage, but since we don't have deep recursion (the depth is limited by the number of operations in the expression), it does not significantly affect the space complexity. Thus, the overall space complexity is $O(n)$.\n\n---\n\n### Approach 2: Recursive \n\n#### Intuition\n\nSimilar to the previous approach, we check character by character. When we come across a boolean value (`t` or `f`), we can immediately return it as the result. However, when we see an operator like `!`, `&`, or `|`, we know it controls what comes inside the parentheses following it. We skip the opening parenthesis and move into the subexpression. \n\nFor the `!` operator, we expect one boolean value. We simply negate this value and return the opposite. For `&`, we know all values inside must be true for the result to be true, so we evaluate each one, stopping if we find an `f`. The `|` operator works similarly, but we stop as soon as we find a `t`.\n\nTake the expression `&(t, |(f, t))` as an example. We first encounter `&`, which tells us we need to evaluate everything inside the parentheses. We then encounter `|`, which tells us to evaluate its inner subexpression. When we find that one of the values is `t`, we return `t` for the `|` part. Now the expression simplifies to `&(t, t)`, which evaluates to `t`.\n\nHere we don’t repeat work or manipulate the string like in the previous approach, making it a little more efficient.\n\n#### Algorithm\n\n- Initialize `index` to `0` and call the `evaluate` function with the current expression and index.\n\n- In the `evaluate` function:\n    - Read the current character from `expression` at `index`, and increment `index` by 1.\n\n  - Base cases:\n    - If the character is 't' (true), return `true`.\n    - If the character is 'f' (false), return `false`.\n\n  - Handle the NOT operation ('!(...)'):\n    - If the character is '!', increment `index` to skip the '('.\n    - Recursively evaluate the inner expression and negate the result (using `!`), then increment `index` to skip the ')'.\n    - Return the negated result.\n\n  - Handle the AND ('&(...)') and OR ('|(...)') operations:\n    - Initialize an array `values` to store the results of subexpressions.\n    - Increment `index` to skip the '('.\n    - While the current character is not ')':\n      - If the character is not a comma, recursively evaluate the subexpression and add the result to `values`.\n      - If the character is a comma, increment `index` to skip it.\n    - After exiting the loop, increment `index` to skip the ')'.\n\n  - Manual AND operation:\n    - If the character is '&', iterate through `values`.\n      - If any value is `false`, return `false`.\n    - If all values are `true`, return `true`.\n\n  - Manual OR operation:\n    - If the character is '|', iterate through `values`.\n      - If any value is `true`, return `true`.\n    - If all values are `false`, return `false`.\n\n  - Return `false` at the end of the function (this point should never be reached).\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Wd8HfyHL/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Wd8HfyHL\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `expression` string.\n\n- Time complexity: $O(n)$\n\n    We traverse the entire expression string at most once, as each character is processed sequentially. Each recursive call to `evaluate` processes one character and the calls return only when the entire expression is evaluated. Therefore, in the worst case, where all characters are involved in the expression, the time complexity is linear in terms of the size of the expression.\n\n- Space complexity: $O(n)$\n\n    The space complexity arises from the recursion stack due to the depth of the recursive calls. In the worst case, if the expression is deeply nested, the recursion depth can reach up to $n$, leading to a stack space usage of $O(n)$. \n    \n    Additionally, the space used by the `values` can also contribute to the space complexity, but its size depends on the number of boolean values being evaluated at each level, which is bounded by the size of the expression. Thus, the overall space complexity remains $O(n)$.\n\n---\n\n### Approach 3: Using Stack\n\n#### Intuition\n\nInstead of recursion, we can use a stack to simulate the nested structure of the expression. The stack will keep track of what we are currently evaluating, allowing us to process each part of the expression step by step without making recursive function calls.\n\nIterate from left to right and as we encounter operators, boolean values, and parentheses, we push them onto the stack. When we find a closing parenthesis `)`, we know we’ve reached the end of a subexpression. At this point, we pop values off the stack until we reach the matching opening parenthesis `(`. These popped values form the subexpression, and we can now evaluate it.\n\nFor example, with the expression `&(t, |(f, t))`, we first push `&` onto the stack, followed by `t`. When we encounter `|`, we push it and continue with `f` and `t`. Once we find the closing parenthesis for the `|` subexpression, we pop `t` and `f` off the stack and evaluate `|`. Since one value is `t`, the result of this subexpression is `t`, which we push back onto the stack. Finally, we continue by evaluating the `&` operator with the remaining values on the stack.\n\nThe internal working is extremely similar to [20. Valid Parentheses](https://leetcode.com/problems/valid-parentheses/) problem, if you haven't solved it, then it's recommended to solve it.\n\n#### Algorithm\n\n- Initialize a stack `st` to hold characters as we parse the expression.\n\n- Traverse the entire `expression`:\n  - If the current character is `')'`, it indicates the end of a subexpression:\n    - Initialize a array `values` to collect all values inside the parentheses.\n    - While the top of the stack is not `'('`, pop characters from the stack into `values`.\n    - Pop the `'('` from the stack.\n    - Pop the operator from the top of the stack.\n\n    - Call `evaluateSubExpr(op, values)` to evaluate the subexpression:\n      - Push the result back onto the stack.\n\n  - If the current character is not a comma, push it onto the stack.\n\n- After traversing the expression, the final result will be on the top of the stack.\n\n- Return `true` if the top of the stack is `'t'`, indicating that the expression evaluates to `true`, otherwise return `false`.\n\n- The `evaluateSubExpr` function evaluates a subexpression based on the operator and the list of values:\n  - If the operator is `'!'`, return `'f'` if the first value is `'t'`, otherwise return `'t'`.\n  - If the operator is `'&'`, iterate through the values:\n    - Return `'f'` if any value is `'f'`, otherwise return `'t'`.\n  - If the operator is `'|'`, iterate through the values:\n    - Return `'t'` if any value is `'t'`, otherwise return `'f'`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/KJueFSYj/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"KJueFSYj\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `expression` string.\n\n- Time complexity: $O(n)$\n\n    We traverse the `expression` string once, processing each character in $O(1)$ time. The only significant work happens when we encounter a closing parenthesis `)`, where we collect values from the stack until we reach the corresponding opening parenthesis `(`. In the worst case, all characters in the expression may contribute to these operations, but each character is processed only once. Thus, the overall time complexity is linear.\n\n- Space complexity: $O(n)$\n\n    The space complexity primarily depends on the stack used to store the characters of the expression and the temporary storage for values inside parentheses. In the worst case, the stack can hold all characters of the expression, resulting in $O(n)$ space. Additionally, when processing nested operations, temporary storage might also hold up to $n$ characters, leading to the same $O(n)$ space complexity.\n\n---\n\n### Approach 4: Optimized Stack\n\n#### Intuition\n\nInstead of pushing every character onto the stack, we focus only on the meaningful elements—operators, boolean values, and parentheses—while ignoring commas, which don’t affect the result.\n\nWe still push operators and boolean values onto the stack as we read the expression. But when we encounter a closing parenthesis, we start evaluating the subexpression immediately by popping values off the stack. The key improvement here is that we can stop early if the result becomes obvious. For instance, with the `&` operator, if we find a `f` while popping values, we know the result of the subexpression is `f` and can stop without checking the rest. Similarly, for the `|` operator, finding a `t` allows us to stop early.\n\nConsider the expression `&(t, |(f, t))`. As before, we push `&` and `t`, then `|`, followed by `f` and `t`. When we pop values for the `|` subexpression, we immediately know the result is `t` because one of the values is `t`. We push `t` back onto the stack and continue with the `&` operator, which evaluates to `t` because both values are true.\n\n!?!../Documents/1106/op_stack.json:1025,755!?!\n\n#### Algorithm\n\n- Initialize an empty stack `st` to keep track of operators and boolean values.\n\n- Traverse through each character in the `expression`:\n  - If the current character is a comma `,` or an open parenthesis `(`, skip it (continue to the next character).\n  \n  - If the current character is a boolean value (`t` for true, `f` for false) or an operator (`!`, `&`, `|`), push it onto the stack.\n\n  - If the current character is a closing parenthesis `)`:\n    - Initialize two boolean flags: `hasTrue` and `hasFalse` to track the presence of true and false values within the parentheses.\n\n    - Process the values inside the parentheses:\n      - While the top of the stack is not an operator (`!`, `&`, `|`):\n        - Pop the top value from the stack and check:\n          - If it is `t`, set `hasTrue` to `true`.\n          - If it is `f`, set `hasFalse` to `true`.\n\n    - After processing values, pop the operator from the top of the stack.\n    - Evaluate the subexpression based on the operator:\n      - If the operator is `!`, push `f` if `hasTrue` is `true`; otherwise, push `t`.\n      - If the operator is `&`, push `f` if `hasFalse` is `true`; otherwise, push `t`.\n      - If the operator is `|`, push `t` if `hasTrue` is `true`; otherwise, push `f`.\n\n- After processing the entire expression, the final result will be at the top of the stack:\n  - Return `true` if the top of the stack is `t`, otherwise return `false`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/SarqEB82/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"SarqEB82\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `expression` string.\n\n- Time complexity: $O(n)$\n\n    We traverse each character in the `expression` string once. For each character, operations like pushing to and popping from the stack are $O(1)$ operations. Therefore, the overall time complexity is linear in terms of the length of the input string.\n\n- Space complexity: $O(n)$\n\n    The maximum space used by the stack occurs when every character in the `expression` is a boolean value or an operator without any closing parentheses. In the worst case, all characters might be pushed onto the stack, resulting in a space complexity of $O(n)$. This includes the storage for the stack itself, which could potentially hold all the characters of the expression.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

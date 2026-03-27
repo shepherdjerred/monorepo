@@ -1,0 +1,53 @@
+{
+  "questionId": "1763",
+  "questionFrontendId": "1623",
+  "title": "All Valid Triplets That Can Represent a Country",
+  "titleSlug": "all-valid-triplets-that-can-represent-a-country",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>SchoolA</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| student_id    | int     |\n| student_name  | varchar |\n+---------------+---------+\nstudent_id is the column with unique values for this table.\nEach row of this table contains the name and the id of a student in school A.\nAll student_name are distinct.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>SchoolB</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| student_id    | int     |\n| student_name  | varchar |\n+---------------+---------+\nstudent_id is the column with unique values for this table.\nEach row of this table contains the name and the id of a student in school B.\nAll student_name are distinct.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>SchoolC</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| student_id    | int     |\n| student_name  | varchar |\n+---------------+---------+\nstudent_id is the column with unique values for this table.\nEach row of this table contains the name and the id of a student in school C.\nAll student_name are distinct.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>There is a country with three schools, where each student is enrolled in <strong>exactly one</strong> school. The country is joining a competition and wants to select one student from each school to represent the country such that:</p>\n\n<ul>\n\t<li><code>member_A</code> is selected from <code>SchoolA</code>,</li>\n\t<li><code>member_B</code> is selected from <code>SchoolB</code>,</li>\n\t<li><code>member_C</code> is selected from <code>SchoolC</code>, and</li>\n\t<li>The selected students&#39; names and IDs are pairwise distinct (i.e. no two students share the same name, and no two students share the same ID).</li>\n</ul>\n\n<p>Write a solution to find all the possible triplets representing the country under the given constraints.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nSchoolA table:\n+------------+--------------+\n| student_id | student_name |\n+------------+--------------+\n| 1          | Alice        |\n| 2          | Bob          |\n+------------+--------------+\nSchoolB table:\n+------------+--------------+\n| student_id | student_name |\n+------------+--------------+\n| 3          | Tom          |\n+------------+--------------+\nSchoolC table:\n+------------+--------------+\n| student_id | student_name |\n+------------+--------------+\n| 3          | Tom          |\n| 2          | Jerry        |\n| 10         | Alice        |\n+------------+--------------+\n<strong>Output:</strong> \n+----------+----------+----------+\n| member_A | member_B | member_C |\n+----------+----------+----------+\n| Alice    | Tom      | Jerry    |\n| Bob      | Tom      | Alice    |\n+----------+----------+----------+\n<strong>Explanation:</strong> \nLet us see all the possible triplets.\n- (Alice, Tom, Tom) --&gt; Rejected because member_B and member_C have the same name and the same ID.\n- (Alice, Tom, Jerry) --&gt; Valid triplet.\n- (Alice, Tom, Alice) --&gt; Rejected because member_A and member_C have the same name.\n- (Bob, Tom, Tom) --&gt; Rejected because member_B and member_C have the same name and the same ID.\n- (Bob, Tom, Jerry) --&gt; Rejected because member_A and member_C have the same ID.\n- (Bob, Tom, Alice) --&gt; Valid triplet.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists SchoolA (student_id int, student_name varchar(20))\", \"Create table If Not Exists SchoolB (student_id int, student_name varchar(20))\", \"Create table If Not Exists SchoolC (student_id int, student_name varchar(20))\"], \"mssql\": [\"Create table SchoolA (student_id int, student_name varchar(20))\", \"Create table SchoolB (student_id int, student_name varchar(20))\", \"Create table SchoolC (student_id int, student_name varchar(20))\"], \"oraclesql\": [\"Create table SchoolA (student_id int, student_name varchar(20))\", \"Create table SchoolB (student_id int, student_name varchar(20))\", \"Create table SchoolC (student_id int, student_name varchar(20))\"], \"database\": true, \"name\": \"find_valid_triplets\", \"pythondata\": [\"SchoolA = pd.DataFrame([], columns=['student_id', 'student_name']).astype({'student_id':'Int64', 'student_name':'object'})\", \"SchoolB = pd.DataFrame([], columns=['student_id', 'student_name']).astype({'student_id':'Int64', 'student_name':'object'})\", \"SchoolC = pd.DataFrame([], columns=['student_id', 'student_name']).astype({'student_id':'Int64', 'student_name':'object'})\"], \"postgresql\": [\"\\nCreate table If Not Exists SchoolA (student_id int, student_name varchar(20))\\n\", \"\\nCreate table If Not Exists SchoolB (student_id int, student_name varchar(20))\\n\", \"\\nCreate table If Not Exists SchoolC (student_id int, student_name varchar(20))\\n\"], \"database_schema\": {\"SchoolA\": {\"student_id\": \"INT\", \"student_name\": \"VARCHAR(20)\"}, \"SchoolB\": {\"student_id\": \"INT\", \"student_name\": \"VARCHAR(20)\"}, \"SchoolC\": {\"student_id\": \"INT\", \"student_name\": \"VARCHAR(20)\"}}}",
+  "stats": "{\"totalAccepted\": \"23.3K\", \"totalSubmission\": \"28.8K\", \"totalAcceptedRaw\": 23288, \"totalSubmissionRaw\": 28786, \"acRate\": \"80.9%\"}",
+  "likes": 76,
+  "dislikes": 144,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"SchoolA\":[\"student_id\",\"student_name\"],\"SchoolB\":[\"student_id\",\"student_name\"],\"SchoolC\":[\"student_id\",\"student_name\"]},\"rows\":{\"SchoolA\":[[1,\"Alice\"],[2,\"Bob\"]],\"SchoolB\":[[3,\"Tom\"]],\"SchoolC\":[[3,\"Tom\"],[2,\"Jerry\"],[10,\"Alice\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_valid_triplets(school_a: pd.DataFrame, school_b: pd.DataFrame, school_c: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

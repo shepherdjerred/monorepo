@@ -1,0 +1,116 @@
+{
+  "questionId": "1234",
+  "questionFrontendId": "1301",
+  "title": "Number of Paths with Max Score",
+  "titleSlug": "number-of-paths-with-max-score",
+  "difficulty": "Hard",
+  "content": "<p>You are given a square <code>board</code>&nbsp;of characters. You can move on the board starting at the bottom right square marked with the character&nbsp;<code>&#39;S&#39;</code>.</p>\r\n\r\n<p>You need&nbsp;to reach the top left square marked with the character <code>&#39;E&#39;</code>. The rest of the squares are labeled either with a numeric character&nbsp;<code>1, 2, ..., 9</code> or with an obstacle <code>&#39;X&#39;</code>. In one move you can go up, left or up-left (diagonally) only if there is no obstacle there.</p>\r\n\r\n<p>Return a list of two integers: the first integer is the maximum sum of numeric characters you can collect, and the second is the number of such paths that you can take to get that maximum sum, <strong>taken modulo <code>10^9 + 7</code></strong>.</p>\r\n\r\n<p>In case there is no path, return&nbsp;<code>[0, 0]</code>.</p>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong class=\"example\">Example 1:</strong></p>\r\n<pre><strong>Input:</strong> board = [\"E23\",\"2X2\",\"12S\"]\r\n<strong>Output:</strong> [7,1]\r\n</pre><p><strong class=\"example\">Example 2:</strong></p>\r\n<pre><strong>Input:</strong> board = [\"E12\",\"1X1\",\"21S\"]\r\n<strong>Output:</strong> [4,2]\r\n</pre><p><strong class=\"example\">Example 3:</strong></p>\r\n<pre><strong>Input:</strong> board = [\"E11\",\"XXX\",\"11S\"]\r\n<strong>Output:</strong> [0,0]\r\n</pre>\r\n<p>&nbsp;</p>\r\n<p><strong>Constraints:</strong></p>\r\n\r\n<ul>\r\n\t<li><code>2 &lt;= board.length == board[i].length &lt;= 100</code></li>\r\n</ul>",
+  "hints": [
+    "Use dynamic programming to find the path with the max score.",
+    "Use another dynamic programming array to count the number of paths with max score."
+  ],
+  "metaData": "{\n  \"name\": \"pathsWithMaxScore\",\n  \"params\": [\n    {\n      \"name\": \"board\",\n      \"type\": \"list<string>\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"18.8K\", \"totalSubmission\": \"44.5K\", \"totalAcceptedRaw\": 18835, \"totalSubmissionRaw\": 44527, \"acRate\": \"42.3%\"}",
+  "likes": 550,
+  "dislikes": 28,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"E23\",\"2X2\",\"12S\"]\r",
+    "[\"E12\",\"1X1\",\"21S\"]\r",
+    "[\"E11\",\"XXX\",\"11S\"]\r"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"samsung\", \"name\": \"Samsung\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> pathsWithMaxScore(vector<string>& board) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] pathsWithMaxScore(List<String> board) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def pathsWithMaxScore(self, board: List[str]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def pathsWithMaxScore(self, board):\n        \"\"\"\n        :type board: List[str]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} board\n * @return {number[]}\n */\nvar pathsWithMaxScore = function(board) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function pathsWithMaxScore(board: string[]): number[] {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] PathsWithMaxScore(IList<string> board) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* pathsWithMaxScore(char ** board, int boardSize, int* returnSize){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func pathsWithMaxScore(board []string) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun pathsWithMaxScore(board: List<String>): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func pathsWithMaxScore(_ board: [String]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn paths_with_max_score(board: Vec<String>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} board\n# @return {Integer[]}\ndef paths_with_max_score(board)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $board\n     * @return Integer[]\n     */\n    function pathsWithMaxScore($board) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def pathsWithMaxScore(board: List[String]): Array[Int] = {\n        \n    }\n}"
+    }
+  ],
+  "solution": null
+}

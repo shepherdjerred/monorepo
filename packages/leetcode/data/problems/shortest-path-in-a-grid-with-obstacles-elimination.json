@@ -1,0 +1,140 @@
+{
+  "questionId": "1414",
+  "questionFrontendId": "1293",
+  "title": "Shortest Path in a Grid with Obstacles Elimination",
+  "titleSlug": "shortest-path-in-a-grid-with-obstacles-elimination",
+  "difficulty": "Hard",
+  "content": "<p>You are given an <code>m x n</code> integer matrix <code>grid</code> where each cell is either <code>0</code> (empty) or <code>1</code> (obstacle). You can move up, down, left, or right from and to an empty cell in <strong>one step</strong>.</p>\n\n<p>Return <em>the minimum number of <strong>steps</strong> to walk from the upper left corner </em><code>(0, 0)</code><em> to the lower right corner </em><code>(m - 1, n - 1)</code><em> given that you can eliminate <strong>at most</strong> </em><code>k</code><em> obstacles</em>. If it is not possible to find such walk return <code>-1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/09/30/short1-grid.jpg\" style=\"width: 244px; height: 405px;\" />\n<pre>\n<strong>Input:</strong> grid = [[0,0,0],[1,1,0],[0,0,0],[0,1,1],[0,0,0]], k = 1\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> \nThe shortest path without eliminating any obstacle is 10.\nThe shortest path with one obstacle elimination at position (3,2) is 6. Such path is (0,0) -&gt; (0,1) -&gt; (0,2) -&gt; (1,2) -&gt; (2,2) -&gt; <strong>(3,2)</strong> -&gt; (4,2).\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/09/30/short2-grid.jpg\" style=\"width: 244px; height: 245px;\" />\n<pre>\n<strong>Input:</strong> grid = [[0,1,1],[1,1,1],[1,0,0]], k = 1\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> We need to eliminate at least two obstacles to find such a walk.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == grid.length</code></li>\n\t<li><code>n == grid[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 40</code></li>\n\t<li><code>1 &lt;= k &lt;= m * n</code></li>\n\t<li><code>grid[i][j]</code> is either <code>0</code> <strong>or</strong> <code>1</code>.</li>\n\t<li><code>grid[0][0] == grid[m - 1][n - 1] == 0</code></li>\n</ul>\n",
+  "hints": [
+    "Use BFS.",
+    "BFS on (x,y,r) x,y is coordinate, r is remain number of obstacles you can remove."
+  ],
+  "metaData": "{\n  \"name\": \"shortestPath\",\n  \"params\": [\n    {\n      \"name\": \"grid\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"271.4K\", \"totalSubmission\": \"587.8K\", \"totalAcceptedRaw\": 271422, \"totalSubmissionRaw\": 587791, \"acRate\": \"46.2%\"}",
+  "likes": 4836,
+  "dislikes": 90,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Shortest Path to Get Food\", \"titleSlug\": \"shortest-path-to-get-food\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Obstacle Removal to Reach Corner\", \"titleSlug\": \"minimum-obstacle-removal-to-reach-corner\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find a Safe Walk Through a Grid\", \"titleSlug\": \"find-a-safe-walk-through-a-grid\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[0,0,0],[1,1,0],[0,0,0],[0,1,1],[0,0,0]]\n1",
+    "[[0,1,1],[1,1,1],[1,0,0]]\n1"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"databricks\", \"name\": \"Databricks\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 31, \"slug\": \"pinterest\", \"name\": \"Pinterest\"}, {\"timesEncountered\": 12, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 9, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"snapchat\", \"name\": \"Snap\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"nuro\", \"name\": \"Nuro\"}, {\"timesEncountered\": 2, \"slug\": \"imc\", \"name\": \"IMC\"}, {\"timesEncountered\": 2, \"slug\": \"appfolio\", \"name\": \"AppFolio\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int shortestPath(vector<vector<int>>& grid, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int shortestPath(int[][] grid, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def shortestPath(self, grid: List[List[int]], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def shortestPath(self, grid, k):\n        \"\"\"\n        :type grid: List[List[int]]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} grid\n * @param {number} k\n * @return {number}\n */\nvar shortestPath = function(grid, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function shortestPath(grid: number[][], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int ShortestPath(int[][] grid, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int shortestPath(int** grid, int gridSize, int* gridColSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func shortestPath(grid [][]int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun shortestPath(grid: Array<IntArray>, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func shortestPath(_ grid: [[Int]], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn shortest_path(grid: Vec<Vec<i32>>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} grid\n# @param {Integer} k\n# @return {Integer}\ndef shortest_path(grid, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $grid\n     * @param Integer $k\n     * @return Integer\n     */\n    function shortestPath($grid, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int shortestPath(List<List<int>> grid, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def shortestPath(grid: Array[Array[Int]], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec shortest_path(grid :: [[integer]], k :: integer) :: integer\n  def shortest_path(grid, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec shortest_path(Grid :: [[integer()]], K :: integer()) -> integer().\nshortest_path(Grid, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (shortest-path grid k)\n  (-> (listof (listof exact-integer?)) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1165",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Overview\n\nLike many grid search problems where the goal is to find the shortest path, the key to solve this problem is to apply the Breadth-First Search algorithm, as opposed to the Depth-First Search (DFS) algorithm.\nIn this article, we will start with a classic BFS solution.\nThen on top of BFS, we will introduce a heuristic (greedy) strategy to speed up the algorithm, which eventually transforms our classic BFS algorithm into another classic algorithm called the [A* search algorithm](https://en.wikipedia.org/wiki/A*_search_algorithm).\n\n\n---\n### Approach 1: BFS (Breadth-First Search)\n\n**Intuition**\n\nIn this problem, we must traverse the grid to reach a *target* cell, while the grid contains some obstacles.\nIf the problem ends here, one could probably tell that this is a classic grid search problem, _e.g._ the problem of [1730. Shortest Path to Get Food](https://leetcode.com/problems/shortest-path-to-get-food/) fits the bill exactly.\n\nHowever, the particularity of this problem is that one can eliminate obstacles to a certain extent.\nThis constraint complicates our problem.\nFirst of all, if there were no limit on how many obstacles we can eliminate, then the shortest distance to reach the target cell would be the [Manhattan distance](https://en.wikipedia.org/wiki/Taxicab_geometry) between the starting cell and the target cell.\nLikewise, if the quota to eliminate the obstacles is greater than the Manhattan distance, then the shortest distance is guaranteed to be the Manhattan distance.\nHowever, we do have a limit on the number of obstacles that we can eliminate along the way.\nAs a result, rather than taking a *straightforward* path to reach the target, we have to take some _detour_ in certain cases, which implies that we need to **explore** all possible directions while respecting the constraint.\n\n>By *exploring*, we refer to the BFS strategy, rather than DFS.\nThe BFS algorithm works like detecting an object with sonar.\nA sound wave propagages in all directions with equal speed.\nAt any given moment, all the objects that the sound wave reaches have the same distance to the source of the sound.\nOn the other hand, as soon as the sound wave reaches the object, the path is guaranteed to be the **shortest**, since the distance is proportional to the time, the more time it takes, the longer the distance is.\n\n![BFS demo](../Figures/1293/1293_bfs.png)\n\nGiven the above intuition of the BFS algorithm, we can rest assured that as soon as we reach the target, the path that leads to the target is the shortest.\nThis is also the rationale for why we should employ the BFS strategy rather than DFS.\n\n**Algorithm**\n\nIn the canonical implementation of the BFS algorithm, we would employ a **queue** data structure to maintain the order of exploration.\nEach element in the queue normally contains two pieces of information: the current position and the distance traveled so far from the starting point.\n\n>However, in our problem here, we need another piece of information, which is the **remaining** quota that we can use to eliminate the obstacles.\n\nTogether with the coordinates, the obstacle elimination quota uniquely constitutes a **_state_** during our BFS exploration.\nFor example, in the following graph, we demonstrate two different paths between the start cell and an intermediate cell.\n\n![BFS with two paths](../Figures/1293/1293_bfs_two_paths.png)\n\nWithout the obstacle elimination quota, we would only visit the intermediate cell once, while only one of the two paths can lead us to the target, since in one of the paths we don't have sufficient quota to get through.\nTherefore, it is critical to keep the quota information, so that we can revisit the same cell with different quotas.\n\n**Implementation**\n\nThere are several ways to implement a BFS algorithm.\nWe provide [a template](https://leetcode.com/explore/learn/card/queue-stack/231/practical-application-queue/) to do so in the Queue and Stack Explore Card.\n\nIn this section, we provide some sample implementations together with the tweak we mentioned in the above section.\n\nWe can break down the algorithm into the following steps:\n\n1. The main body of the BFS algorithm consists of a loop around a `queue`, as well as a set called `seen` which keeps track of all the states visited along the way so that we don't visit the same _state_ twice. A _state_ refers to a unique combination of coordinates and the remaining quota.\n\n2. At each iteration of the loop, we pop out one element from the queue. The element contains the distance from the starting point as well as the current `state` which includes the current coordinate and the remaining quotas to eliminate obstacles.\n\n3. Within the same iteration, we evaluate the next moves starting from the popped element. Each move results in a new state and the state is valid if it is within the grid boundaries and has not been visited before. Each valid state is pushed into the queue for later iterations. Meanwhile, we also need to mark the state as _visited_ by adding the state to the `seen` states set.\n\n4. At any iteration, if we have reached our `target`, we can return immediately from the loop.\n\n**_Note:_** before running the BFS traversal, we also perform a quick check to see if we have sufficient quotas to take the most direct path from start to finish regardless of the number of obstacles.\nIf so, the shortest distance to reach the target is the [Manhattan distance](https://en.wikipedia.org/wiki/Taxicab_geometry) between the starting cell and the target cell.\n\n<iframe src=\"https://leetcode.com/playground/RbaWf83A/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"RbaWf83A\"></iframe>\n\n\n**Complexity Analysis**\n\nLet $$N$$ be the number of cells in the grid, and $$K$$ be the quota to eliminate obstacles.\n\n- Time Complexity: $$O(N \\cdot K)$$\n\n    - We conduct a BFS traversal in the grid. In the worst case, we will visit each cell in the grid. And for each cell, at most, it will be visited $$K$$ times, with different quotas of obstacle elimination.\n\n    - Thus, the overall time complexity of the algorithm is $$O(N \\cdot K)$$.\n\n- Space Complexity: $$O(N \\cdot K)$$\n\n    - We used a `queue` to maintain the order of visited states. In the worst case, the queue will contain the majority of the possible states that we need to visit, which in total is $$N \\cdot K$$ as we discussed in the time complexity analysis. Thus, the space complexity of the `queue` is $$O(N \\cdot K)$$.\n\n    - Other than the `queue`, we also used a set variable (named `seen`) to keep track of all the visited states along the way. Same as the `queue`, the space complexity of this set is also $$O(N \\cdot K)$$.\n\n    - To sum up, the overall space complexity of the algorithm is $$O(N \\cdot K)$$.\n\n\n---\n### Approach 2: A* (A Star) Algorithm\n\n**Intuition**\n\nIn the above BFS approach, one might notice that when at any specific position, we would _systematically_ explore the surrounding neighbors in all four directions, due to the nature of BFS.\n\nHowever, the action might seem *conterintuitive* or **sub-optimal**.\nSince the destination is located in the lower-right corner of the grid, in order to find the shortest path, the optimal directions to explore should be either **_right_** or **_down_**, rather than left or up.\n\n![BFS with two paths](../Figures/1293/1293_next_steps.png)\n\nAs depicted in the above image, the optimal steps to explore should be the ones in green (right and down), rather than the ones in orange.\n\n>Therefore, one idea to improve our BFS approach is to **_prioritize_** exploring the most _promising_ directions at each step. Through prioritization, we can speed up the algorithm by reducing the time spent exploring less promising paths.\n\nThis idea leads us to the [A* search algorithm](https://en.wikipedia.org/wiki/A*_search_algorithm), which is yet another classic path finding algorithm that uses a **_heuristic_**.\n\n\nNote: we cannot **exclude** (or prune) those less promising directions, otherwise we might miss the correct path because sometimes we have to take a **_detour_** in order to reach the destination.\n\n**Algorithm**\n\nA* (pronounced as A star) is also known as an [informed search algorithm](https://en.wikipedia.org/wiki/Search_algorithm#Informed_search) or [best-first search](https://en.wikipedia.org/wiki/Best-first_search).\nBecause at each step of exploration, it makes the **_best_** and **_informed_** decision on the next steps, _i.e._ it _prioritizes_ the steps that are the most promising.\nSpecifically, this prioritization strategy can be expressed as _A* selects a path that minimizes the following function_:$$f(n) = g(n) + h(n)$$\n\n- $$n$$: a specific step during the exploration.\n\n- $$g(n)$$: the cost to reach the step $$n$$. Here, the cost refers to the distance traveled so far to the step $$n$$.\n\n- $$h(n)$$: a heuristic **_estimation_** on the cost to reach the destination from the step $$n$$. Here, the cost refers to the distance ahead.\n\n- $$f(n)$$: the _estimated_ total cost to reach the destination if one takes the step $$n$$.\n\n>With the defined function, A* algorithm has a deterministic way to **_evaluate_** each potential step, and then make what it believes to be the _best_ decision at each step.\n\nThe problem boils down to defining the above functions for our scenario, in order to apply the A* algorithm.\nSpecifically, $$g(n)$$ would be the number of steps that one has taken to reach $$n$$.\nAnd $$h(n)$$ would be the [Manhattan distance](https://en.wikipedia.org/wiki/Taxicab_geometry) from $$n$$ to the destination, which is the **_shortest_** path to reach the destination.\n\n>The most important property of our heuristic $$h(n)$$ function is that the function should be [admissible](https://en.wikipedia.org/wiki/Admissible_heuristic), _i.e._ it never **_overestimates_** the cost.\nOtherwise, it could not guarantee that the path we find is the shortest one.\n\nTo understand the _admissible_ property, let us take a metaphor. In a football tournament, we want to select the best team in the end.\nIf we __overestimate__ the incompetence of a team, _i.e._ we downplay the potential of the team, we might _prematurely_ disqualify or ignore the team.\nAs a result, we may predict that a _not-so-good_ team will win the championship, while in reality, the team we disqualified or ignored happens to be the best team.\n\n\n**Implementation**\n\nThe A* algorithm provides a more optimized path selection strategy, on top of the BFS approach.\nTherefore, we can implement the A* algorithm while keeping the bulk of our previous BFS approach intact.\nWe will still use a `queue` to keep track of the order of visits.\nAnd we will still use a `set` to keep track of the visited states so that we do not revisit any previously explored paths.\n\nAdditionally, here are the modifications that we will make:\n\n- Rather than using a normal queue, we use a [priority queue](https://en.wikipedia.org/wiki/Priority_queue) to store the order of visits. The order of visits is based on the estimated total cost function $$f(n)$$ that we defined. With the priority queue, the step that has potentially the _lowest_ cost will be visited first.\n\n- For each element in the queue, we add one more piece of information which is the _**estimated total cost**_ to reach the destination at each step. This estimation will be used to prioritize each potential next step.\n\n- We add another **_heuristic condition_** that allows us to determine the length of the shortest path without exploration. The condition is as follows:\n\n  - At any step, if the remaining quota to eliminate the obstacles is larger than the length of the estimated shortest path (_i.e._ manhattan distance between the current step and the destination), then the length of the remaining path is the manhattan distance.\n\n  - The condition can also be interpreted as if we have sufficient capacity to remove any obstacle along the way, we will simply take the shortest path to reach the destination, without the need for further exploration.\n\n  - We apply the condition at the beginning of each iteration of the loop.\n\n\n<iframe src=\"https://leetcode.com/playground/Jwc7mhYq/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Jwc7mhYq\"></iframe>\n\n\n\n**Complexity Analysis**\n\nLet $$N$$ be the number of cells in the grid, and $$K$$ be the quota to eliminate obstacles.\n\n- Time Complexity: $$O\\big(N \\cdot K \\cdot \\log{(N \\cdot K)} \\big)$$\n\n    - We conduct a BFS traversal in the grid. In the worst case, we will visit each cell in the grid. And each cell can be visited at most $$K$$ times, with different quotas of obstacle elimination. Therefore, the total number of visits would be $$N \\cdot K$$.\n\n    - For each visit, we perform one push and one pop operation in the priority queue, which takes $$O\\big(\\log{(N \\cdot K)} \\big)$$ time.\n\n    - Thus, the overall time complexity of the algorithm is $$O\\big(N \\cdot K \\cdot \\log{(N \\cdot K)} \\big)$$.\n\n    - Although the upper bound for the time complexity of the this algorithm is higher than the previous BFS approach, on average, the A* algorithm will outperform the previous BFS approach when there exists any relatively direct path from the source to the target.\n\n\n- Space Complexity: $$O(N \\cdot K)$$\n\n    - We use a `queue` to maintain the order of visited states. In the worst case, the queue could contain the majority of the possible states that we must visit, which in total is $$N \\cdot K$$, as we discussed in the time complexity analysis. Thus, the space complexity of the `queue` is $$O(N \\cdot K)$$.\n\n    - Other than the `queue`, we also used a set variable (named `seen`) to keep track of all the states we visited along the way. Again, the space complexity of this set is also $$O(N \\cdot K)$$.\n\n    - To sum up, the overall space complexity of the algorithm is $$O(N \\cdot K)$$.\n\n\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

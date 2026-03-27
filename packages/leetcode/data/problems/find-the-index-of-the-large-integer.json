@@ -1,0 +1,120 @@
+{
+  "questionId": "1672",
+  "questionFrontendId": "1533",
+  "title": "Find the Index of the Large Integer",
+  "titleSlug": "find-the-index-of-the-large-integer",
+  "difficulty": "Medium",
+  "content": "<p>We have an integer array <code>arr</code>, where all the integers in <code>arr</code> are equal except for one integer which is <strong>larger</strong> than the rest of the integers. You will not be given direct access to the array, instead, you will have an <strong>API</strong> <code>ArrayReader</code> which have the following functions:</p>\n\n<ul>\n\t<li><code>int compareSub(int l, int r, int x, int y)</code>: where <code>0 &lt;= l, r, x, y &lt; ArrayReader.length()</code>, <code>l &lt;= r and</code> <code>x &lt;= y</code>. The function compares the sum of sub-array <code>arr[l..r]</code> with the sum of the sub-array <code>arr[x..y]</code> and returns:\n\n\t<ul>\n\t\t<li><strong>1</strong> if <code>arr[l]+arr[l+1]+...+arr[r] &gt; arr[x]+arr[x+1]+...+arr[y]</code>.</li>\n\t\t<li><strong>0</strong> if <code>arr[l]+arr[l+1]+...+arr[r] == arr[x]+arr[x+1]+...+arr[y]</code>.</li>\n\t\t<li><strong>-1</strong> if <code>arr[l]+arr[l+1]+...+arr[r] &lt; arr[x]+arr[x+1]+...+arr[y]</code>.</li>\n\t</ul>\n\t</li>\n\t<li><code>int length()</code>: Returns the size of the array.</li>\n</ul>\n\n<p>You are allowed to call <code>compareSub()</code> <b>20 times</b> at most. You can assume both functions work in <code>O(1)</code> time.</p>\n\n<p>Return <em>the index of the array <code>arr</code> which has the largest integer</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [7,7,7,7,10,7,7,7]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The following calls to the API\nreader.compareSub(0, 0, 1, 1) // returns 0 this is a query comparing the sub-array (0, 0) with the sub array (1, 1), (i.e. compares arr[0] with arr[1]).\nThus we know that arr[0] and arr[1] doesn&#39;t contain the largest element.\nreader.compareSub(2, 2, 3, 3) // returns 0, we can exclude arr[2] and arr[3].\nreader.compareSub(4, 4, 5, 5) // returns 1, thus for sure arr[4] is the largest element in the array.\nNotice that we made only 3 calls, so the answer is valid.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [6,6,12]\n<strong>Output:</strong> 2\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= arr.length &lt;= 5 * 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= arr[i] &lt;= 100</code></li>\n\t<li>All elements of <code>arr</code> are equal except for one element which is larger than all other elements.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong></p>\n\n<ul>\n\t<li>What if there are two numbers in <code>arr</code> that are bigger than all other numbers?</li>\n\t<li>What if there is one number that is bigger than other numbers and one number that is smaller than other numbers?</li>\n</ul>\n",
+  "hints": [
+    "Do a binary search over the array, exclude the half of the array that doesn't contain the largest number.",
+    "Keep shrinking the search space till it reaches the size of 2 where you can easily determine which one has the largest integer."
+  ],
+  "metaData": "{\n  \"name\": \"getIndex\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"manual\": true, \n\"typescriptCustomType\" : \"class ArrayReader {\\n    __secret: number[];\\n    __N: number;\\n    __guesses: number;\\n    __mxGuesses: number;\\n\\n    constructor(secret: number[]) {\\n        this.__secret = secret\\n        this.__N = secret.length\\n        for (var i = 1; i < this.__N; ++i) {\\n            this.__secret[i] += this.__secret[i - 1];\\n        }\\n        this.__guesses = 0;\\n        this.__mxGuesses = 20;\\n    };\\n\\n    _getSub(a: number, b: number): number {\\n        var assert = require('assert');\\n        assert(0 <= a && a < this.__N);\\n        assert(0 <= b && b < this.__N);\\n        assert(a <= b);\\n        return (a != 0) ? (this.__secret[b] - this.__secret[a - 1]) : this.__secret[b];\\n    };\\n\\n    compareSub(l: number, r: number, x: number, y: number): number {\\n        this.__guesses += 1;\\n        var a = this._getSub(l, r), b = this._getSub(x, y);\\n        return (a > b) ? 1 : (a < b) ? -1 : 0;\\n    };\\n\\n    _okGuesses(): boolean {\\n        return this.__guesses <= this.__mxGuesses;\\n    };\\n        \\n    length(): number {\\n        return this.__N;\\n    };\\n}\"\n}",
+  "stats": "{\"totalAccepted\": \"18.1K\", \"totalSubmission\": \"32K\", \"totalAcceptedRaw\": 18083, \"totalSubmissionRaw\": 31999, \"acRate\": \"56.5%\"}",
+  "likes": 263,
+  "dislikes": 36,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Search in a Sorted Array of Unknown Size\", \"titleSlug\": \"search-in-a-sorted-array-of-unknown-size\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[7,7,7,7,10,7,7,7]",
+    "[6,6,12]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Interactive",
+      "slug": "interactive"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * // This is the ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * class ArrayReader {\n *   public:\n *     // Compares the sum of arr[l..r] with the sum of arr[x..y] \n *     // return 1 if sum(arr[l..r]) > sum(arr[x..y])\n *     // return 0 if sum(arr[l..r]) == sum(arr[x..y])\n *     // return -1 if sum(arr[l..r]) < sum(arr[x..y])\n *     int compareSub(int l, int r, int x, int y);\n *\n *     // Returns the length of the array\n *     int length();\n * };\n */\n\nclass Solution {\npublic:\n    int getIndex(ArrayReader &reader) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * // This is ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * interface ArrayReader {\n *     // Compares the sum of arr[l..r] with the sum of arr[x..y] \n *     // return 1 if sum(arr[l..r]) > sum(arr[x..y])\n *     // return 0 if sum(arr[l..r]) == sum(arr[x..y])\n *     // return -1 if sum(arr[l..r]) < sum(arr[x..y])\n *     public int compareSub(int l, int r, int x, int y) {}\n *\n *     // Returns the length of the array\n *     public int length() {}\n * }\n */\n\nclass Solution {\n    public int getIndex(ArrayReader reader) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# \"\"\"\n# This is ArrayReader's API interface.\n# You should not implement it, or speculate about its implementation\n# \"\"\"\n#class ArrayReader(object):\n#\t # Compares the sum of arr[l..r] with the sum of arr[x..y]\n#\t # return 1 if sum(arr[l..r]) > sum(arr[x..y])\n#\t # return 0 if sum(arr[l..r]) == sum(arr[x..y])\n#\t # return -1 if sum(arr[l..r]) < sum(arr[x..y])\n#    def compareSub(self, l: int, r: int, x: int, y: int) -> int:\n#\n#\t # Returns the length of the array\n#    def length(self) -> int:\n#\n\n\nclass Solution:\n    def getIndex(self, reader: 'ArrayReader') -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# \"\"\"\n# This is ArrayReader's API interface.\n# You should not implement it, or speculate about its implementation\n# \"\"\"\n#class ArrayReader(object):\n#\t # Compares the sum of arr[l..r] with the sum of arr[x..y]\n#\t # return 1 if sum(arr[l..r]) > sum(arr[x..y])\n#\t # return 0 if sum(arr[l..r]) == sum(arr[x..y])\n#\t # return -1 if sum(arr[l..r]) < sum(arr[x..y])\n#    def compareSub(self, l, r, x, y):\n#        \"\"\"\n#        :type l, r, x, y: int\n#        :rtype int\n#        \"\"\"\n#\n#\t # Returns the length of the array\n#    def length(self):\n#        \"\"\"\n#        :rtype int\n#        \"\"\"\n\nclass Solution(object):\n    def getIndex(self, reader):\n        \"\"\"\n        :type reader: ArrayReader\n        :rtype: integer\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * // This is the ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * function ArrayReader() {\n *     // Compares the sum of arr[l..r] with the sum of arr[x..y] \n *     // return 1 if sum(arr[l..r]) > sum(arr[x..y])\n *     // return 0 if sum(arr[l..r]) == sum(arr[x..y])\n *     // return -1 if sum(arr[l..r]) < sum(arr[x..y])\n *     @param {number} l, r, x, y\n *     @return {number}\n *     this.compareSub = function(l, r, x, y) {\n *         ...\n *     };\n *\n *     // Returns the length of the array\n *     @return {number}\n *     this.length = function() {\n *         ...\n *     };\n * };\n */\n\n/**\n * @param {ArrayReader} reader\n * @return {number}\n */\nvar getIndex = function(reader) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * // This is the ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * class ArrayReader {\n *     // Compares the sum of arr[l..r] with the sum of arr[x..y] \n *     // return 1 if sum(arr[l..r]) > sum(arr[x..y])\n *     // return 0 if sum(arr[l..r]) == sum(arr[x..y])\n *     // return -1 if sum(arr[l..r]) < sum(arr[x..y])\n *     compareSub(l: number, r: number, x: number, y: number): number { };\n *\n *     // Returns the length of the array\n *     length(): number { };\n * };\n */\n\nfunction getIndex(reader: ArrayReader): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * // This is ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * class ArrayReader {\n *     // Compares the sum of arr[l..r] with the sum of arr[x..y] \n *     // return 1 if sum(arr[l..r]) > sum(arr[x..y])\n *     // return 0 if sum(arr[l..r]) == sum(arr[x..y])\n *     // return -1 if sum(arr[l..r]) < sum(arr[x..y])\n *     public int CompareSub(int l, int r, int x, int y) {}\n *\n *     // Returns the length of the array\n *     public int Length() {}\n * }\n */\n\nclass Solution {\n    public int GetIndex(ArrayReader reader) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * *********************************************************************\n * // This is the ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * *********************************************************************\n *\n * // Compares the sum of arr[l..r] with the sum of arr[x..y] \n * // return 1 if sum(arr[l..r]) > sum(arr[x..y])\n * // return 0 if sum(arr[l..r]) == sum(arr[x..y])\n * // return -1 if sum(arr[l..r]) < sum(arr[x..y])\n * int compareSub(ArrayReader *, int l, int r, int x, int y);\n *\n * // Returns the length of the array\n * int length(ArrayReader *);\n */\n\nint getIndex(ArrayReader* reader) {\n\t\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * // This is the ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * type ArrayReader struct {\n * }\n * // Compares the sum of arr[l..r] with the sum of arr[x..y] \n * // return 1 if sum(arr[l..r]) > sum(arr[x..y])\n * // return 0 if sum(arr[l..r]) == sum(arr[x..y])\n * // return -1 if sum(arr[l..r]) < sum(arr[x..y])\n * func (this *ArrayReader) compareSub(l, r, x, y int) int {}\n * \n * // Returns the length of the array\n * func (this *ArrayReader) length() int {}\n */\n\nfunc getIndex(reader *ArrayReader) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * // This is ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * interface ArrayReader {\n *     // Compares the sum of arr[l..r] with the sum of arr[x..y] \n *     // return 1 if sum(arr[l..r]) > sum(arr[x..y])\n *     // return 0 if sum(arr[l..r]) == sum(arr[x..y])\n *     // return -1 if sum(arr[l..r]) < sum(arr[x..y])\n *     fun compareSub(l: Int, r: Int, x: Int, y: Int): Int {}\n *\n *     // Returns the length of the array\n *     fun length(): Int {}\n * }\n */\n\nclass Solution {\n    fun getIndex(reader: ArrayReader): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * // This is ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * interface ArrayReader {\n *     // Compares the sum of arr[l..r] with the sum of arr[x..y] \n *     // return 1 if sum(arr[l..r]) > sum(arr[x..y])\n *     // return 0 if sum(arr[l..r]) == sum(arr[x..y])\n *     // return -1 if sum(arr[l..r]) < sum(arr[x..y])\n *     public func compareSub(_ l: Int, _ r: Int, _ x: Int, _ y: Int) -> Int {}\n *\n *     // Returns the length of the array\n *     public func length() -> Int {}\n * }\n */\n\nclass Solution {\n    func getIndex(_ reader: ArrayReader) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "/**\n * // This is the ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * struct ArrayReader;\n * impl Array Reader {\n *     pub fn compareSub(l: i32, r: i32, x: i32, y: i32) -> i32 {}\n *     // Compares the sum of arr[l..r] with the sum of arr[x..y] \n *     // return 1 if sum(arr[l..r]) > sum(arr[x..y])\n *     // return 0 if sum(arr[l..r]) == sum(arr[x..y])\n *     // return -1 if sum(arr[l..r]) < sum(arr[x..y])\n *     // Returns the length of the array\n * }\n */\n\nimpl Solution {\n    pub fn get_index(reader: &ArrayReader) -> i32 {\n\t\t\n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# This is ArrayReader's API interface.\n# You should not implement it, or speculate about its implementation\n# class ArrayReader\n#\t # Compares the sum of arr[l..r] with the sum of arr[x..y]\n#\t # return 1 if sum(arr[l..r]) > sum(arr[x..y])\n#\t # return 0 if sum(arr[l..r]) == sum(arr[x..y])\n#\t # return -1 if sum(arr[l..r]) < sum(arr[x..y])\n#    def compare_sub(l, r, x, y):\n#       \n#    end\n#\n#\t # Returns the length of the array\n#    def length()\n#\t\t\n#\t end\n# end\n\n# @param {ArrayReader} reader\n# @return {int}\ndef get_index(reader)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * // This is ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * interface ArrayReader {\n *     // Compares the sum of arr[l..r] with the sum of arr[x..y] \n *     // return 1 if sum(arr[l..r]) > sum(arr[x..y])\n *     // return 0 if sum(arr[l..r]) == sum(arr[x..y])\n *     // return -1 if sum(arr[l..r]) < sum(arr[x..y])\n *     function compareSub($l, $r, $x, $y) {}\n *\n *     // Returns the length of the array\n *     function length() {}\n * }\n */\n\nclass Solution {\n    /**\n     * @param ArrayReader $reader\n     * @return Integer\n     */\n    function getIndex($reader) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * // This is ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * interface ArrayReader {\n *     // Compares the sum of arr[l..r] with the sum of arr[x..y] \n *     // return 1 if sum(arr[l..r]) > sum(arr[x..y])\n *     // return 0 if sum(arr[l..r]) == sum(arr[x..y])\n *     // return -1 if sum(arr[l..r]) < sum(arr[x..y])\n *     def compareSub(l: Int, r: Int, x: Int, y: Int): Int {}\n *\n *     // Returns the length of the array\n *     def length(): Int {}\n * }\n */\n\nobject Solution {\n    def getIndex(reader: ArrayReader): Int = {\n        \n\t}\n}"
+    }
+  ],
+  "solution": {
+    "id": "1632",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach 1: Binary Search\n\n#### Intuition\n\nBasically, we want to eliminate the duplicated values and find the larger number. We cannot get each element out but the given API allows us to compare the sum of all the elements in 2 subarrays. \n\nIf our array is broken into two equally sized halves and all the elements in the array were equal, the sum of the two halves would also have an equal sum, but if one element is larger in either of the halves then that respective half will have a larger sum. Then we could discard the other half because we know it doesn't hold the answer, and continue searching on the remaining array.\n\nIt will work great if there are an even number of elements in the array, but if the array has odd elements then if we break it into two parts then one part will have more elements, thus we can't guarantee where the large element is after comparing their sum. Instead, we can keep one element separate, then the remaining arrays will become even.\n\nIf the current search space has an odd length, we can break the array into 3 parts.\nLet's call the 2 parts `left` and `right`, and one separate element `extra_element`. Now we have three possibilities:\n\n* The sum of all the elements in `left` is larger than the sum of all the elements in `right`. The larger element is in the `left`, we can eliminate all elements in `right` and that `extra_element`.\n* The sum of all the elements in `left` is smaller than the sum of all the elements in `right`. The larger element is in the `right`, we can eliminate all elements in `left` and that `extra_element`.\n* The sum of all the elements in `left` equals the sum of all the elements in `right`, the larger element is not in either, we can eliminate all elements in both. The larger element is the `extra_element`.\n\nSo with each comparison, we are eliminating at least half of the number of elements of the search space. Thus, we are using a modified version of binary search.\n\nHere is how the algorithm works in details.\n<center>\n<img src=\"../Figures/1533/1533_Find_the_Index_of_the_Large_Integer.png\" width=\"600\"/>\n</center>\n<br>\n\nSuppose the array contains 26 elements. All its elements are 1 except one is 2.\n\n* At the very beginning, the sum of all the elements in the left subarray (in yellow) is larger than the sum of all the elements in the right subarray (in green). We eliminate the right subarray.\n* Now, the sum of all the elements in the left subarray (in yellow) is smaller than the sum of all the elements in the right subarray (in green). We eliminate the left subarray and the leftover element (in cyan) since the total number of elements is odd (13).\n* Checking again, the sum of all the elements in the left subarray (in yellow) is larger than the sum of all the elements in the right subarray (in green). We eliminate the left subarray.\n* Finally, the sum of all the elements in the left subarray (in yellow) equals to the sum of all the elements in the right subarray (in green). We eliminate both and the leftover element (in cyan) is the answer.\n\n\n#### Algorithm\n\n\n* Set `left = 0` and `length = reader.length`. `left` is the leftmost index of our search space and `length` is the size of our search space. The larger integer's index should always be in [`left`, `left` + `length`)\n* While `length > 1`\n    * Update `length` to `length` / 2.\n    * Set `cmp` to `reader.compareSub(left, left + length - 1, left + length, left + length + length - 1)`\n   * If `cmp` is `0`, return `left + length + length`, the leftover element is the larger integer. Note that this is only possible if the current search space has an odd length, so if we have an even length we don't need to worry about this case.\n   * If `cmp` is `-1`, increase `left` by `length`.\n   * If `cmp` is `1`, we don't need to do anything because we already our `left` bound stays the same and we already divided `length` by `2`.\n* Return `left`. This is standard with binary search where if the search ends without returning, the `left` bound is pointing to the answer.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/3tnmswfP/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"3tnmswfP\"></iframe>\n\n#### Complexity Analysis\n\nHere, $N$ is the length of the internal array.\n\n* Time Complexity:  $O(\\log N)$      \n  After every check we reduce our array size by half, thus we will make at most $\\log N$ calls to the API, where each API call takes constant time.\n\n* Space Complexity: $O(1)$\n  We are not using any additional space other than a few integer variables.\n\n\n----",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,145 @@
+{
+  "questionId": "1473",
+  "questionFrontendId": "1371",
+  "title": "Find the Longest Substring Containing Vowels in Even Counts",
+  "titleSlug": "find-the-longest-substring-containing-vowels-in-even-counts",
+  "difficulty": "Medium",
+  "content": "<p>Given the string <code>s</code>, return the size of the longest substring containing each vowel an even number of times. That is, &#39;a&#39;, &#39;e&#39;, &#39;i&#39;, &#39;o&#39;, and &#39;u&#39; must appear an even number of times.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;eleetminicoworoep&quot;\n<strong>Output:</strong> 13\n<strong>Explanation: </strong>The longest substring is &quot;leetminicowor&quot; which contains two each of the vowels: <strong>e</strong>, <strong>i</strong> and <strong>o</strong> and zero of the vowels: <strong>a</strong> and <strong>u</strong>.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;leetcodeisgreat&quot;\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> The longest substring is &quot;leetc&quot; which contains two e&#39;s.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;bcbcbc&quot;\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> In this case, the given string &quot;bcbcbc&quot; is the longest because all vowels: <strong>a</strong>, <strong>e</strong>, <strong>i</strong>, <strong>o</strong> and <strong>u</strong> appear zero times.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 5 x 10^5</code></li>\n\t<li><code>s</code>&nbsp;contains only lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Represent the counts (odd or even) of vowels with a bitmask.",
+    "Precompute the prefix xor for the bitmask of vowels and then get the longest valid substring."
+  ],
+  "metaData": "{\n  \"name\": \"findTheLongestSubstring\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"140.8K\", \"totalSubmission\": \"186.1K\", \"totalAcceptedRaw\": 140820, \"totalSubmissionRaw\": 186094, \"acRate\": \"75.7%\"}",
+  "likes": 2561,
+  "dislikes": 142,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"eleetminicoworoep\"",
+    "\"leetcodeisgreat\"",
+    "\"bcbcbc\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findTheLongestSubstring(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findTheLongestSubstring(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findTheLongestSubstring(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findTheLongestSubstring(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar findTheLongestSubstring = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findTheLongestSubstring(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindTheLongestSubstring(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findTheLongestSubstring(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findTheLongestSubstring(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findTheLongestSubstring(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findTheLongestSubstring(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_the_longest_substring(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef find_the_longest_substring(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function findTheLongestSubstring($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findTheLongestSubstring(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findTheLongestSubstring(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_the_longest_substring(s :: String.t) :: integer\n  def find_the_longest_substring(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_the_longest_substring(S :: unicode:unicode_binary()) -> integer().\nfind_the_longest_substring(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-the-longest-substring s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2437",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach: Bitmasking\n\n#### Intuition\n\nGiven a string `s`, we need to find the length of the longest substring in which any vowel present must appear an even number of times. A brute force approach would involve iterating through every substring and counting vowels, but this would result in a Time Limit Exceeded (TLE). Instead, we need to think of a more efficient solution, aiming for a linear or log-linear time complexity.\n\nObserve that we don't need to know the exact count of the vowels to solve this problem; we only need to know the parity of each vowel (whether it appears an even or odd number of times). The parity of each vowel can be stored in a boolean or bit, where `0` means even and `1` means odd. We need five bits to track the parity of all five vowels (a, e, i, o, u), resulting in 2^5 = 32 possible states.\n\nWe can assign the first bit to `a`, the second to `e`, and so on. The state of the vowels can be represented as a binary string. For instance, `00000` means all vowels have even counts, while `10000` means only `a` has an odd count. \nBy converting these binary states to integers, we can assign values to the vowels: `a = 1`, `e = 2`, `i = 4`, `o = 8`, and `u = 16`. If both `a` and `i` have odd counts, their total value would be `1 + 4 = 5`. A total value of `0` means all vowels have even counts.\n\n![fig](../Figures/1371/slide1_repub.drawio.png)\n\nTo find substrings with even vowels, we can use the XOR operator to update and track the parity of the vowels. If a vowel appears an even number of times, the result of XOR will be 0; if it appears an odd number of times, the result will be 1.\n\nWe compute a running XOR for each vowel as we traverse the string. To check for substrings with even vowels, we consider two cases:\n\n1. If the current XOR value is `00000` (i.e., all vowels have even counts), the substring from the start of the string to the current position contains even vowels.\n2. If the current XOR value has occurred before, the substring between the first occurrence of that XOR value and the current position also contains even vowels.\n\n![fig](../Figures/1371/image2_repub.drawio.png)\n\n#### Algorithm\n\n1. Initialize an integer variable `prefixXOR` and set it to 0.\n2. Initialize a character array `characterMap[26]` where specific vowel characters `('a', 'e', 'i', 'o', 'u')` have unique mask values `(1, 2, 4, 8, 16)`.\n3. Initialize an array `mp` of size 32, where all elements are set to -1. This will store the index of the first occurrence of each `prefixXOR` value.\n4. Initialize an integer variable `longestSubstring` and set it to `0`.\n5. Iterate through each character in the string `s`:\n    - Update `prefixXOR` by XORing it with the mask value of the current character (from `characterMap`).\n    - If the current `prefixXOR` value is not found in `mp` and `prefixXOR` is not 0:\n        - Store the current index in `mp` at the position corresponding to `prefixXOR`.\n    - Update `longestSubstring` by comparing it with the difference between the current index and `mp[prefixXOR]`.\n6. Return `longestSubstring` as the final result.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/axaQPQM9/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"axaQPQM9\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ be the size of the given `s` string.\n\n- Time complexity: $O(n)$\n\n    We iterate through the string `s` exactly once. Apart from this, all operations are constant time. Therefore, the total time complexity is given by $O(max(m,n))$.\n\n- Space complexity: $O(1)$\n\n   Apart from the `characterMap` and `mp` array, no additional space is used to solve the problem. Therefore, the space complexity is given by $O(26) + O(32) ≈ O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

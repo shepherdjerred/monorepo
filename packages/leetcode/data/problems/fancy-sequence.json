@@ -1,0 +1,139 @@
+{
+  "questionId": "1728",
+  "questionFrontendId": "1622",
+  "title": "Fancy Sequence",
+  "titleSlug": "fancy-sequence",
+  "difficulty": "Hard",
+  "content": "<p>Write an API that generates fancy sequences using the <code>append</code>, <code>addAll</code>, and <code>multAll</code> operations.</p>\n\n<p>Implement the <code>Fancy</code> class:</p>\n\n<ul>\n\t<li><code>Fancy()</code> Initializes the object with an empty sequence.</li>\n\t<li><code>void append(val)</code> Appends an integer <code>val</code> to the end of the sequence.</li>\n\t<li><code>void addAll(inc)</code> Increments all existing values in the sequence by an integer <code>inc</code>.</li>\n\t<li><code>void multAll(m)</code> Multiplies all existing values in the sequence by an integer <code>m</code>.</li>\n\t<li><code>int getIndex(idx)</code> Gets the current value at index <code>idx</code> (0-indexed) of the sequence <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>. If the index is greater or equal than the length of the sequence, return <code>-1</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;Fancy&quot;, &quot;append&quot;, &quot;addAll&quot;, &quot;append&quot;, &quot;multAll&quot;, &quot;getIndex&quot;, &quot;addAll&quot;, &quot;append&quot;, &quot;multAll&quot;, &quot;getIndex&quot;, &quot;getIndex&quot;, &quot;getIndex&quot;]\n[[], [2], [3], [7], [2], [0], [3], [10], [2], [0], [1], [2]]\n<strong>Output</strong>\n[null, null, null, null, null, 10, null, null, null, 26, 34, 20]\n\n<strong>Explanation</strong>\nFancy fancy = new Fancy();\nfancy.append(2);   // fancy sequence: [2]\nfancy.addAll(3);   // fancy sequence: [2+3] -&gt; [5]\nfancy.append(7);   // fancy sequence: [5, 7]\nfancy.multAll(2);  // fancy sequence: [5*2, 7*2] -&gt; [10, 14]\nfancy.getIndex(0); // return 10\nfancy.addAll(3);   // fancy sequence: [10+3, 14+3] -&gt; [13, 17]\nfancy.append(10);  // fancy sequence: [13, 17, 10]\nfancy.multAll(2);  // fancy sequence: [13*2, 17*2, 10*2] -&gt; [26, 34, 20]\nfancy.getIndex(0); // return 26\nfancy.getIndex(1); // return 34\nfancy.getIndex(2); // return 20\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= val, inc, m &lt;= 100</code></li>\n\t<li><code>0 &lt;= idx &lt;= 10<sup>5</sup></code></li>\n\t<li>At most <code>10<sup>5</sup></code> calls total will be made to <code>append</code>, <code>addAll</code>, <code>multAll</code>, and <code>getIndex</code>.</li>\n</ul>\n",
+  "hints": [
+    "Use two arrays to save the cumulative multipliers at each time point and cumulative sums adjusted by the current multiplier.",
+    "The function getIndex(idx) ask to the current value modulo 10^9+7. Use modular inverse and both arrays to calculate this value."
+  ],
+  "metaData": "{\n  \"classname\": \"Fancy\",\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"val\"\n        }\n      ],\n      \"name\": \"append\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"inc\"\n        }\n      ],\n      \"name\": \"addAll\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"m\"\n        }\n      ],\n      \"name\": \"multAll\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"idx\"\n        }\n      ],\n      \"name\": \"getIndex\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"76K\", \"totalSubmission\": \"183.9K\", \"totalAcceptedRaw\": 76014, \"totalSubmissionRaw\": 183858, \"acRate\": \"41.3%\"}",
+  "likes": 638,
+  "dislikes": 184,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"Fancy\",\"append\",\"addAll\",\"append\",\"multAll\",\"getIndex\",\"addAll\",\"append\",\"multAll\",\"getIndex\",\"getIndex\",\"getIndex\"]\n[[],[2],[3],[7],[2],[0],[3],[10],[2],[0],[1],[2]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Segment Tree",
+      "slug": "segment-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Fancy {\npublic:\n    Fancy() {\n        \n    }\n    \n    void append(int val) {\n        \n    }\n    \n    void addAll(int inc) {\n        \n    }\n    \n    void multAll(int m) {\n        \n    }\n    \n    int getIndex(int idx) {\n        \n    }\n};\n\n/**\n * Your Fancy object will be instantiated and called as such:\n * Fancy* obj = new Fancy();\n * obj->append(val);\n * obj->addAll(inc);\n * obj->multAll(m);\n * int param_4 = obj->getIndex(idx);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Fancy {\n\n    public Fancy() {\n        \n    }\n    \n    public void append(int val) {\n        \n    }\n    \n    public void addAll(int inc) {\n        \n    }\n    \n    public void multAll(int m) {\n        \n    }\n    \n    public int getIndex(int idx) {\n        \n    }\n}\n\n/**\n * Your Fancy object will be instantiated and called as such:\n * Fancy obj = new Fancy();\n * obj.append(val);\n * obj.addAll(inc);\n * obj.multAll(m);\n * int param_4 = obj.getIndex(idx);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Fancy:\n\n    def __init__(self):\n        \n\n    def append(self, val: int) -> None:\n        \n\n    def addAll(self, inc: int) -> None:\n        \n\n    def multAll(self, m: int) -> None:\n        \n\n    def getIndex(self, idx: int) -> int:\n        \n\n\n# Your Fancy object will be instantiated and called as such:\n# obj = Fancy()\n# obj.append(val)\n# obj.addAll(inc)\n# obj.multAll(m)\n# param_4 = obj.getIndex(idx)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Fancy(object):\n\n    def __init__(self):\n        \n\n    def append(self, val):\n        \"\"\"\n        :type val: int\n        :rtype: None\n        \"\"\"\n        \n\n    def addAll(self, inc):\n        \"\"\"\n        :type inc: int\n        :rtype: None\n        \"\"\"\n        \n\n    def multAll(self, m):\n        \"\"\"\n        :type m: int\n        :rtype: None\n        \"\"\"\n        \n\n    def getIndex(self, idx):\n        \"\"\"\n        :type idx: int\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your Fancy object will be instantiated and called as such:\n# obj = Fancy()\n# obj.append(val)\n# obj.addAll(inc)\n# obj.multAll(m)\n# param_4 = obj.getIndex(idx)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar Fancy = function() {\n    \n};\n\n/** \n * @param {number} val\n * @return {void}\n */\nFancy.prototype.append = function(val) {\n    \n};\n\n/** \n * @param {number} inc\n * @return {void}\n */\nFancy.prototype.addAll = function(inc) {\n    \n};\n\n/** \n * @param {number} m\n * @return {void}\n */\nFancy.prototype.multAll = function(m) {\n    \n};\n\n/** \n * @param {number} idx\n * @return {number}\n */\nFancy.prototype.getIndex = function(idx) {\n    \n};\n\n/** \n * Your Fancy object will be instantiated and called as such:\n * var obj = new Fancy()\n * obj.append(val)\n * obj.addAll(inc)\n * obj.multAll(m)\n * var param_4 = obj.getIndex(idx)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class Fancy {\n    constructor() {\n        \n    }\n\n    append(val: number): void {\n        \n    }\n\n    addAll(inc: number): void {\n        \n    }\n\n    multAll(m: number): void {\n        \n    }\n\n    getIndex(idx: number): number {\n        \n    }\n}\n\n/**\n * Your Fancy object will be instantiated and called as such:\n * var obj = new Fancy()\n * obj.append(val)\n * obj.addAll(inc)\n * obj.multAll(m)\n * var param_4 = obj.getIndex(idx)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Fancy {\n\n    public Fancy() {\n        \n    }\n    \n    public void Append(int val) {\n        \n    }\n    \n    public void AddAll(int inc) {\n        \n    }\n    \n    public void MultAll(int m) {\n        \n    }\n    \n    public int GetIndex(int idx) {\n        \n    }\n}\n\n/**\n * Your Fancy object will be instantiated and called as such:\n * Fancy obj = new Fancy();\n * obj.Append(val);\n * obj.AddAll(inc);\n * obj.MultAll(m);\n * int param_4 = obj.GetIndex(idx);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} Fancy;\n\n\nFancy* fancyCreate() {\n    \n}\n\nvoid fancyAppend(Fancy* obj, int val) {\n    \n}\n\nvoid fancyAddAll(Fancy* obj, int inc) {\n    \n}\n\nvoid fancyMultAll(Fancy* obj, int m) {\n    \n}\n\nint fancyGetIndex(Fancy* obj, int idx) {\n    \n}\n\nvoid fancyFree(Fancy* obj) {\n    \n}\n\n/**\n * Your Fancy struct will be instantiated and called as such:\n * Fancy* obj = fancyCreate();\n * fancyAppend(obj, val);\n \n * fancyAddAll(obj, inc);\n \n * fancyMultAll(obj, m);\n \n * int param_4 = fancyGetIndex(obj, idx);\n \n * fancyFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type Fancy struct {\n    \n}\n\n\nfunc Constructor() Fancy {\n    \n}\n\n\nfunc (this *Fancy) Append(val int)  {\n    \n}\n\n\nfunc (this *Fancy) AddAll(inc int)  {\n    \n}\n\n\nfunc (this *Fancy) MultAll(m int)  {\n    \n}\n\n\nfunc (this *Fancy) GetIndex(idx int) int {\n    \n}\n\n\n/**\n * Your Fancy object will be instantiated and called as such:\n * obj := Constructor();\n * obj.Append(val);\n * obj.AddAll(inc);\n * obj.MultAll(m);\n * param_4 := obj.GetIndex(idx);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Fancy() {\n\n    fun append(`val`: Int) {\n        \n    }\n\n    fun addAll(inc: Int) {\n        \n    }\n\n    fun multAll(m: Int) {\n        \n    }\n\n    fun getIndex(idx: Int): Int {\n        \n    }\n\n}\n\n/**\n * Your Fancy object will be instantiated and called as such:\n * var obj = Fancy()\n * obj.append(`val`)\n * obj.addAll(inc)\n * obj.multAll(m)\n * var param_4 = obj.getIndex(idx)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass Fancy {\n\n    init() {\n        \n    }\n    \n    func append(_ val: Int) {\n        \n    }\n    \n    func addAll(_ inc: Int) {\n        \n    }\n    \n    func multAll(_ m: Int) {\n        \n    }\n    \n    func getIndex(_ idx: Int) -> Int {\n        \n    }\n}\n\n/**\n * Your Fancy object will be instantiated and called as such:\n * let obj = Fancy()\n * obj.append(val)\n * obj.addAll(inc)\n * obj.multAll(m)\n * let ret_4: Int = obj.getIndex(idx)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct Fancy {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl Fancy {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn append(&self, val: i32) {\n        \n    }\n    \n    fn add_all(&self, inc: i32) {\n        \n    }\n    \n    fn mult_all(&self, m: i32) {\n        \n    }\n    \n    fn get_index(&self, idx: i32) -> i32 {\n        \n    }\n}\n\n/**\n * Your Fancy object will be instantiated and called as such:\n * let obj = Fancy::new();\n * obj.append(val);\n * obj.add_all(inc);\n * obj.mult_all(m);\n * let ret_4: i32 = obj.get_index(idx);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class Fancy\n    def initialize()\n        \n    end\n\n\n=begin\n    :type val: Integer\n    :rtype: Void\n=end\n    def append(val)\n        \n    end\n\n\n=begin\n    :type inc: Integer\n    :rtype: Void\n=end\n    def add_all(inc)\n        \n    end\n\n\n=begin\n    :type m: Integer\n    :rtype: Void\n=end\n    def mult_all(m)\n        \n    end\n\n\n=begin\n    :type idx: Integer\n    :rtype: Integer\n=end\n    def get_index(idx)\n        \n    end\n\n\nend\n\n# Your Fancy object will be instantiated and called as such:\n# obj = Fancy.new()\n# obj.append(val)\n# obj.add_all(inc)\n# obj.mult_all(m)\n# param_4 = obj.get_index(idx)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Fancy {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param Integer $val\n     * @return NULL\n     */\n    function append($val) {\n        \n    }\n  \n    /**\n     * @param Integer $inc\n     * @return NULL\n     */\n    function addAll($inc) {\n        \n    }\n  \n    /**\n     * @param Integer $m\n     * @return NULL\n     */\n    function multAll($m) {\n        \n    }\n  \n    /**\n     * @param Integer $idx\n     * @return Integer\n     */\n    function getIndex($idx) {\n        \n    }\n}\n\n/**\n * Your Fancy object will be instantiated and called as such:\n * $obj = Fancy();\n * $obj->append($val);\n * $obj->addAll($inc);\n * $obj->multAll($m);\n * $ret_4 = $obj->getIndex($idx);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Fancy {\n\n  Fancy() {\n    \n  }\n  \n  void append(int val) {\n    \n  }\n  \n  void addAll(int inc) {\n    \n  }\n  \n  void multAll(int m) {\n    \n  }\n  \n  int getIndex(int idx) {\n    \n  }\n}\n\n/**\n * Your Fancy object will be instantiated and called as such:\n * Fancy obj = Fancy();\n * obj.append(val);\n * obj.addAll(inc);\n * obj.multAll(m);\n * int param4 = obj.getIndex(idx);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class Fancy() {\n\n    def append(`val`: Int): Unit = {\n        \n    }\n\n    def addAll(inc: Int): Unit = {\n        \n    }\n\n    def multAll(m: Int): Unit = {\n        \n    }\n\n    def getIndex(idx: Int): Int = {\n        \n    }\n\n}\n\n/**\n * Your Fancy object will be instantiated and called as such:\n * val obj = new Fancy()\n * obj.append(`val`)\n * obj.addAll(inc)\n * obj.multAll(m)\n * val param_4 = obj.getIndex(idx)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Fancy do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec append(val :: integer) :: any\n  def append(val) do\n    \n  end\n\n  @spec add_all(inc :: integer) :: any\n  def add_all(inc) do\n    \n  end\n\n  @spec mult_all(m :: integer) :: any\n  def mult_all(m) do\n    \n  end\n\n  @spec get_index(idx :: integer) :: integer\n  def get_index(idx) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# Fancy.init_()\n# Fancy.append(val)\n# Fancy.add_all(inc)\n# Fancy.mult_all(m)\n# param_4 = Fancy.get_index(idx)\n\n# Fancy.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec fancy_init_() -> any().\nfancy_init_() ->\n  .\n\n-spec fancy_append(Val :: integer()) -> any().\nfancy_append(Val) ->\n  .\n\n-spec fancy_add_all(Inc :: integer()) -> any().\nfancy_add_all(Inc) ->\n  .\n\n-spec fancy_mult_all(M :: integer()) -> any().\nfancy_mult_all(M) ->\n  .\n\n-spec fancy_get_index(Idx :: integer()) -> integer().\nfancy_get_index(Idx) ->\n  .\n\n\n%% Your functions will be called as such:\n%% fancy_init_(),\n%% fancy_append(Val),\n%% fancy_add_all(Inc),\n%% fancy_mult_all(M),\n%% Param_4 = fancy_get_index(Idx),\n\n%% fancy_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define fancy%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; append : exact-integer? -> void?\n    (define/public (append val)\n      )\n    ; add-all : exact-integer? -> void?\n    (define/public (add-all inc)\n      )\n    ; mult-all : exact-integer? -> void?\n    (define/public (mult-all m)\n      )\n    ; get-index : exact-integer? -> exact-integer?\n    (define/public (get-index idx)\n      )))\n\n;; Your fancy% object will be instantiated and called as such:\n;; (define obj (new fancy%))\n;; (send obj append val)\n;; (send obj add-all inc)\n;; (send obj mult-all m)\n;; (define param_4 (send obj get-index idx))"
+    }
+  ],
+  "solution": {
+    "id": "2936",
+    "content": "### Introduction\n\nWe can combine several `addAll` operations and `multAll` operations into a single operation, represented by the pair $(a, b)$, which transforms any integer $x$ into $ax + b$:\n\n* Initially, $(a, b) = (1, 0)$.\n* When we encounter the `addAll(inc)` operation, we increase $b$ by $\\textit{inc}$.\n* When we encounter the `multAll(m)` operation, we multiply both $a$ and $b$ by $m$.\n\nWe use the array $v$ to store the **original sequence** (that is, the values inserted by each `append(val)` operation). We also use two arrays $a$ and $b$ to store the pairs described above, where $(a_i, b_i)$ represents the **result obtained by condensing all operations before $v_i$ is added to $v$**.\n\nWhen we encounter the operation `getIndex(idx)`, we consider both $(a_\\textit{idx}, b_\\textit{idx})$ and $(a_l, b_l)$:\n\n* Before $v_\\textit{idx}$ is inserted into $v$, all previous operations can be condensed into $(a_\\textit{idx}, b_\\textit{idx})$.\n* So far, all operations can be summarized as $(a_l, b_l)$.\n\nTherefore, the operation applied to $v_\\textit{idx}$ is equivalent to transforming the pair $(a_\\textit{idx}, b_\\textit{idx})$ into $(a_l, b_l)$, which we denote as $(a_o, b_o)$. In other words,\n\n$$\n\\begin{cases}\na_\\textit{idx} \\cdot a_o = a_l \\\nb_\\textit{idx} \\cdot a_o + b_o = b_l\n\\end{cases}\n$$\n\nThe answer to the `getIndex(idx)` operation is therefore\n\n$$\na_o \\cdot v_\\textit{idx} + b_o.\n$$\n\nHow do we solve for $a_o$ and $b_o$? From the equations above, we obtain\n\n$$\n\\begin{cases}\na_o = \\dfrac{a_l}{a_\\textit{idx}} \\\nb_o = b_l - b_\\textit{idx} \\cdot \\dfrac{a_l}{a_\\textit{idx}}\n\\end{cases}\n$$\n\nAt first glance this seems straightforward, but we must note that after many `addAll` and `multAll` operations, $(a, b)$ may become very large, exceeding the range of integer types in most programming languages. One solution would be to use high-precision arithmetic, but that would make the implementation significantly more complex.\n\nFortunately, the problem only requires the result modulo $10^9 + 7$, which allows us to use the concept of a **modular multiplicative inverse**.\n\n---\n\n# Prerequisites\n\nLet the modulus be $m$ (where $m = 10^9 + 7$ in this problem). For an integer $a$, if there exists another integer $a^{-1}$ $(0 < a^{-1} < m)$ such that\n\n$$\na a^{-1} \\equiv 1 \\pmod m\n$$\n\nthen $a^{-1}$ is called the **multiplicative inverse** of $a$.\n\nIf $a$ is a multiple of $m$, then $a^{-1}$ clearly does not exist. When $a$ is not a multiple of $m$, we have\n\n$$\naa^{-1} = km + 1, \\quad k \\in \\mathbb{N}\n$$\n\nRearranging gives\n\n$$\na^{-1}a - km = 1\n$$\n\nIf $m$ is prime, then according to **Bézout's identity**, $\\gcd(a, m) = 1$, which guarantees that integers $a^{-1}$ and $k$ satisfying the equation exist.\n\nIf $(a^{-1}_0, k_0)$ is one solution, then\n\n$$\n(a^{-1}_0 + cm, k_0 + ca), \\quad c \\in \\mathbb{Z}\n$$\n\nare also solutions. Therefore, there must exist a solution $a^{-1}$ such that\n\n$$\n0 < a^{-1} < m\n$$\n\nwhich is exactly the multiplicative inverse we seek.\n\nHow can we compute $a^{-1}$? A simple method is to use **Fermat's Little Theorem**, which states that\n\n$$\na^{m-1} \\equiv 1 \\pmod m\n$$\n\nThus,\n\n$$\n\\begin{aligned}\n& a^{m-1} a^{-1} \\equiv a^{-1} \\pmod m \\\n\\Rightarrow & a^{m-2} a a^{-1} \\equiv a^{-1} \\pmod m \\\n\\Rightarrow & a^{m-2} \\equiv a^{-1} \\pmod m\n\\end{aligned}\n$$\n\nTherefore, the multiplicative inverse of $a$ is\n\n$$\na^{-1} = a^{m-2} \\bmod m\n$$\n\nWe can compute $a^{m-2}$ efficiently using **fast exponentiation**, which runs in $O(\\log m)$ time. For more details, see the editorial for [50. Pow(x, n)](https://leetcode.com/problems/powx-n/editorial/).\n\nThe multiplicative inverse allows us to convert division into multiplication in modular arithmetic. For example,\n\n$$\n\\frac{b}{a} \\equiv b \\cdot a^{-1} \\pmod m\n$$\n\nThis works because multiplication satisfies the distributive property under modulo:\n\n$$\n(a \\times b) \\bmod m =\n((a \\bmod m) \\times (b \\bmod m)) \\bmod m\n$$\n\nDivision, however, does not satisfy this property directly. Using the multiplicative inverse allows us to safely perform division under modulo arithmetic.\n\n### Approach 1: Use modular inverse for the `getIndex` operation\n\n#### Intuition\n\nFrom the equations derived earlier,\n\n$$\n\\begin{cases}\na_o = \\dfrac{a_l}{a_\\textit{idx}} \\\nb_o = b_l - b_\\textit{idx} \\cdot \\dfrac{a_l}{a_\\textit{idx}}\n\\end{cases}\n$$\n\nwe can replace division with multiplication using the multiplicative inverse:\n\n$$\n\\begin{cases}\na_o \\equiv a_l \\cdot a_\\textit{idx}^{-1} \\pmod m \\\nb_o \\equiv b_l - b_\\textit{idx} \\cdot a_l \\cdot a_\\textit{idx}^{-1} \\pmod m\n\\end{cases}\n$$\n\nThe final answer is\n\n$$\n(a_o \\cdot v_\\textit{idx} + b_o) \\bmod m\n$$\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/J62jbyYu/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"J62jbyYu\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the maximum number of elements contained in the sequence $v$.\n\n- Time complexity: $O(\\log m)$\n\n  The `getIndex(idx)` operation takes $O(\\log m)$ time because it requires computing a modular inverse. All other operations take $O(1)$ time.\n\n- Space complexity: $O(n)$.\n\n### Approach 2: Use multiplicative inverse during the `append` operation\n\n#### Intuition\n\nIn the Introduction we observed that:\n\n**The operation applied to $v_\\textit{idx}$ is equivalent to transforming the pair $(a_\\textit{idx}, b_\\textit{idx})$ into $(a_l, b_l)$.**\n\nInstead of solving the system of equations, we can directly compute\n\n$$\na_l \\cdot \\frac{v_\\textit{idx} - b_\\textit{idx}}{a_\\textit{idx}} + b_l\n$$\n\nHowever, this expression cannot be evaluated safely without using a multiplicative inverse, because we cannot guarantee that $v_\\textit{idx} - b_\\textit{idx}$ is divisible by $a_\\textit{idx}$.\n\nEven with high-precision arithmetic, fractional values could appear and propagate errors. By using the multiplicative inverse, we instead compute\n\n$$\na_l \\cdot (v_\\textit{idx} - b_\\textit{idx}) \\cdot a_\\textit{idx}^{-1} + b_l\n$$\n\nwhich ensures that all operations remain within integer arithmetic under modulo.\n\nTherefore, when we encounter an `append(val)` operation and all previous operations are summarized as $(a_l', b_l')$, we transform the value before storing it:\n\n$$\n(\\textit{val} - b_l') \\cdot (a_l')^{-1}\n$$\n\nWhen we later process `getIndex(idx)`, we can simply return\n\n$$\na_l \\cdot v_\\textit{idx} + b_l\n$$\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/6RGgmpHr/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"6RGgmpHr\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the maximum number of elements that can be included in the sequence $v$.\n\n- Time complexity:  $O(\\log m)$\n\n  The `append(val)` operation requires computing a modular inverse and therefore takes $O(\\log m)$ time. All other operations take $O(1)$ time.\n\n- Space complexity: $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

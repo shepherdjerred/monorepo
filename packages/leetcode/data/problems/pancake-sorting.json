@@ -1,0 +1,141 @@
+{
+  "questionId": "1009",
+  "questionFrontendId": "969",
+  "title": "Pancake Sorting",
+  "titleSlug": "pancake-sorting",
+  "difficulty": "Medium",
+  "content": "<p>Given an array of integers <code>arr</code>, sort the array by performing a series of <strong>pancake flips</strong>.</p>\n\n<p>In one pancake flip we do the following steps:</p>\n\n<ul>\n\t<li>Choose an integer <code>k</code> where <code>1 &lt;= k &lt;= arr.length</code>.</li>\n\t<li>Reverse the sub-array <code>arr[0...k-1]</code> (<strong>0-indexed</strong>).</li>\n</ul>\n\n<p>For example, if <code>arr = [3,2,1,4]</code> and we performed a pancake flip choosing <code>k = 3</code>, we reverse the sub-array <code>[3,2,1]</code>, so <code>arr = [<u>1</u>,<u>2</u>,<u>3</u>,4]</code> after the pancake flip at <code>k = 3</code>.</p>\n\n<p>Return <em>an array of the </em><code>k</code><em>-values corresponding to a sequence of pancake flips that sort </em><code>arr</code>. Any valid answer that sorts the array within <code>10 * arr.length</code> flips will be judged as correct.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [3,2,4,1]\n<strong>Output:</strong> [4,2,4,3]\n<strong>Explanation: </strong>\nWe perform 4 pancake flips, with k values 4, 2, 4, and 3.\nStarting state: arr = [3, 2, 4, 1]\nAfter 1st flip (k = 4): arr = [<u>1</u>, <u>4</u>, <u>2</u>, <u>3</u>]\nAfter 2nd flip (k = 2): arr = [<u>4</u>, <u>1</u>, 2, 3]\nAfter 3rd flip (k = 4): arr = [<u>3</u>, <u>2</u>, <u>1</u>, <u>4</u>]\nAfter 4th flip (k = 3): arr = [<u>1</u>, <u>2</u>, <u>3</u>, 4], which is sorted.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [1,2,3]\n<strong>Output:</strong> []\n<strong>Explanation: </strong>The input is already sorted, so there is no need to flip anything.\nNote that other answers, such as [3, 3], would also be accepted.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= arr.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= arr[i] &lt;= arr.length</code></li>\n\t<li>All integers in <code>arr</code> are unique (i.e. <code>arr</code> is a permutation of the integers from <code>1</code> to <code>arr.length</code>).</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"pancakeSort\",\n  \"params\": [\n    {\n      \"name\": \"arr\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<integer>\"\n  },\n  \"manual\": false\n}",
+  "stats": "{\"totalAccepted\": \"113.6K\", \"totalSubmission\": \"158.4K\", \"totalAcceptedRaw\": 113636, \"totalSubmissionRaw\": 158415, \"acRate\": \"71.7%\"}",
+  "likes": 1598,
+  "dislikes": 1560,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[3,2,4,1]",
+    "[1,2,3]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"darwinbox\", \"name\": \"Darwinbox\"}, {\"timesEncountered\": 2, \"slug\": \"square\", \"name\": \"Block\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> pancakeSort(vector<int>& arr) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<Integer> pancakeSort(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def pancakeSort(self, arr: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def pancakeSort(self, arr):\n        \"\"\"\n        :type arr: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arr\n * @return {number[]}\n */\nvar pancakeSort = function(arr) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function pancakeSort(arr: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<int> PancakeSort(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* pancakeSort(int* arr, int arrSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func pancakeSort(arr []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun pancakeSort(arr: IntArray): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func pancakeSort(_ arr: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn pancake_sort(arr: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} arr\n# @return {Integer[]}\ndef pancake_sort(arr)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $arr\n     * @return Integer[]\n     */\n    function pancakeSort($arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> pancakeSort(List<int> arr) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def pancakeSort(arr: Array[Int]): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec pancake_sort(arr :: [integer]) :: [integer]\n  def pancake_sort(arr) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec pancake_sort(Arr :: [integer()]) -> [integer()].\npancake_sort(Arr) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (pancake-sort arr)\n  (-> (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "989",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach 1: Sort like Bubble-Sort\n\n**Intuition**\n\nOne might argue that this is an awkward question to do things.\nIndeed, it is not the most practical operation that one can have with the _pancake flipping_, in order to sort a list.\n\nHowever awkward the problem might be, it is the game that we play with. And in order to win the game, we have to play by the rules.\nActually, from this perspective, this problem does share some similarity with the **_[Rubik's cube](https://en.wikipedia.org/wiki/Rubik%27s_Cube)_**, _i.e._ one cannot move one tile without moving other tiles along with.\nLet us get on with it, by playing a few rounds ourselves to get the hang of the problem.\n\nGiven the input of `[3, 2, 4, 1]`, the desired sorted output would be `[1, 2, 3, 4]`. \n\nAs a reminder, the only operation that we could perform in order to move the elements in the list, is the so-called _pancake flip_, which is to reverse a _prefix_ of the list.\n\nStarting from the largest value in the list, _i.e._ `4` in the example, its desired position would be the tail of the list.\nWhile in the input, it is located at the third of the list, if we look at the list from left to right.\n\nIn order to move the value of `4` to its desired position, we could perform the following two steps:\n\n- Firstly, we do the pancake flip on the prefix of `[3, 2, 4]`. With this operation, we then move the value `4` to the _**head**_ of the updated list as `[4, 2, 3, 1]`.\n\n![flip to head](../Figures/969/969_flip_head.png)\n\n- Now that, the value `4` is located at the head of the list, we could now perform another pancake flip on the entire list, which would get us the list of `[1, 3, 2, 4]`.\n\n![flip to tail](../Figures/969/969_flip_tail.png)\n\nVoila. With the obtained list of `[1, 3, 2, 4]`, we are now one step closer to our final goal, with the value `4` now at its proper place.\nFor the following steps, we only need to focus on the sublist of `[1, 3, 2]`.\n\n>If one looks over the above steps again, it might ring a bell to a well-known algorithm called _**[bubble sort](https://en.wikipedia.org/wiki/Bubble_sort)**_.\n\n<p align=\"center\">\n<img src=\"https://upload.wikimedia.org/wikipedia/commons/3/37/Bubble_sort_animation.gif\">\n</p>\n\n\nIndeed, we share the same strategy as the bubble sort, by _sinking_ the numbers to the bottom one by one.\n\n>Here we can make a statement that for any given number, in order to move it to any desired position, it takes **_at most_** two pancake flips to do so.\n\nThe idea is simple. First we move the number to the head of the list, then we can switch it with any other element by performing another pancake flip.\n\n\n**Algorithm**\n\nOne can inspire from the bubble sort to implement the algorithm.\n\n- First of all, we implement a function called `flip(list, k)`, which performs the pancake flip on the prefix of `list[0:k]` (in Python).\n\n- The main algorithm runs a loop over the values of the list, starting from the largest one.\n\n    - At each round, we identify the value to sort (named as `value_to_sort`), which is the number we would put in place at this round.\n\n    - We then locate the index of the `value_to_sort`.\n\n    - If the `value_to_sort` is not at its place already, we can then perform _at most_ two pancake flips as we explained in the intuition.\n\n    - At the end of the round, the `value_to_sort` would be put in place.\n\n\n<iframe src=\"https://leetcode.com/playground/74miTuW6/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"74miTuW6\"></iframe>\n\n\n\n**Complexity Analysis**\n\nLet $$N$$ be the length of the input list.\n\n- Time Complexity: $$\\mathcal{O}(N^2)$$\n\n    - In the algorithm, we run a loop with $$N$$ iterations.\n\n    - Within each iteration, we are dealing with the corresponding prefix of the list.\n    Here we denote the length of the prefix as $$k$$, _e.g._ in the first iteration, the length of the prefix is $$N$$. While in the second iteration, the length of the prefix is $$N-1$$. \n\n    - Within each iteration, we have operations whose time complexity is linear to the length of the prefix, such as iterating through the prefix to find the index, or flipping the entire prefix _etc._ Hence, for each iteration, its time complexity would be $$\\mathcal{O}(k)$$\n\n    - To sum up all iterations, we have the overall time complexity of the algorithm as $$\\sum_{k=1}^{N} \\mathcal{O}(k) = \\mathcal{O}(N^2)$$.\n\n\n- Space Complexity: $$\\mathcal{O}(N)$$\n\n    - Within the algorithm, we use a list to maintain the final results, which is proportional to the number of pancake flips.\n\n    - For each round of iteration, at most we would add two pancake flips. Therefore, the maximal number of pancake flips needed would be $$2\\cdot N$$.\n\n    - As a result, the space complexity of the algorithm is $$\\mathcal{O}(N)$$. If one does not take into account the space required to hold the result of the function, then one could consider the above algorithm as a constant space solution.\n\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "questionId": "1580",
+  "questionFrontendId": "1470",
+  "title": "Shuffle the Array",
+  "titleSlug": "shuffle-the-array",
+  "difficulty": "Easy",
+  "content": "<p>Given the array <code>nums</code> consisting of <code>2n</code> elements in the form <code>[x<sub>1</sub>,x<sub>2</sub>,...,x<sub>n</sub>,y<sub>1</sub>,y<sub>2</sub>,...,y<sub>n</sub>]</code>.</p>\r\n\r\n<p><em>Return the array in the form</em> <code>[x<sub>1</sub>,y<sub>1</sub>,x<sub>2</sub>,y<sub>2</sub>,...,x<sub>n</sub>,y<sub>n</sub>]</code>.</p>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong class=\"example\">Example 1:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> nums = [2,5,1,3,4,7], n = 3\r\n<strong>Output:</strong> [2,3,5,4,1,7] \r\n<strong>Explanation:</strong> Since x<sub>1</sub>=2, x<sub>2</sub>=5, x<sub>3</sub>=1, y<sub>1</sub>=3, y<sub>2</sub>=4, y<sub>3</sub>=7 then the answer is [2,3,5,4,1,7].\r\n</pre>\r\n\r\n<p><strong class=\"example\">Example 2:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> nums = [1,2,3,4,4,3,2,1], n = 4\r\n<strong>Output:</strong> [1,4,2,3,3,2,4,1]\r\n</pre>\r\n\r\n<p><strong class=\"example\">Example 3:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> nums = [1,1,2,2], n = 2\r\n<strong>Output:</strong> [1,2,1,2]\r\n</pre>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong>Constraints:</strong></p>\r\n\r\n<ul>\r\n\t<li><code>1 &lt;= n &lt;= 500</code></li>\r\n\t<li><code>nums.length == 2n</code></li>\r\n\t<li><code>1 &lt;= nums[i] &lt;= 10^3</code></li>\r\n</ul>",
+  "hints": [
+    "Use two pointers to create the new array of 2n elements. The first starting at the beginning and the other starting at (n+1)th position. Alternate between them and create the new array."
+  ],
+  "metaData": "{\n  \"name\": \"shuffle\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"n\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"1M\", \"totalSubmission\": \"1.2M\", \"totalAcceptedRaw\": 1049640, \"totalSubmissionRaw\": 1180350, \"acRate\": \"88.9%\"}",
+  "likes": 6387,
+  "dislikes": 354,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[2,5,1,3,4,7]\n3",
+    "[1,2,3,4,4,3,2,1]\n4",
+    "[1,1,2,2]\n2"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 10, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 6, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> shuffle(vector<int>& nums, int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] shuffle(int[] nums, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def shuffle(self, nums: List[int], n: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def shuffle(self, nums, n):\n        \"\"\"\n        :type nums: List[int]\n        :type n: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} n\n * @return {number[]}\n */\nvar shuffle = function(nums, n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function shuffle(nums: number[], n: number): number[] {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] Shuffle(int[] nums, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* shuffle(int* nums, int numsSize, int n, int* returnSize){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func shuffle(nums []int, n int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun shuffle(nums: IntArray, n: Int): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func shuffle(_ nums: [Int], _ n: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn shuffle(nums: Vec<i32>, n: i32) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} n\n# @return {Integer[]}\ndef shuffle(nums, n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $n\n     * @return Integer[]\n     */\n    function shuffle($nums, $n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def shuffle(nums: Array[Int], n: Int): Array[Int] = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "1668",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nWe are given an array $nums$ with $2 * n$ elements, $[ x_1, \\space x_2, \\space ... \\space , \\space x_n, \\space y_1 \\space, \\space y_2 , \\space ... \\space , \\space y_n ]$.             \nWe need to rearrange the original array as, $[ x_1, \\space y_1, \\space x_2, \\space y_2, \\space ...... \\space, \\space x_n, \\space y_n ]$.         \n\n![show_using_image](../Figures/1470/Slide1.PNG)\n\n--- \n\n### Approach 1: Simple Iteration\n\n#### Intuition\n\nLet us start by trying to identify some patterns in the original array,\nThe elements from $x_1$ to $x_n$ exist from indices $0$ to $n - 1$ and elements from $y_1$ to $y_n$ from indices $n$ to $2 * n - 1$.\nThe elements of $x$ should be placed at indices `0, 2, 4, ...`. At `nums[i]` we have element $x_{i + 1}$, we should place it at index $2 * i$ for all $0 \\le i \\lt n$.\n\nThe elements of $y$ should be placed at indices `1, 3, 5, ...`. At `nums[n + i]` we have element $y_{i + 1}$, we should place it at index $2 * i + 1$ for all $0 \\le i \\lt n$. Notice that it is the same formula as the previous one but with a `+1`, indicating that elements of $y$ come after elements of $x$.\n\n![places](../Figures/1470/Slide2.PNG)\n\nOne of the intuitive ways to solve this is to have an extra array $\\text{result}$ of size $2 * n$, then iterate over $\\text{nums}$ and place each of its elements at the respective positions in $\\text{result}$.\n\n#### Algorithm\n\n1. Build an array `result` of size `2 * n`.\n2. Iterate over the `nums` array ranging from indices `0` to `n - 1`:\n    - Store the element $x_{i + 1}$ , that is, `nums[i]` at index `2 * i`,    \n    and element $y_{i + 1}$ , that is, `nums[i + n]` at index `2 * i + 1` in `result`.\n3. Return the `result` array.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/meWNyXiP/shared\" frameBorder=\"0\" width=\"100%\" height=\"242\" name=\"meWNyXiP\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $2 * n$ is the number of elements in the `nums` array.\n\n* Time complexity: $O(n)$.          \n  - We iterate on $n$ elements of the `nums` array, which takes us $O(n)$ time.\n  - Initializing the `result` array will take $O(2n)$ time.\n  - Thus, overall we take $O(n + 2n) = O(n)$ time.\n* Space complexity: $O(1)$.\n  - We are not using any additional space other than the output array.\n\n<br />\n\n---\n\n### Approach 2: In-place Filling\n\n#### Intuition\n\nThe previous approach is optimal and sufficient for most interviews.\nBut sometimes the interviewer might come up with a follow-up to perform the changes in-place in the input array without using an output array.\n\n> This approach is much more difficult than the previous one and is included for completeness. Don't be discouraged if you aren't able to come up with it yourself.\n\nSo, we can't store the numbers in some additional space. Additionally, rewriting a number will erase the previous value. Hence, here the interviewer would like to check our understanding of bit manipulation.\n\n<details>\n    <summary>\n        <b> &ensp; If you are not aware of bit manipulation first, let's get a brief idea about it and look at some basic bitwise operators. (click to expand) </b>\n    </summary>\n\n<br />\n\nBit manipulation is the act of manipulating bits, like changing bits of an integer.      \nAt the heart of bit manipulation are the bit-wise operators:     \n\n**NOT (~):** Bitwise NOT is a unary operator that flips the bits of the number i.e., if the current bit is $0$, it will change it to $1$ and vice versa. \n```text\nN = 5 = 101 (in binary)\n~N = ~(101) = 010 = 2 (in decimal)\n```\n\n**AND (&):** In bitwise AND if both bits in the compared position of the bit patterns are $1$, the bit in the resulting bit pattern is $1$, otherwise $0$.\n```text\nA = 5 = 101 (in binary) \nB = 1 = 001 (in binary) \nA & B = 101 & 001 = 001 = 1 (in decimal)\n```\n\n**OR ( | ):** Bitwise OR is also similar to bitwise AND. If both bits in the compared position of the bit patterns are $0$, the bit in the resulting bit pattern is $0$, otherwise $1$.\n```text\nA = 5 = 101 (in binary) \nB = 1 = 001 (in binary) \nA | B = 101 | 001 = 101 = 5 (in decimal)\n```\n\n**XOR (^):** In bitwise XOR if both bits are $0$ or $1$, the result will be $0$, otherwise $1$.\n```text\nA = 5 = 101 (in binary) \nB = 1 = 001 (in binary) \nA ^ B = 101 ^ 001 = 100 = 4 (in decimal)\n```\n\n**Left Shift (<<):** Left shift operator is a binary operator which shifts some number of bits to the left and appends $0$ at the end. One left shift is equivalent to multiplying the bit pattern with $2$.\n```text\nA = 1 = 001 (in binary) \nA << 1 = 001 << 1 = 010 = 2 (in decimal)\nA << 2 = 001 << 2 = 100 = 4 (in decimal)\n\nB = 5 = 00101 (in binary)\nB << 1 = 00101 << 1 = 01010 = 10 (in decimal)\nB << 2 = 00101 << 2 = 10100 = 20 (in decimal)\n```\n\n**Right Shift (>>):** Right shift operator is a binary operator which shifts some number of bits to the right and appends $0$ at the left side. One right shift is equivalent to dividing the bit pattern with $2$.\n```text\nA = 4 = 100 (in binary) \nA >> 1 = 100 >> 1 = 010 = 2 (in decimal)\nA >> 2 = 100 >> 2 = 001 = 1 (in decimal)\nA >> 3 = 100 >> 3 = 000 = 0 (in decimal)\n\nB = 5 = 00101 (in binary)\nB >> 1 = 00101 >> 1 = 00010 = 2 (in decimal)\n```\n</details>\n\n<br /> \n\nNow coming back to our problem, we can see that the maximum possible value of an element of the $nums$ array is $10^3$ which is $1111101000$ in binary.     \nThus each element will take at most $10$-bits in a $32$-bit integer and the remaining bits are $0$ and not used. \n\nThis suggests the idea that in the remaining empty unused bits we can store some extra information.\nOne possible solution is storing two numbers together (the first number in the first ten bits and the second in the next ten bits) without using additional space.\n\n![together](../Figures/1470/Slide3.PNG)\n\nWe will store the last $n$ numbers with the first $n$ numbers of the $nums$ array. Thus, $x_i$ and $y_i$ are stored at $i^{th}$ index.\n\nAnd then we can store the numbers at their respective positions after starting iteration on the stored pairs from index $(n - 1)$ to index $0$.    \nWe would like to move in this direction (right to left) because, even if the right side elements are overwritten, we will not use those overwritten elements again because the current index ($i$) having a number pair will always be less or equal to the updated cells ($i <= 2 * i$ and $2 * i + 1$).  \nThus, the overwritten elements would have already been placed at their correct positions earlier.\n\n![map_array](../Figures/1470/Slide4.PNG)\n\n\n**Storing two numbers together:**      \n   \n$a$ is the first number, $b$ is the second number.  \n  \nWe can left shift $b$ by $10$ bits and take its bitwise-OR with $a$.     \nWhen we take any bit's bitwise-OR with $0$, it results in the same bit, and $1$ results in $1$.      \n\nThe first $10$ bits in $b_{new}$ are $0$. So, when we take its bitwise-OR with $a$, the result's first $10$ bits will have $a$'s $10$ bits, and the next $10$ bits of $a$ are $0$, so the result's next $10$ will store $b$'s $10$ bits there.     \nThus the final result has bits of both $a$ and $b$.\n\n![store](../Figures/1470/Slide5.PNG)\n\n**Extracting both numbers:**       \n  \n$\\text{result}$ is the number having both numbers, $a$ (first number) and, $b$ (second number).    \n\n$\\text{result}$'s first $10$ bits contain $a$. Thus, we can retrieve it by taking bitwise-AND with $0000000000 \\space 1111111111$ ($1023$ in decimal).     \nWhen we take a bit's AND with $1$ it results in the same bit and with $0$ results in $0$.  \n    \n$\\text{result}$'s next $10$ bits contain $b$, thus we can retrieve it by right shifting it by $10$ bits.\n\n![extract](../Figures/1470/Slide6.PNG)\n\n\n#### Algorithm\n\n1. Iterate on the `nums` array from index `i = n` to `2 * n - 1`:\n    - Store the element $y_{i + 1}$, that is, `nums[i]` with $x_{i + 1}$ at index `(i - n)`, using bit manipulation as discussed previously.\n2. Iterate from index `n - 1` to `0`, and at each index `i`:\n    - Extract both `firstNumber` and `secondNumber` using bit manipulation and store them at their respective indices `2 * i` and `2 * i + 1` in the `nums` array.\n3. Return the `nums` array.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/iYTUkbNy/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"iYTUkbNy\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $2 * n$ is the number of elements in the `nums` array.\n\n* Time complexity: $O(n)$.          \n  - We only iterate on the $n$ elements of the `nums` array twice, which takes us $O(n)$ time.\n* Space complexity: $O(1)$.\n  - We are not using any additional space.\n\n<br />\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

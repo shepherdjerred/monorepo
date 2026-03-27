@@ -1,0 +1,143 @@
+{
+  "questionId": "1436",
+  "questionFrontendId": "1311",
+  "title": "Get Watched Videos by Your Friends",
+  "titleSlug": "get-watched-videos-by-your-friends",
+  "difficulty": "Medium",
+  "content": "<p>There are <code>n</code> people, each person has a unique <em>id</em> between <code>0</code> and <code>n-1</code>. Given the arrays <code>watchedVideos</code> and <code>friends</code>, where <code>watchedVideos[i]</code> and <code>friends[i]</code> contain the list of watched videos and the list of friends respectively for the person with <code>id = i</code>.</p>\n\n<p>Level <strong>1</strong> of videos are all watched videos by your&nbsp;friends, level <strong>2</strong> of videos are all watched videos by the friends of your&nbsp;friends and so on. In general, the level <code>k</code> of videos are all&nbsp;watched videos by people&nbsp;with the shortest path <strong>exactly</strong> equal&nbsp;to&nbsp;<code>k</code> with you. Given your&nbsp;<code>id</code> and the <code>level</code> of videos, return the list of videos ordered by their frequencies (increasing). For videos with the same frequency order them alphabetically from least to greatest.&nbsp;</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/01/02/leetcode_friends_1.png\" style=\"width: 144px; height: 200px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> watchedVideos = [[&quot;A&quot;,&quot;B&quot;],[&quot;C&quot;],[&quot;B&quot;,&quot;C&quot;],[&quot;D&quot;]], friends = [[1,2],[0,3],[0,3],[1,2]], id = 0, level = 1\n<strong>Output:</strong> [&quot;B&quot;,&quot;C&quot;] \n<strong>Explanation:</strong> \nYou have id = 0 (green color in the figure) and your friends are (yellow color in the figure):\nPerson with id = 1 -&gt; watchedVideos = [&quot;C&quot;]&nbsp;\nPerson with id = 2 -&gt; watchedVideos = [&quot;B&quot;,&quot;C&quot;]&nbsp;\nThe frequencies of watchedVideos by your friends are:&nbsp;\nB -&gt; 1&nbsp;\nC -&gt; 2\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/01/02/leetcode_friends_2.png\" style=\"width: 144px; height: 200px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> watchedVideos = [[&quot;A&quot;,&quot;B&quot;],[&quot;C&quot;],[&quot;B&quot;,&quot;C&quot;],[&quot;D&quot;]], friends = [[1,2],[0,3],[0,3],[1,2]], id = 0, level = 2\n<strong>Output:</strong> [&quot;D&quot;]\n<strong>Explanation:</strong> \nYou have id = 0 (green color in the figure) and the only friend of your friends is the person with id = 3 (yellow color in the figure).\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == watchedVideos.length ==&nbsp;friends.length</code></li>\n\t<li><code>2 &lt;= n&nbsp;&lt;= 100</code></li>\n\t<li><code>1 &lt;=&nbsp;watchedVideos[i].length &lt;= 100</code></li>\n\t<li><code>1 &lt;=&nbsp;watchedVideos[i][j].length &lt;= 8</code></li>\n\t<li><code>0 &lt;= friends[i].length &lt; n</code></li>\n\t<li><code>0 &lt;= friends[i][j]&nbsp;&lt; n</code></li>\n\t<li><code>0 &lt;= id &lt; n</code></li>\n\t<li><code>1 &lt;= level &lt; n</code></li>\n\t<li>if&nbsp;<code>friends[i]</code> contains <code>j</code>, then <code>friends[j]</code> contains <code>i</code></li>\n</ul>\n",
+  "hints": [
+    "Do BFS to find the kth level friends.",
+    "Then collect movies saw by kth level friends and sort them accordingly."
+  ],
+  "metaData": "{\n  \"name\": \"watchedVideosByFriends\",\n  \"params\": [\n    {\n      \"name\": \"watchedVideos\",\n      \"type\": \"list<list<string>>\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"friends\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"id\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"level\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<string>\"\n  },\n  \"manual\": false\n}",
+  "stats": "{\"totalAccepted\": \"40.8K\", \"totalSubmission\": \"77.7K\", \"totalAcceptedRaw\": 40785, \"totalSubmissionRaw\": 77734, \"acRate\": \"52.5%\"}",
+  "likes": 484,
+  "dislikes": 454,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[\"A\",\"B\"],[\"C\"],[\"B\",\"C\"],[\"D\"]]\n[[1,2],[0,3],[0,3],[1,2]]\n0\n1",
+    "[[\"A\",\"B\"],[\"C\"],[\"B\",\"C\"],[\"D\"]]\n[[1,2],[0,3],[0,3],[1,2]]\n0\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"guidewire\", \"name\": \"Guidewire\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> watchedVideosByFriends(vector<vector<string>>& watchedVideos, vector<vector<int>>& friends, int id, int level) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<String> watchedVideosByFriends(List<List<String>> watchedVideos, int[][] friends, int id, int level) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def watchedVideosByFriends(self, watchedVideos: List[List[str]], friends: List[List[int]], id: int, level: int) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def watchedVideosByFriends(self, watchedVideos, friends, id, level):\n        \"\"\"\n        :type watchedVideos: List[List[str]]\n        :type friends: List[List[int]]\n        :type id: int\n        :type level: int\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[][]} watchedVideos\n * @param {number[][]} friends\n * @param {number} id\n * @param {number} level\n * @return {string[]}\n */\nvar watchedVideosByFriends = function(watchedVideos, friends, id, level) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function watchedVideosByFriends(watchedVideos: string[][], friends: number[][], id: number, level: number): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<string> WatchedVideosByFriends(IList<IList<string>> watchedVideos, int[][] friends, int id, int level) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** watchedVideosByFriends(char*** watchedVideos, int watchedVideosSize, int* watchedVideosColSize, int** friends, int friendsSize, int* friendsColSize, int id, int level, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func watchedVideosByFriends(watchedVideos [][]string, friends [][]int, id int, level int) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun watchedVideosByFriends(watchedVideos: List<List<String>>, friends: Array<IntArray>, id: Int, level: Int): List<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func watchedVideosByFriends(_ watchedVideos: [[String]], _ friends: [[Int]], _ id: Int, _ level: Int) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn watched_videos_by_friends(watched_videos: Vec<Vec<String>>, friends: Vec<Vec<i32>>, id: i32, level: i32) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[][]} watched_videos\n# @param {Integer[][]} friends\n# @param {Integer} id\n# @param {Integer} level\n# @return {String[]}\ndef watched_videos_by_friends(watched_videos, friends, id, level)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[][] $watchedVideos\n     * @param Integer[][] $friends\n     * @param Integer $id\n     * @param Integer $level\n     * @return String[]\n     */\n    function watchedVideosByFriends($watchedVideos, $friends, $id, $level) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> watchedVideosByFriends(List<List<String>> watchedVideos, List<List<int>> friends, int id, int level) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def watchedVideosByFriends(watchedVideos: List[List[String]], friends: Array[Array[Int]], id: Int, level: Int): List[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec watched_videos_by_friends(watched_videos :: [[String.t]], friends :: [[integer]], id :: integer, level :: integer) :: [String.t]\n  def watched_videos_by_friends(watched_videos, friends, id, level) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec watched_videos_by_friends(WatchedVideos :: [[unicode:unicode_binary()]], Friends :: [[integer()]], Id :: integer(), Level :: integer()) -> [unicode:unicode_binary()].\nwatched_videos_by_friends(WatchedVideos, Friends, Id, Level) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (watched-videos-by-friends watchedVideos friends id level)\n  (-> (listof (listof string?)) (listof (listof exact-integer?)) exact-integer? exact-integer? (listof string?))\n  )"
+    }
+  ],
+  "solution": null
+}

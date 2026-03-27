@@ -1,0 +1,141 @@
+{
+  "questionId": "1349",
+  "questionFrontendId": "1232",
+  "title": "Check If It Is a Straight Line",
+  "titleSlug": "check-if-it-is-a-straight-line",
+  "difficulty": "Easy",
+  "content": "<p>You are given an integer array&nbsp;<code>coordinates</code>, <code>coordinates[i] = [x, y]</code>, where <code>[x, y]</code> represents the coordinate of a point. Check if these points&nbsp;make a straight line in the XY plane.</p>\n\n<p>&nbsp;</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/10/15/untitled-diagram-2.jpg\" style=\"width: 336px; height: 336px;\" /></p>\n\n<pre>\n<strong>Input:</strong> coordinates = [[1,2],[2,3],[3,4],[4,5],[5,6],[6,7]]\n<strong>Output:</strong> true\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/10/09/untitled-diagram-1.jpg\" style=\"width: 348px; height: 336px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> coordinates = [[1,1],[2,2],[3,4],[4,5],[5,6],[7,7]]\n<strong>Output:</strong> false\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;=&nbsp;coordinates.length &lt;= 1000</code></li>\n\t<li><code>coordinates[i].length == 2</code></li>\n\t<li><code>-10^4 &lt;=&nbsp;coordinates[i][0],&nbsp;coordinates[i][1] &lt;= 10^4</code></li>\n\t<li><code>coordinates</code>&nbsp;contains no duplicate point.</li>\n</ul>\n",
+  "hints": [
+    "If there're only 2 points, return true.",
+    "Check if all other points lie on the line defined by the first 2 points.",
+    "Use cross product to check collinearity."
+  ],
+  "metaData": "{\n  \"name\": \"checkStraightLine\",\n  \"params\": [\n    {\n      \"name\": \"coordinates\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"305.5K\", \"totalSubmission\": \"763.5K\", \"totalAcceptedRaw\": 305457, \"totalSubmissionRaw\": 763514, \"acRate\": \"40.0%\"}",
+  "likes": 2702,
+  "dislikes": 295,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[1,2],[2,3],[3,4],[4,5],[5,6],[6,7]]",
+    "[[1,1],[2,2],[3,4],[4,5],[5,6],[7,7]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"datadog\", \"name\": \"Datadog\"}, {\"timesEncountered\": 2, \"slug\": \"palantir-technologies\", \"name\": \"Palantir Technologies\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Geometry",
+      "slug": "geometry"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool checkStraightLine(vector<vector<int>>& coordinates) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean checkStraightLine(int[][] coordinates) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def checkStraightLine(self, coordinates: List[List[int]]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def checkStraightLine(self, coordinates):\n        \"\"\"\n        :type coordinates: List[List[int]]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} coordinates\n * @return {boolean}\n */\nvar checkStraightLine = function(coordinates) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function checkStraightLine(coordinates: number[][]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool CheckStraightLine(int[][] coordinates) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool checkStraightLine(int** coordinates, int coordinatesSize, int* coordinatesColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func checkStraightLine(coordinates [][]int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun checkStraightLine(coordinates: Array<IntArray>): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func checkStraightLine(_ coordinates: [[Int]]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn check_straight_line(coordinates: Vec<Vec<i32>>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} coordinates\n# @return {Boolean}\ndef check_straight_line(coordinates)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $coordinates\n     * @return Boolean\n     */\n    function checkStraightLine($coordinates) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool checkStraightLine(List<List<int>> coordinates) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def checkStraightLine(coordinates: Array[Array[Int]]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec check_straight_line(coordinates :: [[integer]]) :: boolean\n  def check_straight_line(coordinates) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec check_straight_line(Coordinates :: [[integer()]]) -> boolean().\ncheck_straight_line(Coordinates) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (check-straight-line coordinates)\n  (-> (listof (listof exact-integer?)) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1854",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach: Slope Property\n\n**Intuition**\n\nWe are given $N$ points `(x, y)`, where `x` and `y` represent the coordinates. We must return `true` if the points make a straight line and `false` otherwise.\n\nTo solve this problem, we will use the slope property of a straight line. The slope of a line is defined as the change in Y coordinates with respect to the change in X coordinates of any two points on the line.\n\n> Slope =    $\\frac{\\Delta Y}{\\Delta X}$\n\nThe property that can be used to solve this problem is that the slope between any two points on a straight line will be the same. If we choose two points from the given list of points, the value of `Slope` as defined above should be the same. \n\nWe don't actually need to check all pairs of points, but only all slopes relative to one fixed point. We will choose to measure from the point at index $0$ and see if all slopes are the same.\n\n![fig](../Figures/1232/1232A.png)\n\nSo if we have three points `p0, p1, p2`, and the slope using `p0 and p1` is $\\frac{\\Delta Y1}{\\Delta X1}$ and the slope between `p0 and p2` is $\\frac{\\Delta Y2}{\\Delta X2}$, we will check if these two slopes are equal or not, i.e. $\\frac{\\Delta Y1}{\\Delta X1}$ = $\\frac{\\Delta Y2}{\\Delta X2}$ . Since $\\Delta X$ can be zero as well and in that case dividing by it would cause an issue. We can tweak the previous equality equation to convert division into multiplication to avoid the divide by zero issues. The new equation would be:\n\n>  $\\Delta Y1$ * $\\Delta X2$ = $\\Delta Y2$ * $\\Delta X1$\n\n**Algorithm**\n\n1. Find the $\\Delta X$ and $\\Delta Y$ using the points at index `0` and `1`.\n2. Iterate over the indices from `2` to the end of the list, and for each index `i` find the $\\Delta X$, $\\Delta Y$ for points at index `0` and `i`.\n3. Compare the slope calculated in step #1 with that of step #2 using the previous equation.\n4. If the equation is not satisfied, return `false`.\n5. Otherwise, at the end of the loop return `true`.\n\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/nZywPKA7/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"nZywPKA7\"></iframe>\n\n**Complexity Analysis**\n\nHere $N$ is the number of points in the list `coordinates`.\n\n* Time complexity: $O(N)$.\n\n  We need to iterate over every point only once, and hence the total time complexity would be equal to $O(N)$.\n\n* Space complexity: $O(1)$.\n\n  We don't require any extra space, and hence the space complexity would be constant.\n  <br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

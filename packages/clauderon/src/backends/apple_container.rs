@@ -529,8 +529,6 @@ impl AppleContainerBackend {
             args.extend([
                 "-e".to_owned(),
                 "GH_TOKEN=clauderon-proxy".to_owned(),
-                "-e".to_owned(),
-                "GITHUB_TOKEN=clauderon-proxy".to_owned(),
             ]);
 
             match agent {

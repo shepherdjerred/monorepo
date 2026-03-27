@@ -1,0 +1,137 @@
+{
+  "questionId": "1146",
+  "questionFrontendId": "1071",
+  "title": "Greatest Common Divisor of Strings",
+  "titleSlug": "greatest-common-divisor-of-strings",
+  "difficulty": "Easy",
+  "content": "<p>For two strings <code>s</code> and <code>t</code>, we say &quot;<code>t</code> divides <code>s</code>&quot; if and only if <code>s = t + t + t + ... + t + t</code> (i.e., <code>t</code> is concatenated with itself one or more times).</p>\n\n<p>Given two strings <code>str1</code> and <code>str2</code>, return <em>the largest string </em><code>x</code><em> such that </em><code>x</code><em> divides both </em><code>str1</code><em> and </em><code>str2</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">str1 = &quot;ABCABC&quot;, str2 = &quot;ABC&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;ABC&quot;</span></p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">str1 = &quot;ABABAB&quot;, str2 = &quot;ABAB&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;AB&quot;</span></p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">str1 = &quot;LEET&quot;, str2 = &quot;CODE&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;&quot;</span></p>\n</div>\n\n<p><strong class=\"example\">Example 4:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">str1 = &quot;AAAAAB&quot;, str2 = &quot;AAA&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;&quot;</span>​​​​​​​</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= str1.length, str2.length &lt;= 1000</code></li>\n\t<li><code>str1</code> and <code>str2</code> consist of English uppercase letters.</li>\n</ul>\n",
+  "hints": [
+    "The greatest common divisor must be a prefix of each string, so we can try all prefixes."
+  ],
+  "metaData": "{\n  \"name\": \"gcdOfStrings\",\n  \"params\": [\n    {\n      \"name\": \"str1\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"str2\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}\n",
+  "stats": "{\"totalAccepted\": \"937.3K\", \"totalSubmission\": \"1.8M\", \"totalAcceptedRaw\": 937257, \"totalSubmissionRaw\": 1750038, \"acRate\": \"53.6%\"}",
+  "likes": 6011,
+  "dislikes": 1658,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Find Greatest Common Divisor of Array\", \"titleSlug\": \"find-greatest-common-divisor-of-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Smallest Even Multiple\", \"titleSlug\": \"smallest-even-multiple\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find the Maximum Factor Score of Array\", \"titleSlug\": \"find-the-maximum-factor-score-of-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"ABCABC\"\n\"ABC\"",
+    "\"ABABAB\"\n\"ABAB\"",
+    "\"LEET\"\n\"CODE\"",
+    "\"AAAAAB\"\n\"AAA\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 17, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 16, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 11, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 7, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}]}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string gcdOfStrings(string str1, string str2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String gcdOfStrings(String str1, String str2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def gcdOfStrings(self, str1: str, str2: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def gcdOfStrings(self, str1, str2):\n        \"\"\"\n        :type str1: str\n        :type str2: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} str1\n * @param {string} str2\n * @return {string}\n */\nvar gcdOfStrings = function(str1, str2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function gcdOfStrings(str1: string, str2: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string GcdOfStrings(string str1, string str2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* gcdOfStrings(char* str1, char* str2) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func gcdOfStrings(str1 string, str2 string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun gcdOfStrings(str1: String, str2: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func gcdOfStrings(_ str1: String, _ str2: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn gcd_of_strings(str1: String, str2: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} str1\n# @param {String} str2\n# @return {String}\ndef gcd_of_strings(str1, str2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $str1\n     * @param String $str2\n     * @return String\n     */\n    function gcdOfStrings($str1, $str2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String gcdOfStrings(String str1, String str2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def gcdOfStrings(str1: String, str2: String): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec gcd_of_strings(str1 :: String.t, str2 :: String.t) :: String.t\n  def gcd_of_strings(str1, str2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec gcd_of_strings(Str1 :: unicode:unicode_binary(), Str2 :: unicode:unicode_binary()) -> unicode:unicode_binary().\ngcd_of_strings(Str1, Str2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (gcd-of-strings str1 str2)\n  (-> string? string? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1679",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nIn this problem, we are looking for the Greatest Common Divisor of two strings, which for convenience we will consider as the **GCD string**. To remove ambiguity, here we regard:\n\n- all strings that divides both str1 and str2 as **divisible strings**.\n- the longest string among all **divisible strings** as the **GCD string**.\n\n\n---\n\n### Approach 1: Brute Force\n\n#### Intuition   \n\nWe start by introducing a brute force method that checks every possible string until we find the GCD string. Before we do that, let's clarify a few things:\n\n> What are the possible candidate strings?\n\nHere we make use of prefix strings. If a string `base` is the GCD string, it must be a prefix of both `str1` and `str2`. So instead of trying every combination of characters, we instead just take each prefix string of `str1` (or `str2`) and check if it is the GCD string.\n\n\n> What is the order we should check in?\n\n\nAs the problem indicates that we should look for the greatest common divisor string (longest length), we should start with the longest possible prefix string, which is the shorter string between `str1` and `str2` (any longer string is guaranteed not to be a divisible string since it will be longer than at least one string). If the current `base` is not valid, we can check the next shorter prefix by removing the last character from `base`.\n\n\n![img](../Figures/1071/bf1.png)\n\n> How to verify if `base` is the GCD string?\n\nIf `base` is the GCD string, then both `str1` and `str2` are made up of multiples of `base`, so we just need to check if `str1` and `str2` can be made up of multiple `base` concatenations. We first check if the length of `str` is divisible by the length of `base`. If so, we multiply `base` by the number of times the lengths divide and check if the made-up string equals `str`.\n\n\n![img](../Figures/1071/bf2.png)\n\n\n<br>\n\n#### Algorithm\n\n1) Find the shorter string among `str1` and `str2`, without loss of generality, let it be `str1`. \n2) Start with `base = str1`, and check if both `str1` and `str2` are made of multiples of `base`.\n\n    - If so, return `base`.\n    - Otherwise, we shall try a shorter string by removing the last character from `base`.\n3) If we have checked all prefix strings without finding the GCD string, return `\"\"`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/5W6dtQmk/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"5W6dtQmk\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $m, n$ be the lengths of the two input strings `str1` and `str2`.\n\n* Time complexity: $O(\\min(m, n) \\cdot (m + n))$\n    We checked every prefix string `base` of the shorter string among `str1` and `str2`, and verify if both strings are made by multiples of `base`. There are up to $\\min(m, n)$ prefix strings to verify and each check involves iterating over the two input strings to check if the current `base` is the GCD string, which costs $O(m + n)$. Therefore, the overall time complexity is $O(\\min(m, n) \\cdot (m + n))$.\n    \n\n* Space complexity: $O(\\min(m, n))$\n    We need to keep a copy of `base` in each iteration, which takes $O(\\min(m, n))$ space.\n<br/>\n\n\n\n---\n\n### Approach 2: Greatest Common Divisor\n\n#### Intuition   \n\nHere is a more mathematical approach to the problem. Note that this approach is more advanced/elegant and you should not feel discouraged if you do not come up with it on the spot in an interview.\n\n\n**1. How to verify if there exists any divisible string?**\n\n\nSuppose there exists a divisible string `base`, we can write `str1` and `str2` in the form of multiples of `base`. Take the following picture as an example.\n\n\n\n![img](../Figures/1071/gcd1.png)\n\nSince both strings contains multiples of the identical segment `base`, their concatenation must be consistent, regardless of the order `(str1 + str2 = str2 + str1)`.\n\n\n![img](../Figures/1071/gcd2.png)\n\nTherefore, we need to check if two concatenations made by `str1` and `str2` in both orders are the same. If they are not consistent, it means there is no divisible strings and we should return `\"\"` as required. Otherwise, there exists a GCD string of `str1` and `str2`.\n\n\n\n**2. If there are divisible strings, what is the length of the GCD string?**\n\n \nWe focus on the substring `gcdBase` whose length equals the greatest common divisor of the lengths of `str1` and `str2` (take the above picture as an example, the lengths of `str1` and `str2` are `9` and `6`, so we focus on the substring of length `3`, which is `gcdBase = ABC`). We will show that if there exists divisible strings, then the `gcdBase` must be the GCD string.\n\n\nFor convenience, we refer to the length of `str1`, `str2` and `gcdBase` as `m`, `n`, `gcdLength` respectively.\n\n\n> Is it possible for the GCD string to be shorter than `gcdBase`?\n\n\nNo. We can prove it by contradiction. Assume that a string `shorterBase` is shorter than `gcdBase` (`shorterLength < gcdLength`, and `gcdBase` is not the GCD string). \n\n\n- `shorterBase` is a divisible string, thus `shorterLength` is a divisor of `m` and `n`.\n- Since `gcdLength` is the greatest common divisor of `m` and `n`, `gcdLength` is divisible by `shorterLength`.\n- Both `str1` and `str2` contains multiples of `gcdBase`, so `gcdBase` is also a divisible string, which means that the GCD string is at least as long as `gcdBase`.\n\n- Therefore it is not possible for the GCD string to be shorter than `gcdBase`.\n\n\nLet's look at the following example where `gcdBase = ABCABC`. Note that we are not sure if `gcdBase` is the GCD string yet.\n\n\n![img](../Figures/1071/exp_2.png)\n\nThere exists a shorter substring `shorterBase = ABC` which divides both `str1` and `str2`. Can this divisible string be the GCD of strings? \n\n![img](../Figures/1071/exp_3.png)\n\nBoth `str1` and `str2` contain multiples of `shorterBase`.\n\n\n![img](../Figures/1071/exp_4.png)\n\nRecall that the length of `gcdBase` is the GCD of the lengths of `str1` and `str2`, thus it is divisible by the length of `shorterBase`.\n\n![img](../Figures/1071/exp_5.png)\n\nSince `gcdLength` is a divisor of both `m` and `n`, both `str1` and `str2` contain multiples of `gcdBase`, thus `gcdBase` is also a divisible string.\n\n\n![img](../Figures/1071/exp_6.png)\n\nWe have shown that if there is a shorter string that divides both str1 and str2, then `gcdBase` is also a divisible string, so a divisible string shorter than `gcdBase` can never be the GCD  string.\n\n\n\n\n> Is it possible for the a string longer than `gcdBase` to be divisible, and thus `gcdBase` is not the GCD string?\n\n\nNo. Assume that there exists a string `longerBase` that is a divisible string with length `longerLength > gcdLength`, \n\n\n- Since `longerBase` is a divisible string, its length `longerLength` must be a divisor of `m` and `n`. \n\n- This contradicts the assumption that `gcdLength` is the GCD of `m` and `n`. \n\n- Therefore there doesn't exist a divisible string longer than `gcdBase`.\n\n\n\n**In conclusion, if there exists divisible strings, the GCD string must be `gcdBase`.**\n\n\n\n<br>\n\n#### Algorithm\n\n1) Check if the concatenations of `str1` and `str2` in different orders are the same. \n    - If not, return `\"\"`.\n\n2) Get the GCD `gcdLength` of the two lengths of `str1` and `str2`.\n\n3) Return the prefix string with a length of `gcdLength` of either `str1` or `str2` as the answer.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/KJ6TjSzk/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"KJ6TjSzk\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $m, n$ be the lengthes of the two input strings `str1` and `str2`.\n\n* Time complexity: $O(m + n)$\n    - We need to compare the two concatenations of length $O(m + n)$, it takes $O(m + n)$ time.\n    - We calculate the GCD using binary Euclidean algorithm, it takes $\\log(m \\cdot n)$ time.\n    - To sum up, the overall time complexity is $O(m + n)$.\n    \n\n* Space complexity: $O(m + n)$\n    We need to compare the two concatenations of length $O(m + n)$. \n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

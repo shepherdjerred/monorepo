@@ -1,0 +1,145 @@
+{
+  "questionId": "1400",
+  "questionFrontendId": "1275",
+  "title": "Find Winner on a Tic Tac Toe Game",
+  "titleSlug": "find-winner-on-a-tic-tac-toe-game",
+  "difficulty": "Easy",
+  "content": "<p><strong>Tic-tac-toe</strong> is played by two players <code>A</code> and <code>B</code> on a <code>3 x 3</code> grid. The rules of Tic-Tac-Toe are:</p>\n\n<ul>\n\t<li>Players take turns placing characters into empty squares <code>&#39; &#39;</code>.</li>\n\t<li>The first player <code>A</code> always places <code>&#39;X&#39;</code> characters, while the second player <code>B</code> always places <code>&#39;O&#39;</code> characters.</li>\n\t<li><code>&#39;X&#39;</code> and <code>&#39;O&#39;</code> characters are always placed into empty squares, never on filled ones.</li>\n\t<li>The game ends when there are <strong>three</strong> of the same (non-empty) character filling any row, column, or diagonal.</li>\n\t<li>The game also ends if all squares are non-empty.</li>\n\t<li>No more moves can be played if the game is over.</li>\n</ul>\n\n<p>Given a 2D integer array <code>moves</code> where <code>moves[i] = [row<sub>i</sub>, col<sub>i</sub>]</code> indicates that the <code>i<sup>th</sup></code> move will be played on <code>grid[row<sub>i</sub>][col<sub>i</sub>]</code>. return <em>the winner of the game if it exists</em> (<code>A</code> or <code>B</code>). In case the game ends in a draw return <code>&quot;Draw&quot;</code>. If there are still movements to play return <code>&quot;Pending&quot;</code>.</p>\n\n<p>You can assume that <code>moves</code> is valid (i.e., it follows the rules of <strong>Tic-Tac-Toe</strong>), the grid is initially empty, and <code>A</code> will play first.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/09/22/xo1-grid.jpg\" style=\"width: 244px; height: 245px;\" />\n<pre>\n<strong>Input:</strong> moves = [[0,0],[2,0],[1,1],[2,1],[2,2]]\n<strong>Output:</strong> &quot;A&quot;\n<strong>Explanation:</strong> A wins, they always play first.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/09/22/xo2-grid.jpg\" style=\"width: 244px; height: 245px;\" />\n<pre>\n<strong>Input:</strong> moves = [[0,0],[1,1],[0,1],[0,2],[1,0],[2,0]]\n<strong>Output:</strong> &quot;B&quot;\n<strong>Explanation:</strong> B wins.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/09/22/xo3-grid.jpg\" style=\"width: 244px; height: 245px;\" />\n<pre>\n<strong>Input:</strong> moves = [[0,0],[1,1],[2,0],[1,0],[1,2],[2,1],[0,1],[0,2],[2,2]]\n<strong>Output:</strong> &quot;Draw&quot;\n<strong>Explanation:</strong> The game ends in a draw since there are no moves to make.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= moves.length &lt;= 9</code></li>\n\t<li><code>moves[i].length == 2</code></li>\n\t<li><code>0 &lt;= row<sub>i</sub>, col<sub>i</sub> &lt;= 2</code></li>\n\t<li>There are no repeated elements on <code>moves</code>.</li>\n\t<li><code>moves</code> follow the rules of tic tac toe.</li>\n</ul>\n",
+  "hints": [
+    "It's straightforward to check if A or B won or not, check for each row/column/diag if all the three are the same.",
+    "Then if no one wins, the game is a draw iff the board is full, i.e. moves.length = 9 otherwise is pending."
+  ],
+  "metaData": "{\n  \"name\": \"tictactoe\",\n  \"params\": [\n    {\n      \"name\": \"moves\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"168.5K\", \"totalSubmission\": \"308.8K\", \"totalAcceptedRaw\": 168458, \"totalSubmissionRaw\": 308768, \"acRate\": \"54.6%\"}",
+  "likes": 1629,
+  "dislikes": 370,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Categorize Box According to Criteria\", \"titleSlug\": \"categorize-box-according-to-criteria\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[0,0],[2,0],[1,1],[2,1],[2,2]]",
+    "[[0,0],[1,1],[0,1],[0,2],[1,0],[2,0]]",
+    "[[0,0],[1,1],[2,0],[1,0],[1,2],[2,1],[0,1],[0,2],[2,2]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 9, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"zoho\", \"name\": \"Zoho\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string tictactoe(vector<vector<int>>& moves) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String tictactoe(int[][] moves) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def tictactoe(self, moves: List[List[int]]) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def tictactoe(self, moves):\n        \"\"\"\n        :type moves: List[List[int]]\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} moves\n * @return {string}\n */\nvar tictactoe = function(moves) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function tictactoe(moves: number[][]): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string Tictactoe(int[][] moves) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* tictactoe(int** moves, int movesSize, int* movesColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func tictactoe(moves [][]int) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun tictactoe(moves: Array<IntArray>): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func tictactoe(_ moves: [[Int]]) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn tictactoe(moves: Vec<Vec<i32>>) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} moves\n# @return {String}\ndef tictactoe(moves)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $moves\n     * @return String\n     */\n    function tictactoe($moves) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String tictactoe(List<List<int>> moves) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def tictactoe(moves: Array[Array[Int]]): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec tictactoe(moves :: [[integer]]) :: String.t\n  def tictactoe(moves) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec tictactoe(Moves :: [[integer()]]) -> unicode:unicode_binary().\ntictactoe(Moves) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (tictactoe moves)\n  (-> (listof (listof exact-integer?)) string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1168",
+    "content": "[TOC]\n\n## Solution\n\n--- \n### Overview\n\nTic Tac Toe is one of the classic games with pretty simple rules. Two players take turns placing characters on an `n` by `n` board. The first player that connects `n` consecutive characters horizontally, vertically, or diagonally wins the game. Traditionally (and in this problem), the board width is fixed at 3. However, to help demonstrate the efficiency of each approach, we will refer to the board width as `n` throughout this article.\n\nIn this problem, we are looking to determine the winner of the game (if one exists). If neither player has won, then we must determine if the game is ongoing or if it has ended in a draw.\n\n\nThe most intuitive approach is to check, after each move, if the current player has won, which can be implemented by different methods. Here we introduce two approaches to solve this problem, the first one is the most intuitive one, while the second one has some optimization.\n\n<br/>\n\n---\n\n### Approach 1: Brute Force\n\n\n**Intuition**\n\nSince we have to find if the current player has won, let's take a look at what the winning conditions are. The figure below illustrates the 4 winning conditions according to the rules.\n\n![limits](../Figures/1275/1275_1.png)\n\nThe above diagram shows that a player can win by connecting `n` consecutive characters in a row, column, diagonal, or anti-diagonal.\n\n\n\nThen, how do we check if any player has won so far? \n\n![limits](../Figures/1275/1275_2.png)\n\nWe can start by creating an `n` by `n` grid that represents the original board. \n\nNext, let's take a closer look at the previous winning conditions. Notice that a character located at `[row, col]` will be on the diagonal when its column index equals its row index, that is `row = col`.  Likewise, a character will be on the anti-diagonal when then the sum of its row index and column index is equal to `n - 1`, that is `row + col = n - 1`.\n\nSuppose the current player marks the location `[row, col]`, where `row` and `col` stand for the row index and column index on board, respectively. If row `row` or column `col` has `n` characters from the same player after this move, then the current player wins. \n\nNow, after each move, we can determine if a player has won by checking each row, column, and diagonal. The next question is, how will we determine the result after all moves have been made? We need to find a way to handle cases where neither player wins.\n\n![limits](../Figures/1275/1275_5.png)\n\nIf neither player has won after all of the moves have been played, we need to check the length of `moves`. There are two possibilities: \"Draw\" if the board is full, meaning the length of `moves` is `n * n`, or \"Pending\" otherwise. \n\nNow, we are ready to implement a brute force solution.\n\n\n**Algorithm**\n\n1) Initialize a 2-dimensional array `board` of size `n` by `n` representing an empty board.\n\n2) For each new move `[row, col]`, mark the relative position `board[row][col]` on `board` with the player's id. Suppose player one's id is 1, and player two's id is -1.\n\n3) Then, check if this move meets any of the winning conditions:\n\n\n    - Check if all cells in the current row are filled with characters from the current player. We traverse the row from column `0` to column `n - 1` while keeping the row index constant.\n    - Check if all cells in the current column are filled with characters from the current player. We traverse the column from row `0` to row `n - 1` while keeping the column index constant.\n    - Check if this move is on the diagonal; that is, check if `row` equals `col`. If so, traverse the entire diagonal and check if all positions on the diagonal contain characters from this player.\n    - Check if this move is on the anti-diagonal; that is, check if `row + col` equals `n - 1`. If so, traverse the entire anti-diagonal and check if all positions on the anti-diagonal contain characters from this player.\n\n\n4) If there is no winner after all of the moves have been played, we will check if the entire board is filled. If so, return \"Draw\", otherwise return \"Pending\", meaning the game is still on. That is, check if the length of `moves` equals the number of cells on the `n` by `n` board.    \n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/JhtTfQu9/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"JhtTfQu9\"></iframe>\n\n\n**Complexity Analysis**\n\nLet `n` be the length of the board and `m` be the length of input `moves`.\n\n* Time complexity: $$O(m \\cdot n)$$\n\n    For every move, we need to traverse the same row, column, diagonal, and anti-diagonal, which takes $$O(n)$$ time. \n    \n\n* Space complexity: $$O(n^2)$$\n\n    We use an `n` by `n` array to record every move.\n\n<br/>\n\n---\n### Approach 2: Record Each Move\n\n**Intuition**\n\nInstead of recording each move in a `n` by `n` grid, as we did in the first approach, could we find a more effective way to record the previous moves?\nThe answer is Yes.\n\n\n>Let's take a look at the 4 winning conditions again.\n\n![limits](../Figures/1275/1275_1.png)\n\n\nIn the first approach, since we created the board and recorded each move, we had to traverse the entire line to check if all marks were of the same type.\n\n>However, this method stores way more information than we actually need, it also results in an increased time and space complexity.\n\nWe do not need to know where these marks are located in order to solve the problem. What we do need to know is: after move `[row, col]`, does any row, column, or diagonal meet the winning condition?\n\n>Therefore, we could just record the result of each row and column instead of the position of each move precisely.\n\n\nNow the question becomes: How should we record the result? Let's take a look at the figure below to find out. \n\n![limits](../Figures/1275/1275_3.png)\n\n>Notice that there are many unique ways to fill a single row. However, only two cases are considered as a win. Recall that in the first approach, we set the value of players A and B to 1 and -1, respectively. Here we can take advantage of these distinct values again.\n\nSuppose we let the value of player A equal `1` and the value of player B equal `-1`. There are other ways to assign value, but `1` and `-1` are the most convenient. \n\nTherefore, a player will win if the value of any line equals `n` or `-n`. Thus after a move `[row, col]`, we could calculate the value of row `row` and column `col` and check if the absolute value equals `n`. If this move is placed on the diagonal or the anti-diagonal, then we will check if the absolute value of the relative value equals `n` as well. \n\nThus, we just need to build two arrays to represent the values for each row and column. For instance, `rows = [0, 0, 0]`, represents the initial value of `row_1`, `row_2`, and `row_3`, and the two values `diag` and `anti_diag` for value on diagonal and anti-diagonal. \n\n\n\nTo see how this will work, consider the two example moves shown below.\n\n![limits](../Figures/1275/1275_4.png)\n\nAfter player A plays at `[2, 0]`, we update the value of `rows[2]` and `col[0]`, since `row = 2` and `col = 2`. Also, because `row + col = 2`, we will update the value of the anti-diagonal. Since none of these values equals 3 after the update, this means that the game is still on.\n\nAfter player B's move, we update the value of `row[1]` and `col[1]`. Since this character is on both diagonal and anti-diagonal, we update `diag` and `anti_diag` as well. We will see that `col[1] = -3`, which means the current player (player B) has won the game! Thus return `B`.\n\n**Algorithm**\n\n1) We use two lists, `rows` and `cols` of size `n`, to represent each row and column.  We also use two numbers, `diag` and `anti_diag`, to represent the diagonal value and anti-diagonal value, respectively.\n\n2) Set the value of player A as `1` and the value of player B as `-1`.\n\n3) For each new move `[row, col]`, add the player's value to `rows[row]` and `cols[col]`. If `[row, col]` is on the diagonal or anti-diagonal, then add the player's value to `diag` or `anti_diag` as well.\n\n\n4) Then, check if this move meets any winning condition:\n\n    - Check if all cells in the current row contain characters from this player. To do so, we just need to check if the absolute value of `rows[row]` equals `n`.\n    - Check if all cells in the current column contain characters from this player. To do so, we just need to check if the absolute value of `cols[col]` equals `n`.\n    - Check if this move is on the diagonal; that is if `row` equals `col`. If so, check if the absolute value of `diag` equals `n`.\n    - Check if this move is on the anti-diagonal; that is if `row + col` equals `n - 1`. If so, check if the absolute value of `anti_diag` equals `n`.\n\n5) If there is no winner after all of the moves have been played, we will check if the entire board is filled. If so, return \"Draw\", otherwise return \"Pending\", meaning the game is still on. To determine if the entire board is filled, check if the length of `moves` equals the number of cells on the `n` by `n` board.    \n\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/PkeubHGs/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"PkeubHGs\"></iframe>\n\n\n**Complexity Analysis**\n\nLet `n` be the length of the board and `m` be the length of input `moves`.\n\n* Time complexity: $$O(m)$$\n\n    For every move, we update the value for a row, column, diagonal, and anti-diagonal.  Each update takes constant time. We also check if any of these lines satisfies the winning condition which also takes constant time.\n\n* Space complexity: $$O(n)$$\n\n    We use two arrays of size `n` to record the value for each row and column, and two integers of constant space to record to value for diagonal and anti-diagonal.\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

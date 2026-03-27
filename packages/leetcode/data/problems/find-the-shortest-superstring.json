@@ -1,0 +1,145 @@
+{
+  "questionId": "980",
+  "questionFrontendId": "943",
+  "title": "Find the Shortest Superstring",
+  "titleSlug": "find-the-shortest-superstring",
+  "difficulty": "Hard",
+  "content": "<p>Given an array of strings <code>words</code>, return <em>the smallest string that contains each string in</em> <code>words</code> <em>as a substring</em>. If there are multiple valid strings of the smallest length, return <strong>any of them</strong>.</p>\n\n<p>You may assume that no string in <code>words</code> is a substring of another string in <code>words</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;alex&quot;,&quot;loves&quot;,&quot;leetcode&quot;]\n<strong>Output:</strong> &quot;alexlovesleetcode&quot;\n<strong>Explanation:</strong> All permutations of &quot;alex&quot;,&quot;loves&quot;,&quot;leetcode&quot; would also be accepted.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;catg&quot;,&quot;ctaagt&quot;,&quot;gcta&quot;,&quot;ttca&quot;,&quot;atgcatc&quot;]\n<strong>Output:</strong> &quot;gctaagttcatgcatc&quot;\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= words.length &lt;= 12</code></li>\n\t<li><code>1 &lt;= words[i].length &lt;= 20</code></li>\n\t<li><code>words[i]</code> consists of lowercase English letters.</li>\n\t<li>All the strings of <code>words</code> are <strong>unique</strong>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"shortestSuperstring\",\n  \"params\": [\n    {\n      \"name\": \"words\",\n      \"type\": \"string[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"35.4K\", \"totalSubmission\": \"78.3K\", \"totalAcceptedRaw\": 35413, \"totalSubmissionRaw\": 78296, \"acRate\": \"45.2%\"}",
+  "likes": 1517,
+  "dislikes": 152,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Rows Covered by Columns\", \"titleSlug\": \"maximum-rows-covered-by-columns\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Minimum Cost Array Permutation\", \"titleSlug\": \"find-the-minimum-cost-array-permutation\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find the Shortest Superstring II\", \"titleSlug\": \"find-the-shortest-superstring-ii\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"alex\",\"loves\",\"leetcode\"]",
+    "[\"catg\",\"ctaagt\",\"gcta\",\"ttca\",\"atgcatc\"]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Bitmask",
+      "slug": "bitmask"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string shortestSuperstring(vector<string>& words) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String shortestSuperstring(String[] words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def shortestSuperstring(self, words: List[str]) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def shortestSuperstring(self, words):\n        \"\"\"\n        :type words: List[str]\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} words\n * @return {string}\n */\nvar shortestSuperstring = function(words) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function shortestSuperstring(words: string[]): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string ShortestSuperstring(string[] words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* shortestSuperstring(char** words, int wordsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func shortestSuperstring(words []string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun shortestSuperstring(words: Array<String>): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func shortestSuperstring(_ words: [String]) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn shortest_superstring(words: Vec<String>) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} words\n# @return {String}\ndef shortest_superstring(words)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $words\n     * @return String\n     */\n    function shortestSuperstring($words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String shortestSuperstring(List<String> words) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def shortestSuperstring(words: Array[String]): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec shortest_superstring(words :: [String.t]) :: String.t\n  def shortest_superstring(words) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec shortest_superstring(Words :: [unicode:unicode_binary()]) -> unicode:unicode_binary().\nshortest_superstring(Words) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (shortest-superstring words)\n  (-> (listof string?) string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "619",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach 1: Dynamic Programming\n\n**Intuition**\n\nWe have to put the words into a row, where each word may overlap the previous word.  This is because no word is contained in any word.\n\nAlso, it is sufficient to try to maximize the total overlap of the words.\n\nSay we have put some words down in our row, ending with word `A[i]`.  Now say we put down word `A[j]` as the next word, where word `j` hasn't been put down yet.  The overlap increases by `overlap(A[i], A[j])`.\n\nWe can use dynamic programming to leverage this recursion.  Let `dp(mask, i)` be the total overlap after putting some words down (represented by a bitmask `mask`), for which `A[i]` was the last word put down.  Then, the key recursion is `dp(mask ^ (1<<j), j) = max(overlap(A[i], A[j]) + dp(mask, i))`, where the `j`th bit is not set in mask, and `i` ranges over all bits set in `mask`.\n\nOf course, this only tells us what the maximum overlap is for each set of words.  We also need to remember each choice along the way (ie. the specific `i` that made `dp(mask ^ (1<<j), j)` achieve a minimum) so that we can reconstruct the answer.\n\n**Algorithm**\n\nOur algorithm has 3 main components:\n\n* Precompute `overlap(A[i], A[j])` for all possible `i, j`.\n* Calculate `dp[mask][i]`, keeping track of the \"`parent`\" `i` for each `j` as described above.\n* Reconstruct the answer using `parent` information.\n\nPlease see the implementation for more details about each section.\n\n<iframe src=\"https://leetcode.com/playground/n5UnrAXW/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"n5UnrAXW\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N^2 (2^N + W))$$, where $$N$$ is the number of words, and $$W$$ is the maximum length of each word.\n\n* Space Complexity:  $$O(N (2^N + W))$$.\n<br />\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

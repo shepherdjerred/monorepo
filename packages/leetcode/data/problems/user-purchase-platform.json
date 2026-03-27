@@ -1,0 +1,53 @@
+{
+  "questionId": "1226",
+  "questionFrontendId": "1127",
+  "title": "User Purchase Platform",
+  "titleSlug": "user-purchase-platform",
+  "difficulty": "Hard",
+  "content": "<p>Table: <code>Spending</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| user_id     | int     |\n| spend_date  | date    |\n| platform    | enum    | \n| amount      | int     |\n+-------------+---------+\nThe table logs the history of the spending of users that make purchases from an online shopping website that has a desktop and a mobile application.\n(user_id, spend_date, platform) is the primary key (combination of columns with unique values) of this table.\nThe platform column is an ENUM (category) type of (&#39;desktop&#39;, &#39;mobile&#39;).\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to find the total number of users and the total amount spent using the mobile only, the desktop only, and both mobile and desktop together for each date.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nSpending table:\n+---------+------------+----------+--------+\n| user_id | spend_date | platform | amount |\n+---------+------------+----------+--------+\n| 1       | 2019-07-01 | mobile   | 100    |\n| 1       | 2019-07-01 | desktop  | 100    |\n| 2       | 2019-07-01 | mobile   | 100    |\n| 2       | 2019-07-02 | mobile   | 100    |\n| 3       | 2019-07-01 | desktop  | 100    |\n| 3       | 2019-07-02 | desktop  | 100    |\n+---------+------------+----------+--------+\n<strong>Output:</strong> \n+------------+----------+--------------+-------------+\n| spend_date | platform | total_amount | total_users |\n+------------+----------+--------------+-------------+\n| 2019-07-01 | desktop  | 100          | 1           |\n| 2019-07-01 | mobile   | 100          | 1           |\n| 2019-07-01 | both     | 200          | 1           |\n| 2019-07-02 | desktop  | 100          | 1           |\n| 2019-07-02 | mobile   | 100          | 1           |\n| 2019-07-02 | both     | 0            | 0           |\n+------------+----------+--------------+-------------+ \n<strong>Explanation:</strong> \nOn 2019-07-01, user 1 purchased using <strong>both</strong> desktop and mobile, user 2 purchased using mobile <strong>only</strong> and user 3 purchased using desktop <strong>only</strong>.\nOn 2019-07-02, user 2 purchased using mobile <strong>only</strong>, user 3 purchased using desktop <strong>only</strong> and no one purchased using <strong>both</strong> platforms.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Spending (user_id int, spend_date date, platform ENUM('desktop', 'mobile'), amount int)\"], \"mssql\": [\"create table Spending (user_id int, spend_date date, platform VARCHAR(10) NOT NULL CHECK (platform IN ('desktop', 'mobile')), amount int)\"], \"oraclesql\": [\"create table Spending (user_id int, spend_date date, platform VARCHAR(10) NOT NULL CHECK (platform IN ('desktop', 'mobile')), amount int)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"user_purchase\", \"pythondata\": [\"Spending = pd.DataFrame([], columns=['user_id', 'spend_date', 'platform', 'amount']).astype({'user_id':'Int64', 'spend_date':'datetime64[ns]', 'platform':'object', 'amount':'Int64'})\\n\"], \"postgresql\": [\"Create table If Not Exists Spending (user_id int, spend_date date, platform VARCHAR(10) CHECK (platform IN ('desktop', 'mobile')), amount int)\\n\"], \"database_schema\": {\"Spending\": {\"user_id\": \"INT\", \"spend_date\": \"DATE\", \"platform\": \"ENUM('desktop', 'mobile')\", \"amount\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"19.8K\", \"totalSubmission\": \"42.8K\", \"totalAcceptedRaw\": 19791, \"totalSubmissionRaw\": 42807, \"acRate\": \"46.2%\"}",
+  "likes": 188,
+  "dislikes": 138,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Spending\":[\"user_id\",\"spend_date\",\"platform\",\"amount\"]},\"rows\":{\"Spending\":[[1,\"2019-07-01\",\"mobile\",100],[1,\"2019-07-01\",\"desktop\",100],[2,\"2019-07-01\",\"mobile\",100],[2,\"2019-07-02\",\"mobile\",100],[3,\"2019-07-01\",\"desktop\",100],[3,\"2019-07-02\",\"desktop\",100]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef user_purchase(spending: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,140 @@
+{
+  "questionId": "1402",
+  "questionFrontendId": "1277",
+  "title": "Count Square Submatrices with All Ones",
+  "titleSlug": "count-square-submatrices-with-all-ones",
+  "difficulty": "Medium",
+  "content": "<p>Given a <code>m * n</code> matrix of ones and zeros, return how many <strong>square</strong> submatrices have all ones.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> matrix =\n[\n&nbsp; [0,1,1,1],\n&nbsp; [1,1,1,1],\n&nbsp; [0,1,1,1]\n]\n<strong>Output:</strong> 15\n<strong>Explanation:</strong> \nThere are <strong>10</strong> squares of side 1.\nThere are <strong>4</strong> squares of side 2.\nThere is  <strong>1</strong> square of side 3.\nTotal number of squares = 10 + 4 + 1 = <strong>15</strong>.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> matrix = \n[\n  [1,0,1],\n  [1,1,0],\n  [1,1,0]\n]\n<strong>Output:</strong> 7\n<strong>Explanation:</strong> \nThere are <b>6</b> squares of side 1.  \nThere is <strong>1</strong> square of side 2. \nTotal number of squares = 6 + 1 = <b>7</b>.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= arr.length&nbsp;&lt;= 300</code></li>\n\t<li><code>1 &lt;= arr[0].length&nbsp;&lt;= 300</code></li>\n\t<li><code>0 &lt;= arr[i][j] &lt;= 1</code></li>\n</ul>\n",
+  "hints": [
+    "Create an additive table that counts the sum of elements of submatrix with the superior corner at (0,0).",
+    "Loop over all subsquares in O(n^3) and check if the sum make the whole array to be ones, if it checks then add 1 to the answer."
+  ],
+  "metaData": "{\n  \"name\": \"countSquares\",\n  \"params\": [\n    {\n      \"name\": \"matrix\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"manual\": false\n}",
+  "stats": "{\"totalAccepted\": \"476.9K\", \"totalSubmission\": \"591.1K\", \"totalAcceptedRaw\": 476866, \"totalSubmissionRaw\": 591064, \"acRate\": \"80.7%\"}",
+  "likes": 5948,
+  "dislikes": 117,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Cost Homecoming of a Robot in a Grid\", \"titleSlug\": \"minimum-cost-homecoming-of-a-robot-in-a-grid\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Fertile Pyramids in a Land\", \"titleSlug\": \"count-fertile-pyramids-in-a-land\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[0,1,1,1],[1,1,1,1],[0,1,1,1]]",
+    "[[1,0,1],[1,1,0],[1,1,0]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countSquares(vector<vector<int>>& matrix) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countSquares(int[][] matrix) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countSquares(self, matrix: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countSquares(self, matrix):\n        \"\"\"\n        :type matrix: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} matrix\n * @return {number}\n */\nvar countSquares = function(matrix) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countSquares(matrix: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountSquares(int[][] matrix) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int countSquares(int** matrix, int matrixSize, int* matrixColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countSquares(matrix [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countSquares(matrix: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countSquares(_ matrix: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_squares(matrix: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} matrix\n# @return {Integer}\ndef count_squares(matrix)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $matrix\n     * @return Integer\n     */\n    function countSquares($matrix) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countSquares(List<List<int>> matrix) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countSquares(matrix: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_squares(matrix :: [[integer]]) :: integer\n  def count_squares(matrix) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_squares(Matrix :: [[integer()]]) -> integer().\ncount_squares(Matrix) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-squares matrix)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2539",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe need to find the number of square submatrices containing only ones in a binary matrix. A square submatrix has equal rows and columns, such as `1x1`, `2x2`, `3x3`, and so on.\n\n1. 1x1 submatrices: Each cell with only a `1` contributes directly to the count.\n2. Larger submatrices: For submatrices larger than `1x1`, the size of the largest square submatrix with its bottom right corner at `(i, j)` determines the count of possible square submatrices.\n\n![slide1](../Figures/1277re/Slide1re.png)\n\nFor a `2x2` square ending at `(i, j)`, the following conditions must be met:\n- The cell at `(i, j)` must be `1`.\n- The cells above `(i-1, j)`, to the left `(i, j-1)`, and diagonally `(i-1, j-1)` must also be `1`.\n\n![slide2](../Figures/1277re/Slide2re.png)\n\nSimilarly, for a `3x3` square:\n- The `2x2` square formed by the neighbors `(i-1, j-1)`, `(i-1, j)`, and `(i, j-1)` must be valid.\n\n![slide3](../Figures/1277re/Slide3re.png)\n\nThus, constructing larger submatrices relies on the existence of smaller valid ones.\n\n---\n\n### Approach 1: Bottom-up Approach\n\n#### Intuition\n\nWe initialize another matrix (`dp`) with the same dimensions as the original one initialized with all 0’s.\n\n`dp(i,j)` represents the side length of the maximum square whose bottom right corner is the cell with index `(i,j)` in the original matrix.\n\nStarting from index `(0,0)`, for every 1 found in the original matrix, we update the value of the current element as:\n\n$$\n\\text{dp}(i+1,\\  j+1) = \\min \\big( \\text{dp}(i,\\  j+1),\\  \\text{dp}(i+1,\\  j),\\  \\text{dp}(i,\\  j) \\big) + 1.\n$$\n\nWe store the sizes of the largest squares in the `dp` array. This gives the side length of the maximal squares upto every index filled with all 1s. The required result is the sum of the sizes of these squares, so we can accumulate them and return the result. \n\n#### Algorithm\n\n1. Create a 2D DP table `dp` of size `(row+1) x (col+1)` to store the size of the largest square submatrices ending at each cell `(i, j)`. \n2. This extra row and column (initialized to 0) help handle boundary conditions and simplify the logic for edge cases.\n3. Initialize a variable `ans` to keep track of the total number of square submatrices with all 1s.\n4. Traverse the input matrix using a nested loop:\n    - Outer loop iterates over the rows (`i` from 0 to `row-1`).\n        - Inner loop iterates over the columns (`j` from 0 to `col-1`):\n            - For each cell `matrix[i][j]`, if the value is 1, calculate the size of the square submatrix ending at that cell.\n            - Use the following relation to fill the `dp` matrix: `dp[i+1][j+1] = min(dp[i][j+1],dp[i+1][j],dp[i][j])+1`\n            - Add this value to the total count `ans`, which keeps track of all squares found so far.\n5. Return the value of `ans`, which represents the total number of square submatrices filled with 1s.\n\n!?!../Documents/1277-re/slideshow1_rename.json:960,540!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Dc4KocxB/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"Dc4KocxB\"></iframe>\n\n#### Complexity Analysis\n\nLet $row$ and $col$ be the number of rows and columns in the matrix respectively.\n\n- Time complexity: $O(row \\cdot col)$\n\n    The solution iterates through every cell in the matrix using two nested loops. Since the matrix has dimensions `row x col`, the total number of cells is `row x col`.\n   \n    Inside the loop, we perform constant-time operations (computing the minimum of three values and updating the result).\n\n    Thus, the overall time complexity is $O(row \\cdot col)$.\n\n- Space complexity: $O(row \\cdot col)$.\n\n    The space complexity is dominated by the 2D DP table `dp`, which is of size `(row+1) x (col+1)`. This extra row and column are used to handle boundary conditions.\n    \n    Therefore, the total space required is $O(row \\cdot col)$.\n\n---\n\n### Approach 2: Top-Down Dynamic Programming\n\n#### Intuition\n\nWe can also approach this problem using recursion, breaking it down into smaller subproblems. At each cell `(i, j)`, the size of the largest square submatrix depends on the sizes of the submatrices at its neighboring cells: `(i-1, j)`, `(i, j-1)`, and `(i-1, j-1)`. This recursive structure enables us to tackle the problem incrementally.\n\nTo optimize, we can convert the recursive approach into a dynamic programming (DP) solution. The DP table will store results of subproblems, preventing redundant calculations and improving time complexity.\n\n#### Algorithm\n\n`solve(i, j, grid, dp)` function:\n\n1. If the current cell `grid[i][j]` is outside the bounds of the grid or is 0, return 0. This means no square submatrices can be formed from this cell.\n2. If a cell's result is already computed (i.e., `dp[i][j]` != -1), return the memoized value to avoid redundant calculations.\n3. For each cell `(i, j)`, recursively calculate the size of the square submatrices:\n    - right: Check the cell to the right `(i, j+1)`.\n    - diagonal: Check the cell to the diagonal below `(i+1, j+1)`.\n    - below: Check the cell below `(i+1, j)`. \n4. For a given cell `(i, j)`, store the result as `1 + min(right, diagonal, below)` in the `dp` table. This accounts for the size of the largest square submatrix that can end at this cell, including the current cell itself.\n\nMain function:\n\n1. Initialize a DP table:\n    - Create a `dp` table (2D vector) of the same size as the input grid, and initialize it with -1 to indicate unvisited cells.\n2. Use a nested loop to iterate through each cell in the grid. For each cell `(i, j)`, call the recursive function `solve(i, j)` to compute the size of the largest square submatrices ending at that cell and add it to the total count.\n3. Finally, return the total number of square submatrices with all 1s.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/jX6Cbaqu/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"jX6Cbaqu\"></iframe>\n\n#### Complexity Analysis\n\nLet $row$ and $col$ be the number of rows and columns in the matrix respectively.\n\n- Time complexity: $O(row \\cdot col)$\n\n    The `solve(i, j)` function is called for each cell in the grid. However, due to memoization, the value for each cell is computed only once, and the result is stored in the `dp` table. This prevents recomputation for the same cell.\n   \n    Hence, there are `row * col` calls to the function, where `row` is the number of rows, and `col` is the number of columns.\n   \n    For each cell `(i, j)`, the function makes constant time calculations for its neighbors: `right`, `diagonal`, and `below`. Each of these operations takes constant time `O(1)`.\n   \n    Thus, the overall time complexity is `O(row * col)`.\n\n- Space complexity: $O(row \\cdot col)$\n\n    The `dp` table is a 2D array of size `row * col` used to store the memoized results. This requires `O(row * col)` space.\n   \n    The recursion depth is bounded by the number of rows `row` or columns `col` in the worst case, depending on how far the recursion can go in the grid. This requires `O(max(row, col))` space for the call stack.\n   \n    Thus, the overall space complexity is `O(row * col)`.\n\n---\n\n### Approach 3: Optimized Dynamic Programming\n\n#### Intuition\n\nFrom the previous approach we can observe that calculating the size of the largest square submatrix ending at a given cell `(i, j)` only depends on three values: the size of the largest square ending at `(i, j-1)` (left), `(i-1, j)` (top), and `(i-1, j-1)` (top-left). These values are sufficient to determine the size of the square submatrix ending at `(i, j)` using the relation: \n\n$dp[j] = 1 + \\min(dp[j-1], dp[j], \\text{prev})$\n\nwhere `prev` stores the value of `dp[j]` from the previous row, effectively representing the top-left neighbor in the matrix.\n\nWith this dependency in mind, we can optimize the traditional 2D dynamic programming table to a 1D array. Instead of maintaining the entire DP table, we use a single array `dp`, where each element corresponds to the size of the largest square submatrix ending at a column in the current row. To handle the dependency on the top-left neighbor, we maintain an additional variable `prev` to store the value of `dp[j]` before it is updated in the current iteration.\n\nWe initialize the `dp` array with all zeros since initially, no square submatrices have been identified. As we iterate through the matrix row by row, we update the `dp` array for each element in the current row. If the matrix element at `(i-1, j-1)` is `1`, it means that this cell can contribute to forming a square. In that case, we calculate the size of the square using the relation mentioned earlier. If the element is `0`, the size of the square at that cell is reset to `0`.\n\nThe `prev` variable is updated during each iteration to store the value of `dp[j]` before it is modified. This ensures that the dependency on the top-left neighbor is correctly accounted for in the current calculation. After updating the value of `dp[j]`, we add it to the `result` variable, which accumulates the total number of square submatrices in the matrix.\n\n#### Algorithm\n\n1. Create a 1D DP table `dp` of size `(row+1) x (col+1)` to store the size of the largest square submatrices ending at each cell `(i, j)`. \n2. This extra column (initialized to 0) helps handle boundary conditions and simplify the logic for edge cases.\n3. Initialize a variable `result` to keep track of the total count of square submatrices and a variable `prev` to store the value of the top-left diagonal element for the DP computation.\n4. Traverse the input matrix using a nested loop:\n    - Outer loop iterates over the rows (`i` from 0 to `row-1`).\n        - Inner loop iterates over the columns (`j` from 0 to `col-1`):\n            - For each cell `matrix[i][j]`, if the value is 1:\n                - Temporarily store the current value of `dp[j]` in a variable `temp`.\n                - Update `dp[j]` using the formula `dp[j] = 1 + min(prev, min(dp[j-1], dp[j]))`.\n                - Update `prev `to the value stored in `temp`.\n                - Add `dp[j]` to `result` to increment the count of square submatrices.\n            - Otherwise, set `dp[j]` to 0 as no square submatrix ends at this cell.\n5. Return the value of `result`, which represents the total number of square submatrices filled with 1s.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/JFiPdsqk/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"JFiPdsqk\"></iframe>\n\n#### Complexity Analysis\n\nLet $row$ and $col$ be the number of rows and columns in the matrix respectively.\n\n- Time complexity: $O(row \\cdot col)$\n\n    The solution iterates through every cell in the matrix using two nested loops. Since the matrix has dimensions `row x col`, the total number of cells is `row x col`.\n\n    Inside the loop, we perform constant-time operations (computing the minimum of three values and updating the result).\n\n    Thus, the overall time complexity is $O(row \\cdot col)$.\n\n- Space complexity: $O(col)$\n\n    The space complexity is dominated by the DP array `dp`, which is of size `(col+1)`. This extra column is used to handle boundary conditions.\n\n    Therefore, the total space required is $O(col)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

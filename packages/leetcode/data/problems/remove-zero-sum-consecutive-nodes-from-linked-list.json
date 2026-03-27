@@ -1,0 +1,138 @@
+{
+  "questionId": "1267",
+  "questionFrontendId": "1171",
+  "title": "Remove Zero Sum Consecutive Nodes from Linked List",
+  "titleSlug": "remove-zero-sum-consecutive-nodes-from-linked-list",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>head</code> of a linked list, we repeatedly delete consecutive sequences of nodes that sum to <code>0</code> until there are no such sequences.</p>\r\n\r\n<p>After doing so, return the head of the final linked list.&nbsp; You may return any such answer.</p>\r\n\n<p>&nbsp;</p>\n<p>(Note that in the examples below, all sequences are serializations of <code>ListNode</code> objects.)</p>\n\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> head = [1,2,-3,3,1]\n<strong>Output:</strong> [3,1]\n<strong>Note:</strong> The answer [1,2,1] would also be accepted.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> head = [1,2,3,-3,4]\n<strong>Output:</strong> [1,2,4]\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> head = [1,2,3,-3,-2]\n<strong>Output:</strong> [1]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The given linked list will contain between <code>1</code> and <code>1000</code> nodes.</li>\n\t<li>Each node in the linked list has <code>-1000 &lt;= node.val &lt;= 1000</code>.</li>\n</ul>\n",
+  "hints": [
+    "Convert the linked list into an array.",
+    "While you can find a non-empty subarray with sum = 0, erase it.",
+    "Convert the array into a linked list."
+  ],
+  "metaData": "{\n  \"name\": \"removeZeroSumSublists\",\n  \"params\": [\n    {\n      \"name\": \"head\",\n      \"type\": \"ListNode\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"ListNode\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"187K\", \"totalSubmission\": \"351.8K\", \"totalAcceptedRaw\": 186963, \"totalSubmissionRaw\": 351818, \"acRate\": \"53.1%\"}",
+  "likes": 3512,
+  "dislikes": 226,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Delete N Nodes After M Nodes of a Linked List\", \"titleSlug\": \"delete-n-nodes-after-m-nodes-of-a-linked-list\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,-3,3,1]",
+    "[1,2,3,-3,4]",
+    "[1,2,3,-3,-2]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bytedance\", \"name\": \"ByteDance\"}, {\"timesEncountered\": 2, \"slug\": \"josh-technology\", \"name\": \"josh technology\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    ListNode* removeZeroSumSublists(ListNode* head) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode() {}\n *     ListNode(int val) { this.val = val; }\n *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n * }\n */\nclass Solution {\n    public ListNode removeZeroSumSublists(ListNode head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution:\n    def removeZeroSumSublists(self, head: Optional[ListNode]) -> Optional[ListNode]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for singly-linked list.\n# class ListNode(object):\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution(object):\n    def removeZeroSumSublists(self, head):\n        \"\"\"\n        :type head: Optional[ListNode]\n        :rtype: Optional[ListNode]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for singly-linked list.\n * function ListNode(val, next) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.next = (next===undefined ? null : next)\n * }\n */\n/**\n * @param {ListNode} head\n * @return {ListNode}\n */\nvar removeZeroSumSublists = function(head) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *     val: number\n *     next: ListNode | null\n *     constructor(val?: number, next?: ListNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.next = (next===undefined ? null : next)\n *     }\n * }\n */\n\nfunction removeZeroSumSublists(head: ListNode | null): ListNode | null {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public int val;\n *     public ListNode next;\n *     public ListNode(int val=0, ListNode next=null) {\n *         this.val = val;\n *         this.next = next;\n *     }\n * }\n */\npublic class Solution {\n    public ListNode RemoveZeroSumSublists(ListNode head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     struct ListNode *next;\n * };\n */\nstruct ListNode* removeZeroSumSublists(struct ListNode* head) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for singly-linked list.\n * type ListNode struct {\n *     Val int\n *     Next *ListNode\n * }\n */\nfunc removeZeroSumSublists(head *ListNode) *ListNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var li = ListNode(5)\n * var v = li.`val`\n * Definition for singly-linked list.\n * class ListNode(var `val`: Int) {\n *     var next: ListNode? = null\n * }\n */\nclass Solution {\n    fun removeZeroSumSublists(head: ListNode?): ListNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public var val: Int\n *     public var next: ListNode?\n *     public init() { self.val = 0; self.next = nil; }\n *     public init(_ val: Int) { self.val = val; self.next = nil; }\n *     public init(_ val: Int, _ next: ListNode?) { self.val = val; self.next = next; }\n * }\n */\nclass Solution {\n    func removeZeroSumSublists(_ head: ListNode?) -> ListNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for singly-linked list.\n// #[derive(PartialEq, Eq, Clone, Debug)]\n// pub struct ListNode {\n//   pub val: i32,\n//   pub next: Option<Box<ListNode>>\n// }\n// \n// impl ListNode {\n//   #[inline]\n//   fn new(val: i32) -> Self {\n//     ListNode {\n//       next: None,\n//       val\n//     }\n//   }\n// }\nimpl Solution {\n    pub fn remove_zero_sum_sublists(head: Option<Box<ListNode>>) -> Option<Box<ListNode>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for singly-linked list.\n# class ListNode\n#     attr_accessor :val, :next\n#     def initialize(val = 0, _next = nil)\n#         @val = val\n#         @next = _next\n#     end\n# end\n# @param {ListNode} head\n# @return {ListNode}\ndef remove_zero_sum_sublists(head)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a singly-linked list.\n * class ListNode {\n *     public $val = 0;\n *     public $next = null;\n *     function __construct($val = 0, $next = null) {\n *         $this->val = $val;\n *         $this->next = $next;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param ListNode $head\n     * @return ListNode\n     */\n    function removeZeroSumSublists($head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *   int val;\n *   ListNode? next;\n *   ListNode([this.val = 0, this.next]);\n * }\n */\nclass Solution {\n  ListNode? removeZeroSumSublists(ListNode? head) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode(_x: Int = 0, _next: ListNode = null) {\n *   var next: ListNode = _next\n *   var x: Int = _x\n * }\n */\nobject Solution {\n    def removeZeroSumSublists(head: ListNode): ListNode = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for singly-linked list.\n#\n# defmodule ListNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           next: ListNode.t() | nil\n#         }\n#   defstruct val: 0, next: nil\n# end\n\ndefmodule Solution do\n  @spec remove_zero_sum_sublists(head :: ListNode.t | nil) :: ListNode.t | nil\n  def remove_zero_sum_sublists(head) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for singly-linked list.\n%%\n%% -record(list_node, {val = 0 :: integer(),\n%%                     next = null :: 'null' | #list_node{}}).\n\n-spec remove_zero_sum_sublists(Head :: #list_node{} | null) -> #list_node{} | null.\nremove_zero_sum_sublists(Head) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for singly-linked list:\n#|\n\n; val : integer?\n; next : (or/c list-node? #f)\n(struct list-node\n  (val next) #:mutable #:transparent)\n\n; constructor\n(define (make-list-node [val 0])\n  (list-node val #f))\n\n|#\n\n(define/contract (remove-zero-sum-sublists head)\n  (-> (or/c list-node? #f) (or/c list-node? #f))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2259",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nThe task is to delete consecutive sequences of nodes that sum to zero from the given linked list.\n\nIf all of the nodes in a given consecutive sequence are negative, or they are all positive, there is not a zero-sum consecutive sequence. If a consecutive sequence of nodes has mixed signs, as in both positive and negative values, there may be a zero-sum consecutive sequence.\n\nOne case of nodes that sum to zero is additive inverses, or opposites, such as `-3 ⟶ 3`. Other consecutive sequences that sum to zero may have multiple nodes such as `1 ⟶ -3 ⟶ 2`.\n\nWe can break this problem up into two main tasks: \n\n1. Identifying consecutive sequences of zero-sum nodes.\n2. Removing those consecutive sequences.\n\n---\n\n### Approach 1: Prefix Sum for Each Consecutive Sequence\n\n#### Intuition\n\nWe may need to remove the `head` of the given linked list if it is part of a sequence of zero-sum consecutive nodes. We will save a ListNode `front` with any arbitrary value whose `next` field points to `head`. If `head` is deleted, `front.next` will be updated to the next remaining node, so we still have a reference to the front of the final linked list.\n\n**1. How do we identify consecutive sequences of zero-sum nodes?**\n\nProblems that require sequences of elements to meet certain criteria are often efficiently solved with [prefix sum](https://leetcode.com/tag/prefix-sum/). A prefix sum is the sum of prefixes, or running total, of the input sequence. \n\n> **Prefix Sum Example**\n>\n> Linked List: `1 ⟶ 4 ⟶ -3`    \n> - The prefix sum of node `1` is $1$. \n> - The prefix sum of node `4` is $1 + 4 = 5$. \n> - The prefix sum of node `-3` is $1 + 4 - 3 = 2$. \n>\n\nWe can calculate the prefix sum for every sequence of consecutive nodes. We loop through nodes in the linked list with `start`, which is the node before the start of each sequence, and `end`, which is the end of each sequence. We calculate the prefix sum of the nodes between `start` (exclusive) and `end` (inclusive). \n\n![Example A1](../Figures/1171/1171ExampleA1.png)\n\nWhen the prefix sum of the last element in a consecutive sequence is `0`, we know we need to remove nodes. In this case, the consecutive zero-sum sequence is `3 ⟶ -3`, so we need to remove those nodes. The remaining list should be `1 ⟶ 4 ⟶ 5 ⟶ 6`.\n\n**2. How do we delete the consecutive zero-sum nodes?**\n\nTo delete the nodes, we need to add a connection from node `4` to node `5`, which will skip the zero-sum nodes in the linked list.\n\n![Example A2](../Figures/1171/1171ExampleA2.png)\n\nWhen we encounter a prefix sum of `0`, we can \"delete\" the zero-sum consecutive sequence by setting `start.next` to `end.next`.\n\n#### Algorithm\n\n1. Initialize a new ListNode `front` with the value `0` whose `next` field points to `head` and a node `start` to `front`.\n\n2. Process all of the nodes in the linked list, while `start != null`:\n\n    - Initialize a variable `prefixSum` to `0` and a ListNode `end` to `start.next`.\n\n    - Process the rest of the nodes in the linked list, while `end != null`:\n    \n        - Add `end`'s value to `prefixSum`.\n\n        - If `prefixSum` equals `0`, make a connection from `start` to the last node after the zero-sum consecutive sequence by setting `start.next` to `end.next`\n\n        - Set `end` to `end.next`.\n\n    - Set `start` to `start.next`.\n\n3. Return `front.next`. The `front` points to the head of the final linked list.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/7M3XSFku/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"7M3XSFku\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the original linked list.\n\n* Time complexity: $O(n^2)$\n\n    We use nested `while` loops to process the list. The outer while loop will run $n$ times since there are $n$ nodes in the list. With each iteration of the outer while loop, there will be one fewer node remaining in the linked list. \n    \n    The inner while loop will run $n$ times then, $n - 1$ times, then $n -2$, etc. until the $n^{th}$ iteration of the outer while loop, where the inner while loop will run $1$ time. The total number of times the inner while loop runs is the sum $n + (n - 1) + (n - 2) + \\dots + (n - (n - 1))$. This can be calculated by the formula $\\frac{n(n + 1)}{2}$, which we can simplify to $O(n^2)$.\n\n* Space complexity: $O(1)$\n\n    We use a handful of variables and no extra space that grows with input size, so the space complexity is constant, i.e. $O(1)$.\n\n---\n\n### Approach 2: Prefix Sum Hash Table\n\n#### Intuition\n\nWe will use a dummy node `front` similar to the above approach.\n\n**1. How do we identify consecutive sequences of zero-sum nodes?**\n\nThe above approach has a quadratic time complexity, which is not very efficient. We need a way to identify consecutive sequences of zero-sum nodes without calculating the prefix sum for every possible consecutive sequence. Let's look at an example of the prefix sum of each node from the front of the linked list.\n\n![prefix_sum Example A3](../Figures/1171/1171ExampleA3.png)\n\nHow can we use the prefix sum to determine zero-sum consecutive sequences? Let's examine the above example to determine what patterns we notice in the prefix sum when there is a zero-sum consecutive sequence. One pattern we notice is that the prefix sum increases when the node has a positive value, and decreases when the node has a negative value. \n\nThe zero-sum consecutive sequence in the example is `3 ⟶ -3`. What do we notice about the prefix sum? The prefix sum at the end of this consecutive sequence, $5$, is the same as the prefix sum before the sequence.\n\nThis makes sense; a zero-sum consecutive sequence will have a prefix sum of zero. The prefix sum before and at the end of the sequence will be the same. When we encounter a prefix sum that we have seen before, we have discovered a zero-sum consecutive sequence.\n\n> The crucial insight is that the prefix sum from the `front` node to node `A` will be equal to the sum from the `front` node to node `B` if and only if the sum from node `A.next` to node `B` is `0`.\n\nTo determine when to remove nodes, we need to be able to store and reference the prefix sums found so far. A [hash table](https://leetcode.com/explore/learn/card/hash-table/) is an efficient way to do this. \n\nWe will use a hash table to store the prefix sum. The key will be the prefix sum, and the value will be the node that has that prefix sum. \n\nWe will process the linked list, calculating the prefix sum for each node, `current`, and saving it in the hash table `prefixSumToNode`.\n\n**2. How do we remove the consecutive zero-sum nodes?**\n\nLet's look at this example:  \n\n![Example B1](../Figures/1171/1171ExampleB1.png)\n\nWhen we encounter a prefix sum we have seen before, we know we need to remove nodes. In this case, we need to remove nodes `-3`, `1`, and `2`. The remaining list should be `1 ⟶ 4 ⟶ 5 ⟶ 6`.\n\nTo delete the nodes, we need to add a connection from node `4` to node `5`, which will skip the zero-sum nodes in the linked list. In the example, node `4` is A, and node 2 is `B`.\n\nLet's start by making our hash table.\n\n!?!../Documents/1171/1171_slideshow.json: 960,540!?!\n\nNotice that there is only one entry for the prefix sum 5. First, the corresponding node is node 4, then it is node 2. A duplicate prefix sum means there is a zero-sum consecutive sequence. Recall that the hash table does not store duplicate keys, so only the last occurrence of a given prefix sum is stored in the hash table. This is node `B`. All nodes between the first occurrence of a prefix sum through node `B` need to be deleted because they are part of a zero-sum consecutive sequence.\n \nTo find the first occurrence of a prefix sum, we can traverse through the linked list again, recalculating the prefix sums. \n\n![Example B2](../Figures/1171/1171ExampleB2.png)\n\nWe can connect `A`, the last node before the zero-sum consecutive sequence, to `B.next`, the first node after. This will eliminate the zero-sum nodes `A.next` through `B`.\n\nWe can find `B.next` with `prefixSumToNode[prefixSum].next`.\n\nWhen there is no zero-sum consecutive sequence, `A` and `B` are essentially the same node. Hence, by assigning `A.next` to `B.next`, we aren't changing the linked list.\n\nAfter removing zero-sum nodes, we return `front.next`. The `front` points to the head of the final linked list.\n\n#### Algorithm\n\n1. Initialization:\n\n    - Initialize a new ListNode `front` with the value `0` whose `next` field points to `head` and a node `current` to `front`.\n\n    - Initialize a variable `prefixSum` to `0` and a hashmap `prefixSumToNode`, which stores integer, ListNode pairs. The key is the prefix sum, and the value is the corresponding ListNode. Add `front` to the hashmap.\n\n2. Process all of the nodes in the linked list, while `current != null`:\n\n    - Add `current`'s value to `prefixSum`.\n\n    - Add the prefix sum and node pair to the `prefixSumToNode` hashmap.\n\n    - Set `current` to `current.next`.\n\n3. Reset `prefixSum` to `0` and `current` to `front`.\n\n4. Process all of the nodes in the linked list, while `current != null`:\n\n    - Add `current`'s value to `prefixSum`.\n\n    - Make a connection from `current` to the last node after the zero-sum consecutive sequence by setting `current.next` to `prefixSumToNode[prefixSum].next`.\n\n    - Set `current` to `current.next`.\n\n5. Return `front.next`. The `front` points to the head of the final linked list.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/8bqe42aa/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"8bqe42aa\"></iframe>\n\nThe above implementation visited each node in the linked list twice. Can we form a one-pass solution? \n\nWe can implement a solution using aspects of both previous solutions. Like the above approach, it uses a prefix sum hash table to identify consecutive zero-sum sequences, but like the first approach, it traverses the linked list with a nested while loop.\n \nWhen we encounter a prefix sum we have seen before, we know we need to remove a sequence of consecutive zero-sum nodes. We can connect node `A`, the first node before the sequence, to `B.next`, the node after the zero-sum consecutive sequence. We need to delete the hash table entries of the nodes in the zero-sum sequence so we don't incorrectly delete any following nodes that have the same prefix sum as a node in this zero-sum consecutive sequence. We iterate through the nodes between `A` and `B`, removing each one from the hash table.\n\nIn this implementation, we do not necessarily visit every node twice, but we do visit nodes that are part of zero-sum consecutive sequences twice to delete them from the hash table. \n\n<iframe src=\"https://leetcode.com/playground/7cheg7sP/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"7cheg7sP\"></iframe>\n\nAlthough we use a nested while loop, the inner loop deletes nodes that are part of zero-sum sequences, and once a node is deleted, it will not be re-visited. We handle each node of the linked list *at most twice*, once to add it to the hash table and once to delete it. In the previous implementation, we were visiting each node *exactly twice*.\n\n#### Complexity Analysis\n\nLet $n$ be the length of the original linked list.\n\n* Time complexity: $O(n)$\n\n    We traverse through the linked list twice, once to calculate the prefix sums, and once to delete nodes, so the time complexity is $O(2n)$, which we can simplify to $O(n)$.\n\n\n* Space complexity: $O(n)$\n\n    We initialize the hash table `prefixSumToNode`, which is size $O(e)$ where $e$ is the number of distinct prefix sums calculated from in `nums`. At worst, when there are no zero-sum consecutive sequences, there can be $n$ distinct prefix sums, so the space complexity is $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

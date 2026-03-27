@@ -1,0 +1,49 @@
+{
+  "questionId": "1209",
+  "questionFrontendId": "1188",
+  "title": "Design Bounded Blocking Queue",
+  "titleSlug": "design-bounded-blocking-queue",
+  "difficulty": "Medium",
+  "content": "<p>Implement a thread-safe bounded blocking queue that has the following methods:</p>\n\n<ul>\n\t<li><code>BoundedBlockingQueue(int capacity)</code> The constructor initializes the queue with a maximum <code>capacity</code>.</li>\n\t<li><code>void enqueue(int element)</code> Adds an <code>element</code> to the front of the queue. If the queue is full, the calling thread is blocked until the queue is no longer full.</li>\n\t<li><code>int dequeue()</code> Returns the element at the rear of the queue and removes it. If the queue is empty, the calling thread is blocked until the queue is no longer empty.</li>\n\t<li><code>int size()</code> Returns the number of elements currently in the queue.</li>\n</ul>\n\n<p>Your implementation will be tested using multiple threads at the same time. Each thread will either be a producer thread that only makes calls to the <code>enqueue</code> method or a consumer thread that only makes calls to the <code>dequeue</code> method. The <code>size</code> method will be called after every test case.</p>\n\n<p>Please do not use built-in implementations of bounded blocking queue as this will not be accepted in an interview.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong>\n1\n1\n[&quot;BoundedBlockingQueue&quot;,&quot;enqueue&quot;,&quot;dequeue&quot;,&quot;dequeue&quot;,&quot;enqueue&quot;,&quot;enqueue&quot;,&quot;enqueue&quot;,&quot;enqueue&quot;,&quot;dequeue&quot;]\n[[2],[1],[],[],[0],[2],[3],[4],[]]\n\n<strong>Output:</strong>\n[1,0,2,2]\n\n<strong>Explanation:</strong>\nNumber of producer threads = 1\nNumber of consumer threads = 1\n\nBoundedBlockingQueue queue = new BoundedBlockingQueue(2);   // initialize the queue with capacity = 2.\n\nqueue.enqueue(1);   // The producer thread enqueues 1 to the queue.\nqueue.dequeue();    // The consumer thread calls dequeue and returns 1 from the queue.\nqueue.dequeue();    // Since the queue is empty, the consumer thread is blocked.\nqueue.enqueue(0);   // The producer thread enqueues 0 to the queue. The consumer thread is unblocked and returns 0 from the queue.\nqueue.enqueue(2);   // The producer thread enqueues 2 to the queue.\nqueue.enqueue(3);   // The producer thread enqueues 3 to the queue.\nqueue.enqueue(4);   // The producer thread is blocked because the queue&#39;s capacity (2) is reached.\nqueue.dequeue();    // The consumer thread returns 2 from the queue. The producer thread is unblocked and enqueues 4 to the queue.\nqueue.size();       // 2 elements remaining in the queue. size() is always called at the end of each test case.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong>\n3\n4\n[&quot;BoundedBlockingQueue&quot;,&quot;enqueue&quot;,&quot;enqueue&quot;,&quot;enqueue&quot;,&quot;dequeue&quot;,&quot;dequeue&quot;,&quot;dequeue&quot;,&quot;enqueue&quot;]\n[[3],[1],[0],[2],[],[],[],[3]]\n<strong>Output:</strong>\n[1,0,2,1]\n\n<strong>Explanation:</strong>\nNumber of producer threads = 3\nNumber of consumer threads = 4\n\nBoundedBlockingQueue queue = new BoundedBlockingQueue(3);   // initialize the queue with capacity = 3.\n\nqueue.enqueue(1);   // Producer thread P1 enqueues 1 to the queue.\nqueue.enqueue(0);   // Producer thread P2 enqueues 0 to the queue.\nqueue.enqueue(2);   // Producer thread P3 enqueues 2 to the queue.\nqueue.dequeue();    // Consumer thread C1 calls dequeue.\nqueue.dequeue();    // Consumer thread C2 calls dequeue.\nqueue.dequeue();    // Consumer thread C3 calls dequeue.\nqueue.enqueue(3);   // One of the producer threads enqueues 3 to the queue.\nqueue.size();       // 1 element remaining in the queue.\n\nSince the number of threads for producer/consumer is greater than 1, we do not know how the threads will be scheduled in the operating system, even though the input seems to imply the ordering. Therefore, any of the output [1,0,2] or [1,2,0] or [0,1,2] or [0,2,1] or [2,0,1] or [2,1,0] will be accepted.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= Number of Prdoucers &lt;= 8</code></li>\n\t<li><code>1 &lt;= Number of Consumers &lt;= 8</code></li>\n\t<li><code>1 &lt;= size &lt;= 30</code></li>\n\t<li><code>0 &lt;= element &lt;= 20</code></li>\n\t<li>The number of calls to <code>enqueue</code> is <strong>greater than or equal to</strong> the number of calls to <code>dequeue</code>.</li>\n\t<li>At most <code>40</code> calls will be made to <code>enque</code>, <code>deque</code>, and <code>size</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"foobar\",\n  \"params\": [\n    {\n      \"name\": \"numsProducerThread\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"numsConsumerThread\"\n    },\n    {\n      \"type\": \"string[]\",\n      \"name\": \"methods\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"params\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"python3\"\n  ],\n  \"manual\": true\n}",
+  "stats": "{\"totalAccepted\": \"68.9K\", \"totalSubmission\": \"93.5K\", \"totalAcceptedRaw\": 68858, \"totalSubmissionRaw\": 93472, \"acRate\": \"73.7%\"}",
+  "likes": 550,
+  "dislikes": 43,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "1\n1\n[\"BoundedBlockingQueue\",\"enqueue\",\"dequeue\",\"dequeue\",\"enqueue\",\"enqueue\",\"enqueue\",\"enqueue\",\"dequeue\"]\n[[2],[1],[],[],[0],[2],[3],[4],[]]",
+    "3\n4\n[\"BoundedBlockingQueue\",\"enqueue\",\"enqueue\",\"enqueue\",\"dequeue\",\"dequeue\",\"dequeue\",\"enqueue\"]\n[[3],[1],[0],[2],[],[],[],[3]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 5, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"rubrik\", \"name\": \"Rubrik\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Concurrency",
+      "slug": "concurrency"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class BoundedBlockingQueue {\npublic:\n    BoundedBlockingQueue(int capacity) {\n        \n    }\n    \n    void enqueue(int element) {\n        \n    }\n    \n    int dequeue() {\n        \n    }\n    \n    int size() {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class BoundedBlockingQueue {\n\n    public BoundedBlockingQueue(int capacity) {\n        \n    }\n    \n    public void enqueue(int element) throws InterruptedException {\n        \n    }\n    \n    public int dequeue() throws InterruptedException {\n        \n    }\n    \n    public int size() {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class BoundedBlockingQueue(object):\n\n    def __init__(self, capacity: int):\n        \n\n    def enqueue(self, element: int) -> None:\n        \n\n    def dequeue(self) -> int:\n        \n\n    def size(self) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class BoundedBlockingQueue(object):\n    def __init__(self, capacity):\n        \"\"\"\n        :type capacity: int\n        \"\"\"\n        \n\n    def enqueue(self, element):\n        \"\"\"\n        :type element: int\n        :rtype: void\n        \"\"\"\n        \n\n    def dequeue(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n    def size(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        "
+    }
+  ],
+  "solution": null
+}

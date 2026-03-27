@@ -1,0 +1,139 @@
+{
+  "questionId": "1497",
+  "questionFrontendId": "1381",
+  "title": "Design a Stack With Increment Operation",
+  "titleSlug": "design-a-stack-with-increment-operation",
+  "difficulty": "Medium",
+  "content": "<p>Design a stack that supports increment operations on its elements.</p>\n\n<p>Implement the <code>CustomStack</code> class:</p>\n\n<ul>\n\t<li><code>CustomStack(int maxSize)</code> Initializes the object with <code>maxSize</code> which is the maximum number of elements in the stack.</li>\n\t<li><code>void push(int x)</code> Adds <code>x</code> to the top of the stack if the stack has not reached the <code>maxSize</code>.</li>\n\t<li><code>int pop()</code> Pops and returns the top of the stack or <code>-1</code> if the stack is empty.</li>\n\t<li><code>void inc(int k, int val)</code> Increments the bottom <code>k</code> elements of the stack by <code>val</code>. If there are less than <code>k</code> elements in the stack, increment all the elements in the stack.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;CustomStack&quot;,&quot;push&quot;,&quot;push&quot;,&quot;pop&quot;,&quot;push&quot;,&quot;push&quot;,&quot;push&quot;,&quot;increment&quot;,&quot;increment&quot;,&quot;pop&quot;,&quot;pop&quot;,&quot;pop&quot;,&quot;pop&quot;]\n[[3],[1],[2],[],[2],[3],[4],[5,100],[2,100],[],[],[],[]]\n<strong>Output</strong>\n[null,null,null,2,null,null,null,null,null,103,202,201,-1]\n<strong>Explanation</strong>\nCustomStack stk = new CustomStack(3); // Stack is Empty []\nstk.push(1);                          // stack becomes [1]\nstk.push(2);                          // stack becomes [1, 2]\nstk.pop();                            // return 2 --&gt; Return top of the stack 2, stack becomes [1]\nstk.push(2);                          // stack becomes [1, 2]\nstk.push(3);                          // stack becomes [1, 2, 3]\nstk.push(4);                          // stack still [1, 2, 3], Do not add another elements as size is 4\nstk.increment(5, 100);                // stack becomes [101, 102, 103]\nstk.increment(2, 100);                // stack becomes [201, 202, 103]\nstk.pop();                            // return 103 --&gt; Return top of the stack 103, stack becomes [201, 202]\nstk.pop();                            // return 202 --&gt; Return top of the stack 202, stack becomes [201]\nstk.pop();                            // return 201 --&gt; Return top of the stack 201, stack becomes []\nstk.pop();                            // return -1 --&gt; Stack is empty return -1.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= maxSize, x, k &lt;= 1000</code></li>\n\t<li><code>0 &lt;= val &lt;= 100</code></li>\n\t<li>At most <code>1000</code> calls will be made to each method of <code>increment</code>, <code>push</code> and <code>pop</code> each separately.</li>\n</ul>\n",
+  "hints": [
+    "Use an array to represent the stack. Push will add new integer to the array. Pop removes the last element in the array and increment will add val to the first k elements of the array.",
+    "This solution run in O(1) per push and pop and O(k) per increment."
+  ],
+  "metaData": "{\n  \"classname\": \"CustomStack\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer\",\n        \"name\": \"maxSize\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"x\"\n        }\n      ],\n      \"name\": \"push\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [],\n      \"name\": \"pop\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"k\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"val\"\n        }\n      ],\n      \"name\": \"increment\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true,\n  \"manual\": false\n}",
+  "stats": "{\"totalAccepted\": \"260.1K\", \"totalSubmission\": \"325.4K\", \"totalAcceptedRaw\": 260113, \"totalSubmissionRaw\": 325410, \"acRate\": \"79.9%\"}",
+  "likes": 2366,
+  "dislikes": 112,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"CustomStack\",\"push\",\"push\",\"pop\",\"push\",\"push\",\"push\",\"increment\",\"increment\",\"pop\",\"pop\",\"pop\",\"pop\"]\n[[3],[1],[2],[],[2],[3],[4],[5,100],[2,100],[],[],[],[]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 5, \"slug\": \"cloudflare\", \"name\": \"Cloudflare\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"moloco\", \"name\": \"Moloco\"}, {\"timesEncountered\": 2, \"slug\": \"ebay\", \"name\": \"eBay\"}, {\"timesEncountered\": 2, \"slug\": \"imc\", \"name\": \"IMC\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class CustomStack {\npublic:\n    CustomStack(int maxSize) {\n        \n    }\n    \n    void push(int x) {\n        \n    }\n    \n    int pop() {\n        \n    }\n    \n    void increment(int k, int val) {\n        \n    }\n};\n\n/**\n * Your CustomStack object will be instantiated and called as such:\n * CustomStack* obj = new CustomStack(maxSize);\n * obj->push(x);\n * int param_2 = obj->pop();\n * obj->increment(k,val);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class CustomStack {\n\n    public CustomStack(int maxSize) {\n        \n    }\n    \n    public void push(int x) {\n        \n    }\n    \n    public int pop() {\n        \n    }\n    \n    public void increment(int k, int val) {\n        \n    }\n}\n\n/**\n * Your CustomStack object will be instantiated and called as such:\n * CustomStack obj = new CustomStack(maxSize);\n * obj.push(x);\n * int param_2 = obj.pop();\n * obj.increment(k,val);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class CustomStack:\n\n    def __init__(self, maxSize: int):\n        \n\n    def push(self, x: int) -> None:\n        \n\n    def pop(self) -> int:\n        \n\n    def increment(self, k: int, val: int) -> None:\n        \n\n\n# Your CustomStack object will be instantiated and called as such:\n# obj = CustomStack(maxSize)\n# obj.push(x)\n# param_2 = obj.pop()\n# obj.increment(k,val)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class CustomStack(object):\n\n    def __init__(self, maxSize):\n        \"\"\"\n        :type maxSize: int\n        \"\"\"\n        \n\n    def push(self, x):\n        \"\"\"\n        :type x: int\n        :rtype: None\n        \"\"\"\n        \n\n    def pop(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n    def increment(self, k, val):\n        \"\"\"\n        :type k: int\n        :type val: int\n        :rtype: None\n        \"\"\"\n        \n\n\n# Your CustomStack object will be instantiated and called as such:\n# obj = CustomStack(maxSize)\n# obj.push(x)\n# param_2 = obj.pop()\n# obj.increment(k,val)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} maxSize\n */\nvar CustomStack = function(maxSize) {\n    \n};\n\n/** \n * @param {number} x\n * @return {void}\n */\nCustomStack.prototype.push = function(x) {\n    \n};\n\n/**\n * @return {number}\n */\nCustomStack.prototype.pop = function() {\n    \n};\n\n/** \n * @param {number} k \n * @param {number} val\n * @return {void}\n */\nCustomStack.prototype.increment = function(k, val) {\n    \n};\n\n/** \n * Your CustomStack object will be instantiated and called as such:\n * var obj = new CustomStack(maxSize)\n * obj.push(x)\n * var param_2 = obj.pop()\n * obj.increment(k,val)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class CustomStack {\n    constructor(maxSize: number) {\n        \n    }\n\n    push(x: number): void {\n        \n    }\n\n    pop(): number {\n        \n    }\n\n    increment(k: number, val: number): void {\n        \n    }\n}\n\n/**\n * Your CustomStack object will be instantiated and called as such:\n * var obj = new CustomStack(maxSize)\n * obj.push(x)\n * var param_2 = obj.pop()\n * obj.increment(k,val)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class CustomStack {\n\n    public CustomStack(int maxSize) {\n        \n    }\n    \n    public void Push(int x) {\n        \n    }\n    \n    public int Pop() {\n        \n    }\n    \n    public void Increment(int k, int val) {\n        \n    }\n}\n\n/**\n * Your CustomStack object will be instantiated and called as such:\n * CustomStack obj = new CustomStack(maxSize);\n * obj.Push(x);\n * int param_2 = obj.Pop();\n * obj.Increment(k,val);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} CustomStack;\n\n\nCustomStack* customStackCreate(int maxSize) {\n    \n}\n\nvoid customStackPush(CustomStack* obj, int x) {\n    \n}\n\nint customStackPop(CustomStack* obj) {\n    \n}\n\nvoid customStackIncrement(CustomStack* obj, int k, int val) {\n    \n}\n\nvoid customStackFree(CustomStack* obj) {\n    \n}\n\n/**\n * Your CustomStack struct will be instantiated and called as such:\n * CustomStack* obj = customStackCreate(maxSize);\n * customStackPush(obj, x);\n \n * int param_2 = customStackPop(obj);\n \n * customStackIncrement(obj, k, val);\n \n * customStackFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type CustomStack struct {\n    \n}\n\n\nfunc Constructor(maxSize int) CustomStack {\n    \n}\n\n\nfunc (this *CustomStack) Push(x int)  {\n    \n}\n\n\nfunc (this *CustomStack) Pop() int {\n    \n}\n\n\nfunc (this *CustomStack) Increment(k int, val int)  {\n    \n}\n\n\n/**\n * Your CustomStack object will be instantiated and called as such:\n * obj := Constructor(maxSize);\n * obj.Push(x);\n * param_2 := obj.Pop();\n * obj.Increment(k,val);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class CustomStack(maxSize: Int) {\n\n    fun push(x: Int) {\n        \n    }\n\n    fun pop(): Int {\n        \n    }\n\n    fun increment(k: Int, `val`: Int) {\n        \n    }\n\n}\n\n/**\n * Your CustomStack object will be instantiated and called as such:\n * var obj = CustomStack(maxSize)\n * obj.push(x)\n * var param_2 = obj.pop()\n * obj.increment(k,`val`)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass CustomStack {\n\n    init(_ maxSize: Int) {\n        \n    }\n    \n    func push(_ x: Int) {\n        \n    }\n    \n    func pop() -> Int {\n        \n    }\n    \n    func increment(_ k: Int, _ val: Int) {\n        \n    }\n}\n\n/**\n * Your CustomStack object will be instantiated and called as such:\n * let obj = CustomStack(maxSize)\n * obj.push(x)\n * let ret_2: Int = obj.pop()\n * obj.increment(k, val)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct CustomStack {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl CustomStack {\n\n    fn new(maxSize: i32) -> Self {\n        \n    }\n    \n    fn push(&self, x: i32) {\n        \n    }\n    \n    fn pop(&self) -> i32 {\n        \n    }\n    \n    fn increment(&self, k: i32, val: i32) {\n        \n    }\n}\n\n/**\n * Your CustomStack object will be instantiated and called as such:\n * let obj = CustomStack::new(maxSize);\n * obj.push(x);\n * let ret_2: i32 = obj.pop();\n * obj.increment(k, val);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class CustomStack\n\n=begin\n    :type max_size: Integer\n=end\n    def initialize(max_size)\n        \n    end\n\n\n=begin\n    :type x: Integer\n    :rtype: Void\n=end\n    def push(x)\n        \n    end\n\n\n=begin\n    :rtype: Integer\n=end\n    def pop()\n        \n    end\n\n\n=begin\n    :type k: Integer\n    :type val: Integer\n    :rtype: Void\n=end\n    def increment(k, val)\n        \n    end\n\n\nend\n\n# Your CustomStack object will be instantiated and called as such:\n# obj = CustomStack.new(max_size)\n# obj.push(x)\n# param_2 = obj.pop()\n# obj.increment(k, val)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class CustomStack {\n    /**\n     * @param Integer $maxSize\n     */\n    function __construct($maxSize) {\n        \n    }\n  \n    /**\n     * @param Integer $x\n     * @return NULL\n     */\n    function push($x) {\n        \n    }\n  \n    /**\n     * @return Integer\n     */\n    function pop() {\n        \n    }\n  \n    /**\n     * @param Integer $k\n     * @param Integer $val\n     * @return NULL\n     */\n    function increment($k, $val) {\n        \n    }\n}\n\n/**\n * Your CustomStack object will be instantiated and called as such:\n * $obj = CustomStack($maxSize);\n * $obj->push($x);\n * $ret_2 = $obj->pop();\n * $obj->increment($k, $val);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class CustomStack {\n\n  CustomStack(int maxSize) {\n    \n  }\n  \n  void push(int x) {\n    \n  }\n  \n  int pop() {\n    \n  }\n  \n  void increment(int k, int val) {\n    \n  }\n}\n\n/**\n * Your CustomStack object will be instantiated and called as such:\n * CustomStack obj = CustomStack(maxSize);\n * obj.push(x);\n * int param2 = obj.pop();\n * obj.increment(k,val);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class CustomStack(_maxSize: Int) {\n\n    def push(x: Int): Unit = {\n        \n    }\n\n    def pop(): Int = {\n        \n    }\n\n    def increment(k: Int, `val`: Int): Unit = {\n        \n    }\n\n}\n\n/**\n * Your CustomStack object will be instantiated and called as such:\n * val obj = new CustomStack(maxSize)\n * obj.push(x)\n * val param_2 = obj.pop()\n * obj.increment(k,`val`)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule CustomStack do\n  @spec init_(max_size :: integer) :: any\n  def init_(max_size) do\n    \n  end\n\n  @spec push(x :: integer) :: any\n  def push(x) do\n    \n  end\n\n  @spec pop() :: integer\n  def pop() do\n    \n  end\n\n  @spec increment(k :: integer, val :: integer) :: any\n  def increment(k, val) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# CustomStack.init_(max_size)\n# CustomStack.push(x)\n# param_2 = CustomStack.pop()\n# CustomStack.increment(k, val)\n\n# CustomStack.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec custom_stack_init_(MaxSize :: integer()) -> any().\ncustom_stack_init_(MaxSize) ->\n  .\n\n-spec custom_stack_push(X :: integer()) -> any().\ncustom_stack_push(X) ->\n  .\n\n-spec custom_stack_pop() -> integer().\ncustom_stack_pop() ->\n  .\n\n-spec custom_stack_increment(K :: integer(), Val :: integer()) -> any().\ncustom_stack_increment(K, Val) ->\n  .\n\n\n%% Your functions will be called as such:\n%% custom_stack_init_(MaxSize),\n%% custom_stack_push(X),\n%% Param_2 = custom_stack_pop(),\n%% custom_stack_increment(K, Val),\n\n%% custom_stack_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define custom-stack%\n  (class object%\n    (super-new)\n    \n    ; max-size : exact-integer?\n    (init-field\n      max-size)\n    \n    ; push : exact-integer? -> void?\n    (define/public (push x)\n      )\n    ; pop : -> exact-integer?\n    (define/public (pop)\n      )\n    ; increment : exact-integer? exact-integer? -> void?\n    (define/public (increment k val)\n      )))\n\n;; Your custom-stack% object will be instantiated and called as such:\n;; (define obj (new custom-stack% [max-size max-size]))\n;; (send obj push x)\n;; (define param_2 (send obj pop))\n;; (send obj increment k val)"
+    }
+  ],
+  "solution": {
+    "id": "2447",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Array\n\n#### Intuition\n\nAt its core, a stack is essentially a list with limited access where we can only interact with the topmost element. For a comprehensive understanding of stacks, refer to this LeetCode [Explore Card](https://leetcode.com/explore/learn/card/queue-stack/230/usage-stack/) for an in-depth explanation. \n\nLet's keep a pointer `topIndex` to point to the top element. We'll simulate the stack using an array since we can access each index of the array in constant time.\n\n- `push()`:\n  The push operation adds an element to the top of the stack, which corresponds to the end of our array. We increment `topIndex` to the next available position in the array and insert the new element there.\n\n- `pop()`:\n  The pop operation removes and returns the element currently at the top of the stack. We return the element that `topIndex` points to and then decrement `topIndex` to indicate the new top element. There's no need to physically remove the element from the array; when `topIndex` next reaches that position, the element will simply be overwritten.\n\n- `increment()`:\n  This operation is unique to our custom stack implementation, as it manipulates elements other than the topmost one. Here, our array representation proves advantageous. We iterate through the first `k` elements (or all elements if the array's length is less than `k`) and increase each element by the given value.\n\n#### Algorithm\n\n- Initialize \n  1. an integer array `stackArray` to store the stack elements.\n  2. an integer variable `topIndex` to -1, representing an empty stack.\n\n- In the constructor, initialize `stackArray` with the given `maxSize`.\n  \n- In the `push` method:\n   - Check if `topIndex` is less than the last index of `stackArray`.\n   - If true, increment `topIndex` and add the new element `x` at that index.\n\n- In the `pop` method:\n   - Check if `topIndex` is greater than or equal to `0`.\n   - If true, return the element at `topIndex` and decrement `topIndex`.\n   - If false, return `-1` to indicate an empty stack.\n  \n- In the `increment` method:\n   - Calculate the `limit` as the minimum of `k` and `topIndex + 1`.\n   - Iterate from `0` to `limit - 1`:\n     - For each iteration, add `val` to the element at index `i` in `stackArray`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/LS96QBTV/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"LS96QBTV\"></iframe>\n\n#### Complexity Analysis\n\n- Time complexity: $O(1)$ for `push` and `pop`, $O(k)$ for `increment`\n\n    The `push` and `pop` methods both perform a single comparison and at most one array operation, all of which are constant time operations.\n\n    The `increment` method iterates over $k$ elements in the worst case, thus having a $O(k)$ time complexity.\n\n- Space complexity: $O(\\text{maxSize})$\n\n    The overall space complexity is $O(\\text{maxSize})$, due to the `stackArray` which can store at most $\\text{maxSize}$ elements. \n\n---\n\n### Approach 2: Linked List\n\n#### Intuition\n\nIn the previous approach, the array has a fixed size (`maxSize`), regardless of whether the stack ever reaches full capacity. This can lead to wasted space. A more efficient solution is to use a data structure that grows dynamically with the stack while still allowing constant-time operations on its end element. A linked list is well-suited for this purpose.\n\nThe linked list implementation is similar to the array-based approach, but it optimizes space usage. Instead of modifying the element at a specific `topIndex`, the push operation adds a new node to the tail of the linked list, and the pop operation removes the tail node. The increment operation remains largely the same: we iterate through the first `k` elements (or all elements if the list has fewer than `k` nodes) and update their values.\n\n#### Algorithm\n\n- Initialize \n  - a list named `stack` to store the elements of the custom stack.\n  - a variable `maxSize` to hold the maximum capacity of the stack.\n\n- In the constructor:\n  - Set `maxSize` to the provided parameter value. \n\n- In the `push` method:\n  - Check if the current size of `stack` is less than `maxSize`:\n    - If true, add the new element to the end of `stack`.\n  \n- In the `pop` method:\n  - If the `stack` is empty, return -1.\n  - Else, remove and return the last element of `stack`.\n  \n- In the `increment` method:\n  - Iterate over the first `k` elements of the stack (or all elements if `k` exceeds the `stack` size).\n    - For each element, update its value by adding `val`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/5aBvpcmf/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"5aBvpcmf\"></iframe>\n\n#### Complexity Analysis\n\n- Time complexity: $O(1)$ for `push` and `pop`, $O(k)$ for `increment`\n\n    The `push` and `pop` operations modify the last node in the list, both taking constant time. \n\n    In the worst case, the `increment` method updates $k$ elements, taking $O(k)$ time.\n\n\n- Space complexity: $O(\\text{maxSize})$\n\n    The stack can store $\\text{maxSize}$ elements in the worst case.\n\n---\n\n### Approach 3: Array using Lazy Propagation\n\n#### Intuition\n\nIn the previous approach, the `increment` operation modified the bottom `k` elements directly, which can become inefficient for large stacks or frequent increments. To improve this, we can use lazy propagation, a technique where updates are delayed until absolutely necessary.\n\nInstead of immediately updating all affected elements during an increment, we store the increment value and apply it only when needed. This is useful when dealing with a range of elements but without the need for immediate updates.\n\nWe introduce an additional array, `incrementArray`, that tracks the increment values. Each index `i` in this array holds the cumulative value by which the elements `[0, i]` in the stack will be incremented.\n\n- `push()`:\n  The push operation remains the same as before. No changes are needed in the `incrementArray` because pushing doesn't involve any increment adjustments.\n\n- `pop()`:\n  When popping an element, we return the value at the top of the stack, including any increments that apply to it. This is where lazy propagation is used.\n\n  First, we retrieve the value at `topIndex` and add the corresponding increment from `incrementArray`. Since this top position is being removed, the increment for it needs to be passed down to the next element below. We do this by adding the increment at `topIndex` to `incrementArray[topIndex-1]`, preserving the necessary increments for future pops.\n\n  Then, we decrement `topIndex` to remove the current top element.\n\n- `increment()`:\n  Instead of directly modifying the bottom `k` elements, we simply update the value at index `k-1` in `incrementArray`. If the stack size is less than `k`, we update the increment at `topIndex` instead. This avoids unnecessary modifications and applies the increments only when the affected elements are accessed.\n\nCheck out the algorithm in action in the slideshow below:\n\n!?!../Documents/1381/slideshow.json:1132,754!?!\n\n#### Algorithm\n\n- Initialize \n  1. an integer array `stackArray` to store the stack elements.\n  2. an integer array `incrementArray` to store increments for lazy propagation.\n  3. an integer variable `topIndex` to `-1`, representing an empty stack.\n\n- In the constructor:\n   - Initialize `stackArray` with the given `maxSize`.\n   - Initialize `incrementArray` with the same `maxSize`.\n   - Set `topIndex` to `-1`.\n\n- In the `push` method:\n   - Check if `topIndex` is less than the last index of `stackArray`.\n   - If true, increment `topIndex` and add the new element `x` at that index in `stackArray`.\n  \n- In the `pop` method:\n   - Check if `topIndex` is less than 0.\n   - If true, return `-1` to indicate an empty stack.\n   - Calculate the actual value by adding `stackArray[topIndex]` and `incrementArray[topIndex]`.\n   - If `topIndex` is greater than 0, add `incrementArray[topIndex]` to `incrementArray[topIndex - 1]`.\n   - Reset `incrementArray[topIndex]` to `0`.\n   - Decrement `topIndex`.\n   - Return the calculated result.\n  \n- In the `increment` method:\n   - Check if `topIndex` is greater than or equal to `0`.\n   - If true, calculate `incrementIndex` as the minimum of `topIndex` and `k - 1`.\n   - Add `val` to `incrementArray[incrementIndex]`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/4D5jeCLA/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"4D5jeCLA\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity: $O(1)$ for all operations\n\n    The `push`, `pop`, and `increment` methods perform only constant time operations (comparisons and array operations).\n\n* Space complexity: $O(\\text{maxSize})$\n\n    The `stackArray` and the `incrementArray` arrays both have a size of $\\text{maxSize}$. Thus, the overall space complexity of the algorithm is $O(2 \\cdot \\text{maxSize}) = O(\\text{maxSize})$\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

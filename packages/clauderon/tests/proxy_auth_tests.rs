@@ -20,7 +20,7 @@
 //!
 //! ```bash
 //! # Set credentials
-//! export GITHUB_TOKEN=ghp_your_token
+//! export GH_TOKEN=ghp_your_token
 //! export ANTHROPIC_API_KEY=sk-ant-your_key
 //! export PAGERDUTY_TOKEN=your_token
 //! export SENTRY_AUTH_TOKEN=your_token
@@ -112,9 +112,9 @@ fn read_audit_log(path: &Path) -> anyhow::Result<Vec<AuditEntry>> {
 #[tokio::test]
 #[ignore]
 async fn test_github_integration() {
-    // Requires GITHUB_TOKEN environment variable
-    if std::env::var("GITHUB_TOKEN").is_err() {
-        eprintln!("Skipping: GITHUB_TOKEN not set");
+    // Requires GH_TOKEN environment variable
+    if std::env::var("GH_TOKEN").is_err() {
+        eprintln!("Skipping: GH_TOKEN not set");
         return;
     }
 
@@ -290,8 +290,8 @@ async fn test_anthropic_oauth_integration() {
 #[tokio::test]
 #[ignore]
 async fn test_pagerduty_integration() {
-    if std::env::var("PAGERDUTY_TOKEN").is_err() && std::env::var("PAGERDUTY_API_KEY").is_err() {
-        eprintln!("Skipping: PAGERDUTY_TOKEN or PAGERDUTY_API_KEY not set");
+    if std::env::var("PAGERDUTY_TOKEN").is_err() {
+        eprintln!("Skipping: PAGERDUTY_TOKEN not set");
         return;
     }
 
@@ -649,8 +649,8 @@ async fn test_talos_gateway_integration() {
 #[ignore]
 async fn test_audit_logging_multiple_services() {
     // Requires at least GitHub and one other service
-    if std::env::var("GITHUB_TOKEN").is_err() {
-        eprintln!("Skipping: GITHUB_TOKEN not set");
+    if std::env::var("GH_TOKEN").is_err() {
+        eprintln!("Skipping: GH_TOKEN not set");
         return;
     }
 
@@ -721,8 +721,8 @@ async fn test_audit_logging_multiple_services() {
 #[ignore]
 async fn test_auth_injection_proof() {
     // Requires GitHub token
-    if std::env::var("GITHUB_TOKEN").is_err() {
-        eprintln!("Skipping: GITHUB_TOKEN not set");
+    if std::env::var("GH_TOKEN").is_err() {
+        eprintln!("Skipping: GH_TOKEN not set");
         return;
     }
 

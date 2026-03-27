@@ -1,0 +1,140 @@
+{
+  "questionId": "1719",
+  "questionFrontendId": "1580",
+  "title": "Put Boxes Into the Warehouse II",
+  "titleSlug": "put-boxes-into-the-warehouse-ii",
+  "difficulty": "Medium",
+  "content": "<p>You are given two arrays of positive integers, <code>boxes</code> and <code>warehouse</code>, representing the heights of some boxes of unit width and the heights of <code>n</code> rooms in a warehouse respectively. The warehouse&#39;s rooms are labeled from <code>0</code> to <code>n - 1</code> from left to right where <code>warehouse[i]</code> (0-indexed) is the height of the <code>i<sup>th</sup></code> room.</p>\n\n<p>Boxes are put into the warehouse by the following rules:</p>\n\n<ul>\n\t<li>Boxes cannot be stacked.</li>\n\t<li>You can rearrange the insertion order of the boxes.</li>\n\t<li>Boxes can be pushed into the warehouse from <strong>either side</strong> (left or right)</li>\n\t<li>If the height of some room in the warehouse is less than the height of a box, then that box and all other boxes behind it will be stopped before that room.</li>\n</ul>\n\n<p>Return <em>the maximum number of boxes you can put into the warehouse.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/08/30/22.png\" style=\"width: 401px; height: 202px;\" />\n<pre>\n<strong>Input:</strong> boxes = [1,2,2,3,4], warehouse = [3,4,1,2]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/08/30/22-1.png\" style=\"width: 240px; height: 202px;\" />\nWe can store the boxes in the following order:\n1- Put the yellow box in room 2 from either the left or right side.\n2- Put the orange box in room 3 from the right side.\n3- Put the green box in room 1 from the left side.\n4- Put the red box in room 0 from the left side.\nNotice that there are other valid ways to put 4 boxes such as swapping the red and green boxes or the red and orange boxes.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/08/30/22-2.png\" style=\"width: 401px; height: 242px;\" />\n<pre>\n<strong>Input:</strong> boxes = [3,5,5,2], warehouse = [2,1,3,4,5]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/08/30/22-3.png\" style=\"width: 280px; height: 242px;\" />\nIt is not possible to put the two boxes of height 5 in the warehouse since there&#39;s only 1 room of height &gt;= 5.\nOther valid solutions are to put the green box in room 2 or to put the orange box first in room 2 before putting the green and red boxes.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == warehouse.length</code></li>\n\t<li><code>1 &lt;= boxes.length, warehouse.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= boxes[i], warehouse[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Try to put at least one box in the house pushing it from either side.",
+    "Once you put one box to the house, you can solve the problem with the same logic used to solve version I. You have a warehouse open from the left only and a warehouse open from the right only."
+  ],
+  "metaData": "{\n  \"name\": \"maxBoxesInWarehouse\",\n  \"params\": [\n    {\n      \"name\": \"boxes\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"warehouse\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"10.7K\", \"totalSubmission\": \"16.3K\", \"totalAcceptedRaw\": 10729, \"totalSubmissionRaw\": 16293, \"acRate\": \"65.9%\"}",
+  "likes": 228,
+  "dislikes": 12,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Put Boxes Into the Warehouse I\", \"titleSlug\": \"put-boxes-into-the-warehouse-i\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,2,3,4]\n[3,4,1,2]",
+    "[3,5,5,2]\n[2,1,3,4,5]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"pinterest\", \"name\": \"Pinterest\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxBoxesInWarehouse(vector<int>& boxes, vector<int>& warehouse) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxBoxesInWarehouse(int[] boxes, int[] warehouse) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxBoxesInWarehouse(self, boxes: List[int], warehouse: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxBoxesInWarehouse(self, boxes, warehouse):\n        \"\"\"\n        :type boxes: List[int]\n        :type warehouse: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} boxes\n * @param {number[]} warehouse\n * @return {number}\n */\nvar maxBoxesInWarehouse = function(boxes, warehouse) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxBoxesInWarehouse(boxes: number[], warehouse: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxBoxesInWarehouse(int[] boxes, int[] warehouse) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxBoxesInWarehouse(int* boxes, int boxesSize, int* warehouse, int warehouseSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxBoxesInWarehouse(boxes []int, warehouse []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxBoxesInWarehouse(boxes: IntArray, warehouse: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxBoxesInWarehouse(_ boxes: [Int], _ warehouse: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_boxes_in_warehouse(boxes: Vec<i32>, warehouse: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} boxes\n# @param {Integer[]} warehouse\n# @return {Integer}\ndef max_boxes_in_warehouse(boxes, warehouse)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $boxes\n     * @param Integer[] $warehouse\n     * @return Integer\n     */\n    function maxBoxesInWarehouse($boxes, $warehouse) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxBoxesInWarehouse(List<int> boxes, List<int> warehouse) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxBoxesInWarehouse(boxes: Array[Int], warehouse: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_boxes_in_warehouse(boxes :: [integer], warehouse :: [integer]) :: integer\n  def max_boxes_in_warehouse(boxes, warehouse) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_boxes_in_warehouse(Boxes :: [integer()], Warehouse :: [integer()]) -> integer().\nmax_boxes_in_warehouse(Boxes, Warehouse) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-boxes-in-warehouse boxes warehouse)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2342",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nPut Boxes Into the Warehouse II is a follow up question of [1564. Put Boxes Into the Warehouse I](https://leetcode.com/problems/put-boxes-into-the-warehouse-i/editorial/). If you are struggling with this problem, you may want to attempt that one first.\n\nThe trick to solving this problem is understanding that this warehouse isn't set up like a typical warehouse. You can't access these individual rooms through a central hallway; to get to the center rooms, you must pass through the rooms that are next to it. If you try to push a box to a tall room that has a short one before it, it will get stuck before the short room.\n\nTo maximize the number of boxes you can place in the warehouse, you should start by placing the smallest box. By doing this, you ensure that you don’t block access to smaller rooms later, because if a smaller box gets stuck, a larger box will certainly get stuck, but the reverse is not true.\n\nTherefore, our strategy would be to place boxes from shortest to tallest.\n\n---\n\n### Approach 1: Add Smallest Boxes to the Rightmost Warehouse Rooms from Both Ends\n\n#### Intuition\n\nWe will take a greedy approach to solve the problem. The intuition is that if each step follows the optimal strategy, then the overall arrangement of boxes will be optimal.\n\nImagine we have a box of height `h`, and we want to push it into the warehouse. We can start pushing from either the left or the right. The limiting factor on how far we can push it will be the first position in the warehouse we encounter that has a height less than `h`. We won't be able to push the box into this position or into any position after it.\n\nTo make the algorithm more efficient, we will first preprocess the heights of the warehouse. Keeping in mind that the limiting factor for each position is the minimum height that comes before it from the left or the right, we update the height for each position to this minimum value. \n\nWe then sort the boxes from shortest to tallest. Next, we check from both ends and try to place the smallest box remaining into the furthermost valid position available.\n\nBecause lower heights for rooms on the left and right will block the entry of boxes into rooms in the middle,  we need to sort the preprocessed warehouse array. We then start from the smallest box and the leftmost and rightmost positions of the warehouse. If the current box can fit in the warehouse room, we increment the count by 1 and move on to the next box. Otherwise, we move on to the next warehouse room from the opposite end and check if the box will fit there.\n\n#### Algorithm\n\n- Initialize `n` as the size of the `warehouse` array.\n- Initialize `minHeight` to `INT_MAX`.\n- Create an array `effectiveHeights` of size `n` and initialize all elements to 0.\n- Iterate from 0 to `n - 1`:\n   - Update `minHeight` as the minimum of `minHeight` and the current `warehouse` height to keep track of the minimum height encountered so far from the left end.\n   - Set `effectiveHeights[i]` to `minHeight`. The effective height at each position should be the minimum height encountered up to that position from the left end, as this limits the maximum height of boxes that can be pushed from the left side.\n- Reset `minHeight` to `INT_MAX` to prepare for computing the minimum heights from the right end.\n- Iterate from `n - 1` to 0:\n   - Update `minHeight` as the minimum of `minHeight` and the current `warehouse` height to keep track of the minimum height encountered so far from the right end.\n   - Set `effectiveHeights[i]` to the maximum of `effectiveHeights[i]` and `minHeight`. The effective height at each position should be the maximum of the minimum heights encountered from both sides, as this accounts for the constraints imposed by both sides when pushing boxes.\n- Sort `effectiveHeights` in ascending order to prepare for the greedy placement of boxes from smallest to largest effective height.\n- Sort `boxes` in ascending order to place boxes from smallest to largest, ensuring that smaller boxes have a chance to be placed even if larger boxes cannot fit.\n- Initialize `count` to 0 to keep track of the number of boxes placed in the warehouse.\n- Iterate from 0 to `n - 1`:\n    - If `count` is less than the size of `boxes`, and the current `box` height is less than or equal to `effectiveHeights[i]`:\n        - Increment `count` as the current box fits within the current effective height and can be placed in the warehouse.\n- Return `count`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/4hcwNGgr/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"4hcwNGgr\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ be the number of boxes and $n$ be the number of rooms in the warehouse.\n\n- Time complexity: $O(m \\log(m) + n \\log(n))$\n\n    $O(m \\log(m) + n \\log(n))$ because we need to sort the `boxes` $O(m \\log m)$ and preprocess the warehouse rooms heights from both ends $O(n)$.\n\n- Space complexity: $O(\\log m + n)$\n\n    The algorithm uses an additional array `effectiveHeights` to store the processed heights of the warehouse, which has the same length as the warehouse array. Therefore, the space complexity is $O(n)$.\n\n    Sorting the boxes has different space complexities depending on the language used. For now, we will consider Java as the primary language, so the space complexity of $O(\\log m)$ is due to the auxiliary stack space used by the sort function.\n\n    Sorting the `effectiveHeights` has a space complexity of $O(\\log n)$ for the same reason.\n\n    The space complexity of the sorting algorithm depends on the programming language.\n    - In Python, the sort method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has $O(n)$ additional space.\n    - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O(\\log n)$ for sorting two arrays.\n    - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worse-case space complexity of $O(\\log n)$.\n\n---\n\n### Approach 2: Add Largest Possible Boxes from Both Ends\n\n#### Intuition\n\nWhat if the interviewer requires us to use $O(1)$ space by modifying the `boxes` array and does not allow us to modify the original `warehouse` array? This follow-up request excludes the possibility of preprocessing the input array as we did before.\n\nWe can take a slightly different greedy approach to tackle the problem. The idea is to iterate over the boxes from largest to smallest and check if each box can fit in either the leftmost or rightmost available room in the warehouse.\n\nWe start by sorting the boxes in descending order of their heights. Then, we initialize two pointers `leftIndex` and `rightIndex` to keep track of the leftmost and rightmost available rooms in the warehouse, respectively.\n\nWe iterate through the sorted boxes from the largest to the smallest. For each box, we check if it can fit in either the leftmost available room (pointed by `leftIndex`) or the rightmost available room (pointed by `rightIndex`).\n\nIf the box can fit in the leftmost available room, we increment the count of placed boxes and move the `leftIndex` to the next room on the right. Similarly, if the box can fit in the rightmost available room, we increment the count and move the `rightIndex` to the next room on the left.\n\nIf the box cannot fit in either the leftmost or rightmost available room, we move to the next smaller box without incrementing the count or updating the indices.\n\nWe continue this process until all boxes have been checked or until `leftIndex` and `rightIndex` cross each other (i.e., there are no more available rooms).\n\nBy iterating over the boxes from largest to smallest, we ensure that smaller boxes have a chance to be placed even if larger boxes cannot fit in the remaining rooms. This greedy approach guarantees that we place the maximum number of boxes possible in the warehouse without using any additional space or modifying the input arrays.\n\n#### Algorithm\n \n- Initialize `warehouseSize` as the size of the `warehouse` array.\n- Sort `boxes` in ascending order to iterate over boxes from largest to smallest.\n- Initialize `leftIndex` to 0 and `rightIndex` to `warehouseSize - 1` to keep track of the leftmost and rightmost available rooms in the warehouse.\n- Initialize `boxCount` to 0 and `boxIndex` to `boxes.size() - 1` to store the number of boxes placed, and to iterate over boxes from largest to smallest.\n- While `leftIndex` is less than or equal to `rightIndex`, and `boxIndex` is greater than or equal to 0:\n    - If the current `box` height is less than or equal to `warehouse[leftIndex]`:\n        - Increment `boxCount` as the current box fits in the leftmost available room, so it can be placed.\n        - Increment `leftIndex` to move to the next room on the right, as the leftmost available room is now occupied.\n    - Else if the current `box` height is less than or equal to `warehouse[rightIndex]`:\n        - Increment `boxCount` as the current box fits in the rightmost available room, so it can be placed.\n        - Decrement `rightIndex` to move to the next room on the left, as the rightmost available room is now occupied.\n    - Decrement `boxIndex` to move to the next smaller box.\n- Return `boxCount`.\n\nThe approach is visualized below:\n\n!?!../Documents/1580-Re/app2.json:976,675!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/2rcwy84k/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"2rcwy84k\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ be the number of boxes and $n$ be the number of rooms in the warehouse.\n\n* Time complexity: $O(m \\log(m) + n)$\n\n    $O(m \\log(m) + n)$ because we need to sort the boxes and iterate over the warehouse rooms and boxes.\n\n* Space complexity: $O(\\log m)$ or $O(m)$ \n\n    Note that some extra space is used when we sort arrays in place. The space complexity of the sorting algorithm depends on the programming language.\n    - In Python, the sort method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has $O(m)$ additional space.\n    - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O(\\log m)$ for sorting two arrays.\n    - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worse-case space complexity of $O(\\log m)$.\n\n    Besides the sorting space, our algorithm uses constant space $O(1)$ by using two pointers to iterate through the boxes and warehouse rooms.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

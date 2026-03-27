@@ -1,0 +1,53 @@
+{
+  "questionId": "1439",
+  "questionFrontendId": "1308",
+  "title": "Running Total for Different Genders",
+  "titleSlug": "running-total-for-different-genders",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Scores</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| player_name   | varchar |\n| gender        | varchar |\n| day           | date    |\n| score_points  | int     |\n+---------------+---------+\n(gender, day) is the primary key (combination of columns with unique values) for this table.\nA competition is held between the female team and the male team.\nEach row of this table indicates that a player_name and with gender has scored score_point in someday.\nGender is &#39;F&#39; if the player is in the female team and &#39;M&#39; if the player is in the male team.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to find the total score for each gender on each day.</p>\n\n<p>Return the result table ordered by <code>gender</code> and <code>day</code> in <strong>ascending order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nScores table:\n+-------------+--------+------------+--------------+\n| player_name | gender | day        | score_points |\n+-------------+--------+------------+--------------+\n| Aron        | F      | 2020-01-01 | 17           |\n| Alice       | F      | 2020-01-07 | 23           |\n| Bajrang     | M      | 2020-01-07 | 7            |\n| Khali       | M      | 2019-12-25 | 11           |\n| Slaman      | M      | 2019-12-30 | 13           |\n| Joe         | M      | 2019-12-31 | 3            |\n| Jose        | M      | 2019-12-18 | 2            |\n| Priya       | F      | 2019-12-31 | 23           |\n| Priyanka    | F      | 2019-12-30 | 17           |\n+-------------+--------+------------+--------------+\n<strong>Output:</strong> \n+--------+------------+-------+\n| gender | day        | total |\n+--------+------------+-------+\n| F      | 2019-12-30 | 17    |\n| F      | 2019-12-31 | 40    |\n| F      | 2020-01-01 | 57    |\n| F      | 2020-01-07 | 80    |\n| M      | 2019-12-18 | 2     |\n| M      | 2019-12-25 | 13    |\n| M      | 2019-12-30 | 26    |\n| M      | 2019-12-31 | 29    |\n| M      | 2020-01-07 | 36    |\n+--------+------------+-------+\n<strong>Explanation:</strong> \nFor the female team:\nThe first day is 2019-12-30, Priyanka scored 17 points and the total score for the team is 17.\nThe second day is 2019-12-31, Priya scored 23 points and the total score for the team is 40.\nThe third day is 2020-01-01, Aron scored 17 points and the total score for the team is 57.\nThe fourth day is 2020-01-07, Alice scored 23 points and the total score for the team is 80.\n\nFor the male team:\nThe first day is 2019-12-18, Jose scored 2 points and the total score for the team is 2.\nThe second day is 2019-12-25, Khali scored 11 points and the total score for the team is 13.\nThe third day is 2019-12-30, Slaman scored 13 points and the total score for the team is 26.\nThe fourth day is 2019-12-31, Joe scored 3 points and the total score for the team is 29.\nThe fifth day is 2020-01-07, Bajrang scored 7 points and the total score for the team is 36.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Scores (player_name varchar(20), gender varchar(1), day date, score_points int)\"], \"mssql\": [\"Create table Scores (player_name varchar(20), gender varchar(1), day date, score_points int)\"], \"oraclesql\": [\"Create table Scores (player_name varchar(20), gender varchar(1), day date, score_points int)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"running_total\", \"pythondata\": [\"Scores = pd.DataFrame([], columns=['player_name', 'gender', 'day', 'score_points']).astype({'player_name':'object', 'gender':'object', 'day':'datetime64[ns]', 'score_points':'Int64'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Scores (player_name varchar(20), gender varchar(1), day date, score_points int)\"], \"database_schema\": {\"Scores\": {\"player_name\": \"VARCHAR(20)\", \"gender\": \"VARCHAR(1)\", \"day\": \"DATE\", \"score_points\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"47.2K\", \"totalSubmission\": \"54.8K\", \"totalAcceptedRaw\": 47226, \"totalSubmissionRaw\": 54834, \"acRate\": \"86.1%\"}",
+  "likes": 225,
+  "dislikes": 70,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Last Person to Fit in the Bus\", \"titleSlug\": \"last-person-to-fit-in-the-bus\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Scores\":[\"player_name\",\"gender\",\"day\",\"score_points\"]},\"rows\":{\"Scores\":[[\"Aron\",\"F\",\"2020-01-01\",17],[\"Alice\",\"F\",\"2020-01-07\",23],[\"Bajrang\",\"M\",\"2020-01-07\",7],[\"Khali\",\"M\",\"2019-12-25\",11],[\"Slaman\",\"M\",\"2019-12-30\",13],[\"Joe\",\"M\",\"2019-12-31\",3],[\"Jose\",\"M\",\"2019-12-18\",2],[\"Priya\",\"F\",\"2019-12-31\",23],[\"Priyanka\",\"F\",\"2019-12-30\",17]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef running_total(scores: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,141 @@
+{
+  "questionId": "1752",
+  "questionFrontendId": "1630",
+  "title": "Arithmetic Subarrays",
+  "titleSlug": "arithmetic-subarrays",
+  "difficulty": "Medium",
+  "content": "<p>A sequence of numbers is called <strong>arithmetic</strong> if it consists of at least two elements, and the difference between every two consecutive elements is the same. More formally, a sequence <code>s</code> is arithmetic if and only if <code>s[i+1] - s[i] == s[1] - s[0] </code>for all valid <code>i</code>.</p>\n\n<p>For example, these are <strong>arithmetic</strong> sequences:</p>\n\n<pre>\n1, 3, 5, 7, 9\n7, 7, 7, 7\n3, -1, -5, -9</pre>\n\n<p>The following sequence is not <strong>arithmetic</strong>:</p>\n\n<pre>\n1, 1, 2, 5, 7</pre>\n\n<p>You are given an array of <code>n</code> integers, <code>nums</code>, and two arrays of <code>m</code> integers each, <code>l</code> and <code>r</code>, representing the <code>m</code> range queries, where the <code>i<sup>th</sup></code> query is the range <code>[l[i], r[i]]</code>. All the arrays are <strong>0-indexed</strong>.</p>\n\n<p>Return <em>a list of </em><code>boolean</code> <em>elements</em> <code>answer</code><em>, where</em> <code>answer[i]</code> <em>is</em> <code>true</code> <em>if the subarray</em> <code>nums[l[i]], nums[l[i]+1], ... , nums[r[i]]</code><em> can be <strong>rearranged</strong> to form an <strong>arithmetic</strong> sequence, and</em> <code>false</code> <em>otherwise.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = <code>[4,6,5,9,3,7]</code>, l = <code>[0,0,2]</code>, r = <code>[2,3,5]</code>\n<strong>Output:</strong> <code>[true,false,true]</code>\n<strong>Explanation:</strong>\nIn the 0<sup>th</sup> query, the subarray is [4,6,5]. This can be rearranged as [6,5,4], which is an arithmetic sequence.\nIn the 1<sup>st</sup> query, the subarray is [4,6,5,9]. This cannot be rearranged as an arithmetic sequence.\nIn the 2<sup>nd</sup> query, the subarray is <code>[5,9,3,7]. This</code> can be rearranged as <code>[3,5,7,9]</code>, which is an arithmetic sequence.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [-12,-9,-3,-12,-6,15,20,-25,-20,-15,-10], l = [0,1,6,4,8,7], r = [4,4,9,7,9,10]\n<strong>Output:</strong> [false,true,false,false,true,true]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == nums.length</code></li>\n\t<li><code>m == l.length</code></li>\n\t<li><code>m == r.length</code></li>\n\t<li><code>2 &lt;= n &lt;= 500</code></li>\n\t<li><code>1 &lt;= m &lt;= 500</code></li>\n\t<li><code>0 &lt;= l[i] &lt; r[i] &lt; n</code></li>\n\t<li><code>-10<sup>5</sup> &lt;= nums[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "To check if a given sequence is arithmetic, just check that the difference between every two consecutive elements is the same.",
+    "If and only if a set of numbers can make an arithmetic sequence, then its sorted version makes an arithmetic sequence. So to check a set of numbers, sort it, and check if that sequence is arithmetic.",
+    "For each query, get the corresponding set of numbers which will be the sub-array represented by the query, sort it, and check if the result sequence is arithmetic."
+  ],
+  "metaData": "{\n  \"name\": \"checkArithmeticSubarrays\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"l\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"r\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<boolean>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"156.7K\", \"totalSubmission\": \"187.1K\", \"totalAcceptedRaw\": 156698, \"totalSubmissionRaw\": 187060, \"acRate\": \"83.8%\"}",
+  "likes": 1898,
+  "dislikes": 210,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Arithmetic Slices\", \"titleSlug\": \"arithmetic-slices\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Can Make Arithmetic Progression From Sequence\", \"titleSlug\": \"can-make-arithmetic-progression-from-sequence\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[4,6,5,9,3,7]\n[0,0,2]\n[2,3,5]",
+    "[-12,-9,-3,-12,-6,15,20,-25,-20,-15,-10]\n[0,1,6,4,8,7]\n[4,4,9,7,9,10]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<bool> checkArithmeticSubarrays(vector<int>& nums, vector<int>& l, vector<int>& r) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<Boolean> checkArithmeticSubarrays(int[] nums, int[] l, int[] r) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def checkArithmeticSubarrays(self, nums: List[int], l: List[int], r: List[int]) -> List[bool]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def checkArithmeticSubarrays(self, nums, l, r):\n        \"\"\"\n        :type nums: List[int]\n        :type l: List[int]\n        :type r: List[int]\n        :rtype: List[bool]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number[]} l\n * @param {number[]} r\n * @return {boolean[]}\n */\nvar checkArithmeticSubarrays = function(nums, l, r) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function checkArithmeticSubarrays(nums: number[], l: number[], r: number[]): boolean[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<bool> CheckArithmeticSubarrays(int[] nums, int[] l, int[] r) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nbool* checkArithmeticSubarrays(int* nums, int numsSize, int* l, int lSize, int* r, int rSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func checkArithmeticSubarrays(nums []int, l []int, r []int) []bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun checkArithmeticSubarrays(nums: IntArray, l: IntArray, r: IntArray): List<Boolean> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func checkArithmeticSubarrays(_ nums: [Int], _ l: [Int], _ r: [Int]) -> [Bool] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn check_arithmetic_subarrays(nums: Vec<i32>, l: Vec<i32>, r: Vec<i32>) -> Vec<bool> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer[]} l\n# @param {Integer[]} r\n# @return {Boolean[]}\ndef check_arithmetic_subarrays(nums, l, r)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer[] $l\n     * @param Integer[] $r\n     * @return Boolean[]\n     */\n    function checkArithmeticSubarrays($nums, $l, $r) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<bool> checkArithmeticSubarrays(List<int> nums, List<int> l, List<int> r) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def checkArithmeticSubarrays(nums: Array[Int], l: Array[Int], r: Array[Int]): List[Boolean] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec check_arithmetic_subarrays(nums :: [integer], l :: [integer], r :: [integer]) :: [boolean]\n  def check_arithmetic_subarrays(nums, l, r) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec check_arithmetic_subarrays(Nums :: [integer()], L :: [integer()], R :: [integer()]) -> [boolean()].\ncheck_arithmetic_subarrays(Nums, L, R) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (check-arithmetic-subarrays nums l r)\n  (-> (listof exact-integer?) (listof exact-integer?) (listof exact-integer?) (listof boolean?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2157",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Sort and Check\n\n**Intuition**\n\nThe first thing to notice is that any arithmetic sequence must be sorted. This is because each successive element differs by a constant amount, so the entire sequence must be monotone since the change is constant.\n\nFor a given subarray `arr`, how do we check if we can form an arithmetic sequence? The problem states that we are allowed to rearrange `arr`. Thus, we should start by sorting `arr`, since if we can form an arithmetic sequence, the sequence must be sorted.\n\nOnce we have sorted `arr`, we can simply iterate over each adjacent element and check if the differences are constant. We will initialize `diff = arr[1] - arr[0]` as the difference between the first two elements.\n\n![img](../Figures/1630/1.png)\n<br>\n\nWe will then iterate over all other adjacent elements and check if their difference is equal to `diff`. If **any** difference is not equal to `diff`, then we cannot form an arithmetic sequence.\n\n![img](../Figures/1630/2.png)\n<br>\n\nIf all differences are equal to `diff`, then we can form an arithmetic sequence. This brings us to our solution. We will define a function `check(arr)` that takes a subarray `arr` and applies the above process to determine if it is an arithmetic sequence.\n\nThen, we will iterate over all pairs `l[i], r[i]` and form `arr` as the subarray of `nums` from `l[i]` `r[i]`. Once we have `arr`, we will pass it into `check` to find the answer for the $$i^{th}$$ query.\n\n**Algorithm**\n\n1. Define `check(arr)`:\n    - Sort `arr`.\n    - Initialize `diff = arr[1] - arr[0]`.\n    - Iterate `i` over the indices of `arr`, starting from `2`:\n        - If `arr[i] - arr[i - 1] != diff`, return `false`.\n    - Return `true`.\n2. Initialize the answer `ans`.\n3. Iterate `i` over the indices of `l`:\n    - Create `arr` as the subarray of `nums` from indices `l[i]` to `r[i]`.\n    - Add `check(arr)` to `ans`.\n4. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/kBErx9Wh/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"kBErx9Wh\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `nums` and $$m$$ as the length of `l` and `r`,\n\n* Time complexity: $$O(m \\cdot n \\cdot \\log{}n)$$\n\n    There are $$m$$ queries. In the worst-case scenario, each query would have `r[i] - l[i]` = $$O(n)$$, representing an array of size $$O(n)$$.\n    \n    Then, we would require $$O(n)$$ to create `arr`, $$O(n \\cdot \\log{}n)$$ to sort `arr`, and $$O(n)$$ to iterate over `arr`.\n    \n    Thus, in the worst-case scenario, each of the $$m$$ queries costs $$O(n \\cdot \\log{}m)$$.\n\n* Space complexity: $$O(n)$$\n\n    We create `arr`, which may use up to $$O(n)$$ space.\n    \n<br/>\n\n---\n\n### Approach 2: No Sorting\n\n**Intuition**\n\nWe can implement `check` more efficiently! While it is true that any arithmetic sequence is sorted, we don't need to exploit this fact to determine if `arr` is an arithmetic sequence.\n\nLet's say `arr` has a length of `n`, and we have the maximum element in `arr` as `max` and the minimum element as `min`.\n\nIf `arr` were to form an arithmetic sequence, then the difference `diff` that defines the sequence must be equal to $$\\dfrac{\\text{max} - \\text{min}}{n - 1}$$.\n\nWhy? Because `min` must be the first element of the sequence and `max` must be the final element of the sequence. Thus, if we started at `min` and iterated to `max`, we would require $$n - 1$$ iterations. On each iteration, our value would increase by `diff` (by definition).\n\nTherefore, we increment by a total of $$\\text{diff} \\cdot (n - 1)$$. By starting at `min` and ending at `max`, we cover a total distance of `max - min`. Thus, we have $$\\text{diff} \\cdot (n - 1) = \\text{max} - \\text{min}$$, which we can rearrange as $$\\text{diff} = \\dfrac{\\text{max} - \\text{min}}{n - 1}$$.\n\n![img](../Figures/1630/3.png)\n<br>\n\nIf `diff` is not an integer, then we cannot have an arithmetic sequence. If it is, how do we verify if `arr` is an arithmetic sequence or not?\n\nIf `arr` is an arithmetic sequence, then `min + diff` must be in `arr`. Similarly, `min + 2 * diff` must be in `arr`. In fact, every value of `min + k * diff` that is less than `max` must be in `arr`. We can check if all of these numbers are in `arr`, and if they are, then `arr` must be an arithmetic sequence. For efficient $$O(1)$$ checks, we will convert `arr` to a hash set.\n\nWe can then check if all necessary numbers exist with a while loop. We initialize `curr = min + diff` as the first number to check. If `curr` is not in `arr`, we can immediately return `false`. Otherwise, we check the next number by incrementing `curr` by `diff`. We repeat this process until `curr = max`. If all the numbers are in the hash set, then we return `true`.\n\n**Algorithm**\n\n1. Define `check(arr)`:\n    - Iterate over `arr` to do the following:\n        - Find `minElement`, the minimum element in `arr`,\n        - Find `maxElement`, the maximum element in `arr`.\n        - Create `arrSet`, a hash set with all the elements of `arr`.\n    - Calculate `diff = (maxElement - minElement) / (arr.length - 1)`. If it is not an integer, return `false`.\n    - Initialize `curr = minElement + diff`.\n    - While `curr < maxElement`:\n        - If `curr` is not in `arrSet`, return `false`.\n        - Increment `curr` by `diff`.\n2. Initialize the answer `ans`.\n3. Iterate `i` over the indices of `l`:\n    - Create `arr` as the subarray of `nums` from indices `l[i]` to `r[i]`.\n    - Add `check(arr)` to `ans`.\n4. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/276gbVei/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"276gbVei\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `nums` and $$m$$ as the length of `l` and `r`,\n\n* Time complexity: $$O(m \\cdot n)$$\n\n    There are $$m$$ queries. In the worst-case scenario, each query would have `r[i] - l[i]` = $$O(n)$$, representing an array of size $$O(n)$$.\n    \n    Then, we would require $$O(n)$$ to create `arr`, $$O(n)$$ to create `arrSet`, and $$O(n)$$ to verify if `arr` is an arithmetic sequence.\n    \n    Thus, in the worst-case scenario, each of the $$m$$ queries costs $$O(n)$$.\n\n* Space complexity: $$O(n)$$\n\n    We create `arr` and `arrSet`, which may use up to $$O(n)$$ space.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

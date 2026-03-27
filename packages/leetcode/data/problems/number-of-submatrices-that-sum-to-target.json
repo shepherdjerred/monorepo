@@ -1,0 +1,144 @@
+{
+  "questionId": "1145",
+  "questionFrontendId": "1074",
+  "title": "Number of Submatrices That Sum to Target",
+  "titleSlug": "number-of-submatrices-that-sum-to-target",
+  "difficulty": "Hard",
+  "content": "<p>Given a <code>matrix</code>&nbsp;and a <code>target</code>, return the number of non-empty submatrices that sum to <font face=\"monospace\">target</font>.</p>\n\n<p>A submatrix <code>x1, y1, x2, y2</code> is the set of all cells <code>matrix[x][y]</code> with <code>x1 &lt;= x &lt;= x2</code> and <code>y1 &lt;= y &lt;= y2</code>.</p>\n\n<p>Two submatrices <code>(x1, y1, x2, y2)</code> and <code>(x1&#39;, y1&#39;, x2&#39;, y2&#39;)</code> are different if they have some coordinate&nbsp;that is different: for example, if <code>x1 != x1&#39;</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/02/mate1.jpg\" style=\"width: 242px; height: 242px;\" />\n<pre>\n<strong>Input:</strong> matrix = [[0,1,0],[1,1,1],[0,1,0]], target = 0\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The four 1x1 submatrices that only contain 0.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> matrix = [[1,-1],[-1,1]], target = 0\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> The two 1x2 submatrices, plus the two 2x1 submatrices, plus the 2x2 submatrix.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> matrix = [[904]], target = 0\n<strong>Output:</strong> 0\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= matrix.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= matrix[0].length &lt;= 100</code></li>\n\t<li><code>-1000 &lt;= matrix[i][j] &lt;= 1000</code></li>\n\t<li><code>-10^8 &lt;= target &lt;= 10^8</code></li>\n</ul>\n",
+  "hints": [
+    "Using a 2D prefix sum, we can query the sum of any submatrix in O(1) time.\r\nNow for each (r1, r2), we can find the largest sum of a submatrix that uses every row in [r1, r2] in linear time using a sliding window."
+  ],
+  "metaData": "{\n  \"name\": \"numSubmatrixSumTarget\",\n  \"params\": [\n    {\n      \"name\": \"matrix\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"name\": \"target\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"manual\": false\n}",
+  "stats": "{\"totalAccepted\": \"171.5K\", \"totalSubmission\": \"229.9K\", \"totalAcceptedRaw\": 171504, \"totalSubmissionRaw\": 229870, \"acRate\": \"74.6%\"}",
+  "likes": 3900,
+  "dislikes": 108,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Disconnect Path in a Binary Matrix by at Most One Flip\", \"titleSlug\": \"disconnect-path-in-a-binary-matrix-by-at-most-one-flip\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[0,1,0],[1,1,1],[0,1,0]]\n0",
+    "[[1,-1],[-1,1]]\n0",
+    "[[904]]\n0"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numSubmatrixSumTarget(vector<vector<int>>& matrix, int target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numSubmatrixSumTarget(int[][] matrix, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numSubmatrixSumTarget(self, matrix: List[List[int]], target: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numSubmatrixSumTarget(self, matrix, target):\n        \"\"\"\n        :type matrix: List[List[int]]\n        :type target: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} matrix\n * @param {number} target\n * @return {number}\n */\nvar numSubmatrixSumTarget = function(matrix, target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numSubmatrixSumTarget(matrix: number[][], target: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumSubmatrixSumTarget(int[][] matrix, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numSubmatrixSumTarget(int** matrix, int matrixSize, int* matrixColSize, int target) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numSubmatrixSumTarget(matrix [][]int, target int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numSubmatrixSumTarget(matrix: Array<IntArray>, target: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numSubmatrixSumTarget(_ matrix: [[Int]], _ target: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn num_submatrix_sum_target(matrix: Vec<Vec<i32>>, target: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} matrix\n# @param {Integer} target\n# @return {Integer}\ndef num_submatrix_sum_target(matrix, target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $matrix\n     * @param Integer $target\n     * @return Integer\n     */\n    function numSubmatrixSumTarget($matrix, $target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numSubmatrixSumTarget(List<List<int>> matrix, int target) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numSubmatrixSumTarget(matrix: Array[Array[Int]], target: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec num_submatrix_sum_target(matrix :: [[integer]], target :: integer) :: integer\n  def num_submatrix_sum_target(matrix, target) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec num_submatrix_sum_target(Matrix :: [[integer()]], Target :: integer()) -> integer().\nnum_submatrix_sum_target(Matrix, Target) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (num-submatrix-sum-target matrix target)\n  (-> (listof (listof exact-integer?)) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "926",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Prerequisites\n\nIn this section, we list some problems and concepts that could help with the resolution of this particular problem.\n\n**[Optional] Number of Subarrays that Sum to Target**\n\nIn this solution, we're going to reduce this 2D problem to a 1D one [Subarray Sum Equals k](https://leetcode.com/problems/subarray-sum-equals-k/).\n\nOne of the best solutions for this 1D problem is to use a hashmap with the key as prefix sum and value as the number of subarrays starting from index zero and having this particular sum value.\n\nIf you don't remember this idea well, you may want to check Approach 4 in the above article to make reading this article easier.\n\n**[Required] 2D Prefix Sum**\n\nMany problems could be solved using the so-called [prefix sum](https://en.wikipedia.org/wiki/Prefix_sum).\n\nIn one dimension it's simple: there is an array of numbers $$x_0, x_1, x_2, ..., x_n$$ and we're building a second array which is a sum of prefixes of the input array:\n\n$$\nP_0 = x_0 \\\\\nP_1 = x_0 + x_1 \\\\\n... \\\\\nP_n = x_0 + x_1 + x_2 + ... + x_n\n$$\n\nHere is how it looks like, we sum up the current value with all values on the left:\n\n![append](../Figures/1074/1d_prefix3.png)\n\n> In 2D the idea is basically the same: prefix sum $$P_{mn}$$ is a sum of the current value with the integers above or on the left. \n\n$$\nP_{mn} = \\sum\\limits_{i = 0}^{i = m}\\sum\\limits_{j = 0}^{j = n}{x_{ij}}\n$$\n\n![append](../Figures/1074/2d_prefix.png)\n\nPrefix sum could be computed in $$\\mathcal{O}(R \\times C)$$ time, where $$R$$ is the number of rows and $$C$$ is the number of columns.\n\n<iframe src=\"https://leetcode.com/playground/MWBuJpQD/shared\" frameBorder=\"0\" width=\"100%\" height=\"157\" name=\"MWBuJpQD\"></iframe>\n\nUsing a 2D prefix sum, we can now query the sum of any submatrix in $$\\mathcal{O}(1)$$ time.\n<br /> \n<br />\n\n\n---\n### Overview: Reduce 2D Problem to 1D\n\nLet's fix two rows: $$r_1$$ and $$r_2$$, and consider all \"prefix\" matrices that are using all rows from $$r_1$$ to $$r_2$$.\n\n![append](../Figures/1074/all_matrices3.png)\n\nUsing 2D prefix sum `ps`, one could easily get the sum of each prefix matrix: `curr_sum = ps[r2][col] - ps[r1 - 1][col]`. \n\nThis sum itself could be considered as a 1D prefix sum because when rows are fixed, there is just one parameter to play with: the column `col`.\n\nThe job is done! The problem is reduced to the 1D problem [Number of Subarrays that Sum to Target](https://leetcode.com/problems/subarray-sum-equals-k/), and to underline the similarity, let's reuse the code from Approach 4 of this 1D problem.\n\n<iframe src=\"https://leetcode.com/playground/6bybUkPK/shared\" frameBorder=\"0\" width=\"100%\" height=\"259\" name=\"6bybUkPK\"></iframe>\n\nWe've got a pretty nice combination here:\n\n- Use 2D prefix sum to reduce the problem to lots of smaller 1D problems.\n\n- Use 1D prefix sum to solve these 1D problems. \n<br /> \n<br />\n\n\n---\n### Approach 1: Number of Subarrays that Sum to Target: Horizontal 1D Prefix Sum \n\n![append](../Figures/1074/all_matrices3.png)\n\n**Algorithm**\n\n- Initialize the result: `count = 0`.\n\n- Compute the number of rows: `r = len(matrix)` and number of columns: `c = len(matrix[0])`.\n\n- Compute 2D prefix sum `ps`. To simplify the code, we allocate one more row and one more column, reserving row 0 and column 0 for zero values. This way, we avoid computing the first row and the first column separately.\n\n- Iterate over the rows: r1 from 1 to r, and r2 from r1 to r:\n    \n    - Inside this double loop, the left and right row boundaries are fixed. Now it's time to initialize a hashmap: 1D prefix sum -> number of matrices which use `[r1, r2]` rows and sum to this prefix sum. The sum of the empty matrix is equal to zero: `h[0] = 1`.\n    \n    - Iterate over the columns from 1 to c + 1. At each step:\n    \n        - Compute current 1D prefix sum `curr_sum` using previously computed 2D prefix sum `ps`: `curr_sum = ps[r2][col] - ps[r1 - 1][col]`.\n        \n        - The number of times the sum `curr_sum - target` occurred, defines the number of matrices that use `r1 ... r2` rows and sum to target. Increment the count: `count += h[curr_sum - target]`.\n        \n        - Add the current 1D prefix sum into the hashmap.\n        \n- Return `count`.\n\n**Implementation**\n\n!?!../Documents/1074_LIS_test.json:1000,408!?!\n\n<iframe src=\"https://leetcode.com/playground/k6tvkwEn/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"k6tvkwEn\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(R^2 C)$$, where $$R$$ is the number of rows and $$C$$ is the number of columns.\n\n* Space complexity: $$\\mathcal{O}(RC)$$ to store 2D prefix sum.  \n<br /> \n<br />\n\n\n---\n### Approach 2: Number of Subarrays that Sum to Target: Vertical 1D Prefix Sum \n\nIn Approach 1, we were fixing two rows, and computing the \"horizontal\" 1D prefix sum. One could follow the same logic by fixing two **_columns_**, and computing the \"vertical\" 1D prefix sum.\n\n![append](../Figures/1074/vertical_matrices2.png)\n\n**Algorithm**\n\n- Initialize the result: `count = 0`.\n\n- Compute the number of rows: `r = len(matrix)` and the number of columns:\n`c = len(matrix[0])`.\n\n- Compute 2D prefix sum `ps`. To simplify the code, \nwe allocate one more row and one more column, reserving row 0 and column 0 for zero values.\n\n- Iterate over the columns: c1 from 1 to c, and c2 from c1 to c:\n    \n    - Inside this double loop, the upper and lower column boundaries are fixed. Now it's time to initialize a hashmap: 1D prefix sum -> number of matrices that use `[c1, c2]` columns and sum to this prefix sum. The sum of the empty matrix is equal to zero: `h[0] = 1`.\n    \n    - Iterate over the rows from 1 to r + 1. At each step:\n    \n        - Compute current 1D prefix sum `curr_sum` using previously computed 2D prefix sum `ps`: `curr_sum = ps[row][c2] - ps[row][c1 - 1]`.\n        \n        - The number of times the sum `curr_sum - target` occurred, defines the number of matrices that use `c1 ... c2` rows and sum to target. Increment the count: `count += h[curr_sum - target]`.\n        \n        - Add the current 1D prefix sum into the hashmap.\n        \n- Return `count`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/jnM7my3y/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"jnM7my3y\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(R C^2)$$, where $$R$$ is the number of rows and $$C$$ is the number of columns.\n \n* Space complexity: $$\\mathcal{O}(RC)$$ to store 2D prefix sum.  \n<br /> \n<br />",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

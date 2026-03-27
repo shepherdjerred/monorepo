@@ -1,0 +1,141 @@
+{
+  "questionId": "1098",
+  "questionFrontendId": "1133",
+  "title": "Largest Unique Number",
+  "titleSlug": "largest-unique-number",
+  "difficulty": "Easy",
+  "content": "<p>Given an integer array <code>nums</code>, return <em>the largest integer that only occurs once</em>. If no integer occurs once, return <code>-1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [5,7,3,9,4,9,8,3,1]\n<strong>Output:</strong> 8\n<strong>Explanation:</strong> The maximum integer in the array is 9 but it is repeated. The number 8 occurs only once, so it is the answer.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [9,9,8,8]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> There is no number that occurs only once.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 2000</code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [
+    "Find the number of occurrences of each value.",
+    "Use an array or a hash table to do that.",
+    "Look for the largest value with number of occurrences = 1."
+  ],
+  "metaData": "{\n  \"name\": \"largestUniqueNumber\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"110.5K\", \"totalSubmission\": \"155K\", \"totalAcceptedRaw\": 110513, \"totalSubmissionRaw\": 155023, \"acRate\": \"71.3%\"}",
+  "likes": 356,
+  "dislikes": 18,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[5,7,3,9,4,9,8,3,1]",
+    "[9,9,8,8]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int largestUniqueNumber(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int largestUniqueNumber(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def largestUniqueNumber(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def largestUniqueNumber(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar largestUniqueNumber = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function largestUniqueNumber(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int LargestUniqueNumber(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int largestUniqueNumber(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func largestUniqueNumber(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun largestUniqueNumber(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func largestUniqueNumber(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn largest_unique_number(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef largest_unique_number(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function largestUniqueNumber($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int largestUniqueNumber(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def largestUniqueNumber(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec largest_unique_number(nums :: [integer]) :: integer\n  def largest_unique_number(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec largest_unique_number(Nums :: [integer()]) -> integer().\nlargest_unique_number(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (largest-unique-number nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2451",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Sorting\n\n#### Intuition\n\nTo find if a number is unique, one approach is to sort the array. Sorting groups of identical numbers together makes it easier to spot unique numbers since they will stand apart from the groups.\n\nWe start by sorting the array. Then, we go through it from the end to the beginning. This ensures that if we find a unique number, it will be the largest, and we can return it immediately.\n\nTo check for uniqueness, we compare each number to the one next to it. A unique number will differ from its neighbors. Since we're moving in one direction, we only need to compare each number with the next one. Any earlier duplicates will already have been checked.\n\nIf we find a duplicate, we skip over the whole group instead of checking each number. We do this by advancing the pointer to the next distinct number.\n\nThe algorithm checks for uniqueness at the start of each group. This is why we only need to check the next element to determine if a number stands alone.\n\nIf we finish checking the entire array and find no unique number, we return -1.\n\nThe algorithm is visualized below:\n\n!?!../Documents/1133/slideshow.json:1236,460!?!\n\n#### Algorithm\n\n- Initialize a variable `n` to the length of the input array `nums`.\n- If `n` is equal to 1, return the first (and only) element of `nums`.\n- Sort the `nums` array in ascending order.\n- Initialize a variable `currentIndex` to `n - 1`, pointing to the last element of the sorted array.\n- Enter a while loop that continues as long as `currentIndex` is greater than or equal to 0:\n  - Check if `currentIndex` is 0 or if the current element is different from the previous element.\n  - If true, return the element at `currentIndex`.\n  - Enter a nested while loop that continues as long as `currentIndex` is greater than 0 and the current element is equal to the previous element:\n    - Adjust `currentIndex` to skip duplicates.\n  - Adjust `currentIndex` to move to the next unique number.\n- If the outer while loop completes without finding a unique largest number, return -1.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/VZHQSobr/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"VZHQSobr\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the `nums` array.\n\n- Time complexity: $O(n \\cdot \\log n)$\n\n    Sorting the input array takes $O(n \\cdot \\log n)$ time.\n\n    In the worst case, we iterate over all elements once, taking $O(n)$ time. The inner while loop for skipping duplicates doesn't add to the overall time complexity, as it's still part of the single pass through the array.\n\n    Thus, the overall time complexity of the algorithm is $O(n \\cdot \\log n) + O(n) = O(n \\cdot \\log n)$.\n\n- Space complexity: $O(S)$\n\n    The space taken by the sorting algorithm ($S$) depends on the language of implementation:\n    - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n)$.\n    - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worst-case space complexity of $O(\\log n)$.\n    - In Python, the `sort()` method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has a space complexity of $O(n)$.\n\n---\n\n### Approach 2: Sorted Map\n\n#### Intuition\n\nAnother way to group numbers efficiently is by using a frequency table. A frequency table is a collection of key-value pairs, where the key is the number and the value is how often it appears in the array. We'll build this frequency table using a map.\n\nTo find the largest unique number, it's useful if the numbers are in order. This allows us to start with the largest number and work our way down, stopping once we find one that appears only once. Some languages provide a sorted map that works well for this task.\n\nWe loop through the `nums` array to fill the map. After that, we check the keys in descending order and return the first one with a value of 1. If none exist, we return -1 since there are no unique numbers in the array.\n\n#### Algorithm\n\n- Initialize a sorted map `frequencyMap` to store numbers as keys and their frequencies as values.\n- Iterate through each number `num` in the input array `nums`:\n  - Update the frequency of `num` in `frequencyMap`.\n- Initialize a variable `largestUnique` to -1, which will store the result.\n- Iterate through the keys of `frequencyMap` in descending order. \n   - For each number:\n       - Check if its frequency in `frequencyMap` is equal to 1.\n       - If true, assign this number to `largestUnique` and break the loop.\n- Return the value of `largestUnique`.\n\n#### Implementation\n\n> Note: `Python3` lacks a built-in sorted map implementation, so we simulate its functionality using a map and `OrderedDict`. While this approach is more complex than necessary, it is included here for completeness.\n\n<iframe src=\"https://leetcode.com/playground/BGwK5nD4/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"BGwK5nD4\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the `nums` array.\n\n* Time complexity: $O(n \\cdot \\log n)$\n\n    Each insertion operation in the sorted map takes $O(\\log k)$ time, where $k$ is the number of unique elements in the map. Since $k = n$ in the worst case, populating the sorted map takes $O(n \\cdot \\log n)$ time.\n\n    To find the largest unique number, we iterate through the keys of the map, taking $O(n \\cdot \\log n)$ time.\n\n    Thus, the overall time complexity of the algorithm is $2 \\cdot O(n \\cdot \\log n) = O(n \\cdot \\log n)$.\n\n* Space complexity: $O(n)$\n\n    The sorted map takes $O(n)$ space in the worst case (where all elements in `nums` are unique).\n\n---\n\n### Approach 3: Map\n\n#### Intuition\n\nThe sorted map approach is effective, but it has a key drawback: each addition and retrieval takes $O(\\log n)$ time. In contrast, a standard hash map performs these operations in constant time. Let's consider an alternative using a hash map to enhance efficiency.\n\nWe'll follow a similar strategy, but we'll change how we track the largest unique number. First, we create a hash map to hold the numbers from our input array `nums`. Each number will serve as a key, while its frequency will be the corresponding value.\n\nNext, we introduce a variable called `largestUnique` to track the largest unique number we find. We initialize this variable to -1, which will act as our default if we don't find any unique numbers.\n\nAfter constructing the frequency map, we iterate through its keys. For each key, we check its frequency. If the frequency is 1, it means the number is unique. We then compare this number with the current value of `largestUnique`. If it's larger, we update `largestUnique` to this new value.\n\nOnce we've gone through all the keys in the map, `largestUnique` will contain the largest unique number from the original array. If we find no unique numbers, `largestUnique` will remain -1.\n\n#### Algorithm\n\n- Initialize a map called `frequencyMap` to store integers as keys and their frequencies as values.\n- Iterate through each number `num` in the input array `nums`:\n  - Update the frequency of `num` in `frequencyMap`.\n- Initialize a variable `largestUnique` to -1, which will store the result.\n- Iterate through each number in the key set of `frequencyMap`. \n  - For each `num`:\n       - Check if its frequency in `frequencyMap` is equal to 1 and if `num` is greater than `largestUnique`.\n       - If both conditions are true, assign `num` to `largestUnique`.\n- After the loop is complete, return the value of `largestUnique`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Dxp8bR3a/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"Dxp8bR3a\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the `nums` array.\n\n* Time complexity: $O(n)$\n\n    Iterating through `nums` and populating the hash map takes $O(n)$ time. To find the largest number, the algorithm iterates through each key in the map. Since the number of keys can be $n$ in the worst case, this also takes $O(n)$ time.\n\n    Thus, the time complexity of the algorithm is $O(n)$.\n\n* Space complexity: $O(n)$\n\n    The map occupies $O(n)$ space in the worst case (where all elements in `nums` are unique).\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

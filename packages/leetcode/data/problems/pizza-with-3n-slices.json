@@ -1,0 +1,139 @@
+{
+  "questionId": "1489",
+  "questionFrontendId": "1388",
+  "title": "Pizza With 3n Slices",
+  "titleSlug": "pizza-with-3n-slices",
+  "difficulty": "Hard",
+  "content": "<p>There is a pizza with <code>3n</code> slices of varying size, you and your friends will take slices of pizza as follows:</p>\n\n<ul>\n\t<li>You will pick <strong>any</strong> pizza slice.</li>\n\t<li>Your friend Alice will pick the next slice in the anti-clockwise direction of your pick.</li>\n\t<li>Your friend Bob will pick the next slice in the clockwise direction of your pick.</li>\n\t<li>Repeat until there are no more slices of pizzas.</li>\n</ul>\n\n<p>Given an integer array <code>slices</code> that represent the sizes of the pizza slices in a clockwise direction, return <em>the maximum possible sum of slice sizes that you can pick</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/02/18/sample_3_1723.png\" style=\"width: 500px; height: 266px;\" />\n<pre>\n<strong>Input:</strong> slices = [1,2,3,4,5,6]\n<strong>Output:</strong> 10\n<strong>Explanation:</strong> Pick pizza slice of size 4, Alice and Bob will pick slices with size 3 and 5 respectively. Then Pick slices with size 6, finally Alice and Bob will pick slice of size 2 and 1 respectively. Total = 4 + 6.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/02/18/sample_4_1723.png\" style=\"width: 500px; height: 299px;\" />\n<pre>\n<strong>Input:</strong> slices = [8,9,8,6,1,1]\n<strong>Output:</strong> 16\n<strong>Explanation:</strong> Pick pizza slice of size 8 in each turn. If you pick slice with size 9 your partners will pick slices of size 8.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>3 * n == slices.length</code></li>\n\t<li><code>1 &lt;= slices.length &lt;= 500</code></li>\n\t<li><code>1 &lt;= slices[i] &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [
+    "By studying the pattern of the operations, we can find out that the problem is equivalent to: Given an integer array with size 3N, select N integers with maximum sum and any selected integers are not next to each other in the array.",
+    "The first one in the array is considered next to the last one in the array. Use Dynamic Programming to solve it."
+  ],
+  "metaData": "{\n  \"name\": \"maxSizeSlices\",\n  \"params\": [\n    {\n      \"name\": \"slices\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"37.5K\", \"totalSubmission\": \"69.7K\", \"totalAcceptedRaw\": 37536, \"totalSubmissionRaw\": 69738, \"acRate\": \"53.8%\"}",
+  "likes": 1137,
+  "dislikes": 24,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,2,3,4,5,6]",
+    "[8,9,8,6,1,1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxSizeSlices(vector<int>& slices) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxSizeSlices(int[] slices) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxSizeSlices(self, slices: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxSizeSlices(self, slices):\n        \"\"\"\n        :type slices: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} slices\n * @return {number}\n */\nvar maxSizeSlices = function(slices) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxSizeSlices(slices: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxSizeSlices(int[] slices) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxSizeSlices(int* slices, int slicesSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxSizeSlices(slices []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxSizeSlices(slices: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxSizeSlices(_ slices: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_size_slices(slices: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} slices\n# @return {Integer}\ndef max_size_slices(slices)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $slices\n     * @return Integer\n     */\n    function maxSizeSlices($slices) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxSizeSlices(List<int> slices) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxSizeSlices(slices: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_size_slices(slices :: [integer]) :: integer\n  def max_size_slices(slices) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_size_slices(Slices :: [integer()]) -> integer().\nmax_size_slices(Slices) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-size-slices slices)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

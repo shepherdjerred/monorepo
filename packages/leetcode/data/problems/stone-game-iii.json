@@ -1,0 +1,145 @@
+{
+  "questionId": "1522",
+  "questionFrontendId": "1406",
+  "title": "Stone Game III",
+  "titleSlug": "stone-game-iii",
+  "difficulty": "Hard",
+  "content": "<p>Alice and Bob continue their games with piles of stones. There are several stones <strong>arranged in a row</strong>, and each stone has an associated value which is an integer given in the array <code>stoneValue</code>.</p>\n\n<p>Alice and Bob take turns, with Alice starting first. On each player&#39;s turn, that player can take <code>1</code>, <code>2</code>, or <code>3</code> stones from the <strong>first</strong> remaining stones in the row.</p>\n\n<p>The score of each player is the sum of the values of the stones taken. The score of each player is <code>0</code> initially.</p>\n\n<p>The objective of the game is to end with the highest score, and the winner is the player with the highest score and there could be a tie. The game continues until all the stones have been taken.</p>\n\n<p>Assume Alice and Bob <strong>play optimally</strong>.</p>\n\n<p>Return <code>&quot;Alice&quot;</code><em> if Alice will win, </em><code>&quot;Bob&quot;</code><em> if Bob will win, or </em><code>&quot;Tie&quot;</code><em> if they will end the game with the same score</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> stoneValue = [1,2,3,7]\n<strong>Output:</strong> &quot;Bob&quot;\n<strong>Explanation:</strong> Alice will always lose. Her best move will be to take three piles and the score become 6. Now the score of Bob is 7 and Bob wins.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> stoneValue = [1,2,3,-9]\n<strong>Output:</strong> &quot;Alice&quot;\n<strong>Explanation:</strong> Alice must choose all the three piles at the first move to win and leave Bob with negative score.\nIf Alice chooses one pile her score will be 1 and the next move Bob&#39;s score becomes 5. In the next move, Alice will take the pile with value = -9 and lose.\nIf Alice chooses two piles her score will be 3 and the next move Bob&#39;s score becomes 3. In the next move, Alice will take the pile with value = -9 and also lose.\nRemember that both play optimally so here Alice will choose the scenario that makes her win.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> stoneValue = [1,2,3,6]\n<strong>Output:</strong> &quot;Tie&quot;\n<strong>Explanation:</strong> Alice cannot win this game. She can end the game in a draw if she decided to choose all the first three piles, otherwise she will lose.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= stoneValue.length &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>-1000 &lt;= stoneValue[i] &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [
+    "The game can be mapped to minmax game. Alice tries to maximize the total score and Bob tries to minimize it.",
+    "Use dynamic programming to simulate the game. If the total score was 0 the game is \"Tie\", and if it has positive value then \"Alice\" wins, otherwise \"Bob\" wins."
+  ],
+  "metaData": "{\n  \"name\": \"stoneGameIII\",\n  \"params\": [\n    {\n      \"name\": \"stoneValue\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"110.5K\", \"totalSubmission\": \"174.6K\", \"totalAcceptedRaw\": 110521, \"totalSubmissionRaw\": 174571, \"acRate\": \"63.3%\"}",
+  "likes": 2302,
+  "dislikes": 81,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Stone Game V\", \"titleSlug\": \"stone-game-v\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Stone Game VI\", \"titleSlug\": \"stone-game-vi\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Stone Game VII\", \"titleSlug\": \"stone-game-vii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Stone Game VIII\", \"titleSlug\": \"stone-game-viii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Stone Game IX\", \"titleSlug\": \"stone-game-ix\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,7]",
+    "[1,2,3,-9]",
+    "[1,2,3,6]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Game Theory",
+      "slug": "game-theory"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string stoneGameIII(vector<int>& stoneValue) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String stoneGameIII(int[] stoneValue) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def stoneGameIII(self, stoneValue: List[int]) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def stoneGameIII(self, stoneValue):\n        \"\"\"\n        :type stoneValue: List[int]\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} stoneValue\n * @return {string}\n */\nvar stoneGameIII = function(stoneValue) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function stoneGameIII(stoneValue: number[]): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string StoneGameIII(int[] stoneValue) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* stoneGameIII(int* stoneValue, int stoneValueSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func stoneGameIII(stoneValue []int) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun stoneGameIII(stoneValue: IntArray): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func stoneGameIII(_ stoneValue: [Int]) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn stone_game_iii(stone_value: Vec<i32>) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} stone_value\n# @return {String}\ndef stone_game_iii(stone_value)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $stoneValue\n     * @return String\n     */\n    function stoneGameIII($stoneValue) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String stoneGameIII(List<int> stoneValue) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def stoneGameIII(stoneValue: Array[Int]): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec stone_game_iii(stone_value :: [integer]) :: String.t\n  def stone_game_iii(stone_value) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec stone_game_iii(StoneValue :: [integer()]) -> unicode:unicode_binary().\nstone_game_iii(StoneValue) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (stone-game-iii stoneValue)\n  (-> (listof exact-integer?) string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1839",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\n>**Note.** For this problem, we assume that you already know the fundamentals of dynamic programming and are figuring out how to apply it to a wide range of problems, such as this one. If you are not yet at this stage, we recommend checking out our relevant [Explore Card content on dynamic programming](https://leetcode.com/explore/featured/card/dynamic-programming/) before coming back to this article.\n\nThe game described in the problem is a [zero-sum game](https://en.wikipedia.org/wiki/Zero-sum_game). Since the sum of all stones is constant, Alice getting more points means Bob getting less, and vice versa. In zero-sum games with two rational players, both want to minimize their opponent's score since it is equivalent to maximizing their own.\n\nIf Alice has a higher score than Bob, she wins. If Bob's score is higher, he wins. If their scores are equal, it is a tie.\n\nThe thing that matters to determine the outcome of this game is the **difference** between the player's scores. To know the result, one checks whether the difference is positive, negative, or zero at the end of the game. Each player wants to maximize the difference between their score and their opponent's.\n\n---\n\n### Approach 1: Bottom-Up Dynamic Programming\n\n#### Intuition\n\nLet $n$ denote the number of stones in the row.\n\nFor $0 \\le i \\le n$, define $\\text{dp}[i]$ as follows. Consider a game with only the last $n - i$ stones (imagine $\\text{stoneValues}[i]$ is the first stone). $\\text{dp}[i]$ is the first player's score minus the second player's score at the end of the game.\n\nThe base case of this DP is $\\text{dp}[n] = 0$. Since there are no stones in the game, thus the players cannot make any moves, and the difference between their scores will be zero.\n\nConsider now $i < n$ when at least one stone is in the game. Let's call the first player X and the second one Y. Then $\\text{dp}[i]$ is the difference $\\text{score}_\\text{X} - \\text{score}_\\text{Y}$.\n*  If the player X takes $1$ stone (with index $i$), X's score for the current move is $\\text{stoneValue}[i]$. After that, the next state will be $\\text{dp}[i + 1]$, since there is one less stone in the game. However, the players exchange their roles - X becomes Y, and Y becomes X.\n\n> This might be confusing, so consider an example with names. Let's say X = Alice, and Y = Bob, at $\\text{dp}[i]$. Alice takes one stone, and now we move to $\\text{dp}[i + 1]$. However, now it's Bob's turn. We defined X as the player who takes the first turn, and in this new state $\\text{dp}[i + 1]$, Bob is moving first. Therefore, X is now Bob, and Y is now Alice.\n\n* Remember, we defined $\\text{dp}[i]$ as $\\text{score}_\\text{X} - \\text{score}_\\text{Y}$. Thus, $\\text{dp}[i + 1]$ is actually the future value of $\\text{score}_\\text{Y} - \\text{score}_\\text{X}$ from the \"perspective\" of $\\text{dp}[i]$, since X and Y have swapped.\n* Thus, if player X only takes $1$ stone, then it will result in a score difference of $\\text{stoneValue}[i] - \\text{dp}[i + 1]$. The minus is to flip $\\text{score}_\\text{Y} - \\text{score}_\\text{X}$ into $\\text{score}_\\text{X} - \\text{score}_\\text{Y}$.\n* Similarly, if X takes two stones (with indices $i$ and $i + 1$), the difference $\\text{score}_\\text{X} - \\text{score}_\\text{Y}$ will be $\\text{stoneValue}[i] + \\text{stoneValue}[i + 1] - \\text{dp}[i + 2]$.\n* Finally, if X takes three stones, the difference will be $\\text{stoneValue}[i] + \\text{stoneValue}[i + 1] + \\text{stoneValue}[i + 2] - \\text{dp}[i + 3]$.\n\n> If you're confused about this logic, think about it like this.\n>\n> 1. $\\text{dp}[i]$ is some number that the first player wants to maximize.\n>\n> 2. After the first player moves, the second player moves. Therefore the next $\\text{dp}$ state will be some number the second player wants to maximize.\n>\n> 3. Since both players try to maximize these values, we can think of these values as their scores.\n> \n> 4. Because one player's gain is the other player's loss, we need to **subtract** the next $\\text{dp}$ state. It is because the next $\\text{dp}$ state represents the other player's \"score\", and their gain is our loss.\n\nSince X plays optimally, they will choose the option that maximizes the difference $\\text{score}_\\text{X} - \\text{score}_\\text{Y}$. It implies that $\\text{dp}[i]$ is the maximum of the above three values. We will try all three.\n\nHaving all DP values computed, one can answer who wins using only $\\text{dp}[0]$, which is the score difference in the game with all $n$ stones present. Since Alice is the first player, this value being positive means Alice wins.\n\n#### Algorithm\n\n1. Let $n$ be the number of stones.\n2. Declare the array $\\text{dp}$ of size $n + 1$.\n3. Set $\\text{dp}[n] = 0$. (The base case of the DP).\n4. Iterate $i$ from $n - 1$ to $0$.\n\t* Set $\\text{dp}[i] = \\text{stoneValue}[i] - \\text{dp}[i + 1]$ (take one stone).\n\t* If $i + 2 \\le n$, update $\\text{dp}[i]$ with $\\text{stoneValue}[i] + \\text{stoneValue}[i + 1] - \\text{dp}[i + 2]$ (take two stones) if it's larger.\n\t* If $i + 3 \\le n$, update $\\text{dp}[i]$ with $\\text{stoneValue}[i] + \\text{stoneValue}[i + 1] + \\text{stoneValue}[i + 2] - \\text{dp}[i + 3]$ (take three stones) if it's larger.\n5. If $\\text{dp}[0] > 0$, Alice wins.\n6. If $\\text{dp}[0] < 0$, Bob wins.\n7. If $\\text{dp}[0] = 0$, it is a tie.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/NqNuspsp/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"NqNuspsp\"></iframe>\n\n\n#### Complexity Analysis\n\n* Time complexity: $O(n)$.\n\nThere is a `for` loop that performs $n$ iterations. For each state, we try up to three options: to take $1$, $2$, or $3$ stones, so each iteration takes $O(1)$ time.\n\n* Space complexity: $O(n)$.\n\nWe store the array `dp[n + 1]` of size $O(n)$.\n\n---\n\n### Approach 2: Top-Down Dynamic Programming (Memoization)\n\n#### Intuition\n\nIn this approach, we will calculate the same DP as in the previous one, but the manner of organizing computations will differ.\n\nWe will use the recursive function $f(i)$ that returns the value of $\\text{dp}[i]$.\n\nThe base case of the recursive function is $i = n$ – the same as the base case of the DP: $f(n)$ returns zero.\n\nOne can rewrite the DP recurrence relation in terms of $f$ as follows: $f(i)$ returns the maximum of three values: $\\text{stoneValue}[i] - f(i + 1)$ (take one stone), $\\text{stoneValue}[i] + \\text{stoneValue}[i + 1] - f(i + 2)$ (take two stones), $\\text{stoneValue}[i] + \\text{stoneValue}[i + 1] + \\text{stoneValue}[i + 2] - f(i + 3)$ (take three stones).\n\nThe answer to the problem is $f(0) = \\text{dp}[0]$.\n\nHere is an implementation of this function.\n\n<iframe src=\"https://leetcode.com/playground/gEJYqMpp/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"gEJYqMpp\"></iframe>\n\nThe issue here is that $f$ might be called (exponentially) many times for the same parameter $i$.\n\nEach time we call, for instance, $f(4)$, we recompute the same result for $i = 4$.\n\nInstead, one may keep the calculated values of $f(i)$ in memory. We will store the same DP array as in the previous approach. In this case, the process will be as follows.\n\nFor example, we call $f(4)$ for the first time, calculate the result for $i = 4$, and write this result into $\\text{dp}[4]$. When we call $f(4)$ for the second time, we immediately return $\\text{dp}[4]$.\n\nIn this way, we calculate the value of $f$ for each state (each parameter $i$) only once.\n\nThere remains one small technical question: how to know whether we call $f(i)$ for the first time and need to compute the result, or we call it later and can return $\\text{dp}[i]$ found earlier? One can handle this by initializing the $\\text{dp}$ array with a huge value like $10^9$ that could not possibly occur normally. Then $\\text{dp}[i] = 10^9$ will mean that we have not calculated $f(i)$ yet. As soon as we find the result of $f(i)$, we will write it into $\\text{dp}[i]$, and this value will not be $10^9$ anymore.\n\n#### Algorithm\n\nThe function $f$ takes a parameter $i$.\n1. If $i = n$, return $0$.\n2. If $\\text{dp}[i]$ was computed previously, return $\\text{dp}[i]$.\n3. Set $\\text{dp}[i] = \\text{stoneValue}[i] - f(i + 1)$ (take one stone).\n4. If $i + 2 \\le n$, update $\\text{dp}[i]$ with $\\text{stoneValue}[i] + \\text{stoneValue}[i + 1] - f(i + 2)$ (take two stones).\n5. If $i + 3 \\le n$, update $\\text{dp}[i]$ with $\\text{stoneValue}[i] + \\text{stoneValue}[i + 1] + \\text{stoneValue}[i + 2] - f(i + 3)$ (take three stones).\n6. Return $\\text{dp}[i]$.\n\nOne needs to call $f(0)$.\n* If $f(0) > 0$, Alice wins.\n* If $f(0) < 0$, Bob wins.\n* If $f(0) = 0$, it is a tie.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Rf5V5ZYr/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Rf5V5ZYr\"></iframe>\n\n\n#### Complexity Analysis\n\n* Time complexity: $O(n)$.\n\nEven though we changed the order of calculating DP, the time complexity is the same as in the previous approach: for each $i$, we compute $\\text{dp}[i]$ in $O(1)$. Since we store the results in memory, we will calculate each $\\text{dp}[i]$ only once.\n\n* Space complexity: $O(n)$.\n\nIt is the same as in the first approach.\n\n\n---\n\n### Approach 3: Bottom-Up Dynamic Programming, Space Complexity Optimized\n\n#### Intuition\n\nTo solve the problem with $O(1)$ space complexity, we can use the observation that we only ever need the values $\\text{dp}[i+1]$, $\\text{dp}[i+2]$, and $\\text{dp}[i+3]$ to calculate $\\text{dp}[i]$. Therefore, we only need to keep track of the current and the next three values of $\\text{dp}$.\n\nNow, the size of $\\text{dp}$ will be $4$ instead of $n + 1$. Whenever we want to access $\\text{dp}[i]$, we will use $\\text{dp}[i \\% 4]$ instead.\n\nWhen counting $\\text{dp}[i \\% 4]$, we will use the values of $\\text{dp}[(i + 1) \\% 4]$, $\\text{dp}[(i + 2) \\% 4]$, and $\\text{dp}[(i + 3) \\% 4]$. All four indices in the array are distinct.\n\nNote that an array of size $3$ would be insufficient, since $\\text{dp}[i \\% 3]$ would \"collide\" with $\\text{dp}[(i + 3) \\% 3]$.\n\n#### Algorithm\n\nIt is the same as in Approach 1, with the only difference being the size of $\\text{dp}$ and that we take all indices in the array $\\text{dp}$ modulo $4$.\n\n1. Let $n$ be the number of stones.\n2. Declare the array $\\text{dp}$ of size $4$.\n3. Set $\\text{dp}[n \\% 4] = 0$. (The base case of the DP).\n4. Iterate $i$ from $n - 1$ to $0$.\n\t* Set $\\text{dp}[i \\% 4] = \\text{stoneValue}[i] - \\text{dp}[(i + 1) \\% 4]$ (take one stone).\n\t* If $i + 2 \\le n$, update $\\text{dp}[i]$ with $\\text{stoneValue}[i] + \\text{stoneValue}[i + 1] - \\text{dp}[(i + 2) \\% 4]$ (take two stones) if it's larger.\n\t* If $i + 3 \\le n$, update $\\text{dp}[i]$ with $\\text{stoneValue}[i] + \\text{stoneValue}[i + 1] + \\text{stoneValue}[i + 2] - \\text{dp}[(i + 3) \\% 4]$ (take three stones) if it's larger.\n5. If $\\text{dp}[0] > 0$, Alice wins.\n6. If $\\text{dp}[0] < 0$, Bob wins.\n7. If $\\text{dp}[0] = 0$, it is a tie.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/J6A484PW/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"J6A484PW\"></iframe>\n\n\n#### Complexity Analysis\n\n* Time complexity: $O(n)$.\n\nIt is the same as in Approach 1.\n\n* Space complexity: $O(1)$.\n\nWe have eliminated the need for an entire array to store the DP values. Instead, we only keep track of the current and next three values. Therefore, the space complexity of this solution is $O(1)$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

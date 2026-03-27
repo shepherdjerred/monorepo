@@ -1,0 +1,142 @@
+{
+  "questionId": "1085",
+  "questionFrontendId": "1101",
+  "title": "The Earliest Moment When Everyone Become Friends",
+  "titleSlug": "the-earliest-moment-when-everyone-become-friends",
+  "difficulty": "Medium",
+  "content": "<p>There are n people in a social group labeled from <code>0</code> to <code>n - 1</code>. You are given an array <code>logs</code> where <code>logs[i] = [timestamp<sub>i</sub>, x<sub>i</sub>, y<sub>i</sub>]</code> indicates that <code>x<sub>i</sub></code> and <code>y<sub>i</sub></code> will be friends at the time <code>timestamp<sub>i</sub></code>.</p>\n\n<p>Friendship is <strong>symmetric</strong>. That means if <code>a</code> is friends with <code>b</code>, then <code>b</code> is friends with <code>a</code>. Also, person <code>a</code> is acquainted with a person <code>b</code> if <code>a</code> is friends with <code>b</code>, or <code>a</code> is a friend of someone acquainted with <code>b</code>.</p>\n\n<p>Return <em>the earliest time for which every person became acquainted with every other person</em>. If there is no such earliest time, return <code>-1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> logs = [[20190101,0,1],[20190104,3,4],[20190107,2,3],[20190211,1,5],[20190224,2,4],[20190301,0,3],[20190312,1,2],[20190322,4,5]], n = 6\n<strong>Output:</strong> 20190301\n<strong>Explanation:</strong> \nThe first event occurs at timestamp = 20190101, and after 0 and 1 become friends, we have the following friendship groups [0,1], [2], [3], [4], [5].\nThe second event occurs at timestamp = 20190104, and after 3 and 4 become friends, we have the following friendship groups [0,1], [2], [3,4], [5].\nThe third event occurs at timestamp = 20190107, and after 2 and 3 become friends, we have the following friendship groups [0,1], [2,3,4], [5].\nThe fourth event occurs at timestamp = 20190211, and after 1 and 5 become friends, we have the following friendship groups [0,1,5], [2,3,4].\nThe fifth event occurs at timestamp = 20190224, and as 2 and 4 are already friends, nothing happens.\nThe sixth event occurs at timestamp = 20190301, and after 0 and 3 become friends, we all become friends.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> logs = [[0,2,0],[1,0,1],[3,0,3],[4,1,2],[7,3,1]], n = 4\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> At timestamp = 3, all the persons (i.e., 0, 1, 2, and 3) become friends.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 100</code></li>\n\t<li><code>1 &lt;= logs.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>logs[i].length == 3</code></li>\n\t<li><code>0 &lt;= timestamp<sub>i</sub> &lt;= 10<sup>9</sup></code></li>\n\t<li><code>0 &lt;= x<sub>i</sub>, y<sub>i</sub> &lt;= n - 1</code></li>\n\t<li><code>x<sub>i</sub> != y<sub>i</sub></code></li>\n\t<li>All the values <code>timestamp<sub>i</sub></code> are <strong>unique</strong>.</li>\n\t<li>All the pairs <code>(x<sub>i</sub>, y<sub>i</sub>)</code> occur at most one time in the input.</li>\n</ul>\n",
+  "hints": [
+    "Sort the log items by their timestamp.",
+    "How can we model this problem as a graph problem?",
+    "Let's use a union-find data structure. At the beginning we have a graph with N nodes but no edges.",
+    "Then we loop through the events and unite each node until the number of connected components reach to 1. Notice that each time two different connected components are united the number of connected components decreases by 1."
+  ],
+  "metaData": "{\n  \"name\": \"earliestAcq\",\n  \"params\": [\n    {\n      \"name\": \"logs\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"131.9K\", \"totalSubmission\": \"200K\", \"totalAcceptedRaw\": 131892, \"totalSubmissionRaw\": 199989, \"acRate\": \"65.9%\"}",
+  "likes": 1113,
+  "dislikes": 41,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Number of Provinces\", \"titleSlug\": \"number-of-provinces\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[20190101,0,1],[20190104,3,4],[20190107,2,3],[20190211,1,5],[20190224,2,4],[20190301,0,3],[20190312,1,2],[20190322,4,5]]\n6",
+    "[[0,2,0],[1,0,1],[3,0,3],[4,1,2],[7,3,1]]\n4"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"expedia\", \"name\": \"Expedia\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int earliestAcq(vector<vector<int>>& logs, int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int earliestAcq(int[][] logs, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def earliestAcq(self, logs: List[List[int]], n: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def earliestAcq(self, logs, n):\n        \"\"\"\n        :type logs: List[List[int]]\n        :type n: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} logs\n * @param {number} n\n * @return {number}\n */\nvar earliestAcq = function(logs, n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function earliestAcq(logs: number[][], n: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int EarliestAcq(int[][] logs, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int earliestAcq(int** logs, int logsSize, int* logsColSize, int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func earliestAcq(logs [][]int, n int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun earliestAcq(logs: Array<IntArray>, n: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func earliestAcq(_ logs: [[Int]], _ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn earliest_acq(logs: Vec<Vec<i32>>, n: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} logs\n# @param {Integer} n\n# @return {Integer}\ndef earliest_acq(logs, n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $logs\n     * @param Integer $n\n     * @return Integer\n     */\n    function earliestAcq($logs, $n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int earliestAcq(List<List<int>> logs, int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def earliestAcq(logs: Array[Array[Int]], n: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec earliest_acq(logs :: [[integer]], n :: integer) :: integer\n  def earliest_acq(logs, n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec earliest_acq(Logs :: [[integer()]], N :: integer()) -> integer().\nearliest_acq(Logs, N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (earliest-acq logs n)\n  (-> (listof (listof exact-integer?)) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1297",
+    "content": "[TOC]\n\n## Solution\n\n\n---\n### Approach: Union-Find (Disjoint-Set)\n\n**Intuition**\n\nThis problem deals with the relationship or membership of entities.\nFor those of you who are familiar with a data structure called **_Union-Find_**, this problem might ring a bell.\nIn fact, it is a perfect example that demonstrates the advantages of **_Union-Find_** data structure (also known as [Disjoint-Set](https://en.wikipedia.org/wiki/Disjoint-set_data_structure)).\n\n>Union-Find (_a.k.a_ Disjoint-Set) is a data structure that keeps track of the **_connectivities_** among interconnected individuals **_efficiently_**. With Union-Find, one can quickly determine which group a specific individual belongs to. In addition, one can quickly merge two individuals together along with the two groups that they belong to.\n\nAs suggested by its name, a typical Union-Find data structure usually provides two interfaces as follows:\n- `find(a)`: this function returns the group that the individual `a` belongs to.\n\n- `union(a, b)`: this function merges the two groups that the individuals `a` and `b` belong to respectively, if the groups are not of the same group already.\n\nTo make the `union(a, b)` function more useful, one can return a boolean value in the function to indicate whether the merging actually happens or not.\nFor example, `union(a, b)` would return true when `a` and `b` (and their respective groups) are merged together, and false when `a` and `b` are already in the same group and thus do not need to be merged together.\n\nNow, imagine that we already have the above Union-Find data structure available, we can go over the problem again and try to come up with a solution using the data structure.\n\n\n**Algorithm**\n\nThe solution, which as shown below, can be implemented in only a few lines, is actually less difficult than the implementation of the Union-Find data structure.\n\n<iframe src=\"https://leetcode.com/playground/kJjPK5dL/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"kJjPK5dL\"></iframe>\n\n**_Yes, talk is cheap._** But still, here are a few more words to help you better understand the above code.\n\n- In order to discover the _earliest_ moment, we must first ensure that we read through the logs in chronological order.\nSince there is no mentioning whether the logs are ordered or not in the problem description, we need to **sort** them first.\n\n- Once the logs are _sorted_ by time, we then iterate through them, while applying the Union-Find data structure.\n\n    - For each log, we connect the two individuals that were involved in the log, by applying the `union(a, b)` function.\n    - Each log adds more connections among the individuals.\n    A connection is *useful* if the two individuals are separated (disjoint), or *redundant* if the two individuals are connected already via other individuals.\n    - Initially, we treat each individual as a separate group. The number of groups decreases along with the _useful_ merging operations.\n    The moment when the number of groups is reduced to one is the _earliest_ moment when everyone becomes connected (friends).\n\n\n**Implementation**\n\nIn the above solutions, we assume that the Union-Find data structure has been implemented.\nIn this section, we provide a complete solution with an **_optimized_** implementation of the Union-Find data structure.\nBy _optimized_, we apply the **path compression** optimization in the `find(a)` interface and **union by rank** in the `union(a, b)` interface.\nFor those of you who are not familiar with the data structure, we have an [Explore Card](https://leetcode.com/explore/featured/card/graph/618/disjoint-set/) that dives into more details, including the optimization techniques mentioned here.\n\n<iframe src=\"https://leetcode.com/playground/XA26xfDd/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"XA26xfDd\"></iframe>\n\nTo see better how the Union-Find algorithm works, here we showcase an example on how Union-Find algorithms _find_ and _merge_ groups together.\n\nIn the following table, we show a list of logs in chronological order where each entry indicates the moment when two people become friends.\n\n![log table](../Figures/1101/1101_events.png)\n\nTo visualize the final relationships, we draw the following graph, where each node represents an individual and the link between nodes represents the friendship relationship between two individuals.\nIn addition, the label on top of the link indicates the moment when two individuals become friends.\n\n![graph](../Figures/1101/1101_graph.png)\n\nAs one can see, at the timestamp `4`, eventually everyone gets to know each other.\nNote that, the connections of `3` and `5` do not contribute to the overall connections among the friends.\nThey are _redundant_ connections, as we discussed before.\nTo highlight them, we mark the connections with a dashed line.\n\n\nNow, given the above example, we show _step by step_ how our Union-Find algorithm works.\n\n- Initially, we have four groups, where each individual is a group itself. We use a directed link to point to the group that an individual belongs to. We show them in the following graph.\n\n![graph](../Figures/1101/1101_step_1.png)\n\n- Starting from the first event `(1, A, B)`, we merge the groups of `A` and `B` together with the `union(A, B)` function. By merging, we assign the group of either `A` or `B` to the other one.\nAs a result, the merged group `(A, B)` contains two elements.\nThe total number of groups is now reduced to three.\n\n![graph](../Figures/1101/1101_step_2.png)\n\n- With the event `(2, B, C)`, we then merge the group of `(A, B)` with the group of `(C)` together.\nTo optimize the merging operations, we merge a smaller group (_i.e._ the one with smaller _rank_ value) into a larger group.\nTherefore, we merge the group of `(C)` into the group of `(A, B)`.\nThe total number of groups is now reduced to two.\n**Note:** The keen observer will notice that `C` should actually point to `A` because of the effects of union by rank, but the main point here is that `C` has now joined the group with `A` and `B`. For simplicity, we will point `C` to `B`.\n\n![graph](../Figures/1101/1101_step_3.png)\n\n- With the event `(3, A, C)`, as it turns out, the individuals `A` and `C` already belong to the same group.\nTherefore, no merging operation is needed.\nThe landscape of groups remains the same.\n\n![graph](../Figures/1101/1101_step_3.png)\n\n- Finally with the event `(4, C, D)`, we merge the group of `(D)` into the group of `(A, B, C)`.\nThe total number of groups is reduced to one.\nAnd this is the **_earliest_** moment when everyone becomes friends.\n\n![graph](../Figures/1101/1101_step_4.png)\n\n\n\n**Complexity Analysis**\n\nSince we applied the Union-Find data structure in our algorithm, we would like to start with a statement on the time complexity of the data structure, as follows:\n\n>**Statement**: If $$M$$ operations, either Union or Find, are applied to $$N$$ elements, the total run time is $$O(M \\cdot \\alpha(N))$$, where $$ \\alpha (N) $$ is the [Inverse Ackermann Function](https://en.wikipedia.org/wiki/Ackermann_function#Inverse).\n\nOne can refer to this article on [Union-Find complexity](http://www.cs.cornell.edu/courses/cs6110/2014sp/Handouts/UnionFind.pdf) for more details.\n\nIn our case, the number of elements in the Union-Find data structure is equal to the number of people, and the number of operations on the Union-Find data structure is up to the number of logs.\n\nLet $$N$$ be the number of people and $$M$$ be the number of logs.\n\n- Time Complexity: $$O(N + M \\log M + M \\alpha (N))$$\n\n    - First of all, we sort the logs in the order of timestamp. The time complexity of (quick) sorting is $$O(M \\log M)$$.\n\n    - Then we created a Union-Find data structure, which takes $$O(N)$$ time to initialize the array of group IDs.\n\n    - We then iterate through the sorted logs. At each iteration, we invoke the `union(a, b)` function. According to the statement we made above, the amortized time complexity of the entire process is $$O(M \\alpha (N))$$.\n\n    - To sum up, the overall time complexity of our algorithm is $$O(N + M \\log M + M \\alpha (N))$$.\n\n- Space Complexity: $$O(N + M)$$ or $$O(N + \\log M)$$\n\n    - The space complexity of our Union-Find data structure is $$O(N)$$, because we keep track of the group ID for each individual.\n\n    - The space complexity of the sorting algorithm depends on the implementation of each program language.\n\n    - For instance, the `list.sort()` function in Python is implemented with the [Timsort](https://en.wikipedia.org/wiki/Timsort) algorithm whose space complexity is $$O(M)$$.\n    While in Java, the [Arrays.sort()](https://docs.oracle.com/javase/8/docs/api/java/util/Arrays.html#sort-byte:A-) is implemented as a variant of quicksort algorithm whose space complexity is $$O(\\log{M})$$.\n\n    - To sum up, the overall space complexity of the algorithm is $$O(N + M)$$ for Python and $$O(N + \\log M)$$ for Java.\n\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

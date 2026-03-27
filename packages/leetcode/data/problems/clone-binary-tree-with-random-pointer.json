@@ -1,0 +1,119 @@
+{
+  "questionId": "1624",
+  "questionFrontendId": "1485",
+  "title": "Clone Binary Tree With Random Pointer",
+  "titleSlug": "clone-binary-tree-with-random-pointer",
+  "difficulty": "Medium",
+  "content": "<p>A binary tree is given such that each node contains an additional random pointer which could point to any node in the tree or null.</p>\n\n<p>Return a <a href=\"https://en.wikipedia.org/wiki/Object_copying#Deep_copy\" target=\"_blank\"><strong>deep copy</strong></a> of the tree.</p>\n\n<p>The tree is represented in the same input/output way as normal binary trees where each node is represented as a pair of <code>[val, random_index]</code> where:</p>\n\n<ul>\n\t<li><code>val</code>: an integer representing <code>Node.val</code></li>\n\t<li><code>random_index</code>: the index of the node (in the input) where the random pointer points to, or <code>null</code> if it does not point to any node.</li>\n</ul>\n\n<p>You will be given the tree in class <code>Node</code> and you should return the cloned tree in class <code>NodeCopy</code>. <code>NodeCopy</code> class is just a clone of <code>Node</code> class with the same attributes and constructors.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/06/17/clone_1.png\" style=\"width: 500px; height: 473px;\" />\n<pre>\n<strong>Input:</strong> root = [[1,null],null,[4,3],[7,0]]\n<strong>Output:</strong> [[1,null],null,[4,3],[7,0]]\n<strong>Explanation:</strong> The original binary tree is [1,null,4,7].\nThe random pointer of node one is null, so it is represented as [1, null].\nThe random pointer of node 4 is node 7, so it is represented as [4, 3] where 3 is the index of node 7 in the array representing the tree.\nThe random pointer of node 7 is node 1, so it is represented as [7, 0] where 0 is the index of node 1 in the array representing the tree.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/06/17/clone_2.png\" style=\"width: 500px; height: 540px;\" />\n<pre>\n<strong>Input:</strong> root = [[1,4],null,[1,0],null,[1,5],[1,5]]\n<strong>Output:</strong> [[1,4],null,[1,0],null,[1,5],[1,5]]\n<strong>Explanation:</strong> The random pointer of a node can be the node itself.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/06/17/clone_3.png\" style=\"width: 500px; height: 426px;\" />\n<pre>\n<strong>Input:</strong> root = [[1,6],[2,5],[3,4],[4,3],[5,2],[6,1],[7,0]]\n<strong>Output:</strong> [[1,6],[2,5],[3,4],[4,3],[5,2],[6,1],[7,0]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the <code>tree</code> is in the range <code>[0, 1000].</code></li>\n\t<li><code>1 &lt;= Node.val &lt;= 10<sup>6</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Traverse the tree, keep a hashtable with you and create a nodecopy for each node in the tree.",
+    "Start traversing the original tree again and connect the left, right and random pointers in the cloned tree the same way as the original tree with the help of the hashtable."
+  ],
+  "metaData": "{\n  \"name\": \"copyRandomBinaryTree\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"TreeNode\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"TreeNode\"\n  },\n  \"manual\": true,\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"csharp\",\n    \"python3\",\n    \"javascript\",\n    \"typescript\",\n    \"kotlin\",\n    \"scala\",\n    \"swift\",\n    \"php\",\n    \"ruby\",\n    \"golang\"\n  ], \"typescriptCustomType\" : \"class _Node {\\n    val: number\\n    left: _Node | null\\n    right: _Node | null\\n    random: _Node | null\\n\\n    constructor(val?: number, left?: _Node | null, right?: _Node | null, random?: _Node | null) {\\n        this.val = (val===undefined ? 0 : val)\\n        this.left = (left===undefined ? null : left)\\n        this.right = (right===undefined ? null : right)\\n        this.random = (random===undefined ? null : random)\\n    }\\n}\\n\\n class NodeCopy {\\n    val: number\\n    left: NodeCopy | null\\n    right: NodeCopy | null\\n    random: NodeCopy | null\\n\\n    constructor(val?: number, left?: NodeCopy | null, right?: NodeCopy | null, random?: NodeCopy | null) {\\n        this.val = (val===undefined ? 0 : val)\\n        this.left = (left===undefined ? null : left)\\n        this.right = (right===undefined ? null : right)\\n        this.random = (random===undefined ? null : random)\\n    }\\n}\\n\"\n}",
+  "stats": "{\"totalAccepted\": \"35.9K\", \"totalSubmission\": \"44.4K\", \"totalAcceptedRaw\": 35930, \"totalSubmissionRaw\": 44420, \"acRate\": \"80.9%\"}",
+  "likes": 432,
+  "dislikes": 94,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Clone Graph\", \"titleSlug\": \"clone-graph\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Copy List with Random Pointer\", \"titleSlug\": \"copy-list-with-random-pointer\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Clone N-ary Tree\", \"titleSlug\": \"clone-n-ary-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,null],null,[4,3],[7,0]]",
+    "[[1,4],null,[1,0],null,[1,5],[1,5]]",
+    "[[1,6],[2,5],[3,4],[4,3],[5,2],[6,1],[7,0]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a Node.\n * struct Node {\n *     int val;\n *     Node *left;\n *     Node *right;\n *     Node *random;\n *     Node() : val(0), left(nullptr), right(nullptr), random(nullptr) {}\n *     Node(int x) : val(x), left(nullptr), right(nullptr), random(nullptr) {}\n *     Node(int x, Node *left, Node *right, Node *random) : val(x), left(left), right(right), random(random) {}\n * };\n */\n\nclass Solution {\npublic:\n    NodeCopy* copyRandomBinaryTree(Node* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for Node.\n * public class Node {\n *     int val;\n *     Node left;\n *     Node right;\n *     Node random;\n *     Node() {}\n *     Node(int val) { this.val = val; }\n *     Node(int val, Node left, Node right, Node random) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *         this.random = random;\n *     }\n * }\n */\n\nclass Solution {\n    public NodeCopy copyRandomBinaryTree(Node root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for Node.\n# class Node:\n#     def __init__(self, val=0, left=None, right=None, random=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\n#         self.random = random\n\nclass Solution:\n    def copyRandomBinaryTree(self, root: 'Optional[Node]') -> 'Optional[NodeCopy]':\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for Node.\n# class Node(object):\n#     def __init__(self, val=0, left=None, right=None, random=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\n#         self.random = random\n\nclass Solution(object):\n    def copyRandomBinaryTree(self, root):\n        \"\"\"\n        :type root: Node\n        :rtype: NodeCopy\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * // Definition for a _Node.\n * function _Node(val, left, right, random) {\n *    this.val = val === undefined ? null : val;\n *    this.left = left === undefined ? null : left;\n *    this.right = right === undefined ? null : right;\n *    this.random = random === undefined ? null : random;\n * };\n */\n\n/**\n * @param {_Node} root\n * @return {NodeCopy}\n */\nvar copyRandomBinaryTree = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for _Node.\n * class _Node {\n *     val: number\n *     left: _Node | null\n *     right: _Node | null\n *     random: _Node | null\n * \n *     constructor(val?: number, left?: _Node | null, right?: _Node | null, random?: _Node | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *         this.random = (random===undefined ? null : random)\n *     }\n * }\n */\n\n\nfunction copyRandomBinaryTree(root: _Node | null): NodeCopy | null {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for Node.\n * public class Node {\n *     public int val;\n *     public Node left;\n *     public Node right;\n *     public Node random;\n *     public Node(int val=0, Node left=null, Node right=null, Node random=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *         this.random = random;\n *     }\n * }\n */\n\npublic class Solution {\n    public NodeCopy CopyRandomBinaryTree(Node root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a Node.\n * type Node struct {\n *     Val int\n *     Left *Node\n *     Right *Node\n *     Random *Node\n * }\n */\n\nfunc copyRandomBinaryTree(root *Node) *NodeCopy {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = Node(5)\n * var v = ti.`val`\n * Definition for a Node.\n * class Node(var `val`: Int) {\n *     var left: Node? = null\n *     var right: Node? = null\n *     var random: Node? = null\n * }\n */\n\nclass Solution {\n    fun copyRandomBinaryTree(root: Node?): NodeCopy? {\n    \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a Node.\n * public class Node {\n *     public var val: Int\n *     public var left: Node?\n *     public var right: Node?\n *\t   public var random: Node?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; self.random = nil; }\n *     public init(_ val: Int) {self.val = val; self.left = nil; self.right = nil; self.random = nil; }\n *     public init(_ val: Int) {\n *         self.val = val\n *         self.left = nil\n *         self.right = nil\n *         self.random = nil\n *     }\n * }\n */\n\nclass Solution {\n    func copyRandomBinaryTree(_ root: Node?) -> NodeCopy? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for Node.\n# class Node\n#     attr_accessor :val, :left, :right, :random\n#     def initialize(val = 0, left = nil, right = nil, random = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#         @random = random\n#     end\n# end\n\n# @param {Node} root\n# @return {NodeCopy}\ndef copy_random_binary_tree(root)\n\nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a Node.\n * class Node {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     public $random = null;\n *     function __construct($val = 0, $left = null, $right = null, $random = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *         $this->random = $random;\n *     }\n * }\n */\n\nclass Solution {\n    /**\n     * @param Node $root\n     * @return NodeCopy\n     */\n    public function copyRandomBinaryTree($root) {\n    \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a Node.\n * class Node(var _value: Int, _left: Node = null, _right: Node = null, _random: Node = null) {\n *   var value: Int = _value\n *   var left: Node = _left\n *   var right: Node = _right\n *   var random: Node = _random\n * }\n */\n\nobject Solution {\n    def copyRandomBinaryTree(root: Node): NodeCopy = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "1702",
+    "content": "[TOC]\n\n## Solution\n\n### Overview\n\nIn this problem, we are given a binary tree root. Each node of the tree has an integer value `val`, and three pointers `left`, `right`, and `random` pointing to other nodes.\n\nOur task is to make a deep copy of this tree, i.e. copy every node and make similar connections between the new nodes as the given tree has.\n\n--- \n\n### Approach 1: Depth-First Search On Binary Tree (2 Passes)\n\n#### Intuition\n\nLet's start with an easy problem, if we had a normal binary tree with only `left` and `right` pointers, then how do you think we could solve this problem?    \nAs we need to make copies of all nodes we just need to traverse all the nodes of the given tree recursively using depth-first search and create respective new nodes for each traversed node, thus creating a deep copy.\n\n> If you are new to DFS: we use a recursive function to explore nodes as far as possible along each branch. Upon reaching the end of a branch, we backtrack to the previous node and continue exploring the next branches.   \n> When we encounter an unvisited node, we will take one of its neighbor nodes (if exists) as the next node on this branch and recursively call the `dfs` function to take this next node as the 'starting node' and solve the subproblem (i.e. traverse on its neighbors).  <br />    \n> If you are new to Depth First Search, please see our [Leetcode Explore Card](https://leetcode.com/explore/featured/card/graph/619/depth-first-search-in-graph/3882/) for more information on it!\n\n\n!?!../Documents/1485/slideshow1.json:1024,768!?!\n\n\nSimilarly, in this problem, if we generate a new tree similar to the given tree without connecting the new tree's node's random pointers, then our only remaining task will be to connect the new tree's node's random pointers to their respective nodes.\n\nWe know which node the random pointer of any current node (node of the given tree) points to,   \nand if we store what is the respective new node (the copied node) for any old node (we can use a hash map mapping old nodes to their respective new copied node).  \nThen we can easily tell which node the random pointer of the new node should point to, like this: \n\n$A_{old} \\text{'s random node} \\rightarrow X_{old}$      \n$A_{old} \\text{'s respective new node} \\rightarrow A_{new}$       \n$X_{old} \\text{'s respective new node} \\rightarrow X_{new}$       \n\nThus, this implies,   \n$A_{new} \\text{'s random node} \\rightarrow X_{new}$\n\n\n![random_node](../Figures/1485/Slide29.PNG)\n\n\nThus, first, we will iterate on the given tree to make a new tree without connecting its random pointers, and   \nstoring the respective old and new node pairs in a hash map `newOldPairs`.\n\nThen we will iterate over the given tree again to find the respective new node's random node using the hash map `newOldPairs`.\n\n\n#### Algorithm\n\n1. Initialize a hash map `newOldPairs` which maps the old tree's nodes with the respective new tree's node. \n2. Create a function `deepCopy(root)` which takes the given tree's root as a parameter and returns the new tree's root:\n    - If `root` is `NULL`, then the respective new tree's node will also be `NULL`.\n    - Create a new node `newRoot` with the same values as `root`.\n    - Call `deepCopy(root->left)` and `deepCopy(root->right)` to create left and right nodes of `newRoot` and attach them to it.\n   - Store the `root` and `newRoot` pair in hash map `newOldPairs` and return the new tree's root, `newRoot`.\n3. Create a function `mapRandomPointers(oldNode)` which takes the given tree's root as a parameter:\n    - If `oldNode` is `NULL`, then there is no need to proceed further.\n    - We find the random node `newRootRandom` of `newRoot` as discussed previously and make the connection.\n    - Call `mapRandomPointers` on its left and right subtrees.\n4. Create a deep copy of the tree with root `root` using the function `deepCopy(root)`.\n5. Map all random pointers of the new tree using function `mapRandomPointers(root)`.\n6. Return `newRoot`.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/gmVyaeru/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"gmVyaeru\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $n$ is the number of nodes in the given tree.\n\n* Time complexity: $O(n)$   \n  - We traverse each node of the given tree twice using functions `deepCopy` and `mapRandomPointers`.   \n    Thus, it will take us $O(n)$ time.\n* Space complexity:  $O(n)$    \n  - We store all $n$ nodes of the given tree in the hash map `newOldPairs` as key.    \n  - And the recursive stack might have $n$ elements in it.    \n    Thus, we use $O(n)$ space.\n\n---\n\n### Approach 2: Depth-First Search On Graph (1 Pass)\n\n#### Intuition\n\nLet's say we were given a graph to be cloned (the difference between a graph and a tree is that we could have loops and disconnected components in graphs).\n\nAs in the previous approach, we saw to clone a binary tree we traverse each node once and make a clone of that node. Similarly, if we had a graph then we just need to traverse each node once and clone it. If we traverse on the same node again (as loops are possible in the graph), then we won't copy it again and stop.\n\nThus the given binary tree with a random pointer can also be considered a graph with only one component and at most 3 edges from each node. So we just need to traverse each node once using DFS and clone them.\n\n![dfs](../Figures/1485/Slide31.PNG)\n\nTo mark if a node is already visited or not, we will use a hash map `seen`, which returns the respective new node if the node of the given tree was already cloned before.\n\nWe are attaching the following slideshow to show how depth-first search works on our graph:\n\n!?!../Documents/1485/slideshow2.json:1024,768!?!\n\n\n#### Algorithm\n\n1. Initialize a hash map `seen` which stores the new node if the old node was already traversed before. \n2. Create a function `dfs(root)` which takes the given tree's root as a parameter and returns the new tree's root:\n    - If `root` is `NULL`, then the respective new tree's node will also be `NULL`.\n    - If `root` is already present in the hash map `seen`, it was already traversed, thus we return the respective new node `seen[root]` we created earlier.\n    - Create a new node `newRoot` with the same value as `root`.\n   - Store the `root` and `newRoot` pair in the hash map `seen` to mark `root` as visited.\n    - Call `dfs` on left, right, and random edges of `root` and attach the returned new nodes to the `newRoot`.\n3. Create a deep copy of the tree with root `root` using the function `dfs(root)` and return it.\n\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/A6mJihe4/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"A6mJihe4\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $n$ is the number of nodes in the given tree.\n\n* Time complexity: $O(n)$   \n  - We traverse each node and edge of the given graph using the function `dfs`.  There will be $n$ nodes and $3n$ edges in the worst case.   \n  - Thus, it will take us $O(n + 3n) = O(n)$ time.\n* Space complexity:  $O(n)$    \n  - We store all $n$ nodes of the given graph in the hash map `newOldPairs` as key.\n  - And in the worst case, the recursive stack may have $n$ elements in it.\n  - Thus, we use $O(n)$ space.\n\n---\n\n\n### Approach 3: Breadth-First Search on Graph\n\n#### Intuition\n\nJust like the previous approach, we can also use a breadth-first search to traverse all the nodes and edges of our graph and clone them.\n\n> BFS is an algorithm for traversing or searching a graph. It traverses in a level-wise manner, i.e., all the nodes at the present level (say `L`) are explored before moving on to the nodes at the next level (`L + 1`), where a level's number is the distance from a starting node. BFS is implemented with a queue.  <br />   \n> If you are not familiar with BFS traversal, we suggest you read our [Leetcode Explore Card](https://leetcode.com/explore/featured/card/graph/620/breadth-first-search-in-graph/).\n\n\n#### Algorithm\n\n1. Initialize a hash map `seen` which stores the new node if the old node was already traversed before. \n2. Create a function `bfs(root)` which takes the given tree's root as a parameter and returns the new tree's root:\n    - If `root` is `NULL`, then the respective new tree's node will also be `NULL`.\n    - We create a queue `pending`, push the `root` node in it and store it with its respective new node in the hash map `seen` to mark it as visited.\n    - While we have nodes in our `pending` queue:\n        - We get the current node `oldNode` from queue and current node's respective new node `newNode` from hash map.\n        - If `oldNode`'s left child exists and it is not present in the `seen` hash map then we create a new node, put it in the hash map and queue, and attach the `newNode`'s left pointer with this newly created node.\n        - Similarly, we repeat the above step for `oldNode`'s right and random pointer nodes. \n        - Thus, we will attach the left, right and random pointers and will only push unvisited nodes in the `pending` queue.\n        - We return the respective new node of `root` using hash map `seen`.\n3. Create a deep copy of the tree with root `root` using the function `bfs(root)` and return it.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/UUzzPA7f/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"UUzzPA7f\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $n$ is the number of nodes in the given tree.\n\n* Time complexity: $O(n)$   \n  - We traverse each node and edge of the given tree using the function `bfs`.  There will be $n$ nodes and $3n$ edges in the worst case.   \n  - Thus, it will take us $O(n + 3n) = O(n)$ time.\n* Space complexity:  $O(n)$    \n  - We store all $n$ nodes of the given tree in the hash map `newOldPairs` as key.       \n  - And in the worst case, the `pending` queue may have $n$ elements in it.\n  - Thus, we use $O(n)$ space.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

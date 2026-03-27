@@ -1,0 +1,145 @@
+{
+  "questionId": "1710",
+  "questionFrontendId": "1606",
+  "title": "Find Servers That Handled Most Number of Requests",
+  "titleSlug": "find-servers-that-handled-most-number-of-requests",
+  "difficulty": "Hard",
+  "content": "<p>You have <code>k</code> servers numbered from <code>0</code> to <code>k-1</code> that are being used to handle multiple requests simultaneously. Each server has infinite computational capacity but <strong>cannot handle more than one request at a time</strong>. The requests are assigned to servers according to a specific algorithm:</p>\n\n<ul>\n\t<li>The <code>i<sup>th</sup></code> (0-indexed) request arrives.</li>\n\t<li>If all servers are busy, the request is dropped (not handled at all).</li>\n\t<li>If the <code>(i % k)<sup>th</sup></code> server is available, assign the request to that server.</li>\n\t<li>Otherwise, assign the request to the next available server (wrapping around the list of servers and starting from 0 if necessary). For example, if the <code>i<sup>th</sup></code> server is busy, try to assign the request to the <code>(i+1)<sup>th</sup></code> server, then the <code>(i+2)<sup>th</sup></code> server, and so on.</li>\n</ul>\n\n<p>You are given a <strong>strictly increasing</strong> array <code>arrival</code> of positive integers, where <code>arrival[i]</code> represents the arrival time of the <code>i<sup>th</sup></code> request, and another array <code>load</code>, where <code>load[i]</code> represents the load of the <code>i<sup>th</sup></code> request (the time it takes to complete). Your goal is to find the <strong>busiest server(s)</strong>. A server is considered <strong>busiest</strong> if it handled the most number of requests successfully among all the servers.</p>\n\n<p>Return <em>a list containing the IDs (0-indexed) of the <strong>busiest server(s)</strong></em>. You may return the IDs in any order.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/08/load-1.png\" style=\"width: 389px; height: 221px;\" />\n<pre>\n<strong>Input:</strong> k = 3, arrival = [1,2,3,4,5], load = [5,2,3,3,3] \n<strong>Output:</strong> [1] \n<strong>Explanation:</strong> \nAll of the servers start out available.\nThe first 3 requests are handled by the first 3 servers in order.\nRequest 3 comes in. Server 0 is busy, so it&#39;s assigned to the next available server, which is 1.\nRequest 4 comes in. It cannot be handled since all servers are busy, so it is dropped.\nServers 0 and 2 handled one request each, while server 1 handled two requests. Hence server 1 is the busiest server.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> k = 3, arrival = [1,2,3,4], load = [1,2,1,2]\n<strong>Output:</strong> [0]\n<strong>Explanation:</strong> \nThe first 3 requests are handled by first 3 servers.\nRequest 3 comes in. It is handled by server 0 since the server is available.\nServer 0 handled two requests, while servers 1 and 2 handled one request each. Hence server 0 is the busiest server.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> k = 3, arrival = [1,2,3], load = [10,12,11]\n<strong>Output:</strong> [0,1,2]\n<strong>Explanation:</strong> Each server handles a single request, so they are all considered the busiest.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= k &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= arrival.length, load.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>arrival.length == load.length</code></li>\n\t<li><code>1 &lt;= arrival[i], load[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>arrival</code> is <strong>strictly increasing</strong>.</li>\n</ul>\n",
+  "hints": [
+    "To speed up the next available server search, keep track of the available servers in a sorted structure such as an ordered set.",
+    "To determine if a server is available, keep track of the end times for each task in a heap and add the server to the available set once the soonest task ending time is less than or equal to the next task to add."
+  ],
+  "metaData": "{\n  \"name\": \"busiestServers\",\n  \"params\": [\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"arrival\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"load\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<integer>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"28.6K\", \"totalSubmission\": \"63.1K\", \"totalAcceptedRaw\": 28612, \"totalSubmissionRaw\": 63150, \"acRate\": \"45.3%\"}",
+  "likes": 673,
+  "dislikes": 30,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Meeting Rooms III\", \"titleSlug\": \"meeting-rooms-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "3\n[1,2,3,4,5]\n[5,2,3,3,3]",
+    "3\n[1,2,3,4]\n[1,2,1,2]",
+    "3\n[1,2,3]\n[10,12,11]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 2, \"slug\": \"cisco\", \"name\": \"Cisco\"}, {\"timesEncountered\": 2, \"slug\": \"wish\", \"name\": \"Wish\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> busiestServers(int k, vector<int>& arrival, vector<int>& load) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<Integer> busiestServers(int k, int[] arrival, int[] load) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def busiestServers(self, k: int, arrival: List[int], load: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def busiestServers(self, k, arrival, load):\n        \"\"\"\n        :type k: int\n        :type arrival: List[int]\n        :type load: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} k\n * @param {number[]} arrival\n * @param {number[]} load\n * @return {number[]}\n */\nvar busiestServers = function(k, arrival, load) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function busiestServers(k: number, arrival: number[], load: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<int> BusiestServers(int k, int[] arrival, int[] load) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* busiestServers(int k, int* arrival, int arrivalSize, int* load, int loadSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func busiestServers(k int, arrival []int, load []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun busiestServers(k: Int, arrival: IntArray, load: IntArray): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func busiestServers(_ k: Int, _ arrival: [Int], _ load: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn busiest_servers(k: i32, arrival: Vec<i32>, load: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} k\n# @param {Integer[]} arrival\n# @param {Integer[]} load\n# @return {Integer[]}\ndef busiest_servers(k, arrival, load)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $k\n     * @param Integer[] $arrival\n     * @param Integer[] $load\n     * @return Integer[]\n     */\n    function busiestServers($k, $arrival, $load) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> busiestServers(int k, List<int> arrival, List<int> load) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def busiestServers(k: Int, arrival: Array[Int], load: Array[Int]): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec busiest_servers(k :: integer, arrival :: [integer], load :: [integer]) :: [integer]\n  def busiest_servers(k, arrival, load) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec busiest_servers(K :: integer(), Arrival :: [integer()], Load :: [integer()]) -> [integer()].\nbusiest_servers(K, Arrival, Load) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (busiest-servers k arrival load)\n  (-> exact-integer? (listof exact-integer?) (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1592",
+    "content": "[TOC]\r\n\r\n## Solution\r\n\r\n--- \r\n\r\n### Overview\r\n\r\nThis problem is a variation of the classic task-scheduling problem. The tricky part is finding the correct available server (For convenience, we will call those idle servers **free**, as opposed to **busy** servers handling requests). \r\nWhen we want to assign request `i` to a server, we must start trying the `i % k`-th server, then the `i % k + 1`-th server, and so forth. This requirement makes the problem seem a little tricky at first glance. But no worries, we will present two approaches to solve it! \r\n\r\n\r\n---\r\n\r\n### Approach 1: Sorted Containers.\r\n\r\n\r\n#### Intuition   \r\n\r\n\r\nServers only have two states: busy or free. Naturally, we store them separated by availability state into two containers, `busy` and `free`.\r\nWhen a server having free state is assigned a request, we move it from `free` to `busy`. Similarly, when a busy server has finished its request, we move it from `busy` to `free`. That sounds like a good idea, doesn't it?\r\n\r\n\r\n\r\n\r\n> How do we store busy servers?\r\n\r\nEach request `i` has two parameters: arrival `arrival[i]` and load `load[i]`, so we have the starting time `arrival[i]` and the ending time `arrival[i] + load[i]` of each request. Whenever we have a new request, we should look into servers in `busy` and check if any server has finished its task. It indicates that we should store each busy server in `busy` in a format similar to `(ending time, server ID)`. \r\n\r\n\r\n\r\n\r\nDuring the process, we may have to keep adding busy servers to `busy` and remove free servers from `busy`. The priority queue is a suitable data structure to store busy servers according to their ending times. \r\nTherefore, we don't need to iterate over the entire `busy` to find the free ones and always look for the server on top of the queue having the earliest ending time.    \r\n\r\n\r\n\r\n> How do we store free servers?\r\n\r\nSuppose we have moved all free servers from `busy` to `free`. Now its time to pick the correct one for request `i`. How do we find this target server?\r\n\r\n![img](../Figures/1606/1606-1_1.png)\r\n\r\nWe can surely use the brute force approach, that is to iterate over `free` by ID from `i % k`, `i % k + 1`, `i % k + 2`, and so on until we find the correct one, but it takes a linear time for each request in the worst-case scenario.\r\n\r\n\r\n\r\nWe can improve this time complexity by keeping the free servers in sorted order, so we can use a binary search to locate the correct server in logarithmic time! Hence, we shall maintain servers in `free` sorted by their IDs. There are built-in data structures (set in C++, TreeSet in Java, sortedList in Python) that keep elements sorted and allow us to insert, remove, or perform binary search in a logarithmic time. We can use them to maintain the free servers.\r\n\r\n\r\nAccording to the question, when we are assigning task `4` to the a server, we are looking for the the smallest server ID that is equal to or greater than `4 % i`, which is also the insert position of `4 % 3 = 1` to `free`. Therefore, we can perform a binary search on `free`. If the IDs of all free servers are smaller than `i % k`, we have to pick the one with the smallest ID.\r\n\r\nAs shown in the picture below, the sorted IDs of free servers are `free = [0, 2]`, we find the insert position of `1` to `free` is `1`, so we assgin this task to server `free[1] = 2`. \r\n\r\n![img](../Figures/1606/1606-1_2.png)\r\n\r\nMore examples are shown in the picture below: we find that the `4` is the smallest server ID that is no less than `2`, thus we assign task `2` to server `4`; In the case on the right, all servers have IDs less than `7`, so we assign task `7` to the server with the smallest ID `1`.\r\n\r\n![img](../Figures/1606/1606-bs.png)\r\n\r\nNow let's look at how requests in example 1 are assigned.\r\n\r\n\r\n\r\n!?!../Documents/1606/s2.json:601,241!?!\r\n\r\n\r\n<br>\r\n\r\n#### Algorithm\r\n\r\n1) Initialize an empty priority queue `free` and a sorted container `busy` to store free servers and busy servers separately.\r\n2) Use an array `count` of size `k` to record the workload of each server.\r\n3) Add all `k` servers to `free`.\r\n4) Iterate over requests, for each request `[start[i], load[i]]`, do the following steps by order:\r\n   i) If there are servers that become free before `start[i]`, we remove them from `busy` and add them to `free`.\r\n   ii) If there is no server in `free`, abandon this request by repeating step 4.\r\n   iii) Otherwise, perform a binary search on `free` to find the first server larger than or equal to `i`. If all servers are smaller than `i`, choose the smallest one to handle this request. Increment the workload of this server by 1 and repeat step 4.\r\n5) After the iteration stops, collect all servers having the maximum workload.\r\n\r\n#### Implementation\r\n\r\n<iframe src=\"https://leetcode.com/playground/UNCwjEBh/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"UNCwjEBh\"></iframe>\r\n\r\n\r\n#### Complexity Analysis\r\n\r\nLet $$k$$ be the number of servers and $$n$$ be the size of the input array `arrival`, that is, the number of requests.\r\n\r\n* Time complexity: $$O(n \\cdot \\log k)$$\r\n\r\n    - We used a priority queue `busy` and a sorted container `free`.\r\n    - Operations like adding and removing in the priority queue take logarithmic time. Since there may be at most $$k$$ servers stored in the priority queue, thus each operation takes $$O(\\log k)$$ time.\r\n\r\n\r\n    - Sorted containers are implemented using a red-black tree, and operations like inserting, deleting, and performing a binary search on the red-black tree take $$O(\\log k)$$ time.\r\n\r\n\r\n    - In each step, we perform multiple operations on `busy` and `free`. Therefore, the overall time complexity is $$O(n \\cdot \\log k)$$.\r\n    \r\n\r\n* Space complexity: $$O(k)$$\r\n\r\n    - The total number of servers stored in `busy` and `free` is $$n$$, so they take $$O(k)$$ space.\r\n    - We used an array `count` to record the number of requests handled by each server, which takes $$O(k)$$ space.\r\n    - To sum up, the overall time complexity is $$O(k)$$.\r\n\r\n<br/>\r\n\r\n\r\n\r\n---\r\n\r\n### Approach 2: Two Priority Queues\r\n\r\n#### Intuition   \r\n\r\nIn the previous approach, we relied on some built-in functions to help maintain free servers in sorted order. Here we also introduce a method that does not require binary search nor a complex sorting container, but simply two priority queues. Let's get into it now!\r\n\r\n\r\n\r\nLet's temporarily change the conditions of the topic a little: whenever we have a request, we want to assign it to the **smallest** free server. \r\nNow the problem becomes much easy;\r\n We just need another priority queue named `free` to maintain a min-heap of all free servers. Each time we encounter a new request, pop the first server from the `free` queue that is guaranteed to be the smallest one.\r\n\r\n\r\nBack to this problem, what will happen if we still use a priority queue to store free servers? Will we still get the correct result?\r\n\r\nLet's look at the example below. We want to assign request `4` to a server. Since all free servers are stored in `free` by their IDs, assign it to the server on the top of `free`, that is, server `0`.\r\n\r\n\r\n![img](../Figures/1606/1606-1_1.png)\r\n\r\nOops, this is the wrong choice! This request should be assigned to server `1` but is assigned to server `0`! We use a priority queue as the container, so the first available server always has the smallest ID, regardless of what ID we want first. \r\n\r\nThis implies that we can't simply add the free server back to the `free` queue with its **original ID**, we can try modifying its ID before adding it to `free`. \r\n\r\n\r\n\r\n![img](../Figures/1606/1606-test2.png)\r\n\r\n\r\nBut this is certainly not a random modification, and we must change the ID according to these rules:\r\n\r\n- The modified ID represents its priority to be assigned to a request `i`. In other words, the smallest ID represents the correct server for request `i`. \r\nSuppose we have two free servers, `0` and `2`, and the current `i % k` is `1`. In this case, we should choose server `2`, so the modified ID of server `2` should be **smaller than** that of server `0` (meaning server `2` has a higher priority than server `0`).\r\n\r\n\r\n- The modified ID is still mapped to its original ID so that we can track a server by its modified ID.\r\n\r\nHence, we can increment each ID by multiple `k` to make it equal to or greater than `i`. Therefore, the value of the modified ID represents its priority to be assigned to task `i`, and we can always get its original ID by taking the remainder of this ID to `k`. Back to the problem, we add `3` to both servers `0` and `2` to make them `3` and `5`. Now both modified IDs are no less than `3`, and we assign task `3` to the server with the smaller modified ID (server `2`).\r\n\r\n\r\n\r\n![img](../Figures/1606/1606-test3.png)\r\n\r\n\r\n\r\nNow, we can always get the correct server for each request. Refer to the slides below!\r\n\r\n\r\n!?!../Documents/1606/s1.json:601,241!?!\r\n\r\n<br>\r\n\r\n#### Algorithm\r\n\r\n1) Initialize an empty priority queue named `free` and a sorted container  `busy` to store free and busy servers separately.\r\n2) Use an array `count` of size `k` to record the workload of each server.\r\n3) Put all `k` servers to `free`.\r\n4) Iterate over requests, for each request `[start[i], load[i]]`, do the following steps by order:\r\n5) Remove free servers from `busy`, increment their IDs by multiple `k`s to make them no less than `i`, and add them to `free`.\r\n\r\n6) If there are free servers in `free`, remove the first one and get its original ID `busy_id` by taking the residual of `k` for the modified ID, add this server to `busy`, and increment `count[busy_id]` by 1. \r\n\r\n\r\n   - Otherwise, this request is abandoned, as we currently have no free server.\r\n\r\n   Repeat step 4.\r\n7) After the iteration stops, collect all servers having the maximum workload.\r\n\r\n\r\n#### Implementation\r\n\r\n<iframe src=\"https://leetcode.com/playground/ehEcWLfN/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ehEcWLfN\"></iframe>\r\n\r\n\r\n#### Complexity Analysis\r\n\r\nLet $$k$$ be the number of servers and $$n$$ be the size of the input array `arrival`, that is, the number of requests.\r\n\r\n* Time complexity: $$O(n \\cdot \\log k)$$\r\n\r\n    - We used two priority queues named `busy` and `free` to store all servers, each operation like adding and removing in a priority queue of size $$O(k)$$ takes $$O(\\log k)$$ time. \r\n\r\n    - In each iteration step, we make several operations on `busy` and `free` that take $$O(\\log k)$$ time. \r\n\r\n    - Therefore, the overall time complexity is $$O(n \\cdot \\log k)$$.\r\n    \r\n\r\n* Space complexity: $$O(k)$$\r\n\r\n    - We used two priority queues named `busy` and `free` to store all servers, that take $$O(k)$$ space.\r\n    - We used an array `count` to record the number of requests handled by each server, which also takes $$O(k)$$ space.\r\n    - To sum up, the overall time complexity is $$O(k)$$.\r\n\r\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

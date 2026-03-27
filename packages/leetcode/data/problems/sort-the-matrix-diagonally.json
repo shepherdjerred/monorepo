@@ -1,0 +1,141 @@
+{
+  "questionId": "1253",
+  "questionFrontendId": "1329",
+  "title": "Sort the Matrix Diagonally",
+  "titleSlug": "sort-the-matrix-diagonally",
+  "difficulty": "Medium",
+  "content": "<p>A <strong>matrix diagonal</strong> is a diagonal line of cells starting from some cell in either the topmost row or leftmost column and going in the bottom-right direction until reaching the matrix&#39;s end. For example, the <strong>matrix diagonal</strong> starting from <code>mat[2][0]</code>, where <code>mat</code> is a <code>6 x 3</code> matrix, includes cells <code>mat[2][0]</code>, <code>mat[3][1]</code>, and <code>mat[4][2]</code>.</p>\n\n<p>Given an <code>m x n</code> matrix <code>mat</code> of integers, sort each <strong>matrix diagonal</strong> in ascending order and return <em>the resulting matrix</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/01/21/1482_example_1_2.png\" style=\"width: 500px; height: 198px;\" />\n<pre>\n<strong>Input:</strong> mat = [[3,3,1,1],[2,2,1,2],[1,1,1,2]]\n<strong>Output:</strong> [[1,1,1,1],[1,2,2,2],[1,2,3,3]]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> mat = [[11,25,66,1,69,7],[23,55,17,45,15,52],[75,31,36,44,58,8],[22,27,33,25,68,4],[84,28,14,11,5,50]]\n<strong>Output:</strong> [[5,17,4,1,52,7],[11,11,25,45,8,69],[14,23,25,44,58,15],[22,27,31,36,50,66],[84,28,75,33,55,68]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == mat.length</code></li>\n\t<li><code>n == mat[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 100</code></li>\n\t<li><code>1 &lt;= mat[i][j] &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "Use a data structure to store all values of each diagonal.",
+    "How to index the data structure with the id of the diagonal?",
+    "All cells in the same diagonal (i,j) have the same difference so we can get the diagonal of a cell using the difference i-j."
+  ],
+  "metaData": "{\n  \"name\": \"diagonalSort\",\n  \"params\": [\n    {\n      \"name\": \"mat\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[][]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"196.2K\", \"totalSubmission\": \"236K\", \"totalAcceptedRaw\": 196243, \"totalSubmissionRaw\": 235975, \"acRate\": \"83.2%\"}",
+  "likes": 3577,
+  "dislikes": 239,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Sort Matrix by Diagonals\", \"titleSlug\": \"sort-matrix-by-diagonals\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[3,3,1,1],[2,2,1,2],[1,1,1,2]]",
+    "[[11,25,66,1,69,7],[23,55,17,45,15,52],[75,31,36,44,58,8],[22,27,33,25,68,4],[84,28,14,11,5,50]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 2, \"slug\": \"quora\", \"name\": \"Quora\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> diagonalSort(vector<vector<int>>& mat) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[][] diagonalSort(int[][] mat) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def diagonalSort(self, mat: List[List[int]]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def diagonalSort(self, mat):\n        \"\"\"\n        :type mat: List[List[int]]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} mat\n * @return {number[][]}\n */\nvar diagonalSort = function(mat) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function diagonalSort(mat: number[][]): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[][] DiagonalSort(int[][] mat) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** diagonalSort(int** mat, int matSize, int* matColSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func diagonalSort(mat [][]int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun diagonalSort(mat: Array<IntArray>): Array<IntArray> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func diagonalSort(_ mat: [[Int]]) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn diagonal_sort(mat: Vec<Vec<i32>>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} mat\n# @return {Integer[][]}\ndef diagonal_sort(mat)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $mat\n     * @return Integer[][]\n     */\n    function diagonalSort($mat) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> diagonalSort(List<List<int>> mat) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def diagonalSort(mat: Array[Array[Int]]): Array[Array[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec diagonal_sort(mat :: [[integer]]) :: [[integer]]\n  def diagonal_sort(mat) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec diagonal_sort(Mat :: [[integer()]]) -> [[integer()]].\ndiagonal_sort(Mat) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (diagonal-sort mat)\n  (-> (listof (listof exact-integer?)) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1077",
+    "content": "[TOC]\n\n## Video Solution\n\n<div>\n  <div class=\"video-container\">\n    <iframe src=\"https://player.vimeo.com/video/503255206?texttrack=en\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n  </div>\n</div>\n\n</br>\n\n## Solution Article\n\n---\n\n### Approach 1: Hash Table of Heaps\n\nThe most straightforward idea is to create a **hash table of heaps** to store the diagonals. This way, the diagonals are automatically sorted, and one has nothing to do but push these sorted diagonals back into the matrix.\n\n![Demonstrate the process of building heaps for each diagonal and then generating the result.](../Figures/1329/hashmap.png) \n*Fig 1. Approach 1: HashMap of Heaps.*\n\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/fHXBotin/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"fHXBotin\"></iframe>\n\n**Complexity Analysis**\n\nLet $$M$$ be the number of rows, and $$N$$ be the number of columns.\n\n\n* Time complexity: $$\\mathcal{O}\\Big(N \\times M \\times \\log \\big(\\min(N, M)\\big)\\Big)$$.\n\n    We perform $$N \\times M$$ operations in two nested loops. At each iteration, we push an element into a heap that contains the current diagonal. The longest diagonal contains $$\\min(N, M)$$ element, and so pushing an element to a heap has a cost of $$\\mathcal{O}\\Big(\\log\\big(\\min(N, M)\\big)\\Big)$$. Multiplying these together, we get a time complexity of $$\\mathcal{O}\\Big(N \\times M \\times \\log \\big(\\min(N, M)\\big)\\Big)$$\n    \n* Space complexity: $$\\mathcal{O}(M \\times N)$$.\n\n    The `diagonals` Hash Map has to store each element in the input matrix.\n\n<br />\n\n---\n\n### Approach 2: Sort Diagonals One by One Using Heap\n\nTo optimize the space, we could sort diagonals one by one. That would decrease the space complexity from $$\\mathcal{O}(N \\times M)$$ down to $$\\mathcal{O}(\\min(N, M))$$.\n\n![Demonstrate the process of building heaps one by one for each diagonal and then generating the result.](../Figures/1329/diagonals.png) \n*Fig 2. Approach 2: Sort Diagonals One by One Using Heap.*\n\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/ViWXAScD/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ViWXAScD\"></iframe>\n\n**Complexity Analysis**\n\nLet $$M$$ be the number of rows, and $$N$$ be the number of columns.\n\n* Time complexity: $$\\mathcal{O}\\Big(N \\times M \\times \\log \\big(\\min(N, M)\\big)\\Big)$$.\n\n    We perform $$N \\times M$$ operations in two nested loops. At each iteration, we push an element into a heap that contains the current diagonal. The longest diagonal contains $$\\min(N, M)$$ element, and so pushing an element to a heap has a cost of $$\\mathcal{O}\\Big(\\log\\big(\\min(N, M)\\big)\\Big)$$. Multiplying these together, we get a time complexity of $$\\mathcal{O}\\Big(N \\times M \\times \\log \\big(\\min(N, M)\\big)\\Big)$$\n    \n* Space complexity: $$\\mathcal{O}(\\min(N, M))$$.\n\n    The space is used by the heap with diagonal elements, and the longest diagonal contains $$\\min(N, M)$$ elements.\n\n<br />\n\n---\n\n### Approach 3: Sort Diagonals One by One Using Counting Sort\n\n**Intuition**\n\nInstead of using a heap, we could put each diagonal into a list and then sort it using built-in sorting functions. This would achieve the same time and space complexity as the previous approach.\n\nBut can we do better on the time complexity? Yes, we can! Instead of using heaps or built-in sort, we could implement a [counting sort](https://en.wikipedia.org/wiki/Counting_sort). Recall that counting sort runs in $$\\mathcal{O}(A + B)$$ time, where $$A$$ is the number of items to be sorted, and $$B$$ is the difference between the smallest and largest element.\n\n![Demonstrate the process of applying counting sort for each diagonal and then generating the result.](../Figures/1329/diagonals.png)\n*Fig 3. Approach 3: Sort Diagonals One by One Using Sort.*\n\n\n> **Interview Tip**: A somewhat popular follow-up question for \"sorting\" problems goes something like this. Assume that the maximum value in the data to be sorted is `x`, where `x` is small compared to the *number* of elements to be sorted. Assuming that the number of values to be sorted is $$n$$, can you come up with a solution that runs in $$O(x \\cdot n)$$ time, as opposed to $$O(n \\log n)$$ time?\n> \n> The solution to this is to use counting sort. It is important to practice implementing counting sort so that you can confidently tackle this common follow-up question.\n\n<iframe src=\"https://leetcode.com/playground/ZEFMdy4D/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ZEFMdy4D\"></iframe>\n\n**Complexity Analysis**\n\nLet $$M$$ be the number of rows, $$N$$ the number of columns, and $$V$$ the range of values in the matrix.\n\nThe time complexity is dependent on whether we're treating $$V$$ as a variable or a constant. In the code above, we treated it as a constant; we simply set the minimum and maximum for the range to `min = 0` and `max = 100`, which would give a fixed-size range of `V = 100`. Alternatively, if we'd done `min = min value in diagonal` and `max = max value in diagonal`, then this would make it a variable.\n\n* Time complexity (Treating $$V$$ as a variable): $$\\mathcal{O}\\big((V \\times M) + (V \\times N) + (M \\times N)\\big)$$.\n\n    The best way of analyzing the time complexity for this approach is to summarise all of the steps as follows.\n\n    - Each of the $$M \\times N$$ elements is getting taken out of the matrix *once*.\n    - Each of the $$M \\times N$$ elements is getting returned to the matrix *once*.\n    - Each of the $$M \\times N$$ elements is getting inserted into an array (direct access) *once*.\n    - Each of the $$M \\times N$$ elements is getting removed from an array *once*.\n    The total cost for these $$4$$ operations is $$\\mathcal{O}(4 \\times M \\times N) = \\mathcal{O}(M \\times N)$$.\n\n    We're not quite done though, we also need to consider the cost of creating and traversing the `counts` arrays.\n\n    - There are a total of $$M + N - 1$$ diagonals, and for each diagonal, an array of length $$V$$ is created.\n    - Each of the $$M + N - 1$$ arrays of length $$V$$ are traversed once.\n    The total cost for these $$2$$ operations is $$\\mathcal{O}(2 \\times V \\times (M + N - 1))$$. Dropping the constants, we\n    get $$\\mathcal{O}\\big(V \\times (M + N)\\big)$$ and expanding the brackets gives $$\\mathcal{O}\\big((V \\times M) + (V \\times N)\\big)$$.\n    \n    Combining the two parts, we get a final result of $$\\mathcal{O}\\big((V \\times M) + (V \\times N) + (M \\times N)\\big)$$.\n\n* Time complexity (Treating $$V$$ as a constant): $$\\mathcal{O}(N \\times M)$$.\n\n    Each of the $$M \\times N$$ values in the matrix is being put into a bucket of a fixed-size array. Putting a value has a cost of $$O(1)$$, as does iterating over the buckets. Therefore, we're only left with the cost of iterating the matrix.\n\n* Space complexity: $$\\mathcal{O}\\big(\\min(N, M)\\big)$$.\n\n    We use additional space for the current diagonal we're processing. The maximum possible diagonal size is $$\\min(N, M)$$.\n\n</br>\n\n> **Further Thoughts: A slippery slope for arbitrary constants**\n>\n> The \"constant range\" way of implementing and analyzing counting sort is popular, but not without its issues. If, for example, the range was the size of a 32-bit integer, then the constant would be over 4 billion - and would no doubt lead to a `TLE` if you tried to run it here on LeetCode! Also, it leads to another compelling question: Why is it OK to treat the range as a constant, but not the array length? We could easily write some code that hardcodes the maximum array size, and then simply skip all out-of-bounds indexes. This, technically, would allow us to iterate an array, up to a size big enough to solve the problem, in $$O(1)$$ time. And why stop there? By hardcoding high enough values, we could, in theory, solve every problem on LeetCode in $$O(1)$$ time. This all seems pretty silly, so the moral of the story is: we need to be very careful about hardcoding *any* problem constraints.\n>  \n> In an interview, you should be careful to explain and justify whether or not you're treating the number range as a constant.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,143 @@
+{
+  "questionId": "1470",
+  "questionFrontendId": "1348",
+  "title": "Tweet Counts Per Frequency",
+  "titleSlug": "tweet-counts-per-frequency",
+  "difficulty": "Medium",
+  "content": "<p>A social media company is trying to monitor activity on their site by analyzing the number of tweets that occur in select periods of time. These periods can be partitioned into smaller <strong>time chunks</strong> based on a certain frequency (every <strong>minute</strong>, <strong>hour</strong>, or <strong>day</strong>).</p>\n\n<p>For example, the period <code>[10, 10000]</code> (in <strong>seconds</strong>) would be partitioned into the following <strong>time chunks</strong> with these frequencies:</p>\n\n<ul>\n\t<li>Every <strong>minute</strong> (60-second chunks): <code>[10,69]</code>, <code>[70,129]</code>, <code>[130,189]</code>, <code>...</code>, <code>[9970,10000]</code></li>\n\t<li>Every <strong>hour</strong> (3600-second chunks): <code>[10,3609]</code>, <code>[3610,7209]</code>, <code>[7210,10000]</code></li>\n\t<li>Every <strong>day</strong> (86400-second chunks): <code>[10,10000]</code></li>\n</ul>\n\n<p>Notice that the last chunk may be shorter than the specified frequency&#39;s chunk size and will always end with the end time of the period (<code>10000</code> in the above example).</p>\n\n<p>Design and implement an API to help the company with their analysis.</p>\n\n<p>Implement the <code>TweetCounts</code> class:</p>\n\n<ul>\n\t<li><code>TweetCounts()</code> Initializes the <code>TweetCounts</code> object.</li>\n\t<li><code>void recordTweet(String tweetName, int time)</code> Stores the <code>tweetName</code> at the recorded <code>time</code> (in <strong>seconds</strong>).</li>\n\t<li><code>List&lt;Integer&gt; getTweetCountsPerFrequency(String freq, String tweetName, int startTime, int endTime)</code> Returns a list of integers representing the number of tweets with <code>tweetName</code> in each <strong>time chunk</strong> for the given period of time <code>[startTime, endTime]</code> (in <strong>seconds</strong>) and frequency <code>freq</code>.\n\t<ul>\n\t\t<li><code>freq</code> is one of <code>&quot;minute&quot;</code>, <code>&quot;hour&quot;</code>, or <code>&quot;day&quot;</code> representing a frequency of every <strong>minute</strong>, <strong>hour</strong>, or <strong>day</strong> respectively.</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;TweetCounts&quot;,&quot;recordTweet&quot;,&quot;recordTweet&quot;,&quot;recordTweet&quot;,&quot;getTweetCountsPerFrequency&quot;,&quot;getTweetCountsPerFrequency&quot;,&quot;recordTweet&quot;,&quot;getTweetCountsPerFrequency&quot;]\n[[],[&quot;tweet3&quot;,0],[&quot;tweet3&quot;,60],[&quot;tweet3&quot;,10],[&quot;minute&quot;,&quot;tweet3&quot;,0,59],[&quot;minute&quot;,&quot;tweet3&quot;,0,60],[&quot;tweet3&quot;,120],[&quot;hour&quot;,&quot;tweet3&quot;,0,210]]\n\n<strong>Output</strong>\n[null,null,null,null,[2],[2,1],null,[4]]\n\n<strong>Explanation</strong>\nTweetCounts tweetCounts = new TweetCounts();\ntweetCounts.recordTweet(&quot;tweet3&quot;, 0);                              // New tweet &quot;tweet3&quot; at time 0\ntweetCounts.recordTweet(&quot;tweet3&quot;, 60);                             // New tweet &quot;tweet3&quot; at time 60\ntweetCounts.recordTweet(&quot;tweet3&quot;, 10);                             // New tweet &quot;tweet3&quot; at time 10\ntweetCounts.getTweetCountsPerFrequency(&quot;minute&quot;, &quot;tweet3&quot;, 0, 59); // return [2]; chunk [0,59] had 2 tweets\ntweetCounts.getTweetCountsPerFrequency(&quot;minute&quot;, &quot;tweet3&quot;, 0, 60); // return [2,1]; chunk [0,59] had 2 tweets, chunk [60,60] had 1 tweet\ntweetCounts.recordTweet(&quot;tweet3&quot;, 120);                            // New tweet &quot;tweet3&quot; at time 120\ntweetCounts.getTweetCountsPerFrequency(&quot;hour&quot;, &quot;tweet3&quot;, 0, 210);  // return [4]; chunk [0,210] had 4 tweets\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= time, startTime, endTime &lt;= 10<sup>9</sup></code></li>\n\t<li><code>0 &lt;= endTime - startTime &lt;= 10<sup>4</sup></code></li>\n\t<li>There will be at most <code>10<sup>4</sup></code> calls <strong>in total</strong> to <code>recordTweet</code> and <code>getTweetCountsPerFrequency</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"classname\": \"TweetCounts\",\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"string\",\n          \"name\": \"tweetName\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"time\"\n        }\n      ],\n      \"name\": \"recordTweet\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"string\",\n          \"name\": \"freq\"\n        },\n        {\n          \"type\": \"string\",\n          \"name\": \"tweetName\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"startTime\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"endTime\"\n        }\n      ],\n      \"name\": \"getTweetCountsPerFrequency\",\n      \"return\": {\n        \"type\": \"list<integer>\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"39.3K\", \"totalSubmission\": \"85.5K\", \"totalAcceptedRaw\": 39322, \"totalSubmissionRaw\": 85542, \"acRate\": \"46.0%\"}",
+  "likes": 222,
+  "dislikes": 309,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Design Video Sharing Platform\", \"titleSlug\": \"design-video-sharing-platform\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"TweetCounts\",\"recordTweet\",\"recordTweet\",\"recordTweet\",\"getTweetCountsPerFrequency\",\"getTweetCountsPerFrequency\",\"recordTweet\",\"getTweetCountsPerFrequency\"]\n[[],[\"tweet3\",0],[\"tweet3\",60],[\"tweet3\",10],[\"minute\",\"tweet3\",0,59],[\"minute\",\"tweet3\",0,60],[\"tweet3\",120],[\"hour\",\"tweet3\",0,210]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"intercom\", \"name\": \"Intercom\"}, {\"timesEncountered\": 3, \"slug\": \"twitter\", \"name\": \"X\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class TweetCounts {\npublic:\n    TweetCounts() {\n        \n    }\n    \n    void recordTweet(string tweetName, int time) {\n        \n    }\n    \n    vector<int> getTweetCountsPerFrequency(string freq, string tweetName, int startTime, int endTime) {\n        \n    }\n};\n\n/**\n * Your TweetCounts object will be instantiated and called as such:\n * TweetCounts* obj = new TweetCounts();\n * obj->recordTweet(tweetName,time);\n * vector<int> param_2 = obj->getTweetCountsPerFrequency(freq,tweetName,startTime,endTime);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class TweetCounts {\n\n    public TweetCounts() {\n        \n    }\n    \n    public void recordTweet(String tweetName, int time) {\n        \n    }\n    \n    public List<Integer> getTweetCountsPerFrequency(String freq, String tweetName, int startTime, int endTime) {\n        \n    }\n}\n\n/**\n * Your TweetCounts object will be instantiated and called as such:\n * TweetCounts obj = new TweetCounts();\n * obj.recordTweet(tweetName,time);\n * List<Integer> param_2 = obj.getTweetCountsPerFrequency(freq,tweetName,startTime,endTime);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class TweetCounts:\n\n    def __init__(self):\n        \n\n    def recordTweet(self, tweetName: str, time: int) -> None:\n        \n\n    def getTweetCountsPerFrequency(self, freq: str, tweetName: str, startTime: int, endTime: int) -> List[int]:\n        \n\n\n# Your TweetCounts object will be instantiated and called as such:\n# obj = TweetCounts()\n# obj.recordTweet(tweetName,time)\n# param_2 = obj.getTweetCountsPerFrequency(freq,tweetName,startTime,endTime)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class TweetCounts(object):\n\n    def __init__(self):\n        \n\n    def recordTweet(self, tweetName, time):\n        \"\"\"\n        :type tweetName: str\n        :type time: int\n        :rtype: None\n        \"\"\"\n        \n\n    def getTweetCountsPerFrequency(self, freq, tweetName, startTime, endTime):\n        \"\"\"\n        :type freq: str\n        :type tweetName: str\n        :type startTime: int\n        :type endTime: int\n        :rtype: List[int]\n        \"\"\"\n        \n\n\n# Your TweetCounts object will be instantiated and called as such:\n# obj = TweetCounts()\n# obj.recordTweet(tweetName,time)\n# param_2 = obj.getTweetCountsPerFrequency(freq,tweetName,startTime,endTime)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar TweetCounts = function() {\n    \n};\n\n/** \n * @param {string} tweetName \n * @param {number} time\n * @return {void}\n */\nTweetCounts.prototype.recordTweet = function(tweetName, time) {\n    \n};\n\n/** \n * @param {string} freq \n * @param {string} tweetName \n * @param {number} startTime \n * @param {number} endTime\n * @return {number[]}\n */\nTweetCounts.prototype.getTweetCountsPerFrequency = function(freq, tweetName, startTime, endTime) {\n    \n};\n\n/** \n * Your TweetCounts object will be instantiated and called as such:\n * var obj = new TweetCounts()\n * obj.recordTweet(tweetName,time)\n * var param_2 = obj.getTweetCountsPerFrequency(freq,tweetName,startTime,endTime)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class TweetCounts {\n    constructor() {\n        \n    }\n\n    recordTweet(tweetName: string, time: number): void {\n        \n    }\n\n    getTweetCountsPerFrequency(freq: string, tweetName: string, startTime: number, endTime: number): number[] {\n        \n    }\n}\n\n/**\n * Your TweetCounts object will be instantiated and called as such:\n * var obj = new TweetCounts()\n * obj.recordTweet(tweetName,time)\n * var param_2 = obj.getTweetCountsPerFrequency(freq,tweetName,startTime,endTime)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class TweetCounts {\n\n    public TweetCounts() {\n        \n    }\n    \n    public void RecordTweet(string tweetName, int time) {\n        \n    }\n    \n    public IList<int> GetTweetCountsPerFrequency(string freq, string tweetName, int startTime, int endTime) {\n        \n    }\n}\n\n/**\n * Your TweetCounts object will be instantiated and called as such:\n * TweetCounts obj = new TweetCounts();\n * obj.RecordTweet(tweetName,time);\n * IList<int> param_2 = obj.GetTweetCountsPerFrequency(freq,tweetName,startTime,endTime);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} TweetCounts;\n\n\nTweetCounts* tweetCountsCreate() {\n    \n}\n\nvoid tweetCountsRecordTweet(TweetCounts* obj, char* tweetName, int time) {\n    \n}\n\nint* tweetCountsGetTweetCountsPerFrequency(TweetCounts* obj, char* freq, char* tweetName, int startTime, int endTime, int* retSize) {\n    \n}\n\nvoid tweetCountsFree(TweetCounts* obj) {\n    \n}\n\n/**\n * Your TweetCounts struct will be instantiated and called as such:\n * TweetCounts* obj = tweetCountsCreate();\n * tweetCountsRecordTweet(obj, tweetName, time);\n \n * int* param_2 = tweetCountsGetTweetCountsPerFrequency(obj, freq, tweetName, startTime, endTime, retSize);\n \n * tweetCountsFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type TweetCounts struct {\n    \n}\n\n\nfunc Constructor() TweetCounts {\n    \n}\n\n\nfunc (this *TweetCounts) RecordTweet(tweetName string, time int)  {\n    \n}\n\n\nfunc (this *TweetCounts) GetTweetCountsPerFrequency(freq string, tweetName string, startTime int, endTime int) []int {\n    \n}\n\n\n/**\n * Your TweetCounts object will be instantiated and called as such:\n * obj := Constructor();\n * obj.RecordTweet(tweetName,time);\n * param_2 := obj.GetTweetCountsPerFrequency(freq,tweetName,startTime,endTime);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class TweetCounts() {\n\n    fun recordTweet(tweetName: String, time: Int) {\n        \n    }\n\n    fun getTweetCountsPerFrequency(freq: String, tweetName: String, startTime: Int, endTime: Int): List<Int> {\n        \n    }\n\n}\n\n/**\n * Your TweetCounts object will be instantiated and called as such:\n * var obj = TweetCounts()\n * obj.recordTweet(tweetName,time)\n * var param_2 = obj.getTweetCountsPerFrequency(freq,tweetName,startTime,endTime)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass TweetCounts {\n\n    init() {\n        \n    }\n    \n    func recordTweet(_ tweetName: String, _ time: Int) {\n        \n    }\n    \n    func getTweetCountsPerFrequency(_ freq: String, _ tweetName: String, _ startTime: Int, _ endTime: Int) -> [Int] {\n        \n    }\n}\n\n/**\n * Your TweetCounts object will be instantiated and called as such:\n * let obj = TweetCounts()\n * obj.recordTweet(tweetName, time)\n * let ret_2: [Int] = obj.getTweetCountsPerFrequency(freq, tweetName, startTime, endTime)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct TweetCounts {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl TweetCounts {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn record_tweet(&self, tweet_name: String, time: i32) {\n        \n    }\n    \n    fn get_tweet_counts_per_frequency(&self, freq: String, tweet_name: String, start_time: i32, end_time: i32) -> Vec<i32> {\n        \n    }\n}\n\n/**\n * Your TweetCounts object will be instantiated and called as such:\n * let obj = TweetCounts::new();\n * obj.record_tweet(tweetName, time);\n * let ret_2: Vec<i32> = obj.get_tweet_counts_per_frequency(freq, tweetName, startTime, endTime);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class TweetCounts\n    def initialize()\n        \n    end\n\n\n=begin\n    :type tweet_name: String\n    :type time: Integer\n    :rtype: Void\n=end\n    def record_tweet(tweet_name, time)\n        \n    end\n\n\n=begin\n    :type freq: String\n    :type tweet_name: String\n    :type start_time: Integer\n    :type end_time: Integer\n    :rtype: Integer[]\n=end\n    def get_tweet_counts_per_frequency(freq, tweet_name, start_time, end_time)\n        \n    end\n\n\nend\n\n# Your TweetCounts object will be instantiated and called as such:\n# obj = TweetCounts.new()\n# obj.record_tweet(tweet_name, time)\n# param_2 = obj.get_tweet_counts_per_frequency(freq, tweet_name, start_time, end_time)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class TweetCounts {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param String $tweetName\n     * @param Integer $time\n     * @return NULL\n     */\n    function recordTweet($tweetName, $time) {\n        \n    }\n  \n    /**\n     * @param String $freq\n     * @param String $tweetName\n     * @param Integer $startTime\n     * @param Integer $endTime\n     * @return Integer[]\n     */\n    function getTweetCountsPerFrequency($freq, $tweetName, $startTime, $endTime) {\n        \n    }\n}\n\n/**\n * Your TweetCounts object will be instantiated and called as such:\n * $obj = TweetCounts();\n * $obj->recordTweet($tweetName, $time);\n * $ret_2 = $obj->getTweetCountsPerFrequency($freq, $tweetName, $startTime, $endTime);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class TweetCounts {\n\n  TweetCounts() {\n    \n  }\n  \n  void recordTweet(String tweetName, int time) {\n    \n  }\n  \n  List<int> getTweetCountsPerFrequency(String freq, String tweetName, int startTime, int endTime) {\n    \n  }\n}\n\n/**\n * Your TweetCounts object will be instantiated and called as such:\n * TweetCounts obj = TweetCounts();\n * obj.recordTweet(tweetName,time);\n * List<int> param2 = obj.getTweetCountsPerFrequency(freq,tweetName,startTime,endTime);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class TweetCounts() {\n\n    def recordTweet(tweetName: String, time: Int): Unit = {\n        \n    }\n\n    def getTweetCountsPerFrequency(freq: String, tweetName: String, startTime: Int, endTime: Int): List[Int] = {\n        \n    }\n\n}\n\n/**\n * Your TweetCounts object will be instantiated and called as such:\n * val obj = new TweetCounts()\n * obj.recordTweet(tweetName,time)\n * val param_2 = obj.getTweetCountsPerFrequency(freq,tweetName,startTime,endTime)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule TweetCounts do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec record_tweet(tweet_name :: String.t, time :: integer) :: any\n  def record_tweet(tweet_name, time) do\n    \n  end\n\n  @spec get_tweet_counts_per_frequency(freq :: String.t, tweet_name :: String.t, start_time :: integer, end_time :: integer) :: [integer]\n  def get_tweet_counts_per_frequency(freq, tweet_name, start_time, end_time) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# TweetCounts.init_()\n# TweetCounts.record_tweet(tweet_name, time)\n# param_2 = TweetCounts.get_tweet_counts_per_frequency(freq, tweet_name, start_time, end_time)\n\n# TweetCounts.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec tweet_counts_init_() -> any().\ntweet_counts_init_() ->\n  .\n\n-spec tweet_counts_record_tweet(TweetName :: unicode:unicode_binary(), Time :: integer()) -> any().\ntweet_counts_record_tweet(TweetName, Time) ->\n  .\n\n-spec tweet_counts_get_tweet_counts_per_frequency(Freq :: unicode:unicode_binary(), TweetName :: unicode:unicode_binary(), StartTime :: integer(), EndTime :: integer()) -> [integer()].\ntweet_counts_get_tweet_counts_per_frequency(Freq, TweetName, StartTime, EndTime) ->\n  .\n\n\n%% Your functions will be called as such:\n%% tweet_counts_init_(),\n%% tweet_counts_record_tweet(TweetName, Time),\n%% Param_2 = tweet_counts_get_tweet_counts_per_frequency(Freq, TweetName, StartTime, EndTime),\n\n%% tweet_counts_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define tweet-counts%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; record-tweet : string? exact-integer? -> void?\n    (define/public (record-tweet tweet-name time)\n      )\n    ; get-tweet-counts-per-frequency : string? string? exact-integer? exact-integer? -> (listof exact-integer?)\n    (define/public (get-tweet-counts-per-frequency freq tweet-name start-time end-time)\n      )))\n\n;; Your tweet-counts% object will be instantiated and called as such:\n;; (define obj (new tweet-counts%))\n;; (send obj record-tweet tweet-name time)\n;; (define param_2 (send obj get-tweet-counts-per-frequency freq tweet-name start-time end-time))"
+    }
+  ],
+  "solution": null
+}

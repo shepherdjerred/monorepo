@@ -60,7 +60,7 @@ export function createPostalDeployment(
   );
 
   // Postal secrets (Rails secret key, DKIM signing key, etc.)
-  // Expected fields: rails_secret_key, signing_key
+  // Expected fields: RAILS_SECRET_KEY, SIGNING_KEY
   const postalSecretsItem = new OnePasswordItem(chart, "postal-secrets", {
     spec: {
       itemPath: vaultItemPath("n3tfwq24v3rstfedrloupgzaqe"),
@@ -97,7 +97,7 @@ export function createPostalDeployment(
     MAIN_DB_USERNAME: EnvValue.fromValue(props.mariadb.username),
     MAIN_DB_PASSWORD: EnvValue.fromSecretValue({
       secret: mariadbSecret,
-      key: "mariadb-password",
+      key: "MARIADB_PASSWORD",
     }),
     MAIN_DB_DATABASE: EnvValue.fromValue(props.mariadb.databaseName),
 
@@ -108,7 +108,7 @@ export function createPostalDeployment(
     MESSAGE_DB_USERNAME: EnvValue.fromValue(props.mariadb.username),
     MESSAGE_DB_PASSWORD: EnvValue.fromSecretValue({
       secret: mariadbSecret,
-      key: "mariadb-password",
+      key: "MARIADB_PASSWORD",
     }),
 
     // Web server configuration
@@ -125,13 +125,13 @@ export function createPostalDeployment(
     // Rails secret key for session encryption
     RAILS_SECRET_KEY: EnvValue.fromSecretValue({
       secret: postalSecrets,
-      key: "rails_secret_key",
+      key: "RAILS_SECRET_KEY",
     }),
 
     // DKIM signing key for email authentication
     SIGNING_KEY: EnvValue.fromSecretValue({
       secret: postalSecrets,
-      key: "signing_key",
+      key: "SIGNING_KEY",
     }),
 
     // Logging configuration

@@ -1,0 +1,58 @@
+{
+  "questionId": "1291",
+  "questionFrontendId": "1173",
+  "title": "Immediate Food Delivery I",
+  "titleSlug": "immediate-food-delivery-i",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Delivery</code></p>\n\n<pre>\n+-----------------------------+---------+\n| Column Name                 | Type    |\n+-----------------------------+---------+\n| delivery_id                 | int     |\n| customer_id                 | int     |\n| order_date                  | date    |\n| customer_pref_delivery_date | date    |\n+-----------------------------+---------+\ndelivery_id is the primary key (column with unique values) of this table.\nThe table holds information about food delivery to customers that make orders at some date and specify a preferred delivery date (on the same order date or after it).\n</pre>\n\n<p>&nbsp;</p>\n\n<p>If the customer&#39;s preferred delivery date is the same as the order date, then the order is called <strong>immediate;</strong> otherwise, it is called <strong>scheduled</strong>.</p>\n\n<p>Write a solution to find the percentage of immediate orders in the table, <strong>rounded to 2 decimal places</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nDelivery table:\n+-------------+-------------+------------+-----------------------------+\n| delivery_id | customer_id | order_date | customer_pref_delivery_date |\n+-------------+-------------+------------+-----------------------------+\n| 1           | 1           | 2019-08-01 | 2019-08-02                  |\n| 2           | 5           | 2019-08-02 | 2019-08-02                  |\n| 3           | 1           | 2019-08-11 | 2019-08-11                  |\n| 4           | 3           | 2019-08-24 | 2019-08-26                  |\n| 5           | 4           | 2019-08-21 | 2019-08-22                  |\n| 6           | 2           | 2019-08-11 | 2019-08-13                  |\n+-------------+-------------+------------+-----------------------------+\n<strong>Output:</strong> \n+----------------------+\n| immediate_percentage |\n+----------------------+\n| 33.33                |\n+----------------------+\n<strong>Explanation:</strong> The orders with delivery id 2 and 3 are immediate while the others are scheduled.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Delivery (delivery_id int, customer_id int, order_date date, customer_pref_delivery_date date)\"], \"mssql\": [\"Create table Delivery (delivery_id int, customer_id int, order_date date, customer_pref_delivery_date date)\"], \"oraclesql\": [\"Create table Delivery (delivery_id int, customer_id int, order_date date, customer_pref_delivery_date date)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"food_delivery\", \"pythondata\": [\"Delivery = pd.DataFrame([], columns=['delivery_id', 'customer_id', 'order_date', 'customer_pref_delivery_date']).astype({'delivery_id':'Int64', 'customer_id':'Int64', 'order_date':'datetime64[ns]', 'customer_pref_delivery_date':'datetime64[ns]'})\"], \"postgresql\": [\"Create table If Not Exists Delivery (delivery_id int, customer_id int, order_date date, customer_pref_delivery_date date)\"], \"database_schema\": {\"Delivery\": {\"delivery_id\": \"INT\", \"customer_id\": \"INT\", \"order_date\": \"DATE\", \"customer_pref_delivery_date\": \"DATE\"}}}",
+  "stats": "{\"totalAccepted\": \"91.7K\", \"totalSubmission\": \"113.6K\", \"totalAcceptedRaw\": 91682, \"totalSubmissionRaw\": 113644, \"acRate\": \"80.7%\"}",
+  "likes": 304,
+  "dislikes": 13,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Delivery\":[\"delivery_id\",\"customer_id\",\"order_date\",\"customer_pref_delivery_date\"]},\"rows\":{\"Delivery\":[[1,1,\"2019-08-01\",\"2019-08-02\"],[2,5,\"2019-08-02\",\"2019-08-02\"],[3,1,\"2019-08-11\",\"2019-08-11\"],[4,3,\"2019-08-24\",\"2019-08-26\"],[5,4,\"2019-08-21\",\"2019-08-22\"],[6,2,\"2019-08-11\",\"2019-08-13\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"doordash\", \"name\": \"DoorDash\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef food_delivery(delivery: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "2027",
+    "content": "<!-- Don't delete this -->\n[TOC]\n\n# Solution\n\n---\n\n## pandas\n\n### Approach: Selecting rows based on conditions\n\n\n#### Intuition\n\nThe formula for calculating the percentage of immediate delivery is as follows:\n\n$\\text{percentage} = \\frac{\\text{validCount}}{\\text{totalCount}} \\cdot 100$\n\n\n#### Algorithm\n\nWe have the original DataFrame `delivery` shown below:\n\n| delivery_id | customer_id | order_date | customer_pref_delivery_date |\n|-------------|-------------|------------|-----------------------------|\n| 1           | 1           | 2019-08-01 | 2019-08-02                  |\n| 2           | 5           | 2019-08-02 | 2019-08-02                  |\n| 3           | 1           | 2019-08-11 | 2019-08-11                  |\n| 4           | 3           | 2019-08-24 | 2019-08-26                  |\n| 5           | 4           | 2019-08-21 | 2019-08-22                  |\n| 6           | 2           | 2019-08-11 | 2019-08-13                  |\n\n<br>\n\nFirst, let's find the condition to determine whether an order is immediate, which is when `order_date` is equal to `customer_pref_delivery_date`. Therefore, the first step is to identify and count the number of rows that satisfy:\n\n```\ndelivery['order_date'] = delivery['customer_pref_delivery_date']\n```\n\nWhen we compare two columns in pandas using the expression above, Pandas performs an element-wise comparison between the two columns. The result of this comparison is a Series where each element is either `True` or `False`, depending on whether the corresponding elements in the two columns are equal or not:\n\n```python\nis_valid = (delivery['order_date'] == delivery['customer_pref_delivery_date'])\n```\n\nWe will obtain the resulting Series `is_valid`:\n\n```\n0    False\n1     True\n2     True\n3    False\n4    False\n5    False\ndtype: bool\n```\n\nTo count the number of `True` in this Series, we can use the `sum()` method along with the bool indexing. In Pandas, `True` is treated as 1 and `False` as 0, so summing this Series effectively counts the number of `True` values.\n\n```python\nvalid_count = is_valid.sum()\n\n# valid_count = 2\n```\n\n<br>\n\nThe total number of orders is equal to the number of rows in the DataFrame `delivery`, which can be directly obtained using the `len()` method: \n\n```python\ntotal_count = len(delivery)\n\n# total_count = 6\n```\n\n<br>\n\nAs per the requirements of the problem, we need to round the result to two decimal places, so we use the build-in function `round()` which enables us to round a numeric value to a specified number of decimal places:\n\n```python\n# Round the percentage to 2 decimal places.\npercentage = round(100 * valid_count / total_count, 2)\n\n# percentage = 33.33\n```\n\n<br>\n\nFinally, we generate a DataFrame `df` that includes the rounded values.\n\n```python\ndf = pd.DataFrame({'immediate_percentage': [percentage]})\n```\n\nThe resulting DataFrame `df` looks like this:\n\n| immediate_percentage |\n|------------|\n| 33.33       |\n\n<br>\n\n#### Implementation\n\nThe complete code is shown below:\n\n<iframe src=\"https://leetcode.com/playground/L3baGJxn/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"L3baGJxn\"></iframe>\n\n<br>\n<br>\n\n\n## Database\n\n#### Intuition\n\nThe formula for calculating the percentage of immediate delivery is as follows:\n\n$\\text{percentage} = \\frac{\\text{validCount}}{\\text{totalCount}} \\cdot 100$\n\n\n#### Algorithm\n\nRegarding the percentage formula, we first need to derive the ratio of immediate orders to total orders, which is calculated as follows:\n\n```sql\nAVG(order_date = customer_pref_delivery_date)\n```\n\nThe keyword `AVG` is used to calculate the average value of a numeric column or an expression that evaluates to a numeric value. It takes a single argument, which can be a column name, a mathematical expression, or a combination of both. In our case, `AVG()` takes a logical expression `order_date = customer_pref_delivery_date` which compares `order_date` with `customer_pref_delivery_date`, and if they are equal, it returns 1 (`True`), otherwise 0 (`False`). Then `AVG()` calculates the average of these 1s and 0s, which gives us the decimal percentage of rows where `order_date` is equal to `customer_pref_delivery_date`.\n\n\nAccording to the formula at the beginning, we need to multiply the average value after the decimal point by 100, convert it to a percentage value, and then round to 2 decimal places, which can be achieved this way:\n\n```sql\nROUND(\n    100 * AVG(order_date = customer_pref_delivery_date),\n    2)\n```\n\n`ROUND()` is a function that rounds a number to a specified number of decimal places. It has a syntax of `ROUND(number, k)` that rounds `number` to `k` decimal places. In this problem, we use it to round the average value to two decimal places.\n\nNext, the keyword `AS` is used to rename the rounded value by giving it an alias as `immediate_percentage`.\n\n#### Implementation\n\n```sql\nSELECT ROUND(\n    100 * AVG(order_date = customer_pref_delivery_date), \n    2) AS immediate_percentage\nFROM \n    Delivery;\n```",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

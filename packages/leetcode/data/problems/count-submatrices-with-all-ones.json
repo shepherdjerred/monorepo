@@ -1,0 +1,148 @@
+{
+  "questionId": "1628",
+  "questionFrontendId": "1504",
+  "title": "Count Submatrices With All Ones",
+  "titleSlug": "count-submatrices-with-all-ones",
+  "difficulty": "Medium",
+  "content": "<p>Given an <code>m x n</code> binary matrix <code>mat</code>, <em>return the number of <strong>submatrices</strong> that have all ones</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/10/27/ones1-grid.jpg\" style=\"width: 244px; height: 245px;\" />\n<pre>\n<strong>Input:</strong> mat = [[1,0,1],[1,1,0],[1,1,0]]\n<strong>Output:</strong> 13\n<strong>Explanation:</strong> \nThere are 6 rectangles of side 1x1.\nThere are 2 rectangles of side 1x2.\nThere are 3 rectangles of side 2x1.\nThere is 1 rectangle of side 2x2. \nThere is 1 rectangle of side 3x1.\nTotal number of rectangles = 6 + 2 + 3 + 1 + 1 = 13.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/10/27/ones2-grid.jpg\" style=\"width: 324px; height: 245px;\" />\n<pre>\n<strong>Input:</strong> mat = [[0,1,1,0],[0,1,1,1],[1,1,1,0]]\n<strong>Output:</strong> 24\n<strong>Explanation:</strong> \nThere are 8 rectangles of side 1x1.\nThere are 5 rectangles of side 1x2.\nThere are 2 rectangles of side 1x3. \nThere are 4 rectangles of side 2x1.\nThere are 2 rectangles of side 2x2. \nThere are 2 rectangles of side 3x1. \nThere is 1 rectangle of side 3x2. \nTotal number of rectangles = 8 + 5 + 2 + 4 + 2 + 2 + 1 = 24.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= m, n &lt;= 150</code></li>\n\t<li><code>mat[i][j]</code> is either <code>0</code> or <code>1</code>.</li>\n</ul>\n",
+  "hints": [
+    "For each row i, create an array nums where:  if mat[i][j] == 0 then nums[j] = 0 else nums[j] = nums[j-1] +1.",
+    "In the row i, number of rectangles between column j and k(inclusive) and ends in row i, is equal to SUM(min(nums[j, .. idx])) where idx go from j to k.  Expected solution is O(n^3)."
+  ],
+  "metaData": "{\n  \"name\": \"numSubmat\",\n  \"params\": [\n    {\n      \"name\": \"mat\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"148K\", \"totalSubmission\": \"208.3K\", \"totalAcceptedRaw\": 147991, \"totalSubmissionRaw\": 208306, \"acRate\": \"71.0%\"}",
+  "likes": 2674,
+  "dislikes": 220,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count Submatrices With Equal Frequency of X and Y\", \"titleSlug\": \"count-submatrices-with-equal-frequency-of-x-and-y\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,0,1],[1,1,0],[1,1,0]]",
+    "[[0,1,1,0],[0,1,1,1],[1,1,1,0]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    },
+    {
+      "name": "Monotonic Stack",
+      "slug": "monotonic-stack"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numSubmat(vector<vector<int>>& mat) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numSubmat(int[][] mat) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numSubmat(self, mat: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numSubmat(self, mat):\n        \"\"\"\n        :type mat: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} mat\n * @return {number}\n */\nvar numSubmat = function(mat) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numSubmat(mat: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumSubmat(int[][] mat) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numSubmat(int** mat, int matSize, int* matColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numSubmat(mat [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numSubmat(mat: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numSubmat(_ mat: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn num_submat(mat: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} mat\n# @return {Integer}\ndef num_submat(mat)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $mat\n     * @return Integer\n     */\n    function numSubmat($mat) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numSubmat(List<List<int>> mat) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numSubmat(mat: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec num_submat(mat :: [[integer]]) :: integer\n  def num_submat(mat) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec num_submat(Mat :: [[integer()]]) -> integer().\nnum_submat(Mat) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (num-submat mat)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2814",
+    "content": "### Approach 1: Enumeration\n\n#### Intuition\n\nA straightforward idea is to enumerate each position $(i,j)$ in the matrix and count how many submatrices with this position as the bottom-right corner have all elements equal to $1$. By doing this, we can count the number of submatrices that meet the condition without repetition or omission. After enumeration, the question is: how do we count the number of submatrices that meet the condition?\n\nWe preprocess a $\\textit{row}$ array, where $\\textit{row}[i][j]$ represents the number of consecutive $1$s extending to the left from position $(i,j)$ in the matrix. The recursive formula is straightforward:\n\n$$\nrow[i][j]=\\begin{cases}\n0, & \\quad mat[i][j]= 0 \\\\\nrow[i][j-1]+1, & \\quad mat[i][j]= 1\n\\end{cases}\n$$\n\nOnce we have the $\\textit{row}$ array, if we want to count the number of subrectangles with $(i,j)$ as the bottom-right corner that satisfy the condition, we can enumerate the height of the subrectangles and check how many of them are valid. We start this enumeration from the $i$-th row and move upward. For the $i$-th row, there are $\\textit{row}[i][j]$ subrectangles that satisfy the condition. For the $i-1$-th row, there are $\\texttt{min}(\\textit{row}[i][j], \\textit{row}[i-1][j])$ subrectangles, because both rows must consist entirely of $1$s to satisfy the condition. The same logic applies to higher rows, where we continuously take the minimum value to ensure the condition holds. Enumerating from bottom to top allows us to update the minimum in constant time.\n\nFollowing this idea, for each bottom-right point $(i,j)$, the number of valid subrectangles can be calculated in linear time. After traversing all points, we obtain the total number of subrectangles that satisfy the condition.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/G6ziSppd/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"G6ziSppd\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ be the number of rows of the matrix and $n$ be the number of columns.\n\n- Time complexity: $O(m^2\\times n)$.\n  \n  The code involves a triple loop.\n\n- Space complexity: $O(m\\times n)$.\n  \n  An $m \\times n$ matrix is needed for enumeration.\n\n---\n\n### Approach 2: Monotonic Stack\n\n#### Intuition\n\nThe goal is to count the number of submatrices in which all elements are $1$. Similar to the first approach, we can still **enumerate the bottom-right corner of each submatrix**, but here we use a more efficient counting method with a monotonic stack. The method works as follows:\n\n1. **Process each row as the base.**\n   Convert each row of the matrix into a histogram height array $\\textit{heights}$, where $\\textit{heights}[j]$ represents the number of consecutive $1$s extending upward in column $j$, with the current row as the bottom.\n   For example, if the current row is treated as the base, then $\\textit{heights}[j]$ tells us how tall the column of $1$s is at position $j$.\n\n2. **Enumerate each column as the right boundary.**\n   For each row, once the heights are calculated, we use a monotonic stack to find the nearest column on the left of each $\\textit{heights}[j]$ that has a smaller height. This gives us the left boundary for rectangles ending at $j$.\n\n3. **Count subrectangles using the left and right boundaries.**\n   Suppose the right boundary is at $j$, and the nearest smaller height on the left is at $i$ (found using the monotonic stack). Then:\n  - If the left boundary is less than or equal to $i$, the subrectangles ending at $i$ have already been counted. Extending them to $j$ adds no new subrectangles.\n  - If the left boundary is greater than $i$, then it can range from $i+1$ to $j$, giving $(j - i)$ possible positions. Each position can form $\\textit{heights}[j]$ subrectangles of different heights, so in total we add $(j-i) \\times \\textit{heights}[j]$ subrectangles.\n\n4. **Accumulate the result.**\n   By summing over all right boundaries in each row, we obtain the total number of submatrices in the matrix with all elements equal to $1$.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/HQpwvjNm/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"HQpwvjNm\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ be the number of rows of the matrix and $n$ be the number of columns.\n\n- Time complexity: $O(m\\times n)$.\n  \n  For each row, we update the $\\textit{heights}$ array in $O(n)$ time, so processing all $m$ rows takes $O(m \\times n)$.\n  \n  Within each row, we use a monotonic stack to find the left and right boundaries of each column. Since every element enters and leaves the stack at most once, the stack operations for one row take $O(n)$ time. Repeating this across all $m$ rows gives a total of $O(m \\times n)$.\n  \n  Combining both parts, the overall time complexity is $O(m \\times n)$.\n\n- Space complexity: $O(n)$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

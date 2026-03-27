@@ -1,0 +1,140 @@
+{
+  "questionId": "1244",
+  "questionFrontendId": "1316",
+  "title": "Distinct Echo Substrings",
+  "titleSlug": "distinct-echo-substrings",
+  "difficulty": "Hard",
+  "content": "<p>Return the number of <strong>distinct</strong> non-empty substrings of <code>text</code>&nbsp;that can be written as the concatenation of some string with itself (i.e. it can be written as <code>a + a</code>&nbsp;where <code>a</code> is some string).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> text = &quot;abcabcabc&quot;\n<strong>Output:</strong> 3\n<b>Explanation: </b>The 3 substrings are &quot;abcabc&quot;, &quot;bcabca&quot; and &quot;cabcab&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> text = &quot;leetcodeleetcode&quot;\n<strong>Output:</strong> 2\n<b>Explanation: </b>The 2 substrings are &quot;ee&quot; and &quot;leetcodeleetcode&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= text.length &lt;= 2000</code></li>\n\t<li><code>text</code>&nbsp;has only lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Given a substring of the text, how to check if it can be written as the concatenation of a string with itself ?",
+    "We can do that in linear time, a faster way is to use hashing.",
+    "Try all substrings and use hashing to check them."
+  ],
+  "metaData": "{\n  \"name\": \"distinctEchoSubstrings\",\n  \"params\": [\n    {\n      \"name\": \"text\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"22.2K\", \"totalSubmission\": \"41.8K\", \"totalAcceptedRaw\": 22189, \"totalSubmissionRaw\": 41750, \"acRate\": \"53.1%\"}",
+  "likes": 337,
+  "dislikes": 208,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Find Substring With Given Hash Value\", \"titleSlug\": \"find-substring-with-given-hash-value\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"abcabcabc\"",
+    "\"leetcodeleetcode\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Trie",
+      "slug": "trie"
+    },
+    {
+      "name": "Rolling Hash",
+      "slug": "rolling-hash"
+    },
+    {
+      "name": "Hash Function",
+      "slug": "hash-function"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int distinctEchoSubstrings(string text) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int distinctEchoSubstrings(String text) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def distinctEchoSubstrings(self, text: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def distinctEchoSubstrings(self, text):\n        \"\"\"\n        :type text: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} text\n * @return {number}\n */\nvar distinctEchoSubstrings = function(text) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function distinctEchoSubstrings(text: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int DistinctEchoSubstrings(string text) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int distinctEchoSubstrings(char* text) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func distinctEchoSubstrings(text string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun distinctEchoSubstrings(text: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func distinctEchoSubstrings(_ text: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn distinct_echo_substrings(text: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} text\n# @return {Integer}\ndef distinct_echo_substrings(text)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $text\n     * @return Integer\n     */\n    function distinctEchoSubstrings($text) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int distinctEchoSubstrings(String text) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def distinctEchoSubstrings(text: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec distinct_echo_substrings(text :: String.t) :: integer\n  def distinct_echo_substrings(text) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec distinct_echo_substrings(Text :: unicode:unicode_binary()) -> integer().\ndistinct_echo_substrings(Text) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (distinct-echo-substrings text)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

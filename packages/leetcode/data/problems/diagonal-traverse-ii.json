@@ -1,0 +1,140 @@
+{
+  "questionId": "1539",
+  "questionFrontendId": "1424",
+  "title": "Diagonal Traverse II",
+  "titleSlug": "diagonal-traverse-ii",
+  "difficulty": "Medium",
+  "content": "<p>Given a 2D integer array <code>nums</code>, return <em>all elements of </em><code>nums</code><em> in diagonal order as shown in the below images</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/04/08/sample_1_1784.png\" style=\"width: 158px; height: 143px;\" />\n<pre>\n<strong>Input:</strong> nums = [[1,2,3],[4,5,6],[7,8,9]]\n<strong>Output:</strong> [1,4,2,7,5,3,8,6,9]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/04/08/sample_2_1784.png\" style=\"width: 230px; height: 177px;\" />\n<pre>\n<strong>Input:</strong> nums = [[1,2,3,4,5],[6,7],[8],[9,10,11],[12,13,14,15,16]]\n<strong>Output:</strong> [1,6,2,8,7,3,9,4,12,10,5,13,11,14,15,16]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i].length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= sum(nums[i].length) &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i][j] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Notice that numbers with equal sums of row and column indexes belong to the same diagonal.",
+    "Store them in tuples (sum, row, val), sort them, and then regroup the answer."
+  ],
+  "metaData": "{\n  \"name\": \"findDiagonalOrder\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"list<list<integer>>\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"178.2K\", \"totalSubmission\": \"305.6K\", \"totalAcceptedRaw\": 178219, \"totalSubmissionRaw\": 305577, \"acRate\": \"58.3%\"}",
+  "likes": 2300,
+  "dislikes": 160,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[1,2,3],[4,5,6],[7,8,9]]",
+    "[[1,2,3,4,5],[6,7],[8],[9,10,11],[12,13,14,15,16]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"liftoff\", \"name\": \"Liftoff\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bp\", \"name\": \"BP\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> findDiagonalOrder(vector<vector<int>>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] findDiagonalOrder(List<List<Integer>> nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findDiagonalOrder(self, nums: List[List[int]]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findDiagonalOrder(self, nums):\n        \"\"\"\n        :type nums: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} nums\n * @return {number[]}\n */\nvar findDiagonalOrder = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findDiagonalOrder(nums: number[][]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] FindDiagonalOrder(IList<IList<int>> nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* findDiagonalOrder(int** nums, int numsSize, int* numsColSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findDiagonalOrder(nums [][]int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findDiagonalOrder(nums: List<List<Int>>): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findDiagonalOrder(_ nums: [[Int]]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_diagonal_order(nums: Vec<Vec<i32>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} nums\n# @return {Integer[]}\ndef find_diagonal_order(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $nums\n     * @return Integer[]\n     */\n    function findDiagonalOrder($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> findDiagonalOrder(List<List<int>> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findDiagonalOrder(nums: List[List[Int]]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_diagonal_order(nums :: [[integer]]) :: [integer]\n  def find_diagonal_order(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_diagonal_order(Nums :: [[integer()]]) -> [integer()].\nfind_diagonal_order(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-diagonal-order nums)\n  (-> (listof (listof exact-integer?)) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2166",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Group Elements by the Sum of Row and Column Indices\n\n**Intuition**\n\nThe crux of the problem is figuring out how to identify the diagonals and how to iterate over them. We will make use of an important property of diagonals in this approach.\n\nLet's say you are currently at the start of a diagonal (bottom-left) and your coordinates are `row, col`. How do you get to the next value in the diagonal? You go up and right. By going up, you move to `row - 1`. By going right, you move to `col + 1`. That is, our `row` decreases by `1`, and our `col` increases by `1`.\n\nThis is true for any given point in any given diagonal. If we were to consider the sum `row, col`, it would be constant along the diagonal since the `-1` from moving up cancels out the `+1` from moving right!\n\n![img](../Figures/1424/1.png)\n<br>\n\nAs you can see in the above image, every square is annotated with `row + col`. Each diagonal shares the same values.\n\nFor each square, we will use the sum `row + col` as an identifier to the diagonal that it belongs to. We will use a hash map `groups` where `groups[x]` is a list of all values that appear in the diagonal with identifier `x`.\n\nTo collect the cells on each diagonal in the correct order, we will iterate through each row from left to right starting with the bottom row. The reason we choose the bottom-up, left-to-right order is that the diagonals move upward and to the right, so by iterating to the upper right, we will visit the squares in the correct order.\n\nOnce we have populated `groups`, we simply need to iterate over the identifiers and add each list to our answer. Notice that conveniently, the order in which we visit the diagonals is the same as the identifier order! What we mean by this is that the first diagonal we traverse is `0`, then `1`, then `2`, and so on.\n\nThus, we can use an integer `curr` initialized to `0` that represents the current diagonal we are adding to our answer. We add `groups[curr]` to the answer, then increment `curr`, and repeat until `curr` is no longer in `groups`.\n\n**Algorithm**\n\n1. Initialize a hash map `groups`.\n2. Iterate `row` from `nums.length - 1` to `0`:\n    - Iterate `col` from `0` until `groups[row].length`:\n        - Calculate `diagonal = row + col`.\n        - Add `nums[row][col]` to `groups[diagonal]`.\n3. Initialize the answer list `ans` and `curr = 0`.\n4. While `curr` is in `groups`:\n    - Add all the elements of `groups[curr]` to `ans` in order.\n    - Increment `curr`.\n5. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/JtahaixP/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"JtahaixP\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the number of integers in `grid`,\n\n* Time complexity: $$O(n)$$\n\n    We iterate over each of the $$n$$ integers to populate `groups`, then we iterate over them again to populate `ans`.\n\n* Space complexity: $$O(n)$$\n\n    The values of `groups` are lists that together will store exactly $$n$$ integers, thus using $$O(n)$$ space.\n    \n<br/>\n\n---\n\n### Approach 2: Breadth First Search\n\n**Intuition**\n\nIn the previous approach, we require two passes. The first pass populates `groups`, and the second pass populates `ans`. Can we do better, perhaps solving the problem in one pass?\n\nYes! Let's think about the grid as a graph. Each square is a node, and we can imagine each node having an edge to the squares below and to the right (if they exist). Let's take a look at the diagonal image again:\n\n![img](../Figures/1424/2.png)\n<br>\n\nAs you can see, a node with identifier `x` has edges to nodes with identifier `x + 1`. If we consider the top-left square `0, 0` as a \"source\" node, then each square's identifier is exactly equal to its distance from the source. This allows us to visit the diagonals in order using BFS!\n\n> If you are not familiar with BFS, please check out the relevant [LeetCode Explore Card](https://leetcode.com/explore/learn/card/queue-stack/231/practical-application-queue/).\n\nWe start a BFS from `0, 0`. At each node `row, col`, we first push `row + 1, col` to the queue and then `row, col + 1`. Note that we only add a square to the queue if it both exists and has not been visited yet.\n\nHow do we know if a square has been visited yet? We could use a hash set to keep track of visited squares, but there is a simpler way. We only need to consider the square `row + 1, col` (down) if we are at the start of a diagonal. Otherwise, for every other square on the diagonal, the square below it has already been visited by the right edge of the previous square.\n\n![img](../Figures/1424/3.png)\n<br>\n\nThe level-wise nature of BFS will ensure that we visit all squares in a diagonal with identifier `x` before we visit any square in a diagonal with identifier `x + 1`. This means we will visit the diagonals in the correct order. Because we add the square `row + 1, col` before `row, col + 1`, we will also traverse over each diagonal in the correct order as well. This means our entire BFS will traverse the input in the same order as the answer, allowing us to solve the problem in one pass!\n\n**Algorithm**\n\n1. Initialize a `queue` with `(0, 0)` and the answer list `ans`.\n2. While `queue` is not empty:\n    - Remove `(row, col)` from `queue`.\n    - Add `nums[row][col]` to `ans`.\n    - If `col == 0` and `row + 1` is in bounds, add `(row + 1, col)` to `queue`.\n    - If `col + 1` is in bounds for the current row, add `(row, col + 1)` to `queue`.\n3. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/f9CiaX8N/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"f9CiaX8N\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the number of integers in `grid`,\n\n* Time complexity: $$O(n)$$\n\n    During the BFS, we visit each square once, performing $$O(1)$$ work at each iteration.\n\n* Space complexity: $$O(\\sqrt{n})$$\n\n    The extra space we use is for `queue`. The largest size `queue` will be is proportional to the size of the largest diagonal.\n    \n    Let's say you had a diagonal with a size of $$k$$ starting from the bottom left of the input and going to the top right. What are the fewest squares possible that could support such a diagonal existing? The first square in the diagonal can be the only square in its row. The second square in the diagonal needs one square to its left. The third square in the diagonal needs two squares to its left, and so on.\n\n    ![img](../Figures/1424/4.png)\n    <br>\n\n    As you can see in the above image, the green diagonal requires many squares to its left to support its existence. In fact, we can notice that if we extended the image to a square, we would have a grid of size $$k * k$$. That means to support a diagonal of size $$k$$, we require $$\\dfrac{k^2}{2} = O(k^2)$$ squares.\n\n    The conclusion is that a grid of size $$O(k^2)$$ can only support a diagonal of size $$k$$. In our problem, we defined the input grid to have a size of $$n$$. Thus, the largest diagonal it could support would be $$O(\\sqrt{n})$$.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

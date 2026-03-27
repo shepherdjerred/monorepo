@@ -1,0 +1,138 @@
+{
+  "questionId": "1709",
+  "questionFrontendId": "1604",
+  "title": "Alert Using Same Key-Card Three or More Times in a One Hour Period",
+  "titleSlug": "alert-using-same-key-card-three-or-more-times-in-a-one-hour-period",
+  "difficulty": "Medium",
+  "content": "<p>LeetCode company workers use key-cards to unlock office doors. Each time a worker uses their key-card, the security system saves the worker&#39;s name and the time when it was used. The system emits an <strong>alert</strong> if any worker uses the key-card <strong>three or more times</strong> in a one-hour period.</p>\n\n<p>You are given a list of strings <code>keyName</code> and <code>keyTime</code> where <code>[keyName[i], keyTime[i]]</code> corresponds to a person&#39;s name and the time when their key-card was used <strong>in a</strong> <strong>single day</strong>.</p>\n\n<p>Access times are given in the <strong>24-hour time format &quot;HH:MM&quot;</strong>, such as <code>&quot;23:51&quot;</code> and <code>&quot;09:49&quot;</code>.</p>\n\n<p>Return a <em>list of unique worker names who received an alert for frequent keycard use</em>. Sort the names in <strong>ascending order alphabetically</strong>.</p>\n\n<p>Notice that <code>&quot;10:00&quot;</code> - <code>&quot;11:00&quot;</code> is considered to be within a one-hour period, while <code>&quot;22:51&quot;</code> - <code>&quot;23:52&quot;</code> is not considered to be within a one-hour period.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> keyName = [&quot;daniel&quot;,&quot;daniel&quot;,&quot;daniel&quot;,&quot;luis&quot;,&quot;luis&quot;,&quot;luis&quot;,&quot;luis&quot;], keyTime = [&quot;10:00&quot;,&quot;10:40&quot;,&quot;11:00&quot;,&quot;09:00&quot;,&quot;11:00&quot;,&quot;13:00&quot;,&quot;15:00&quot;]\n<strong>Output:</strong> [&quot;daniel&quot;]\n<strong>Explanation:</strong> &quot;daniel&quot; used the keycard 3 times in a one-hour period (&quot;10:00&quot;,&quot;10:40&quot;, &quot;11:00&quot;).\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> keyName = [&quot;alice&quot;,&quot;alice&quot;,&quot;alice&quot;,&quot;bob&quot;,&quot;bob&quot;,&quot;bob&quot;,&quot;bob&quot;], keyTime = [&quot;12:01&quot;,&quot;12:00&quot;,&quot;18:00&quot;,&quot;21:00&quot;,&quot;21:20&quot;,&quot;21:30&quot;,&quot;23:00&quot;]\n<strong>Output:</strong> [&quot;bob&quot;]\n<strong>Explanation:</strong> &quot;bob&quot; used the keycard 3 times in a one-hour period (&quot;21:00&quot;,&quot;21:20&quot;, &quot;21:30&quot;).\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= keyName.length, keyTime.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>keyName.length == keyTime.length</code></li>\n\t<li><code>keyTime[i]</code> is in the format <strong>&quot;HH:MM&quot;</strong>.</li>\n\t<li><code>[keyName[i], keyTime[i]]</code> is <strong>unique</strong>.</li>\n\t<li><code>1 &lt;= keyName[i].length &lt;= 10</code></li>\n\t<li><code>keyName[i] contains only lowercase English letters.</code></li>\n</ul>\n",
+  "hints": [
+    "Group the times by the name of the card user, then sort each group"
+  ],
+  "metaData": "{\n  \"name\": \"alertNames\",\n  \"params\": [\n    {\n      \"name\": \"keyName\",\n      \"type\": \"string[]\"\n    },\n    {\n      \"type\": \"string[]\",\n      \"name\": \"keyTime\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<string>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"49K\", \"totalSubmission\": \"106K\", \"totalAcceptedRaw\": 48972, \"totalSubmissionRaw\": 106004, \"acRate\": \"46.2%\"}",
+  "likes": 339,
+  "dislikes": 440,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"daniel\",\"daniel\",\"daniel\",\"luis\",\"luis\",\"luis\",\"luis\"]\n[\"10:00\",\"10:40\",\"11:00\",\"09:00\",\"11:00\",\"13:00\",\"15:00\"]",
+    "[\"alice\",\"alice\",\"alice\",\"bob\",\"bob\",\"bob\",\"bob\"]\n[\"12:01\",\"12:00\",\"18:00\",\"21:00\",\"21:20\",\"21:30\",\"23:00\"]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"stripe\", \"name\": \"Stripe\"}], \"more_than_six_months\": [{\"timesEncountered\": 14, \"slug\": \"karat\", \"name\": \"Karat\"}, {\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"wayfair\", \"name\": \"Wayfair\"}, {\"timesEncountered\": 2, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> alertNames(vector<string>& keyName, vector<string>& keyTime) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<String> alertNames(String[] keyName, String[] keyTime) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def alertNames(self, keyName: List[str], keyTime: List[str]) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def alertNames(self, keyName, keyTime):\n        \"\"\"\n        :type keyName: List[str]\n        :type keyTime: List[str]\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} keyName\n * @param {string[]} keyTime\n * @return {string[]}\n */\nvar alertNames = function(keyName, keyTime) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function alertNames(keyName: string[], keyTime: string[]): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<string> AlertNames(string[] keyName, string[] keyTime) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** alertNames(char** keyName, int keyNameSize, char** keyTime, int keyTimeSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func alertNames(keyName []string, keyTime []string) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun alertNames(keyName: Array<String>, keyTime: Array<String>): List<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func alertNames(_ keyName: [String], _ keyTime: [String]) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn alert_names(key_name: Vec<String>, key_time: Vec<String>) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} key_name\n# @param {String[]} key_time\n# @return {String[]}\ndef alert_names(key_name, key_time)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $keyName\n     * @param String[] $keyTime\n     * @return String[]\n     */\n    function alertNames($keyName, $keyTime) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> alertNames(List<String> keyName, List<String> keyTime) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def alertNames(keyName: Array[String], keyTime: Array[String]): List[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec alert_names(key_name :: [String.t], key_time :: [String.t]) :: [String.t]\n  def alert_names(key_name, key_time) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec alert_names(KeyName :: [unicode:unicode_binary()], KeyTime :: [unicode:unicode_binary()]) -> [unicode:unicode_binary()].\nalert_names(KeyName, KeyTime) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (alert-names keyName keyTime)\n  (-> (listof string?) (listof string?) (listof string?))\n  )"
+    }
+  ],
+  "solution": null
+}

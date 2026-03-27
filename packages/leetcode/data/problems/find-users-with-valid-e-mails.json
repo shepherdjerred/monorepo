@@ -1,0 +1,58 @@
+{
+  "questionId": "1664",
+  "questionFrontendId": "1517",
+  "title": "Find Users With Valid E-Mails",
+  "titleSlug": "find-users-with-valid-e-mails",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Users</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| user_id       | int     |\n| name          | varchar |\n| mail          | varchar |\n+---------------+---------+\nuser_id is the primary key (column with unique values) for this table.\nThis table contains information of the users signed up in a website. Some e-mails are invalid.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to find the users who have <strong>valid emails</strong>.</p>\n\n<p>A valid e-mail has a prefix name and a domain where:</p>\n\n<ul>\n\t<li><strong>The prefix name</strong> is a string that may contain letters (upper or lower case), digits, underscore <code>&#39;_&#39;</code>, period <code>&#39;.&#39;</code>, and/or dash <code>&#39;-&#39;</code>. The prefix name <strong>must</strong> start with a letter.</li>\n\t<li><strong>The domain</strong> is <code>&#39;@leetcode.com&#39;</code>.</li>\n</ul>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nUsers table:\n+---------+-----------+-------------------------+\n| user_id | name      | mail                    |\n+---------+-----------+-------------------------+\n| 1       | Winston   | winston@leetcode.com    |\n| 2       | Jonathan  | jonathanisgreat         |\n| 3       | Annabelle | bella-@leetcode.com     |\n| 4       | Sally     | sally.come@leetcode.com |\n| 5       | Marwan    | quarz#2020@leetcode.com |\n| 6       | David     | david69@gmail.com       |\n| 7       | Shapiro   | .shapo@leetcode.com     |\n+---------+-----------+-------------------------+\n<strong>Output:</strong> \n+---------+-----------+-------------------------+\n| user_id | name      | mail                    |\n+---------+-----------+-------------------------+\n| 1       | Winston   | winston@leetcode.com    |\n| 3       | Annabelle | bella-@leetcode.com     |\n| 4       | Sally     | sally.come@leetcode.com |\n+---------+-----------+-------------------------+\n<strong>Explanation:</strong> \nThe mail of user 2 does not have a domain.\nThe mail of user 5 has the # sign which is not allowed.\nThe mail of user 6 does not have the leetcode domain.\nThe mail of user 7 starts with a period.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Users (user_id int, name varchar(30), mail varchar(50))\"], \"mssql\": [\"Create table Users (user_id int, name varchar(30), mail varchar(50))\"], \"oraclesql\": [\"Create table Users (user_id int, name varchar(30), mail varchar(50))\"], \"database\": true, \"name\": \"valid_emails\", \"pythondata\": [\"Users = pd.DataFrame([], columns=['user_id', 'name', 'mail']).astype({'user_id':'int64', 'name':'object', 'mail':'object'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Users (user_id int, name varchar(30), mail varchar(50))\"], \"database_schema\": {\"Users\": {\"user_id\": \"INT\", \"name\": \"VARCHAR(30)\", \"mail\": \"VARCHAR(50)\"}}}",
+  "stats": "{\"totalAccepted\": \"284.2K\", \"totalSubmission\": \"780.6K\", \"totalAcceptedRaw\": 284243, \"totalSubmissionRaw\": 780557, \"acRate\": \"36.4%\"}",
+  "likes": 701,
+  "dislikes": 314,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Users\":[\"user_id\",\"name\",\"mail\"]},\"rows\":{\"Users\":[[1,\"Winston\",\"winston@leetcode.com\"],[2,\"Jonathan\",\"jonathanisgreat\"],[3,\"Annabelle\",\"bella-@leetcode.com\"],[4,\"Sally\",\"sally.come@leetcode.com\"],[5,\"Marwan\",\"quarz#2020@leetcode.com\"],[6,\"David\",\"david69@gmail.com\"],[7,\"Shapiro\",\".shapo@leetcode.com\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef valid_emails(users: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "2011",
+    "content": "<!-- Don't delete this -->\n[TOC]\n\n# Solution\n\n---\n\n## pandas\n\n### Overview\n\nGiven a table with users and their emails, we want to filter users based on the validity of their email addresses. A valid email should start with a prefix containing only allowed characters and end with the domain `'@leetcode.com'`.\n\n---\n\n### Approach: Using Regular Expressions\n\n#### Algorithm\n\nIn general, if you are asked to match a string, *writing a regular expression pattern to match on* should come first to mind.\n\nRegEx provides various functionality, here are a few relevant ones:\n\n1. `^`: This represents the start of a string or line.\n\n1. `[a-z]`: This represents a character range, matching any character from `a` to `z`.\n\n    * `[0-9]`: This represents a character range, matching any character from `0` to `9`.\n\n    * `[a-zA-Z]`: This variant matches any character from `a` to `z` or `A` to `Z`. Note that there is no limit to the number of character ranges you can specify inside the square brackets -- you can add additional characters or ranges you want to match.\n\n    * `[^a-z]`: This variant matches any character that is not from `a` to `z`. Note that the `^` character is used to negate the character range, which means it has a different meaning inside the square brackets than outside where it means the start.\n\n1. `[a-z]*`: This represents a character range, matching any character from `a` to `z` zero or more times.\n\n1. `[a-z]+`: This represents a character range, matching any character from `a` to `z` one or more times.\n\n1. `.`: This matches exactly **one** of any character.\n\n1. `\\.`: This represents a period character. Note that the backslash is used to escape the period character, as the period character has a special meaning in regular expressions. Also note that in many languages, you need to escape the backslash itself, so you need to use `\\\\.`.\n\n1. The dollar sign: This represents the end of a string or line.\n\nThe key idea here is to separate the first character of the name column from the rest, change their cases accordingly, and then join them back together.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/R6UNYbpZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"157\" name=\"R6UNYbpZ\"></iframe>\n\n<br>\n\n---\n\n\n## Database\n\n### Approach: Selecting rows based on conditions\n#### Algorithm\nIn general, if you are asked to match a string, *writing a regular expression pattern to match on* should come first to mind.\n\nRegEx provides various functionality, here are a few relevant ones:\n\n1. `^`: This represents the start of a string or line.\n\n1. `[a-z]`: This represents a character range, matching any character from `a` to `z`.\n\n    * `[0-9]`: This represents a character range, matching any character from `0` to `9`.\n\n    * `[a-zA-Z]`: This variant matches any character from `a` to `z` or `A` to `Z`. Note that there is no limit to the number of character ranges you can specify inside the square brackets -- you can add additional characters or ranges you want to match.\n\n    * `[^a-z]`: This variant matches any character that is not from `a` to `z`. Note that the `^` character is used to negate the character range, which means it has a different meaning inside the square brackets than outside where it means the start.\n\n1. `[a-z]*`: This represents a character range, matching any character from `a` to `z` zero or more times.\n\n1. `[a-z]+`: This represents a character range, matching any character from `a` to `z` one or more times.\n\n1. `.`: This matches exactly **one** of any character.\n\n1. `\\.`: This represents a period character. Note that the backslash is used to escape the period character, as the period character has a special meaning in regular expressions. Also note that in many languages, you need to escape the backslash itself, so you need to use `\\\\.`.\n\n1. The dollar sign: This represents the end of a string or line.\n\nThe key idea here is to separate the first character of the name column from the rest, change their cases accordingly, and then join them back together.\n\nThe complete code is as follows:\n\n#### Implementation\n\n```sql\nSELECT user_id, name, mail\nFROM Users\n-- Note that we also escaped the `@` character, as it has a special meaning in some regex flavors\nWHERE mail REGEXP '^[a-zA-Z][a-zA-Z0-9_.-]*\\\\@leetcode\\\\.com$';\n```",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

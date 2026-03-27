@@ -1,0 +1,150 @@
+{
+  "questionId": "1691",
+  "questionFrontendId": "1568",
+  "title": "Minimum Number of Days to Disconnect Island",
+  "titleSlug": "minimum-number-of-days-to-disconnect-island",
+  "difficulty": "Hard",
+  "content": "<p>You are given an <code>m x n</code> binary grid <code>grid</code> where <code>1</code> represents land and <code>0</code> represents water. An <strong>island</strong> is a maximal <strong>4-directionally</strong> (horizontal or vertical) connected group of <code>1</code>&#39;s.</p>\n\n<p>The grid is said to be <strong>connected</strong> if we have <strong>exactly one island</strong>, otherwise is said <strong>disconnected</strong>.</p>\n\n<p>In one day, we are allowed to change <strong>any </strong>single land cell <code>(1)</code> into a water cell <code>(0)</code>.</p>\n\n<p>Return <em>the minimum number of days to disconnect the grid</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/12/24/land1.jpg\" style=\"width: 500px; height: 169px;\" />\n<pre>\n<strong>Input:</strong> grid = [[0,1,1,0],[0,1,1,0],[0,0,0,0]]\n\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> We need at least 2 days to get a disconnected grid.\nChange land grid[1][1] and grid[0][2] to water and get 2 disconnected island.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/12/24/land2.jpg\" style=\"width: 404px; height: 85px;\" />\n<pre>\n<strong>Input:</strong> grid = [[1,1]]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> Grid of full water is also disconnected ([[1,1]] -&gt; [[0,0]]), 0 islands.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == grid.length</code></li>\n\t<li><code>n == grid[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 30</code></li>\n\t<li><code>grid[i][j]</code> is either <code>0</code> or <code>1</code>.</li>\n</ul>\n",
+  "hints": [
+    "Return 0 if the grid is already disconnected.",
+    "Return 1 if changing a single land to water disconnect the island.",
+    "Otherwise return 2.",
+    "We can disconnect the grid within at most 2 days."
+  ],
+  "metaData": "{\n  \"name\": \"minDays\",\n  \"params\": [\n    {\n      \"name\": \"grid\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"98.9K\", \"totalSubmission\": \"168.2K\", \"totalAcceptedRaw\": 98869, \"totalSubmissionRaw\": 168234, \"acRate\": \"58.8%\"}",
+  "likes": 1300,
+  "dislikes": 224,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Disconnect Path in a Binary Matrix by at Most One Flip\", \"titleSlug\": \"disconnect-path-in-a-binary-matrix-by-at-most-one-flip\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Runes to Add to Cast Spell\", \"titleSlug\": \"minimum-runes-to-add-to-cast-spell\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[0,1,1,0],[0,1,1,0],[0,0,0,0]]",
+    "[[1,1]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"argo-ai\", \"name\": \"Argo AI\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    },
+    {
+      "name": "Strongly Connected Component",
+      "slug": "strongly-connected-component"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minDays(vector<vector<int>>& grid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minDays(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minDays(self, grid: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minDays(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} grid\n * @return {number}\n */\nvar minDays = function(grid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minDays(grid: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinDays(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minDays(int** grid, int gridSize, int* gridColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minDays(grid [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minDays(grid: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minDays(_ grid: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_days(grid: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} grid\n# @return {Integer}\ndef min_days(grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $grid\n     * @return Integer\n     */\n    function minDays($grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minDays(List<List<int>> grid) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minDays(grid: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_days(grid :: [[integer]]) :: integer\n  def min_days(grid) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_days(Grid :: [[integer()]]) -> integer().\nmin_days(Grid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-days grid)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2401",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a binary grid where each cell represents either land (1) or water (0). Each day, we can convert any single land cell to a water cell. Our task is to determine the minimum number of days required to modify the grid such that it either:\n\n- Contains no islands, or\n- Contains more than one island.\n\nAn island is a maximal group of horizontally or vertically connected land cells.\n\nIn this article, we will explore the applications of the Flood-Fill Algorithm, Tarjan's Algorithm, and Articulation Points, focusing on their practical uses rather than their fundamental principles. If you are unfamiliar with these algorithms, please refer to the foundational materials for a comprehensive understanding:\n\n1. [Flood-Fill Algorithm](https://leetcode.com/problems/flood-fill/description/)\n2. [Tarjan's Algorithm and Articulation Points](https://leetcode.com/problems/critical-connections-in-a-network/editorial/)\n    \n---\n\n### Approach 1: Brute Force\n\n#### Intuition\n\nThe binary grid can initially be in one of three states:\n1. No islands (all cells are water).\n2. One island.\n3. More than one island.\n\nWe only need to modify the grid in the second case, aiming to reach either the first or third state with minimal changes.\n\nA brute force approach would involve flipping each land cell one by one to achieve the desired conditions. However, this could generate up to $2^{30}$ states, which will not satisfy the problem constraints. \n\nTo reduce this complexity, we can identify a pattern. The most effective way to split an island into two parts is to find the thinnest cross-section and change those cells to water. In a binary grid, even for uniform shapes like squares or circles, the thinnest cross-section comprises at most 2 squares. Examples can be seen here:\n\n![two flips are enough](../Figures/1568/two_is_enough.png)\n\nFirst, we should determine if the grid already satisfies the conditions (zero or more than one island). If so, we can immediately return 0.\n\nTo check if we can meet the conditions in 1 step, we systematically flip each island cell to water and evaluate the resulting configuration. We iterate over each cell in the grid, temporarily changing it to water, and use a `countIslands` function to determine the number of islands in the modified grid. When we encounter a land cell, we use the [flood-fill algorithm](https://en.wikipedia.org/wiki/Flood_fill) to count the entire island. The total number of flood-fill calls indicates the number of islands.\n\nIf removing one land cell does not achieve the goal, the only remaining option is to return 2.\n\n#### Algorithm\n\n- Define an array `DIRECTIONS` that contain the directions for moving right, left, down, and up.\n\nMain method `minDays`:\n\n- Set `rows` and `cols` as the number of rows and columns in `grid`.\n- Initialize a variable `initialIslandCount` and set it to the initial number of islands in the grid by calling the `countIslands` method. \n- Check if `initialIslandCount` is not equal to `1` (i.e. the island is already disconnected):\n  - If `true`, return `0`.\n- Iterate through each cell `(row, col)` of the grid:\n  - If the cell is water, skip it.\n  - Set `grid[row][col]` to `0`.\n  - Find the `newIslandCount` by calling `countIslands`.\n  - If `newIslandCount` is not equal to `1`, return `1`.\n  - Set  `grid[row][col]` back to `1`.\n- Return `2`.\n  \nHelper method `countIslands`:\n\n- Define a method `countIslands` with parameter: the `grid`.\n- Initialize:\n  - `rows` and `cols` as the number of rows and columns in the `grid`.\n  - a boolean array `visited` to track visited cells.\n  - a variable `islandCount` set to `0`.\n- Iterate through each cell `(row, col)` of the `grid`:\n  - If the cell has not been visited and its value is `1`:  \n    - Call `exploreIsland` on `(row, col)`.\n    - Increment `islandCount`.\n- Return `islandCount`.\n\nHelper method `exploreIsland`:\n\n- Define a method `exploreIsland` with parameters: `grid`, the `row` and `col` indices, and the `visited` array.\n- Set `visited[row][col]` to `true`.\n- For each `direction` in `DIRECTIONS`:\n  - Set `newRow` to `row + direction[0]`.\n  - Set `newCol` to `col + direction[1]`.\n  - Check if the `(newRow, newCol)` is valid using `isValidLandCell`:\n    - If `true`, call `exploreIsland` on `(newRow, newCol)`.\n\nHelper method `isValidLandCell`:\n\n- Define a method `isValidLandCell` with parameters: `grid`, the `row` and `col` indices, and the `visited` array.\n- Return `true` if the cell is within the `grid` bounds, `grid[row][col]` is `1` and has not been visited yet.\n- Else, return `false`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/TkjwpTDi/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"TkjwpTDi\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ be the number of rows and $n$ be the number of columns in the `grid`.\n\n- Time complexity: $O((m \\cdot n)^2)$\n\n    The main operation in this algorithm is the `countIslands` function, which is called multiple times. `countIslands` in turn calls the `exploreIslands` method, which performs a depth-first search on the grid. The DFS in the worst case can explore all the cells in the grid, resulting in a time complexity of $O(m \\cdot n)$.\n\n    The `countIslands` method may be called a maximum of $1 + m \\cdot n$ times.\n\n    Thus, the overall time complexity of the algorithm is $O((m \\cdot n) \\cdot (1 + m \\cdot n))$, which simplifies to $O((m \\cdot n)^2)$.\n\n- Space complexity: $O(m \\cdot n)$\n\n    The main space usage comes from the `visited` array in the `countIslands` function, which has a size of $m \\times n$.\n\n    The recursive call stack in the DFS (`exploreIsland` function) can go as deep as $m \\cdot n$ in the worst case.\n\n    Therefore, the space complexity of the algorithm is $O(m \\cdot n)$.  \n\n---\n\n### Approach 2: Tarjan's Algorithm\n\n#### Intuition\n\nAn articulation point is a cell that will split an island in two when it is changed from land to water. If a given grid has an articulation point, we can disconnect the island in one day. Tarjan's algorithm efficiently finds articulation points in a graph.\n\nThe algorithm uses three key pieces of information for each node (cell): discovery time, lowest reachable time, and parent. The discovery time is when a node is first visited during the DFS. The lowest reachable time is the minimum discovery time of any node that can be reached from the subtree rooted at the current node, including the current node itself. The parent is the node from which the current node was discovered during the DFS.\n\nA node can be an articulation point in two cases:\n1. A non-root node is an articulation point if it has a child whose lowest reachable time is greater than or equal to the node's discovery time. This condition means that the child (and its subtree) cannot reach any ancestor of the current node without going through the current node, making it critical for connectivity.\n2. The root node of the DFS tree is an articulation point if it has more than one child. Removing the root would disconnect these children from each other.\n\nIf no articulation points are found, the grid cannot be disconnected by removing a single land cell. In that case, we return 2.\n\n#### Algorithm\n \n- Define a constant array `DIRECTIONS` that contains the directions for moving right, down, left, and up.\n\nMain method `minDays`:\n\n- Set `rows` and `cols` as the number of rows and columns in the `grid`.\n- Initialize an `ArticulationPointInfo` object `apInfo` with `hasArticulationPoint` set to `false` and `time` set to `0`.\n- Initialize variables:\n  - `landCells` to count the number of land cells in the grid.\n  - `islandCount` to count the number of islands in the grid.\n- Initialize arrays `discoveryTime`, `lowestReachable`, and `parentCell` with default values of `-1`. These arrays store information about each cell during DFS traversal.\n- Loop through each cell `(i, j)` of the `grid`:\n  - If the cell is land (`1`):\n    - Increment the `landCells` count.\n    - If the cell has not been visited (`discoveryTime[i][j]` = `-1`):\n      - Call `findArticulationPoints` on `(i, j)` to find if articulation point exists.\n      - Increment `islandCount`.\n- If there is zero or more than one island, return `0`\n- If there is only one land cell, return `1`.\n- If there is an articulation point, return `1`.\n- Otherwise, return `2`.\n\nHelper method `findArticulationPoints`:\n\n- Define a method `findArticulationPoints` with parameters: `grid`, the `row` and `col` indices, `discoveryTime`, `lowestReachable`, `parentCell`, and `apInfo`.\n- Set `rows` and `cols` as the number of rows and columns in the `grid`.\n- Set `discoveryTime` of the current cell to `apInfo.time`.\n- Increment the `time` in `apInfo`.\n- Set the `lowestReachable` time of the current cell to its `discoveryTime`.\n- Initialize a variable `children` to count the number of child nodes in the DFS tree.\n- To explore adjacent cells, loop through each `direction` in `DIRECTIONS`:\n  - Calculate `newRow` as `row + direction[0]`.\n  - Calculate `newCol` as `col + direction[1]`.\n  - If `(newRow, newCol)` is a valid cell:\n    - If the `discoveryTime` of the new cell is `-1`:\n      - Increment `children`.\n      - Set the `parentCell` of the new cell to the current cell.\n      - Recursively call `findArticulationPoints` for the new cell.\n      - Update the `lowestReachable` time for the current cell to the minimum of `lowestReachable[row][col]` and `lowestReachable[newRow][newCol]`.\n      - If `lowestReachable` of `(newRow, newCol)` is greater than or equal to `discoveryTime` of `(row, col)`, and `(row, col)` has a parent:\n        - Set `hasArticulationPoint` of `apInfo` to `true`.\n    - Else if `(newRow, newCol)` is not the parent of `(row, col)`:\n        - Set `lowestReachable` time of `(row, col)` to the minimum of `lowestReachable[row][col]` and `discoveryTime[newRow][newCol]`.\n- Check if `(row, col)` is the root of the DFS tree and has more than 1 `children`:\n  - Set `hasArticulationPoint` of `apInfo` to `true`.\n\nHelper method `isValidLandCell`:\n\n- Define a method `isValidLandCell` with parameters: `grid`, and the `row` and `col` indices.\n- Return `true` if the given cell is within the bounds of the grid and is a land cell (`1`).\n- Else, return `false`.\n\nHelper class `ArticulationPointInfo`:\n\n- Define a class `ArticulationPointInfo` with fields: `hasArticulationPoint` and `time`.\n- Override the default constructor to initialize `hasArticulationPoint` and `time`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/V5ydSy68/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"V5ydSy68\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ be the number of rows and $n$ be the number of columns in the `grid`.\n\n* Time complexity: $O(m \\cdot n)$\n\n    Initializing the arrays `discoveryTime`, `lowestReachable`, and `parentCell` takes $O(m \\cdot n)$ time each.\n\n    The DFS traversal by the `findArticulationPoints` method visits each cell exactly once, taking $O(m \\cdot n)$ time.\n\n    Thus, the overall time complexity of the algorithm is $O(m \\cdot n)$.\n\n* Space complexity: $O(m \\cdot n)$\n\n    The arrays `discoveryTime`, `lowestReachable`, and `parentCell` each take $O(m \\cdot n)$ space.\n\n    The recursive call stack for the DFS traversal can go as deep as the number of land cells in the worst case. If all cells are land, the depth of the recursive call stack can be $O(m \\cdot n)$.\n\n    Thus, the total space complexity of the algorithm is $O(m \\cdot n) + O(m \\cdot n) = O(m \\cdot n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

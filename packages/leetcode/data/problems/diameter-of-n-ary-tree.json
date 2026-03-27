@@ -1,0 +1,112 @@
+{
+  "questionId": "1665",
+  "questionFrontendId": "1522",
+  "title": "Diameter of N-Ary Tree",
+  "titleSlug": "diameter-of-n-ary-tree",
+  "difficulty": "Medium",
+  "content": "<p>Given a <code>root</code> of an <code>N-ary tree</code>, you need to compute the length of the diameter of the tree.</p>\n\n<p>The diameter of an N-ary tree is the length of the <strong>longest</strong> path between any two nodes in the tree. This path may or may not pass through the root.</p>\n\n<p>(<em>Nary-Tree input serialization is represented in their level order traversal, each group of children is separated by the null value.)</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/07/19/sample_2_1897.png\" style=\"width: 324px; height: 173px;\" /></p>\n\n<pre>\n<strong>Input:</strong> root = [1,null,3,2,4,null,5,6]\n<strong>Output:</strong> 3\n<strong>Explanation: </strong>Diameter is shown in red color.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/07/19/sample_1_1897.png\" style=\"width: 253px; height: 246px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> root = [1,null,2,null,3,4,null,5,null,6]\n<strong>Output:</strong> 4\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/07/19/sample_3_1897.png\" style=\"width: 369px; height: 326px;\" /></p>\n\n<pre>\n<strong>Input:</strong> root = [1,null,2,3,4,5,null,null,6,7,null,8,null,9,10,null,null,11,null,12,null,13,null,null,14]\n<strong>Output:</strong> 7\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The depth of the n-ary tree is less than or equal to <code>1000</code>.</li>\n\t<li>The total number of nodes is between <code>[1, 10<sup>4</sup>]</code>.</li>\n</ul>\n",
+  "hints": [
+    "For the node i, calculate the height of each of its children and keep the first and second maximum heights (max1_i , max2_i).",
+    "Check all nodes and return max( 2 + max1_i  +  max2_i )."
+  ],
+  "metaData": "{\n  \"name\": \"diameter\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"manual\": true,\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"csharp\",\n    \"javascript\",\n    \"python3\",\n    \"typescript\",\n    \"php\",\n    \"golang\",\n    \"scala\",\n    \"kotlin\",\n    \"ruby\",\n    \"swift\",\n    \"c\"\n  ], \"typescriptCustomType\" : \"class _Node {\\n    val: number\\n    children: _Node[]\\n\\n    constructor(val?: number, children?: _Node[]) {\\n        this.val = (val===undefined ? 0 : val)\\n        this.children = (children===undefined ? [] : children)\\n    }\\n}\\n\"\n\n}",
+  "stats": "{\"totalAccepted\": \"61.8K\", \"totalSubmission\": \"81.9K\", \"totalAcceptedRaw\": 61819, \"totalSubmissionRaw\": 81946, \"acRate\": \"75.4%\"}",
+  "likes": 643,
+  "dislikes": 9,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Diameter of Binary Tree\", \"titleSlug\": \"diameter-of-binary-tree\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,null,3,2,4,null,5,6]",
+    "[1,null,2,null,3,4,null,5,null,6]",
+    "[1,null,2,3,4,5,null,null,6,7,null,8,null,9,10,null,null,11,null,12,null,13,null,null,14]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/*\n// Definition for a Node.\nclass Node {\npublic:\n    int val;\n    vector<Node*> children;\n\n    Node() {}\n\n    Node(int _val) {\n        val = _val;\n    }\n\n    Node(int _val, vector<Node*> _children) {\n        val = _val;\n        children = _children;\n    }\n};\n*/\n\nclass Solution {\npublic:\n    int diameter(Node* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/*\n// Definition for a Node.\nclass Node {\n    public int val;\n    public List<Node> children;\n\n    \n    public Node() {\n        children = new ArrayList<Node>();\n    }\n    \n    public Node(int _val) {\n        val = _val;\n        children = new ArrayList<Node>();\n    }\n    \n    public Node(int _val,ArrayList<Node> _children) {\n        val = _val;\n        children = _children;\n    }\n};\n*/\n\nclass Solution {\n    public int diameter(Node root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "\"\"\"\n# Definition for a Node.\nclass Node:\n    def __init__(self, val: Optional[int] = None, children: Optional[List['Node']] = None):\n        self.val = val\n        self.children = children if children is not None else []\n\"\"\"\n\nclass Solution:\n    def diameter(self, root: 'Node') -> int:\n        \"\"\"\n        :type root: 'Node'\n        :rtype: int\n        \"\"\""
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "\"\"\"\n# Definition for a Node.\nclass Node(object):\n    def __init__(self, val=None, children=None):\n        self.val = val\n        self.children = children if children is not None else []\n\"\"\"\n\nclass Solution(object):\n    def diameter(self, root):\n        \"\"\"\n        :type root: 'Node'\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * // Definition for a _Node.\n * function _Node(val, children) {\n *    this.val = val === undefined ? 0 : val;\n *    this.children = children === undefined ? [] : children;\n * };\n */\n\n/**\n * @param {_Node} root\n * @return {number}\n */\nvar diameter = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for _Node.\n * class _Node {\n *     val: number\n *     children: _Node[]\n * \n *     constructor(val?: number, children?: _Node[]) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.children = (children===undefined ? [] : children)\n *     }\n * }\n */\n\n\nfunction diameter(root: _Node): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/*\n// Definition for a Node.\npublic class Node {\n    public int val;\n    public IList<Node> children;\n    \n    public Node() {\n        val = 0;\n        children = new List<Node>();\n    }\n\n    public Node(int _val) {\n        val = _val;\n        children = new List<Node>();\n    }\n    \n    public Node(int _val, List<Node> _children) {\n        val = _val;\n        children = _children;\n    }\n}\n*/\n\npublic class Solution {\n    public int Diameter(Node root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a Node.\n * struct Node {\n *     int val;\n *     int numChildren;\n *     struct Node** children;\n * };\n */\n\nint diameter(struct Node* root) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a Node.\n * type Node struct {\n *     Val int\n *     Children []*Node\n * }\n */\n\nfunc diameter(root *Node) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Definition for a Node.\n * class Node(var `val`: Int) {\n *     var children: List<Node?> = listOf()\n * }\n */\n\nclass Solution {\n    fun diameter(root: Node?): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a Node.\n * public class Node {\n *     public var val: Int\n *     public var children: [Node]\n *     public init(_ val: Int) {\n *         self.val = val\n *         self.children = []\n *     }\n * }\n */\n\nclass Solution {\n    func diameter(_ root: Node?) -> Int {\n    \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a Node.\n# class Node\n#     attr_accessor :val, :children\n#     def initialize(val=0, children=[])\n#         @val = val\n#         @children = children\n#     end\n# end\n\n# @param {Node} root\n# @return {Integer}\ndef diameter(root)\n\t\nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a Node.\n * class Node {\n *     public $val = null;\n *     public $children = null;\n *     function __construct($val = 0) {\n *         $this->val = $val;\n *         $this->children = array();\n *     }\n * }\n */\n\nclass Solution {\n    /**\n     * @param Node $root\n     * @return Integer\n     */\n    function diameter($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a Node.\n * class Node(var _value: Int) {\n *   var value: Int = _value\n *   var children: List[Node] = List()\n * }\n */\n\nobject Solution {\n    def diameter(root: Node): Int = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "1030",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Overview\n\nWe are asked to calculate the diameter of a N-ary tree, which is defined as the **longest path** between any two nodes in the tree.\n\nAt first glance, it seems that we might have to enumerate all pairs of nodes, in order to find out the longest path.\n\nYet, there are certain insights that would allow us to dramatically reduce the scope of enumeration.\n\n>The first insight is that the longest path in a tree can only happen between two **leaves** nodes or between a leaf node and the **root** node.\n\n![example of paths](../Figures/1522/1522_path_examples.png)\n\n>The second insight is that each non-leaf node acts as a **bridge** for the paths between its **_descendant leaves_** nodes.\nIf we pick two longest sub-paths from a non-leaf node to its descendant leaves nodes, and combine them together, then the resulting path would be the longest path among all possible ones that are _bridged_ by this non-leaf node.\n\n![example of subpaths](../Figures/1522/1522_subpath_example.png)\n\nAs one could see from the above graph, the longest path of the tree would be one of the combined paths from the top two longest sub-paths _bridged_ by a non-leaf node (node `2` in the above graph).\n\n>With the above insights, to find the diameter of the tree, it suffices to enumerate all non-leaf nodes and select the top two longest sub-paths bridged by each non-leaf node.\n\nThe above idea could be implemented with the help of two important concepts in the tree data structure, namely the **[height](https://en.wikipedia.org/wiki/Tree_(data_structure)#Terminology)** and **[depth](https://en.wikipedia.org/wiki/Tree_(data_structure)#Terminology)** of a node.\n\nIn this article, we will present two algorithms with regards to the concept of height and depth respectively.\n\n\n---\n### Approach 1: Distance with Height\n\n**Intuition**\n\n>The **_height_** of a node is defined as the length of the longest downward path to a leaf node from that node.\n\nBased on the above definition, a leaf node will have a height of zero.\n\nAs we explained in the overview section, the longest path that is bridged by a non-leaf node will come from the combination of two longest **sub-paths** downward to the leaves nodes from this non-leaf node.\n\nAs one might see now, the _sub-paths_ that we mentioned above consist of the top two largest heights of the children nodes.\n\nIf we define the top two largest heights of the children nodes as `height(node.child_m)` and `height(node.child_n)`, then the longest path bridged by this node would be `height(node.child_m) + height(node.child_n) + 2`.\n\n![formula height](../Figures/1522/1522_formula_height.png)\n\n\n**Algorithm**\n\nLet us first define a function called `height(node)` which returns the height of the node.\nThe function can be implemented via recursion, based on the following formula:\n\n$$\n    \\text{height(node)} = \\max\\big(\\text{height(child)}\\big) + 1, \\space \\forall \\text{child} \\in \\text{node.children}\n$$\n\nMore importantly, within the function of `height(node)`, we need to select the top two largest _heights_ of its children nodes. \nWith these top two largest heights, we calculate the length of the combined path, which would be the candidate as the _diameter_ of the entire tree.\n\nThere are two ways to select the top two largest heights:\n\n- A straight-forward way would be that we keep the heights of all children nodes in an array, and then we **sort** the array and select the top two largest elements.\n\n- A constant-space solution would be that we use only two variables which keep track of the current top two largest elements respectively. While we iterate through all the heights, we **_update_** the two variables accordingly.\n\nIn the following implementation, we opt for the second approach.\n\n<iframe src=\"https://leetcode.com/playground/c7maQUUH/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"c7maQUUH\"></iframe>\n\n\n\n**Complexity Analysis**\n\nLet $$N$$ be the number of nodes in the tree.\n\n- Time Complexity: $$\\mathcal{O}(N)$$\n\n    - We enumerate each node in the tree once and only once via recursion.\n\n- Space Complexity: $$\\mathcal{O}(N)$$\n\n    - We employed only constant-sized variables in the algorithm.\n\n    - On the other hand, we used recursion which will incur additional memory consumption in the function call stack.\n    In the worst case where all the nodes are chained up in a single path, the recursion will pile up $$N$$ times.\n\n    - As a result, the overall space complexity of the algorithm is $$\\mathcal{O}(N)$$.\n\n\n---\n### Approach 2: Distance with Depth\n\n**Intuition**\n\n>The **depth** of a node is the length of the path to the **root** node.\n\nStill, we would like to know the longest path between two leaves nodes _bridged_ by a non-leaf node.\nBut this time we could calculate it with the concept of depth, rather than height.\n\nIf we know the top two largest depths among two leaves nodes starting from the node, namely `depth(node.leaf_m)` and `depth(node.leaf_n)`, then this longest path could be calculated as the sum of top two largest depths minus the depth of the parent node, namely  \n`depth(node.leaf_m) + depth(node.leaf_n) - 2 * depth(node)`.\n\n![formula depth](../Figures/1522/1522_formula_depth.png)\n\n\n**Algorithm**\n\nLet us define a function called `maxDepth(node)` which returns the maximum depth of the leaves nodes starting from the node.\n\nAgain, we could implement it with recursion, with the following formula:\n\n$$\n\\text{maxDepth(node)} = \\max\\big(\\text{maxDepth(node.child)}\\big), \\space \\forall \\text{child} \\in \\text{node.children}\n$$\n\nSimilarly, within the function, we will also select the top two largest depths.\nWith these top two largest depths, we will update the diameter accordingly.\n\n\n<iframe src=\"https://leetcode.com/playground/8shmnKma/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"8shmnKma\"></iframe>\n\n\n\n**Complexity Analysis**\n\nLet $$N$$ be the number of nodes in the tree.\n\n- Time Complexity: $$\\mathcal{O}(N)$$\n\n    - We enumerate each node in the tree once and only once via recursion.\n\n- Space Complexity: $$\\mathcal{O}(N)$$\n\n    - We employed only constant-sized variables in the algorithm.\n\n    - On the other hand, we used recursion which will incur additional memory consumption in the function call stack.\n    In the worst case where all the nodes are chained up in a single path, the recursion will pile up $$N$$ times.\n\n    - As a result, the overall space complexity of the algorithm is $$\\mathcal{O}(N)$$.\n\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

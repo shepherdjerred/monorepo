@@ -1,0 +1,140 @@
+{
+  "questionId": "1147",
+  "questionFrontendId": "1072",
+  "title": "Flip Columns For Maximum Number of Equal Rows",
+  "titleSlug": "flip-columns-for-maximum-number-of-equal-rows",
+  "difficulty": "Medium",
+  "content": "<p>You are given an <code>m x n</code> binary matrix <code>matrix</code>.</p>\n\n<p>You can choose any number of columns in the matrix and flip every cell in that column (i.e., Change the value of the cell from <code>0</code> to <code>1</code> or vice versa).</p>\n\n<p>Return <em>the maximum number of rows that have all values equal after some number of flips</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> matrix = [[0,1],[1,1]]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> After flipping no values, 1 row has all values equal.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> matrix = [[0,1],[1,0]]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> After flipping values in the first column, both rows have equal values.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> matrix = [[0,0,0],[0,0,1],[1,1,0]]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> After flipping values in the first two columns, the last two rows have equal values.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == matrix.length</code></li>\n\t<li><code>n == matrix[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 300</code></li>\n\t<li><code>matrix[i][j]</code> is either&nbsp;<code>0</code> or <code>1</code>.</li>\n</ul>\n",
+  "hints": [
+    "Flipping a subset of columns is like doing a bitwise XOR of some number K onto each row.  We want rows X with X ^ K = all 0s or all 1s.  This is the same as X = X^K ^K = (all 0s or all 1s) ^ K, so we want to count rows that have opposite bits set.  For example, if K = 1, then we count rows X = (00000...001, or 1111....110)."
+  ],
+  "metaData": "{\n  \"name\": \"maxEqualRowsAfterFlips\",\n  \"params\": [\n    {\n      \"name\": \"matrix\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}\n",
+  "stats": "{\"totalAccepted\": \"118.4K\", \"totalSubmission\": \"150.7K\", \"totalAcceptedRaw\": 118442, \"totalSubmissionRaw\": 150748, \"acRate\": \"78.6%\"}",
+  "likes": 1344,
+  "dislikes": 130,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[0,1],[1,1]]",
+    "[[0,1],[1,0]]",
+    "[[0,0,0],[0,0,1],[1,1,0]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxEqualRowsAfterFlips(vector<vector<int>>& matrix) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxEqualRowsAfterFlips(int[][] matrix) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxEqualRowsAfterFlips(self, matrix: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxEqualRowsAfterFlips(self, matrix):\n        \"\"\"\n        :type matrix: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} matrix\n * @return {number}\n */\nvar maxEqualRowsAfterFlips = function(matrix) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxEqualRowsAfterFlips(matrix: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxEqualRowsAfterFlips(int[][] matrix) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxEqualRowsAfterFlips(int** matrix, int matrixSize, int* matrixColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxEqualRowsAfterFlips(matrix [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxEqualRowsAfterFlips(matrix: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxEqualRowsAfterFlips(_ matrix: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_equal_rows_after_flips(matrix: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} matrix\n# @return {Integer}\ndef max_equal_rows_after_flips(matrix)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $matrix\n     * @return Integer\n     */\n    function maxEqualRowsAfterFlips($matrix) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxEqualRowsAfterFlips(List<List<int>> matrix) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxEqualRowsAfterFlips(matrix: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_equal_rows_after_flips(matrix :: [[integer]]) :: integer\n  def max_equal_rows_after_flips(matrix) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_equal_rows_after_flips(Matrix :: [[integer()]]) -> integer().\nmax_equal_rows_after_flips(Matrix) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-equal-rows-after-flips matrix)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2594",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Brute Force\n\n#### Intuition\n\nOur task is to make as many rows as possible in the matrix consist of identical values (either all 0s or all 1s) using only one type of move: flipping entire columns.\n\nOn closer inspection, you will see there are only two possible scenarios to look out for: \n\nFor the first, let's consider a 3 x 3 grid:\n```\n+---+---+---+\n| 0 | 1 | 0 |\n+---+---+---+\n| 0 | 1 | 0 |\n+---+---+---+\n| 1 | 1 | 0 |\n+---+---+---+\n```\n\nWe can see from this grid that flipping columns to make the first row uniform will make the second row uniform, as well. However, the third row remains non-uniform since it does not match the first row. \n\nNow, let's look at our second scenario:\n```\n+---+---+---+---+\n| 0 | 1 | 0 | 0 |\n+---+---+---+---+\n| 1 | 0 | 1 | 1 |\n+---+---+---+---+\n| 0 | 1 | 0 | 0 |\n+---+---+---+---+\n| 0 | 1 | 1 | 0 |\n+---+---+---+---+\n```\n\nThe first two rows are perfect opposites. Flipping the second column to make the first row uniform will have the positive side effect of making the values in the second row uniform, as well. Additionally, as in the first scenario, the third row will now become uniform. However, the fourth row remains non-uniform since it is neither identical nor exactly opposite.\n\nThis means that our answer boils down to this: the rows that can be made uniform (all values in the row are the same) after flipping will be the combined total of rows that are identical and rows that are exactly opposite. \n\nWe'll loop over each row in the given matrix to determine which approach is best. For each row, we count the number of other rows in the matrix that are exactly the same and that are exactly opposite. The highest count across all rows will be our answer.\n\n#### Algorithm\n\n- Initialize a variable:\n  - `numCols` to store the number of columns in the matrix by accessing the length of the first row.\n  - `maxIdenticalRows` to track the maximum count of identical rows found so far.\n- Iterate through each row `currentRow` of the matrix:\n  - Initialize:\n    - an array `flippedRow` of size `numCols` to store the flipped version of the current row.\n    - a counter `identicalRowCount` to track rows matching either the current pattern or its flipped version.\n  - Create the flipped version by iterating through each column:\n    - Set each element of `flippedRow` to the complement (1 - value) of the corresponding element in `currentRow`.\n  - Iterate through each row of the matrix again as `compareRow`:\n    - Compare `compareRow` with both `currentRow` and `flippedRow`.\n    - If `compareRow` matches either pattern, increment `identicalRowCount`.\n  - Update `maxIdenticalRows` to the larger value between itself and `identicalRowCount`.\n- Return `maxIdenticalRows` as the final result.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/hPcGzMKT/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"hPcGzMKT\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of rows and $m$ be the number of columns in the matrix.\n\n- Time complexity: $O(n^2 \\cdot m)$\n\n    The outer loop iterates through each row of the matrix. For each row, the algorithm creates its flipped version ($m$ operations) and then compares it with every other row in the matrix ($n$ comparisons, each requiring $m$ operations for array comparison). \n\n    Thus, the total time complexity of the algorithm is $O(n \\cdot n \\cdot m) = O(n^2 \\cdot m)$. \n\n- Space complexity: $O(m)$\n\n    The only additional space used is for storing the `flippedRow` array, which has a length equal to $m$. \n    \n    Thus, the space complexity is $O(m)$.  \n\n---\n\n### Approach 2: Hash Map\n\n#### Intuition\n\nNotice that a row and its complement actually form the same pattern, just with opposite digits. To illustrate this, let's take the 2 x 2 grid again:\n\n```\n+---+---+\n| 0 | 1 |\n+---+---+\n| 1 | 0 |\n+---+---+\n```\n\nTo represent the pattern in a more abstract way, let's use 'T' for the first digit in each row and 'F' for its opposite. In the first row, 'T' stands for 0, while in the second row, 'T' stands for 1. Essentially, we are replacing every number in a row with a symbol signifying whether the number is equal to the first number in the grid. If we rewrite our grid using these symbols, it becomes a bit easier to see the underlying structure.\n\n```\n+---+---+\n| T | F |   // T = 0\n+---+---+\n| T | F |   // T = 1\n+---+---+\n```\n\nThis means that if we replace each row with a unique pattern that represents it, then identical and even complementary rows will share the same pattern. The below illustration visualizes this concept:\n\n![](../Figures//1072/TFpic.png)\n\nSo, our task simplifies to just finding the pattern that shows up the most often. To do this, we’ll go through each row in the matrix, converting it into its pattern string. Then, we’ll use a map called `patternFrequency` to keep track of how many times each pattern appears. Once we’ve done that, we’ll just look through all the values in the map, find the highest frequency, and return that as our answer.\n\n#### Algorithm\n\n- Initialize a map `patternFrequency` to store patterns and their frequencies.\n- Iterate through each row `currentRow` of the matrix:\n  - Initialize a string `patternBuilder` to construct the pattern.\n  - For each element in the row:\n    - Compare it with the first element of the row.\n    - Append 'T' to the pattern if the current element matches the first element.\n    - Append 'F' to the pattern if the current element differs from the first element.\n  - Convert the constructed pattern to a string `rowPattern`.\n  - Update the frequency of `rowPattern` in the map.\n- Initialize a variable `maxFrequency` to track the highest frequency found.\n- Iterate through all frequencies in the map:\n  - Update `maxFrequency` to the larger value between itself and current frequency.\n- Return `maxFrequency` as the final result.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Zvf6p6xz/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Zvf6p6xz\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of rows and $m$ be the number of columns in the matrix.\n\n* Time complexity: $O(n \\cdot m)$\n\n    The outer loop iterates through each of the $n$ rows in the matrix. For each row, we create a pattern by examining each element of the row, which takes $m$ operations. \n    \n    The final loop through the map is bounded by $n$ as there cannot be more unique patterns than rows. \n    \n    Thus, the total time complexity is $O(n \\cdot m + n)$ = $O(n \\cdot m)$. \n\n* Space complexity: $O(n \\cdot m)$\n\n    The `patternFrequency` map stores the patterns as keys and their frequencies as values. The length of each pattern is $m$ and there can be at most $n$ unique patterns (equal to the number of rows). \n\n    Thus, the space complexity is $O(n \\cdot m)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,157 @@
+{
+  "questionId": "948",
+  "questionFrontendId": "912",
+  "title": "Sort an Array",
+  "titleSlug": "sort-an-array",
+  "difficulty": "Medium",
+  "content": "<p>Given an array of integers <code>nums</code>, sort the array in ascending order and return it.</p>\n\n<p>You must solve the problem <strong>without using any built-in</strong> functions in <code>O(nlog(n))</code> time complexity and with the smallest space complexity possible.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [5,2,3,1]\n<strong>Output:</strong> [1,2,3,5]\n<strong>Explanation:</strong> After sorting the array, the positions of some numbers are not changed (for example, 2 and 3), while the positions of other numbers are changed (for example, 1 and 5).\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [5,1,1,2,0,0]\n<strong>Output:</strong> [0,0,1,1,2,5]\n<strong>Explanation:</strong> Note that the values of nums are not necessarily unique.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>-5 * 10<sup>4</sup> &lt;= nums[i] &lt;= 5 * 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"sortArray\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"1.1M\", \"totalSubmission\": \"2M\", \"totalAcceptedRaw\": 1103473, \"totalSubmissionRaw\": 1973959, \"acRate\": \"55.9%\"}",
+  "likes": 7222,
+  "dislikes": 843,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[5,2,3,1]",
+    "[5,1,1,2,0,0]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 17, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 16, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 8, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 5, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 2, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 2, \"slug\": \"hive\", \"name\": \"Hive\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Divide and Conquer",
+      "slug": "divide-and-conquer"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Merge Sort",
+      "slug": "merge-sort"
+    },
+    {
+      "name": "Bucket Sort",
+      "slug": "bucket-sort"
+    },
+    {
+      "name": "Radix Sort",
+      "slug": "radix-sort"
+    },
+    {
+      "name": "Counting Sort",
+      "slug": "counting-sort"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> sortArray(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] sortArray(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def sortArray(self, nums: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def sortArray(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number[]}\n */\nvar sortArray = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function sortArray(nums: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] SortArray(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* sortArray(int* nums, int numsSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func sortArray(nums []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun sortArray(nums: IntArray): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func sortArray(_ nums: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn sort_array(nums: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer[]}\ndef sort_array(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer[]\n     */\n    function sortArray($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> sortArray(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def sortArray(nums: Array[Int]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec sort_array(nums :: [integer]) :: [integer]\n  def sort_array(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec sort_array(Nums :: [integer()]) -> [integer()].\nsort_array(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (sort-array nums)\n  (-> (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1706",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nThe purpose of this problem is to evaluate the interviewee's understanding of sorting algorithms and their ability to implement these algorithms without relying on built-in sort methods.\n\nThere are a variety of sorting algorithms such as Bubble Sort, Insertion Sort, Selection Sort, Merge Sort, Heap Sort, Quick Sort, Counting Sort, Radix Sort, and others. In this article, we will concentrate on four algorithms that are deemed efficient enough for this particular problem - **Merge Sort, Heap Sort, Counting Sort, and Radix Sort**.\n\n![slide1](../Figures/912/Slide1.PNG)\n\nWe attached a list of time complexities of some popular sorting algorithms. Here, `n` is the number of elements in the array, `k` is the size of buckets used, and `d` is the number maximum of digits of an element in the array.\n\nIn this article we will be giving brief descriptions of these algorithms but won't cover them in great detail.   \nFor those who would like to explore these and other sorting algorithms in greater detail, we are providing a link to our [Sorting Leetbook](https://leetcode.com/explore/learn/card/sorting/693/introduction/4431/). \n\n---\n\n### Approach 1: Merge Sort\n\n#### Intuition\n\nMerge Sort is a divide-and-conquer sorting algorithm. The intuition behind it is to divide the data set into smaller and smaller sub-arrays until it is easy to sort, and then merge the sorted sub-arrays back into a larger sorted array.\n\nThe steps for implementing Merge Sort are as follows:  \n - **Divide the data set into two equal parts:** The first step in the Merge Sort algorithm is to divide the data set into two equal halves. This is done by finding the middle point of the data set and splitting the data into two parts.\n\n - **Recursively sort each half:** Once the data set is divided into two halves, the Merge Sort function is called recursively on each half. The recursive calls continue until each half of the data is sorted into single-element arrays.\n - **Merge the sorted halves:** Once each half of the data is sorted, the two halves are merged back into one final sorted array. The merging process involves comparing the first elements of each half and inserting the smaller element into the final array. This process continues until one of the halves is empty. The remaining elements of the other half are then inserted into the final array.\n - **Repeat the process until the entire data is sorted:** The Merge Sort function is called recursively until the entire data set is sorted.\n\n![slide2](../Figures/912/Slide2.PNG)\n\n#### Algorithm\n\n1. Create a helper function called `merge` which takes in the original array `arr`, indices `left`, `mid`, `right`, and a temporary array `tempArr` as parameters.\n    - Calculate the start indices and sizes of the two halves of the array. The first half starts from the `left` index and the second half starts from `mid+1`.\n    - Copy elements of both halves into the temporary array.\n    - Merge the sub-arrays from the temporary array `tempArr` back into the original array `arr` in a sorted order using a while loop. The loop runs until either the first half or second half is completely merged. In each iteration, the smaller of the two elements from the first and second half is copied into the original array \"arr\".\n    - Copy any remaining elements from the first half or second half into the original array.\n\n2. Create a recursive function called `mergeSort` which takes in the original array `arr`, indices `left`, `right`, and a temporary array `tempArr` as parameters.\n    - Check if the `left` index is greater than or equal to the `right` index. If it is, we return from the function.\n    - Calculate the `mid` index.\n    - Sort the first and second halves of the array recursively by calling the `mergeSort` function.\n    - Merge the sorted halves by calling the `merge` function.\n\n3. Create a temporary array `temporaryArray` with the same size as the `nums` array.\n4. Call the `mergeSort` function on the `nums` array with boundary, `0`, and `nums.size()-1`.\n5. Return the sorted array `nums`.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/7u7HrdKb/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"7u7HrdKb\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $n$ is the number of elements in the `nums` array.\n\n* Time complexity: $O(n \\log n)$          \n  - We divide the `nums` array into two halves till there is only one element in the array, which will lead to $O(\\log n)$ steps.  \n  $n \\rarr n/2 \\rarr n/4 \\rarr ... \\rarr 1 \\space (\\text{k steps}) $   \n  $ n / 2^{(k-1)} = 1 \\implies $ $k \\approx \\log n$\n  - And after each division, we merge those respective halves which will take $O(n)$ time each.\n  - Thus, overall it takes $O(n \\log n)$ time.\n\n* Space complexity: $O(n)$    \n  - The recursive stack will take $O(\\log n)$ space and we used an additional array `temporaryArray` of size $n$.\n  - Thus, overall we use $O(\\log n + n) = O(n)$ space. \n\n\n\n\n---\n\n### Approach 2: Heap Sort\n\n#### Intuition\n\nThe intuition behind Heap Sort is to organize the elements of the data set into a binary heap (a max binary heap, or a min binary heap), which provides a fast way to access the largest (or smallest) element. A max (or min) binary heap is a complete binary tree-based data structure where a parent node must be greater (or smaller) than or equal to its children nodes. This property ensures that the largest (or smallest) element is always at the root node of the max (or min) binary heap.\n\nThe steps for implementing Heap Sort are as follows:  \n\n- **Build the binary heap:** Organize the elements of the array into a max binary heap such that the parent node is either greater than or equal to its children nodes. In the resulting max binary heap we will have the largest element at the root node.\n\n- **Swap the root node and the last element:** Swap the root node (which is the largest element) with the last element in the heap. So that we place the largest element at the end, thus, trying to sort in ascending order.\n\n- **Rebuild the heap:** Rebuild the heap with the new root node, and while not considering the already swapped elements from the array to satisfy the heap property.\n\n- **Repeat steps 2 and 3:** Repeat steps 2 and 3 until the binary heap is empty.\n\n> **Note:** The first step of building the binary heap can be done efficiently using the bottom-up approach $O(n)$ time, where the binary heap is built from the bottom-most level to the top-most level. But we will implement top-down heapify in this article as it is easier to understand and implement during an interview setting, but we recommend you to practice implementation of bottom-up heapify also.\n\n![slide3](../Figures/912/Slide3.PNG)\n\n![slide4](../Figures/912/Slide4.PNG)\n\n#### Algorithm\n\n1. Create a function `heapify` that takes an array `arr`, size `n`, and index `i` as input.\n    - Initialize `largest` as `i`.\n    - Calculate the left child of node `i` as `2 * i + 1` and the right child as `2 * i + 2`.\n    - If the left child of node `i` is less than `n` and the value of the left child is greater than the value at `largest`, then set `largest` to `left`.\n    - If the right child of node `i` is less than `n` and the value of the right child is greater than the value at `largest`, then set `largest` to `right`.\n    - If `largest` is not equal to `i`, then swap the values at `i` and `largest`, and call `heapify` on the affected sub-tree rooted at `largest`.\n\n2. Create a function `heapSort` that takes an array `arr` as input.\n    - Initialize `n` as the size of the array.\n    - Build the max heap by calling `heapify` function on each node (except leaf nodes).\n    - Then, traverse the elements of the array `arr` from end to beginning, and for each element swap the root with the last element and call `heapify` on the reduced heap to make sure it remains a max heap.\n\n4. Call `heapSort` on the array `nums`.\n5. Return the sorted array `nums`.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/jC4dr6nE/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"jC4dr6nE\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $n$ is the number of elements in the `nums` array.\n\n* Time complexity: $O(n \\log n)$          \n  - While heapifying the `nums` array we traverse the height of the complete binary tree made using $n$ elements, which leads to $O(\\log n)$ time operations, and the heapify is done $n$ times, once for each element.\n  - Thus, overall it takes $O(n \\log n)$ time.\n\n* Space complexity: $O(log n)$    \n  - The recursive stack will take $O(\\log n)$ space, the sorting happens in place and we don't use any other additional memory.\n\n     \n\n---\n\n\n### Approach 3: Counting Sort\n\n\n#### Intuition\n\nThe intuition behind counting sort is to count the frequency of each element in the input array and then place the elements in their correct positions based on their values and frequencies. Counting sort is a non-comparative sorting algorithm and is useful in situations where the elements in the array have a limited range.\n\n\nThe steps for implementing Counting Sort are as follows:  \n\n- **Create a counting hash map:** Create a hash map that maps integers with integers which will be used to store the frequency of each element.\n\n- **Find the minimum and maximum values:** Iterate over the array to be sorted to find the minimum and maximum elements which will be used later on.\n\n- **Count the frequency of each element:** Loop through the array to be sorted and increase the count of the corresponding element in the counting hash map.\n\n- **Place elements in the original array:** Loop through the input array's element's range from the minimum value to the maximum value and place each element in its proper position in the original array based on the frequency in the hash map.\n\n\n![slide4](../Figures/912/Slide5.PNG)\n\n#### Algorithm\n\n1. Create a function `countingSort` to sort the input array `arr`.\n    - Create a counting hash map `counts` to store the count of each element of the array.\n    - Find the minimum and maximum values `minVal` and `maxVal` in the array.\n    - Iterate through the array `arr` and update the count of each element in the hash map.\n    - Initialize a variable `index` to zero, which will be used to store the sorted elements in the array `arr`.\n    - Start a loop that goes from the minimum value `minVal` to the maximum value `maxVal`. \n         - For each value `val` in the loop, check if its count in the hash map `counts` is greater than zero. If it is, overwrite that value in the array `arr` starting at the `index` position. Update the `index` and decrease the count of the value in the hash map `counts` by `1`.\n    - The input array `arr` should now be sorted. Return the sorted array.\n2. Calls the `countingSort` function with `nums` as a parameter.\n3. Return the sorted array `nums`.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/bssUj2Pt/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"bssUj2Pt\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $n$ is the number of elements in the `nums` array, and $k$ is the range of value of its elements (minimum value to maximum value).\n\n* Time complexity: $O(n + k)$          \n  - We iterate on the array elements while counting the frequency and finding minimum and maximum values, thus taking $O(n)$ time.\n  - Then we iterate on the input array's element's range which will take $O(k)$ time.\n  - Thus, overall it takes $O(n + k)$ time.\n\n* Space complexity: $O(n)$    \n  - We use a hash map `counts` which might store all $O(n)$ elements of the input array in worst-case.\n\n\n\n---\n\n### Approach 4: Radix Sort\n\n#### Intuition\n\nThe intuition behind radix sort is that it takes advantage of the fact that integers have a finite number of digits and each digit can have a limited number of values (0 to 9). Instead of comparing elements, it sorts elements by the individual digits of the integers.\n\nThe steps for implementing Radix Sort are as follows:  \n\n- **Sort array using bucket sort:** For each place value (unit place to last place) sort the array using counting sort. \n\n- **Bucket Sort:** We need 10 buckets for each digit (0 - 9) and we will push array elements in their respective bucket, and fetch the elements from each bucket one by one in the order it was pushed in the bucket.\n\n- **Sort considering all elements are positive:** Elements in the input array can be both positive or negative, thus we will sort the array considering all elements are positive then we will separate out the negative elements at the end in reversed order.\n\n![slide5](../Figures/912/Slide6.PNG)\n\n**This approach is not expected by the interviewer and is a bit complex to code during an interview setting,   \nbut we are listing it here to show you how you can use a radix sort on integer arrays.**\n\n#### Algorithm\n\n1. Create a function `bucketSort` which takes an array `arr` and an integer `placeValue` (indicating the place according to which the array will be sorted) as input.\n    - Create 2D array `buckets` with `10` rows, to store respective bucket elements together.\n    - Loop through each element in `arr`, find the digit of the number based on the current place value, and store it in the respective bucket.\n    - Overwrite `arr` with the elements stored in each bucket in the correct order.\n\n2. Create a function `radixSort` which takes an array `arr` as input.\n    - Find the maximum absolute value `maaxElement` in `arr` and find the number of digits `maxDigits` in the maximum element.\n   - Loop through the digits, starting from the least significant digit place, and call `bucketSort` for each place value.\n    - Create two arrays `negatives` and `positives` and store the negative and positive elements of `arr` in them.\n    - Reverse the elements in `negatives` and merge the elements of `negatives` and `positives` in `arr`.\n\n3. Call function `radixSort` with `nums` array as input.\n4. Returns the sorted `nums` array.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/8hsyeStj/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"8hsyeStj\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $n$ is the number of elements in the `nums` array, $d$ is the maximum number of digits and $b$ is the size of the bucket used.\n\n* Time complexity: $O(d \\cdot (n + b))$          \n  - We iterate on the array elements to find the maximum number and then find the count of its digits, thus taking $O(n + d)$ time.\n  - Then we sort the array for each integer place which will take $O(n + b)$ time, thus for all $d$ places it will take $O(d \\cdot (n + b))$ time.\n  - At the end, we seperate out positive and negative numbers and reverse the negatives, which overall will take $O(n)$ time.\n  - Thus, overall it takes $O((n + d) + d \\cdot (n + b) + n) = O(d \\cdot (n + b))$ time.\n\n* Space complexity: $O(n + b)$    \n  - We use additional arrays `negatives` and `positives` which use $O(n)$ space and `buckets` which use $O(n + b)$ space.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

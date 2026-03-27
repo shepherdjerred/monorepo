@@ -1,0 +1,58 @@
+{
+  "questionId": "1453",
+  "questionFrontendId": "1322",
+  "title": "Ads Performance",
+  "titleSlug": "ads-performance",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Ads</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| ad_id         | int     |\n| user_id       | int     |\n| action        | enum    |\n+---------------+---------+\n(ad_id, user_id) is the primary key (combination of columns with unique values) for this table.\nEach row of this table contains the ID of an Ad, the ID of a user, and the action taken by this user regarding this Ad.\nThe action column is an ENUM (category) type of (&#39;Clicked&#39;, &#39;Viewed&#39;, &#39;Ignored&#39;).\n</pre>\n\n<p>&nbsp;</p>\n\n<p>A company is running Ads and wants to calculate the performance of each Ad.</p>\n\n<p>Performance of the Ad is measured using Click-Through Rate (CTR) where:</p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/01/17/sql1.png\" style=\"width: 600px; height: 54px;\" />\n<p>Write a solution&nbsp;to find the <code>ctr</code> of each Ad. <strong>Round</strong> <code>ctr</code> to <strong>two decimal points</strong>.</p>\n\n<p>Return the result table ordered by <code>ctr</code> in <strong>descending order</strong> and by <code>ad_id</code> in <strong>ascending order</strong> in case of a tie.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nAds table:\n+-------+---------+---------+\n| ad_id | user_id | action  |\n+-------+---------+---------+\n| 1     | 1       | Clicked |\n| 2     | 2       | Clicked |\n| 3     | 3       | Viewed  |\n| 5     | 5       | Ignored |\n| 1     | 7       | Ignored |\n| 2     | 7       | Viewed  |\n| 3     | 5       | Clicked |\n| 1     | 4       | Viewed  |\n| 2     | 11      | Viewed  |\n| 1     | 2       | Clicked |\n+-------+---------+---------+\n<strong>Output:</strong> \n+-------+-------+\n| ad_id | ctr   |\n+-------+-------+\n| 1     | 66.67 |\n| 3     | 50.00 |\n| 2     | 33.33 |\n| 5     | 0.00  |\n+-------+-------+\n<strong>Explanation:</strong> \nfor ad_id = 1, ctr = (2/(2+1)) * 100 = 66.67\nfor ad_id = 2, ctr = (1/(1+2)) * 100 = 33.33\nfor ad_id = 3, ctr = (1/(1+1)) * 100 = 50.00\nfor ad_id = 5, ctr = 0.00, Note that ad_id = 5 has no clicks or views.\nNote that we do not care about Ignored Ads.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Ads (ad_id int, user_id int, action ENUM('Clicked', 'Viewed', 'Ignored'))\"], \"mssql\": [\"Create table Ads (ad_id int, user_id int, action VARCHAR(10) NOT NULL CHECK (action IN ('Clicked', 'Viewed', 'Ignored')))\"], \"oraclesql\": [\"Create table Ads (ad_id int, user_id int, action VARCHAR(10) NOT NULL CHECK (action IN ('Clicked', 'Viewed', 'Ignored')))\"], \"database\": true, \"name\": \"ads_performance\", \"pythondata\": [\"Ads = pd.DataFrame([], columns=['ad_id', 'user_id']).astype({'ad_id':'Int64', 'user_id':'Int64', 'action':'object'})\"], \"postgresql\": [\"Create table If Not Exists Ads (ad_id int, user_id int, action VARCHAR(30) CHECK (action IN ('Clicked', 'Viewed', 'Ignored')))\\n\"], \"database_schema\": {\"Ads\": {\"ad_id\": \"INT\", \"user_id\": \"INT\", \"action\": \"ENUM('Clicked', 'Viewed', 'Ignored')\"}}}",
+  "stats": "{\"totalAccepted\": \"52.7K\", \"totalSubmission\": \"89.9K\", \"totalAcceptedRaw\": 52740, \"totalSubmissionRaw\": 89912, \"acRate\": \"58.7%\"}",
+  "likes": 273,
+  "dislikes": 68,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Ads\":[\"ad_id\",\"user_id\",\"action\"]},\"rows\":{\"Ads\":[[1,1,\"Clicked\"],[2,2,\"Clicked\"],[3,3,\"Viewed\"],[5,5,\"Ignored\"],[1,7,\"Ignored\"],[2,7,\"Viewed\"],[3,5,\"Clicked\"],[1,4,\"Viewed\"],[2,11,\"Viewed\"],[1,2,\"Clicked\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef ads_performance(ads: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "2088",
+    "content": "[TOC]\n\n# Solution\n\n---\n\n## pandas\n### Approach 1: Pandas DataFrame CTR Calculation using Conditional Aggregation and Transformation\n\n#### Intuition\n\nThe Click-Through Rate (CTR) is a widely used metric in online advertising to measure the success of an ad campaign. It is defined as:\n\n$ CTR = \\left( \\frac{\\text{Number of Clicks}}{\\text{Number of Clicks} + \\text{Number of Views}} \\right) \\times 100\\% $\n\nIn this case, we are tasked with computing the CTR for each individual ad based on user interactions recorded in a dataframe. The challenge is to correctly handle cases where an ad has not been clicked or viewed at all, to avoid a division by zero error.\n\nLet's step through the process and examine the intermediate outputs generated at each stage:\n\nLet's begin with the following `ads` input DataFrame:\n\n<table>\n<tr>\n    <th>ad_id</th>\n    <th>user_id</th>\n    <th>action</th>\n</tr>\n<tr>\n    <td>1</td>\n    <td>1</td>\n    <td>Clicked</td>\n</tr>\n<tr>\n    <td>2</td>\n    <td>2</td>\n    <td>Clicked</td>\n</tr>\n<tr>\n    <td>3</td>\n    <td>3</td>\n    <td>Viewed</td>\n</tr>\n<tr>\n    <td>5</td>\n    <td>5</td>\n    <td>Ignored</td>\n</tr>\n<tr>\n    <td>1</td>\n    <td>7</td>\n    <td>Ignored</td>\n</tr>\n<tr>\n    <td>2</td>\n    <td>7</td>\n    <td>Viewed</td>\n</tr>\n<tr>\n    <td>3</td>\n    <td>5</td>\n    <td>Clicked</td>\n</tr>\n<tr>\n    <td>1</td>\n    <td>4</td>\n    <td>Viewed</td>\n</tr>\n<tr>\n    <td>2</td>\n    <td>11</td>\n    <td>Viewed</td>\n</tr>\n<tr>\n    <td>1</td>\n    <td>2</td>\n    <td>Clicked</td>\n</tr>\n</table>\n\n<br>\n\n**Step 1: Grouping by 'ad_id'**\n\n```python\ngrouped_ads = ads.groupby('ad_id')['action']\n```\n\nWe group the data by `ad_id`, and we select the 'action' column for further processing.\n\n**Step 2: Applying a lambda function to calculate CTR**\n\nNext, we'll apply a lambda function to calculate the CTR. Here, we will see the intermediate output for a single group (let's take `ad_id` = 1 as an example):\n\n```python\nexample_group = grouped_ads.get_group(1)\nnum_clicked = sum(example_group == 'Clicked')  # Output: 3\nnum_viewed = sum(example_group == 'Viewed')    # Output: 1\n```\n\nIn this group:\n- Number of Clicks: 3\n- Number of Views: 1\n\n**Step 3: Calculating CTR**\n\nUsing these values, we can proceed to calculate the CTR:\n\n```python\nctr = (num_clicked / (num_clicked + num_viewed)) * 100  # Output: 75.0\n```\n\nFor `ad_id` 1, the CTR is 75.0%.\n\n**Step 4: Creating a Dataframe with CTR values**\n\nAfter processing all groups, we will have a series with the CTR values. For visualization, it is converted to a table and the column is named 'ctr':\n\n```python\nctr_df = ctr.reset_index()\nctr_df.columns = ['ad_id', 'ctr']\n```\n\nThe dataframe at this point looks like this:\n\n<table>\n<tr>\n    <th>ad_id</th>\n    <th>ctr</th>\n</tr>\n<tr>\n    <td>1</td>\n    <td>75.00</td>\n</tr>\n<tr>\n    <td>2</td>\n    <td>33.33</td>\n</tr>\n<tr>\n    <td>3</td>\n    <td>50.00</td>\n</tr>\n<tr>\n    <td>5</td>\n    <td>0.00</td>\n</tr>\n</table>\n<br>\n\n**Step 5: Sorting the Results**\n\nFinally, we sort the results by the 'ctr' column in descending order and by 'ad_id' in ascending order in case of a tie:\n\n```python\nresult_df = ctr_df.sort_values(by=['ctr', 'ad_id'], ascending=[False, True])\n```\n\nThis is your final output:\n\n<table>\n<tr>\n    <th>ad_id</th>\n    <th>ctr</th>\n</tr>\n<tr>\n    <td>1</td>\n    <td>75.00</td>\n</tr>\n<tr>\n    <td>3</td>\n    <td>50.00</td>\n</tr>\n<tr>\n    <td>2</td>\n    <td>33.33</td>\n</tr>\n<tr>\n    <td>5</td>\n    <td>0.00</td>\n</tr>\n</table>\n<br>\n\nThe final output is a dataframe that succinctly presents the `ad_id` along with its respective CTR, showcasing the performance of each ad based on the historical data of user actions.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ZUMQUdES/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"ZUMQUdES\"></iframe>\n\n---\n\n## Database\n### Approach 1: Conditional Aggregation for CTR Calculation\n\n#### Intuition\n\nLet's break down the intuition behind calculating the Click-Through Rate (CTR) using the SQL query:\n\n**Step 1: Calculating the Components of CTR**\n\nFirst, we want to calculate the two main components of the CTR formula for each ad:\n1. **Number of clicks:** How many times the ad was clicked.\n2. **Number of views:** How many times the ad was viewed.\n\nIn SQL, we use conditional aggregation to calculate these values within a single query. The expressions `SUM(action = 'Clicked')` and `SUM(action = 'Viewed')` are used to count the number of 'Clicked' and 'Viewed' actions for each ad, respectively. Essentially, these expressions create a boolean mask (1 for true and 0 for false) for each action type, and then sum up these values to get the count of each action type.\n\n**Step 2: Applying the CTR Formula**\n\nNext, we apply the CTR formula:\n\n$ \\text{CTR} = \\left( \\frac{\\text{number of clicks}}{\\text{number of clicks + number of views}} \\right) \\times 100 $\n\nWe implement this formula directly in SQL using the counts calculated in Step 1. The calculation is performed for each ad separately.\n\n**Step 3: Handling Special Cases (Zero Views and Zero Clicks)**\n\nWe encounter a problem when an ad has zero views and zero clicks, which would result in a division by zero error in the CTR formula. To handle this, we use the `IFNULL` function to replace potential `NULL` values (arising from division by zero) with a default value of 0. This ensures that the CTR of ads with zero views and clicks is reported as 0.00.\n\n**Step 4: Rounding the CTR Value**\n\nTo make the CTR values more readable, we round them to two decimal places using the `ROUND` function.\n\n**Step 5: Ordering the Results**\n\nFinally, we want the output to be sorted by CTR in descending order, so that ads with the highest CTR come first. If two ads have the same CTR, we further sort them by `ad_id` in ascending order, so that the ad with the smaller ID comes first. This is achieved with the `ORDER BY` clause where we first order by `ctr DESC` and then by `ad_id ASC`.\n\nBy grouping the results by `ad_id` and ordering them as specified, we ensure the final output meets the requirements stated in the problem.\n\n\n#### Implementation\n\n```sql\nSELECT\n    ad_id,\n    ROUND(\n        IFNULL(\n            (SUM(action = 'Clicked') / (SUM(action = 'Clicked') + SUM(action = 'Viewed'))) * 100,\n            0\n        ), \n        2\n    ) AS ctr\nFROM\n    Ads\nGROUP BY\n    ad_id\nORDER BY\n    ctr DESC,\n    ad_id ASC;\n\n```",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

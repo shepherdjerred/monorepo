@@ -1,0 +1,53 @@
+{
+  "questionId": "1405",
+  "questionFrontendId": "1270",
+  "title": "All People Report to the Given Manager",
+  "titleSlug": "all-people-report-to-the-given-manager",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Employees</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| employee_id   | int     |\n| employee_name | varchar |\n| manager_id    | int     |\n+---------------+---------+\nemployee_id is the column of unique values for this table.\nEach row of this table indicates that the employee with ID employee_id and name employee_name reports his work to his/her direct manager with manager_id\nThe head of the company is the employee with employee_id = 1.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to find <code>employee_id</code> of all employees that directly or indirectly report their work to the head of the company.</p>\n\n<p>The indirect relation between managers <strong>will not exceed three managers</strong> as the company is small.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nEmployees table:\n+-------------+---------------+------------+\n| employee_id | employee_name | manager_id |\n+-------------+---------------+------------+\n| 1           | Boss          | 1          |\n| 3           | Alice         | 3          |\n| 2           | Bob           | 1          |\n| 4           | Daniel        | 2          |\n| 7           | Luis          | 4          |\n| 8           | Jhon          | 3          |\n| 9           | Angela        | 8          |\n| 77          | Robert        | 1          |\n+-------------+---------------+------------+\n<strong>Output:</strong> \n+-------------+\n| employee_id |\n+-------------+\n| 2           |\n| 77          |\n| 4           |\n| 7           |\n+-------------+\n<strong>Explanation:</strong> \nThe head of the company is the employee with employee_id 1.\nThe employees with employee_id 2 and 77 report their work directly to the head of the company.\nThe employee with employee_id 4 reports their work indirectly to the head of the company 4 --&gt; 2 --&gt; 1. \nThe employee with employee_id 7 reports their work indirectly to the head of the company 7 --&gt; 4 --&gt; 2 --&gt; 1.\nThe employees with employee_id 3, 8, and 9 do not report their work to the head of the company directly or indirectly. \n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Employees (employee_id int, employee_name varchar(30), manager_id int)\"], \"mssql\": [\"Create table Employees (employee_id int, employee_name varchar(30), manager_id int)\"], \"oraclesql\": [\"Create table Employees (employee_id int, employee_name varchar(30), manager_id int)\"], \"database\": true, \"name\": \"find_reporting_people\", \"pythondata\": [\"Employees = pd.DataFrame([], columns=['employee_id', 'employee_name', 'manager_id']).astype({'employee_id':'Int64', 'employee_name':'object', 'manager_id':'Int64'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Employees (employee_id int, employee_name varchar(30), manager_id int)\"], \"database_schema\": {\"Employees\": {\"employee_id\": \"INT\", \"employee_name\": \"VARCHAR(30)\", \"manager_id\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"66.8K\", \"totalSubmission\": \"79.6K\", \"totalAcceptedRaw\": 66849, \"totalSubmissionRaw\": 79625, \"acRate\": \"84.0%\"}",
+  "likes": 444,
+  "dislikes": 32,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Employees\":[\"employee_id\",\"employee_name\",\"manager_id\"]},\"rows\":{\"Employees\":[[1,\"Boss\",1],[3,\"Alice\",3],[2,\"Bob\",1],[4,\"Daniel\",2],[7,\"Luis\",4],[8,\"John\",3],[9,\"Angela\",8],[77,\"Robert\",1]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_reporting_people(employees: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

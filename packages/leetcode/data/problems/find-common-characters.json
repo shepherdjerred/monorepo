@@ -1,0 +1,137 @@
+{
+  "questionId": "1044",
+  "questionFrontendId": "1002",
+  "title": "Find Common Characters",
+  "titleSlug": "find-common-characters",
+  "difficulty": "Easy",
+  "content": "<p>Given a string array <code>words</code>, return <em>an array of all characters that show up in all strings within the </em><code>words</code><em> (including duplicates)</em>. You may return the answer in <strong>any order</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> words = [\"bella\",\"label\",\"roller\"]\n<strong>Output:</strong> [\"e\",\"l\",\"l\"]\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> words = [\"cool\",\"lock\",\"cook\"]\n<strong>Output:</strong> [\"c\",\"o\"]\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= words.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= words[i].length &lt;= 100</code></li>\n\t<li><code>words[i]</code> consists of lowercase English letters.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"commonChars\",\n  \"params\": [\n    {\n      \"name\": \"words\",\n      \"type\": \"string[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<string>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"428.5K\", \"totalSubmission\": \"573.8K\", \"totalAcceptedRaw\": 428492, \"totalSubmissionRaw\": 573836, \"acRate\": \"74.7%\"}",
+  "likes": 4515,
+  "dislikes": 439,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Intersection of Two Arrays II\", \"titleSlug\": \"intersection-of-two-arrays-ii\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"bella\",\"label\",\"roller\"]",
+    "[\"cool\",\"lock\",\"cook\"]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 10, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 8, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"tripadvisor\", \"name\": \"Tripadvisor\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> commonChars(vector<string>& words) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<String> commonChars(String[] words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def commonChars(self, words: List[str]) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def commonChars(self, words):\n        \"\"\"\n        :type words: List[str]\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} words\n * @return {string[]}\n */\nvar commonChars = function(words) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function commonChars(words: string[]): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<string> CommonChars(string[] words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** commonChars(char** words, int wordsSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func commonChars(words []string) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun commonChars(words: Array<String>): List<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func commonChars(_ words: [String]) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn common_chars(words: Vec<String>) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} words\n# @return {String[]}\ndef common_chars(words)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $words\n     * @return String[]\n     */\n    function commonChars($words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> commonChars(List<String> words) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def commonChars(words: Array[String]): List[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec common_chars(words :: [String.t]) :: [String.t]\n  def common_chars(words) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec common_chars(Words :: [unicode:unicode_binary()]) -> [unicode:unicode_binary()].\ncommon_chars(Words) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (common-chars words)\n  (-> (listof string?) (listof string?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2331",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe need to keep track of the frequencies of the letters in each string, and the frequencies of letters that the different strings have in common. \n\nAny time we have an array of strings and want to track how often each character appears, we should think about a way to efficiently store and update the frequency of the characters as we iterate over the array/string. \n\nHere are some other problems that use this idea: \n\n* [49. Group Anagrams](https://leetcode.com/problems/group-anagrams/description/)\n* [242. Valid Anagram](https://leetcode.com/problems/valid-anagram/description/)\n* [350. Intersection of Two Arrays II](https://leetcode.com/problems/intersection-of-two-arrays-ii/description/)\n\nA common mistake when solving this type of problem is to overlook whether or not we need to track duplicate characters. Example 1 in this problem highlights the need to return the letters that the strings have in common the same number of times they appear in all of the strings. This small detail is easy to miss and can potentially steer you away from the right solution. \n\n---\n\n### Approach: Array + Frequency Intersection\n\n#### Intuition\n\nTo find common characters in `words`, we traverse the array and incrementally accumulate character frequencies of each string as we go. We need to make sure we store both the list of common characters and their counts.  \n\nLet's say we have the list and count of the common characters for the previous strings in `words` up to a certain point. To find the common characters for the next string immediately following this point, we compare this list with the character counts of that next string. We update the list to keep the smaller count for each character, setting the count to zero if the character is absent in the next string.\n\nWe keep the smaller count because it ensures the character is present in all the strings processed so far.\n\n!?!../Documents/1002/slideshow.json:960,540!?!\n\nOne option would be to use a hash set to store the frequencies of the characters for a string, iterating the characters one by one and incrementing their entry in the hash set. Can you think of a more efficient data structure, knowing that all characters of our strings are lowercase English letters? We can solve this problem more efficiently with an array with a fixed size of 26 for each letter of the alphabet. \n\n> Note: This is a very common optimization technique, if you are asked a question in an interview that involves counting the occurrences of characters in a string, clarify the constraints of the characters with the interviewer and adjust your data structure according to that constraint. \n\n#### Algorithm\n\n1. Initialization:\n    - Create a list `commonCharacterCounts` of size `26`, initialized to `0`.\n    - Create a list `currentCharacterCounts` of size `26`, initialized to `0`.\n    - Create an empty list `result`.\n2. Iterate through `words` from left to right:\n    - For the first string in `words`:\n        - For each character in the first string, increment the corresponding position in `commonCharacterCounts`.\n    - For each subsequent word in `words`:\n        - Reset `currentCharacterCounts` to `0`.\n        - For each character in the current word, increment the corresponding position in `currentCharacterCounts`.\n        - For each letter from 'a' to 'z':\n            - Update `commonCharacterCounts` at that letter to be the minimum of its current value and the value in `currentCharacterCounts`.\n3. Collect common characters:\n    - For each letter from 'a' to 'z':\n        - For the number of times indicated by `commonCharacterCounts` at that letter, append the character corresponding to the letter to `result`.\n4. Return the `result` list.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/hPGxXJi3/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"hPGxXJi3\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of strings in `words`, and $k$ be the average length of the strings in `words`.  \n\n- Time Complexity: $O(n \\cdot k)$\n\n    Initializing the `commonCharacterCounts` array with the characters from the first word takes $O(k)$ time.\n\n    For each of the remaining $n - 1$ words, we count the characters in the current word and update the `commonCharacterCounts` array. \n    \n    Counting characters in each word and updating the `commonCharacterCounts` array both take $O(k)$ time.\n\n    Summing these times across all the strings in `words` gives $O(k + (n - 1) \n    \\cdot k) = O(n \\cdot k)$.\n    \n- Space Complexity: O(1)\n\n    The space used by the `commonCharacterCounts` and `currentCharacterCounts` arrays are constant, as they always have a size of `26` (the number of lowercase English letters).\n\n    Beyond these arrays, the algorithm uses a constant amount of additional space for variables `words_size`, `i`, and `letter`.\n\n    Therefore, the space complexity is O(1).\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

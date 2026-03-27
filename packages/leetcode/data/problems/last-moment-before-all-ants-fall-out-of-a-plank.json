@@ -1,0 +1,141 @@
+{
+  "questionId": "1627",
+  "questionFrontendId": "1503",
+  "title": "Last Moment Before All Ants Fall Out of a Plank",
+  "titleSlug": "last-moment-before-all-ants-fall-out-of-a-plank",
+  "difficulty": "Medium",
+  "content": "<p>We have a wooden plank of the length <code>n</code> <strong>units</strong>. Some ants are walking on the plank, each ant moves with a speed of <strong>1 unit per second</strong>. Some of the ants move to the <strong>left</strong>, the other move to the <strong>right</strong>.</p>\n\n<p>When two ants moving in two <strong>different</strong> directions meet at some point, they change their directions and continue moving again. Assume changing directions does not take any additional time.</p>\n\n<p>When an ant reaches <strong>one end</strong> of the plank at a time <code>t</code>, it falls out of the plank immediately.</p>\n\n<p>Given an integer <code>n</code> and two integer arrays <code>left</code> and <code>right</code>, the positions of the ants moving to the left and the right, return <em>the moment when the last ant(s) fall out of the plank</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/06/17/ants.jpg\" style=\"width: 450px; height: 610px;\" />\n<pre>\n<strong>Input:</strong> n = 4, left = [4,3], right = [0,1]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> In the image above:\n-The ant at index 0 is named A and going to the right.\n-The ant at index 1 is named B and going to the right.\n-The ant at index 3 is named C and going to the left.\n-The ant at index 4 is named D and going to the left.\nThe last moment when an ant was on the plank is t = 4 seconds. After that, it falls immediately out of the plank. (i.e., We can say that at t = 4.0000000001, there are no ants on the plank).\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/06/17/ants2.jpg\" style=\"width: 639px; height: 101px;\" />\n<pre>\n<strong>Input:</strong> n = 7, left = [], right = [0,1,2,3,4,5,6,7]\n<strong>Output:</strong> 7\n<strong>Explanation:</strong> All ants are going to the right, the ant at index 0 needs 7 seconds to fall.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/06/17/ants3.jpg\" style=\"width: 639px; height: 100px;\" />\n<pre>\n<strong>Input:</strong> n = 7, left = [0,1,2,3,4,5,6,7], right = []\n<strong>Output:</strong> 7\n<strong>Explanation:</strong> All ants are going to the left, the ant at index 7 needs 7 seconds to fall.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= left.length &lt;= n + 1</code></li>\n\t<li><code>0 &lt;= left[i] &lt;= n</code></li>\n\t<li><code>0 &lt;= right.length &lt;= n + 1</code></li>\n\t<li><code>0 &lt;= right[i] &lt;= n</code></li>\n\t<li><code>1 &lt;= left.length + right.length &lt;= n + 1</code></li>\n\t<li>All values of <code>left</code> and <code>right</code> are unique, and each value can appear <strong>only in one</strong> of the two arrays.</li>\n</ul>\n",
+  "hints": [
+    "The ants change their way when they meet is equivalent to continue moving without changing their direction.",
+    "Answer is the max distance for one ant to reach the end of the plank in the facing direction."
+  ],
+  "metaData": "{\n  \"name\": \"getLastMoment\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"left\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"right\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"99.1K\", \"totalSubmission\": \"145.3K\", \"totalAcceptedRaw\": 99055, \"totalSubmissionRaw\": 145259, \"acRate\": \"68.2%\"}",
+  "likes": 1579,
+  "dislikes": 439,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count Collisions on a Road\", \"titleSlug\": \"count-collisions-on-a-road\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Movement of Robots\", \"titleSlug\": \"movement-of-robots\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "4\n[4,3]\n[0,1]",
+    "7\n[]\n[0,1,2,3,4,5,6,7]",
+    "7\n[0,1,2,3,4,5,6,7]\n[]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Brainteaser",
+      "slug": "brainteaser"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int getLastMoment(int n, vector<int>& left, vector<int>& right) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int getLastMoment(int n, int[] left, int[] right) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def getLastMoment(self, n: int, left: List[int], right: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def getLastMoment(self, n, left, right):\n        \"\"\"\n        :type n: int\n        :type left: List[int]\n        :type right: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[]} left\n * @param {number[]} right\n * @return {number}\n */\nvar getLastMoment = function(n, left, right) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function getLastMoment(n: number, left: number[], right: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int GetLastMoment(int n, int[] left, int[] right) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int getLastMoment(int n, int* left, int leftSize, int* right, int rightSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func getLastMoment(n int, left []int, right []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun getLastMoment(n: Int, left: IntArray, right: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func getLastMoment(_ n: Int, _ left: [Int], _ right: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn get_last_moment(n: i32, left: Vec<i32>, right: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[]} left\n# @param {Integer[]} right\n# @return {Integer}\ndef get_last_moment(n, left, right)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[] $left\n     * @param Integer[] $right\n     * @return Integer\n     */\n    function getLastMoment($n, $left, $right) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int getLastMoment(int n, List<int> left, List<int> right) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def getLastMoment(n: Int, left: Array[Int], right: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec get_last_moment(n :: integer, left :: [integer], right :: [integer]) :: integer\n  def get_last_moment(n, left, right) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec get_last_moment(N :: integer(), Left :: [integer()], Right :: [integer()]) -> integer().\nget_last_moment(N, Left, Right) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (get-last-moment n left right)\n  (-> exact-integer? (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2164",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach: Ants Pass Each Other!\n\n**Intuition**\n\nInitially, this problem may seem daunting as there could be many possible collisions between the ants.\n\nHowever, we can make a few observations that simplify the problem greatly. The first thing to notice is that collisions happen instantaneously. The second thing to notice is that all ants walk at the same speed. The final thing to notice is that the ants eventually fall off the plank, so there won't be any infinite collisions.\n\nThis brings us to the critical observation. Let's say we have an ant `A` walking right and an ant `B` walking left, and they are on a collision course.\n\n![example](../Figures/1503/1.png)\n<br>\n\nAt `t = 1`, the ants are about to collide. At `t = 2`, the ants try to walk forward and collide, thus swapping directions.\n\n![example](../Figures/1503/2.png)\n<br>\n\nAt `t = 3`, they reach the end of the plank and fall off.\n\n![example](../Figures/1503/3.png)\n<br>\n\nNow, let's consider a new scenario with the same ants `A` and `B`. Imagine if all the ants walking left were on one plank, and all the ants walking right were on a different plank.\n\n![example](../Figures/1503/4.png)\n<br>\n\n![example](../Figures/1503/5.png)\n<br>\n\nAt `t = 2` in the original scenario, the ants collide and swap directions. In the new scenario, the ants will simply pass each other.\n\n![example](../Figures/1503/6.png)\n<br>\n\n![example](../Figures/1503/7.png)\n<br>\n\nThe two scenarios are actually equivalent! That is, the collisions are completely irrelevant. Why?\n\nWhen the ants collide, they do not change position because their attempt at moving forward is blocked. What we mean here is that at `t = 2`, `A` is at index `1` and tries to walk to the right. However, it collides into `B` and stays at index `1`. The same can be said for `B` remaining at position `2`.\n\nHowever, the ant that they collided with is at the position that they **would have been at** had there not been any collision. The ant they collided with also now has their original velocity (since their velocities swapped after the collision).\n\nBecause all the ants here are the same, we previously referred to them as `A` and `B` for better distinction. They have no differences in reality. Thus two ants colliding according to the rules and simply passing through each other are two entirely identical scenarios. If the ant they collided with has their original velocity and is at the same position they would have been at had there not been any collision (and vice-versa), did the collision really change anything? No.\n\nThus, we can consider the ants walking right simply passing through those walking left. So what will be our answer?\n\n- An ant walking left from position `num` will take `num` time to fall off the plank.\n- An ant walking right from position `num` will take `n - num` time to fall off the plank.\n\nWe simply take the maximum of all these times.\n\n**Algorithm**\n\n1. Initialize `ans = 0`.\n2. Iterate over `left`. For each `num`:\n    - Update `ans` with `num` if it is larger.\n3. Iterate over `right`. For each `num`:\n    - Update `ans` with `n - num` if it is larger.\n4. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/8ohaPawe/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"8ohaPawe\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `left` and $$m$$ as the length of `right`, \n\n* Time complexity: $$O(n + m)$$\n\n    We iterate over `left` and `right` once, performing $$O(1)$$ work at each iteration.\n\n* Space complexity: $$O(1)$$\n\n    We aren't using any extra space except the for loop iteration variable.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

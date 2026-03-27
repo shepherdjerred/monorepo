@@ -1,0 +1,153 @@
+{
+  "questionId": "1014",
+  "questionFrontendId": "973",
+  "title": "K Closest Points to Origin",
+  "titleSlug": "k-closest-points-to-origin",
+  "difficulty": "Medium",
+  "content": "<p>Given an array of <code>points</code> where <code>points[i] = [x<sub>i</sub>, y<sub>i</sub>]</code> represents a point on the <strong>X-Y</strong> plane and an integer <code>k</code>, return the <code>k</code> closest points to the origin <code>(0, 0)</code>.</p>\n\n<p>The distance between two points on the <strong>X-Y</strong> plane is the Euclidean distance (i.e., <code>&radic;(x<sub>1</sub> - x<sub>2</sub>)<sup>2</sup> + (y<sub>1</sub> - y<sub>2</sub>)<sup>2</sup></code>).</p>\n\n<p>You may return the answer in <strong>any order</strong>. The answer is <strong>guaranteed</strong> to be <strong>unique</strong> (except for the order that it is in).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/03/03/closestplane1.jpg\" style=\"width: 400px; height: 400px;\" />\n<pre>\n<strong>Input:</strong> points = [[1,3],[-2,2]], k = 1\n<strong>Output:</strong> [[-2,2]]\n<strong>Explanation:</strong>\nThe distance between (1, 3) and the origin is sqrt(10).\nThe distance between (-2, 2) and the origin is sqrt(8).\nSince sqrt(8) &lt; sqrt(10), (-2, 2) is closer to the origin.\nWe only want the closest k = 1 points from the origin, so the answer is just [[-2,2]].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> points = [[3,3],[5,-1],[-2,4]], k = 2\n<strong>Output:</strong> [[3,3],[-2,4]]\n<strong>Explanation:</strong> The answer [[-2,4],[3,3]] would also be accepted.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= k &lt;= points.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>-10<sup>4</sup> &lt;= x<sub>i</sub>, y<sub>i</sub> &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"kClosest\",\n  \"params\": [\n    {\n      \"name\": \"points\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[][]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"1.7M\", \"totalSubmission\": \"2.5M\", \"totalAcceptedRaw\": 1707678, \"totalSubmissionRaw\": 2480465, \"acRate\": \"68.8%\"}",
+  "likes": 9066,
+  "dislikes": 338,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Kth Largest Element in an Array\", \"titleSlug\": \"kth-largest-element-in-an-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Top K Frequent Elements\", \"titleSlug\": \"top-k-frequent-elements\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Top K Frequent Words\", \"titleSlug\": \"top-k-frequent-words\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Nearest Point That Has the Same X or Y Coordinate\", \"titleSlug\": \"find-nearest-point-that-has-the-same-x-or-y-coordinate\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum Rectangles to Cover Points\", \"titleSlug\": \"minimum-rectangles-to-cover-points\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"K-th Nearest Obstacle Queries\", \"titleSlug\": \"k-th-nearest-obstacle-queries\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,3],[-2,2]]\n1",
+    "[[3,3],[5,-1],[-2,4]]\n2"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 9, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"asana\", \"name\": \"Asana\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"whatnot\", \"name\": \"Whatnot\"}], \"more_than_six_months\": [{\"timesEncountered\": 47, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 20, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 2, \"slug\": \"wix\", \"name\": \"Wix\"}, {\"timesEncountered\": 2, \"slug\": \"swiggy\", \"name\": \"Swiggy\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Divide and Conquer",
+      "slug": "divide-and-conquer"
+    },
+    {
+      "name": "Geometry",
+      "slug": "geometry"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Quickselect",
+      "slug": "quickselect"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> kClosest(vector<vector<int>>& points, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[][] kClosest(int[][] points, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def kClosest(self, points: List[List[int]], k: int) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def kClosest(self, points, k):\n        \"\"\"\n        :type points: List[List[int]]\n        :type k: int\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} points\n * @param {number} k\n * @return {number[][]}\n */\nvar kClosest = function(points, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function kClosest(points: number[][], k: number): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[][] KClosest(int[][] points, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** kClosest(int** points, int pointsSize, int* pointsColSize, int k, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func kClosest(points [][]int, k int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun kClosest(points: Array<IntArray>, k: Int): Array<IntArray> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func kClosest(_ points: [[Int]], _ k: Int) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn k_closest(points: Vec<Vec<i32>>, k: i32) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} points\n# @param {Integer} k\n# @return {Integer[][]}\ndef k_closest(points, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $points\n     * @param Integer $k\n     * @return Integer[][]\n     */\n    function kClosest($points, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> kClosest(List<List<int>> points, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def kClosest(points: Array[Array[Int]], k: Int): Array[Array[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec k_closest(points :: [[integer]], k :: integer) :: [[integer]]\n  def k_closest(points, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec k_closest(Points :: [[integer()]], K :: integer()) -> [[integer()]].\nk_closest(Points, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (k-closest points k)\n  (-> (listof (listof exact-integer?)) exact-integer? (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1272",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nFinding the $$k$$ closest points to the origin will require us to first be able to calculate the distance of a given point to the origin before we can start to evaluate the relative closeness of any two points.\n\nIn order to evaluate the distance from the origin to a given point, we must use the **Euclidean distance** equation. This equation starts with the **Pythagorean theorem**, (&nbsp;$$a^2 + b^2 = c^2$$&nbsp;) which calculates the distance of the hypotenuse (&nbsp;$$c$$&nbsp;) of a right triangle when the length of the other two sides (&nbsp;$$a$$, $$b$$&nbsp;) is known.\n\nGiven two Euclidean points, we can determine the values for $$a$$ and $$b$$ by taking the difference of the two $$x$$ coordinates (&nbsp;$$a = x_1 - x_2$$&nbsp;) and the two $$y$$ coordinates (&nbsp;$$b = y_1 - y_2$$&nbsp;). Plugging these values into the Pythagorean theorem and solving for the length of $$c$$, we get the Euclidean distance equation (&nbsp;$$dist = \\sqrt{(x_1 - x_2)^2 + (y_1 - y_2)^2}$$&nbsp;).\n\nIn this problem, with one of the two Euclidean coordinates being the origin (&nbsp;$$0, 0$$&nbsp;), this simplifies the Euclidean distance equation back to the original Pythagorean theorem (&nbsp;$$dist = \\sqrt{(x - 0)^2 + (y - 0)^2} = \\sqrt{x^2 + y^2}$$&nbsp;).\n\nWe can also simplify the process of comparing two points by using the squared Euclidean distance instead of the precise Euclidean distance, as both will yield the same result. This allows us to remove the square root from each side of the equation (&nbsp;$$\\sqrt{{x_1}^2 + {y_1}^2} < \\sqrt{{x_2} ^2 + {y_2}^2}$$&nbsp;) $$=$$ (&nbsp;$${x_1}^2 + {y_1}^2 < {x_2}^2 + {y_2}^2$$&nbsp;) which will significantly reduce the overall computational time for each comparison made.\n\n</br>\n\n---\n\n### Approach 1: Sort with Custom Comparator\n\n**Intuition**\n\nWe can reframe the problem as finding $$k$$ points with the smallest **squared Euclidean distance** from the origin. When seeking the smallest elements in a list, an intuitive first step is to sort the list, as this will bring the smallest elements to the front.\n\nTherefore, in this problem, we can sort the entire `points` array using a **custom comparator** function that applies the squared Euclidean distance equation. After the sorting process is completed, we just return the first $$k$$ elements of the sorted array.\n\nThis solution is trivial, and while it gets the job done, it should not be considered an ideal candidate for an interview response. As we will see, there are more efficient options from which to choose.\n\n**Algorithm**\n\n1. Sort the array with a **custom comparator** function.\n   - The custom comparator function will use the **squared Euclidean distance** equation to compare two points.\n2. Return the first $$k$$ elements of the array.\n\n<iframe src=\"https://leetcode.com/playground/AYzHcWxr/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"AYzHcWxr\"></iframe>\n\n\n**Complexity Analysis**\n\nHere $$N$$ refers to the length of the given array `points`.\n\n* Time complexity: $$O(N \\cdot \\log N)$$ for the sorting of `points`.\n\n  While sorting methods vary between different languages, [most have a worst-case or average time complexity of $$O(N \\cdot \\log N)$$](https://en.wikipedia.org/wiki/Sorting_algorithm#Comparison_of_algorithms).\n\n* Space complexity: $$O(\\log N)$$ to $$O(N)$$ for the extra space required by the sorting process.\n\n  As with the time complexity, the space complexity of the sorting method used can vary from language to language. C++'s STL, for example, uses QuickSort most of the time but will switch to either HeapSort or InsertionSort depending on the nature of the data. Java uses a variant of QuickSort with dual pivots when dealing with arrays of primitive values. The implementation of both C++'s and Java's sort methods will require an average of $$O(\\log N)$$ extra space. Python, on the other hand, uses TimSort, which is a hybrid of MergeSort and InsertionSort and requires $$O(N)$$ extra space. Unlike most other languages, Javascript's sort method will actually vary from browser to browser. Since the adoption of ECMAScript 2019, however, the sort method is required to be stable, which generally means MergeSort or TimSort and a space complexity of $$O(N)$$.\n\n<br/>\n\n---\n\n### Approach 2: Max Heap or Max Priority Queue\n\n**Intuition**\n\nWhile we must iterate over all elements in the `points` array, we only need to keep track of the $$k$$ closest points encountered so far. We could therefore choose to store them in a separate data structure. In order to keep this data structure capped at $$k$$ elements, we will need to keep track of the point that is farthest away from the origin and thus the next point to be removed when a closer point is found.\n\nThe ideal data structure for this purpose is a [**max heap** or **max priority queue**](https://leetcode.com/explore/featured/card/heap/). These data structures allow access to the max value in constant time and perform replacements in logarithmic time.\n\n> _**Note**: We can simulate max heap functionality in a min heap data structure by inserting $$-dist$$ instead of $$dist$$, if necessary._\n\nAt the start of our iteration through `points`, we will insert the first $$k$$ elements into our heap. Once the heap is \"full\", we can then compare each new point to the farthest point stored in the heap. If the new point is closer, then we should remove the farthest point from the heap and insert the new point.\n\nAfter the entire `points` array has been processed, we can create an array from the points stored in the heap and then return the answer.\n\n**Algorithm**\n\n1. Use a **max heap** (or **max priority queue**) to store points by distance.\n   - Store the first $$k$$ elements in the heap.\n   - Then only add new elements that are closer than the top point in the heap while removing the top point to keep the heap at $$k$$ elements.\n2. Return an array of the $$k$$ points stored in the heap.\n\n<iframe src=\"https://leetcode.com/playground/PBwEh8sX/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"PBwEh8sX\"></iframe>\n\n\n**Complexity Analysis**\n\nHere $$N$$ refers to the length of the given array `points`.\n\n* Time complexity: $$O(N \\cdot \\log k)$$\n\n  Adding to/removing from the heap (or priority queue) only takes $$O(\\log k)$$ time when the size of the heap is capped at $$k$$ elements.\n\n* Space complexity: $$O(k)$$\n\n  The heap (or priority queue) will contain at most $$k$$ elements.\n\n<br/>\n\n---\n\n### Approach 3: Binary Search\n\n**Intuition**\n\nSince this problem is asking us to identify the first $$k$$ sorted points, another approach that may come to mind is a [**binary search**](https://leetcode.com/explore/learn/card/binary-search/). In a standard binary search approach, we would have a sorted array of data, a defined target condition, and a set range of values to attempt. The binary search process involves picking a midpoint of the range and then figuring out on which side of the midpoint the target lies in $$O(1)$$ time. By repeating this process, we can isolate the target condition in only $$O(\\log N)$$ time.\n\nWithout a sorted `points` array, applying a binary search technique to the current problem would require us to modify the standard method. For this modified approach we would first choose a target distance, then we would iterate through every point during each binary search loop to check if our target distance contains exactly $$k$$ points. If it contains less than $$k$$ points, we will increase our target distance, and vice versa, until we find a target distance that contains exactly $$k$$ points. This would result in an average time complexity of $$O(N \\cdot \\log N)$$, which is no better than the standard sorting method.\n\nIn this case, however, we can improve upon the time complexity of this modified binary search by eliminating one set of points at the end of each iteration. If the target distance yields fewer than $$k$$ closer points, then we know that each of those points belongs in our answer and can then be ignored in later iterations. If the target distance yields more than $$k$$ closer points, on the other hand, we know that we can discard the points that fell outside the target distance.\n\nBy roughly halving the remaining points in each iteration of the binary search, we reduce the total number of processes to $$N + \\frac{N}{2} + \\frac{N}{4} + \\frac{N}{8} + ... + \\frac{N}{N} = 2N$$. This results in an average time complexity of $$O(N)$$.\n\nSince we're going to be using the midpoint of the range of distances for each iteration of our binary search, we should calculate the actual Euclidean distance for each point, rather than using the squared distance as in the other approaches. An even distribution of the points in the input array will yield an even distribution of distances, but an uneven distribution of squared distances.\n\nAs the efficiency of this solution relies on averaging as close to a middle split of the points as possible on each iteration of the binary search, the use of Euclidean distances will be more efficient than the use of squared Euclidean distances. We can precompute these distances in a separate array prior to performing the binary search, however, to lessen the overall processing required. This will also allow us to use an array of reference indices in our binary search, rather than having to create and modify more complex arrays during each iteration.\n\nDuring each iteration of the binary search, we will split the points into two arrays, `closer`, which contains all of the points that are closer than or equal to the current target distance, and `farther`, which contains all of the points that are farther than the target distance. If the `closer` array contains fewer than $$k$$ points, we can add those points to our answer array (`closest`) and adjust $$k$$ to reflect the number of points still left to be found. Then we can focus on the remaining points in the `farther` array for the next round. If the `closer` array contains more than $$k$$ points, we can discard the `farther` array. In either case, we will need to update our range to match the array we keep.\n\nOnce the answer array is complete, we can build and return an array of the $$k$$ closest points. \n\n**Algorithm**\n\n1. Precompute the Euclidean distances of each point.\n2. Define the initial binary search range by identifying the farthest computed distance.\n3. Perform a binary search from low to high using the reference distances.\n   - Calculate the midpoint of the remaining range as the target distance.\n   - Split the remaining points into those closer and those farther than the target distance.\n   - If the `closer` array has fewer than $$k$$ points, add them to the `closest` array and adjust the value of $$k$$.\n   - Keep only the appropriate remaining array for the next iteration and update the binary search range.\n4. Once $$k$$ elements have been added to the `closest` array, return the $$k$$ closest points.\n\n<iframe src=\"https://leetcode.com/playground/KcaamHgq/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"KcaamHgq\"></iframe>\n\n\n**Complexity Analysis**\n\nHere $$N$$ refers to the length of the given array `points`.\n\n* Time complexity: $$O(N)$$\n\n  While this binary search variant has a worst-case time complexity of $$O(N^2)$$, it has an average time complexity of $$O(N)$$. It achieves this by halving (on average) the remaining elements needing to be processed at each iteration, which results in $$N + \\frac{N}{2} + \\frac{N}{4} + \\frac{N}{8} + ... + \\frac{N}{N} = 2N$$ total processes. This yields an average time complexity of $$O(N)$$.\n\n* Space complexity: $$O(N)$$\n\n  An extra $$O(N)$$ space is required for the arrays containing distances and reference indices.\n\n<br/>\n\n---\n\n### Approach 4: QuickSelect\n\n**Intuition**\n\nWhile the previous approach was successful in reducing the time complexity to only $$O(N)$$, it did so at the expense of pushing the space complexity to $$O(N)$$. But what if we could use an in-place approach and modify the `points` array directly? Bringing the $$k$$ closest points forward to the beginning of the array would effectively result in a partial sort of `points`. This method is called the **QuickSelect algorithm**.\n\nIn fact, anytime we are tasked with finding the $$k$$ (or $$k^{th}$$) [smallest/largest/etc.] element(s), we should always consider whether the QuickSelect algorithm can be applied. To understand why this is the case, we will briefly introduce the QuickSelect algorithm before diving into how it can be applied to this problem.\n\nThe QuickSelect algorithm is essentially a partial application of one of the most common sorting methods: the **QuickSort algorithm**. Both the QuickSort algorithm and its derivate, the QuickSelect algorithm, were invented by Tony Hoare between 1959 and 1961. In order to more easily understand the QuickSelect algorithm, we should first examine how the QuickSort algorithm works.\n\nThe QuickSort algorithm operates by **recursively** performing a partial sort of a given range of values. First, a **pivot** value is chosen from the values in the range. Then the QuickSort function uses two pointers, which start from opposite ends of the range and move inward, to swap values in the range. These values are swapped as necessary to ensure that all values lower than the pivot are on one side, and the remaining higher values are on the other. Once the values are thus partitioned, the QuickSort function can be recursively called on each **partition** with progressively smaller ranges until the array is completely sorted.\n\nSince the partition size roughly halves with each recursion, the total recursion stack averages a depth of $$\\log N$$, and as each layer of recursion includes all $$N$$ values in total, this leads to an overall time complexity for the QuickSort algorithm of $$O(N \\cdot \\log N)$$. Due to the **recursion stack** necessary for the QuickSort process, it also requires $$O(\\log N)$$ extra space.\n\n<br>\n\n![QuickSort time complexity](../Figures/973/973_quicksort_complexity.png)\n\n<br>\n\nBut if we don't care about fully sorting the array of values and instead only want to make sure that we select the first $$k$$ values, we can simplify this process. At each recursive branching of the QuickSort function, we can ignore the partition which does _not_ include the $$k^{th}$$ value. This is the basis for the QuickSelect algorithm.\n\nAn immediate benefit of being able to ignore one of the two resulting partitions at each step is that we no longer need to use recursion to branch the process. We can instead convert the function to a more space-friendly iterative solution that uses only a constant amount of space.\n\nA typical QuickSelect function (`quickSelect()`) starts with two pointers (`left`, `right`) that define the entire range of indices in the given array. The function will iteratively apply a partitioning helper function (`partition()`) which will return the index of the borderline between the two subsequent partitions.\n\nInside the partition helper function, the first step is to find a suitable pivot value. For this, we can call on another helper function (`choosePivot()`). The efficiency of the QuickSelect algorithm relies heavily upon picking a good pivot candidate; the closer the pivot is to the median value, the more likely each successive partitioning is to suitably narrow the range of values.\n\nCommon methods for selecting a pivot candidate include picking the first, last, or middle index of the range, or picking the median value between those three elements. Other, more complex methods for selecting a pivot value exist, but their suitability depends upon the nature of the array in question.\n\nIf the range is already sorted or nearly sorted, for example, picking the first or last index can potentially lead to the worst-case time complexity of $$O(N^2)$$ for the QuickSelect process. With no information about the nature of the order of the elements in `points`, we'll simply choose the element at the middle index of the range for this solution, using the simple median formula (`a + floor((b - a) / 2)`).\n\n> _**Note**: Since we're choosing a pivot distance from among the remaining points, we should use the squared Euclidean distance rather than the actual Euclidean distance to save processing time. Unlike the binary search solution, where we used the midpoint of the range of distances, using the distance of a random choice of the remaining points as our pivot distance will not result in an unbalanced split, on average._\n\nAfter choosing a pivot value, the partition function will swap the values of the elements in the range until it is partitioned into two sides with values less than the pivot value on one side and the remaining values on the other. Like finding the pivot, there are multiple methods available to accomplish this, but we'll use a basic version in which we start with pointers at either end of its range (`left`, `right`) and move inward, swapping elements with values larger than the pivot value to the right side.\n\nOnce the two pointers meet, we'll need to make sure the left pointer has completely moved past the end of the left side partition, then we can return it back to the QuickSelect function as the `pivotIndex` representing the left-most edge of the right partition.\n\nIf `pivotIndex` is equal to $$k$$, then we know that the first $$k$$ values in the array will be the ones we want to select. Since the order of the elements in the output array does not matter, an array containing those $$k$$ values can immediately be returned as the solution. Otherwise, the QuickSelect function should adjust its range pointers appropriately, keeping only the partition which includes the $$k^{th}$$ value. This process will continue to narrow the range until a match is found and the solution is returned.\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/614034863?h=d451ff9686\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen; picture-in-picture\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<br>\n\nUnlike the QuickSort algorithm, the QuickSelect algorithm roughly halves the remaining elements needed to process at each iteration, so the total number of processes will average at $$N + \\frac{N}{2} + \\frac{N}{4} + \\frac{N}{8} + ... + \\frac{N}{N} = 2N$$, which results in an average time complexity of $$O(N)$$, down from the $$O(N \\cdot \\log N)$$ of the QuickSort algorithm.\n\n<br>\n\n![QuickSelect time complexity](../Figures/973/973_quickselect_complexity.png)\n\n<br>\n\n**Algorithm**\n\n1. Return the result of a **QuickSelect algorithm** on the `points` array to $$k$$ elements.\n2. In the QuickSelect function:\n   - Repeatedly **partition** a range of elements in the given array while homing in on the $$k^{th}$$ element.\n3. In the partition function:\n   - Choose a **pivot** element. The pivot value will be squared Euclidean distance from the origin to the pivot element and will be compared to the squared Euclidean distance of all other points in the partition.\n   - Start with pointers at the left and right ends of the partition, then while the two pointers have not yet met:\n     - If the value of the element at the left pointer is smaller than the pivot value, increment the left pointer.\n     - Otherwise, swap the elements at the two pointers and decrement the right pointer.\n   - Make sure the left pointer is past the last element whose value is lower than the pivot value.\n   - Return the value of the left pointer as the new pivot index.\n4. Return the first $$k$$ elements of the array.\n\n<iframe src=\"https://leetcode.com/playground/4J7BpNom/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"4J7BpNom\"></iframe>\n\n\n**Complexity Analysis**\n\nHere $$N$$ refers to the length of the given array `points`.\n\n* Time complexity: $$O(N)$$.\n\n  Similar to the earlier binary search solution, the QuickSelect solution has a worst-case time complexity of $$O(N^2)$$ if the worst pivot is chosen each time. On average, however, it has a time complexity of $$O(N)$$ because it halves (roughly) the remaining elements needing to be processed at each iteration. This results in $$N + \\frac{N}{2} + \\frac{N}{4} + \\frac{N}{8} + ... + \\frac{N}{N} = 2N$$ total processes, yielding an average time complexity of $$O(N)$$.\n\n* Space complexity: $$O(1)$$.\n\n  The QuickSelect algorithm conducts the partial sort of `points` in place with no recursion, so only constant extra space is required.\n\n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

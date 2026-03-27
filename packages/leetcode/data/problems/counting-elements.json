@@ -1,0 +1,136 @@
+{
+  "questionId": "1391",
+  "questionFrontendId": "1426",
+  "title": "Counting Elements",
+  "titleSlug": "counting-elements",
+  "difficulty": "Easy",
+  "content": "<p>Given an integer array <code>arr</code>, count how many elements <code>x</code> there are, such that <code>x + 1</code> is also in <code>arr</code>. If there are duplicates in <code>arr</code>, count them separately.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [1,2,3]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> 1 and 2 are counted cause 2 and 3 are in arr.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [1,1,3,3,5,5,7,7]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> No numbers are counted, cause there is no 2, 4, 6, or 8 in arr.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= arr.length &lt;= 1000</code></li>\n\t<li><code>0 &lt;= arr[i] &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [
+    "Use hashset to store all elements.",
+    "Loop again to count all valid elements."
+  ],
+  "metaData": "{\n  \"name\": \"countElements\",\n  \"params\": [\n    {\n      \"name\": \"arr\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"167K\", \"totalSubmission\": \"274.8K\", \"totalAcceptedRaw\": 166991, \"totalSubmissionRaw\": 274786, \"acRate\": \"60.8%\"}",
+  "likes": 167,
+  "dislikes": 66,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,2,3]",
+    "[1,1,3,3,5,5,7,7]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"drw\", \"name\": \"DRW\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countElements(vector<int>& arr) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countElements(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countElements(self, arr: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countElements(self, arr):\n        \"\"\"\n        :type arr: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arr\n * @return {number}\n */\nvar countElements = function(arr) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countElements(arr: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountElements(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int countElements(int* arr, int arrSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countElements(arr []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countElements(arr: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countElements(_ arr: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_elements(arr: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} arr\n# @return {Integer}\ndef count_elements(arr)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $arr\n     * @return Integer\n     */\n    function countElements($arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countElements(List<int> arr) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countElements(arr: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_elements(arr :: [integer]) :: integer\n  def count_elements(arr) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_elements(Arr :: [integer()]) -> integer().\ncount_elements(Arr) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-elements arr)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "925",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Search with Array\n\n**Intuition**\n\nThe simplest way of solving this problem is to loop through each integer, `x`, checking whether or not it should be counted. This requires checking whether or not `x + 1` is in `arr`.\n\n```\ndefine function count_elements(arr):\n    count = 0\n    for each x in arr:\n        if integer_in_array(arr, x + 1):\n            count = count + 1\n    return count\n```\n\nTo implement the `integer_in_array` function in the above algorithm, we can use **linear search**. To do a linear search, we need to loop through each integer of `arr`. If we find the integer that we're looking for, then return `true`. If we get to the end of `arr`, then we know the integer is not there, and so should return `false`.\n\n```\ndefine function integer_in_array(arr, target):\n    for each x in arr:\n        if target is equal to x:\n            return true\n    return false\n```\n\nMany programming languages have a built in function for checking whether or not an integer is in `arr`, e.g. Python.\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/ecM2CWCM/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"ecM2CWCM\"></iframe>\n\n\n**Complexity Analysis**\n\nLet $$N$$ be the length of the input array, `arr`.\n\n- Time complexity : $$O(N^2)$$.\n\n    We loop through each of the $$N$$ integers `x`, checking whether or not `x + 1` is also in `arr`. Checking whether or not `x + 1` is in `arr` is done using linear search, which requires checking through all $$N$$ integers in `arr`. Because we're doing $$N$$ operations $$N$$ times, we get a time complexity of $$O(N^2)$$.\n\n- Space complexity : $$O(1)$$.\n\n    We are only using a constant number of single-value variables (e.g. `count`), giving us a space complexity of $$O(1)$$.\n\n<br/>\n\n---\n\n### Approach 2: Search with HashSet\n\n**Intuition**\n\nIf you're not familiar with the `HashSet` data structure, check out our [Hash Tables Explore Card](https://leetcode.com/explore/learn/card/hash-table/) to get up to speed.\n\nThe above algorithm will work fine for the maximum array length we're given here. However, we can do a lot better than $$O(N^2)$$, and an interviewer will no doubt expect you to come up with a better way.\n\nThe reason why the algorithm above was so inefficient is because we're performing $$N$$ linear searches, each with a cost of $$O(N)$$. When we have an algorithm that is performing many linear searches to check for item existence, we should instead be looking to change the way the data is stored so that the time complexity of doing each search is less.\n\nRecall that looking up items in a `HashSet` has a cost of $$O(1)$$. Creating a `HashSet` from an array of $$N$$ items has a cost of $$O(N)$$. We only need to create the `HashSet` *once*. After that, we can then replace all $$O(N)$$ linear searches with $$O(1)$$ `HashSet` lookups.\n\nBefore we go any further, here is an algorithm that is *incorrect*. Try to spot what the problem is; we'll discuss it just below.\n\n```\ndefine function count_elements(arr):\n    hash_set = a new HashSet\n    add all integers of arr to hash_set\n    count = 0\n    for each x in hash_set:\n        if hash_set contains x + 1:\n            count = count + 1\n    return count\n```\n\nDid you spot the bug? If there were duplicates in `arr`, then the `count` returned will be too low! \n\nRecall that a `HashSet` removes duplicates. Consider a case like `arr = [1, 1, 2]`. The `HashSet` will be `{1, 2}`. Therefore, the above code will loop over each integer in the `HashSet`, which is only *one* copy of `1`. Yet `arr` had *two* copies of `1`. \n\nTo fix it, we need to loop over `arr`, but do the existence checks using the `HashSet`.\n\n```\ndefine function count_elements(arr):\n    hash_set = a new HashSet\n    add all integers of arr to hash_set\n    count = 0\n    for each x in arr:\n        if hash_set contains x + 1:\n            count = count + 1\n    return count\n```\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/bXPWLk28/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"bXPWLk28\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the length of the input array, `arr`.\n\n- Time complexity : $$O(N)$$.\n\n    Creating a `HashSet` from $$N$$ integers takes $$O(N)$$ time. We then need to loop over each of the $$N$$ integers like before, except this time we check for `x + 1` by seeing if it is in the `HashSet`; an $$O(1)$$ operation. This gives us a total time complexity of $$O(N) + N \\cdot O(1) = O(N) + O(N) = O(N)$$.\n\n- Space complexity : $$O(N)$$.\n\n    The `HashSet` needs to store each unique integer from `arr`. In the worst case, all the integers in `arr` will be unique, meaning that the `HashSet` has a space complexity of $$O(N)$$.\n\nIt's interesting to note that $$O(N)$$ is an *upper bound* on the space complexity. If $$U$$ is the number of unique integers in `arr`, then the space complexity could more accurately be represented as $$O(U)$$.\n\n<br/>\n\n---\n\n### Approach 3: Search with Sorted Array\n\n**Intuition**\n\nAnother way of changing the data storage to allow for more efficient searching is to sort it. Sorting has a time complexity of $$O(N \\, \\log \\, N)$$, and searching for integers in a sorted array, using binary search, has a cost of $$O(\\log \\, N)$$. This will give us a total time complexity of $$O(N \\, \\log \\, N)$$.\n\n```\ndefine function countElements(arr):\n    sort arr\n    count = 0\n    for each x in arr:\n        binary search for x + 1 in arr\n        if x + 1 is in arr:\n            count = count + 1\n    return count\n```\n\nThe main challenge of this approach would be needing to implement your own binary search.\n\nHowever, we don't actually need to use binary search! If we iterate over the sorted `arr`, then we know that if `x + 1` exists, it will be after all the copies of `x`. \n\n![Searching for x + 1 in sorted arr.](../Figures/10003/sorting.png)\n\nEach copy of `x` should be counted if at least one copy of `x + 1` exists. Therefore, we can iterate down the sorted `arr`, keeping track of how many times the current `x` has appeared. When we get to a different integer, we can check if it's `x + 1`, and if it is, then the number of `x` we saw should be added to `count`.\n\n```\ndefine function countElements(arr):\n    sort arr\n    count = 0\n    run_length = 1\n    for each i in range 1 to arr.length - 1:\n        if arr[i - 1] is not equal to arr[i]:\n            if arr[i - 1] + 1 is equal to arr[i]:\n                count = count + run_length\n            run_length = 0\n        run_length = run_length + 1\n    return count\n```\n\nHere is an animation of this approach.\n\n!?!../Documents/10003_sorting_approach.json:960,183!?!\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/27sY2N7D/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"27sY2N7D\"></iframe>\n\n**Complexity Analysis**\n\n- Time complexity : $$O(N \\, \\log \\, N)$$.\n\n    Sorting using a built-in sorting algorithm has a cost of $$O(N \\, \\log \\, N)$$. After that, we do a single pass through `arr`, which has a cost of $$O(N)$$, giving us a total time complexity of $$O(N \\, \\log \\, N) + O(N) = O(N \\, \\log \\, N)$$.\n\n- Space complexity : varies from $$O(N)$$ to $$O(1)$$.\n\n    The space complexity of this approach is dependent on the space complexity of the sorting algorithm you're using. The space complexity of sorting algorithms built into programming languages is generally anywhere from $$O(N)$$ to $$O(1)$$.\n\n    Notice that you could implement your own $$O(N \\, \\log \\, N)$$ time complexity, $$O(1)$$ space complexity, sorting algorithm if needed. In practice, $$O(N \\, \\log \\, N)$$ is not much worse than $$O(N)$$, and so this approach provides an interesting contrast to Approach 2 (which had a space complexity of $$O(N)$$).\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

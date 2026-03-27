@@ -61,8 +61,8 @@ Complete Grafana operations via REST API. This skill replaces Grafana MCP server
 export GRAFANA_URL="https://your-grafana.com"
 export GRAFANA_API_KEY="your-api-key"
 
-# Or use service account token
-export GRAFANA_TOKEN="glsa_..."
+# Service account tokens also use GRAFANA_API_KEY
+# export GRAFANA_API_KEY="glsa_..."
 
 # Auth header helper
 AUTH="Authorization: Bearer $GRAFANA_API_KEY"

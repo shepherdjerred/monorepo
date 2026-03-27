@@ -1,0 +1,53 @@
+{
+  "questionId": "1712",
+  "questionFrontendId": "1565",
+  "title": "Unique Orders and Customers Per Month",
+  "titleSlug": "unique-orders-and-customers-per-month",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Orders</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| order_id      | int     |\n| order_date    | date    |\n| customer_id   | int     |\n| invoice       | int     |\n+---------------+---------+\norder_id is the column with unique values for this table.\nThis table contains information about the orders made by customer_id.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to find the number of <strong>unique orders</strong> and the number of <strong>unique customers</strong> with invoices <strong>&gt; $20</strong> for each <strong>different month</strong>.</p>\n\n<p>Return the result table sorted in <strong>any order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nOrders table:\n+----------+------------+-------------+------------+\n| order_id | order_date | customer_id | invoice    |\n+----------+------------+-------------+------------+\n| 1        | 2020-09-15 | 1           | 30         |\n| 2        | 2020-09-17 | 2           | 90         |\n| 3        | 2020-10-06 | 3           | 20         |\n| 4        | 2020-10-20 | 3           | 21         |\n| 5        | 2020-11-10 | 1           | 10         |\n| 6        | 2020-11-21 | 2           | 15         |\n| 7        | 2020-12-01 | 4           | 55         |\n| 8        | 2020-12-03 | 4           | 77         |\n| 9        | 2021-01-07 | 3           | 31         |\n| 10       | 2021-01-15 | 2           | 20         |\n+----------+------------+-------------+------------+\n<strong>Output:</strong> \n+---------+-------------+----------------+\n| month   | order_count | customer_count |\n+---------+-------------+----------------+\n| 2020-09 | 2           | 2              |\n| 2020-10 | 1           | 1              |\n| 2020-12 | 2           | 1              |\n| 2021-01 | 1           | 1              |\n+---------+-------------+----------------+\n<strong>Explanation:</strong> \nIn September 2020 we have two orders from 2 different customers with invoices &gt; $20.\nIn October 2020 we have two orders from 1 customer, and only one of the two orders has invoice &gt; $20.\nIn November 2020 we have two orders from 2 different customers but invoices &lt; $20, so we don&#39;t include that month.\nIn December 2020 we have two orders from 1 customer both with invoices &gt; $20.\nIn January 2021 we have two orders from 2 different customers, but only one of them with invoice &gt; $20.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Orders (order_id int, order_date date, customer_id int, invoice int)\"], \"mssql\": [\"Create table Orders (order_id int, order_date date, customer_id int, invoice int)\"], \"oraclesql\": [\"Create table Orders (order_id int, order_date date, customer_id int, invoice int)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"unique_orders_and_customers\", \"pythondata\": [\"Orders = pd.DataFrame([], columns=['order_id', 'order_date', 'customer_id', 'invoice']).astype({'order_id':'Int64', 'order_date':'datetime64[ns]', 'customer_id':'Int64', 'invoice':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Orders (order_id int, order_date date, customer_id int, invoice int)\"], \"database_schema\": {\"Orders\": {\"order_id\": \"INT\", \"order_date\": \"DATE\", \"customer_id\": \"INT\", \"invoice\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"26K\", \"totalSubmission\": \"31.7K\", \"totalAcceptedRaw\": 25956, \"totalSubmissionRaw\": 31682, \"acRate\": \"81.9%\"}",
+  "likes": 82,
+  "dislikes": 47,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Orders\":[\"order_id\",\"order_date\",\"customer_id\",\"invoice\"]},\"rows\":{\"Orders\":[[1,\"2020-09-15\",1,30],[2,\"2020-09-17\",2,90],[3,\"2020-10-06\",3,20],[4,\"2020-10-20\",3,21],[5,\"2020-11-10\",1,10],[6,\"2020-11-21\",2,15],[7,\"2020-12-01\",4,55],[8,\"2020-12-03\",4,77],[9,\"2021-01-07\",3,31],[10,\"2021-01-15\",2,20]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef unique_orders_and_customers(orders: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

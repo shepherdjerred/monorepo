@@ -1,0 +1,141 @@
+{
+  "questionId": "1435",
+  "questionFrontendId": "1310",
+  "title": "XOR Queries of a Subarray",
+  "titleSlug": "xor-queries-of-a-subarray",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array <code>arr</code> of positive integers. You are also given the array <code>queries</code> where <code>queries[i] = [left<sub>i, </sub>right<sub>i</sub>]</code>.</p>\n\n<p>For each query <code>i</code> compute the <strong>XOR</strong> of elements from <code>left<sub>i</sub></code> to <code>right<sub>i</sub></code> (that is, <code>arr[left<sub>i</sub>] XOR arr[left<sub>i</sub> + 1] XOR ... XOR arr[right<sub>i</sub>]</code> ).</p>\n\n<p>Return an array <code>answer</code> where <code>answer[i]</code> is the answer to the <code>i<sup>th</sup></code> query.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [1,3,4,8], queries = [[0,1],[1,2],[0,3],[3,3]]\n<strong>Output:</strong> [2,7,14,8] \n<strong>Explanation:</strong> \nThe binary representation of the elements in the array are:\n1 = 0001 \n3 = 0011 \n4 = 0100 \n8 = 1000 \nThe XOR values for queries are:\n[0,1] = 1 xor 3 = 2 \n[1,2] = 3 xor 4 = 7 \n[0,3] = 1 xor 3 xor 4 xor 8 = 14 \n[3,3] = 8\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [4,8,2,10], queries = [[2,3],[1,3],[0,0],[0,3]]\n<strong>Output:</strong> [8,0,4,4]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= arr.length, queries.length &lt;= 3 * 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= arr[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>queries[i].length == 2</code></li>\n\t<li><code>0 &lt;= left<sub>i</sub> &lt;= right<sub>i</sub> &lt; arr.length</code></li>\n</ul>\n",
+  "hints": [
+    "What is the result of x ^ y ^ x ?",
+    "Compute the prefix sum for XOR.",
+    "Process the queries with the prefix sum values."
+  ],
+  "metaData": "{\n  \"name\": \"xorQueries\",\n  \"params\": [\n    {\n      \"name\": \"arr\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"queries\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"216.8K\", \"totalSubmission\": \"277.5K\", \"totalAcceptedRaw\": 216794, \"totalSubmissionRaw\": 277549, \"acRate\": \"78.1%\"}",
+  "likes": 2102,
+  "dislikes": 60,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,3,4,8]\n[[0,1],[1,2],[0,3],[3,3]]",
+    "[4,8,2,10]\n[[2,3],[1,3],[0,0],[0,3]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"airtel\", \"name\": \"Airtel\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> xorQueries(vector<int>& arr, vector<vector<int>>& queries) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] xorQueries(int[] arr, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def xorQueries(self, arr: List[int], queries: List[List[int]]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def xorQueries(self, arr, queries):\n        \"\"\"\n        :type arr: List[int]\n        :type queries: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arr\n * @param {number[][]} queries\n * @return {number[]}\n */\nvar xorQueries = function(arr, queries) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function xorQueries(arr: number[], queries: number[][]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] XorQueries(int[] arr, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* xorQueries(int* arr, int arrSize, int** queries, int queriesSize, int* queriesColSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func xorQueries(arr []int, queries [][]int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun xorQueries(arr: IntArray, queries: Array<IntArray>): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func xorQueries(_ arr: [Int], _ queries: [[Int]]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn xor_queries(arr: Vec<i32>, queries: Vec<Vec<i32>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} arr\n# @param {Integer[][]} queries\n# @return {Integer[]}\ndef xor_queries(arr, queries)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $arr\n     * @param Integer[][] $queries\n     * @return Integer[]\n     */\n    function xorQueries($arr, $queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> xorQueries(List<int> arr, List<List<int>> queries) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def xorQueries(arr: Array[Int], queries: Array[Array[Int]]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec xor_queries(arr :: [integer], queries :: [[integer]]) :: [integer]\n  def xor_queries(arr, queries) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec xor_queries(Arr :: [integer()], Queries :: [[integer()]]) -> [integer()].\nxor_queries(Arr, Queries) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (xor-queries arr queries)\n  (-> (listof exact-integer?) (listof (listof exact-integer?)) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2434",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given an array of positive integers and a list of queries. For each query `[lefti, righti]`, we need to compute the XOR of all elements from index `lefti` to index `righti` in the array and return the results in the order in which the queries are given.\n\nFirst, let's review a few key concepts to provide more context and better understand the following approaches.\n\n##### XOR Operator (`^`):\n\nThe `XOR` (exclusive `OR`) operator is a bitwise operator that compares each bit of two operands. The result is `1` if the bits differ, and `0` if they are the same. Here’s a truth table for the `XOR` operator:\n\n| A | B | A ^ B |\n|---|---|-------|\n| 0 | 0 |   0   |\n| 0 | 1 |   1   |\n| 1 | 0 |   1   |\n| 1 | 1 |   0   |\n\nProperties:\n- `A ^ A = 0` (any number XORed with itself is `0`)\n- `A ^ 0 = A` (XORing with `0` leaves the number unchanged)\n- `A ^ B = B ^ A` (order doesn’t matter)\n- `(A ^ B) ^ C = A ^ (B ^ C)` (grouping doesn’t matter)\n- `(A ^ B) ^ B = A` (XORing twice cancels out)\n\n---\n\n### Approach 1: Iterative Approach\n\n#### Intuition\n\nGiven a range of indices in the query, the most straightforward approach is to compute the XOR for each element between the specified indices. To do this, we loop through the subarray defined by the query's `left` and `right` indices and compute the XOR of all the elements in that range.\n\nThis approach directly follows the problem's instructions by manually performing XOR on all elements between the `left` and `right` indices. However, it becomes inefficient when the array or the number of queries grows large. Each query requires a full pass over the subarray, and if many queries overlap, we end up recalculating the same XOR values repeatedly.\n\n#### Algorithm\n\n- Initialize an empty array `result` to store the results of each query.\n- For each query `q`:\n  - Initialize `xorSum` to 0.\n  - Calculate the XOR for the range `[q[0], q[1]]`:\n    - Iterate through the elements from index `q[0]` to index `q[1]` in the array `arr`.\n    - Update `xorSum` with the XOR of the current element.\n- Append `xorSum` to the `result` array after processing each query.\n- Return the `result` array containing the XOR results for all queries.\n\n#### Implementation\n\n> Note: This Python solution will result in a Time Limit Exceeded (TLE) error due to the brute-force nature of the approach and Python's inherent slower execution speed.\n\n<iframe src=\"https://leetcode.com/playground/aXxN48su/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"aXxN48su\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of elements in `arr` and $q$ be the number of queries.\n\n- Time Complexity: $O(q \\cdot n)$\n  \n  For each query, we iterate through the range `[left, right]` in the `arr` to compute the XOR. Given that `q` is the number of queries and each query can potentially cover up to `n` elements, the worst-case time complexity is $O(q \\cdot n)$. This can be quite slow if both `q` and `n` are large.\n\n- Space Complexity: $O(1)$\n  \n  The space complexity is constant because we are using only a few extra variables for calculations and storing results in the output array. The space required does not grow with the input size, except for the result storage, which is proportional to the number of queries. Since the result storage is a requirement of the problem statement, we will not count it towards the space complexity.\n\n---\n\n### Approach 2: Prefix XOR Array\n\n#### Intuition\n\nTo reduce redundant calculations, we can use an array for quick lookups when we need the XOR value of a particular segment. Specifically, each entry at index `i` in our array holds the XOR of all elements from the start of the original array up to index `i`. This cumulative XOR allows us to easily compute the XOR of any segment of the array. This concept is known as a prefix array,\n\nWe start by initializing the prefix XOR array. The first element is set to the first element of the original array. For each subsequent index, we compute the XOR of the previous element in the prefix XOR array with the current element from the original array. This step constructs the prefix XOR array in one pass.\n\nWith the prefix XOR array ready, we can quickly answer any query. For a query that asks for the XOR from index `left` to `right`, we use:\n   $$ \\text{XOR}_{left \\text{ to } right} = \\text{prefixXOR}[right + 1] \\oplus \\text{prefixXOR}[left] $$\n\nHere, `prefixXOR[right + 1]` gives the XOR of elements from the start up to `right`, and `prefixXOR[left]` gives the XOR from the start up to `left - 1`. XORing these two values gives the result for the subarray from `left` to `right`.\n\nWhen we XOR `prefixXOR[right + 1]` with `prefixXOR[left]`, we effectively remove the XOR of elements from the start to left - 1 from the XOR of elements from the start to right.\n\nAssume the array is $[a, b, c, d, e]$.\n\n$$\n\\text{prefixXOR}[0] = 0 \\quad (\\text{XOR of elements before the start})\n$$\n$$\n\\text{prefixXOR}[1] = a\n$$\n$$\n\\text{prefixXOR}[2] = a \\oplus b\n$$\n$$\n\\text{prefixXOR}[3] = a \\oplus b \\oplus c\n$$\n$$\n\\text{prefixXOR}[4] = a \\oplus b \\oplus c \\oplus d\n$$\n$$\n\\text{prefixXOR}[5] = a \\oplus b \\oplus c \\oplus d \\oplus e\n$$\n\nTo query the XOR from index 1 to 3:\n\n$$\n\\text{prefixXOR}[4] = a \\oplus b \\oplus c \\oplus d\n$$\n\n$$\n\\text{prefixXOR}[1] = a\n$$\n\nXORing these:\n\n$$\n\\text{prefixXOR}[4] \\oplus \\text{prefixXOR}[1] = (a \\oplus b \\oplus c \\oplus d) \\oplus a = b \\oplus c \\oplus d\n$$\n\nThis gives the XOR of elements from index 1 to 3.\n\nSo using $\\text{prefixXOR}[ \\text{right} + 1 ] \\oplus \\text{prefixXOR}[ \\text{left} ]$ isolates the XOR of the desired subarray.\n\nThe algorithm is visualized below:\n\n!?!../Documents/1310/xor.json:980,570!?!\n\n#### Algorithm\n\n- Initialize the `prefixXOR` array of size `n + 1` with all elements set to `0`.\n\n- Build the `prefixXOR` array:\n  - Iterate through each element `arr[i]`:\n    - Compute `prefixXOR[i + 1]` as `prefixXOR[i] ^ arr[i]` (XOR current element with previous prefix XOR value).\n\n- Initialize the `result` array to store the results of queries.\n\n- Process each query:\n  - For each query `q` with range `[q[0], q[1]]`:\n    - Compute the XOR of the subarray from index `q[0]` to `q[1]` using `prefixXOR[q[1] + 1] ^ prefixXOR[q[0]]`.\n    - Add the result to the `result` array.\n\n- Return the `result` array containing the XOR results for all queries.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/8kvdTrpv/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"8kvdTrpv\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of elements in `arr` and $q$ be the number of queries.\n\n- Time Complexity: $O(n + q)$\n  \n  We first compute the prefix XOR array in $O(n)$ time. Each query is then resolved in constant time $O(1)$ using the prefix XOR array. Thus, the total time complexity is $O(n + q)$.\n\n- Space Complexity: $O(n)$\n  \n  The space complexity is $O(n)$ due to the additional prefix XOR array of size $n + 1$.\n\n---\n\n### Approach 3: In place Prefix XOR\n\n#### Intuition\n\nInstead of creating a separate prefix XOR array, we can modify the original array in place to store the prefix XOR values directly. This reduces memory usage by ensuring that each element at index `i` in the array now holds the XOR of all elements from the start of the array up to `i`.\n\nWhen a query is made, we can still compute the XOR for any subarray using the same logic as in the prefix XOR array approach, but now we do it without needing a separate XOR array. We can achieve this because the solution relies on the modified array.\n\n> It is strongly advised to check with your interviewer on whether you are allowed to modify the input. Some interviewers appreciate the idea if you provide solid reasoning, but otherwise, avoid using the in-place prefix XOR. Good interviewers are interested in discussing a solution that you are leading.\n\n#### Algorithm\n\n- Initialize an empty array `result` to store the results of each query.\n\n- Convert `arr` into a prefix XOR array in-place:\n  - Iterate through `arr` starting from index 1:\n    - Update each element by XOR-ing it with the previous element (`arr[i] ^= arr[i - 1]`).\n\n- Resolve each query using the prefix XOR array:\n  - For each query `q`:\n    - If the start index `q[0]` is greater than 0:\n      - Compute the `XOR` result for the subarray from `q[0]` to `q[1]` using `arr[q[0] - 1] ^ arr[q[1]]`.\n    - Otherwise:\n      - Directly use `arr[q[1]]` as the result for the query.\n\n- Append the computed result for each query to the `result` array.\n\n- Return the `result` array containing the results of all queries.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/E4Cb3obC/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"E4Cb3obC\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of elements in `arr` and $q$ be the number of queries.\n\n- Time Complexity: $O(n + q)$\n  \n  The time complexity is the same as the prefix XOR array approach. We first convert the `arr` into an in-place prefix XOR array in $O(n)$ time. Each query is then resolved in constant time $O(1)$, leading to an overall time complexity of $O(n + q)$.\n\n- Space Complexity: $O(1)$\n\n  The space complexity is constant because the in-place prefix XOR modification does not require extra space beyond what is needed to store the results.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "questionId": "1132",
+  "questionFrontendId": "1181",
+  "title": "Before and After Puzzle",
+  "titleSlug": "before-and-after-puzzle",
+  "difficulty": "Medium",
+  "content": "<p>Given a list of <code>phrases</code>, generate a list of&nbsp;Before and After puzzles.</p>\n\n<p>A <em>phrase</em> is a string that consists of lowercase English letters and spaces only. No space appears in the start or the end of a phrase. There are&nbsp;no consecutive spaces&nbsp;in a phrase.</p>\n\n<p><em>Before and After&nbsp;puzzles</em> are phrases that are formed by merging&nbsp;two phrases where the <strong>last&nbsp;word of the first&nbsp;phrase</strong> is the same as the <strong>first word of the second phrase</strong>. Note that only the <em>last word of the first phrase</em> and the <em>first word of the second phrase</em> are merged in this process.</p>\n\n<p>Return the&nbsp;Before and After&nbsp;puzzles that can be formed by every two phrases&nbsp;<code>phrases[i]</code>&nbsp;and&nbsp;<code>phrases[j]</code>&nbsp;where&nbsp;<code>i != j</code>. Note that the order of matching two phrases matters, we want to consider both orders.</p>\n\n<p>You should return a list of&nbsp;<strong>distinct</strong>&nbsp;strings <strong>sorted&nbsp;lexicographically</strong>, after removing all <em>duplicate</em> phrases in the generated Before and After puzzles.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">phrases = [&quot;writing code&quot;,&quot;code rocks&quot;]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[&quot;writing code rocks&quot;]</span></p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">phrases = [&quot;mission statement&quot;,&quot;a quick bite to eat&quot;,&quot;a chip off the old block&quot;,&quot;chocolate bar&quot;,&quot;mission impossible&quot;,&quot;a man on a mission&quot;,&quot;block party&quot;,&quot;eat my words&quot;,&quot;bar of soap&quot;]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[&quot;a chip off the old block party&quot;,&quot;a man on a mission impossible&quot;,&quot;a man on a mission statement&quot;,&quot;a quick bite to eat my words&quot;,&quot;chocolate bar of soap&quot;]</span></p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">phrases = [&quot;a&quot;,&quot;b&quot;,&quot;a&quot;]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[&quot;a&quot;]</span></p>\n</div>\n\n<p><strong class=\"example\">Example 4:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">phrases = [&quot;ab ba&quot;,&quot;ba ab&quot;,&quot;ab ba&quot;]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[&quot;ab ba ab&quot;,&quot;ba ab ba&quot;]</span></p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= phrases.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= phrases[i].length &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "What if you check every pair of strings (bruteforce)?",
+    "For every two strings, check if they can form a puzzle by comparing their last and first words."
+  ],
+  "metaData": "{\n  \"name\": \"beforeAndAfterPuzzles\",\n  \"params\": [\n    {\n      \"name\": \"phrases\",\n      \"type\": \"string[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<string>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"13.1K\", \"totalSubmission\": \"25.2K\", \"totalAcceptedRaw\": 13072, \"totalSubmissionRaw\": 25219, \"acRate\": \"51.8%\"}",
+  "likes": 92,
+  "dislikes": 158,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"writing code\",\"code rocks\"]",
+    "[\"mission statement\",\"a quick bite to eat\",\"a chip off the old block\",\"chocolate bar\",\"mission impossible\",\"a man on a mission\",\"block party\",\"eat my words\",\"bar of soap\"]",
+    "[\"a\",\"b\",\"a\"]",
+    "[\"ab ba\",\"ba ab\",\"ab ba\"]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"clutter\", \"name\": \"Clutter\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> beforeAndAfterPuzzles(vector<string>& phrases) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<String> beforeAndAfterPuzzles(String[] phrases) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def beforeAndAfterPuzzles(self, phrases: List[str]) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def beforeAndAfterPuzzles(self, phrases):\n        \"\"\"\n        :type phrases: List[str]\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} phrases\n * @return {string[]}\n */\nvar beforeAndAfterPuzzles = function(phrases) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function beforeAndAfterPuzzles(phrases: string[]): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<string> BeforeAndAfterPuzzles(string[] phrases) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** beforeAndAfterPuzzles(char** phrases, int phrasesSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func beforeAndAfterPuzzles(phrases []string) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun beforeAndAfterPuzzles(phrases: Array<String>): List<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func beforeAndAfterPuzzles(_ phrases: [String]) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn before_and_after_puzzles(phrases: Vec<String>) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} phrases\n# @return {String[]}\ndef before_and_after_puzzles(phrases)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $phrases\n     * @return String[]\n     */\n    function beforeAndAfterPuzzles($phrases) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> beforeAndAfterPuzzles(List<String> phrases) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def beforeAndAfterPuzzles(phrases: Array[String]): List[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec before_and_after_puzzles(phrases :: [String.t]) :: [String.t]\n  def before_and_after_puzzles(phrases) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec before_and_after_puzzles(Phrases :: [unicode:unicode_binary()]) -> [unicode:unicode_binary()].\nbefore_and_after_puzzles(Phrases) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (before-and-after-puzzles phrases)\n  (-> (listof string?) (listof string?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2813",
+    "content": "### Approach: Hash Table + Sorting\n\n#### Intuition\n\nThis problem leans more toward implementation details than complex algorithms. The task is to concatenate two phrases such that the last word of the first phrase is the same as the first word of the second phrase. To achieve this, we only need to extract the first and last words of each phrase and compare them pairwise. Since the final list must not contain duplicates, we use a hash table to record all valid concatenated phrases and then sort them before returning.\n\n#### Algorithm\n\n1. Traverse the string array `phrases`, split each phrase by spaces, and store its first and last words in a new array `sp`. The array `sp` should preserve the order of `phrases`.\n2. Perform a double traversal of the array `sp`. If `sp[i][0] == sp[j][1]`, then the phrases at indices `i` and `j` can be concatenated. Store the concatenated phrase in the hash table.\n3. Collect all concatenated phrases from the hash table into a new array, then sort and return it.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/PquwfEJe/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"PquwfEJe\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the length of the string array `phrases`, and $K$ be the average length of the string phrases.\n\n- Time complexity: $O(N^2K(\\log N+\\log K))$\n\n  The nested loop runs $O(N^2)$ times. For each valid pair, string comparison (for matching) is $O(K)$ in the worst case, and constructing the concatenated string is $O(K)$. Inserting each concatenated string (of length $O(K)$) into a balanced BST (set) requires $O(K \\cdot \\log M)$ per insertion, where $M$ is the size of the set (up to $O(N^2)$). The total cost is dominated by $O(N^2 \\cdot K \\cdot \\log N)$.\n\n- Space complexity: $O(N^2K)$\n\n  The hash table can store up to $N(N-1)$ entries, each occupying $O(K)$ space. In addition, the two-dimensional array `sp` has a maximum size proportional to the input array `phrases`.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

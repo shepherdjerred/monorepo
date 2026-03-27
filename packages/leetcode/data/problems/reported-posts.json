@@ -1,0 +1,58 @@
+{
+  "questionId": "1215",
+  "questionFrontendId": "1113",
+  "title": "Reported Posts",
+  "titleSlug": "reported-posts",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Actions</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| user_id       | int     |\n| post_id       | int     |\n| action_date   | date    | \n| action        | enum    |\n| extra         | varchar |\n+---------------+---------+\nThis table may have duplicate rows.\nThe action column is an ENUM (category) type of (&#39;view&#39;, &#39;like&#39;, &#39;reaction&#39;, &#39;comment&#39;, &#39;report&#39;, &#39;share&#39;).\nThe extra column has optional information about the action, such as a reason for the report or a type of reaction.</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to report&nbsp;the number of posts reported yesterday for each report reason. Assume today is <code>2019-07-05</code>.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nActions table:\n+---------+---------+-------------+--------+--------+\n| user_id | post_id | action_date | action | extra  |\n+---------+---------+-------------+--------+--------+\n| 1       | 1       | 2019-07-01  | view   | null   |\n| 1       | 1       | 2019-07-01  | like   | null   |\n| 1       | 1       | 2019-07-01  | share  | null   |\n| 2       | 4       | 2019-07-04  | view   | null   |\n| 2       | 4       | 2019-07-04  | report | spam   |\n| 3       | 4       | 2019-07-04  | view   | null   |\n| 3       | 4       | 2019-07-04  | report | spam   |\n| 4       | 3       | 2019-07-02  | view   | null   |\n| 4       | 3       | 2019-07-02  | report | spam   |\n| 5       | 2       | 2019-07-04  | view   | null   |\n| 5       | 2       | 2019-07-04  | report | racism |\n| 5       | 5       | 2019-07-04  | view   | null   |\n| 5       | 5       | 2019-07-04  | report | racism |\n+---------+---------+-------------+--------+--------+\n<strong>Output:</strong> \n+---------------+--------------+\n| report_reason | report_count |\n+---------------+--------------+\n| spam          | 1            |\n| racism        | 2            |\n+---------------+--------------+\n<strong>Explanation:</strong> Note that we only care about report reasons with non-zero number of reports.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Actions (user_id int, post_id int, action_date date, action ENUM('view', 'like', 'reaction', 'comment', 'report', 'share'), extra varchar(10))\"], \"mssql\": [\"create table Actions (user_id int, post_id int, action_date date, action VARCHAR(10) NOT NULL CHECK (action IN ('view', 'like', 'reaction', 'comment', 'report', 'share')), extra varchar(10))\"], \"oraclesql\": [\"create table Actions (user_id int, post_id int, action_date date, action VARCHAR(10) NOT NULL CHECK (action IN ('view', 'like', 'reaction', 'comment', 'report', 'share')), extra varchar(10))\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"reported_posts\", \"pythondata\": [\"Actions = pd.DataFrame([], columns=['user_id', 'post_id', 'action_date', 'action', 'extra']).astype({'user_id':'Int64', 'post_id':'Int64', 'action_date':'datetime64[ns]', 'action':'object', 'extra':'object'})\"], \"postgresql\": [\"Create table If Not Exists Actions (user_id int, post_id int, action_date date, action VARCHAR(10) CHECK (action IN ('view', 'like', 'reaction', 'comment', 'report', 'share')), extra varchar(10))\"], \"database_schema\": {\"Actions\": {\"user_id\": \"INT\", \"post_id\": \"INT\", \"action_date\": \"DATE\", \"action\": \"ENUM('view', 'like', 'reaction', 'comment', 'report', 'share')\", \"extra\": \"VARCHAR(10)\"}}}",
+  "stats": "{\"totalAccepted\": \"54K\", \"totalSubmission\": \"83.3K\", \"totalAcceptedRaw\": 54005, \"totalSubmissionRaw\": 83311, \"acRate\": \"64.8%\"}",
+  "likes": 118,
+  "dislikes": 420,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Actions\":[\"user_id\",\"post_id\",\"action_date\",\"action\",\"extra\"]},\"rows\":{\"Actions\":[[1,1,\"2019-07-01\",\"view\",null],[1,1,\"2019-07-01\",\"like\",null],[1,1,\"2019-07-01\",\"share\",null],[2,4,\"2019-07-04\",\"view\",null],[2,4,\"2019-07-04\",\"report\",\"spam\"],[3,4,\"2019-07-04\",\"view\",null],[3,4,\"2019-07-04\",\"report\",\"spam\"],[4,3,\"2019-07-02\",\"view\",null],[4,3,\"2019-07-02\",\"report\",\"spam\"],[5,2,\"2019-07-04\",\"view\",null],[5,2,\"2019-07-04\",\"report\",\"racism\"],[5,5,\"2019-07-04\",\"view\",null],[5,5,\"2019-07-04\",\"report\",\"racism\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef reported_posts(actions: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "2096",
+    "content": "[TOC]\n\n# Solution\n\n---\n\n\n\n## pandas\n\n\n### Approach 1: Using groupby()\n\n\n#### Algorithm\n\n\n1. We first filter the `actions` table to include only actions that occurred on July 4, 2019.\n\n2. Next, we narrow down the data to only include 'report' actions using another filter.\n\n3. We then use the Pandas groupby function to group the filtered data by the 'extra' column, which contains the report reasons. For each group, we count the number of unique 'post_id's, representing the number of posts reported for that reason.\n\n4. Finally, we rename the columns in the result to make it more descriptive and return the result as a Pandas DataFrame.\n\n\n#### Code \n\n```python\n\nimport pandas as pd\n\ndef reported_posts(actions: pd.DataFrame) -> pd.DataFrame:\n    # Filter the 'actions' table to include only actions on the specified date (July 4, 2019).\n    actions = actions[actions['action_date'] == '2019-07-04']\n    \n    # Filter further to include only 'report' actions.\n    actions = actions[actions['action'] == 'report']\n\n    # Group the filtered data by the 'extra' column (report reasons) and count the unique 'post_id's.\n    report_counts = actions.groupby('extra')['post_id'].nunique().reset_index()\n    \n    # Rename the columns for clarity.\n    report_counts = report_counts.rename(columns={\n        'extra': 'report_reason',\n        'post_id': 'report_count'\n    })\n\n    return report_counts\n\n\n```\n\n<br>\n\n## Database\n\n\n### Approach 1: Use GROUP BY Clause\n\n\n#### Algorithm\n\n1. Initialize Query: Start an SQL query.\n\n2. Select Columns: Choose extra as report_reason and count distinct post_id as report_count.\n\n3. Filter Data: Include rows with action_date as '2019-07-04' and action as 'report'.\n\n4. Group Data: Group results by report_reason.\n\n5. Execute Query: Execute the query and retrieve the report counts by reason.\n\n\n#### Code\n\n```sql\n\nSELECT\n    extra AS report_reason,\n    COUNT(DISTINCT post_id) AS report_count\nFROM Actions\nWHERE action_date = '2019-07-04' AND \n      action = 'report'\nGROUP BY report_reason;\n```\n\n\n<br>",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

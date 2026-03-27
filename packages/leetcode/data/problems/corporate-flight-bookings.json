@@ -1,0 +1,128 @@
+{
+  "questionId": "1206",
+  "questionFrontendId": "1109",
+  "title": "Corporate Flight Bookings",
+  "titleSlug": "corporate-flight-bookings",
+  "difficulty": "Medium",
+  "content": "<p>There are <code>n</code> flights that are labeled from <code>1</code> to <code>n</code>.</p>\n\n<p>You are given an array of flight bookings <code>bookings</code>, where <code>bookings[i] = [first<sub>i</sub>, last<sub>i</sub>, seats<sub>i</sub>]</code> represents a booking for flights <code>first<sub>i</sub></code> through <code>last<sub>i</sub></code> (<strong>inclusive</strong>) with <code>seats<sub>i</sub></code> seats reserved for <strong>each flight</strong> in the range.</p>\n\n<p>Return <em>an array </em><code>answer</code><em> of length </em><code>n</code><em>, where </em><code>answer[i]</code><em> is the total number of seats reserved for flight </em><code>i</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> bookings = [[1,2,10],[2,3,20],[2,5,25]], n = 5\n<strong>Output:</strong> [10,55,45,25,25]\n<strong>Explanation:</strong>\nFlight labels:        1   2   3   4   5\nBooking 1 reserved:  10  10\nBooking 2 reserved:      20  20\nBooking 3 reserved:      25  25  25  25\nTotal seats:         10  55  45  25  25\nHence, answer = [10,55,45,25,25]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> bookings = [[1,2,10],[2,2,15]], n = 2\n<strong>Output:</strong> [10,25]\n<strong>Explanation:</strong>\nFlight labels:        1   2\nBooking 1 reserved:  10  10\nBooking 2 reserved:      15\nTotal seats:         10  25\nHence, answer = [10,25]\n\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 2 * 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= bookings.length &lt;= 2 * 10<sup>4</sup></code></li>\n\t<li><code>bookings[i].length == 3</code></li>\n\t<li><code>1 &lt;= first<sub>i</sub> &lt;= last<sub>i</sub> &lt;= n</code></li>\n\t<li><code>1 &lt;= seats<sub>i</sub> &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"corpFlightBookings\",\n  \"params\": [\n    {\n      \"name\": \"bookings\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"n\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"102.7K\", \"totalSubmission\": \"153.7K\", \"totalAcceptedRaw\": 102723, \"totalSubmissionRaw\": 153748, \"acRate\": \"66.8%\"}",
+  "likes": 1865,
+  "dislikes": 168,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Zero Array Transformation II\", \"titleSlug\": \"zero-array-transformation-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Zero Array Transformation III\", \"titleSlug\": \"zero-array-transformation-iii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,2,10],[2,3,20],[2,5,25]]\n5",
+    "[[1,2,10],[2,2,15]]\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> corpFlightBookings(vector<vector<int>>& bookings, int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] corpFlightBookings(int[][] bookings, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def corpFlightBookings(self, bookings: List[List[int]], n: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def corpFlightBookings(self, bookings, n):\n        \"\"\"\n        :type bookings: List[List[int]]\n        :type n: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} bookings\n * @param {number} n\n * @return {number[]}\n */\nvar corpFlightBookings = function(bookings, n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function corpFlightBookings(bookings: number[][], n: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] CorpFlightBookings(int[][] bookings, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* corpFlightBookings(int** bookings, int bookingsSize, int* bookingsColSize, int n, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func corpFlightBookings(bookings [][]int, n int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun corpFlightBookings(bookings: Array<IntArray>, n: Int): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func corpFlightBookings(_ bookings: [[Int]], _ n: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn corp_flight_bookings(bookings: Vec<Vec<i32>>, n: i32) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} bookings\n# @param {Integer} n\n# @return {Integer[]}\ndef corp_flight_bookings(bookings, n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $bookings\n     * @param Integer $n\n     * @return Integer[]\n     */\n    function corpFlightBookings($bookings, $n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> corpFlightBookings(List<List<int>> bookings, int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def corpFlightBookings(bookings: Array[Array[Int]], n: Int): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec corp_flight_bookings(bookings :: [[integer]], n :: integer) :: [integer]\n  def corp_flight_bookings(bookings, n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec corp_flight_bookings(Bookings :: [[integer()]], N :: integer()) -> [integer()].\ncorp_flight_bookings(Bookings, N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (corp-flight-bookings bookings n)\n  (-> (listof (listof exact-integer?)) exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": null
+}

@@ -20,8 +20,8 @@ Configured in `.chezmoi.toml.tmpl` to use `~/git/monorepo/packages/dotfiles` (no
 
 Affected secrets (lines 39-46):
 
-- `GITHUB_TOKEN` — Homelab vault
-- `GRAFANA_TOKEN` — Homelab vault
+- `GH_TOKEN` — Homelab vault
+- `GRAFANA_API_KEY` — Homelab vault
 - `PAGERDUTY_TOKEN` — was Homelab vault item `yio3tx4wkvysvy5umdrqh7fe2e`, **deleted as of 2026-02-28**
 - `BUGSINK_TOKEN` — Personal vault
 - `ARGOCD_AUTH_TOKEN` — separate vault

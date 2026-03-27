@@ -1,0 +1,142 @@
+{
+  "questionId": "1640",
+  "questionFrontendId": "1500",
+  "title": "Design a File Sharing System",
+  "titleSlug": "design-a-file-sharing-system",
+  "difficulty": "Medium",
+  "content": "<p>We will use a file-sharing system to share a very large file which consists of <code>m</code> small <b>chunks</b> with IDs from <code>1</code> to <code>m</code>.</p>\n\n<p>When users join the system, the system should assign <b>a unique</b> ID to them. The unique ID should be used <b>once</b> for each user, but when a user leaves the system, the ID can be <b>reused</b> again.</p>\n\n<p>Users can request a certain chunk of the file, the system should return a list of IDs of all the users who own this chunk. If the user receives a non-empty list of IDs, they receive the requested chunk successfully.</p>\n\n<p><br />\nImplement the <code>FileSharing</code> class:</p>\n\n<ul>\n\t<li><code>FileSharing(int m)</code> Initializes the object with a file of <code>m</code> chunks.</li>\n\t<li><code>int join(int[] ownedChunks)</code>: A new user joined the system owning some chunks of the file, the system should assign an id to the user which is the <b>smallest positive integer</b> not taken by any other user. Return the assigned id.</li>\n\t<li><code>void leave(int userID)</code>: The user with <code>userID</code> will leave the system, you cannot take file chunks from them anymore.</li>\n\t<li><code>int[] request(int userID, int chunkID)</code>: The user <code>userID</code> requested the file chunk with <code>chunkID</code>. Return a list of the IDs of all users that own this chunk sorted in ascending order.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<pre>\n<b>Input:</b>\n[&quot;FileSharing&quot;,&quot;join&quot;,&quot;join&quot;,&quot;join&quot;,&quot;request&quot;,&quot;request&quot;,&quot;leave&quot;,&quot;request&quot;,&quot;leave&quot;,&quot;join&quot;]\n[[4],[[1,2]],[[2,3]],[[4]],[1,3],[2,2],[1],[2,1],[2],[[]]]\n<b>Output:</b>\n[null,1,2,3,[2],[1,2],null,[],null,1]\n<b>Explanation:</b>\nFileSharing fileSharing = new FileSharing(4); // We use the system to share a file of 4 chunks.\n\nfileSharing.join([1, 2]);    // A user who has chunks [1,2] joined the system, assign id = 1 to them and return 1.\n\nfileSharing.join([2, 3]);    // A user who has chunks [2,3] joined the system, assign id = 2 to them and return 2.\n\nfileSharing.join([4]);       // A user who has chunk [4] joined the system, assign id = 3 to them and return 3.\n\nfileSharing.request(1, 3);   // The user with id = 1 requested the third file chunk, as only the user with id = 2 has the file, return [2] . Notice that user 1 now has chunks [1,2,3].\n\nfileSharing.request(2, 2);   // The user with id = 2 requested the second file chunk, users with ids [1,2] have this chunk, thus we return [1,2].\n\nfileSharing.leave(1);        // The user with id = 1 left the system, all the file chunks with them are no longer available for other users.\n\nfileSharing.request(2, 1);   // The user with id = 2 requested the first file chunk, no one in the system has this chunk, we return empty list [].\n\nfileSharing.leave(2);        // The user with id = 2 left the system.\n\nfileSharing.join([]);        // A user who doesn&#39;t have any chunks joined the system, assign id = 1 to them and return 1. Notice that ids 1 and 2 are free and we can reuse them.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= m &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= ownedChunks.length &lt;= min(100, m)</code></li>\n\t<li><code>1 &lt;= ownedChunks[i] &lt;= m</code></li>\n\t<li>Values of <code>ownedChunks</code> are unique.</li>\n\t<li><code>1 &lt;= chunkID &lt;= m</code></li>\n\t<li><code>userID</code> is guaranteed to be a user in the system if you <strong>assign</strong> the IDs <strong>correctly</strong>.</li>\n\t<li>At most <code>10<sup>4</sup></code> calls will be made to <code>join</code>, <code>leave</code> and <code>request</code>.</li>\n\t<li>Each call to <code>leave</code> will have a matching call for <code>join</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow-up:</strong></p>\n\n<ul>\n\t<li>What happens if the system identifies the user by their IP address instead of their unique ID and users disconnect and connect from the system with the same IP?</li>\n\t<li>If the users in the system join and leave the system frequently without requesting any chunks, will your solution still be efficient?</li>\n\t<li>If all users join the system one time, request all files, and then leave, will your solution still be efficient?</li>\n\t<li>If the system will be used to share <code>n</code> files where the <code>ith</code> file consists of <code>m[i]</code>, what are the changes you have to make?</li>\n</ul>\n",
+  "hints": [
+    "Try to solve it by keeping for each file chunk, the users who have this chunk.",
+    "Try to solve it by keeping all the users in the system with their owned chunks, and when you request a chunk, check all users for it."
+  ],
+  "metaData": "{\n  \"classname\": \"FileSharing\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer\",\n        \"name\": \"m\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"list<integer>\",\n          \"name\": \"ownedChunks\"\n        }\n      ],\n      \"name\": \"join\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"userID\"\n        }\n      ],\n      \"name\": \"leave\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"userID\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"chunkID\"\n        }\n      ],\n      \"name\": \"request\",\n      \"return\": {\n        \"type\": \"list<integer>\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true,\n  \"manual\": false\n}",
+  "stats": "{\"totalAccepted\": \"6.7K\", \"totalSubmission\": \"16K\", \"totalAcceptedRaw\": 6677, \"totalSubmissionRaw\": 15993, \"acRate\": \"41.7%\"}",
+  "likes": 53,
+  "dislikes": 132,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Design Twitter\", \"titleSlug\": \"design-twitter\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"FileSharing\",\"join\",\"join\",\"join\",\"request\",\"request\",\"leave\",\"request\",\"leave\",\"join\"]\n[[4],[[1,2]],[[2,3]],[[4]],[1,3],[2,2],[1],[2,1],[2],[[]]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"twitch\", \"name\": \"Twitch\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Data Stream",
+      "slug": "data-stream"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class FileSharing {\npublic:\n    FileSharing(int m) {\n        \n    }\n    \n    int join(vector<int> ownedChunks) {\n        \n    }\n    \n    void leave(int userID) {\n        \n    }\n    \n    vector<int> request(int userID, int chunkID) {\n        \n    }\n};\n\n/**\n * Your FileSharing object will be instantiated and called as such:\n * FileSharing* obj = new FileSharing(m);\n * int param_1 = obj->join(ownedChunks);\n * obj->leave(userID);\n * vector<int> param_3 = obj->request(userID,chunkID);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class FileSharing {\n\n    public FileSharing(int m) {\n        \n    }\n    \n    public int join(List<Integer> ownedChunks) {\n        \n    }\n    \n    public void leave(int userID) {\n        \n    }\n    \n    public List<Integer> request(int userID, int chunkID) {\n        \n    }\n}\n\n/**\n * Your FileSharing object will be instantiated and called as such:\n * FileSharing obj = new FileSharing(m);\n * int param_1 = obj.join(ownedChunks);\n * obj.leave(userID);\n * List<Integer> param_3 = obj.request(userID,chunkID);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class FileSharing:\n\n    def __init__(self, m: int):\n        \n\n    def join(self, ownedChunks: List[int]) -> int:\n        \n\n    def leave(self, userID: int) -> None:\n        \n\n    def request(self, userID: int, chunkID: int) -> List[int]:\n        \n\n\n# Your FileSharing object will be instantiated and called as such:\n# obj = FileSharing(m)\n# param_1 = obj.join(ownedChunks)\n# obj.leave(userID)\n# param_3 = obj.request(userID,chunkID)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class FileSharing(object):\n\n    def __init__(self, m):\n        \"\"\"\n        :type m: int\n        \"\"\"\n        \n\n    def join(self, ownedChunks):\n        \"\"\"\n        :type ownedChunks: List[int]\n        :rtype: int\n        \"\"\"\n        \n\n    def leave(self, userID):\n        \"\"\"\n        :type userID: int\n        :rtype: None\n        \"\"\"\n        \n\n    def request(self, userID, chunkID):\n        \"\"\"\n        :type userID: int\n        :type chunkID: int\n        :rtype: List[int]\n        \"\"\"\n        \n\n\n# Your FileSharing object will be instantiated and called as such:\n# obj = FileSharing(m)\n# param_1 = obj.join(ownedChunks)\n# obj.leave(userID)\n# param_3 = obj.request(userID,chunkID)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} m\n */\nvar FileSharing = function(m) {\n    \n};\n\n/** \n * @param {number[]} ownedChunks\n * @return {number}\n */\nFileSharing.prototype.join = function(ownedChunks) {\n    \n};\n\n/** \n * @param {number} userID\n * @return {void}\n */\nFileSharing.prototype.leave = function(userID) {\n    \n};\n\n/** \n * @param {number} userID \n * @param {number} chunkID\n * @return {number[]}\n */\nFileSharing.prototype.request = function(userID, chunkID) {\n    \n};\n\n/** \n * Your FileSharing object will be instantiated and called as such:\n * var obj = new FileSharing(m)\n * var param_1 = obj.join(ownedChunks)\n * obj.leave(userID)\n * var param_3 = obj.request(userID,chunkID)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class FileSharing {\n    constructor(m: number) {\n        \n    }\n\n    join(ownedChunks: number[]): number {\n        \n    }\n\n    leave(userID: number): void {\n        \n    }\n\n    request(userID: number, chunkID: number): number[] {\n        \n    }\n}\n\n/**\n * Your FileSharing object will be instantiated and called as such:\n * var obj = new FileSharing(m)\n * var param_1 = obj.join(ownedChunks)\n * obj.leave(userID)\n * var param_3 = obj.request(userID,chunkID)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class FileSharing {\n\n    public FileSharing(int m) {\n        \n    }\n    \n    public int Join(IList<int> ownedChunks) {\n        \n    }\n    \n    public void Leave(int userID) {\n        \n    }\n    \n    public IList<int> Request(int userID, int chunkID) {\n        \n    }\n}\n\n/**\n * Your FileSharing object will be instantiated and called as such:\n * FileSharing obj = new FileSharing(m);\n * int param_1 = obj.Join(ownedChunks);\n * obj.Leave(userID);\n * IList<int> param_3 = obj.Request(userID,chunkID);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} FileSharing;\n\n\nFileSharing* fileSharingCreate(int m) {\n    \n}\n\nint fileSharingJoin(FileSharing* obj, int* ownedChunks, int ownedChunksSize) {\n    \n}\n\nvoid fileSharingLeave(FileSharing* obj, int userID) {\n    \n}\n\nint* fileSharingRequest(FileSharing* obj, int userID, int chunkID, int* retSize) {\n    \n}\n\nvoid fileSharingFree(FileSharing* obj) {\n    \n}\n\n/**\n * Your FileSharing struct will be instantiated and called as such:\n * FileSharing* obj = fileSharingCreate(m);\n * int param_1 = fileSharingJoin(obj, ownedChunks, ownedChunksSize);\n \n * fileSharingLeave(obj, userID);\n \n * int* param_3 = fileSharingRequest(obj, userID, chunkID, retSize);\n \n * fileSharingFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type FileSharing struct {\n    \n}\n\n\nfunc Constructor(m int) FileSharing {\n    \n}\n\n\nfunc (this *FileSharing) Join(ownedChunks []int) int {\n    \n}\n\n\nfunc (this *FileSharing) Leave(userID int)  {\n    \n}\n\n\nfunc (this *FileSharing) Request(userID int, chunkID int) []int {\n    \n}\n\n\n/**\n * Your FileSharing object will be instantiated and called as such:\n * obj := Constructor(m);\n * param_1 := obj.Join(ownedChunks);\n * obj.Leave(userID);\n * param_3 := obj.Request(userID,chunkID);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class FileSharing(m: Int) {\n\n    fun join(ownedChunks: List<Int>): Int {\n        \n    }\n\n    fun leave(userID: Int) {\n        \n    }\n\n    fun request(userID: Int, chunkID: Int): List<Int> {\n        \n    }\n\n}\n\n/**\n * Your FileSharing object will be instantiated and called as such:\n * var obj = FileSharing(m)\n * var param_1 = obj.join(ownedChunks)\n * obj.leave(userID)\n * var param_3 = obj.request(userID,chunkID)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass FileSharing {\n\n    init(_ m: Int) {\n        \n    }\n    \n    func join(_ ownedChunks: [Int]) -> Int {\n        \n    }\n    \n    func leave(_ userID: Int) {\n        \n    }\n    \n    func request(_ userID: Int, _ chunkID: Int) -> [Int] {\n        \n    }\n}\n\n/**\n * Your FileSharing object will be instantiated and called as such:\n * let obj = FileSharing(m)\n * let ret_1: Int = obj.join(ownedChunks)\n * obj.leave(userID)\n * let ret_3: [Int] = obj.request(userID, chunkID)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct FileSharing {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl FileSharing {\n\n    fn new(m: i32) -> Self {\n        \n    }\n    \n    fn join(&self, owned_chunks: Vec<i32>) -> i32 {\n        \n    }\n    \n    fn leave(&self, user_id: i32) {\n        \n    }\n    \n    fn request(&self, user_id: i32, chunk_id: i32) -> Vec<i32> {\n        \n    }\n}\n\n/**\n * Your FileSharing object will be instantiated and called as such:\n * let obj = FileSharing::new(m);\n * let ret_1: i32 = obj.join(ownedChunks);\n * obj.leave(userID);\n * let ret_3: Vec<i32> = obj.request(userID, chunkID);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class FileSharing\n\n=begin\n    :type m: Integer\n=end\n    def initialize(m)\n        \n    end\n\n\n=begin\n    :type owned_chunks: Integer[]\n    :rtype: Integer\n=end\n    def join(owned_chunks)\n        \n    end\n\n\n=begin\n    :type user_id: Integer\n    :rtype: Void\n=end\n    def leave(user_id)\n        \n    end\n\n\n=begin\n    :type user_id: Integer\n    :type chunk_id: Integer\n    :rtype: Integer[]\n=end\n    def request(user_id, chunk_id)\n        \n    end\n\n\nend\n\n# Your FileSharing object will be instantiated and called as such:\n# obj = FileSharing.new(m)\n# param_1 = obj.join(owned_chunks)\n# obj.leave(user_id)\n# param_3 = obj.request(user_id, chunk_id)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class FileSharing {\n    /**\n     * @param Integer $m\n     */\n    function __construct($m) {\n        \n    }\n  \n    /**\n     * @param Integer[] $ownedChunks\n     * @return Integer\n     */\n    function join($ownedChunks) {\n        \n    }\n  \n    /**\n     * @param Integer $userID\n     * @return NULL\n     */\n    function leave($userID) {\n        \n    }\n  \n    /**\n     * @param Integer $userID\n     * @param Integer $chunkID\n     * @return Integer[]\n     */\n    function request($userID, $chunkID) {\n        \n    }\n}\n\n/**\n * Your FileSharing object will be instantiated and called as such:\n * $obj = FileSharing($m);\n * $ret_1 = $obj->join($ownedChunks);\n * $obj->leave($userID);\n * $ret_3 = $obj->request($userID, $chunkID);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class FileSharing {\n\n  FileSharing(int m) {\n    \n  }\n  \n  int join(List<int> ownedChunks) {\n    \n  }\n  \n  void leave(int userID) {\n    \n  }\n  \n  List<int> request(int userID, int chunkID) {\n    \n  }\n}\n\n/**\n * Your FileSharing object will be instantiated and called as such:\n * FileSharing obj = FileSharing(m);\n * int param1 = obj.join(ownedChunks);\n * obj.leave(userID);\n * List<int> param3 = obj.request(userID,chunkID);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class FileSharing(_m: Int) {\n\n    def join(ownedChunks: List[Int]): Int = {\n        \n    }\n\n    def leave(userID: Int): Unit = {\n        \n    }\n\n    def request(userID: Int, chunkID: Int): List[Int] = {\n        \n    }\n\n}\n\n/**\n * Your FileSharing object will be instantiated and called as such:\n * val obj = new FileSharing(m)\n * val param_1 = obj.join(ownedChunks)\n * obj.leave(userID)\n * val param_3 = obj.request(userID,chunkID)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule FileSharing do\n  @spec init_(m :: integer) :: any\n  def init_(m) do\n    \n  end\n\n  @spec join(owned_chunks :: [integer]) :: integer\n  def join(owned_chunks) do\n    \n  end\n\n  @spec leave(user_id :: integer) :: any\n  def leave(user_id) do\n    \n  end\n\n  @spec request(user_id :: integer, chunk_id :: integer) :: [integer]\n  def request(user_id, chunk_id) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# FileSharing.init_(m)\n# param_1 = FileSharing.join(owned_chunks)\n# FileSharing.leave(user_id)\n# param_3 = FileSharing.request(user_id, chunk_id)\n\n# FileSharing.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec file_sharing_init_(M :: integer()) -> any().\nfile_sharing_init_(M) ->\n  .\n\n-spec file_sharing_join(OwnedChunks :: [integer()]) -> integer().\nfile_sharing_join(OwnedChunks) ->\n  .\n\n-spec file_sharing_leave(UserID :: integer()) -> any().\nfile_sharing_leave(UserID) ->\n  .\n\n-spec file_sharing_request(UserID :: integer(), ChunkID :: integer()) -> [integer()].\nfile_sharing_request(UserID, ChunkID) ->\n  .\n\n\n%% Your functions will be called as such:\n%% file_sharing_init_(M),\n%% Param_1 = file_sharing_join(OwnedChunks),\n%% file_sharing_leave(UserID),\n%% Param_3 = file_sharing_request(UserID, ChunkID),\n\n%% file_sharing_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define file-sharing%\n  (class object%\n    (super-new)\n    \n    ; m : exact-integer?\n    (init-field\n      m)\n    \n    ; join : (listof exact-integer?) -> exact-integer?\n    (define/public (join owned-chunks)\n      )\n    ; leave : exact-integer? -> void?\n    (define/public (leave user-id)\n      )\n    ; request : exact-integer? exact-integer? -> (listof exact-integer?)\n    (define/public (request user-id chunk-id)\n      )))\n\n;; Your file-sharing% object will be instantiated and called as such:\n;; (define obj (new file-sharing% [m m]))\n;; (define param_1 (send obj join owned-chunks))\n;; (send obj leave user-id)\n;; (define param_3 (send obj request user-id chunk-id))"
+    }
+  ],
+  "solution": null
+}

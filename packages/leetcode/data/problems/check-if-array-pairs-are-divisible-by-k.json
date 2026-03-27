@@ -1,0 +1,142 @@
+{
+  "questionId": "1620",
+  "questionFrontendId": "1497",
+  "title": "Check If Array Pairs Are Divisible by k",
+  "titleSlug": "check-if-array-pairs-are-divisible-by-k",
+  "difficulty": "Medium",
+  "content": "<p>Given an array of integers <code>arr</code> of even length <code>n</code> and an integer <code>k</code>.</p>\n\n<p>We want to divide the array into exactly <code>n / 2</code> pairs such that the sum of each pair is divisible by <code>k</code>.</p>\n\n<p>Return <code>true</code><em> If you can find a way to do that or </em><code>false</code><em> otherwise</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [1,2,3,4,5,10,6,7,8,9], k = 5\n<strong>Output:</strong> true\n<strong>Explanation:</strong> Pairs are (1,9),(2,8),(3,7),(4,6) and (5,10).\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [1,2,3,4,5,6], k = 7\n<strong>Output:</strong> true\n<strong>Explanation:</strong> Pairs are (1,6),(2,5) and(3,4).\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [1,2,3,4,5,6], k = 10\n<strong>Output:</strong> false\n<strong>Explanation:</strong> You can try all possible pairs to see that there is no way to divide arr into 3 pairs each with sum divisible by 10.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>arr.length == n</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>n</code> is even.</li>\n\t<li><code>-10<sup>9</sup> &lt;= arr[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Keep an array of the frequencies of ((x % k) + k) % k for each x in arr.",
+    "for each i in [0, k - 1] we need to check if freq[i] == freq[k - i]",
+    "Take care of the case when i == k - i and when i == 0"
+  ],
+  "metaData": "{\n  \"name\": \"canArrange\",\n  \"params\": [\n    {\n      \"name\": \"arr\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"207.5K\", \"totalSubmission\": \"449.4K\", \"totalAcceptedRaw\": 207459, \"totalSubmissionRaw\": 449390, \"acRate\": \"46.2%\"}",
+  "likes": 2622,
+  "dislikes": 156,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count Array Pairs Divisible by K\", \"titleSlug\": \"count-array-pairs-divisible-by-k\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Deletions to Make Array Divisible\", \"titleSlug\": \"minimum-deletions-to-make-array-divisible\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count Pairs That Form a Complete Day II\", \"titleSlug\": \"count-pairs-that-form-a-complete-day-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Pairs That Form a Complete Day I\", \"titleSlug\": \"count-pairs-that-form-a-complete-day-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,4,5,10,6,7,8,9]\n5",
+    "[1,2,3,4,5,6]\n7",
+    "[1,2,3,4,5,6]\n10"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 7, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"visa\", \"name\": \"Visa\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"devrev\", \"name\": \"DevRev\"}, {\"timesEncountered\": 2, \"slug\": \"6sense\", \"name\": \"6sense\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool canArrange(vector<int>& arr, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean canArrange(int[] arr, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def canArrange(self, arr: List[int], k: int) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def canArrange(self, arr, k):\n        \"\"\"\n        :type arr: List[int]\n        :type k: int\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arr\n * @param {number} k\n * @return {boolean}\n */\nvar canArrange = function(arr, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function canArrange(arr: number[], k: number): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool CanArrange(int[] arr, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool canArrange(int* arr, int arrSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func canArrange(arr []int, k int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun canArrange(arr: IntArray, k: Int): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func canArrange(_ arr: [Int], _ k: Int) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn can_arrange(arr: Vec<i32>, k: i32) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} arr\n# @param {Integer} k\n# @return {Boolean}\ndef can_arrange(arr, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $arr\n     * @param Integer $k\n     * @return Boolean\n     */\n    function canArrange($arr, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool canArrange(List<int> arr, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def canArrange(arr: Array[Int], k: Int): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec can_arrange(arr :: [integer], k :: integer) :: boolean\n  def can_arrange(arr, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec can_arrange(Arr :: [integer()], K :: integer()) -> boolean().\ncan_arrange(Arr, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (can-arrange arr k)\n  (-> (listof exact-integer?) exact-integer? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2450",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Hashing / Counting\n\n#### Intuition\n\nWe have an array of size `n` and need to divide it into exactly `n/2` pairs. The goal is to ensure that the sum of each pair is divisible by `k`. We will return `true` if we can make these pairs and `false` otherwise.\n\nTo form a pair, we first pick an integer from the array and calculate its value modulo `k`, which we will call `mod`. To find a suitable partner for this integer, we look for another element with a modulo value of `k - mod`. This can be explained with the proof given below:\n\nLet the array be $A = [a_1, a_2, ..., a_n]$ and the divisor be $k$. We need to form pairs such that:\n\n$(ai + aj) \\% k = 0$\n\nThis can be rewritten as:\n\n$(ai \\% k + aj \\% k) \\% k = 0$\n\nFor each element in the array, its remainder when divided by $k$ lies in the range $[0, k-1]$. Let's denote the remainder of an element $a_i$ by $mod_i = a_i \\% k$. To form a valid pair $(ai, aj)$, we need:\n\n$(mod_i + mod_j) \\% k = 0$\n\nThis implies:\n\n$mod_j = k - mod_i$\n\nIf `mod` is 0, we need to pair this element with another that is also 0. This is because the sum of two numbers divisible by `k` is also divisible by `k`. Therefore, the count of elements that yield a modulo of 0 must be even to form valid pairs.\n\nTo efficiently track the modulo values, we can use a hashmap called `remainderCount`. This hashmap will store the counts of each modulo value. We will then iterate through the array to check if we can successfully form pairs based on these counts.\n\n#### Algorithm\n\n1. Create a hashmap `remainderCount` to store the count of remainders when dividing elements of `arr` by `k`.\n2. Iterate through the array `arr`:\n    - For each element `i`, compute the remainder as `(x % k + k) % k` to handle both positive and negative values.\n    - Increment the count of this remainder in `remainderCount`.\n3. Iterate through the array `arr` again:\n    - For each element `i`, compute the remainder as `(i % k + k) % k`.\n    - If the remainder is 0, check if the count of this remainder in `remainderCount` is even:\n        - If it is odd, return `false` (no valid pairs).\n    - For all other remainders `rem`, check if the count of `rem` is equal to the count of `k - rem`:\n        - If they are not equal, return `false` (no valid pairs).\n4. If all checks pass, return `true` (valid pairs can be made).\n\n!?!../Documents/1497_rename/slideshow1_rename.json:960,540!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/cMDdbuuu/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"cMDdbuuu\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `arr` array.\n\n- Time complexity: $O(n)$\n\n   The loop traverses the array twice, and all search, insert operations performed on the hashmap take constant time. Therefore, the time complexity is linear.\n\n- Space complexity: $O(k)$\n\n   Inserting the modulo values in the hashmap requires exactly `k` unique values from `0` to `k-1`, so the space complexity is given by $O(k)$.\n\n---\n\n### Approach 2: Sorting and Two-Pointers\n\n#### Intuition\n\nIn the previous approach, we focused on finding pairs with their modulo `k` values expressed as $\\text{mod}$ and $k - \\text{mod}$. When we sort the array by these modulo values, we notice that pairs will be located at opposite ends. For instance, after pairing elements with modulo 0, elements with modulo 1 will pair with those at `k - 1`, which are at the end of the array since modulo values range from 0 to `k - 1`.\n\nTo solve this, we can use a two-pointer technique. After handling the case for modulo 0  value, we set two pointers, `i` at the start and `j` at the end of the array. If the values at `i` and `j` form a valid pair, we move `i` to the next index and `j` to the previous index. If they do not form a pair, we return false. If `i` and `j` converge at the same index, we return true.\n\n#### Algorithm\n\n1. Define a custom comparator to sort the array based on the remainder when dividing elements by `k`.\n    - The comparator will return `true` if the modulo of the first element is less than the second, taking into account negative values by using `(k + i % k) % k`.\n2. Sort the array `arr` using the custom comparator.\n3. Initialize two pointers `start` and `end`:\n    - `start` starts from the beginning of the array and `end` starts from the end of the array.\n4. While `start` is less than `end`:\n    - If the element at index `start` is not divisible by `k`, break the loop.\n    - If the next element (`start + 1`) is not divisible by `k`, return `false` (invalid pairing).\n    - Increment `start` by 2.\n5. For the remaining elements:\n    - If the sum of the two elements is not divisible by `k`, return `false` (invalid pairing).\n    - Increment `start` and decrement `end` to continue pairing.\n6. If all pairs are valid, return `true`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/2SEmtqFU/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"2SEmtqFU\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `arr` array.\n\n- Time complexity: $O(n \\cdot \\log n)$\n\n   Sorting the array takes $O(n \\cdot \\log n)$ time. All other operations are linear or constant time.\n\n   Therefore, the total time complexity is given by $O(n\\cdot \\log n)$.\n\n- Space complexity: $O(n)$ or $O(\\log n)$.\n\n   The space complexity of the sorting algorithm depends on the programming language.\n    - In Python, the sort method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has $O(n)$ additional space.\n    - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n )$ for sorting an array.\n    - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worse-case space complexity of $O( \\log n )$.\n\n   Therefore, the space complexity is given by $O(n)$ or $O(\\log n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "questionId": "1556",
+  "questionFrontendId": "1460",
+  "title": "Make Two Arrays Equal by Reversing Subarrays",
+  "titleSlug": "make-two-arrays-equal-by-reversing-subarrays",
+  "difficulty": "Easy",
+  "content": "<p>You are given two integer arrays of equal length <code>target</code> and <code>arr</code>. In one step, you can select any <strong>non-empty subarray</strong> of <code>arr</code> and reverse it. You are allowed to make any number of steps.</p>\n\n<p>Return <code>true</code> <em>if you can make </em><code>arr</code><em> equal to </em><code>target</code><em>&nbsp;or </em><code>false</code><em> otherwise</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> target = [1,2,3,4], arr = [2,4,1,3]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> You can follow the next steps to convert arr to target:\n1- Reverse subarray [2,4,1], arr becomes [1,4,2,3]\n2- Reverse subarray [4,2], arr becomes [1,2,4,3]\n3- Reverse subarray [4,3], arr becomes [1,2,3,4]\nThere are multiple ways to convert arr to target, this is not the only way to do so.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> target = [7], arr = [7]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> arr is equal to target without any reverses.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> target = [3,7,9], arr = [3,7,11]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> arr does not have value 9 and it can never be converted to target.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>target.length == arr.length</code></li>\n\t<li><code>1 &lt;= target.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= target[i] &lt;= 1000</code></li>\n\t<li><code>1 &lt;= arr[i] &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [
+    "Each element of target should have a corresponding element in arr, and if it doesn't have a corresponding element, return false.",
+    "To solve it easiely you can sort the two arrays and check if they are equal."
+  ],
+  "metaData": "{\n  \"name\": \"canBeEqual\",\n  \"params\": [\n    {\n      \"name\": \"target\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"arr\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"332.5K\", \"totalSubmission\": \"438.6K\", \"totalAcceptedRaw\": 332493, \"totalSubmissionRaw\": 438562, \"acRate\": \"75.8%\"}",
+  "likes": 1525,
+  "dislikes": 164,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,2,3,4]\n[2,4,1,3]",
+    "[7]\n[7]",
+    "[3,7,9]\n[3,7,11]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool canBeEqual(vector<int>& target, vector<int>& arr) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean canBeEqual(int[] target, int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def canBeEqual(self, target: List[int], arr: List[int]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def canBeEqual(self, target, arr):\n        \"\"\"\n        :type target: List[int]\n        :type arr: List[int]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} target\n * @param {number[]} arr\n * @return {boolean}\n */\nvar canBeEqual = function(target, arr) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function canBeEqual(target: number[], arr: number[]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool CanBeEqual(int[] target, int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool canBeEqual(int* target, int targetSize, int* arr, int arrSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func canBeEqual(target []int, arr []int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun canBeEqual(target: IntArray, arr: IntArray): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func canBeEqual(_ target: [Int], _ arr: [Int]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn can_be_equal(target: Vec<i32>, arr: Vec<i32>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} target\n# @param {Integer[]} arr\n# @return {Boolean}\ndef can_be_equal(target, arr)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $target\n     * @param Integer[] $arr\n     * @return Boolean\n     */\n    function canBeEqual($target, $arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool canBeEqual(List<int> target, List<int> arr) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def canBeEqual(target: Array[Int], arr: Array[Int]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec can_be_equal(target :: [integer], arr :: [integer]) :: boolean\n  def can_be_equal(target, arr) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec can_be_equal(Target :: [integer()], Arr :: [integer()]) -> boolean().\ncan_be_equal(Target, Arr) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (can-be-equal target arr)\n  (-> (listof exact-integer?) (listof exact-integer?) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2388",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nYou are given two arrays, `arr` and `target`. In one step, we can reverse any subarray of `arr`. We need to determine whether or not it is possible to turn `arr` into `target` by performing any number of steps. \n\n---\n\n### Approach 1: Sorting\n\n### Intuition\n\nWe can consider simulating a sequence of reversals on `arr` to see if it can be turned into `target`. Consider the following reversal strategy:\n\nFirst, we iterate through each element `target[i]` from left to right. For each `target[i]`, we locate the same element in `arr`, if it exists. If it does not exist, we can immediately return false as it is not possible to do any number of reversals for `arr` to match `target`. If the element `arr[j]` is found, but not in the same position as `target[i]`, (i.e. `j > i`), we repeatedly swap  `arr[j]` with the element in front of it, `arr[j-1]`, until `j == i`. This effectively pushes `arr[j]` forward to the same position as `target[i]`. Note that this swapping is equivalent to repeatedly reversing the subarray `arr[j-1:j]` in which j is decremented at each step.\n\n!?!../Documents/1460/slideshow1.json:960,540!?!\n\n\nThis swapping strategy demonstrates that `arr` can be rearranged in any possible order. As long as `arr` contains the same elements as `target`, the ordering of `arr` does not matter because it can always be reordered into `target` using the swapping strategy mentioned above.\n\nThus, the problem boils down to whether or not `arr` and `target` contain the same elements. In order to determine this, we can sort both arrays. If the arrays have the same elements, then their sorted versions should be identical. If they don't have the same elements, then their sorted versions will have at least one differing value at some index `i`.\n\n### Algorithm\n\n1. Sort both the input arrays `arr` and `target` in ascending order.\n2. Iterate through the elements of both sorted arrays simultaneously:\n    * Compare corresponding elements from `arr` and `target`.\n    * If any pair of elements differs, return `false` as the arrays cannot be made equal.\n3. If all elements match after the iteration, return `true` indicating that the arrays can be made equal by rearranging the elements. \n\n### Implementation\n\n<iframe src=\"https://leetcode.com/playground/587FZKfe/shared\" frameBorder=\"0\" width=\"100%\" height=\"242\" name=\"587FZKfe\"></iframe>\n\n### Complexity Analysis\n\nLet $N$ be the size of arrays `target` and `arr`. \n\n* Time Complexity: $O(N \\cdot log N)$\n\n    Sorting each array takes $O(N \\cdot log N)$. Iterating through the two arrays to check for differences takes $O(N)$.\n    Thus, the total time complexity is $O(N \\cdot log N)$.\n\n* Space Complexity: $O(\\log N)$ or $O(N)$\n\n    Some extra space is used when we sort an array of size $N$ in place. The space complexity of the sorting algorithm depends on the programming language.\n    - In Python, the sort method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has a space complexity of $O(N)$\n    - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worst-case space complexity of $O( \\log N )$\n    - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log N)$\n\n### Approach 2: Frequency Counting With 2 Dictionaries\n\n### Intuition \n\nAnother way to determine whether or not `arr` and `target` have the same elements is to compare their frequency counts for each of their elements. We can use a dictionary for each array, where each key represents an element, and its value represents the number of occurrences of that element in the array.\nIf the dictionaries differ at any point, it means `arr` cannot be turned into `target` through any number of operations.\n\n### Algorithm\n\n1. Create a frequency map `arrFreq` to count the occurrences of each number in the array `arr`.  \n    * Iterate through `arr` and for each number, update the frequency in `arrFreq`.\n2. Create a frequency map `targetFreq` to count the occurrences of each number in the array `target`.  \n    * Iterate through `target` and for each number, update the frequency in `targetFreq` similarly.  \n3. Compare the size of the key sets of `arrFreq` and `targetFreq`.  \n    * If they differ in size, return `false`, indicating the arrays cannot be equal.  \n4. Iterate through the keys in `arrFreq`:  \n    * For each key, check if the frequency in `targetFreq` matches the frequency in `arrFreq`.  \n    * If any frequency does not match, return `false`.  \n5. If all checks are passed, return `true`, indicating the arrays can be made equal by reversing subarrays.  \n\n### Implementation\n\n<iframe src=\"https://leetcode.com/playground/e5qes3tN/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"e5qes3tN\"></iframe>\n\n### Complexity Analysis\n\nLet $N$ be the size of arrays `target` and `arr`. \n\n* Time Complexity: $O(N)$\n\n    Iterating through each array and updating their dictionaries takes $O(N)$ time. Iterating through one of the dictionary's keys and performing lookups will also take $O(N)$ time. Thus, the total time complexity is $O(N)$.\n\n* Space Complexity: $O(N)$\n\n    In the worst case, each array's dictionary will have `arr.length` keys, taking up $O(N)$ space. Thus, the total space complexity is $O(N)$.\n\n ### Approach 3: Frequency Counting With 1 Dictionary\n\n### Intuition \n\nIn the previous approach, we check if there are any differences in the two arrays' frequencies by comparing their respective frequency dictionaries. \n\nHowever, we can streamline this process using only one frequency dictionary for `arr`. By creating the frequency dictionary `arrFreq` for `arr`, we can iterate through the `target` and check if each element exists in `arrFreq`. If it does, we decrement its frequency value in `arrFreq`. If the dictionary is completely empty at the end of the iteration, it indicates that `target` and `arr` have matching elements.\n\n### Algorithm\n\n1. Create a frequency map `arrFreq` to count the occurrences of each number in the array `arr`.\n    * Iterate through `arr` and for each number, update the frequency in `arrFreq`.\n2. Iterate through each number in the `target` array:  \n    * Check if the number is present in `arrFreq`. If not, return `false` as the arrays cannot be made equal.  \n    * Decrease the frequency of the number in `arrFreq` by 1.  \n    * If the frequency of the number becomes 0, remove the number from `arrFreq` as there are no more occurrences needed.  \n2. After processing all numbers in `target`, check if `arrFreq` is empty.  \n    * If it is empty, return `true`, indicating that the arrays can be made equal.  \n    * If not, return `false`.  \n\n### Implementation\n\n<iframe src=\"https://leetcode.com/playground/W6rVwhRf/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"W6rVwhRf\"></iframe>\n\n### Complexity Analysis\n\nLet $N$ be the size of arrays `target` and `arr`. \n\n* Time Complexity: $O(N)$\n\n    Iterating through one array and updating their dictionary takes $O(N)$ time. Iterating through an array and performing lookups in the dictionary will also take $O(N)$ time. Thus, the total time complexity is $O(N)$.\n\n* Space Complexity: $O(N)$\n\n    In the worst case, the dictionary will have `arr.length` keys, taking up $O(N)$ space. Thus, the total space complexity is $O(N)$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

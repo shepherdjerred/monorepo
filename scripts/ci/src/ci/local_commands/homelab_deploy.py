@@ -183,9 +183,9 @@ def run(args: argparse.Namespace, config: ReleaseConfig) -> None:
     # Step 5: Sync ArgoCD
     if not args.skip_argocd and all_argo_apps:
         print("\n--- Step 5: Sync ArgoCD ---", flush=True)
-        argocd_token = os.environ.get("ARGOCD_TOKEN", "")
+        argocd_token = os.environ.get("ARGOCD_AUTH_TOKEN", "")
         if not argocd_token and not dry_run:
-            print("Error: ARGOCD_TOKEN required for ArgoCD sync", file=sys.stderr)
+            print("Error: ARGOCD_AUTH_TOKEN required for ArgoCD sync", file=sys.stderr)
             sys.exit(1)
         for app_name in all_argo_apps:
             print(f"  Syncing {app_name}...", flush=True)
@@ -197,7 +197,7 @@ def run(args: argparse.Namespace, config: ReleaseConfig) -> None:
     # Step 6: Wait healthy
     if args.wait_healthy and not args.skip_argocd and all_argo_apps and not dry_run:
         print("\n--- Step 6: Wait for healthy ---", flush=True)
-        argocd_token = os.environ.get("ARGOCD_TOKEN", "")
+        argocd_token = os.environ.get("ARGOCD_AUTH_TOKEN", "")
         for app_name in all_argo_apps:
             print(f"  Waiting for {app_name}...", flush=True)
             health = argocd.wait_for_health(app_name, argocd_token)

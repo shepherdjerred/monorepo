@@ -1,0 +1,137 @@
+{
+  "questionId": "1537",
+  "questionFrontendId": "1422",
+  "title": "Maximum Score After Splitting a String",
+  "titleSlug": "maximum-score-after-splitting-a-string",
+  "difficulty": "Easy",
+  "content": "<p>Given a&nbsp;string <code>s</code>&nbsp;of zeros and ones, <em>return the maximum score after splitting the string into two <strong>non-empty</strong> substrings</em> (i.e. <strong>left</strong> substring and <strong>right</strong> substring).</p>\n\n<p>The score after splitting a string is the number of <strong>zeros</strong> in the <strong>left</strong> substring plus the number of <strong>ones</strong> in the <strong>right</strong> substring.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;011101&quot;\n<strong>Output:</strong> 5 \n<strong>Explanation:</strong> \nAll possible ways of splitting s into two non-empty substrings are:\nleft = &quot;0&quot; and right = &quot;11101&quot;, score = 1 + 4 = 5 \nleft = &quot;01&quot; and right = &quot;1101&quot;, score = 1 + 3 = 4 \nleft = &quot;011&quot; and right = &quot;101&quot;, score = 1 + 2 = 3 \nleft = &quot;0111&quot; and right = &quot;01&quot;, score = 1 + 1 = 2 \nleft = &quot;01110&quot; and right = &quot;1&quot;, score = 2 + 1 = 3\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;00111&quot;\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> When left = &quot;00&quot; and right = &quot;111&quot;, we get the maximum score = 2 + 3 = 5\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;1111&quot;\n<strong>Output:</strong> 3\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= s.length &lt;= 500</code></li>\n\t<li>The string <code>s</code> consists of characters <code>&#39;0&#39;</code> and <code>&#39;1&#39;</code> only.</li>\n</ul>\n",
+  "hints": [
+    "Precompute a prefix sum of ones ('1').",
+    "Iterate from left to right counting the number of zeros ('0'), then use the precomputed prefix sum for counting ones ('1'). Update the answer."
+  ],
+  "metaData": "{\n  \"name\": \"maxScore\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"371.5K\", \"totalSubmission\": \"570.9K\", \"totalAcceptedRaw\": 371456, \"totalSubmissionRaw\": 570947, \"acRate\": \"65.1%\"}",
+  "likes": 2195,
+  "dislikes": 91,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"011101\"",
+    "\"00111\"",
+    "\"1111\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 14, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 8, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxScore(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxScore(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxScore(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxScore(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar maxScore = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxScore(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxScore(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxScore(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxScore(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxScore(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxScore(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_score(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef max_score(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function maxScore($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxScore(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxScore(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_score(s :: String.t) :: integer\n  def max_score(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_score(S :: unicode:unicode_binary()) -> integer().\nmax_score(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-score s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2184",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Brute Force\n\n**Intuition**\n\nIn this problem, we need to make a \"split\" which involves separating the input into a left part and a right part.\n\nTo start, we can check every possible split. We will use an integer `i` to iterate over the string, where `i` represents the index of the final character in the left part.\n\nFor a given `i`, we iterate on the indices of `s` from `0` to `i` and count how many times `0` occurs. We then iterate on the indices from `i + 1` until the last index and count how many times `1` occurs. The sum of these counts represents the score for the current split, and we take the maximum of all scores.\n\nNote that we cannot iterate `i` until the final index, but rather the second last index. If we were to iterate to the final index, the right part would be empty, which is not allowed by the problem.\n\n**Algorithm**\n\n1. Initialize the answer `ans = 0`.\n2. Iterate `i` from `0` until `s.length - 1`:\n    - Initialize the current score `curr = 0`.\n    - Iterate `j` from `0` to `i`:\n        - If `s[j] == '0'`, increment `curr`.\n    - Iterate `j` from `i + 1` until `s.length`:\n        - If `s[j] == '1'`, increment `curr`.\n    - Update `ans` with `curr` if it is larger.\n3. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/BxhALAmW/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"BxhALAmW\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `nums`,\n\n* Time complexity: $$O(n^2)$$\n\n    We iterate `i` over $$n - 1$$ indices. For each iteration, we have two iterations over `j`, traversing over a total of $$n$$ indices. Thus, we iterate $$O(n \\cdot (n - 1)) = O(n^2)$$ times.\n\n* Space complexity: $$O(1)$$\n\n    We aren't using any extra space other than a few integers.\n    \n<br/>\n\n---\n\n### Approach 2: Count Left Zeros and Right Ones\n\n**Intuition**\n\nWe can improve on the previous solution by noticing that between a split at index `i` and index `i + 1`, we are only changing one character (more specifically, moving it from the right substring to the left substring), leaving the other characters unchanged. Instead of iterating over the entire string for each split, we only need to check the moved character and calculate the score for the new split based on the previous split.\n\nWe start by counting how many times `1` occurs in `s`. Let's store this value in a variable `ones`. We will also have a variable `zeros` that represents how many `0` are in the left part. Initially, our variables `ones` and `zeros` are set as if the left part is empty and the right part is the entire string.\n\nNow, we iterate `i` in the same manner as the previous approach: each index `i` represents the final index of the left part. At each iteration `i`, we remove `s[i]` from the right part and add it to the left part.\n\n![example](../Figures/1422/1.png)\n<br>\n\nThere are two possibilities for each index `i`:\n\n- If `s[i] == '1'`: this `1` was in the right part, but it is now joining the left part. Thus, we lose `1` score since the right part is losing a `1`. Decrement `ones`.\n- If `s[i] == '0'`, this `0` was in the right part, but it is now joining the left part. Thus, we gain `1` score since the left part is gaining a `0`. Increment `zeros`.\n\nWe update the answer with `zeros + ones` at each iteration if it is larger.\n\n**Algorithm**\n\n1. Initialize `ones` as the number of times `1` occurs in `s`.\n2. Initialize `zeros = 0` and the answer `ans = 0`.\n3. Iterate `i` from `0` until `s.length - 1`:\n    - If `s[i] == '1'`, decrement `ones`.\n    - Otherwise, increment `zeros`.\n    - Update `ans` with `zeros + ones` if it is larger.\n4. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/RbevsbUt/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"RbevsbUt\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `nums`,\n\n* Time complexity: $$O(n)$$\n\n    We start by finding the frequency of `1`, which costs $$O(n)$$. Next, we iterate over the string once, performing $$O(1)$$ work at each iteration. Thus, our time complexity is $$O(2n) = O(n)$$.\n\n* Space complexity: $$O(1)$$\n\n    We aren't using any extra space other than a few integers.\n    \n<br/>\n\n---\n\n### Approach 3: One Pass\n\n**Intuition**\n\nIn the previous approach, we used two passes over the input string: once to calculate `ones`, and another time to calculate `ans`. We can further optimize the algorithm to only use one pass!\n\nThe answer to our problem is the maximum score for all valid splits, as represented by the following equation:\n\n$$\\text{score} = Z_L + O_R$$, where $$Z_L$$ is the number of zeros in the left substring and $$O_R$$ is the number of ones in the right substring.\n\nWe can express $$O_R$$ as $$O_T - O_L$$, where $$O_T$$ is the total number of ones in `s`, and $$O_L$$ is the number of ones in the left substring.\n\nUsing the above expression, our first equation can be represented as:\n\n$$\\text{score} = Z_L + O_T - O_L$$\n\nIn the above equation, $$O_T$$ is a constant, we need to find the maximum value of $$Z_L - O_L$$ for all valid splits. Notice that both of these values depend solely on the left substring. Therefore, we don't need to consider the right substring, which saves the need for the first traversal in the previous solution.\n\nIn the code, we will use the variable `zeros` to represent $$Z_L$$ and the variables `ones` to represent $$O_L$$. As `zeros - ones` may be negative, we initialize an integer `best` to a very small value, like negative infinity. Here, `best` represents the largest value of `zeros - ones` we have seen so far.\n\nWe now iterate `i` in the same manner as the first two approaches: at each iteration, `i` represents the final index of the left part. On each iteration, we are adding `s[i]` to the left part. Thus, if `s[i] = '1'` we increment `ones`, otherwise `s[i] = '0'` and we increment `zeros`. Then, we update `best` with `zeros - ones` if it is larger.\n\nRecall that we don't iterate `i` over the final index since it would mean having an empty right part. Once we are done iterating over `s`, we will check the final index to see if it is a `1`. If it is, we increment `ones`.\n\nThe reason we explicitly check the final index for `1` is that we want `ones` to represent $$O_T$$ in the end, but when we calculate `ones`, we don't iterate over the last index, so we need to account for it. Now, we have `best` as the maximum of all $$Z_L - O_L$$ and `ones` represents $$O_T$$, we can return `best + ones` as the answer.\n\n**Algorithm**\n\n1. Initialize `ones = 0`, `zeros = 0`, and `best` to a very small value like negative infinity.\n2. Iterate `i` from `0` until `s.length - 1`:\n    - If `s[i] == '1'`, increment `ones`.\n    - Otherwise, increment `zeros`.\n    - Update `best` with `zeros - ones` if it is larger.\n3. If the final character of `s` is equal to `'1'`, increment `ones`.\n4. Return `best + ones`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/Q7CXvTeL/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"Q7CXvTeL\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `nums`,\n\n* Time complexity: $$O(n)$$\n\n    We make one pass over `nums`, performing $$O(1)$$ work at each iteration.\n\n* Space complexity: $$O(1)$$\n\n    We aren't using any extra space other than a few integers.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

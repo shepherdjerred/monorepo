@@ -1,0 +1,136 @@
+{
+  "questionId": "1444",
+  "questionFrontendId": "1342",
+  "title": "Number of Steps to Reduce a Number to Zero",
+  "titleSlug": "number-of-steps-to-reduce-a-number-to-zero",
+  "difficulty": "Easy",
+  "content": "<p>Given an integer <code>num</code>, return <em>the number of steps to reduce it to zero</em>.</p>\n\n<p>In one step, if the current number is even, you have to divide it by <code>2</code>, otherwise, you have to subtract <code>1</code> from it.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = 14\n<strong>Output:</strong> 6\n<strong>Explanation:</strong>&nbsp;\nStep 1) 14 is even; divide by 2 and obtain 7.&nbsp;\nStep 2) 7 is odd; subtract 1 and obtain 6.\nStep 3) 6 is even; divide by 2 and obtain 3.&nbsp;\nStep 4) 3 is odd; subtract 1 and obtain 2.&nbsp;\nStep 5) 2 is even; divide by 2 and obtain 1.&nbsp;\nStep 6) 1 is odd; subtract 1 and obtain 0.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = 8\n<strong>Output:</strong> 4\n<strong>Explanation:</strong>&nbsp;\nStep 1) 8 is even; divide by 2 and obtain 4.&nbsp;\nStep 2) 4 is even; divide by 2 and obtain 2.&nbsp;\nStep 3) 2 is even; divide by 2 and obtain 1.&nbsp;\nStep 4) 1 is odd; subtract 1 and obtain 0.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = 123\n<strong>Output:</strong> 12\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= num &lt;= 10<sup>6</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Simulate the process to get the final answer."
+  ],
+  "metaData": "{\n  \"name\": \"numberOfSteps\",\n  \"params\": [\n    {\n      \"name\": \"num\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"911.9K\", \"totalSubmission\": \"1.1M\", \"totalAcceptedRaw\": 911886, \"totalSubmissionRaw\": 1063223, \"acRate\": \"85.8%\"}",
+  "likes": 4276,
+  "dislikes": 181,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Moves to Reach Target Score\", \"titleSlug\": \"minimum-moves-to-reach-target-score\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Operations to Obtain Zero\", \"titleSlug\": \"count-operations-to-obtain-zero\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "14",
+    "8",
+    "123"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"hrt\", \"name\": \"Hudson River Trading\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numberOfSteps(int num) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numberOfSteps(int num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numberOfSteps(self, num: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numberOfSteps(self, num):\n        \"\"\"\n        :type num: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} num\n * @return {number}\n */\nvar numberOfSteps = function(num) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numberOfSteps(num: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumberOfSteps(int num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numberOfSteps(int num) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numberOfSteps(num int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numberOfSteps(num: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numberOfSteps(_ num: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn number_of_steps(num: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} num\n# @return {Integer}\ndef number_of_steps(num)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $num\n     * @return Integer\n     */\n    function numberOfSteps($num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numberOfSteps(int num) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numberOfSteps(num: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec number_of_steps(num :: integer) :: integer\n  def number_of_steps(num) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec number_of_steps(Num :: integer()) -> integer().\nnumber_of_steps(Num) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (number-of-steps num)\n  (-> exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "892",
+    "content": "## Video Solution\n\n---\n\n<div>\n  <div class=\"video-container\">\n    <iframe src=\"https://player.vimeo.com/video/725871856?texttrack=en-x-autogenerated\" frameborder=\"0\"\n      allow=\"autoplay; fullscreen\"></iframe>\n  </div>\n</div>\n\n> At 4:57, the power of two labels are missing. From left to right, the labels should say: $2^7, \\; 2^6, \\; 2^5, \\; 2^4, \\; 2^3, \\; 2^2, \\; 2^1, \\; 2^0$\n\n## Solution\n\n---\n\n### Approach 1: Simulation\n\n**Intuition**\n\nThe most intuitive, and easiest, solution is to simply simulate the rules and count how many steps are carried out in order to reach zero.\n\nAs an example, assume our starting value is `43`. The steps we need to take will be:\n\n```\n43 # Odd, subtract 1\n42 # Even, divide by 2\n21 # Odd, subtract 1\n20 # Even, divide by 2\n10 # Even, divide by 2\n 5 # Odd, subtract 1\n 4 # Even divide by 2\n 2 # Even, divide by 2\n 1 # Odd, subtract 1\n 0\n```\n\nThis is a total of `9` steps.\n\nHere's an animation of this same algorithm being used with a starting value of `211`.\n\n!?!../Documents/1342_simulation_animation.json:960,250!?!\n\n**Algorithm**\n\nThe algorithm works by simulating each step of the rules; if the current number is even then divide it by `2`. Else if it's odd, subtract `1` from it. Each time we perform one of these actions, we increment the steps we've taken by `1` so that we can return it at the end.\n\nTo check if a number is even or odd, we can use the *modulus* (`%`) operator. Recall that the *modulus* operator gives us the *remainder* when we divide two numbers. If `number % 2` is `1`, then we know `number` must be **odd**. Otherwise, the only other value it could be is `0`, which means `number` must be **even**.\n\n<iframe src=\"https://leetcode.com/playground/nZD45biw/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"nZD45biw\"></iframe>\n\n**Complexity Analysis**\n\nLet $$n = num$$.\n\n- Time Complexity : $$O(\\log \\, n)$$.\n\n    At each step, what we did depended on whether the remaining $$num$$ was odd or even. If $$num$$ was even, we *halved* what was left. If it was odd, we only subtracted $$1$$. *However*, by subtracting $$1$$, we were making it *even*, and so on the next step we were *guaranteed* to halve it.\n\n    What this means is that in the worst case, we're halving it on every *second* step. We treat the $$\\frac{1}{2}$$ of the time as a constant though, so in essence, we say that at each step, $$num$$ is being halved.\n\n    When something is halved at every step, it has a $$O(\\log \\, n)$$ time complexity.\n\n- Space Complexity : $$O(1)$$.\n\n    We only use a constant number of integer variables, and so the space complexity is $$O(1)$$.\n\nIt's impossible for us to do better than a time complexity of $$O(\\log \\, n)$$—unless we were willing to hardcode all 1 million possible cases we could be given (the problem statement says `0 <= num <= 10^6`). But we really don't want to do that! By the end of this article, you'll be able to see why it's *impossible* for an algorithm to do better.\n\n</br>\n\n---\n\n### Approach 2: Counting Bits\n\n*Note: Approach 2 and 3 don't change the time complexity, but they offer a different way of thinking about the problem that studying will hopefully help you expand your problem solving skills! A prerequisite for these last 2 approaches is knowing how numbers are represented in binary.*\n\nAt each step, we either subtract `1` from `num`, or we divide `num` by `2`. In binary, these two operations do something very simple, but very interesting, to a number!\n\nRecall that odd numbers always have a last bit of `1`. Subtracting `1`, *from an odd number*, **changes the last bit** from `1` to `0`.\n\n![Showing 53 - 1 changes the last bit to zero](../Figures/1342/subtract_1_from_odd.png)\n\nDividing by `2` **removes the last bit** from the number.\n\n![Showing 52 / 2 removes the last bit](../Figures/1342/divide_by_2.png)\n\nFor example, have a look at the binary representation of `210` as it's reduced to zero.\n\n!?!../Documents/1342_simulation_binary_animation.json:960,250!?!\n\nThe bits slid along, and each became the \"last\" bit. Notice how the `0`s took **one** step to remove, and the `1`s took **two** steps to remove.\n\nThis means that we could simply analyze the binary representation of the starting `num` to determine the number of steps needed to reduce it.\n\nSo, to get our answer, we can just add two steps for every `1`, and add one step for every `0`, for each bit in the binary representation.\n\n![Showing the bits of a number map to either one or two steps](../Figures/1342/bits_to_steps.png)\n\nThere's one thing to be careful of, and that is not inadvertently counting the last bit as two steps. The last bit to remove will *always* be a `1`—it was the most significant bit in the original `num`. The algorithm above would add *2* for removing this final `1`. But actually, when we subtract `1` from it, it goes to zero. So we don't need add two steps for this bit. The simplest way of handling this case is to subtract `1` from our *final* `steps` count, as we know this \"off-by-one-error\" will always happen (except when the initial `num` is `0`, we need to be careful of that edge case too!).\n\nLet's look at another example. The number we'll use is `78`; this can be written in binary as `1001110`. The binary contains four `1`s and three `0`s, so our total number of steps must be `(4 * 2) + (3 * 1) - 1 = 10`. This the correct result!\n\n**Algorithm**\n\nTo count the bits we'll convert our number into a binary string, for each character if it's a `\"1\"` we'll add two steps, else if it's `\"0\"` we'll add one step.\n\nIn **Java**, we can use `Integer.toBinaryString(...)` to convert an int to binary. The binary number is represented as `String`.\n\nIn **Python**, we can use `bin(...)` to convert an int to binary. Like in Java, the binary number is represented as a `str`. However, it also contains `0b` on the start—this is simply a code to say the `str` is a binary number. The \"pythonic\" thing to do is chop these two characters off with a list splice. i.e., to get the binary for `num`, you would do `bin(num)[2:]`.\n\n<iframe src=\"https://leetcode.com/playground/LpxaaJwF/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"LpxaaJwF\"></iframe>\n\nIn Python, we can do this really elegantly using the `string.count(...)` and `len(...)` functions.\n\n<iframe src=\"https://leetcode.com/playground/cPvCPyeK/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"cPvCPyeK\"></iframe>\n\n\n**Complexity Analysis**\n\nLet $$n = num$$.\n\n- Time Complexity : $$O(\\log \\, n)$$.\n\n    Converting a number into string can be done in $$\\log \\, n$$ time.\n\n    We then loop over each bit, doing a single operation each time. The number of bits in a number is $$\\log_2 \\, number$$, so the time complexity is $$O(\\log \\, n)$$.\n\n- Space Complexity : $$O(\\log \\, n)$$.\n\n    Because we convert the number into a string, we'll have $$\\log_2 \\, number$$ characters in our string. This gives us a space complexity of $$O(\\log \\, n)$$.\n\n</br>\n\n---\n\n### Approach 3: Counting Bits with Bitwise Operators\n\nIn Approach 2, we needed to convert the number into a string representation. Strings are considerably larger than the integer they represent though. Another way of inspecting bits, to check if they're `1` or `0`, is to use the bitwise-and (`&`) operator.\n\nThe result of `a & b` (`a` bitwise-and `b`) looks at each bit in both `a` and `b` at the same time. If both bits are `1` then bitwise-and sets the same bit of the result to `1`, but if either are `0` it sets the bit to `0`.\n\nFor example, `109` and `57` can be written as `1101101` and `111001` respectively. This image shows what happens when we bitwise-and them.\n\n![Bitwise and of 109 and 57 showing result](../Figures/1342/bitwise_and.png)\n\nSo, to actually inspect a specific bit, we can use a number that has a `1` followed by enough `0`s to put the `1` at the position we want it (we commonly call this a \"bitmask\"). With this number, we bitwise-and (`&`) it with the input number. If the input number has a `1` at the same position, it'll output `1` at that position, and because all other numbers are `0` they will be `0` in the output as well.\n\nThese numbers of the form `1`, followed by some number of `0`s, are actually just the powers of two, where the power is the number of `0`s after the one. As such, we can check if a bit is a `1` in a number by doing `num & (1 << bit)` where `bit` is the bit we want to check (0-indexed from the right).\n\nFor example, let's check if the *sixth* bit of `109` is a `1`.\n\n![Bitwise and of 109 and 32 showing result of 32](../Figures/1342/check_sixth_digit.png)\n\nThe output is `100000`, which *is not* zero. Therefore, we know that the sixth bit has to be a `1`.\n\nLet's also check if the the fifth bit of `109` is a `1`.\n\n![Bitwise and of 109 and 16 showing result of 0](../Figures/1342/check_fifth_digit.png)\n\nThe output is `0000000`, which *is* zero. Therefore, we know that the fifth bit must be a `0`.\n\nJust like Approach 2, we look at each bit, and if it's a `1` we add `2` to `steps`, otherwise if it's a `0`, we add `1` to `steps`.\n\n**Algorithm**\n\nUnlike the previous approach, this approach won't work correctly when `num = 0` is the input. The previous approach did an iteration for the lone `0` bit as it was in the string, but for this approach the loop won't run at all. `-1` will then be returned because of the `steps - 1`. The solution is to check for `num == 0` at the start and `return 0` if it is detected.\n\n<iframe src=\"https://leetcode.com/playground/dJQpEmJg/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"dJQpEmJg\"></iframe>\n\n**Complexity Analysis**\n\nLet $$n = num$$.\n\n- Time Complexity : $$O(\\log \\, n)$$.\n\n    We're pulling out each of the $$\\log \\, n$$ bits from `num` and performing an $$O(1)$$ operation on each one. Therefore, the total time complexity is, again, $$O(\\log \\, n)$$.\n\n- Space Complexity : $$O(1)$$.\n\n    We only use a constant number of integer variables, and so the space complexity is $$O(1)$$.\n\n</br>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

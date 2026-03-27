@@ -1,0 +1,135 @@
+{
+  "questionId": "1196",
+  "questionFrontendId": "1105",
+  "title": "Filling Bookcase Shelves",
+  "titleSlug": "filling-bookcase-shelves",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array <code>books</code> where <code>books[i] = [thickness<sub>i</sub>, height<sub>i</sub>]</code> indicates the thickness and height of the <code>i<sup>th</sup></code> book. You are also given an integer <code>shelfWidth</code>.</p>\n\n<p>We want to place these books in order onto bookcase shelves that have a total width <code>shelfWidth</code>.</p>\n\n<p>We choose some of the books to place on this shelf such that the sum of their thickness is less than or equal to <code>shelfWidth</code>, then build another level of the shelf of the bookcase so that the total height of the bookcase has increased by the maximum height of the books we just put down. We repeat this process until there are no more books to place.</p>\n\n<p>Note that at each step of the above process, the order of the books we place is the same order as the given sequence of books.</p>\n\n<ul>\n\t<li>For example, if we have an ordered list of <code>5</code> books, we might place the first and second book onto the first shelf, the third book on the second shelf, and the fourth and fifth book on the last shelf.</li>\n</ul>\n\n<p>Return <em>the minimum possible height that the total bookshelf can be after placing shelves in this manner</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/06/24/shelves.png\" style=\"height: 500px; width: 337px;\" />\n<pre>\n<strong>Input:</strong> books = [[1,1],[2,3],[2,3],[1,1],[1,1],[1,1],[1,2]], shelfWidth = 4\n<strong>Output:</strong> 6\n<strong>Explanation:</strong>\nThe sum of the heights of the 3 shelves is 1 + 3 + 2 = 6.\nNotice that book number 2 does not have to be on the first shelf.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> books = [[1,3],[2,4],[3,2]], shelfWidth = 6\n<strong>Output:</strong> 4\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= books.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= thickness<sub>i</sub> &lt;= shelfWidth &lt;= 1000</code></li>\n\t<li><code>1 &lt;= height<sub>i</sub> &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [
+    "Use dynamic programming:  dp(i) will be the answer to the problem for books[i:]."
+  ],
+  "metaData": "{\n  \"name\": \"minHeightShelves\",\n  \"params\": [\n    {\n      \"name\": \"books\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"shelfWidth\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"158.2K\", \"totalSubmission\": \"230.5K\", \"totalAcceptedRaw\": 158202, \"totalSubmissionRaw\": 230514, \"acRate\": \"68.6%\"}",
+  "likes": 2678,
+  "dislikes": 270,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[1,1],[2,3],[2,3],[1,1],[1,1],[1,1],[1,2]]\n4",
+    "[[1,3],[2,4],[3,2]]\n6"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 2, \"slug\": \"6sense\", \"name\": \"6sense\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minHeightShelves(vector<vector<int>>& books, int shelfWidth) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minHeightShelves(int[][] books, int shelfWidth) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minHeightShelves(self, books: List[List[int]], shelfWidth: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minHeightShelves(self, books, shelfWidth):\n        \"\"\"\n        :type books: List[List[int]]\n        :type shelfWidth: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} books\n * @param {number} shelfWidth\n * @return {number}\n */\nvar minHeightShelves = function(books, shelfWidth) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minHeightShelves(books: number[][], shelfWidth: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinHeightShelves(int[][] books, int shelfWidth) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minHeightShelves(int** books, int booksSize, int* booksColSize, int shelfWidth) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minHeightShelves(books [][]int, shelfWidth int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minHeightShelves(books: Array<IntArray>, shelfWidth: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minHeightShelves(_ books: [[Int]], _ shelfWidth: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_height_shelves(books: Vec<Vec<i32>>, shelf_width: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} books\n# @param {Integer} shelf_width\n# @return {Integer}\ndef min_height_shelves(books, shelf_width)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $books\n     * @param Integer $shelfWidth\n     * @return Integer\n     */\n    function minHeightShelves($books, $shelfWidth) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minHeightShelves(List<List<int>> books, int shelfWidth) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minHeightShelves(books: Array[Array[Int]], shelfWidth: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_height_shelves(books :: [[integer]], shelf_width :: integer) :: integer\n  def min_height_shelves(books, shelf_width) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_height_shelves(Books :: [[integer()]], ShelfWidth :: integer()) -> integer().\nmin_height_shelves(Books, ShelfWidth) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-height-shelves books shelfWidth)\n  (-> (listof (listof exact-integer?)) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2385",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given an array of `books`, where each book has a specified thickness and height, and a bookcase with a given `shelfWidth`. The goal is to arrange the books in the bookcase to minimize its height.  \n\nAs we process each book sequentially, we have two options: place the book on the current shelf (if its thickness is less than or equal to the remaining width), or start a new shelf. When a new shelf is created, the height of the bookcase increases by the height of the tallest book on the previous shelf.  \n\nOur task is to determine the minimum possible height of the bookcase after all books have been placed.  \n\n---\n\n### Approach 1: Top-Down Dynamic Programming\n\n### Intuition\n\nWhen processing each book in the `books` array, we have two options: place the book on the current shelf or start a new shelf. Since it's not immediately clear which option will yield the minimum height of the bookcase, we need to evaluate both scenarios and choose the one that results in the smallest height.  \n\nWe can model this problem using recursion by defining a function $f(i, remainingShelfWidth, maxHeight)$ that represents the minimum height of the bookcase containing all books up to book `i`, with the current shelf having a remaining width of `remainingShelfWidth` and a maximum height of `maxHeight`. This function essentially breaks down the problem into smaller subproblems:  \n\n- **New Shelf Option**: If we choose to put book `i` on a new shelf, the height of the bookcase will be equal to the height of the previous shelf plus the height of book `i`. This leads to the subproblem $f(i + 1, shelfWidth - books[i][0], books[i][1])$, where we process book `i + 1` with a new shelf containing book `i`. \n\n- **Current Shelf Option**: If we choose to put book `i` on the current shelf, the remaining width of the shelf decreases, and the maximum height of the shelf may increase if the height of book `i` exceeds the current `maxHeight`. This leads to the subproblem $f(i + 1, remainingShelfWidth - books[i][0], \\max(maxHeight, books[i][1]))$.\n\nTo find the optimal height of the bookcase, we can use the recurrence relation below encompassing these two options. This recurrence relation compares the height of the bookcase when placing the book on a new shelf (adding the height of the previous shelf to the result of processing the remaining books) versus placing it on the current shelf (adjusting width and height accordingly):\n\n$$f(i, remainingShelfWidth, maxHeight) = \\min\\left(maxHeight + f(i + 1, shelfWidth - books[i][0], books[i][1]), f(i + 1, remainingShelfWidth - books[i][0], \\max(maxHeight, books[i][1]))\\right)$$  \n\nIf we look at the recursive calls that would be made for Example 1, we notice that subproblems appear more than once.  \n\n![Recursive call tree](../Figures/1105/recursive_call_tree.drawio.png)  \n\nWithout any optimizations, this recursive approach would lead to an exponential time complexity of $O(2^N)$ due to the doubling of recursive calls at each book. However, we can utilize a technique called memoization to store previously computed results. This way, if the same subproblem is encountered again, we can retrieve the result from a cache rather than recalculating it. With this optimization, the time complexity would be linearly proportional to the number of unique subproblems.\n\nWe use a 2D array `memo` as our cache, where `memo[i][j]` represents the minimum height of the bookcase containing all books up to `i` with $j$ remaining shelf space. Note that `maxHeight` is implicitly handled by this memoization structure because the height is recalculated based on the maximum height of books in the current configuration.  \n\n### Algorithm\n\n1. Initialize a 2D array `memo` to cache previous computations, where `memo[i][remainingShelfWidth]` stores the minimum height of the bookcase containing all books up to the `i-th` book with `remainingShelfWidth` width available on the current shelf.  \n2. Call `dpHelper(books, shelfWidth, memo, 0, shelfWidth, 0)` to start the dynamic programming process from the first book, with the full shelf width available and initial height set to 0.  \n3. In `dpHelper` function:   \n    *  If `i == books.length`: \n        * Finish the current shelf and return its height `maxHeight`\n    * **If the result is already computed in `memo`:**  \n        * Return the cached result to avoid redundant calculations.  \n    * **Calculate the height for different scenarios:**  \n        * Extract the current book's width (`currentBook[0]`) and height (`currentBook[1]`).  \n        * **Option 1:** Place the current book on a new shelf:  \n            * Compute height by adding the height of the bookcase for the rest of the books starting from `i + 1` with a new shelf width (`shelfWidth - currentBook[0]`) and updated height (`currentBook[1]`).  \n        * **Option 2:** Place the current book on the current shelf:\n            * Initialize `maxHeightUpdated` to be the maximum of `maxHeight` and `currentBook[1]`.   \n            * Compute height by adding the height of the bookcase for the rest of the books starting from `i + 1` with updated remaining shelf width (`remainingShelfWidth - currentBook[0]`) and updated maximum height (`maxHeightUpdated`).  \n        * **Store the minimum height** between the two options in `memo[i][remainingShelfWidth]` to use it for future computations.  \n    * Return the cached result from `memo[i][remainingShelfWidth]`.  \n4. Return the result from `dpHelper` for the initial call to get the minimum height of the bookcase to accommodate all books on the shelves.  \n\n### Implementation\n\n<iframe src=\"https://leetcode.com/playground/mBUzBhxk/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"mBUzBhxk\"></iframe>\n\n### Complexity Analysis\n\nLet $N$ be the length of array `books`, and $W$ be the `shelfWidth`.\n\n* Time Complexity: $O(N \\cdot W)$ \n\n    There are a total of $O(N \\cdot W)$ possible subproblems to be solved. Each subproblem takes constant time, so the total time complexity is $O(N \\cdot W \\cdot H)$.\n\n* Space Complexity: $O(N \\cdot W)$\n\n    Our `memo` array has a size of $N \\cdot W$. Thus, the total space complexity is $O(N \\cdot W)$.\n\n### Approach 2: Bottom-Up Dynamic Programming\n\n### Intuition\n\nIn the previous recurrence relation, we used a top-down approach where we recursively solved subproblems in decreasing order of size. Now, let’s explore a bottom-up approach, where our subproblems are solved in increasing order of size.  \n\nWe can define a subproblem $f(i)$ as the minimum possible height of the bookcase when containing all books up to (but not including) book `i`. This allows us to compute the bookcase height incrementally:  \n\n- **Base Cases**:  \n  - For `i = 0`, $f(0)$ is trivially `0`, as there are no books to place.  \n  - For `i = 1`, $f(1)$ is simply the height of the first book, `books[0][1]`, since it must be placed on the first shelf.  \nStarting from these base cases, we build up to $f(books.length)$, which will be our final answer.  \n\nTo compute $f(i + 1)$, we need to consider how to arrange book `i` on the shelves, taking advantage of the previously computed values $f(j)$ for $0 \\leq j < i + 1$:  \n\n- **New Shelf Option**: Similar to approach 1, one option is to place book `i` on a new shelf. The height of the bookcase in this scenario would be `books[i][1] + f(i)`, where `f(i)` is the height when arranging all books up to book `i-1`.  \n\n- **Combining Books**: Another option is to place book `i` on a shelf along with some of the previous books. To do this, we need to consider moving all possible numbers of previous books onto this new shelf and check which arrangement yields the minimum height:  \n\n  - For each possible number of previous books that can fit within the `shelfWidth`, calculate the height of the shelf with book `i` and the previous books. For example, if we decide to place book `i` along with book `i-1`, the smallest possible height would be $\\max(books[i][1], books[i-1][1]) + f(i-1)$. This involves taking the maximum height of books on the new shelf and adding it to the height from the previous arrangement without the current books.  \n\nBy iterating through all possible combinations of previous books that can fit on the shelf with book `i`, we determine the minimal height for $f(i + 1)$.  \n\nThe final solution, $f(books.length)$, gives us the minimum height of the bookcase when all books are placed optimally.  \n\n### Algorithm\n\n1. Initialize `dp` array of size `books.length + 1`. `dp[i]` represents the minimum height of the bookshelf when containing all books up to and excluding book `i`.  \n2. Set base cases:  \n    * `dp[0]` is 0 (height of an empty bookcase).  \n    * `dp[1]` is the height of the first book, `books[0][1]`.  \n3. Iterate from `i = 2` to `books.length`:  \n    * Calculate the remaining shelf width after placing the current book `books[i - 1]` on a new shelf.  \n    * Initialize `maxHeight` to the height of the current book.  \n    * Set `dp[i]` to the height of the current book (`books[i - 1][1]`) plus the height of the bookcase containing all previous books (`dp[i - 1]`).  \n    * Iterate backwards from `j = i - 1`:  \n        * Check if adding the book `books[j - 1]` to the shelf still fits within the remaining shelf width.  \n        * Update `maxHeight` to be the maximum height of books on the current shelf.  \n        * Calculate the height if the current set of books (`books[j - 1]` to `books[i - 1]`) are placed on the same shelf.  \n        * Update `dp[i]` to be the minimum of the current `dp[i]` and the height of this configuration (`maxHeight + dp[j - 1]`).  \n        * Decrease `j` to consider additional books on the same shelf.  \n4. Return `dp[books.length]` which represents the minimum height of the bookcase required to store all the books.  \n\n### Implementation\n\n<iframe src=\"https://leetcode.com/playground/FtuDUAVm/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"FtuDUAVm\"></iframe>\n\n### Complexity Analysis\n\nLet $N$ be the length of array `books`, and $W$ be the `shelfWidth`.\n\n* Time Complexity: $O(N \\cdot W)$\n\n    There are $O(N)$ subproblems to complete. In the worst case, each subproblem `dp[i]` takes $O(W)$ time to calculate the heights when adding previous books onto the new shelf. Thus, the total time complexity is $O(N \\cdot W)$.\n\n* Space Complexity: $O(N)$\n\n    The `dp` array has $N + 1$ elements, so the total space complexity is $O(N)$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

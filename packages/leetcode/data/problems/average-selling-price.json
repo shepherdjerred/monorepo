@@ -1,0 +1,53 @@
+{
+  "questionId": "1390",
+  "questionFrontendId": "1251",
+  "title": "Average Selling Price",
+  "titleSlug": "average-selling-price",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Prices</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| product_id    | int     |\n| start_date    | date    |\n| end_date      | date    |\n| price         | int     |\n+---------------+---------+\n(product_id, start_date, end_date) is the primary key (combination of columns with unique values) for this table.\nEach row of this table indicates the price of the product_id in the period from start_date to end_date.\nFor each product_id there will be no two overlapping periods. That means there will be no two intersecting periods for the same product_id.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>UnitsSold</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| product_id    | int     |\n| purchase_date | date    |\n| units         | int     |\n+---------------+---------+\nThis table may contain duplicate rows.\nEach row of this table indicates the date, units, and product_id of each product sold. \n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to find the average selling price for each product. <code>average_price</code> should be <strong>rounded to 2 decimal places</strong>. If a product does not have any sold units, its average selling price is assumed to be 0.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nPrices table:\n+------------+------------+------------+--------+\n| product_id | start_date | end_date   | price  |\n+------------+------------+------------+--------+\n| 1          | 2019-02-17 | 2019-02-28 | 5      |\n| 1          | 2019-03-01 | 2019-03-22 | 20     |\n| 2          | 2019-02-01 | 2019-02-20 | 15     |\n| 2          | 2019-02-21 | 2019-03-31 | 30     |\n+------------+------------+------------+--------+\nUnitsSold table:\n+------------+---------------+-------+\n| product_id | purchase_date | units |\n+------------+---------------+-------+\n| 1          | 2019-02-25    | 100   |\n| 1          | 2019-03-01    | 15    |\n| 2          | 2019-02-10    | 200   |\n| 2          | 2019-03-22    | 30    |\n+------------+---------------+-------+\n<strong>Output:</strong> \n+------------+---------------+\n| product_id | average_price |\n+------------+---------------+\n| 1          | 6.96          |\n| 2          | 16.96         |\n+------------+---------------+\n<strong>Explanation:</strong> \nAverage selling price = Total Price of Product / Number of products sold.\nAverage selling price for product 1 = ((100 * 5) + (15 * 20)) / 115 = 6.96\nAverage selling price for product 2 = ((200 * 15) + (30 * 30)) / 230 = 16.96\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Prices (product_id int, start_date date, end_date date, price int)\", \"Create table If Not Exists UnitsSold (product_id int, purchase_date date, units int)\"], \"mssql\": [\"Create table Prices (product_id int, start_date date, end_date date, price int)\", \"Create table UnitsSold (product_id int, purchase_date date, units int)\"], \"oraclesql\": [\"Create table Prices (product_id int, start_date date, end_date date, price int)\", \"Create table UnitsSold (product_id int, purchase_date date, units int)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"average_selling_price\", \"pythondata\": [\"Prices = pd.DataFrame([], columns=['product_id', 'start_date', 'end_date', 'price']).astype({'product_id':'Int64', 'start_date':'datetime64[ns]', 'end_date':'datetime64[ns]', 'price':'Int64'})\", \"UnitsSold = pd.DataFrame([], columns=['product_id', 'purchase_date', 'units']).astype({'product_id':'Int64', 'purchase_date':'datetime64[ns]', 'units':'Int64'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Prices (product_id int, start_date date, end_date date, price int)\\n\", \"Create table If Not Exists UnitsSold (product_id int, purchase_date date, units int)\"], \"database_schema\": {\"Prices\": {\"product_id\": \"INT\", \"start_date\": \"DATE\", \"end_date\": \"DATE\", \"price\": \"INT\"}, \"UnitsSold\": {\"product_id\": \"INT\", \"purchase_date\": \"DATE\", \"units\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"633.4K\", \"totalSubmission\": \"1.7M\", \"totalAcceptedRaw\": 633436, \"totalSubmissionRaw\": 1704051, \"acRate\": \"37.2%\"}",
+  "likes": 1967,
+  "dislikes": 269,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Prices\":[\"product_id\",\"start_date\",\"end_date\",\"price\"],\"UnitsSold\":[\"product_id\",\"purchase_date\",\"units\"]},\"rows\":{\"Prices\":[[1,\"2019-02-17\",\"2019-02-28\",5],[1,\"2019-03-01\",\"2019-03-22\",20],[2,\"2019-02-01\",\"2019-02-20\",15],[2,\"2019-02-21\",\"2019-03-31\",30]],\"UnitsSold\":[[1,\"2019-02-25\",100],[1,\"2019-03-01\",15],[2,\"2019-02-10\",200],[2,\"2019-03-22\",30]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"paypal\", \"name\": \"PayPal\"}], \"more_than_six_months\": [{\"timesEncountered\": 14, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 13, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}]}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef average_selling_price(prices: pd.DataFrame, units_sold: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

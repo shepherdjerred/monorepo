@@ -1,0 +1,138 @@
+{
+  "questionId": "956",
+  "questionFrontendId": "920",
+  "title": "Number of Music Playlists",
+  "titleSlug": "number-of-music-playlists",
+  "difficulty": "Hard",
+  "content": "<p>Your music player contains <code>n</code> different songs. You want to listen to <code>goal</code> songs (not necessarily different) during your trip. To avoid boredom, you will create a playlist so that:</p>\n\n<ul>\n\t<li>Every song is played <strong>at least once</strong>.</li>\n\t<li>A song can only be played again only if <code>k</code> other songs have been played.</li>\n</ul>\n\n<p>Given <code>n</code>, <code>goal</code>, and <code>k</code>, return <em>the number of possible playlists that you can create</em>. Since the answer can be very large, return it <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 3, goal = 3, k = 1\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> There are 6 possible playlists: [1, 2, 3], [1, 3, 2], [2, 1, 3], [2, 3, 1], [3, 1, 2], and [3, 2, 1].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 2, goal = 3, k = 0\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> There are 6 possible playlists: [1, 1, 2], [1, 2, 1], [2, 1, 1], [2, 2, 1], [2, 1, 2], and [1, 2, 2].\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 2, goal = 3, k = 1\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> There are 2 possible playlists: [1, 2, 1] and [2, 1, 2].\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= k &lt; n &lt;= goal &lt;= 100</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"numMusicPlaylists\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"goal\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"79K\", \"totalSubmission\": \"131.5K\", \"totalAcceptedRaw\": 78960, \"totalSubmissionRaw\": 131501, \"acRate\": \"60.0%\"}",
+  "likes": 2467,
+  "dislikes": 206,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count the Number of Good Subsequences\", \"titleSlug\": \"count-the-number-of-good-subsequences\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "3\n3\n1",
+    "2\n3\n0",
+    "2\n3\n1"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"coursera\", \"name\": \"Coursera\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Combinatorics",
+      "slug": "combinatorics"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numMusicPlaylists(int n, int goal, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numMusicPlaylists(int n, int goal, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numMusicPlaylists(self, n: int, goal: int, k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numMusicPlaylists(self, n, goal, k):\n        \"\"\"\n        :type n: int\n        :type goal: int\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number} goal\n * @param {number} k\n * @return {number}\n */\nvar numMusicPlaylists = function(n, goal, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numMusicPlaylists(n: number, goal: number, k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumMusicPlaylists(int n, int goal, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numMusicPlaylists(int n, int goal, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numMusicPlaylists(n int, goal int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numMusicPlaylists(n: Int, goal: Int, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numMusicPlaylists(_ n: Int, _ goal: Int, _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn num_music_playlists(n: i32, goal: i32, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer} goal\n# @param {Integer} k\n# @return {Integer}\ndef num_music_playlists(n, goal, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer $goal\n     * @param Integer $k\n     * @return Integer\n     */\n    function numMusicPlaylists($n, $goal, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numMusicPlaylists(int n, int goal, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numMusicPlaylists(n: Int, goal: Int, k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec num_music_playlists(n :: integer, goal :: integer, k :: integer) :: integer\n  def num_music_playlists(n, goal, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec num_music_playlists(N :: integer(), Goal :: integer(), K :: integer()) -> integer().\nnum_music_playlists(N, Goal, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (num-music-playlists n goal k)\n  (-> exact-integer? exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1970",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Bottom-up Dynamic Programming\n\n>**Note.** For this approach, we assume that you already know the fundamentals of dynamic programming and are figuring out how to apply it to a wide range of problems, such as this one. If you are not yet at this stage, we recommend checking out our relevant [Explore Card content on dynamic programming](https://leetcode.com/explore/featured/card/dynamic-programming/) before coming back to this approach.\n\n#### Intuition\n\nWe can't simply generate all possible playlists because the problem constraints are too large. Therefore, we need to approach this problem in a different, more efficient way. That's where dynamic programming comes in.\n\nWe're using a dynamic programming (DP) table $\\text{dp}[i][j]$ to represent the number of possible playlists of length $i$ containing exactly $j$ unique songs. Our goal is to calculate $\\text{dp}[\\text{goal}][n]$, which represents the number of ways we can make a playlist of length $\\text{goal}$ using exactly $n$ unique songs.\n\n##### Base cases\n\nTo generate the DP table, we need to define the initial conditions:\n* $\\text{dp}[0][0] = 1$. This represents that there's exactly one way to create a playlist of length $0$ with $0$ unique songs, which is essentially an empty playlist.\n* For all $i < j$, $\\text{dp}[i][j] = 0$. This makes sense because we can't form a playlist of length $i$ with $j$ unique songs when $i < j$. There just aren't enough slots in the playlist to accommodate all the unique songs.\n\n##### Transitions\n\nNow, let's look at the transition rules to fill up the rest of the DP table. Let's say we want to compute the value $\\text{dp}[i][j]$.\n\nIf we add a song that we haven't played yet to the playlist, the playlist length increases by $1$ (from $i - 1$ to $i$), and the number of unique songs also increases by $1$ (from $j - 1$ to $j$). Therefore, a playlist of length $i$ with $j$ unique songs can be formed by adding new songs to each playlist of length $i - 1$ with $j - 1$ unique songs.\n\nIn this scenario, how many new songs do we have available to choose from?\n\nAt this point, we have $j - 1$ unique songs in the playlist. Since there are $n$ unique songs in total, the number of new songs we can add to the playlist is $n - (j - 1) = n - j + 1$.\n\nSince we have $n - j + 1$ choices of the new song, the number of new playlists we can create by adding a new song is $\\text{dp}[i - 1][j - 1] \\cdot (n - j + 1)$. Hence, we add this to $\\text{dp}[i][j]$.\n\nIf we replay an old song, the playlist length increases by $1$ (from $i - 1$ to $i$), but the number of unique songs remains the same (still $j$). Therefore, the number of playlists of length $i$ with $j$ unique songs can be increased by replaying an old song in every playlist of length $i - 1$ with $j$ unique songs.\n\nIn this scenario, how many previously played songs can we choose from?\n\nAt this point, we have $j$ unique songs in the playlist, so we can choose any of these $j$ songs. However, due to the constraint that we can't replay a song unless $k$ other songs have been played, we can't choose from the last $k$ played songs.\n\nSo, if $j > k$, the number of old songs we can replay is $j - k$.\n\nSince we have $j - k$ choices of the old song to replay, the number of new playlists we can create by replaying an old song is $dp[i - 1][j] \\cdot (j - k)$. Hence, if $j > k$, we add this to $\\text{dp}[i][j]$.\n\nThese two scenarios encompass all possible transitions for our dynamic programming solution. Each iteration of our loop considers both of these possibilities and updates $\\text{dp}[i][j]$ accordingly. Since this problem involves large numbers, we perform all operations modulo $10^9 + 7$ to avoid overflow issues.\n\nIn the end, $\\text{dp}[\\text{goal}][n]$ will represent the number of possible playlists of length $\\text{goal}$ using exactly $n$ unique songs, which is the answer to our problem.\n\n#### Algorithm\n\n1. Initialize a two-dimensional dynamic programming table, $\\text{dp}[\\text{goal} + 1][n + 1]$, with zeros.\n2. Set $\\text{dp}[0][0]$ to 1, as there is exactly one way to have a playlist of length $0$ with $0$ unique songs.\n3. Iterate $i$ from $1$ to $\\text{goal}$. (This represents the current length of the playlist).\n\t* Within this loop, iterate $j$ from $1$ to $\\min(i, n)$. (This represents the number of unique songs in the playlist).\n\t\t* Calculate the number of new playlists created by adding a new song: $\\text{dp}[i - 1][j - 1] \\cdot (n - j + 1)$. Add this value to $\\text{dp}[i][j]$ under modulo $10^9 + 7$.\n\t\t* If $j > k$, calculate the number of new playlists created by replaying an old song: $\\text{dp}[i - 1][j] \\cdot (j - k)$. Add this value to $\\text{dp}[i][j]$ under modulo $10^9 + 7$.\n4. Return the value of $\\text{dp}[\\text{goal}][n]$.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/6vSUxbaA/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"6vSUxbaA\"></iframe>\n\n#### Complexity Analysis\n\n* Time Complexity: $O(\\text{goal} \\cdot n)$.\n\nWe need to iterate over a two-dimensional DP table of size $\\text{goal} + 1$ by $n + 1$. In each cell, we perform constant time operations.\n\n* Space Complexity: $O(\\text{goal} \\cdot n)$.\n\nWe're maintaining a two-dimensional DP table of size $\\text{goal} + 1$ by $n + 1$ to store intermediate results.\n\n---\n\n### Approach 2: Top-down Dynamic Programming (Memoization)\n\n#### Intuition\n\nThe bottom-up DP solution iteratively builds up to the solution starting from the simplest subproblems. The top-down dynamic programming approach, also known as memoization, starts with the original problem and breaks it down into subproblems as needed. Here's how we can adjust the solution to a top-down approach.\n\nWe declare the same two-dimensional DP table, $\\text{dp}[\\text{goal} + 1][n + 1]$. This table will keep track of the number of possible playlists of length $i$ using $j$ unique songs. All elements in the DP table are initialized to a sentinel value, for example, $-1$, which indicates that the subproblem hasn't been solved yet.\n\n> The term \"sentinel value\" is a common term used in computer science to refer to a special value that's used for a specific purpose. In the context of this problem, the sentinel value is a special value that we use to initialize the dynamic programming table, and it indicates that a specific subproblem has not been solved yet.\n\nWe then define a function, $\\text{numberOfPlaylists}(i, j)$, that computes and returns the number of playlists of length $i$ using $j$ unique songs. Inside this function, we first check if the solution to this subproblem has already been computed by verifying whether $\\text{dp}[i][j]$ is not equal to $-1$. If it is not, we return $\\text{dp}[i][j]$ because it means we've already solved this subproblem and computed its solution.\n\nIf $\\text{dp}[i][j]$ is equal to $-1$, then we need to compute the solution.\n\nThe base cases of the recursion are as follows:\n* If both $i$ and $j$ are equal to $0$, then the number of possible playlists is $1$. This case represents the fact that there's exactly one way to create a playlist of $0$ length with $0$ unique songs: an empty playlist.\n* If $i$ or $j$ is $0$ and $i$ is not equal to $j$, then the number of possible playlists is $0$. This case represents the impossibility of having a playlist of length $i$ with $j$ unique songs. We can directly return $0$ in this case.\n\nIn the function $\\text{numberOfPlaylists}(i, j)$, these base cases are checked before we proceed to the computation part.\n\nThen we calculate the number of possible playlists by considering two cases: adding a new song or replaying an old song. The number of ways to add a new song is $\\text{dp}[i - 1][j - 1] \\cdot (n - j + 1)$ and to replay an old song is $\\text{dp}[i - 1][j] \\cdot (j - k)$ if $j > k$.\n\nAfter computing the solution for the subproblem, we store it in $\\text{dp}[i][j]$ and return this value. This ensures that if we encounter the same subproblem later, we can retrieve the solution from the DP table without needing to re-compute it, which gives us the efficiency advantage of dynamic programming.\n\nThe final answer to the problem is obtained by calling the function $\\text{numberOfPlaylists}(\\text{goal}, n)$. This gives us the number of possible playlists of length $\\text{goal}$ using exactly $n$ unique songs.\n\n#### Algorithm\n\n1. Initialize a two-dimensional dynamic programming table, $\\text{dp}[\\text{goal} + 1][n + 1]$, with $-1$. This table will be used to store the number of possible playlists of length $i$ using exactly $j$ unique songs.\n2. Implement a recursive function, $\\text{numberOfPlaylists}(i, j)$, to calculate the number of playlists of length $i$ with $j$ unique songs.\n\t* If $i$ is equal to $0$ and $j$ is equal to $0$, return $1$. This represents an empty playlist with no unique songs.\n\t* If either $i$ or $j$ is equal to $0$, return $0$. This represents an impossible scenario where the length of the playlist or the number of unique songs is zero.\n\t* If $\\text{dp}[i][j]$ is not equal to $-1$, return $\\text{dp}[i][j]$. This indicates that the solution for this subproblem has already been computed and can be directly retrieved from the dynamic programming table.\n\t* Calculate the number of new playlists created by adding a new song to the playlist. This can be done by recursively calling $\\text{numberOfPlaylists}(i - 1, j - 1)$ and multiplying it by $(n - j + 1)$, which represents the number of new songs available to choose from. Assign $\\text{dp}[i][j]$ to this value.\n\t* Calculate the number of new playlists created by replaying an old song. This can be done by recursively calling $\\text{numberOfPlaylists}(i - 1, j)$ and multiplying it by $(j - k)$ if $j > k$. This accounts for the restriction that a song can only be replayed if $k$ other songs have been played before it. If $j > k$, add this value to $\\text{dp}[i][j]$.\n\t* Return $\\text{dp}[i][j]$.\n3. Finally, call the $\\text{numberOfPlaylists}(\\text{goal}, n)$ function to obtain the total number of possible playlists of length $\\text{goal}$ using exactly $n$ unique songs. This will be the final answer to the problem.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/5nzAjpWw/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"5nzAjpWw\"></iframe>\n\n#### Complexity Analysis\n\n* Time Complexity: $O(\\text{goal} \\cdot n)$.\n\nWe are filling up a 2D DP table with $\\text{goal}+1$ rows and $n+1$ columns. Each cell of the DP table gets filled once.\n\n* Space Complexity: $O(\\text{goal} \\cdot n)$.\n\nThe 2D DP table uses $O(\\text{goal} \\cdot n)$ of memory.\n\n---\n\n### Approach 3: Combinatorics\n\n#### Intuition\n\n> Note: this approach is very mathematical and out of scope for an interview. Do not be discouraged if you cannot come up with this solution. We have included it for the sake of completeness.\n\nImagine you have a set of $i$ unique songs, and $i$ could be any number from $k$ to $n$ (inclusive).\n\nNow, define $f(i)$ as the total number of different playlists of length $\\text{goal}$ you can create using only songs from this collection (including the playlists that contain fewer than $i$ unique songs). The important thing to remember is that we're following a rule about repeating songs: you can only play the same song again after $k$ other different songs have been played.\n\nHow do we count $f(i)$?\n\n* For the very first song in the playlist, you have $i$ choices because you have $i$ unique songs. So, you pick one song out of $i$ possibilities.\n* For the second song, since it cannot be the same as the first one, you have $i - 1$ choices. You've already played one song, and you can't repeat it yet, so you have one fewer choice.\n* You keep picking new songs for the first $k$ songs in the playlist. For the third song, you have $i - 2$ choices, for the fourth one $i - 3$ choices, and so on, until the $k$-th song, for which you have $i - (k - 1)$ choices.\n* Now, for the $(k+1)$-th song and onwards, the only banned songs are $k$ last played songs. Thus, each of the remaining $\\text{goal} - k$ songs has $i - k$ possible choices.\n\nThis leads us to the formula for $f(i)$: $$f(i) = i \\cdot (i - 1) \\cdot (i - 2) \\cdot \\dots \\cdot (i - k + 1) \\cdot (i - k)^{\\text{goal} - k} = \\dfrac{i!}{(i - k)!} (i - k)^{\\text{goal} - k}.$$\n\nYou might think that $f(n)$ is the answer to the problem. However it is not the case, because $f(n)$ counts also the playlists that contain fewer than $n$ unique songs, which are not valid according to the problem statement. We only want the playlists that contain **exactly** $n$ unique songs.\n\nConsider an example with $n = 4$, $k = 2$ and $\\text{goal}$ being an arbitrary number such that $\\text{goal} \\ge n$. We have $4$ songs, let's label them $A$, $B$, $C$ and $D$.\n* There is $\\binom{4}{4} = 1$ set of songs of size $4$: $\\{A, B, C, D\\}$. Here $\\binom{n}{i} = \\frac{n!}{i! (n - i)!}$ denotes the binomial coefficient that represents the number of ways to choose $i$ unique songs from $n$ songs.\n* Also, there are $\\binom{4}{3} = 4$ sets of songs of size $3$: $\\{A, B, C\\}$, $\\{A, B, D\\}$, $\\{A, C, D\\}$, $\\{B, C, D\\}$.\n* Finally, there are six sets of size $\\binom{4}{2} = 6$: $\\{A, B\\}$, $\\{A, C\\}$, $\\{A, D\\}$, $\\{B, C\\}$, $\\{B, D\\}$, $\\{C, D\\}$.\nHere we do not consider sets with fewer than $k$ songs.\n\nSince $f(4)$ includes playlists containing $2$, $3$, or $4$ unique songs, we have over-counted some of the playlists and now need to correct this over-counting.\n\nWe can use a principle from combinatorics, the inclusion-exclusion principle, to do this correction. The basic idea of this principle is to subtract the over-counted cases from the total to avoid double counting.\n\nLet's see how it applies to our problem.\n\n* The case of $3$ unique songs:\n\nConsider any subset of $3$ unique songs. The total number of playlists that can be made from these $3$ songs is $f(3)$. Now, when we calculated $f(4)$, we included all the possible playlists of $4$ songs, which implicitly also counts the playlists that contain only $3$ of these $4$ songs.\n\nFor instance, consider songs $A$, $B$, $C$, and $D$. When we look at $f(4)$, it counts playlists that use songs $A$, $B$, $C$, $D$ but also counts playlists that might use only songs $A$, $B$, $C$ (or any other combination of $3$ songs). These latter playlists are also counted in $f(3)$.\n\nWe need to correct this over-counting by subtracting $f(3)$ from $f(4)$. However, since there are $4$ possible combinations of $3$ songs that we could choose from the $4$ songs (i.e., $\\binom{4}{3} = 4$), we need to subtract $4 \\cdot f(3)$ from $f(4)$.\n\n* The case of $2$ unique songs:\n\nLet's consider the subset $\\{A, B\\}$ from our total set $\\{A, B, C, D\\}$. With these $2$ songs, we can generate $f(2)$ different playlists, following the rule about song repetition.\n\nWhen we computed $f(4)$, it included all possible playlists that could be made from any or all of the $4$ songs ($A$, $B$, $C$, $D$). Hence, the playlists which include only songs $A$ and $B$ were counted in $f(4)$.\n\nThen, we computed $f(3)$ for each combination of $3$ songs. For instance, for the combination $\\{A, B, C\\}$, it also includes playlists that only use $A$ and $B$, and similarly for $\\{A, B, D\\}$. In this way, we are counting the \"only $2$ songs\" playlists in each $f(3)$.\n\nNow, when we corrected $f(4)$ by subtracting $4 \\cdot f(3)$, our aim was to remove the over-counting of \"only $3$ songs\" playlists. However, as a side effect, we also subtracted the \"only $2$ songs\" playlists twice. For example, we subtracted playlists that includes $A$ and $B$ once for $\\{A, B, C\\}$ and once for $\\{A, B, D\\}$. Hence, we've subtracted the \"only $2$ songs\" playlists two more times than we've added them, leading to under-counting.\n\nSo, to correct for this under-counting, we need to add back the number of \"only $2$ songs\" playlists. There are $\\binom{4}{2} = 6$ ways to choose $2$ unique songs from our set of $4$ songs ($A$, $B$, $C$, $D$). So, for each of these $2$ song combinations, we add $f(2)$ to our count. This means we add $6 \\cdot f(2)$ to our count to correct for the under-counting of \"only $2$ songs\" playlists.\n\nThe final answer for $n = 4$, $k = 2$ is $\\binom{4}{4} f(4) - \\binom{4}{3} f(3) + \\binom{4}{2} f(2)$.\n\nFor $n = 7$, $k = 4$ the answer would be $\\binom{7}{7} f(7) - \\binom{7}{6} f(6) + \\binom{7}{5} f(5) - \\binom{7}{4} f(4)$.\n\nIn general, for each $i$ from $k$ to $n$, we calculate $(-1)^{n-i} \\binom{n}{i} f(i)$. The $(-1)^{n-i}$ factor alternates the addition and subtraction to correct the over-counting and under-counting.\n\nFinally, the total number of valid playlists that contain exactly $n$ unique songs is the sum of these corrected counts: $$\\sum_{i=k}^n (-1)^{n - i} \\binom{n}{i} f(i) = \\sum_{i=k}^n (-1)^{n - i} \\frac{n!}{i!(n-i)!} \\frac{i!}{(i - k)!} (i - k)^{\\text{goal} - k} = n! \\sum_{i=k}^n (-1)^{n - i} \\frac{(i - k)^{\\text{goal} - k}}{(n-i)!(i - k)!}$$.\n\nTo calculate each summand quickly, we precalculate factorials and inverse factorials modulo $10^9 + 7$ in the arrays $\\text{factorial}$ and $\\text{inv\\_factorial}$ respectively.\n\n#### Algorithm\n\n1. Initialize the $\\text{factorial}$ and $\\text{inv\\_factorial}$ arrays to precalculate the factorial and inverse factorial values modulo $10^9 + 7$ up to $n$.\n2. Calculate the factorial and inverse factorial values using the formula $\\text{factorial}[i] = \\text{factorial}[i - 1] \\cdot i$ and the [Fermat's Little Theorem](https://en.wikipedia.org/wiki/Fermat%27s_little_theorem) respectively.\n3. Initialize variables $\\text{sign}$ to $1$ and $\\text{answer}$ to $0$. These variables will be used to apply the principle of inclusion-exclusion.\n4. Iterate $i$ from $n$ down to $k$.\n\t* Calculate $\\text{temp}$ as $\\frac{(i - k)^{\\text{goal} - k}}{(n-i)!(i - k)!}$, update $\\text{answer}$ as $\\text{answer} + \\text{sign} \\cdot \\text{temp}$, and update $\\text{sign}$ as $-\\text{sign}$.\n5. Return $n! \\cdot \\text{answer}$ as the final answer to the problem. This is the number of distinct playlists of length $\\text{goal}$ that can be created with $n$ unique songs and obeying the $k$ distance rule.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/RqxSsvDb/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"RqxSsvDb\"></iframe>\n\n#### Complexity Analysis\n\n* Time Complexity: $O(n \\log \\text{goal})$.\n\nThe main loop runs from $n$ down to $k$, so it iterates $n - k + 1 = O(n)$ times.\nInside the main loop, we calculate the power of $(i - k)$ raised to $(\\text{goal} - k)$, which takes $O(\\log \\text{goal})$ time.\n\nSo the total time complexity is $O(n \\log \\text{goal})$.\n\n* Space Complexity: $O(n)$.\n\nWe maintain arrays for precalculated factorials and inverse factorials.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

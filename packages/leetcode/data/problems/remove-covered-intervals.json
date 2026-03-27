@@ -1,0 +1,136 @@
+{
+  "questionId": "1222",
+  "questionFrontendId": "1288",
+  "title": "Remove Covered Intervals",
+  "titleSlug": "remove-covered-intervals",
+  "difficulty": "Medium",
+  "content": "<p>Given an array <code>intervals</code> where <code>intervals[i] = [l<sub>i</sub>, r<sub>i</sub>]</code> represent the interval <code>[l<sub>i</sub>, r<sub>i</sub>)</code>, remove all intervals that are covered by another interval in the list.</p>\n\n<p>The interval <code>[a, b)</code> is covered by the interval <code>[c, d)</code> if and only if <code>c &lt;= a</code> and <code>b &lt;= d</code>.</p>\n\n<p>Return <em>the number of remaining intervals</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> intervals = [[1,4],[3,6],[2,8]]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> Interval [3,6] is covered by [2,8], therefore it is removed.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> intervals = [[1,4],[2,3]]\n<strong>Output:</strong> 1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= intervals.length &lt;= 1000</code></li>\n\t<li><code>intervals[i].length == 2</code></li>\n\t<li><code>0 &lt;= l<sub>i</sub> &lt; r<sub>i</sub> &lt;= 10<sup>5</sup></code></li>\n\t<li>All the given intervals are <strong>unique</strong>.</li>\n</ul>\n",
+  "hints": [
+    "How to check if an interval is covered by another?",
+    "Compare each interval to all others and check if it is covered by any interval."
+  ],
+  "metaData": "{\n  \"name\": \"removeCoveredIntervals\",\n  \"params\": [\n    {\n      \"name\": \"intervals\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"142.3K\", \"totalSubmission\": \"253.8K\", \"totalAcceptedRaw\": 142334, \"totalSubmissionRaw\": 253774, \"acRate\": \"56.1%\"}",
+  "likes": 2314,
+  "dislikes": 61,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[1,4],[3,6],[2,8]]",
+    "[[1,4],[2,3]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int removeCoveredIntervals(vector<vector<int>>& intervals) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int removeCoveredIntervals(int[][] intervals) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def removeCoveredIntervals(self, intervals: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def removeCoveredIntervals(self, intervals):\n        \"\"\"\n        :type intervals: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} intervals\n * @return {number}\n */\nvar removeCoveredIntervals = function(intervals) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function removeCoveredIntervals(intervals: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int RemoveCoveredIntervals(int[][] intervals) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int removeCoveredIntervals(int** intervals, int intervalsSize, int* intervalsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func removeCoveredIntervals(intervals [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun removeCoveredIntervals(intervals: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func removeCoveredIntervals(_ intervals: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn remove_covered_intervals(intervals: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} intervals\n# @return {Integer}\ndef remove_covered_intervals(intervals)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $intervals\n     * @return Integer\n     */\n    function removeCoveredIntervals($intervals) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int removeCoveredIntervals(List<List<int>> intervals) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def removeCoveredIntervals(intervals: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec remove_covered_intervals(intervals :: [[integer]]) :: integer\n  def remove_covered_intervals(intervals) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec remove_covered_intervals(Intervals :: [[integer()]]) -> integer().\nremove_covered_intervals(Intervals) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (remove-covered-intervals intervals)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "870",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Greedy Algorithm\n\n**Solution Pattern**\n\n> The idea of the greedy algorithm is to pick the _locally_ optimal move at each step, which would lead to the _globally_ optimal solution.\n\nTypical greedy solution has $$\\mathcal{O}(N \\log N)$$ time complexity and consists of two steps:\n\n- Figure out how to sort the input data.\nThat would take $$\\mathcal{O}(N \\log N)$$ time and could be done directly by sorting or indirectly by using the heap data structure. Usually sorting is better than heap usage because of the gain in space.\n\n- Parse the sorted input in $$\\mathcal{O}(N)$$ time to construct a solution. \n\nIn the case of already sorted input, the greedy solution could have $$\\mathcal{O}(N)$$ time complexity, [here is an example](https://leetcode.com/articles/gas-station/).\n\n**Intuition**\n\nLet us figure out how to sort the input. The idea to sort by start point is pretty obvious because it simplifies further parsing:\n\n![traversal](../Figures/1288/sort.png)\n\nLet us consider two subsequent intervals after sorting. Since sorting ensures that `start1 < start2`, it's sufficient to compare the end boundaries:   \n\n- If `end1 < end2`, the intervals won't completely cover one another, though they have some overlapping.\n\n![traversal](../Figures/1288/dont_cover2.png) \n\n- If `end1 >= end2`, the interval 2 is covered by the interval 1.\n\n![traversal](../Figures/1288/cover.png) \n\n**Edge case: How to treat intervals that share a start point**\n\n> We've missed an important edge case in the previous discussion: what if two intervals share the start point, _i.e._ `start1 == start2`? \n\nThe above algorithm will fail because it cannot distinguish these two situations as follows: \n\n![traversal](../Figures/1288/share.png) \n\nOne of the intervals is covered by another, but if we sort only by the start point, we would not know which one. Hence, we need to sort by the endpoint as well.\n\n> If two intervals share the same start point, one has to put the longer interval in front.\n\nThis way the above algorithm would work fine here as well. Moreover, it can deal with more complex cases, like the one below:\n\n![traversal](../Figures/1288/complex.png)\n\n**Algorithm**\n\n- Sort in the ascending order by the start point. If two intervals share the same start point, put the longer one to be the first.\n\n- Initiate the number of non-covered intervals: `count = 0`.\n\n- Iterate over sorted intervals and compare end points. \n    \n    - If the current interval is not covered by the previous one `end > prev_end`, increase the number of non-covered intervals. Assign the current interval to be previous for the next step.\n    \n    - Otherwise, the current interval is covered by the previous one. Do nothing.\n\n- Return `count`.\n\n**Implementation**\n\n!?!../Documents/1288_LIS.json:1000,302!?!\n\n<iframe src=\"https://leetcode.com/playground/Aq23MYuA/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"Aq23MYuA\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}(N \\log N)$$ since the sorting dominates the complexity of the algorithm.\n \n* Space complexity : $$\\mathcal{O}(N)$$ or $$\\mathcal{O}(\\log{N})$$\n\n  - The space complexity of the sorting algorithm depends on the implementation of each programming language.\n\n  - For instance, the `sorted()` function in Python is implemented with the [Timsort](https://en.wikipedia.org/wiki/Timsort) algorithm whose space complexity is $$\\mathcal{O}(N)$$.\n\n  - In Java, the [Arrays.sort()](https://docs.oracle.com/javase/8/docs/api/java/util/Arrays.html#sort-byte:A-) is implemented as a variant of quicksort algorithm whose space complexity is $$\\mathcal{O}(\\log{N})$$.\n\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

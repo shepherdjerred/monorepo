@@ -1,0 +1,150 @@
+{
+  "questionId": "1577",
+  "questionFrontendId": "1467",
+  "title": "Probability of a Two Boxes Having The Same Number of Distinct Balls",
+  "titleSlug": "probability-of-a-two-boxes-having-the-same-number-of-distinct-balls",
+  "difficulty": "Hard",
+  "content": "<p>Given <code>2n</code> balls of <code>k</code> distinct colors. You will be given an integer array <code>balls</code> of size <code>k</code> where <code>balls[i]</code> is the number of balls of color <code>i</code>.</p>\n\n<p>All the balls will be <strong>shuffled uniformly at random</strong>, then we will distribute the first <code>n</code> balls to the first box and the remaining <code>n</code> balls to the other box (Please read the explanation of the second example carefully).</p>\n\n<p>Please note that the two boxes are considered different. For example, if we have two balls of colors <code>a</code> and <code>b</code>, and two boxes <code>[]</code> and <code>()</code>, then the distribution <code>[a] (b)</code> is considered different than the distribution <code>[b] (a) </code>(Please read the explanation of the first example carefully).</p>\n\n<p>Return<em> the probability</em> that the two boxes have the same number of distinct balls. Answers within <code>10<sup>-5</sup></code> of the actual value will be accepted as correct.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> balls = [1,1]\n<strong>Output:</strong> 1.00000\n<strong>Explanation:</strong> Only 2 ways to divide the balls equally:\n- A ball of color 1 to box 1 and a ball of color 2 to box 2\n- A ball of color 2 to box 1 and a ball of color 1 to box 2\nIn both ways, the number of distinct colors in each box is equal. The probability is 2/2 = 1\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> balls = [2,1,1]\n<strong>Output:</strong> 0.66667\n<strong>Explanation:</strong> We have the set of balls [1, 1, 2, 3]\nThis set of balls will be shuffled randomly and we may have one of the 12 distinct shuffles with equal probability (i.e. 1/12):\n[1,1 / 2,3], [1,1 / 3,2], [1,2 / 1,3], [1,2 / 3,1], [1,3 / 1,2], [1,3 / 2,1], [2,1 / 1,3], [2,1 / 3,1], [2,3 / 1,1], [3,1 / 1,2], [3,1 / 2,1], [3,2 / 1,1]\nAfter that, we add the first two balls to the first box and the second two balls to the second box.\nWe can see that 8 of these 12 possible random distributions have the same number of distinct colors of balls in each box.\nProbability is 8/12 = 0.66667\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> balls = [1,2,1,2]\n<strong>Output:</strong> 0.60000\n<strong>Explanation:</strong> The set of balls is [1, 2, 2, 3, 4, 4]. It is hard to display all the 180 possible random shuffles of this set but it is easy to check that 108 of them will have the same number of distinct colors in each box.\nProbability = 108 / 180 = 0.6\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= balls.length &lt;= 8</code></li>\n\t<li><code>1 &lt;= balls[i] &lt;= 6</code></li>\n\t<li><code>sum(balls)</code> is even.</li>\n</ul>\n",
+  "hints": [
+    "Check how many ways you can distribute the balls between the boxes.",
+    "Consider that one way you will use (x1, x2, x3, ..., xk) where xi is the number of balls from colour i. The probability of achieving this way randomly is ( (ball1 C x1) * (ball2 C x2) * (ball3 C x3) * ... * (ballk C xk)) / (2n C n).",
+    "The probability of a draw is the sigma of probabilities of different ways to achieve draw.",
+    "Can you use Dynamic programming to solve this problem in a better complexity ?"
+  ],
+  "metaData": "{\n  \"name\": \"getProbability\",\n  \"params\": [\n    {\n      \"name\": \"balls\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"double\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"11.6K\", \"totalSubmission\": \"19.1K\", \"totalAcceptedRaw\": 11627, \"totalSubmissionRaw\": 19053, \"acRate\": \"61.0%\"}",
+  "likes": 299,
+  "dislikes": 178,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,1]",
+    "[2,1,1]",
+    "[1,2,1,2]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    },
+    {
+      "name": "Combinatorics",
+      "slug": "combinatorics"
+    },
+    {
+      "name": "Probability and Statistics",
+      "slug": "probability-and-statistics"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    double getProbability(vector<int>& balls) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public double getProbability(int[] balls) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def getProbability(self, balls: List[int]) -> float:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def getProbability(self, balls):\n        \"\"\"\n        :type balls: List[int]\n        :rtype: float\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} balls\n * @return {number}\n */\nvar getProbability = function(balls) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function getProbability(balls: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public double GetProbability(int[] balls) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "double getProbability(int* balls, int ballsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func getProbability(balls []int) float64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun getProbability(balls: IntArray): Double {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func getProbability(_ balls: [Int]) -> Double {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn get_probability(balls: Vec<i32>) -> f64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} balls\n# @return {Float}\ndef get_probability(balls)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $balls\n     * @return Float\n     */\n    function getProbability($balls) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  double getProbability(List<int> balls) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def getProbability(balls: Array[Int]): Double = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec get_probability(balls :: [integer]) :: float\n  def get_probability(balls) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec get_probability(Balls :: [integer()]) -> float().\nget_probability(Balls) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (get-probability balls)\n  (-> (listof exact-integer?) flonum?)\n  )"
+    }
+  ],
+  "solution": null
+}

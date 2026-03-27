@@ -1,0 +1,77 @@
+{
+  "questionId": "1774",
+  "questionFrontendId": "1634",
+  "title": "Add Two Polynomials Represented as Linked Lists",
+  "titleSlug": "add-two-polynomials-represented-as-linked-lists",
+  "difficulty": "Medium",
+  "content": "<p>A polynomial linked list is a special type of linked list where every node represents a term in a polynomial expression.</p>\r\n\r\n<p>Each node has three attributes:</p>\r\n\r\n<ul>\r\n\t<li><code>coefficient</code>: an integer representing the number multiplier of the term. The coefficient of the term <code><strong>9</strong>x<sup>4</sup></code> is <code>9</code>.</li>\r\n\t<li><code>power</code>: an integer representing the exponent. The power of the term <code>9x<strong><sup>4</sup></strong></code> is <code>4</code>.</li>\r\n\t<li><code>next</code>: a pointer to the next node in the list, or <code>null</code> if it is the last node of the list.</li>\r\n</ul>\r\n\r\n<p>For example, the polynomial <code>5x<sup>3</sup> + 4x - 7</code> is represented by the polynomial linked list illustrated below:</p>\r\n\r\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/30/polynomial2.png\" style=\"width: 500px; height: 91px;\" /></p>\r\n\r\n<p>The polynomial linked list must be in its standard form: the polynomial must be in <strong>strictly</strong> descending order by its <code>power</code> value. Also, terms with a <code>coefficient</code> of <code>0</code> are omitted.</p>\r\n\r\n<p>Given two polynomial linked list heads, <code>poly1</code> and <code>poly2</code>, add the polynomials together and return <em>the head of the sum of the polynomials</em>.</p>\r\n\r\n<p><strong><code>PolyNode</code> format:</strong></p>\r\n\r\n<p>The input/output format is as a list of <code>n</code> nodes, where each node is represented as its <code>[coefficient, power]</code>. For example, the polynomial <code>5x<sup>3</sup> + 4x - 7</code> would be represented as: <code>[[5,3],[4,1],[-7,0]]</code>.</p>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong class=\"example\">Example 1:</strong></p>\r\n\r\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/10/14/ex1.png\" style=\"width: 600px; height: 322px;\" /></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> poly1 = [[1,1]], poly2 = [[1,0]]\r\n<strong>Output:</strong> [[1,1],[1,0]]\r\n<strong>Explanation:</strong> poly1 = x. poly2 = 1. The sum is x + 1.\r\n</pre>\r\n\r\n<p><strong class=\"example\">Example 2:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> poly1 = [[2,2],[4,1],[3,0]], poly2 = [[3,2],[-4,1],[-1,0]]\r\n<strong>Output:</strong> [[5,2],[2,0]]\r\n<strong>Explanation:</strong> poly1 = 2x<sup>2</sup> + 4x + 3. poly2 = 3x<sup>2</sup> - 4x - 1. The sum is 5x<sup>2</sup> + 2. Notice that we omit the &quot;0x&quot; term.\r\n</pre>\r\n\r\n<p><strong class=\"example\">Example 3:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> poly1 = [[1,2]], poly2 = [[-1,2]]\r\n<strong>Output:</strong> []\r\n<strong>Explanation:</strong> The sum is 0. We return an empty list.\r\n</pre>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong>Constraints:</strong></p>\r\n\r\n<ul>\r\n\t<li><code>0 &lt;= n &lt;= 10<sup>4</sup></code></li>\r\n\t<li><code>-10<sup>9</sup>&nbsp;&lt;= PolyNode.coefficient &lt;= 10<sup>9</sup></code></li>\r\n\t<li><code>PolyNode.coefficient != 0</code></li>\r\n\t<li><code>0&nbsp;&lt;= PolyNode.power &lt;= 10<sup>9</sup></code></li>\r\n\t<li><code>PolyNode.power &gt; PolyNode.next.power</code></li>\r\n</ul>",
+  "hints": [
+    "Process both linked lists at the same time",
+    "If the current power of the two heads is equal, add this power with the sum of the coefficients to the answer list.",
+    "If one head has a larger power, add this power to the answer list and move only this head."
+  ],
+  "metaData": "{\n  \"name\": \"addPoly\",\n  \"params\": [\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"poly1\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"poly2\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"manual\": true,\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"javascript\",\n    \"python3\",\n    \"python\",\n    \"csharp\"\n  ]\n}",
+  "stats": "{\"totalAccepted\": \"16.4K\", \"totalSubmission\": \"26.9K\", \"totalAcceptedRaw\": 16413, \"totalSubmissionRaw\": 26887, \"acRate\": \"61.0%\"}",
+  "likes": 173,
+  "dislikes": 14,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Add Two Numbers\", \"titleSlug\": \"add-two-numbers\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Merge Two Sorted Lists\", \"titleSlug\": \"merge-two-sorted-lists\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Add Two Numbers II\", \"titleSlug\": \"add-two-numbers-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,1]]\n[[1,0]]",
+    "[[2,2],[4,1],[3,0]]\n[[3,2],[-4,1],[-1,0]]",
+    "[[1,2]]\n[[-1,2]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for polynomial singly-linked list.\n * struct PolyNode {\n *     int coefficient, power;\n *     PolyNode *next;\n *     PolyNode(): coefficient(0), power(0), next(nullptr) {};\n *     PolyNode(int x, int y): coefficient(x), power(y), next(nullptr) {};\n *     PolyNode(int x, int y, PolyNode* next): coefficient(x), power(y), next(next) {};\n * };\n */\n\nclass Solution {\npublic:\n    PolyNode* addPoly(PolyNode* poly1, PolyNode* poly2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for polynomial singly-linked list.\n * class PolyNode {\n *     int coefficient, power;\n *     PolyNode next = null;\n \n *     PolyNode() {}\n *     PolyNode(int x, int y) { this.coefficient = x; this.power = y; }\n *     PolyNode(int x, int y, PolyNode next) { this.coefficient = x; this.power = y; this.next = next; }\n * }\n */\n\nclass Solution {\n    public PolyNode addPoly(PolyNode poly1, PolyNode poly2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for polynomial singly-linked list.\n# class PolyNode:\n#     def __init__(self, x=0, y=0, next=None):\n#         self.coefficient = x\n#         self.power = y\n#         self.next = next\n\nclass Solution:\n    def addPoly(self, poly1: 'PolyNode', poly2: 'PolyNode') -> 'PolyNode':\n        \n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for polynomial singly-linked list.\n# class PolyNode:\n#     def __init__(self, x=0, y=0, next=None):\n#         self.coefficient = x\n#         self.power = y\n#         self.next = next\n\nclass Solution:\n    def addPoly(self, poly1, poly2):\n        \"\"\"\n        :type poly1: PolyNode\n        :type poly2: PolyNode\n        :rtype: PolyNode\n        \"\"\"\n        \n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for polynomial singly-linked list.\n * function PolyNode(x=0, y=0, next=null) {\n *     this.coefficient = x;\n *     this.power = y;\n *     this.next = next;\n * }\n */\n\n/**\n * @param {PolyNode} poly1\n * @param {PolyNode} poly2\n * @return {PolyNode}\n */\nvar addPoly = function(poly1, poly2) {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for polynomial singly-linked list.\n * public class PolyNode {\n *     public int coefficient, power;\n *     public PolyNode next;\n *\n *     public PolyNode(int x=0, int y=0, PolyNode next=null) {\n *         this.coefficient = x;\n *         this.power = y;\n *         this.next = next;\n *     }\n * }\n */\n\npublic class Solution {\n    public PolyNode AddPoly(PolyNode poly1, PolyNode poly2) {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "2422",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given two linked lists, `poly1` and `poly2`, each representing a polynomial expression. Each term in a polynomial expression comprises a `coefficient` and a `power`. We must return a linked list representing the sum of `poly1` and `poly2` in standard form, where the terms are sorted in descending order based on its `power` field.\n\n> For example, the polynomial $5x^3 + 4x - 7$ would be represented as: `[[5,3],[4,1],[-7,0]]`.\n\n### Approach 1: Map\n\n### Intuition\n\nFor this problem, we need to:\n\n1. Identify terms from `poly1` and `poly2` with the same power to combine them in the sum. We must also handle terms with unique powers by adding them directly to the sum.\n2. Ensure the terms in the sum are ordered in standard form.\n\nTo handle the first task, we can use a map to store the (power, coefficient) pairs of our sum. We'll iterate through all the nodes in `poly1` and `poly2`. If a node with a power `p` already exists in our map, we will add the current node's `coefficient` to the existing coefficient value in the map. This combines all terms with the same power. We'll also remove pairs where the combined coefficient is $0$, as these terms cancel out.\n\nFor the second point, we can use specifically a tree map, a special kind of map data structure that keeps the keys sorted. By using a custom comparator, we can have the keys sorted in descending order of power. Once the map is populated, we can iterate through the sorted keys and append each (power, coefficient) pair to our final linked list sum.\n\n### Algorithm\n\n1. Initialize a map `map` with a custom comparator to make the keys sorted in decreasing order. This will hold the terms of the sum of `poly1` and `poly2`. \n2. Initialize a pointer `sum` to an empty dummy node. This will point to the sum of `poly1` and `poly2`.\n3. Initialize a pointer `current` to `sum` to maintain access to the last node of `sum`.\n4. Iterate through each node `n` of `poly1` and `poly2`:\n    * If a pair with key `n.power` doesn't already exist in `map`, then we can add `n` as a new entry: (`n.power`, `n.coefficient`).\n    * If a pair with key `n.power` already exists in `map`, then we can append `n.coefficient` to the existing pair's value to combined terms: (`n.power`, `existingCoefficient + n.coefficient`).\n        * If the combined coefficient value is $0$, then the pair can be removed.\n5. Iterate through the sorted keys of `map`:\n    * For each key `k`, append a new `PolyNode` with `k` power and `map.get(k)` coefficient to `sum`. We can use the `current` pointer to directly append to the end of the list. Update `current` to the newly appended node.\n6. Return `sum.next`, pointing to the start of the sum of `poly1` and `poly2`.\n\n### Implementation\n\n<iframe src=\"https://leetcode.com/playground/XegB3KzY/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"XegB3KzY\"></iframe>\n\n### Complexity Analysis \n\nLet $M$ be the size of `poly1` and $N$ be the size of `poly2`.\n\n* Time Complexity: $O((M+N) \\cdot \\log(M+N))$\n\n    An insertion/retrieval in a sorted map takes $O(\\log n)$ time, where $n$ is the number of elements in the map. Because we do a total of $O(M + N)$ insertions and retrievals, our total time complexity is $O((M+N) \\cdot \\log(M+N))$\n\n* Space Complexity: $O(M + N)$\n\n    There is extra space needed for `map` as well as the final `sum` linked list. The size of each in the worst case is $O(M + N)$\n\n### Approach 2: Two Pointer\n\n### Intuition\n\nIn the previous approach, we used a tree map's sorted keys to ensure `sum`'s terms are in the correct order. This method involved a costly $O(\\log n)$ operation for each insertion and retrieval. In this approach, we achieve the correct order without maintaining a sorted list.\n\nThe key observation is that `poly1` and `poly2` are each already sorted. We can use two pointers, one for each linked list, to track the terms that need to be combined and added to our final answer. These pointers will ensure that we process the terms in the correct descending order, so our result, `sum`, is in standard form.\n\nWe can manage our pointers, `p1` and `p2`, with the following logic:\n\n- `p1` points to `poly1`, and `p2` points to `poly2`.\n- If the `power` of `p1`'s term and `p2`'s term are equal, we add a new term that combines them to `sum`. We then advance both `p1` and `p2`.\n- If `p1`'s term has a larger `power` than `p2`'s term, we add `p1`'s term directly to `sum`. This is because we know `p1`'s term has a unique `power` that cannot be combined with a term in `poly2`. We then advance `p1` to the next term in `poly1`, which will have a smaller `power`. This allows `p2` to possibly match with a term in `poly1` in a later step.\n- Similarly, if `p2`'s term has a larger `power` than `p1`'s term, we add `p2`'s term to `sum` and advance `p2`.\n\nWith this two-pointer approach, we can efficiently scan each linked list once, ensuring that `sum` is in the correct standard form.\n\n### Algorithm \n\n1. Initialize pointers `p1` and `p2` to traverse `poly1` and `poly2`, respectively.\n2. Initialize `sum` to an empty `PolyNode`, representing an initial dummy node.\n3. Initialize `current` to `sum`, a pointer that will keep track of the last node of `sum` to make appending easier.\n4. While we have more nodes to process for both linked lists:\n    * If the powers of the current nodes in both lists are equal:\n        * If their coefficients don't cancel out:\n            * Append a new node with the summed coefficients and the same power.\n            * Update `current` to point to this new node.\n        * Update both `p1` and `p2`.\n    * If `p1`'s power is greater:\n        * Append `p1` to the end of `sum`.\n        * Update `p1` and `current`.\n    * Else:\n        * Append `p2` to the end of `sum`.\n        * Update `p2` and `current`.\n5. Append any remaining nodes that have not been seen yet:\n    * If `p1 == null`, then append `p2` to add the remaining terms of `poly2`.\n    * Else, append `p1` to add the remaining terms of `poly1`.\n6. Return `sum.next` since `sum` points to the initial dummy node.\n\n### Implementation\n\n<iframe src=\"https://leetcode.com/playground/5L8Q9UGL/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"5L8Q9UGL\"></iframe>\n\n### Complexity Analysis\n\nLet $M$ be the size of `poly1` and $N$ be the size of `poly2`.\n\n* Time Complexity: $O(M + N)$\n\n    In the worst case, each linked list is entirely traversed, which takes $O(M + N)$ iterations. Thus, the time complexity is $O(M + N)$.\n\n* Space Complexity: $O(\\min(M, N))$\n\n    A new node is created for `sum` whenever terms from `poly1` and `poly2` have the same power and need to be combined. In other cases, we directly modify the input nodes, which require no extra space. Thus, the worst case is if all terms from `poly1` have a corresponding term in `poly2` with the same power (and vice-versa). In this case, the extra space needed is $O(\\min(M, N))$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

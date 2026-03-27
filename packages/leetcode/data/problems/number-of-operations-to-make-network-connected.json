@@ -1,0 +1,145 @@
+{
+  "questionId": "1442",
+  "questionFrontendId": "1319",
+  "title": "Number of Operations to Make Network Connected",
+  "titleSlug": "number-of-operations-to-make-network-connected",
+  "difficulty": "Medium",
+  "content": "<p>There are <code>n</code> computers numbered from <code>0</code> to <code>n - 1</code> connected by ethernet cables <code>connections</code> forming a network where <code>connections[i] = [a<sub>i</sub>, b<sub>i</sub>]</code> represents a connection between computers <code>a<sub>i</sub></code> and <code>b<sub>i</sub></code>. Any computer can reach any other computer directly or indirectly through the network.</p>\n\n<p>You are given an initial computer network <code>connections</code>. You can extract certain cables between two directly connected computers, and place them between any pair of disconnected computers to make them directly connected.</p>\n\n<p>Return <em>the minimum number of times you need to do this in order to make all the computers connected</em>. If it is not possible, return <code>-1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/01/02/sample_1_1677.png\" style=\"width: 500px; height: 148px;\" />\n<pre>\n<strong>Input:</strong> n = 4, connections = [[0,1],[0,2],[1,2]]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> Remove cable between computer 1 and 2 and place between computers 1 and 3.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/01/02/sample_2_1677.png\" style=\"width: 500px; height: 129px;\" />\n<pre>\n<strong>Input:</strong> n = 6, connections = [[0,1],[0,2],[0,3],[1,2],[1,3]]\n<strong>Output:</strong> 2\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 6, connections = [[0,1],[0,2],[0,3],[1,2]]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> There are not enough cables.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= connections.length &lt;= min(n * (n - 1) / 2, 10<sup>5</sup>)</code></li>\n\t<li><code>connections[i].length == 2</code></li>\n\t<li><code>0 &lt;= a<sub>i</sub>, b<sub>i</sub> &lt; n</code></li>\n\t<li><code>a<sub>i</sub> != b<sub>i</sub></code></li>\n\t<li>There are no repeated connections.</li>\n\t<li>No two computers are connected by more than one cable.</li>\n</ul>\n",
+  "hints": [
+    "As long as there are at least (n - 1) connections, there is definitely a way to connect all computers.",
+    "Use DFS to determine the number of isolated computer clusters."
+  ],
+  "metaData": "{\n  \"name\": \"makeConnected\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"connections\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"354.7K\", \"totalSubmission\": \"535.1K\", \"totalAcceptedRaw\": 354700, \"totalSubmissionRaw\": 535101, \"acRate\": \"66.3%\"}",
+  "likes": 5591,
+  "dislikes": 84,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "4\n[[0,1],[0,2],[1,2]]",
+    "6\n[[0,1],[0,2],[0,3],[1,2],[1,3]]",
+    "6\n[[0,1],[0,2],[0,3],[1,2]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 6, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"intuit\", \"name\": \"Intuit\"}, {\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 2, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 2, \"slug\": \"akuna-capital\", \"name\": \"Akuna Capital\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int makeConnected(int n, vector<vector<int>>& connections) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int makeConnected(int n, int[][] connections) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def makeConnected(self, n: int, connections: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def makeConnected(self, n, connections):\n        \"\"\"\n        :type n: int\n        :type connections: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} connections\n * @return {number}\n */\nvar makeConnected = function(n, connections) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function makeConnected(n: number, connections: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MakeConnected(int n, int[][] connections) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int makeConnected(int n, int** connections, int connectionsSize, int* connectionsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func makeConnected(n int, connections [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun makeConnected(n: Int, connections: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func makeConnected(_ n: Int, _ connections: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn make_connected(n: i32, connections: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} connections\n# @return {Integer}\ndef make_connected(n, connections)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $connections\n     * @return Integer\n     */\n    function makeConnected($n, $connections) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int makeConnected(int n, List<List<int>> connections) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def makeConnected(n: Int, connections: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec make_connected(n :: integer, connections :: [[integer]]) :: integer\n  def make_connected(n, connections) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec make_connected(N :: integer(), Connections :: [[integer()]]) -> integer().\nmake_connected(N, Connections) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (make-connected n connections)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1697",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given an undirected graph with `n` nodes which are referred to as computers from `1` to `n` and edges referred to as `connections` in the description.\n\nAny edge that connects two nodes can be replaced and placed between any two disconnected nodes.\n\nOur task is to return the minimum number of edges that must be replaced in order to connect the entire graph. If there is no way to connect the entire graph, we must return `-1`.\n\n---\n\n### Approach 1: Depth First Search\n\n#### Intuition\n\nA connected graph with the fewest edges is a tree with `n - 1` edges connecting `n` nodes. So, in order for a graph with `n` nodes to be connected, the graph must have at least `n - 1` edges. It is impossible to connect a graph that has fewer than `n - 1` edges. Otherwise, it is always possible to connect the graph.\n\nWe return `-1` if the number of edges in the graph (as determined by the size of `connections`) is less than `n - 1`.\n\nOtherwise, we can connect the entire graph if we have at least `n - 1` edges. Let's say that our graph has `c` different connected components. If we have at least `n - 1` edges, then some components **must** have \"extra\" edges. We would replace these edges to connect all the components together.\n\nHow many edges do we need to replace? Imagine that each connected component is simplified to just a single node. Now, to connect this simplified graph, we know we need a minimum of  `c - 1` edges. Therefore, the answer is `c - 1`. We can imagine these `c - 1` edges connecting the original connected components.\n\n**So, if there are at least `n - 1` edges, the solution is the number of connected components minus one. Otherwise, we return `-1`.**\n\nConsider the following visual example, in which we have three components and replace two edges (`3 - 1 = 2`) to connect the entire graph:\n\n![img](../Figures/1319/1319-1.png)\n\nThe graph above has seven nodes. We needed at least six edges to connect the entire graph (which we have), so we could form a connected graph. As you can see, the component with four nodes has \"extra\" edges which we replaced to connect the entire graph.\n\nWe can use a graph traversal algorithm such as depth-first search (DFS) to determine the number of different connected components in the graph.\n\nIf you are new to Depth First Search, please see our [Leetcode Explore Card](https://leetcode.com/explore/featured/card/graph/619/depth-first-search-in-graph/3882/) for more information on it!\n\nTo figure out how many connected components there are in the graph, we first mark all nodes as unvisited. We create a variable called `numberOfConnectedComponents` to count the number of connected components in the graph and initialize it to `0`.\n\nWe iterate through all the nodes from `0` to `n - 1`, checking whether each `node` has been visited or not. If `node` is not visited, we begin a DFS traversal from `node` and increment `numberOfConnectedComponents` by `1` (a new connected component is discovered). The DFS traversal would visit all of the nodes in the component to which `node` belongs.\n\nAs an answer, we return `numberofConnectedComponents - 1`.\n\n#### Algorithm\n\n1. Check the size of `connections`. If it is less than `n - 1`, we don't have enough edges to connect the entire graph . We return `-1` in this case.\n2. Create an adjacency list using `connections` where `adj[x]` contains all the neighbors of node `x`.\n3. Create an integer `numberOfConnectedComponents` which stores the number of connected components in the graph. Initialize it to `0`.\n4. Create a `visit` array of length `n` to keep track of nodes that have been visited.\n5. Iterate through all of the nodes, and for each node `i` check if it has been visited or not. If node `i` is not visited, we increment `numberOfConnectedComponents` by `1` and start a DFS traversal:\n    - We use the `dfs` function to perform the traversal. For each call, pass `node`, `edges`, and `visit` as the parameters. We start with node `i`.\n    - We mark `node` as visited.\n    - We iterate over all the neighbors of `node`. If any `neighbor` has not yet been visited, we recursively call `dfs` with `neighbor` as the node.\n6. Return `numberOfConnectedComponents - 1`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ChwxPf7q/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ChwxPf7q\"></iframe>\n\n#### Complexity Analysis\n\nHere $n$ is the number of nodes and $e$ is the total number edges (determined by size of `connections`).\n\n* Time complexity: $O(n + e)$.\n    - We need $O(e)$ time to initialize the adjacency list and $O(n)$ to initialize the `visit` array.\n    - The `dfs` function visits each node once, which takes $O(n)$ time in total. Because we have undirected edges, each edge can only be iterated twice (by nodes at the end), resulting in $O(e)$ operations total while visiting all nodes.\n    - As a result, the total time required is $O(n + e)$.\n\n* Space complexity: $O(n + e)$.\n    - Building the adjacency list takes $O(e)$ space.\n    - The `visit` array takes $O(n)$ space.\n    - The recursion call stack used by `dfs` can have no more than $n$ elements in the worst-case scenario. It would take up $O(n)$ space in that case. \n\n---\n\n### Approach 2: Breadth First Search\n\n#### Intuition\n\nAs we just have to find the number of connected components in the graph, another method is to use a breadth-first search (BFS).\n\nBFS is an algorithm for traversing or searching a graph. It traverses in a level-wise manner, i.e., all the nodes at the present level (say `l`) are explored before moving on to the nodes at the next level (`l + 1`), where a level's number is the distance from a starting node. BFS is implemented with a queue.\n\nIf you are not familiar with BFS traversal, we suggest you read our [Leetcode Explore Card](https://leetcode.com/explore/featured/card/graph/620/breadth-first-search-in-graph/).\n\n#### Algorithm\n\n1. Check the size of `connections`. If it is less than `n - 1`, we don't have enough edges to connect the entire graph . We return `-1` in this case.\n2. Create an adjacency list using `connections` where `adj[x]` contains all the neighbors of node `x`.\n3. Initialize an integer `numberOfConnectedComponents` which stores the number of connected components in the graph. Initialize it to `0`.\n4. Create a `visit` array of length `n` to keep track of nodes that have been visited.\n5. Iterate through all of the nodes and for each node `i` check if it has been visited or not. If node `i` is not visited, we increment `numberOfConnectedComponents` by `1` and start a BFS traversal:\n    - We use the `bfs` function to perform the traversal. For each call, pass `node`, `edges`, and `visit` as the parameters. We start with node `i`.\n    - We create an integer queue `q` and push `node` into it. We also mark `node` as visited.\n    - We now loop until the queue is empty. The queue's first element, `node`, is popped out. We iterate over all the neighbors of `node`. If any `neighbor` has not yet been visited, we mark it as visited and push it into the queue.\n6. Return `numberOfConnectedComponents - 1`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/gxs8rUiq/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"gxs8rUiq\"></iframe>\n\n#### Complexity Analysis\n\nHere $n$ is the number of nodes and $e$ is the total number edges (determined by size of `connections`).\n\n* Time complexity: $O(n + e)$.\n    - Each queue operation in the BFS algorithm takes $O(1)$ time, and a single node can only be pushed once, leading to $O(n)$ operations for $n$ nodes. We iterate over all the neighbors of each node that is popped out of the queue, so for an undirected edge, a given edge could be iterated at most twice (by nodes at both ends), resulting in $O(e)$ operations total for all the nodes.\n    - We also need $O(e)$ time to initialize the adjacency list and $O(n)$ to initialize the `visit` array.\n    - As a result, the total time required is $O(n + e)$.\n\n* Space complexity: $O(n + e)$.\n    - Building the adjacency list takes $O(e)$ space. \n    - The BFS queue takes $O(n)$ because each node is added at most once.\n    - The `visit` array takes $O(n)$ space as well.\n\n---\n\n### Approach 3: Union-find\n\n#### Intuition\n\nAnother approach to solving questions based on graph connectivity is the union-find data structure.\n\nA disjoint-set data structure also called a union–find data structure or merge–find set, is a data structure that stores a collection of disjoint (non-overlapping) sets. Equivalently, it stores a partition of a set into disjoint subsets. It provides operations for adding new sets, merging sets (replacing them by their union), and finding a representative member of a set. It implements two useful operations:\n\n1. `Find`: Determine which subset a particular element is in. This can be used to determine if two elements are in the same subset.\n2. `Union`: Join two subsets into a single subset.\n\nIf you are new to Union-Find, we suggest you read our [Leetcode Explore Card](https://leetcode.com/explore/learn/card/graph/618/disjoint-set/3881/). We will not talk about implementation details in this article, but only about the interface to the data structure.\n\nSimilar to the previous approaches, we check if we have sufficient edges to connect the entire graph. We return `-1` if the number of edges in the graph (as determined by the size of `connections`) is less than `n - 1`.\n\nIn the union-find data structure, we initialize all nodes as separate components. We declare a variable called `numberOfConnectedComponents` to count the number of connected components in the graph and initialize it to `n`. We iterate over all the edges, and for each `edge`, we decrement `numberOfConnectedComponents` by `1` whenever two different components are merged into a single one using `edge`.\n\nWe iterate through all of the edges, and for each edge that connects `node1` and `node2`, we use the `find` operation to check the components to which both of them belong. If they belong to different components, i.e., `find(node1) != find(node2)`, we perform a `union` operation on both nodes, which merges the two different connected components into a single connected component. We also decrement `numberOfConnectedComponents` by `1`. If `node1` and `node2` belong to the same component, we don't do anything.\n\nAs an answer, we return `numberofConnectedComponents - 1`.\n\n#### Algorithm\n\n1. Check the size of `connections`. If it is less than `n - 1`, we don't have enough edges to connect the entire graph . We return `-1` in this case.\n2. Create an instance of `UnionFind` of size `n`.\n3. Initialize an integer `numberOfConnectedComponents` which stores the number of connected components in the graph. Initialize it to `n`.\n4. Iterate over all the edges and for each `connection` in `connections`: \n    - Using the `find` operation, determine the components of both the nodes connected by `connection`.\n    - If both nodes belong to different components, we use the `union` operation over both nodes to combine the two different connected components into a single one. We also decrement `numberOfConnectedComponents` by `1`. \n    - Otherwise, we don't do anything if both nodes already belong to the same component.\n5. Return `numberOfConnectedComponents - 1`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/FHFpWpCB/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"FHFpWpCB\"></iframe>\n\n#### Complexity Analysis\n\nHere $n$ is the number of nodes and $e$ is the total number edges (determined by size of `connections`).\n\n* Time complexity: $O(n + e)$.\n    - For $T$ operations, the amortized time complexity of the union-find algorithm (using path compression with union by rank) is $O(alpha(T))$. Here, $\\alpha(T)$ is the inverse Ackermann function that grows so slowly, that it doesn't exceed $4$ for all reasonable $T$ (approximately $ T < 10^{600}$). You can read more about the complexity of union-find [here](https://en.wikipedia.org/wiki/Disjoint-set_data_structure#Time_complexity).  Because the function grows so slowly, we consider it to be $O(1)$.\n    - Initializing `UnionFind` takes $O(n)$ time beacuse we are initializing the `parent` and `rank` arrays of size `n` each.\n    - We iterate through every edge and use the `find` operation to find the component of nodes connected by each edge. It takes $O(1)$ per operation and takes $O(e)$ time for all the $e$ edges. If nodes from different components are connected by an edge, we also perform `union` of the nodes, which takes $O(1)$ time per operation. Because there are $e$ edges, it may be called $e$ times in the worst-case scenario. It would take $O(e)$ time in that case.\n    - As a result, the total time required is $O(n + e)$.\n\n* Space complexity: $O(n)$.\n    - We are using the `parent` and `rank` arrays, both of which require $O(n)$ space each.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

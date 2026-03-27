@@ -1,0 +1,141 @@
+{
+  "questionId": "1256",
+  "questionFrontendId": "1331",
+  "title": "Rank Transform of an Array",
+  "titleSlug": "rank-transform-of-an-array",
+  "difficulty": "Easy",
+  "content": "<p>Given an array of integers&nbsp;<code>arr</code>, replace each element with its rank.</p>\n\n<p>The rank represents how large the element is. The rank has the following rules:</p>\n\n<ul>\n\t<li>Rank is an integer starting from 1.</li>\n\t<li>The larger the element, the larger the rank. If two elements are equal, their rank must be the same.</li>\n\t<li>Rank should be as small as possible.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [40,10,20,30]\n<strong>Output:</strong> [4,1,2,3]\n<strong>Explanation</strong>: 40 is the largest element. 10 is the smallest. 20 is the second smallest. 30 is the third smallest.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [100,100,100]\n<strong>Output:</strong> [1,1,1]\n<strong>Explanation</strong>: Same elements share the same rank.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [37,12,28,9,100,56,80,5,12]\n<strong>Output:</strong> [5,3,4,2,8,6,7,1,3]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= arr.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-10<sup>9</sup>&nbsp;&lt;= arr[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Use a temporary array to copy the array and sort it.",
+    "The rank of each element is the number of unique elements smaller than it in the sorted array plus one."
+  ],
+  "metaData": "{\n  \"name\": \"arrayRankTransform\",\n  \"params\": [\n    {\n      \"name\": \"arr\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"319.8K\", \"totalSubmission\": \"451.4K\", \"totalAcceptedRaw\": 319799, \"totalSubmissionRaw\": 451399, \"acRate\": \"70.8%\"}",
+  "likes": 2383,
+  "dislikes": 114,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Rank Transform of a Matrix\", \"titleSlug\": \"rank-transform-of-a-matrix\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find Target Indices After Sorting Array\", \"titleSlug\": \"find-target-indices-after-sorting-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[40,10,20,30]",
+    "[100,100,100]",
+    "[37,12,28,9,100,56,80,5,12]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"agoda\", \"name\": \"Agoda\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 18, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> arrayRankTransform(vector<int>& arr) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] arrayRankTransform(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def arrayRankTransform(self, arr: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def arrayRankTransform(self, arr):\n        \"\"\"\n        :type arr: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arr\n * @return {number[]}\n */\nvar arrayRankTransform = function(arr) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function arrayRankTransform(arr: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] ArrayRankTransform(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* arrayRankTransform(int* arr, int arrSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func arrayRankTransform(arr []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun arrayRankTransform(arr: IntArray): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func arrayRankTransform(_ arr: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn array_rank_transform(arr: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} arr\n# @return {Integer[]}\ndef array_rank_transform(arr)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $arr\n     * @return Integer[]\n     */\n    function arrayRankTransform($arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> arrayRankTransform(List<int> arr) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def arrayRankTransform(arr: Array[Int]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec array_rank_transform(arr :: [integer]) :: [integer]\n  def array_rank_transform(arr) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec array_rank_transform(Arr :: [integer()]) -> [integer()].\narray_rank_transform(Arr) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (array-rank-transform arr)\n  (-> (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2454",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe have an array `arr` of integers. Our task is to create a new array that replaces each number in `arr` with its rank. The rank represents the position of each number when `arr` is sorted in ascending order. Smaller numbers receive lower ranks (the smallest number gets a rank of 1), while larger numbers get higher ranks. If two numbers are the same, they share the same rank.\n\n### Approach 1: Sorting + Hash Map \n\n### Intuition\n\nThe rank of an element is based on its position in a sorted array. To determine the ranks, we first sort the array `arr`.\n\nIn the sorted array, the first element gets rank 1 because it is the smallest. The second element gets rank 2 if it is larger than the first. If it is equal to the first element, it also gets rank 1. In general, if an element's value is different from the previous element's value, its rank is one more than the previous element's rank. If the values are the same, they share the same rank.\n\nWe can store the ranks in a hash map, where each key is a number from `arr` and each value is its rank. We will use a variable `rank`, starting at 1, to track the rank as we go through the sorted array. For each element, we check if its value is greater than the previous element's value. If it is, we increment `rank` and store the new rank in the map. If it isn't, we store the same rank as the previous element.\n\nAfter calculating the ranks for all elements, we can replace each element in the original array `arr` with its rank by looking it up in the hash map.\n\n### Algorithm\n\n1. Initialize a hash map `numToRank` to store the mapping from each number in `arr` to its corresponding rank\n2. Create a copy of `arr` called `sortedArr`. Sort it so that it is in ascending order.\n3. Initialize current `rank` to 1.\n4. Iterate through each element `sortedArr[i]` in `sortedArr`:\n    * If `i > 0` and `sortedArr[i] > sortedArr[i-1]`, then `rank` can be incremented.\n    * Add the mapping `(sortedArr[i], rank)` to our `numToRank`\n5. Iterate through each element `arr[i]` in input `arr`:\n    * Replace it with its rank: `arr[i] = numToRank.get(arr[i])`\n6. Return `arr`\n\n### Implementation\n\n<iframe src=\"https://leetcode.com/playground/FQYywjMt/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"FQYywjMt\"></iframe>\n\n### Complexity Analysis \n\nLet $N$ be the size of `arr`.\n\n* Time Complexity: $O(N \\cdot \\log N)$\n\n    Sorting `sortedArr` takes $O(N \\cdot \\log N)$ time. Iterating through `arr` and `sortedArr` and inserting/looking up the rank for each number in our hash map takes in total $O(N \\cdot \\log N)$ time. Thus, the total time complexity is $O(N \\cdot \\log N)$\n\n* Space complexity: $O(N + S)$\n\n    Creating a copy of `arr` to be sorted will take $O(N)$ time. \n\n    The space taken by the sorting algorithm ($S$) depends on the language of implementation:\n\n    In Java, Arrays.sort() is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log N)$.\n    In C++, the sort() function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worst-case space complexity of $O(\\log N)$.\n    In Python, the sort() method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has a space complexity of $O(N)$.\n\n### Approach 2: Deduplicating with Set\n\n### Intuition\n\nIn Approach 1, we compared the current element to the previous one to decide if we should update our rank variable. This ensures that duplicate elements have the same rank. Instead of checking for duplicates directly, we can first remove them by adding the elements to a set. A set only keeps unique elements, so it automatically handles duplicates for us. After this step, we can sort the elements in the set and iterate through them to calculate their ranks. Some programming languages have sets that keep elements in order, while others have unordered sets, which means we need to sort them manually after adding elements.\n\n### Algorithm\n\n1. Initialize a hash map `numToRank` to store the mapping from each number in `arr` to its corresponding rank\n2. Initialize a set `nums` to contain unique values of `arr`\n3. Add each number in `arr` to set `nums`.\n4. Initialize current rank to 1.\n5. If `nums` isn't sorted by default, sort it\n6. Iterate through each element `num` in `nums`:\n    * Add the mapping `(num, rank)` to our `numToRank`\n    * Increment `rank`\n7. Iterate through each element `arr[i]` in input `arr`:\n    * Replace it with its rank: `arr[i] = numToRank.get(arr[i])`\n8. Return `arr`\n\n### Implementation\n\n<iframe src=\"https://leetcode.com/playground/PyDfuJKd/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"PyDfuJKd\"></iframe>\n\n\n### Complexity Analysis\n\nLet $N$ be the size of `arr`.\n\n* Time Complexity: $O(N \\cdot \\log N)$\n\n    Adding one element to our set and making sure it is sorted will take a total of $O(N \\cdot \\log N)$ time. Iterating through `arr` and `nums` and inserting `num` to `nums` set, inserting/looking up the rank for each number in our hash map takes in total $O(N)$ time. Thus, the total time complexity is $O(N \\cdot \\log N)$.\n\n* Space Complexity: $O(N)$ \n\n    Initializing a new set of size $N$ for `nums` will take $O(N)$ space. The `numToRank` hash map will consume $O(N)$ space. Thus, the total space complexity is $O(N)$.\n\n\n### Approach 3: Ordered Map\n\n### Intuition \n\nIn Approach 2, we eliminated the need for deduplication and manual sorting by using a set. In Approach 3, we consolidate our operations using a data structure called an ordered map. An ordered map is like a regular map, but its unique keys are sorted. \n\n> Note that in Java and C++, this is offered through the `TreeMap` class and `std::map` class, respectively. Unfortunately, Python does not offer an equivalent.\n\nWith the ordered map, we can store unique elements from `arr` as sorted keys. Since the input is not sorted, we cannot directly calculate the ranks. Instead, we will iterate through the unsorted input `arr` and populate the ordered map so that each element maps to a list of indices where it occurs.\n\nAfter building the map, we calculate the ranks. We start with `rank = 1`. Next, we iterate through the sorted keys of the ordered map and go through each key's list of indices. For each index `i`, we replace `arr[i]` with `rank`. After processing each key, we increment `rank` for the next greater key.\n\n### Algorithm\n\n1. Initialize an ordered map `numToIndices` to map each number `num` in `arr` to all indices for all occurrences of `num`\n2. For each `i` in the range `[0, arr.length)`:\n    * Access the list of indices for element `arr[i]` and append the index `i`\n3. Initialize `rank = 1`\n4. For each `num` in the ordered key set of `numToIndices`\n    * Go through each index `index` in `numToIndices[num]`:\n        * Reassign `arr[index]` to rank `rank`\n    * Increment `rank`\n5. Return `arr`\n\n### Implementation\n\n<iframe src=\"https://leetcode.com/playground/kq2Yhn5e/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"kq2Yhn5e\"></iframe>\n\n### Complexity Analysis\n\nLet $N$ be the size of `arr`.\n\n* Time Complexity: $O(N \\cdot \\log N)$\n\n    Each insert to our ordered map `numToIndices` takes $O(\\log N)$ time. Thus, populating our ordered map takes a total of $O(N \\cdot \\log N)$ time.\n\n* Space Complexity: $O(N)$: \n\n    In the worst case, our ordered map will have size $O(N)$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

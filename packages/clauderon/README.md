@@ -81,7 +81,7 @@ Clauderon supports three methods for providing credentials, with the following p
 Set credentials directly as environment variables:
 
 ```bash
-export GITHUB_TOKEN="ghp_..."
+export GH_TOKEN="ghp_..."
 export CLAUDE_CODE_OAUTH_TOKEN="sk-ant-..."
 export OPENAI_API_KEY="sk-..."
 ```
@@ -140,7 +140,7 @@ Clauderon can securely retrieve credentials from 1Password instead of storing th
 You can also set environment variables to 1Password secret references:
 
 ```bash
-export GITHUB_TOKEN="op://Production/GitHub/token"
+export GH_TOKEN="op://Production/GitHub/token"
 export CLAUDE_CODE_OAUTH_TOKEN="op://Production/Anthropic/oauth_token"
 ```
 
@@ -169,17 +169,17 @@ When credentials are defined in multiple places, clauderon uses the highest prio
 
 ```bash
 # Example 1: Env var takes precedence
-export GITHUB_TOKEN="from-env"              # ← Used (highest priority)
+export GH_TOKEN="from-env"                  # ← Used (highest priority)
 # TOML: github_token = "op://vault/item"   # Ignored
 # File: ~/.clauderon/secrets/github_token  # Ignored
 
 # Example 2: 1Password when no env var
-# No GITHUB_TOKEN env var
+# No GH_TOKEN env var
 # TOML: github_token = "op://vault/item"   # ← Used
 # File: ~/.clauderon/secrets/github_token  # Ignored
 
 # Example 3: File as fallback
-# No GITHUB_TOKEN env var
+# No GH_TOKEN env var
 # No 1Password configuration
 # File: ~/.clauderon/secrets/github_token  # ← Used
 ```

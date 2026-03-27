@@ -1,0 +1,146 @@
+{
+  "questionId": "1747",
+  "questionFrontendId": "1625",
+  "title": "Lexicographically Smallest String After Applying Operations",
+  "titleSlug": "lexicographically-smallest-string-after-applying-operations",
+  "difficulty": "Medium",
+  "content": "<p>You are given a string <code>s</code> of <strong>even length</strong> consisting of digits from <code>0</code> to <code>9</code>, and two integers <code>a</code> and <code>b</code>.</p>\n\n<p>You can apply either of the following two operations any number of times and in any order on <code>s</code>:</p>\n\n<ul>\n\t<li>Add <code>a</code> to all odd indices of <code>s</code> <strong>(0-indexed)</strong>. Digits post <code>9</code> are cycled back to <code>0</code>. For example, if <code>s = &quot;3456&quot;</code> and <code>a = 5</code>, <code>s</code> becomes <code>&quot;3951&quot;</code>.</li>\n\t<li>Rotate <code>s</code> to the right by <code>b</code> positions. For example, if <code>s = &quot;3456&quot;</code> and <code>b = 1</code>, <code>s</code> becomes <code>&quot;6345&quot;</code>.</li>\n</ul>\n\n<p>Return <em>the <strong>lexicographically smallest</strong> string you can obtain by applying the above operations any number of times on</em> <code>s</code>.</p>\n\n<p>A string <code>a</code> is lexicographically smaller than a string <code>b</code> (of the same length) if in the first position where <code>a</code> and <code>b</code> differ, string <code>a</code> has a letter that appears earlier in the alphabet than the corresponding letter in <code>b</code>. For example, <code>&quot;0158&quot;</code> is lexicographically smaller than <code>&quot;0190&quot;</code> because the first position they differ is at the third letter, and <code>&#39;5&#39;</code> comes before <code>&#39;9&#39;</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;5525&quot;, a = 9, b = 2\n<strong>Output:</strong> &quot;2050&quot;\n<strong>Explanation:</strong> We can apply the following operations:\nStart:  &quot;5525&quot;\nRotate: &quot;2555&quot;\nAdd:    &quot;2454&quot;\nAdd:    &quot;2353&quot;\nRotate: &quot;5323&quot;\nAdd:    &quot;5222&quot;\nAdd:    &quot;5121&quot;\nRotate: &quot;2151&quot;\nAdd:    &quot;2050&quot;​​​​​\nThere is no way to obtain a string that is lexicographically smaller than &quot;2050&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;74&quot;, a = 5, b = 1\n<strong>Output:</strong> &quot;24&quot;\n<strong>Explanation:</strong> We can apply the following operations:\nStart:  &quot;74&quot;\nRotate: &quot;47&quot;\n​​​​​​​Add:    &quot;42&quot;\n​​​​​​​Rotate: &quot;24&quot;​​​​​​​​​​​​\nThere is no way to obtain a string that is lexicographically smaller than &quot;24&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;0011&quot;, a = 4, b = 2\n<strong>Output:</strong> &quot;0011&quot;\n<strong>Explanation:</strong> There are no sequence of operations that will give us a lexicographically smaller string than &quot;0011&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= s.length &lt;= 100</code></li>\n\t<li><code>s.length</code> is even.</li>\n\t<li><code>s</code> consists of digits from <code>0</code> to <code>9</code> only.</li>\n\t<li><code>1 &lt;= a &lt;= 9</code></li>\n\t<li><code>1 &lt;= b &lt;= s.length - 1</code></li>\n</ul>\n",
+  "hints": [
+    "Since the length of s is even, the total number of possible sequences is at most 10 * 10 * s.length.",
+    "You can generate all possible sequences and take their minimum.",
+    "Keep track of already generated sequences so they are not processed again."
+  ],
+  "metaData": "{\n  \"name\": \"findLexSmallestString\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"a\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"b\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"86.1K\", \"totalSubmission\": \"108.4K\", \"totalAcceptedRaw\": 86079, \"totalSubmissionRaw\": 108368, \"acRate\": \"79.4%\"}",
+  "likes": 690,
+  "dislikes": 320,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Lexicographically Smallest String After Substring Operation\", \"titleSlug\": \"lexicographically-smallest-string-after-substring-operation\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Lexicographically Smallest String After a Swap\", \"titleSlug\": \"lexicographically-smallest-string-after-a-swap\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"5525\"\n9\n2",
+    "\"74\"\n5\n1",
+    "\"0011\"\n4\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"jpmorgan\", \"name\": \"J.P. Morgan\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string findLexSmallestString(string s, int a, int b) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String findLexSmallestString(String s, int a, int b) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findLexSmallestString(self, s: str, a: int, b: int) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findLexSmallestString(self, s, a, b):\n        \"\"\"\n        :type s: str\n        :type a: int\n        :type b: int\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {number} a\n * @param {number} b\n * @return {string}\n */\nvar findLexSmallestString = function(s, a, b) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findLexSmallestString(s: string, a: number, b: number): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string FindLexSmallestString(string s, int a, int b) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* findLexSmallestString(char* s, int a, int b) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findLexSmallestString(s string, a int, b int) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findLexSmallestString(s: String, a: Int, b: Int): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findLexSmallestString(_ s: String, _ a: Int, _ b: Int) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_lex_smallest_string(s: String, a: i32, b: i32) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {Integer} a\n# @param {Integer} b\n# @return {String}\ndef find_lex_smallest_string(s, a, b)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param Integer $a\n     * @param Integer $b\n     * @return String\n     */\n    function findLexSmallestString($s, $a, $b) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String findLexSmallestString(String s, int a, int b) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findLexSmallestString(s: String, a: Int, b: Int): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_lex_smallest_string(s :: String.t, a :: integer, b :: integer) :: String.t\n  def find_lex_smallest_string(s, a, b) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_lex_smallest_string(S :: unicode:unicode_binary(), A :: integer(), B :: integer()) -> unicode:unicode_binary().\nfind_lex_smallest_string(S, A, B) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-lex-smallest-string s a b)\n  (-> string? exact-integer? exact-integer? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2852",
+    "content": "### Approach: Enumeration\n\n#### Intuition\n\nThe problem involves two operations:\n\n1. Accumulate: Add the odd-numbered elements of ( s ) by ( a ). If the sum exceeds ( 9 ), wrap around to ( 0 ) and continue adding. \n2. Rotate: Rotate ( s ) to the right by ( b ) bits. \n\nThese operations can be performed an unlimited number of times, and the question asks for the **lexicographically smallest string** that can be obtained.\n\nNoting that the length of ( s ) is even, if ( b ) is even, then regardless of how many rotations are performed, we can only apply the accumulation operation to the odd-numbered elements of ( s ). However, if ( b ) is odd, both the odd- and even-numbered elements of ( s ) can be modified through accumulation, each potentially a different number of times.\n\nFrom the above observation, we see that the number of cumulative operations and the number of rotations are **independent** of each other. The number of rotations does not affect whether even positions can be accumulated. Therefore, we can first enumerate the number of rotations and then enumerate the number of cumulative operations to find the lexicographically smallest result.\n\nMore specifically, we proceed as follows:\n\n1. Enumerate the number of rotations, letting ( t ) denote the string after rotating ( s ). Since rotation eventually cycles, and there are at most ( n ) unique rotations (where ( n ) is the length of ( s )), we use an array `vis` to record whether a position has already been visited. Once a previously visited position is encountered, the enumeration stops.\n2. For each ( t ), enumerate the number of times ( j ) the odd digits of ( t ) are incremented, and then the number of times ( k ) the even digits are incremented. Since each element’s value lies in ([0, 9]), performing more than 9 additions would necessarily repeat a previous state. Specifically, if ( b ) is even, ( k )’s upper limit is ( 0 ); otherwise, it is ( 9 ).\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/T3HcTkVZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"T3HcTkVZ\"></iframe>\n\nDuring the enumeration of rotation counts, we consider positions in the order\n$0 \\times b \\bmod n,~1 \\times b \\bmod n,~2 \\times b \\bmod n, \\ldots, x \\times b \\bmod n$.\nThe final position reached can be expressed as:\n\n$$\nxb - yn = z\n$$\n\nHere, $x$ is the number of rotations, $y$ is the number of times we subtract $n$ during the modulo operation, and $z$ is the final position reached.\n\nAccording to the Euclidean algorithm, $z$ must be a multiple of $\\gcd(b, n)$. Therefore, we only need to enumerate multiples of $\\gcd(b, n)$ in the range $[0, n)$.\n\n<iframe src=\"https://leetcode.com/playground/H2UrCyKw/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"H2UrCyKw\"></iframe>\n\nIn the process of enumerating cumulative counts, our goal is to minimize the string’s lexicographical order. Since the odd and even positions are independent, and the cumulative count within each group is uniform, we only need to consider $t[0]$ and $t[1]$.\n\nWe first determine the minimum number of accumulations that minimize $t[1]$ (for the odd positions). If $b$ is odd, we also determine the minimum number of accumulations that minimize $t[0]$ (for the even positions).\n\n<iframe src=\"https://leetcode.com/playground/Au7Y2465/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Au7Y2465\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of $s$, and $d$ be the upper limit on the number of cumulative sums, which is $10$ in this problem.\n\n- Time complexity: $O(n^2d^2)$.\n  \n  After optimizing the rotation enumeration, the constant factor decreases, but the asymptotic complexity remains $O(n^2d^2)$ in the worst case. After optimizing accumulation enumeration, the time complexity reduces to $O(n^2d)$.\n\n- Space complexity: $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

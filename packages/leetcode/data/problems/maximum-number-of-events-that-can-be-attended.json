@@ -1,0 +1,144 @@
+{
+  "questionId": "1478",
+  "questionFrontendId": "1353",
+  "title": "Maximum Number of Events That Can Be Attended",
+  "titleSlug": "maximum-number-of-events-that-can-be-attended",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array of <code>events</code> where <code>events[i] = [startDay<sub>i</sub>, endDay<sub>i</sub>]</code>. Every event <code>i</code> starts at <code>startDay<sub>i</sub></code><sub> </sub>and ends at <code>endDay<sub>i</sub></code>.</p>\n\n<p>You can attend an event <code>i</code> at any day <code>d</code> where <code>startDay<sub>i</sub> &lt;= d &lt;= endDay<sub>i</sub></code>. You can only attend one event at any time <code>d</code>.</p>\n\n<p>Return <em>the maximum number of events you can attend</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/02/05/e1.png\" style=\"width: 400px; height: 267px;\" />\n<pre>\n<strong>Input:</strong> events = [[1,2],[2,3],[3,4]]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> You can attend all the three events.\nOne way to attend them all is as shown.\nAttend the first event on day 1.\nAttend the second event on day 2.\nAttend the third event on day 3.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> events= [[1,2],[2,3],[3,4],[1,2]]\n<strong>Output:</strong> 4\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= events.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>events[i].length == 2</code></li>\n\t<li><code>1 &lt;= startDay<sub>i</sub> &lt;= endDay<sub>i</sub> &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Sort the events by the start time and in case of tie by the end time in ascending order.",
+    "Loop over the sorted events. Attend as much as you can and keep the last day occupied. When you try to attend new event keep in mind the first day you can attend a new event in."
+  ],
+  "metaData": "{\n  \"name\": \"maxEvents\",\n  \"params\": [\n    {\n      \"name\": \"events\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"225.3K\", \"totalSubmission\": \"578.7K\", \"totalAcceptedRaw\": 225301, \"totalSubmissionRaw\": 578704, \"acRate\": \"38.9%\"}",
+  "likes": 3993,
+  "dislikes": 634,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Number of Events That Can Be Attended II\", \"titleSlug\": \"maximum-number-of-events-that-can-be-attended-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Earnings From Taxi\", \"titleSlug\": \"maximum-earnings-from-taxi\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Meeting Rooms III\", \"titleSlug\": \"meeting-rooms-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,2],[2,3],[3,4]]",
+    "[[1,2],[2,3],[3,4],[1,2]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 7, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 6, \"slug\": \"paypal\", \"name\": \"PayPal\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"gopuff\", \"name\": \"Gopuff\"}, {\"timesEncountered\": 3, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 3, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"visa\", \"name\": \"Visa\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxEvents(vector<vector<int>>& events) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxEvents(int[][] events) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxEvents(self, events: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxEvents(self, events):\n        \"\"\"\n        :type events: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} events\n * @return {number}\n */\nvar maxEvents = function(events) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxEvents(events: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxEvents(int[][] events) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxEvents(int** events, int eventsSize, int* eventsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxEvents(events [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxEvents(events: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxEvents(_ events: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_events(events: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} events\n# @return {Integer}\ndef max_events(events)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $events\n     * @return Integer\n     */\n    function maxEvents($events) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxEvents(List<List<int>> events) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxEvents(events: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_events(events :: [[integer]]) :: integer\n  def max_events(events) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_events(Events :: [[integer()]]) -> integer().\nmax_events(Events) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-events events)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2791",
+    "content": "### Approach: Greedy\n\n#### Intuition\n\nAccording to the problem statement, meeting $i$ starts on $\\textit{startDay}_i$ and ends on $\\textit{endDay}_i$. You are allowed to attend a meeting on any day within the interval $[\\textit{startDay}_i, \\textit{endDay}_i]$. Since only one meeting can be attended per day, we apply a greedy strategy: if it's possible to attend both meetings $i$ and $j$ on day $k$, we should prioritize the one with the earlier end time, i.e., $\\min(\\textit{endDay}_i, \\textit{endDay}_j)$. This ensures we leave more room to accommodate other meetings later.\n\nFollowing this principle, we assume that the latest any meeting ends is $\\textit{maxDay}$. We can then iterate through each day from $1$ to $\\textit{maxDay}$ and greedily choose which meeting to attend on each day. To do this efficiently, we use a min-heap to keep track of the end times of currently available meetings. We also sort all meetings by their start time in advance.\n\nLet the current day be $i$. At each day, we perform the following steps:\n\n+ Add to the candidate queue (the min-heap) all meetings whose start day is less than or equal to $i$. At this point, the heap contains all meetings available to attend on day $i$ or earlier.\n\n+ Remove from the heap all meetings whose end day is less than $i$, as they can no longer be attended.\n\n+ If the heap is not empty, we attend the meeting with the earliest end time (which is at the top of the heap), increment the count of attended meetings by $1$, and remove it from the heap.\n\nFinally, return the total number of meetings attended.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/UdJhEBHM/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"UdJhEBHM\"></iframe>\n\n#### Complexity analysis\n\nLet $n$ be the number of meetings in the given array $\\textit{events}$, and let $T$ be the maximum value of any end time in $\\textit{events}$.\n\n- Time complexity: $O((T + n) \\log n)$.\n  \n  Sorting the array $\\textit{events}$ takes $O(n \\log n)$ time. After sorting, we iterate over each day from $1$ to $T$, giving us $T$ time points to process. For each day, we may add or remove meetings from the priority queue, which maintains at most $n$ elements. Each insertion or deletion operation in the heap takes $O(\\log n)$ time. Therefore, the total cost of heap operations across all days is $O(T \\log n)$. Combining both steps, the overall time complexity becomes $O((T + n) \\log n)$.\n\n- Space complexity: $O(n)$.\n  \n  We use a priority queue (min-heap) to store the end times of meetings that are available to attend. Since there are at most $n$ meetings, the heap will contain at most $n$ elements at any given time. Thus, the space complexity is $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

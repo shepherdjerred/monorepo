@@ -66,7 +66,7 @@ void mock.module("../../../configuration.js", () => ({
     environment: Bun.env["ENVIRONMENT"] ?? "dev",
     discordToken: Bun.env["DISCORD_TOKEN"] ?? "test",
     applicationId: Bun.env["APPLICATION_ID"] ?? "test",
-    riotApiToken: Bun.env["RIOT_API_TOKEN"] ?? "test",
+    riotApiToken: Bun.env["RIOT_API_KEY"] ?? "test",
     databaseUrl: Bun.env["DATABASE_URL"] ?? "test.db",
     port: Number.parseInt(Bun.env["PORT"] ?? "3000"),
     s3BucketName: Bun.env["S3_BUCKET_NAME"],

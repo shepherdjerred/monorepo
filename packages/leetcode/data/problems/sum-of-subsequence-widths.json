@@ -1,0 +1,137 @@
+{
+  "questionId": "927",
+  "questionFrontendId": "891",
+  "title": "Sum of Subsequence Widths",
+  "titleSlug": "sum-of-subsequence-widths",
+  "difficulty": "Hard",
+  "content": "<p>The <strong>width</strong> of a sequence is the difference between the maximum and minimum elements in the sequence.</p>\n\n<p>Given an array of integers <code>nums</code>, return <em>the sum of the <strong>widths</strong> of all the non-empty <strong>subsequences</strong> of </em><code>nums</code>. Since the answer may be very large, return it <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>A <strong>subsequence</strong> is a sequence that can be derived from an array by deleting some or no elements without changing the order of the remaining elements. For example, <code>[3,6,2,7]</code> is a subsequence of the array <code>[0,3,1,6,2,2,7]</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2,1,3]\n<strong>Output:</strong> 6\nExplanation: The subsequences are [1], [2], [3], [2,1], [2,3], [1,3], [2,1,3].\nThe corresponding widths are 0, 0, 0, 1, 1, 2, 2.\nThe sum of these widths is 6.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2]\n<strong>Output:</strong> 0\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"sumSubseqWidths\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"26.5K\", \"totalSubmission\": \"65.5K\", \"totalAcceptedRaw\": 26457, \"totalSubmissionRaw\": 65504, \"acRate\": \"40.4%\"}",
+  "likes": 738,
+  "dislikes": 172,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[2,1,3]",
+    "[2]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int sumSubseqWidths(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int sumSubseqWidths(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def sumSubseqWidths(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def sumSubseqWidths(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar sumSubseqWidths = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function sumSubseqWidths(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int SumSubseqWidths(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int sumSubseqWidths(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func sumSubseqWidths(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun sumSubseqWidths(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func sumSubseqWidths(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn sum_subseq_widths(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef sum_subseq_widths(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function sumSubseqWidths($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int sumSubseqWidths(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def sumSubseqWidths(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec sum_subseq_widths(nums :: [integer]) :: integer\n  def sum_subseq_widths(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec sum_subseq_widths(Nums :: [integer()]) -> integer().\nsum_subseq_widths(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (sum-subseq-widths nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "535",
+    "content": "[TOC]\r\n\r\n## Solution\r\n---\r\n### Approach 1: Mathematical\r\n\r\n**Intuition**\r\n\r\nLet's try to count the number of subsequences with minimum `A[i]` and maximum `A[j]`.\r\n\r\n**Algorithm**\r\n\r\nWe can sort the array as it doesn't change the answer.  After sorting the array, this allows us to know that the number of subsequences with minimum `A[i]` and maximum `A[j]` is $$2^{j-i-1}$$.  Hence, the desired answer is:\r\n\r\n$$\r\n\\sum\\limits_{j > i} (2^{j-i-1}) (A_j - A_i)\r\n$$\r\n\r\n$$\r\n= \\big( \\sum\\limits_{i = 0}^{n-2} \\sum\\limits_{j = i+1}^{n-1} (2^{j-i-1}) (A_j) \\big) - \\big( \\sum\\limits_{i = 0}^{n-2} \\sum\\limits_{j = i+1}^{n-1} (2^{j-i-1}) (A_i) \\big)\r\n$$\r\n\r\n$$\r\n= \\big( (2^0 A_1 + 2^1 A_2 + 2^2 A_3 + \\cdots) + (2^0 A_2 + 2^1 A_3 + \\cdots) + (2^0 A_3 + 2^1 A_4 + \\cdots) + \\cdots \\big)\r\n$$\r\n$$\r\n - \\big( \\sum\\limits_{i = 0}^{n-2} (2^0 + 2^1 + \\cdots + 2^{N-i-2}) (A_i) \\big)\r\n$$\r\n\r\n$$\r\n= \\big( \\sum\\limits_{j = 1}^{n-1} (2^j - 1) A_j \\big) - \\big( \\sum\\limits_{i = 0}^{n-2} (2^{N-i-1} - 1) A_i \\big)\r\n$$\r\n\r\n$$\r\n= \\sum\\limits_{i = 0}^{n-1} \\big(((2^i - 1) A_i) - ((2^{N-i-1} - 1) A_i)\\big)\r\n$$\r\n\r\n$$\r\n= \\sum\\limits_{i = 0}^{n-1} (2^i - 2^{N-i-1}) A_i\r\n$$\r\n\r\n<iframe src=\"https://leetcode.com/playground/KZfnbgzc/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"KZfnbgzc\"></iframe>\r\n\r\n**Complexity Analysis**\r\n\r\n* Time Complexity:  $$O(N \\log N)$$, where $$N$$ is the length of `A`.\r\n\r\n* Space Complexity:  $$O(N)$$, the space used by `pow2`.  (We can improve this to $$O(1)$$ space by calculating these powers on the fly.)\r\n<br />\r\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

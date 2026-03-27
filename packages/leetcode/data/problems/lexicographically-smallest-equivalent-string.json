@@ -1,0 +1,138 @@
+{
+  "questionId": "1058",
+  "questionFrontendId": "1061",
+  "title": "Lexicographically Smallest Equivalent String",
+  "titleSlug": "lexicographically-smallest-equivalent-string",
+  "difficulty": "Medium",
+  "content": "<p>You are given two strings of the same length <code>s1</code> and <code>s2</code> and a string <code>baseStr</code>.</p>\n\n<p>We say <code>s1[i]</code> and <code>s2[i]</code> are equivalent characters.</p>\n\n<ul>\n\t<li>For example, if <code>s1 = &quot;abc&quot;</code> and <code>s2 = &quot;cde&quot;</code>, then we have <code>&#39;a&#39; == &#39;c&#39;</code>, <code>&#39;b&#39; == &#39;d&#39;</code>, and <code>&#39;c&#39; == &#39;e&#39;</code>.</li>\n</ul>\n\n<p>Equivalent characters follow the usual rules of any equivalence relation:</p>\n\n<ul>\n\t<li><strong>Reflexivity:</strong> <code>&#39;a&#39; == &#39;a&#39;</code>.</li>\n\t<li><strong>Symmetry:</strong> <code>&#39;a&#39; == &#39;b&#39;</code> implies <code>&#39;b&#39; == &#39;a&#39;</code>.</li>\n\t<li><strong>Transitivity:</strong> <code>&#39;a&#39; == &#39;b&#39;</code> and <code>&#39;b&#39; == &#39;c&#39;</code> implies <code>&#39;a&#39; == &#39;c&#39;</code>.</li>\n</ul>\n\n<p>For example, given the equivalency information from <code>s1 = &quot;abc&quot;</code> and <code>s2 = &quot;cde&quot;</code>, <code>&quot;acd&quot;</code> and <code>&quot;aab&quot;</code> are equivalent strings of <code>baseStr = &quot;eed&quot;</code>, and <code>&quot;aab&quot;</code> is the lexicographically smallest equivalent string of <code>baseStr</code>.</p>\n\n<p>Return <em>the lexicographically smallest equivalent string of </em><code>baseStr</code><em> by using the equivalency information from </em><code>s1</code><em> and </em><code>s2</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s1 = &quot;parker&quot;, s2 = &quot;morris&quot;, baseStr = &quot;parser&quot;\n<strong>Output:</strong> &quot;makkek&quot;\n<strong>Explanation:</strong> Based on the equivalency information in s1 and s2, we can group their characters as [m,p], [a,o], [k,r,s], [e,i].\nThe characters in each group are equivalent and sorted in lexicographical order.\nSo the answer is &quot;makkek&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s1 = &quot;hello&quot;, s2 = &quot;world&quot;, baseStr = &quot;hold&quot;\n<strong>Output:</strong> &quot;hdld&quot;\n<strong>Explanation: </strong>Based on the equivalency information in s1 and s2, we can group their characters as [h,w], [d,e,o], [l,r].\nSo only the second letter &#39;o&#39; in baseStr is changed to &#39;d&#39;, the answer is &quot;hdld&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s1 = &quot;leetcode&quot;, s2 = &quot;programs&quot;, baseStr = &quot;sourcecode&quot;\n<strong>Output:</strong> &quot;aauaaaaada&quot;\n<strong>Explanation:</strong> We group the equivalent characters in s1 and s2 as [a,o,e,r,s,c], [l,p], [g,t] and [d,m], thus all letters in baseStr except &#39;u&#39; and &#39;d&#39; are transformed to &#39;a&#39;, the answer is &quot;aauaaaaada&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s1.length, s2.length, baseStr &lt;= 1000</code></li>\n\t<li><code>s1.length == s2.length</code></li>\n\t<li><code>s1</code>, <code>s2</code>, and <code>baseStr</code> consist of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Model these equalities as edges of a graph.",
+    "Group each connected component of the graph and assign each node of this component to the node with the lowest lexicographically character.",
+    "Finally convert the string with the precalculated information."
+  ],
+  "metaData": "{\n  \"name\": \"smallestEquivalentString\",\n  \"params\": [\n    {\n      \"name\": \"s1\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"s2\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"baseStr\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"180.2K\", \"totalSubmission\": \"222.1K\", \"totalAcceptedRaw\": 180226, \"totalSubmissionRaw\": 222118, \"acRate\": \"81.1%\"}",
+  "likes": 2876,
+  "dislikes": 186,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Lexicographically Smallest Generated String\", \"titleSlug\": \"lexicographically-smallest-generated-string\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"parker\"\n\"morris\"\n\"parser\"",
+    "\"hello\"\n\"world\"\n\"hold\"",
+    "\"leetcode\"\n\"programs\"\n\"sourcecode\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"cloudera\", \"name\": \"Cloudera\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string smallestEquivalentString(string s1, string s2, string baseStr) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String smallestEquivalentString(String s1, String s2, String baseStr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def smallestEquivalentString(self, s1: str, s2: str, baseStr: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def smallestEquivalentString(self, s1, s2, baseStr):\n        \"\"\"\n        :type s1: str\n        :type s2: str\n        :type baseStr: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s1\n * @param {string} s2\n * @param {string} baseStr\n * @return {string}\n */\nvar smallestEquivalentString = function(s1, s2, baseStr) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function smallestEquivalentString(s1: string, s2: string, baseStr: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string SmallestEquivalentString(string s1, string s2, string baseStr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* smallestEquivalentString(char* s1, char* s2, char* baseStr) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func smallestEquivalentString(s1 string, s2 string, baseStr string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun smallestEquivalentString(s1: String, s2: String, baseStr: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func smallestEquivalentString(_ s1: String, _ s2: String, _ baseStr: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn smallest_equivalent_string(s1: String, s2: String, base_str: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s1\n# @param {String} s2\n# @param {String} base_str\n# @return {String}\ndef smallest_equivalent_string(s1, s2, base_str)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s1\n     * @param String $s2\n     * @param String $baseStr\n     * @return String\n     */\n    function smallestEquivalentString($s1, $s2, $baseStr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String smallestEquivalentString(String s1, String s2, String baseStr) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def smallestEquivalentString(s1: String, s2: String, baseStr: String): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec smallest_equivalent_string(s1 :: String.t, s2 :: String.t, base_str :: String.t) :: String.t\n  def smallest_equivalent_string(s1, s2, base_str) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec smallest_equivalent_string(S1 :: unicode:unicode_binary(), S2 :: unicode:unicode_binary(), BaseStr :: unicode:unicode_binary()) -> unicode:unicode_binary().\nsmallest_equivalent_string(S1, S2, BaseStr) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (smallest-equivalent-string s1 s2 baseStr)\n  (-> string? string? string? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1626",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nWe have two strings, `s1` and `s2`, of identical length. We need to use equivalence information from these two strings to form the lexicographically smallest string of the given third string, `baseStr`. The characters at respective indices in the two strings are equivalent. So if at index `i` there is a character `c` in `s1` and a character `f` in `s2`, then we can exchange `f` with `c` or vice versa in the string `baseStr`.\n</br>\n\n---\n\n### Approach 1: Depth-First Search (DFS)\n\n#### Intuition\n\nThis problem can be depicted as a graph problem. Characters can be represented as nodes and the equivalence relation between these characters as an edge between the nodes.\n\nFollowing this analogy, we can have some connected components. Each character in a component can be converted to any other character in the component. Since we need to find the lexicographically smallest string, we will find the smallest character in the component and convert every other character instance in the `baseStr` to this character. This way, we ensure that each character in the string `baseStr` gets converted to the smallest possible character, and hence we get the smallest string as a whole.\n\n!?!../Documents/1061_Lexicographically_Smallest_Equivalent_String.json:960,720!?!\n\nSo, the problem boils down to building the graph and finding the smallest character in each connected component. In the end, we replace the characters in `baseStr` with the corresponding smallest character in its component. In this approach, we will use DFS to find the connected components.\n\n> If you're not familiar with DFS, check out our [Explore card](https://leetcode.com/explore/learn/card/queue-stack/232/practical-application-stack/).\n\n#### Algorithm\n\n1. Create an adjacency matrix `adjMatrix` to store the edges. This matrix will be of size $26 * 26$, as we have only lowercase English letters, with value $1$ at cell `(x, y)` if there is an edge between character `x` and `y`, $0$ otherwise. Also, create an array `visited` that will help us track if a character has been visited by DFS yet.\n2. Iterate over all the characters in their integer form (`\"a\" = 0`, `\"b\" = 1`, etc.), from $0$ until $25$, and for each character `c`:\n\n    - If `c` is not visited yet (`visited[c] = 0`), perform a DFS starting with `c` and store all the traversed characters in a vector `component`, also store the minimum of all these characters in a variable `minChar`.\n    - Iterate over all the characters in `component` and map all these characters to `minChar` in a vector `mappingChar`. This map will store the characters to which the `baseStr` characters will finally map.\n\n3. Iterate over the string `baseStr` and store the mapped character in the string `ans`.\n4. Return `ans`.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/buF7LrNq/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"buF7LrNq\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $N$ is the length of strings `s1` and `s2`, $M$ is the length of string `baseStr`, and $|\\Sigma|$ is the number of unique characters in `s1` or `s2`, which is $26$ for this problem.\n\n* Time complexity: $O(N + M + |\\Sigma|^2)$.\n\n  We first iterate over strings `s1` and `s2`, which costs us $O(N)$. The DFS, in the worst case, will perform $|\\Sigma|^2$ number of operations as we iterate over all the $26$ characters and can perform DFS for all of them, leading to another $26$ operations. In the end, we iterate over the string `baseStr` to create the `ans` string; this costs $O(M)$. Therefore, the total time complexity equals $O(N + M + |\\Sigma|^2)$.\n\n\n* Space complexity: $O(|\\Sigma|^2)$.\n\n  The adjacency matrix size is $|\\Sigma| * |\\Sigma| = 26 * 26 = 676$. The size of `mappingChar` and `visited` is also fixed at $|\\Sigma|$. The recursion call stack space used by DFS will also be at max $|\\Sigma|$, which is one recursive call for each character. Therefore, the total space complexity is $O(|\\Sigma|^2)$.\n\n---\n\n### Approach 2: Disjoint Set Union (DSU/Union Find)\n\n#### Intuition\n\n> If you're not familiar with DSU, check out our [Explore card](https://leetcode.com/explore/learn/card/graph/618/disjoint-set/).\n\nAnother way to find the connected components in a graph is using a Disjoint Set Union (DSU) data structure. Instead of using an adjacency matrix, we will perform a union operation for all the edges. In the end, the nodes that can be converted to each other will be in the same component.\n\nWe also need to find the smallest character in each component. For this, we can change how we generally perform the union operation. While merging two components, we will always make the smaller character representative of the whole merged group.\n\nAlthough generally, we perform union by size to have almost constant time (Inverse Ackermann $\\alpha(n)$ to be precise, which is practically $O(1)$) operations, but owing to the smaller constraints ($26$ lowercase English characters), we can still have the constant time complexity. For larger constraints, we can still follow the union by size and have a different method to fetch the components by finding the representative of each character. However, for this problem, we will not use union by size for simplicity and as it's not going to improve the time complexity by much.\n\n#### Algorithm\n\n1. Iterate over all the characters from `0` until `26`, and make each character represent itself in a vector `representative`.\n2. Iterate over the characters in `s1` and `s2` and perform the union operation between the characters at their corresponding positions. In the union, we always make the smaller character the representative.\n3. Iterate over the characters in the string `baseStr` and map the characters to their representative by calling the `find()` operation and create the answer string `ans`.\n4. Return `ans`.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/C8ySgSCz/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"C8ySgSCz\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $N$ is the length of strings `s1` and `s2`, $M$ is the length of string `baseStr`, and $|\\Sigma|$ is the number of unique characters in `s1` or `s2`, which is $26$ for this problem.\n\n* Time complexity: $O((N + M) \\log |\\Sigma| )$.\n\n  We perform the union operation for all the $N$ characters in the strings `s1` and `s2`. Since we didn't use union by size and only have the path compression, the time complexity for the union operation would be equal to $O(\\log |\\Sigma|)$. Also, we iterate over the characters in `baseStr` and call the `find()` operations which costs $O(M \\log |\\Sigma|)$ in total. Therefore the total time complexity equals $O((N + M) \\log |\\Sigma| )$.\n\n* Space complexity: $O(|\\Sigma|)$.\n\n  The only space needed is the list of size $|\\Sigma|$ `representative` to store the representatives, and hence the total space complexity is constant.\n\n\n> **Note:** The strings `s1` and `s2`, as per the problem description, can only have lowercase English letters. Therefore, the time complexity of both solutions could also be mentioned as $O(N + M)$, and the space complexity as constant.\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

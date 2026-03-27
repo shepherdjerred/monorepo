@@ -1,0 +1,145 @@
+{
+  "questionId": "925",
+  "questionFrontendId": "889",
+  "title": "Construct Binary Tree from Preorder and Postorder Traversal",
+  "titleSlug": "construct-binary-tree-from-preorder-and-postorder-traversal",
+  "difficulty": "Medium",
+  "content": "<p>Given two integer arrays, <code>preorder</code> and <code>postorder</code> where <code>preorder</code> is the preorder traversal of a binary tree of <strong>distinct</strong> values and <code>postorder</code> is the postorder traversal of the same tree, reconstruct and return <em>the binary tree</em>.</p>\n\n<p>If there exist multiple answers, you can <strong>return any</strong> of them.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/07/24/lc-prepost.jpg\" style=\"width: 304px; height: 265px;\" />\n<pre>\n<strong>Input:</strong> preorder = [1,2,4,5,3,6,7], postorder = [4,5,2,6,7,3,1]\n<strong>Output:</strong> [1,2,3,4,5,6,7]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> preorder = [1], postorder = [1]\n<strong>Output:</strong> [1]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= preorder.length &lt;= 30</code></li>\n\t<li><code>1 &lt;= preorder[i] &lt;= preorder.length</code></li>\n\t<li>All the values of <code>preorder</code> are <strong>unique</strong>.</li>\n\t<li><code>postorder.length == preorder.length</code></li>\n\t<li><code>1 &lt;= postorder[i] &lt;= postorder.length</code></li>\n\t<li>All the values of <code>postorder</code> are <strong>unique</strong>.</li>\n\t<li>It is guaranteed that <code>preorder</code> and <code>postorder</code> are the preorder traversal and postorder traversal of the same binary tree.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"constructFromPrePost\",\n  \"params\": [\n    {\n      \"name\": \"preorder\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"postorder\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"TreeNode\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"218.6K\", \"totalSubmission\": \"280.1K\", \"totalAcceptedRaw\": 218619, \"totalSubmissionRaw\": 280108, \"acRate\": \"78.0%\"}",
+  "likes": 3391,
+  "dislikes": 160,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,2,4,5,3,6,7]\n[4,5,2,6,7,3,1]",
+    "[1]\n[1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Divide and Conquer",
+      "slug": "divide-and-conquer"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    TreeNode* constructFromPrePost(vector<int>& preorder, vector<int>& postorder) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public TreeNode constructFromPrePost(int[] preorder, int[] postorder) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def constructFromPrePost(self, preorder: List[int], postorder: List[int]) -> Optional[TreeNode]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def constructFromPrePost(self, preorder, postorder):\n        \"\"\"\n        :type preorder: List[int]\n        :type postorder: List[int]\n        :rtype: Optional[TreeNode]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {number[]} preorder\n * @param {number[]} postorder\n * @return {TreeNode}\n */\nvar constructFromPrePost = function(preorder, postorder) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction constructFromPrePost(preorder: number[], postorder: number[]): TreeNode | null {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public TreeNode ConstructFromPrePost(int[] preorder, int[] postorder) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nstruct TreeNode* constructFromPrePost(int* preorder, int preorderSize, int* postorder, int postorderSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc constructFromPrePost(preorder []int, postorder []int) *TreeNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun constructFromPrePost(preorder: IntArray, postorder: IntArray): TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func constructFromPrePost(_ preorder: [Int], _ postorder: [Int]) -> TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn construct_from_pre_post(preorder: Vec<i32>, postorder: Vec<i32>) -> Option<Rc<RefCell<TreeNode>>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {Integer[]} preorder\n# @param {Integer[]} postorder\n# @return {TreeNode}\ndef construct_from_pre_post(preorder, postorder)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param Integer[] $preorder\n     * @param Integer[] $postorder\n     * @return TreeNode\n     */\n    function constructFromPrePost($preorder, $postorder) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  TreeNode? constructFromPrePost(List<int> preorder, List<int> postorder) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def constructFromPrePost(preorder: Array[Int], postorder: Array[Int]): TreeNode = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec construct_from_pre_post(preorder :: [integer], postorder :: [integer]) :: TreeNode.t | nil\n  def construct_from_pre_post(preorder, postorder) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec construct_from_pre_post(Preorder :: [integer()], Postorder :: [integer()]) -> #tree_node{} | null.\nconstruct_from_pre_post(Preorder, Postorder) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (construct-from-pre-post preorder postorder)\n  (-> (listof exact-integer?) (listof exact-integer?) (or/c tree-node? #f))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2691",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given two integer arrays that represent the `preorder` and `postorder` traversals of a binary tree. Our task is to rebuild the tree and return its root. First, let's clarify the key terms involved in this task:\n\nA *binary tree* is a tree data structure where each node has at most two children, called `left` and `right`. Tree traversal means visiting all the nodes in a specific order. In this problem, we use two common types of binary tree traversal:\n\n-   **Preorder traversal**: We visit the current node first, then go to the left child, and finally to the right child. This means that the parent node will appear before its children in the `preorder` array. \n\n!?!../Documents/889/889_preorder.json:960,540!?!\n\n-   **Postorder traversal**: We temporarily ignore the current node and move directly to its children, visiting the left child first and then the right. After that, we return to the node and process it last. In other words, the parent node always appears after its children in the `postorder` array.\n\n!?!../Documents/889/889_postorder.json:960,540!?!\n\n> For a more comprehensive understanding of binary trees, check out the [Binary Tree Explore Card 🔗](https://leetcode.com/explore/learn/card/data-structure-tree/). This resource provides an in-depth look at binary trees, explaining their key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\nIf you'd like more practice with binary trees, you can first try to construct the two traversals that we are going to use in this problem:\n\n-   [Binary Tree Preorder Traversal](https://leetcode.com/problems/binary-tree-preorder-traversal/description/)\n-   [Binary Tree Postorder Traversal](https://leetcode.com/problems/binary-tree-postorder-traversal/description/)\n\n\n### Approach 1: Divide and Conquer\n\n#### Intuition\n\nBinary trees are inherently recursive structures, meaning we can break them down into smaller subtrees until the problem becomes simple enough to solve directly. In this problem, the base cases are straightforward: if the traversal arrays contain only one element, the tree consists of a single node with that element as its value. Even simpler, when the arrays are empty, the tree is `NULL`.\n\nFor cases where the arrays contain more than one element, we assume we already know how to solve the problem for smaller trees ($N - 1$ elements or fewer). The key observation is that the first node in the preorder traversal is always the root of the tree. Our goal, then, is to correctly determine which parts of the preorder and postorder arrays correspond to the left and right subtrees. Once we identify these sections, we can recursively construct the left and right subtrees and attach them to the root, forming the complete tree.\n\nTo determine which nodes belong to the left and right subtrees, note that the second element in the preorder array is the root of the left subtree, which we'll call `leftRoot`. In the `postorder` array, all nodes visited before `leftRoot` belong to the left subtree. Conversely, the nodes visited after `leftRoot` in the `postorder` array belong to the right subtree. Using this division, we can pass the appropriate segments of the arrays to the recursive function, allowing it to build the tree step by step.\n\nThis approach is based on the **Divide and Conquer** technique, where we recursively break the problem down into two or more subproblems of the same type, continuing until we reach a base case. For a deeper understanding of the topic, you can refer to the relevant [LeetCode Explore Card 🔗](https://leetcode.com/problem-list/divide-and-conquer/).\n\n#### Algorithm\n\n-   Define the recursive function `constructTree(preStart, preEnd, postStart, preorder, postorder)`:\n    -   If `preStart > preEnd`, i.e. there are no more nodes to process, return `NULL`.\n    -   If `preStart == preEnd`, the tree contains only one node:\n        -   Return a new node with value `preorder[preStart]` and no children.\n    -   Define `leftRoot` as the second element of the current portion of the preorder array, i.e., `preorder[preStart + 1]`.\n    -   Initialize `numOfNodesInLeft` to `1`.\n    -   Iterate over the current portion of the `postorder` array until `leftRoot` is found. While `postorder[postStart + numOfNodesInLeft - 1] != leftRoot`:\n        -   Increment `numOfNodesInLeft` by `1`.\n    -   Create a new node `root` and set its value to `preorder[preStart]`.\n    -   Recursively construct the left subtree of root by calling `constructTree(preStart + 1, preStart + numOfNodesInLeft, postStart, preorder, postorder)`.\n    -   Construct the right subtree by calling: `constructTree(preStart + numOfNodesInLeft + 1, preEnd, postStart + numOfNodesInLeft, preorder, postorder)`.\n    -   Return `root`.\n-   In the main `constructFromPrePost` function:\n    -  Initialize `numOfNodes` to the size of the traversal arrays.\n    -  Call the helper function `constructTree(preStart = 0, preEnd = numOfNodes - 1, postStart = 0, preorder, postorder)` and return the root of the constructed tree.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/eermTXfp/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"eermTXfp\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the traversal arrays.\n\n-   Time complexity: $O(n^2)$\n\n    We call the `constructTree` function $n$ times, once for each element in the preorder array. In each call, the function makes a linear pass over the `postorder` array to find the position of the element that matches the root of the left subtree. This means each call to `constructTree` takes $O(n)$ time, and with $n$ calls in total, the overall time complexity is $O(n^2)$.\n\n-   Space complexity: $O(n)$\n\n    Since we are not using any additional data structures other than the input arrays and the result tree, the space complexity is determined by the depth of the recursion. In the worst case, where the tree is a list of nodes with only left children, the recursion will go $O(n)$ levels deep, one for each node. Therefore, the algorithm requires $O(n)$ extra space.\n\n---\n\n### Approach 2: Using Index Array\n\n#### Intuition\n\nLooking at our previous approach, we see that searching through the `postorder` array in each call to `constructTree` adds an extra $O(n)$ time cost, slowing down the algorithm. How can we remove this bottleneck while using the fact that all node values are unique?\n\nAn intuitive solution might be to use a hash map to store the index of each node value in `postorder`. This allows quick lookups and helps us determine how many nodes belong to each subtree efficiently. While this works well and keeps the time and space complexity the same, we can optimize further. Since node values do not exceed the length of the traversal arrays, we can use an index array instead of a hash map. This improves both runtime and auxiliary space usage.\n\nSo, in the preprocessing phase, we create an index array by storing the position of each element in the post-order traversal. This index array replaces the need for the original post-order array in recursion.\n\nThe algorithm then follows the same structure: the first node in the current preorder segment is the root, and the second is the root of its left subtree (`leftRoot`). By finding the index of `leftRoot` in post-order, we determine the left subtree's size and split the problem into two smaller subproblems. We then recursively build the left and right subtrees using the relevant subarrays.\n\n#### Algorithm\n\n-   Define the recursive function `constructTree(preStart, preEnd, postStart, preorder, indexInPostorder)`:\n    -   If `preStart > preEnd`, meaning that there are no more nodes to process, return `NULL`.\n    -   If `preStart == preEnd`, the tree contains only one node:\n        -   Return a new node with value `preorder[preStart]` and no children.\n    -   Define `leftRoot` as the second element of the current portion of the preorder array, i.e., `preorder[preStart + 1]`.\n    -   Initialize `numOfNodesInLeft` to `indexInPostorder[leftRoot] - postStart + 1`, indicating the number of nodes that occur before `leftRoot` in `postorder` and should be added to the left subtree.\n    -   Create a new node `root` and set its value to `preorder[preStart]`.\n    -   Recursively construct the left subtree of `root` by calling: `constructTree(preStart + 1, preStart + numOfNodesLeft, postStart, preorder, indexInPostorder)`.\n    -   Construct the right subtree by calling: `constructTree(preStart + numOfNodesInLeft + 1, preEnd, postStart + numOfNodesInLeft, preorder, indexInPostorder)`.\n    -   Return `root`.\n-   In the main `constructFromPrePost` function:\n    -  Initialize `numOfNodes` to the size of the traversal arrays.\n    -  Create an index array `indexInPostorder` of size `numOfNodes + 1`.\n    -  Iterate over `postorder` and for each element store its index in the `indexInPostorder` array.\n    -  Call the helper function `constructTree(preStart = 0, preEnd = numOfNodes - 1, postStart = 0, preorder, indexInPostorder)` and return the root of the constructed tree.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/FNvvG4un/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"FNvvG4un\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the traversal arrays.\n\n-   Time complexity: $O(n)$\n\n    The `constructTree` function is called exactly $n$ times, once for each node in the tree. Unlike the previous approach, each call handles a constant amount of work because subtree sizes are computed in constant time using the `indexInPostorder` array. As a result, the overall time complexity remains $O(n)$.\n\n-   Space complexity: $O(n)$\n\n    The `indexInPostorder` array requires $O(n)$ space, as it stores the index of each element in the `postorder` traversal. Additionally, in the worst case, the recursion depth can reach $n$ levels, leading to a total space complexity of $O(n)$ for both recursion and auxiliary data structures.\n\n---\n\n### Approach 3: Optimized Recursion\n\n#### Intuition\n\nIn the previous approaches, we explicitly searched for the dividing point between the left and right subtrees using `postorder`, which introduced an additional lookup step. Here we remove that extra search by dynamically determining subtree boundaries as we traverse the arrays, making the recursion more efficient.  \n\nThe core idea is to process nodes in preorder to determine which nodes to create and use postorder to recognize when a subtree is complete. Since preorder always visits nodes in the order Root → Left → Right, each recursive call picks the next node from `preorder` and assigns it as the root of the current subtree. Meanwhile, since postorder follows Left → Right → Root, a subtree is fully processed when we encounter its root in `postorder`. To track this, we maintain an index `posIndex` that moves forward as nodes get finalized.  \n\nTo construct the tree, we first check if the current root’s value matches `postorder[posIndex]`. If it does, the subtree ends at this node, meaning it has no children. Otherwise, we attempt to construct the left subtree by making a recursive call. If the next value still doesn’t match `postorder[posIndex]`, it means there must also be a right subtree, so we make another recursive call to construct it.  \n\nOnce both subtrees are built, we move `posIndex` forward to mark this node and its subtree as fully processed.\n\n#### Algorithm\n\n-   Define the recursive function `constructTree(preIndex, postIndex, preorder, postorder)`:\n    -   Create a new node `root` with value `preorder[preIndex]`.\n    -   Increment `preIndex` by `1` to mark this node as created.\n    -   If the value of root is not equal to `postorder[postIndex]`, meaning that the node has children:\n        -   Recursively construct the left subtree using: `constructTree(preIndex, postIndex, preorder, postorder)`.\n    -   If the value of `root` is still not equal to `postorder[postIndex]`, the node has a right child as well:\n        -   Construct the right subtree using: `constructTree(preIndex, postIndex, preorder, postorder)`.\n    -   Increment `postIndex` by `1` to mark this node and its subtree as processed.\n    -   Return `root`.\n-   In the main `constructFromPrePost` function:\n    -   Initialize two variables, `preIndex = 0`, `postIndex = 0`.\n    -   Create the tree using `constructTree(preIndex, postIndex, preorder, postorder)` and return it.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Z5S9HWsh/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Z5S9HWsh\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the traversal arrays.\n\n-   Time complexity: $O(n)$\n\n    We are making $n$ recursive calls, one for each node in the tree. Each call of the `constructTree` function involves only constant-time operations, like comparing values and incrementing pointers, and therefore the overall time complexity is $O(n)$. \n\n-   Space complexity: $O(n)$\n\n    Since we are not using any additional data structures, the auxiliary space complexity is determined by the recursion depth. In the worst case (when the `postorder` array contains the nodes in reverse order from the `preorder` array), we make $n$ recursive calls to create all the nodes before starting to backtrack. Therefore, the recursion depth can reach $O(n)$, which also corresponds to the space complexity of the algorithm.\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -6,7 +6,7 @@ Downloads cooklang-for-obsidian build artifacts from Buildkite and commits
 them to the shepherdjerred/cooklang-for-obsidian repo via the GitHub API.
 
 Required env vars:
-  GITHUB_TOKEN - GitHub token with repo access
+  GH_TOKEN - GitHub token with repo access
 """
 from __future__ import annotations
 
@@ -25,9 +25,9 @@ def main() -> None:
         print("No cooklang-for-obsidian release detected, skipping", flush=True)
         return
 
-    token = os.environ.get("GITHUB_TOKEN", "")
+    token = os.environ.get("GH_TOKEN", "")
     if not token:
-        msg = "GITHUB_TOKEN not set"
+        msg = "GH_TOKEN not set"
         raise RuntimeError(msg)
 
     print(f"Pushing cooklang-for-obsidian v{version} to {SEPARATE_REPO}", flush=True)

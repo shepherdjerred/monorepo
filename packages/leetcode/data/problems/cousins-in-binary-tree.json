@@ -1,0 +1,142 @@
+{
+  "questionId": "1035",
+  "questionFrontendId": "993",
+  "title": "Cousins in Binary Tree",
+  "titleSlug": "cousins-in-binary-tree",
+  "difficulty": "Easy",
+  "content": "<p>Given the <code>root</code> of a binary tree with unique values and the values of two different nodes of the tree <code>x</code> and <code>y</code>, return <code>true</code> <em>if the nodes corresponding to the values </em><code>x</code><em> and </em><code>y</code><em> in the tree are <strong>cousins</strong>, or </em><code>false</code><em> otherwise.</em></p>\n\n<p>Two nodes of a binary tree are <strong>cousins</strong> if they have the same depth with different parents.</p>\n\n<p>Note that in a binary tree, the root node is at the depth <code>0</code>, and children of each depth <code>k</code> node are at the depth <code>k + 1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/02/12/q1248-01.png\" style=\"width: 304px; height: 270px;\" />\n<pre>\n<strong>Input:</strong> root = [1,2,3,4], x = 4, y = 3\n<strong>Output:</strong> false\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/02/12/q1248-02.png\" style=\"width: 334px; height: 266px;\" />\n<pre>\n<strong>Input:</strong> root = [1,2,3,null,4,null,5], x = 5, y = 4\n<strong>Output:</strong> true\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/02/13/q1248-03.png\" style=\"width: 267px; height: 258px;\" />\n<pre>\n<strong>Input:</strong> root = [1,2,3,null,4], x = 2, y = 3\n<strong>Output:</strong> false\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[2, 100]</code>.</li>\n\t<li><code>1 &lt;= Node.val &lt;= 100</code></li>\n\t<li>Each node has a <strong>unique</strong> value.</li>\n\t<li><code>x != y</code></li>\n\t<li><code>x</code> and <code>y</code> are exist in the tree.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"isCousins\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"root\",\r\n      \"type\": \"TreeNode\"\r\n    },\r\n    {\r\n      \"name\": \"x\",\r\n      \"type\": \"integer\"\r\n    },\r\n    {\r\n      \"name\": \"y\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"348.2K\", \"totalSubmission\": \"588.5K\", \"totalAcceptedRaw\": 348222, \"totalSubmissionRaw\": 588523, \"acRate\": \"59.2%\"}",
+  "likes": 4317,
+  "dislikes": 233,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Binary Tree Level Order Traversal\", \"titleSlug\": \"binary-tree-level-order-traversal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Cousins in Binary Tree II\", \"titleSlug\": \"cousins-in-binary-tree-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,4]\n4\n3",
+    "[1,2,3,null,4,null,5]\n5\n4",
+    "[1,2,3,null,4]\n2\n3"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    bool isCousins(TreeNode* root, int x, int y) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public boolean isCousins(TreeNode root, int x, int y) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def isCousins(self, root: Optional[TreeNode], x: int, y: int) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def isCousins(self, root, x, y):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :type x: int\n        :type y: int\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @param {number} x\n * @param {number} y\n * @return {boolean}\n */\nvar isCousins = function(root, x, y) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction isCousins(root: TreeNode | null, x: number, y: number): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public bool IsCousins(TreeNode root, int x, int y) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nbool isCousins(struct TreeNode* root, int x, int y) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc isCousins(root *TreeNode, x int, y int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun isCousins(root: TreeNode?, x: Int, y: Int): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func isCousins(_ root: TreeNode?, _ x: Int, _ y: Int) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn is_cousins(root: Option<Rc<RefCell<TreeNode>>>, x: i32, y: i32) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @param {Integer} x\n# @param {Integer} y\n# @return {Boolean}\ndef is_cousins(root, x, y)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @param Integer $x\n     * @param Integer $y\n     * @return Boolean\n     */\n    function isCousins($root, $x, $y) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  bool isCousins(TreeNode? root, int x, int y) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def isCousins(root: TreeNode, x: Int, y: Int): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec is_cousins(root :: TreeNode.t | nil, x :: integer, y :: integer) :: boolean\n  def is_cousins(root, x, y) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec is_cousins(Root :: #tree_node{} | null, X :: integer(), Y :: integer()) -> boolean().\nis_cousins(Root, X, Y) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (is-cousins root x y)\n  (-> (or/c tree-node? #f) exact-integer? exact-integer? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "944",
+    "content": "[TOC]\n\n## Solution\n\n---\n\nLet's first take a quiz and see how good your aptitude is. This quiz is mainly to help you understand the question better. If you understand the question well, then just hop on to the approaches.\n\n<center>\n<img src=\"../Figures/993/993_Cousins_Binary_Tree_1.png\" width=\"800\"/>\n</center>\n<br>\n\nLet me admit this, I was really bad at visualizing family trees and hence would perform badly in family tree questions.\n\nThe best I could do was draw a family tree and visualize it and then come to some conclusion. That's why this aptitude question was thrown at you and that explanation was needed :P\n\nThis was an easy one. What if we are given a family tree with a depth of 25 and now the same question is posed? Maybe you can answer this question only if it involves your cousins, or maybe not.\n<br/>\n<br/>\n\n---\n\n### Approach 1: Depth First Search with Branch Pruning\n\n**Intuition**\n\nWe can do a depth-first traversal and find the depth and parent for each node. Once we know the depth and parent for each node we can easily find out if they are cousins. Let's look at the pseudo-code for this before we try to optimize it a bit.\n\n<pre>\n// This pseudo-code recursively traverses the tree and\n// records the depth and parent for each node.\nfunction dfs(node, parentNode = None) {\n    if (node != null) {\n        depth[node.val] = 1 + depth[parentNode.val]\n        parent[node.val] = parentNode\n        dfs(node.left, node)\n        dfs(node.right, node)\n    }\n}\n</pre>\n\nThe above pseudo-code would give us the depth and parent for each node. To find out whether or not `x` and `y` are cousins is just one step away.\n\n<pre>\n// If x and y are at same depth but have different parents.\ndepth[x] == depth[y] and parent[x] != parent[y]\n</pre>\n\n<center>\n<img src=\"../Figures/993/993_Cousins_Binary_Tree_2.png\" width=\"800\"/>\n</center>\n<br>\n\nNow let's see if this brute-force recursive approach can be optimized for some scenarios.\n\n> If `Node x` or `Node y` is lying very shallow in the tree, then does it make any sense to iterate down the entire tree?\n\nIn the above example, `Node 3` and `Node 4` are both cousins and hence at the same depth. What if we find one of the nodes very early on during the traversal?\nHow would that help us?\n\n<center>\n<img src=\"../Figures/993/993_Cousins_Binary_Tree_3.png\" width=\"800\"/>\n</center>\n<br>\n\nThe diagram above shows that we encounter `Node 3` very early on. This would help us to restrict our search space for the other node i.e. `Node 4`. For the second node, we do not need to go beyond the depth at which the first node was found, thus saving traversal of the subtree below node 3.\n\nWe can search for the desired nodes in the tree recursively. Whenever either of the given nodes is found, we record its parent and depth.\n\n**Algorithm**\n\n1. Start traversing the tree from the root node. Look for `Node x` and `Node y`.\n\n2. Record the depth when the first node i.e. either of `x` or `y` is found and return `true`.\n\n3. Once one of the nodes is discovered, for every other recursive call after this discovery, we return `false` if the current depth is more than the recorded depth. This basically means we didn't find the other node at the same depth and there is no point going beyond. This step of pruning helps to speed up the recursion by reducing the number of recursive calls.\n\n4. Return `true` when the other node is discovered and has the same depth as the recorded depth.\n\n5. Recurse the left and the right subtree of the current node. If both left and right recursions return `true` and the current node is not their immediate parent, then `Node x` and `Node y` are cousins. Thus, `isCousin` is set to value `true`.\n\n<iframe src=\"https://leetcode.com/playground/mehgK7XC/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"mehgK7XC\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(N)$$, where $$N$$ is the number of nodes in the binary tree. In the worst case, we might have to visit all the nodes of the binary tree.\n\n    Let's look into one such scenario. When both `Node x` and `Node y` are the leaf nodes and at the last level of the tree, the algorithm has no reasons to prune the recursion. It can only come to a conclusion once it visits both the nodes. If one of these nodes is the last node to be discovered the algorithm inevitably goes through each and every node in the tree.\n\n* Space Complexity: $$O(N)$$. This is because the maximum amount of space utilized by the recursion stack would be $$N$$, as the height of a skewed binary tree could be, at worst, $$N$$. For a left skewed or a right skewed binary tree, where the desired nodes are lying at the maximum depth possible, the algorithm would have to maintain a recursion stack of the height of the tree.\n<br/>\n<br/>\n\n---\n\n### Approach 2: Breadth First Search with Early Stopping\n\nI will repeat my question\n> If `Node x` or `Node y` is lying very shallow in the tree, then does it make any sense to iterate down the entire tree?\n\n<center>\n<img src=\"../Figures/993/993_Cousins_Binary_Tree_4.png\" width=\"800\"/>\n</center>\n<br>\n\nSince this problem is about finding cousins, i.e. nodes lying at the same level/depth, it seems more natural to do a level order traversal of the tree.\n\nIf we do a level order traversal for the aforementioned example, we would only traverse until depth 2. At depth 2, we discover `Node 4`, but we do not find `Node 6` at the same level. Hence we can just stop our traversal and conclude that the nodes are not cousins.\n\nNote, if the nodes are cousins, we would find both the nodes at the same depth.\nHowever, this is also true for siblings. We need to figure out how to determine when two nodes are siblings. One way to find out that they are siblings is when we are adding the nodes to the queue. If `Node x` and `Node y` are left and right children of a node, this would mean that they are siblings. Therefore, we would return `false`.\n\nThere is a cleaner implementation for the level order traversal for this problem, though. For each node, we can add a delimiter to the queue after its children are added. These delimiters help us define boundaries for each parent and the siblings that are confined within those.\nThis implementation was shared by [@votrubac](https://leetcode.com/votrubac/). You can refer to his C++ implementation in the [discussion section](https://leetcode.com/problems/cousins-in-binary-tree/discuss/238624/C++-level-order-traversal)\n\n**Algorithm**\n\n1. Do a level order traversal of the tree using a queue.\n\n2. For every node that is popped off the queue, check if the node is either `Node x` or `Node y`. If it is, then for the first time, set both `siblings` and `cousins` flags as `true`. The flags are set as `true` to mark the possibility of siblings or cousins.\n\n3. To distinguish siblings from cousins, we insert markers in the queue. After inserting the children for each node, we also insert a `null` marker. This marker defines a boundary for each set of siblings and hence helps us to differentiate a pair of siblings from cousins.\n\n4. Whenever we encounter the `null` marker during our traversal, we set the `siblings` flag to `false`. This is because the marker marks the end of the siblings territory.\n\n5. The second time we encounter a node which is equal to `Node x` or `Node y` we will have clarity about whether or not we are still within the siblings boundary. If we are within the siblings boundary, i.e. if the `siblings` flag is still `true`, then we return `false`. Otherwise, we return `true`.\n\n<center>\n<img src=\"../Figures/993/993_Cousins_Binary_Tree_5.png\" width=\"600\"/>\n</center>\n<br>\n\nIn the above diagram, `Node 3` and `Node 3'` are children of the same parent. Hence the `siblings` flag remains `true`.\n\n<center>\n<img src=\"../Figures/993/993_Cousins_Binary_Tree_6_fix.png\" width=\"800\"/>\n</center>\n<br>\n\nClearly, `Node 3` and `Node 4` have different parents. Hence, we do encounter a `null` marker after `Node 3'`. The `null` marker marks the end of siblings for `Node 3`, and hence when `Node 4` is found, we know it is the cousin of `Node 3`.\n\n<iframe src=\"https://leetcode.com/playground/n5vkpANk/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"n5vkpANk\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(N)$$, where $$N$$ is the number of nodes in the binary tree. In the worst case, we might have to visit all the nodes of the binary tree. Similar to approach 1 this approach would also have a complexity of $$O(N)$$ when the `Node x` and `Node y` are present at the last level of the binary tree. The algorithm would follow the standard BFS approach and end up in checking each node before discovering the desired nodes.\n\n* Space Complexity: $$O(N)$$. In the worst case, we need to store all the nodes of the last level in the queue. The last level of a binary tree can have a maximum of $$\\frac{N}{2}$$ nodes. Not to forget we would also need space for $$\\frac{N}{4}$$ `null` markers, one for each pair of siblings. That results in a space complexity of $$O(\\frac{3N}{4})$$ = $$O(N)$$ (You are right Big-O notation doesn't care about constants).\n<br/>\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

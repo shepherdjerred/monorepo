@@ -34,7 +34,7 @@ def _repo_root() -> Path:
 
 
 def _get_token() -> str:
-    token = os.environ.get("GITHUB_TOKEN", "")
+    token = os.environ.get("GH_TOKEN", "")
     if token:
         return token
     result = subprocess.run(["gh", "auth", "token"], capture_output=True, text=True, check=False)
@@ -65,7 +65,7 @@ def run(args: argparse.Namespace, config: ReleaseConfig) -> None:
 
     token = _get_token()
     if not token and not dry_run:
-        print("Error: GITHUB_TOKEN or `gh auth token` required", file=sys.stderr)
+        print("Error: GH_TOKEN or `gh auth token` required", file=sys.stderr)
         sys.exit(1)
 
     # Determine build targets

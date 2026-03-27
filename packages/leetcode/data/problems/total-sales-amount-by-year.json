@@ -1,0 +1,53 @@
+{
+  "questionId": "1518",
+  "questionFrontendId": "1384",
+  "title": "Total Sales Amount by Year",
+  "titleSlug": "total-sales-amount-by-year",
+  "difficulty": "Hard",
+  "content": "<p>Table: <code>Product</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| product_id    | int     |\n| product_name  | varchar |\n+---------------+---------+\nproduct_id is the primary key (column with unique values) for this table.\nproduct_name is the name of the product.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Sales</code></p>\n\n<pre>\n+---------------------+---------+\n| Column Name         | Type    |\n+---------------------+---------+\n| product_id          | int     |\n| period_start        | date    |\n| period_end          | date    |\n| average_daily_sales | int     |\n+---------------------+---------+\nproduct_id is the primary key (column with unique values) for this table. \nperiod_start and period_end indicate the start and end date for the sales period, and both dates are inclusive.\nThe average_daily_sales column holds the average daily sales amount of the items for the period.\nThe dates of the sales years are between 2018 to 2020.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to report the total sales amount of each item for each year, with corresponding <code>product_name</code>, <code>product_id</code>, <code>report_year</code>, and <code>total_amount</code>.</p>\n\n<p>Return the result table <strong>ordered</strong> by <code>product_id</code> and <code>report_year</code>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nProduct table:\n+------------+--------------+\n| product_id | product_name |\n+------------+--------------+\n| 1          | LC Phone     |\n| 2          | LC T-Shirt   |\n| 3          | LC Keychain  |\n+------------+--------------+\nSales table:\n+------------+--------------+-------------+---------------------+\n| product_id | period_start | period_end  | average_daily_sales |\n+------------+--------------+-------------+---------------------+\n| 1          | 2019-01-25   | 2019-02-28  | 100                 |\n| 2          | 2018-12-01   | 2020-01-01  | 10                  |\n| 3          | 2019-12-01   | 2020-01-31  | 1                   |\n+------------+--------------+-------------+---------------------+\n<strong>Output:</strong> \n+------------+--------------+-------------+--------------+\n| product_id | product_name | report_year | total_amount |\n+------------+--------------+-------------+--------------+\n| 1          | LC Phone     |    2019     | 3500         |\n| 2          | LC T-Shirt   |    2018     | 310          |\n| 2          | LC T-Shirt   |    2019     | 3650         |\n| 2          | LC T-Shirt   |    2020     | 10           |\n| 3          | LC Keychain  |    2019     | 31           |\n| 3          | LC Keychain  |    2020     | 31           |\n+------------+--------------+-------------+--------------+\n<strong>Explanation:</strong> \nLC Phone was sold for the period of 2019-01-25 to 2019-02-28, and there are 35 days for this period. Total amount 35*100 = 3500. \nLC T-shirt was sold for the period of 2018-12-01 to 2020-01-01, and there are 31, 365, 1 days for years 2018, 2019 and 2020 respectively.\nLC Keychain was sold for the period of 2019-12-01 to 2020-01-31, and there are 31, 31 days for years 2019 and 2020 respectively.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Product (product_id int, product_name varchar(30))\", \"Create table If Not Exists Sales (product_id int, period_start date, period_end date, average_daily_sales int)\"], \"mssql\": [\"Create table Product (product_id int, product_name varchar(30))\", \"Create table Sales (product_id int, period_start date, period_end date, average_daily_sales int)\"], \"oraclesql\": [\"Create table Product (product_id int, product_name varchar(30))\", \"Create table Sales (product_id int, period_start date, period_end date, average_daily_sales int)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"total_sales\", \"pythondata\": [\"Product = pd.DataFrame([], columns=['product_id', 'product_name']).astype({'product_id':'Int64', 'product_name':'object'})\", \"Sales = pd.DataFrame([], columns=['product_id', 'period_start', 'period_end', 'average_daily_sales']).astype({'product_id':'Int64', 'period_start':'datetime64[ns]', 'period_end':'datetime64[ns]', 'average_daily_sales':'Int64'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Product (product_id int, product_name varchar(30))\\n\", \"Create table If Not Exists Sales (product_id int, period_start date, period_end date, average_daily_sales int)\"], \"database_schema\": {\"Product\": {\"product_id\": \"INT\", \"product_name\": \"VARCHAR(30)\"}, \"Sales\": {\"product_id\": \"INT\", \"period_start\": \"DATE\", \"period_end\": \"DATE\", \"average_daily_sales\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"19.9K\", \"totalSubmission\": \"32.5K\", \"totalAcceptedRaw\": 19935, \"totalSubmissionRaw\": 32515, \"acRate\": \"61.3%\"}",
+  "likes": 236,
+  "dislikes": 133,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Product\": [\"product_id\", \"product_name\"], \"Sales\": [\"product_id\", \"period_start\", \"period_end\", \"average_daily_sales\"]}, \"rows\": {\"Product\": [[1, \"LC Phone \"], [2, \"LC T-Shirt\"], [3, \"LC Keychain\"]], \"Sales\": [[1, \"2019-01-25\", \"2019-02-28\", 100], [2, \"2018-12-01\", \"2020-01-01\", 10], [3, \"2019-12-01\", \"2020-01-31\", 1]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef total_sales(product: pd.DataFrame, sales: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

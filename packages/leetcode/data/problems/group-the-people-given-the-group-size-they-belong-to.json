@@ -1,0 +1,140 @@
+{
+  "questionId": "1407",
+  "questionFrontendId": "1282",
+  "title": "Group the People Given the Group Size They Belong To",
+  "titleSlug": "group-the-people-given-the-group-size-they-belong-to",
+  "difficulty": "Medium",
+  "content": "<p>There are <code>n</code> people&nbsp;that are split into some unknown number of groups. Each person is labeled with a&nbsp;<strong>unique ID</strong>&nbsp;from&nbsp;<code>0</code>&nbsp;to&nbsp;<code>n - 1</code>.</p>\n\n<p>You are given an integer array&nbsp;<code>groupSizes</code>, where <code>groupSizes[i]</code>&nbsp;is the size of the group that person&nbsp;<code>i</code>&nbsp;is in. For example, if&nbsp;<code>groupSizes[1] = 3</code>, then&nbsp;person&nbsp;<code>1</code>&nbsp;must be in a&nbsp;group of size&nbsp;<code>3</code>.</p>\n\n<p>Return&nbsp;<em>a list of groups&nbsp;such that&nbsp;each person&nbsp;<code>i</code>&nbsp;is in a group of size&nbsp;<code>groupSizes[i]</code></em>.</p>\n\n<p>Each person should&nbsp;appear in&nbsp;<strong>exactly one group</strong>,&nbsp;and every person must be in a group. If there are&nbsp;multiple answers, <strong>return any of them</strong>. It is <strong>guaranteed</strong> that there will be <strong>at least one</strong> valid solution for the given input.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> groupSizes = [3,3,3,3,3,1,3]\n<strong>Output:</strong> [[5],[0,1,2],[3,4,6]]\n<b>Explanation:</b> \nThe first group is [5]. The size is 1, and groupSizes[5] = 1.\nThe second group is [0,1,2]. The size is 3, and groupSizes[0] = groupSizes[1] = groupSizes[2] = 3.\nThe third group is [3,4,6]. The size is 3, and groupSizes[3] = groupSizes[4] = groupSizes[6] = 3.\nOther possible solutions are [[2,1,6],[5],[0,4,3]] and [[5],[0,6,2],[4,3,1]].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> groupSizes = [2,1,3,3,3,2]\n<strong>Output:</strong> [[1],[0,5],[2,3,4]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>groupSizes.length == n</code></li>\n\t<li><code>1 &lt;= n&nbsp;&lt;= 500</code></li>\n\t<li><code>1 &lt;=&nbsp;groupSizes[i] &lt;= n</code></li>\n</ul>\n",
+  "hints": [
+    "Put people's IDs with same groupSize into buckets, then split each bucket into groups.",
+    "Greedy fill until you need a new group."
+  ],
+  "metaData": "{\n  \"name\": \"groupThePeople\",\n  \"params\": [\n    {\n      \"name\": \"groupSizes\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<list<integer>>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"249.6K\", \"totalSubmission\": \"285.3K\", \"totalAcceptedRaw\": 249630, \"totalSubmissionRaw\": 285270, \"acRate\": \"87.5%\"}",
+  "likes": 3160,
+  "dislikes": 747,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Rabbits in Forest\", \"titleSlug\": \"rabbits-in-forest\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Groups With Increasing Length\", \"titleSlug\": \"maximum-number-of-groups-with-increasing-length\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,3,3,3,3,1,3]",
+    "[2,1,3,3,3,2]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"roblox\", \"name\": \"Roblox\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> groupThePeople(vector<int>& groupSizes) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<List<Integer>> groupThePeople(int[] groupSizes) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def groupThePeople(self, groupSizes: List[int]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def groupThePeople(self, groupSizes):\n        \"\"\"\n        :type groupSizes: List[int]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} groupSizes\n * @return {number[][]}\n */\nvar groupThePeople = function(groupSizes) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function groupThePeople(groupSizes: number[]): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<IList<int>> GroupThePeople(int[] groupSizes) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** groupThePeople(int* groupSizes, int groupSizesSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func groupThePeople(groupSizes []int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun groupThePeople(groupSizes: IntArray): List<List<Int>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func groupThePeople(_ groupSizes: [Int]) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn group_the_people(group_sizes: Vec<i32>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} group_sizes\n# @return {Integer[][]}\ndef group_the_people(group_sizes)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $groupSizes\n     * @return Integer[][]\n     */\n    function groupThePeople($groupSizes) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> groupThePeople(List<int> groupSizes) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def groupThePeople(groupSizes: Array[Int]): List[List[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec group_the_people(group_sizes :: [integer]) :: [[integer]]\n  def group_the_people(group_sizes) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec group_the_people(GroupSizes :: [integer()]) -> [[integer()]].\ngroup_the_people(GroupSizes) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (group-the-people groupSizes)\n  (-> (listof exact-integer?) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2039",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach: Greedy\n\n**Intuition**\n\nThere are $N$ people, and each one needs to be part of exactly one group with a size from $1$ to $N$. We are given an array `groupSizes` with $N$ integers; the `ith` integer in the array denotes the size of the group that this person should be a part of. We need to return the list of groups, where each group has the indices that should be in that group.\n\nThere can be multiple possible answers to the problem; this is because if there are multiple groups of the same size, it doesn't matter which people should be in which group. We can group any set of people as long as the group size meets the requirement. For example, if the `groupSizes` is `[3,3,3,3,3,1,3]`, then two of the possible solutions are `[[0,1,2],[3,4,6],[5]]` and `[[0,1,3],[2,4,6],[5]]`. Since the order of groups doesn't matter, `[[5],[0,1,2],[3,4,6]]` is also a possible solution.\n\nWe will follow the same approach as above; we will keep an unordered map from an integer to an array. The key integer denotes the size of the group, and the array will store the indices of people. Whenever the size of the array becomes equal to the integer key, i.e. the size, we store the array in the final answer and empty the array for any other group of the same size. This ensures that each person is a part of exactly one group and always grouped with people of the same group size.\n\n!?!../Documents/1282-re/1282_Group_the_People_Given_the_Group_Size_They_Belong_To.json:960,720!?! <br>\n\n\n**Algorithm**\n\n1. Initialize an empty list of lists `ans` to store the groups' indices.\n2. Create a hash map `szToGroup` where the keys are integers representing group sizes, and the values are the arrays of the corresponding indices in the group.\n3. Iterate over the array `groupSizes`, for each index `i`:\n\n    1. Insert the index `i` into the list `szToGroup[groupSizes[i]]`.\n    2. If the size of the list becomes equal to `groupSizes[i]`, store it in the answer `ans`. Also, clear the array for the key `groupSizes[i]` in the map `szToGroup`.\n4. Return `ans`.\n\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/LRZ83D2S/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"LRZ83D2S\"></iframe>\n\n**Complexity Analysis**\n\nHere, $N$ is the size of the list `groupSizes`.\n\n* Time complexity: $O(N)$\n\n  We are iterating over each person's group size in the array `groupSizes` and storing it in the map `szToGroup`.  Whenever the size of the list for a particular size becomes equal to the size itself, we empty the array and store it in our list. Both these operations would take $O(1)$ for each element in the list. Therefore, we're basically iterating over each element three times, once in the outer for loop, a second time when we add it to the final list `ans`, and a final time when we clear it from the list. This makes the total operation count as $3*N$. Hence, the total time complexity equals $O(N)$.\n\n* Space complexity: $O(N)$\n\n  The space required by the map `szToGroup` could store all the indices in the `groupSizes` in the worst-case scenario. This happens when there is only one group of size $N$. The space required by `ans` is required to store the answer, which is not generally considered part of the space complexity. Hence, the total space complexity equals $O(N)$.\n  <br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

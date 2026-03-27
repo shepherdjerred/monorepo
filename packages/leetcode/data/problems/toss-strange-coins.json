@@ -1,0 +1,146 @@
+{
+  "questionId": "1166",
+  "questionFrontendId": "1230",
+  "title": "Toss Strange Coins",
+  "titleSlug": "toss-strange-coins",
+  "difficulty": "Medium",
+  "content": "<p>You have some coins.&nbsp; The <code>i</code>-th&nbsp;coin has a probability&nbsp;<code>prob[i]</code> of facing heads when tossed.</p>\n\n<p>Return the probability that the number of coins facing heads equals <code>target</code> if you toss every coin exactly once.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> prob = [0.4], target = 1\n<strong>Output:</strong> 0.40000\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> prob = [0.5,0.5,0.5,0.5,0.5], target = 0\n<strong>Output:</strong> 0.03125\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= prob.length &lt;= 1000</code></li>\n\t<li><code>0 &lt;= prob[i] &lt;= 1</code></li>\n\t<li><code>0 &lt;= target&nbsp;</code><code>&lt;= prob.length</code></li>\n\t<li>Answers will be accepted as correct if they are within <code>10^-5</code> of the correct answer.</li>\n</ul>\n",
+  "hints": [
+    "What about solving the problem with DP?",
+    "Use DP with two states dp[pos][cnt], where pos represents the pos-th coin and cnt is the number of heads seen so far.",
+    "You can do the transitions with a little bit math.",
+    "For the base case, when pos == n return (cnt == target) to filter out the invalid scenarios."
+  ],
+  "metaData": "{\r\n  \"name\": \"probabilityOfHeads\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"prob\",\r\n      \"type\": \"double[]\"\r\n    },\r\n    {\r\n        \"name\": \"target\",\r\n        \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"double\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"23.1K\", \"totalSubmission\": \"39.7K\", \"totalAcceptedRaw\": 23096, \"totalSubmissionRaw\": 39741, \"acRate\": \"58.1%\"}",
+  "likes": 409,
+  "dislikes": 53,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[0.4]\n1",
+    "[0.5,0.5,0.5,0.5,0.5]\n0"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"twitch\", \"name\": \"Twitch\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Probability and Statistics",
+      "slug": "probability-and-statistics"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    double probabilityOfHeads(vector<double>& prob, int target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public double probabilityOfHeads(double[] prob, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def probabilityOfHeads(self, prob: List[float], target: int) -> float:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def probabilityOfHeads(self, prob, target):\n        \"\"\"\n        :type prob: List[float]\n        :type target: int\n        :rtype: float\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} prob\n * @param {number} target\n * @return {number}\n */\nvar probabilityOfHeads = function(prob, target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function probabilityOfHeads(prob: number[], target: number): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public double ProbabilityOfHeads(double[] prob, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "double probabilityOfHeads(double* prob, int probSize, int target){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func probabilityOfHeads(prob []float64, target int) float64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun probabilityOfHeads(prob: DoubleArray, target: Int): Double {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func probabilityOfHeads(_ prob: [Double], _ target: Int) -> Double {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn probability_of_heads(prob: Vec<f64>, target: i32) -> f64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Float[]} prob\n# @param {Integer} target\n# @return {Float}\ndef probability_of_heads(prob, target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Float[] $prob\n     * @param Integer $target\n     * @return Float\n     */\n    function probabilityOfHeads($prob, $target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  double probabilityOfHeads(List<double> prob, int target) {\n\n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def probabilityOfHeads(prob: Array[Double], target: Int): Double = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec probability_of_heads(prob :: [float], target :: integer) :: float\n  def probability_of_heads(prob, target) do\n\n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec probability_of_heads(Prob :: [float()], Target :: integer()) -> float().\nprobability_of_heads(Prob, Target) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (probability-of-heads prob target)\n  (-> (listof flonum?) exact-integer? flonum?)\n\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1841",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given some coins where the `i`-th coin has a probability `prob[i]` of facing heads when tossed.\n\nOur task is to return the probability that the number of coins facing heads equals `target` if you toss every coin exactly once.\n\n---\n\n### Approach 1: Recursive Dynamic Programming\n\n#### Intuition\n\nIf you are new to Dynamic Programming, please see our [Leetcode Explore Card](https://leetcode.com/explore/featured/card/dynamic-programming/) for more information on it!\n\nWe toss each coin one by one and generate all possible combinations of coin tosses and add the probability of cases where we get the `target` number of heads. For each coin, we can consider both the head and tail scenarios. There are a total of $2^n$ possible cases if there are `n` coins.\n\nWe can use recursion to generate all the possible cases.\n\n<details>\n  <summary>Note: If you don't have a strong background in mathematics (probabilities) then you can read the following discussion to be aware that when we multiply or add probabilities. (click to expand)</summary>\n\nThe decision to multiply or add probabilities depends on the nature of the events involved and the question being asked.\n \nIf we want to find the probability of two independent events occurring together, we need to multiply their probabilities. For example, if we want to know the probability of rolling a six-sided die twice and getting `2` both times, we would multiply the probability of getting `2` on the first roll `(1/6)` by the probability of getting `2` on the second roll `(1/6)`, which gives us a probability of `(1/36)`.\n> Thus, while forming one case and tossing `n` coins we will multiply the probability of each coin to get the overall probability of a particular case (or combination).\n \nOn the other hand, if we want to find the probability of either of two mutually exclusive events occurring, we need to add their probabilities. For example, if you want to know the probability of rolling a `1` or a `2` on a six-sided die, we would add the probability of rolling a `1` `(1/6)` to the probability of rolling a `2` `(1/6)`, which gives us a probability of `(1/3)`. These are two different cases but they both are included thus we add the probability of each case.\n \n> Hence, to include a particular case (or combination) we add its probability.\n\n</details>\n<br>\n\nConsider the first coin and the case in which it shows a head. We'd need another `target - 1` heads from the remaining coins. The probability of such a case would be, probability of the first coin facing head multiplied by the probability of getting `target - 1` heads from the remaining coins. \n\nNow, consider the case where the first coin shows a tail. We'd need `target` heads from the remaining coins. The probability of such a case would be, the probability of the first coin facing tail (1 - probability of facing head) multiplied by the probability of getting `target` heads from the remaining coins.\n\nThe total probability of getting the `target` heads is the sum of the probabilities of both events as they both lead to the `target` heads independently (law of total probability).\n\nWe need two things to perform this recursion: the index of the coin under consideration and the number of more heads required. This is how the recursive relationship is expressed:\n\n> answer = findProbability(index + 1, target - 1) * prob[index] + findProbability(index + 1, target) * (1 - prob[index])\n\nwhere `findProbability(int index, int target)` is a recursive method that returns the probability of getting `target` heads using coins indexed from `index` to `n - 1` (0-based indexing), and `n` is the total number of coins.\n\nBecause we are decrementing `target` by `1` in one of the recursive calls, one base case would be to return `0` if `target` drops below `0` because a negative number of heads is impossible to obtain.\n\nThe other case is when we have covered all of the coins, in which case `index == n`. If we have covered all of the coins and still have `target != 0`, we cannot get any more heads because there are no coins left. We should not include the possibility of the event that resulted in this state. As a result, we'd return `0` to never add probabilities in cases where we couldn't get `target` heads.\n\nIf we have covered all of the coins and `target == 0`, we have exactly the required number of heads. We should include the likelihood of the event that resulted in this state. As a result, we would return `1` to count the probability of receiving `target` heads in such cases.\n\nThe solution is `findProbability(0, target)`.\n\nThe recursion tree of the above relation would look something like this:\n\n![img](../Figures/1230/1230-1.png)\n\nSeveral subproblems, such as `findProbability(2, target - 2)`, `findProbability(3, target - 1)`, `findProbability(3, target - 2)`, etc., are solved multiple times in the partial recursion tree shown above. If we draw the entire recursion tree, we can see that there are many subproblems that are solved repeatedly.\n\nTo avoid this issue, we store the solution of each sub-problem and when we encounter the same subproblem again, we simply refer to the stored result. This is called **memoization**.\n\nAs we know the current state of a sub-problem depends on the start `index` of the remaining array and the `target` heads we need from this remaining array. Thus, we can use a 2D array here.\n\n#### Algorithm\n\n1. Create an integer variable `n` and initialize it to the size of the `prob` array.\n2. Create a 2D-array called `memo` having `n` rows and `target + 1` columns where `memo[i][j]` will store the probability of getting `j` heads using coins from index `i` to `n - 1` (0-based indexing). Initialize the `memo` array with `-1`.\n3. Return `findProbability(index, n, memo, prob, target)` where `findProbability` is a recursive method with five parameters: the starting index from which we should consider the coins as `index`, `n`, `memo`, `prob` and `target`. We perform the following in this method:\n    - If `target < 0`, it means we got more heads than we need, so we return `0` to ignore this case.\n    - If `index == n`, we have covered all the coins. If `target` is zero, it means we have the required number of heads and we return `1` to keep the probability of the last toss whatever it was as (`number * 1 = number`). The previous recursive call's answer (`number`) is returned to its parent caller where we multiply it with the required probability (`prob[index]` or `1 - prob[index]`). Otherwise, we return `0` if we need more heads but have considered all the coins.\n    - If `memo[index][target] != -1`, it indicates that we have already solved this subproblem, so we return `memo[index][target]`.\n    - We recursively find probabilities considering the coin at `index` to show head and tail independently and add them up. When considering the coin to show head, we need `target - 1` more heads from coins from index `index + 1` until the last coin. Now, if we consider the case where the coin shows a tail, we need `target` heads from index `index + 1` until the last coin. As a result, we perform `memo[index][target] = findProbability(index + 1, n, memo, prob, target - 1) * prob[index] + findProbability(index + 1, n, memo, prob, target) * (1 - prob[index])`.\n    - Return `memo[index][target]`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/oKZsrERT/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"oKZsrERT\"></iframe>\n\n#### Complexity Analysis\n\nHere, $n$ is the number of coins.\n\n* Time complexity: $O(n \\cdot \\text{target})$\n\n    - Initializing the `memo` array takes $O(n \\cdot \\text{target})$ time.\n    - The recursive function might be called more than once as we saw in the recursion tree. However, due to memoization each state will be computed only once. There are a total of $O(n \\cdot \\text{target})$ states, so we would take $O(n \\cdot \\text{target})$ time to compute all of them once.\n\n* Space complexity: $O(n \\cdot \\text{target})$\n\n    - The `memo` array consumes $O(n \\cdot \\text{target})$ space.\n    - The recursion stack used in the solution can grow to a maximum size of $O(n)$. When we try to form the recursion tree, we see that after each node two branches are formed. The recursion stack would only have one call out of the two branches. The height of such a tree will be $O(n)$ because at each level we are incrementing the index of the coin under consideration by `1`. As a result, the recursion tree that will be formed will have $O(n)$ height. Hence, the recursion stack will have a maximum of $O(n)$ elements.\n\n---\n\n### Approach 2: Iterative Dynamic Programming\n\n#### Intuition\n\nWe used a top-down approach with memoization in the preceding approach to store the answers to subproblems in order to solve a larger problem. We can also use a bottom-up approach to solve such problems without using recursion. We build answers to smaller subproblems iteratively first, then use them to build answers to larger problems.\n\nWe use the same two states, the coin's index and the required number of heads. We make a 2D array `dp`, where `dp[i][j]` represents the probability of getting `j` heads using the first `i` coins. `dp[n][target]` is our answer, where `n` is the total number of coins.\n\nWe add probabilities considering the coin under consideration to show the head and tail. To form `dp[i][j]`, we first consider the case of getting a head from $i^{th}$ coin. If it's a head, we need `j - 1` heads from the first `i - 1` coins. So, the probability would be `dp[i - 1][j - 1] * prob[i - 1]`.\n\nNow, we consider the case when it shows a tail. We need `j` heads from the first `i - 1` coins. So, the probability would be `dp[i - 1][j] * (1 - prob[i - 1])`.\n\nWe would iterate using two loops with the outer loop iterating over the numbers of coins from `i = 1` to `n` and the inner loop iterating over the number of heads from `j = 1` to `target`. The state transition would be as follows:\n\n> dp[i][j] = dp[i - 1][j - 1] * prob[i - 1] + dp[i - 1][j] * (1 - prob[i - 1])\n\nFor `j = 0`, the value for `dp[i][0]` would be the probability of not getting any heads in the first `i - 1` coins, and the $i^{th}$ coin also shows tails. It would be `dp[i - 1][0] * (1 - prob[i - 1])`.\n\nBecause we cannot get any number of heads from `0` coins, all values with `0` coins under consideration, i.e., `dp[0][j]` for `j > 0` will be `0`. `dp[0][0]` is set to `1` as the base case because getting `0` heads from `0` coins is always guaranteed.\n\n#### Algorithm\n\n1. Create an integer variable `n` and initialize it to the size of the `prob` array.\n2. Create a 2D-array called `dp` having `n + 1` rows and `target + 1` columns where `dp[i][j]` stores the probability of getting `j` heads using first `i` coins.\n3. We set the base case `dp[0][0] = 1`.\n4. We iterate using two loops. The outer loop iterates from `i = 1` to `i = n`. For each `i`, we first set `dp[i][0]`. It denotes the probability of `i` coins with `0` heads and would be `dp[i][0] = dp[i - 1][0] * (1 - prob[i - 1])`, i.e., probability of getting `0` heads from first `i - 1` coins multiplied by the probability of the current coin showing a tail. Then we start an inner loop that iterates over `j = 1` to `j = target`. We perform `dp[i][j] = dp[i - 1][j - 1] * prob[i - 1] + dp[i - 1][j] * (1 - prob[i - 1])`. We added a minor optimization to break the loop if `j > i` as we cannot get more heads than the number of coins itself.\n5. Return `dp[n][target]`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/fNYt9BEE/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"fNYt9BEE\"></iframe>\n\n#### Complexity Analysis\n\nHere, $n$ is the number of coins.\n\n* Time complexity: $O(n \\cdot \\text{target})$\n\n    - Initializing the `dp` array takes $O(n \\cdot \\text{target})$ time.\n    - We fill the `dp` array which takes $O(n \\cdot \\text{target})$ time.\n\n* Space complexity: $O(n \\cdot \\text{target})$\n\n    - The `dp` array consumes $O(n \\cdot \\text{target})$ space.\n\n---\n\n### Approach 3: Dynamic Programming with Space Optimization\n\n#### Intuition\n\nThe state transition, as we discussed in previous approaches, is:\n\n> dp[i][j] = dp[i - 1][j - 1] * prob[i - 1] + dp[i - 1][j] * (1 - prob[i - 1])\n\nLooking closely at this transition, we can see that to fill `dp[i][j]` for a specific `i` and all values of `j` we only need the values from the previous row. We need the values from row `i - 1` in the `dp` grid to fill row `i` (`dp[i - 1][j - 1]` and `dp[i - 1][j]`). Values in rows `i - 2`, `i - 3`, and so on are no longer needed.\n\nThis can be solved by using two 1D arrays of size `n`, `dp`, and `dpPrev`, where `n` is the total number of coins. We use `dp` to compute current row values and `dpPrev` to store previous row values. After each outer loop iteration, we copy all the values of the current row to `dpPrev` and use it for the next iteration. You may realize that after completing the $i^{th}$ outer loop iteration, `dp[j]` here is similar to what `dp[i][j]` stored in the previous approach, and `dpPrev[j]` is similar to `dp[i - 1][j]`.\n\nWe can also solve problem this by using just one 1D array `dp`.\n\nConsider that we have all of the values of row `i - 1` in `dp` and that we now need to compute the values of row `i`. We can begin an inner loop that iterates in reverse, that is, from `j = target` to `1`. Now, when we perform `dp[j] = dp[j - 1] * prob[i - 1] + dp[j] * (1 - prob[i - 1])`, we get values for `dp[j - 1]` and `dp[j]` from the previous row, not the current row, because we are iterating in reverse order. It is important to understand that we only change the values in the $i^{th}$ row (i.e., we use `i` coins) but never use them in the same outer loop iteration. The values modified in the $i^{th}$ iteration would be used to update values in the next iteration ($(i + 1)^{th}$ iteration).\n\nFinally, we compute the case of zero heads, i.e., `j = 0`. We cannot use `j - 1` for `j = 0`, so we need to compute it separately. The probability is simply `dp[0] = dp[0] * (1 - prob[i - 1])` after completing the inner loop for each outer loop iteration.\n\n#### Algorithm\n\n1. Create an integer variable `n` and initialize it to the size of the `prob` array.\n2. Create a 1D-array called `dp` of size `target + 1`.\n3. We set the base case `dp[0] = 1`.\n4. We iterate using two loops. The outer loop iterates from `i = 1` to `n` and the inner loop iterates from `j = 1` to `target`. We perform `dp[j] = dp[j - 1] * prob[i - 1] + dp[j] * (1 - prob[i - 1])`. After the completion of the inner loop, we also update `dp[0] = dp[0] * (1 - prob[i - 1])` to cover the case of zero heads. We cannot use `j - 1` for `j = 0`, so we need to compute it separately.\n5. Return `dp[target]`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/h8AtoBZJ/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"h8AtoBZJ\"></iframe>\n\n#### Complexity Analysis\n\nHere, $n$ is the number of coins.\n\n* Time complexity: $O(n \\cdot \\text{target})$\n\n    - Initializing the `dp` array takes $O(\\text{target})$ time.\n    - To get the answer, we use two loops that take $O(n \\cdot \\text{target})$ time.\n\n* Space complexity: $O(\\text{target})$\n\n    - The `dp` arrays take $O(\\text{target})$ space.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

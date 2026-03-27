@@ -1,0 +1,53 @@
+{
+  "questionId": "1481",
+  "questionFrontendId": "1350",
+  "title": "Students With Invalid Departments",
+  "titleSlug": "students-with-invalid-departments",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Departments</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| id            | int     |\n| name          | varchar |\n+---------------+---------+\nIn SQL, id is the primary key of this table.\nThe table has information about the id of each department of a university.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Students</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| id            | int     |\n| name          | varchar |\n| department_id | int     |\n+---------------+---------+\nIn SQL, id is the primary key of this table.\nThe table has information about the id of each student at a university and the id of the department he/she studies at.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Find the id and the name of all students who are enrolled in departments that no longer exist.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nDepartments table:\n+------+--------------------------+\n| id   | name                     |\n+------+--------------------------+\n| 1    | Electrical Engineering   |\n| 7    | Computer Engineering     |\n| 13   | Bussiness Administration |\n+------+--------------------------+\nStudents table:\n+------+----------+---------------+\n| id   | name     | department_id |\n+------+----------+---------------+\n| 23   | Alice    | 1             |\n| 1    | Bob      | 7             |\n| 5    | Jennifer | 13            |\n| 2    | John     | 14            |\n| 4    | Jasmine  | 77            |\n| 3    | Steve    | 74            |\n| 6    | Luis     | 1             |\n| 8    | Jonathan | 7             |\n| 7    | Daiana   | 33            |\n| 11   | Madelynn | 1             |\n+------+----------+---------------+\n<strong>Output:</strong> \n+------+----------+\n| id   | name     |\n+------+----------+\n| 2    | John     |\n| 7    | Daiana   |\n| 4    | Jasmine  |\n| 3    | Steve    |\n+------+----------+\n<strong>Explanation:</strong> \nJohn, Daiana, Steve, and Jasmine are enrolled in departments 14, 33, 74, and 77 respectively. department 14, 33, 74, and 77 do not exist in the Departments table.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Departments (id int, name varchar(30))\", \"Create table If Not Exists Students (id int, name varchar(30), department_id int)\"], \"mssql\": [\"Create table Departments (id int, name varchar(30))\", \"Create table Students (id int, name varchar(30), department_id int)\"], \"oraclesql\": [\"Create table Departments (id int, name varchar(30))\", \"Create table Students (id int, name varchar(30), department_id int)\"], \"database\": true, \"name\": \"find_students\", \"pythondata\": [\"Departments = pd.DataFrame([], columns=['id', 'name']).astype({'id':'Int64', 'name':'object'})\", \"Students = pd.DataFrame([], columns=['id', 'name', 'department_id']).astype({'id':'Int64', 'name':'object', 'department_id':'Int64'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Departments (id int, name varchar(30))\\n\", \"Create table If Not Exists Students (id int, name varchar(30), department_id int)\"], \"database_schema\": {\"Departments\": {\"id\": \"INT\", \"name\": \"VARCHAR(30)\"}, \"Students\": {\"id\": \"INT\", \"name\": \"VARCHAR(30)\", \"department_id\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"66.4K\", \"totalSubmission\": \"74K\", \"totalAcceptedRaw\": 66429, \"totalSubmissionRaw\": 74021, \"acRate\": \"89.7%\"}",
+  "likes": 184,
+  "dislikes": 9,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Departments\":[\"id\",\"name\"],\"Students\":[\"id\",\"name\",\"department_id\"]},\"rows\":{\"Departments\":[[1,\"Electrical Engineering\"],[7,\"Computer Engineering\"],[13,\"Bussiness Administration\"]],\"Students\":[[23,\"Alice\",1],[1,\"Bob\",7],[5,\"Jennifer\",13],[2,\"John\",14],[4,\"Jasmine\",77],[3,\"Steve\",74],[6,\"Luis\",1],[8,\"Jonathan\",7],[7,\"Daiana\",33],[11,\"Madelynn\",1]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_students(departments: pd.DataFrame, students: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

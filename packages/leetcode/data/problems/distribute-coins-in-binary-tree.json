@@ -1,0 +1,137 @@
+{
+  "questionId": "1021",
+  "questionFrontendId": "979",
+  "title": "Distribute Coins in Binary Tree",
+  "titleSlug": "distribute-coins-in-binary-tree",
+  "difficulty": "Medium",
+  "content": "<p>You are given the <code>root</code> of a binary tree with <code>n</code> nodes where each <code>node</code> in the tree has <code>node.val</code> coins. There are <code>n</code> coins in total throughout the whole tree.</p>\n\n<p>In one move, we may choose two adjacent nodes and move one coin from one node to another. A move may be from parent to child, or from child to parent.</p>\n\n<p>Return <em>the <strong>minimum</strong> number of moves required to make every node have <strong>exactly</strong> one coin</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/01/18/tree1.png\" style=\"width: 250px; height: 236px;\" />\n<pre>\n<strong>Input:</strong> root = [3,0,0]\n<strong>Output:</strong> 2\n<strong>Explanation: </strong>From the root of the tree, we move one coin to its left child, and one coin to its right child.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/01/18/tree2.png\" style=\"width: 250px; height: 236px;\" />\n<pre>\n<strong>Input:</strong> root = [0,3,0]\n<strong>Output:</strong> 3\n<strong>Explanation: </strong>From the left child of the root, we move two coins to the root [taking two moves]. Then, we move one coin from the root of the tree to the right child.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is <code>n</code>.</li>\n\t<li><code>1 &lt;= n &lt;= 100</code></li>\n\t<li><code>0 &lt;= Node.val &lt;= n</code></li>\n\t<li>The sum of all <code>Node.val</code> is <code>n</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"distributeCoins\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"root\",\r\n      \"type\": \"TreeNode\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"225.3K\", \"totalSubmission\": \"291.5K\", \"totalAcceptedRaw\": 225284, \"totalSubmissionRaw\": 291498, \"acRate\": \"77.3%\"}",
+  "likes": 6075,
+  "dislikes": 249,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Sum of Distances in Tree\", \"titleSlug\": \"sum-of-distances-in-tree\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Binary Tree Cameras\", \"titleSlug\": \"binary-tree-cameras\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,0,0]",
+    "[0,3,0]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"zeta\", \"name\": \"Zeta\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    int distributeCoins(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public int distributeCoins(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def distributeCoins(self, root: Optional[TreeNode]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def distributeCoins(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {number}\n */\nvar distributeCoins = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction distributeCoins(root: TreeNode | null): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public int DistributeCoins(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nint distributeCoins(struct TreeNode* root) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc distributeCoins(root *TreeNode) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun distributeCoins(root: TreeNode?): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func distributeCoins(_ root: TreeNode?) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn distribute_coins(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {Integer}\ndef distribute_coins(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return Integer\n     */\n    function distributeCoins($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  int distributeCoins(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def distributeCoins(root: TreeNode): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec distribute_coins(root :: TreeNode.t | nil) :: integer\n  def distribute_coins(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec distribute_coins(Root :: #tree_node{} | null) -> integer().\ndistribute_coins(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (distribute-coins root)\n  (-> (or/c tree-node? #f) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2314",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nGiven the `root` of a binary tree storing coins, our objective is to determine the minimum number of moves required to distribute the coins so that each node has exactly one coin. A move consists of moving one coin from a node to an adjacent node.\n\nWe will need to traverse the tree to distribute the coins.\n\n> If you are not familiar with tree traversal, check out our [Tree Traversal Explore Card](https://leetcode.com/explore/learn/card/data-structure-tree/134/traverse-a-tree/)\n\n---\n\n### Approach 1: Depth-First Search\n\n#### Intuition\n\nWe need to ensure each node contains one coin. Let's start with an example. How do we obtain a coin for the root node?\n\n> **Input** [0,0,2,4,0,1,0]\n\n![Example A](../Figures/979/ExampleA.png)\n\nWe could give the blue `root` node a coin from its red right child. However, this is not an optimal move, as then, a coin from the leftmost node in the tree with four coins must be passed to the red node's child that has zero coins.\n\nFrom the `root`, it's hard to determine how to optimally distribute the coins because we don't have enough information about the subtrees.\n\nWhat if we started distributing coins from the leaves?\n\n![Example B](../Figures/979/ExampleB.png)\n\nIf we represent extra coins as positive values and needed coins as negative values we can calculate the coins exchanged in the subtree rooted at the red node as follows:\n\n```\ncurrent.val = current.val + leftCoins + rightCoins = 0 + 3 + -1 = 2\n```\n\n`current` is the red parent node in the subtree, and `leftCoins` and `rightCoins` are the number of coins the children need to exchange.\n\nThere are three cases for distributing coins from a leaf node:\n\n1. The leaf node doesn't have any coins: Take a coin from the parent, since the parent is the only node it is connected to.\n2. The leaf node has exactly one coin: No coins need to be exchanged.\n3. The leaf node has more than one coin: Keep one coin and give all the extra coins to the parent.\n\nFrom a leaf node, we can directly determine how to optimally distribute coins in the subtree because the only neighbor a leaf can exchange with is their parent.\n\nHow will we traverse the tree so that we handle child nodes before parent nodes? One of the primary ways to traverse a tree is a Depth-First Search (DFS). There are three main traversal types for DFS, one of which is a postorder traversal. In a postorder traversal, the left subtree is visited first, then the right, then the root. \n\n**Recursive DFS Postorder Traversal Template:**\n- If the tree is empty, return.\n- Traverse the left subtree: `dfs(root.left)`.\n- Traverse the right subtree: `dfs(root.right)`.\n- Handle the root.\n\nMoving up the tree, how many coins can the current node pass on to its parent? \n\n![Example C](../Figures/979/ExampleC.png)\n\nThe current node will keep one of its coins, so it will pass on one less than the number of coins it has. This means if it has only one coin, it won't pass on any coins.\n\nThe best practice is not to modify the input, so instead of manipulating the node's value, we will pass along the number of coins exchanged.\n\n![Example D](../Figures/979/ExampleD.png)\n\nWe can calculate the number of coins a parent node can pass on to its parent by subtracting one from its value to represent the coin it keeps, then adding the number of coins its left and right subtrees need to exchange.\n\nTo calculate the number of coins each subtree needs to exchange, we implement a recursive function, `dfs`, using the postorder traversal template.\n\n**dfs:**\n- If the tree is empty, return `0`.\n- Calculate the number of coins the left subtree needs to exchange: `leftCoins = dfs(root.left)`.\n- Calculate the number of coins the right subtree needs to exchange: `rightCoins = dfs(root.right)`.\n- Return the number of coins the current node has available to exchange with its parent: `(current.val - 1) + leftCoins + rightCoins`.\n\nThis function would calculate the number of coins each node needs to exchange with its parent. This is not the number of moves, but we can calculate the number of moves in the same function. \n\n![Example E](../Figures/979/ExampleE.png)\n\nFor the green highlighted subtree, it takes three moves to give each extra coin from the left child to the parent and one move to give one coin from the parent to the right child. In total, four coin exchanges occurred, requiring four moves. We calculate the number of moves by adding the absolute values of the number of coins each child needs to exchange with its parent node. \n\nIn the `dfs` function, we add the number of moves it takes to distribute coins within the current subtree to a globally maintained running sum before handling the root.\n\nHow do we know this process provides the minimum number of moves? Each child node either gives coins to or receives coins from its parent, but not both. Each node exchanges coins with its direct neighbors in a unidirectional flow, minimizing the total number of moves.\n\n#### Algorithm\n\n1. Initialize a variable `moves` to `0`.\n2. Define a recursive function `dfs` that counts the number of moves needed to distribute the coins in the tree given the root as `current`.\n    - Base case: If `current` is `null`, return `0` because no coins need to be exchanged.\n    - Set a variable `leftCoins` to the number of coins the left subtree needs to exchange, the result of `dfs(current.left)`.\n    - Set a variable `rightCoins` to the number of coins the right subtree needs to exchange, the result of `dfs(current.right)`.\n    - Calculate the number of moves needed to distribute coins in each of the subtrees. Since the coins exchanged may be negative, we sum the absolute values of `leftCoins` and `rightCoins` and then add this sum to `moves`.\n    - Return the number of coins the `current` node has available to exchange with its parent. It will keep one coin, so subtract `1` from its value and sum the result with `leftCoins` and `rightCoins`.\n3. Call `dfs(current)`.\n4. Return `moves`.\n\nThe algorithm is visualized below:\n\n!?!../Documents/979/979_slideshow1.json:650,460!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/BBNKWdf9/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"BBNKWdf9\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the tree.\n\n- Time complexity: $O(n)$\n\n    Traversing the tree using DFS costs $O(n)$, as we visit each node exactly once and perform $O(1)$ of work at each visit.\n\n- Space complexity: $O(n)$\n\n     The space complexity of DFS, when implemented recursively, is determined by the maximum depth of the call stack, which corresponds to the depth of the tree. In the worst case, if the tree is entirely unbalanced (e.g., a linked list or a left/right skewed tree), the call stack can grow as deep as the number of nodes, resulting in a space complexity of $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,135 @@
+{
+  "questionId": "1646",
+  "questionFrontendId": "1539",
+  "title": "Kth Missing Positive Number",
+  "titleSlug": "kth-missing-positive-number",
+  "difficulty": "Easy",
+  "content": "<p>Given an array <code>arr</code> of positive integers sorted in a <strong>strictly increasing order</strong>, and an integer <code>k</code>.</p>\n\n<p>Return <em>the</em> <code>k<sup>th</sup></code> <em><strong>positive</strong> integer that is <strong>missing</strong> from this array.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [2,3,4,7,11], k = 5\n<strong>Output:</strong> 9\n<strong>Explanation: </strong>The missing positive integers are [1,5,6,8,9,10,12,13,...]. The 5<sup>th</sup>&nbsp;missing positive integer is 9.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [1,2,3,4], k = 2\n<strong>Output:</strong> 6\n<strong>Explanation: </strong>The missing positive integers are [5,6,7,...]. The 2<sup>nd</sup> missing positive integer is 6.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= arr.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= arr[i] &lt;= 1000</code></li>\n\t<li><code>1 &lt;= k &lt;= 1000</code></li>\n\t<li><code>arr[i] &lt; arr[j]</code> for <code>1 &lt;= i &lt; j &lt;= arr.length</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong></p>\n\n<p>Could you solve this problem in less than O(n) complexity?</p>\n",
+  "hints": [
+    "Keep track of how many positive numbers are missing as you scan the array."
+  ],
+  "metaData": "{\n  \"name\": \"findKthPositive\",\n  \"params\": [\n    {\n      \"name\": \"arr\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"823.1K\", \"totalSubmission\": \"1.3M\", \"totalAcceptedRaw\": 823138, \"totalSubmissionRaw\": 1299930, \"acRate\": \"63.3%\"}",
+  "likes": 7955,
+  "dislikes": 576,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Append K Integers With Minimal Sum\", \"titleSlug\": \"append-k-integers-with-minimal-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,3,4,7,11]\n5",
+    "[1,2,3,4]\n2"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 6, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"morgan-stanley\", \"name\": \"Morgan Stanley\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findKthPositive(vector<int>& arr, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findKthPositive(int[] arr, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findKthPositive(self, arr: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findKthPositive(self, arr, k):\n        \"\"\"\n        :type arr: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arr\n * @param {number} k\n * @return {number}\n */\nvar findKthPositive = function(arr, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findKthPositive(arr: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindKthPositive(int[] arr, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findKthPositive(int* arr, int arrSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findKthPositive(arr []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findKthPositive(arr: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findKthPositive(_ arr: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_kth_positive(arr: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} arr\n# @param {Integer} k\n# @return {Integer}\ndef find_kth_positive(arr, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $arr\n     * @param Integer $k\n     * @return Integer\n     */\n    function findKthPositive($arr, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findKthPositive(List<int> arr, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findKthPositive(arr: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_kth_positive(arr :: [integer], k :: integer) :: integer\n  def find_kth_positive(arr, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_kth_positive(Arr :: [integer()], K :: integer()) -> integer().\nfind_kth_positive(Arr, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-kth-positive arr k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1059",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Brute Force, $$\\mathcal{O}(N)$$ time\n\nThe first idea is to solve the problem in a linear time by parsing all array elements. We iterate through the given array `arr`, which contains sorted positive integers. For each element `num` in the array, if it is less than or equal to `k`, it means one less number is missing, so we increment `k`. If `num` is greater than `k`, we stop because the missing number lies outside the range of the current numbers in `arr`. By the end of the loop, we return the `k`-th missing number.\n\n![img](../Figures/1539/missing.png)\n*Figure 1. Approach 1. Iterate over the array and compute the number of missing numbers in-between the elements.*\n\n\n**Algorithm**\n\n- Iterate through each number `num` in the array `arr`:\n  - If the current `num` is less than or equal to `k`, increment `k`.\n    - This step accounts for the missing positive integers. If the number is less than or equal to `k`, it means we've encountered an actual element of the sequence, so the `k`-th missing positive integer is pushed further by one.\n  - If the current `num` is greater than `k`, break out of the loop.\n    - This happens because there’s no need to continue iterating once we’ve passed the range where the `k`-th missing integer could exist.\n\n- Return the updated value of `k` as the final result, which represents the `k`-th missing positive integer.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/bkGdqDcd/shared\" frameBorder=\"0\" width=\"100%\" height=\"259\" name=\"bkGdqDcd\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$ because in the worst case, we have to parse all array elements.\n\n* Space complexity: $$\\mathcal{O}(1)$$, we don't allocate any additional data structures.\n<br />\n<br />\n\n\n___\n### Approach 2: Binary Search, $$\\mathcal{O}(\\log N)$$ time\n\nApproach 1 doesn't profit from the fact that the input array is sorted. And the sorted input should ring the bell: \"let's try to solve it in a logarithmic time using [binary search](https://leetcode.com/problems/binary-search/solution/)\".\n\nWe need a way to check on how many positive integers are missing before the given array element to use binary search. To do that, let's compare the input array\n`[2, 3, 4, 7, 11]` with an array with no missing integers: `[1, 2, 3, 4, 5]`. The number of missing integers is a simple difference between the corresponding elements of these two arrays:\n\n- Before `2`, there is `2 - 1 = 1` missing integer.\n\n- Before `3`, there is `3 - 2 = 1` missing integer.\n\n- Before `4`, there is `4 - 3 = 1` missing integer.\n\n- Before `7`, there are `7 - 4 = 3` missing integers.\n\n- Before `11`, there are `11 - 5 = 6` missing integers.\n\n> The number of positive integers which are missing before the `arr[idx]` is equal to `arr[idx] - idx - 1`.\n\n![img](../Figures/1539/binary.png)\n*Figure 2. The number of missing positive integers before the index `idx`.*\n\n\nNow we have everything to proceed with the [classical binary search algorithm](https://leetcode.com/problems/binary-search/solution/):\n\n- Choose the pivot index in the middle of the array.\n\n- If the number of positive integers which are missing before `arr[pivot]` is less than k - continue to search on the right side of the array.\n\n- Otherwise, continue to search on the left side.\n\n**Algorithm**\n\n- Initialize search boundaries: `left = 0`, `right = arr.length - 1`.\n\n- While `left <= right`:\n\n    - Choose the pivot index in the middle: `pivot = left + (right - left) / 2`. Note that in Java we couldn't use straightforward `pivot = (left + right) / 2`\n    to avoid the possible overflow. In Python, the integers are not limited, and we're fine to do that.\n\n    - If the number of positive integers which are missing before is less than k `arr[pivot] - pivot - 1 < k` - continue to search on the right side of the array: `left = pivot + 1`.\n\n    - Otherwise, continue to search on the left: `right = pivot - 1`.\n\n- At the end of the loop, `left = right + 1`, and the k*th* missing number is in-between `arr[right]` and `arr[left]`. The number of integers missing before `arr[right]` is `arr[right] - right - 1`. Hence, the number to return is `arr[right] + k - (arr[right] - right - 1) = k + left`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/HyWjq5Hc/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"HyWjq5Hc\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(\\log N)$$, where $$N$$ is a number of elements in the input array.\n\n    Let's compute the time complexity of the binary search with the help of [master theorem](https://en.wikipedia.org/wiki/Master_theorem_(analysis_of_algorithms)) $$T(N) = aT\\left(\\frac{N}{b}\\right) + \\Theta(N^d)$$. The equation represents dividing the problem up into $$a$$ subproblems of size $$\\frac{N}{b}$$ in $$\\Theta(N^d)$$ time. Here, at each step, there is only one subproblem `a = 1`, its size is half of the initial problem `b = 2`, and all this happens in a constant time `d = 0`. That means that $$\\log_b{a} = d$$ and hence we're dealing with [case 2](https://en.wikipedia.org/wiki/Master_theorem_(analysis_of_algorithms)#Case_2_example) that results in $$\\mathcal{O}(N^{\\log_b{a}} \\log^{d + 1} N)$$ = $$\\mathcal{O}(\\log N)$$ time complexity.\n\n* Space complexity: $$\\mathcal{O}(1)$$, we don't allocate any additional data structures.\n<br />\n<br />\n\n\n___",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

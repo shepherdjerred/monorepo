@@ -337,7 +337,6 @@ Clauderon sets many environment variables. Your image doesn't need to set these 
 ### Authentication (placeholder values, replaced by proxy)
 
 - `GH_TOKEN=clauderon-proxy`
-- `GITHUB_TOKEN=clauderon-proxy`
 - `CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-clauderon-proxy-placeholder`
 - `OPENAI_API_KEY=sk-openai-clauderon-proxy-placeholder` (Codex)
 - `CODEX_API_KEY=sk-openai-clauderon-proxy-placeholder` (Codex)

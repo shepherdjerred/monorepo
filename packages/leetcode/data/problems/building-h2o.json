@@ -1,0 +1,64 @@
+{
+  "questionId": "1186",
+  "questionFrontendId": "1117",
+  "title": "Building H2O",
+  "titleSlug": "building-h2o",
+  "difficulty": "Medium",
+  "content": "<p>There are two kinds of threads: <code>oxygen</code> and <code>hydrogen</code>. Your goal is to group these threads to form water molecules.</p>\n\n<p>There is a barrier where each thread has to wait until a complete molecule can be formed. Hydrogen and oxygen threads will be given <code>releaseHydrogen</code> and <code>releaseOxygen</code> methods respectively, which will allow them to pass the barrier. These threads should pass the barrier in groups of three, and they must immediately bond with each other to form a water molecule. You must guarantee that all the threads from one molecule bond before any other threads from the next molecule do.</p>\n\n<p>In other words:</p>\n\n<ul>\n\t<li>If an oxygen thread arrives at the barrier when no hydrogen threads are present, it must wait for two hydrogen threads.</li>\n\t<li>If a hydrogen thread arrives at the barrier when no other threads are present, it must wait for an oxygen thread and another hydrogen thread.</li>\n</ul>\n\n<p>We do not have to worry about matching the threads up explicitly; the threads do not necessarily know which other threads they are paired up with. The key is that threads pass the barriers in complete sets; thus, if we examine the sequence of threads that bind and divide them into groups of three, each group should contain one oxygen and two hydrogen threads.</p>\n\n<p>Write synchronization code for oxygen and hydrogen molecules that enforces these constraints.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> water = &quot;HOH&quot;\n<strong>Output:</strong> &quot;HHO&quot;\n<strong>Explanation:</strong> &quot;HOH&quot; and &quot;OHH&quot; are also valid answers.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> water = &quot;OOHHHH&quot;\n<strong>Output:</strong> &quot;HHOHHO&quot;\n<strong>Explanation:</strong> &quot;HOHHHO&quot;, &quot;OHHHHO&quot;, &quot;HHOHOH&quot;, &quot;HOHHOH&quot;, &quot;OHHHOH&quot;, &quot;HHOOHH&quot;, &quot;HOHOHH&quot; and &quot;OHHOHH&quot; are also valid answers.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>3 * n == water.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 20</code></li>\n\t<li><code>water[i]</code> is either <code>&#39;H&#39;</code> or <code>&#39;O&#39;</code>.</li>\n\t<li>There will be exactly <code>2 * n</code> <code>&#39;H&#39;</code> in <code>water</code>.</li>\n\t<li>There will be exactly <code>n</code> <code>&#39;O&#39;</code> in <code>water</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"H2O\",\n  \"params\": [\n    {\n      \"name\": \"water\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  },\n  \"languages\": [\n    \"java\",\n    \"cpp\",\n    \"python\",\n    \"python3\",\n    \"csharp\",\n    \"c\",\n    \"golang\"\n  ],\n  \"manual\": true\n}",
+  "stats": "{\"totalAccepted\": \"85.8K\", \"totalSubmission\": \"146.8K\", \"totalAcceptedRaw\": 85829, \"totalSubmissionRaw\": 146842, \"acRate\": \"58.4%\"}",
+  "likes": 583,
+  "dislikes": 196,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"HOH\"",
+    "\"OOHHHH\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 6, \"slug\": \"tesla\", \"name\": \"Tesla\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Concurrency",
+      "slug": "concurrency"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class H2O {\npublic:\n    H2O() {\n        \n    }\n\n    void hydrogen(function<void()> releaseHydrogen) {\n        \n        // releaseHydrogen() outputs \"H\". Do not change or remove this line.\n        releaseHydrogen();\n    }\n\n    void oxygen(function<void()> releaseOxygen) {\n        \n        // releaseOxygen() outputs \"O\". Do not change or remove this line.\n        releaseOxygen();\n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class H2O {\n\n    public H2O() {\n        \n    }\n\n    public void hydrogen(Runnable releaseHydrogen) throws InterruptedException {\n\t\t\n        // releaseHydrogen.run() outputs \"H\". Do not change or remove this line.\n        releaseHydrogen.run();\n    }\n\n    public void oxygen(Runnable releaseOxygen) throws InterruptedException {\n        \n        // releaseOxygen.run() outputs \"O\". Do not change or remove this line.\n\t\treleaseOxygen.run();\n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class H2O:\n    def __init__(self):\n        pass\n\n\n    def hydrogen(self, releaseHydrogen: 'Callable[[], None]') -> None:\n        \n        # releaseHydrogen() outputs \"H\". Do not change or remove this line.\n        releaseHydrogen()\n\n\n    def oxygen(self, releaseOxygen: 'Callable[[], None]') -> None:\n        \n        # releaseOxygen() outputs \"O\". Do not change or remove this line.\n        releaseOxygen()"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class H2O(object):\n    def __init__(self):\n        pass\n\n\n    def hydrogen(self, releaseHydrogen):\n        \"\"\"\n        :type releaseHydrogen: method\n        :rtype: void\n        \"\"\"\n        \n        # releaseHydrogen() outputs \"H\". Do not change or remove this line.\n        releaseHydrogen()\n\n\n    def oxygen(self, releaseOxygen):\n        \"\"\"\n        :type releaseOxygen: method\n        :rtype: void\n        \"\"\"\n        \n        # releaseOxygen() outputs \"O\". Do not change or remove this line.\n        releaseOxygen()"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class H2O {\n\n    public H2O() {\n        \n    }\n\n    public void Hydrogen(Action releaseHydrogen) {\n\t\t\n        // releaseHydrogen() outputs \"H\". Do not change or remove this line.\n        releaseHydrogen();\n    }\n\n    public void Oxygen(Action releaseOxygen) {\n        \n        // releaseOxygen() outputs \"O\". Do not change or remove this line.\n\t\treleaseOxygen();\n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "typedef struct {\n    // User defined data may be declared here.\n    \n} H2O;\n\nvoid releaseHydrogen();\n\nvoid releaseOxygen();\n\nH2O* h2oCreate() {\n    H2O* obj = (H2O*) malloc(sizeof(H2O));\n    \n    // Initialize user defined data here.\n    \n    return obj;\n}\n\nvoid hydrogen(H2O* obj) {\n    \n    // releaseHydrogen() outputs \"H\". Do not change or remove this line.\n    releaseHydrogen();\n}\n\nvoid oxygen(H2O* obj) {\n    \n    // releaseOxygen() outputs \"O\". Do not change or remove this line.\n    releaseOxygen();\n}\n\nvoid h2oFree(H2O* obj) {\n    // User defined data may be cleaned up here.\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type H2O struct {\n\n}\n\nfunc NewH2O() *H2O {\n\th := &H2O{}\n\treturn h\n}\n\nfunc (h *H2O) Hydrogen(releaseHydrogen func()) {\n\t// releaseHydrogen() outputs \"H\". Do not change or remove this line.\n\treleaseHydrogen()\n}\n\nfunc (h *H2O) Oxygen(releaseOxygen func()) {\n\t// releaseOxygen() outputs \"H\". Do not change or remove this line.\n\treleaseOxygen()\n}"
+    }
+  ],
+  "solution": null
+}

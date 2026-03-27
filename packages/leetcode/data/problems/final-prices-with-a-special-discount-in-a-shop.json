@@ -1,0 +1,140 @@
+{
+  "questionId": "1570",
+  "questionFrontendId": "1475",
+  "title": "Final Prices With a Special Discount in a Shop",
+  "titleSlug": "final-prices-with-a-special-discount-in-a-shop",
+  "difficulty": "Easy",
+  "content": "<p>You are given an integer array <code>prices</code> where <code>prices[i]</code> is the price of the <code>i<sup>th</sup></code> item in a shop.</p>\n\n<p>There is a special discount for items in the shop. If you buy the <code>i<sup>th</sup></code> item, then you will receive a discount equivalent to <code>prices[j]</code> where <code>j</code> is the minimum index such that <code>j &gt; i</code> and <code>prices[j] &lt;= prices[i]</code>. Otherwise, you will not receive any discount at all.</p>\n\n<p>Return an integer array <code>answer</code> where <code>answer[i]</code> is the final price you will pay for the <code>i<sup>th</sup></code> item of the shop, considering the special discount.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> prices = [8,4,6,2,3]\n<strong>Output:</strong> [4,2,4,2,3]\n<strong>Explanation:</strong> \nFor item 0 with price[0]=8 you will receive a discount equivalent to prices[1]=4, therefore, the final price you will pay is 8 - 4 = 4.\nFor item 1 with price[1]=4 you will receive a discount equivalent to prices[3]=2, therefore, the final price you will pay is 4 - 2 = 2.\nFor item 2 with price[2]=6 you will receive a discount equivalent to prices[3]=2, therefore, the final price you will pay is 6 - 2 = 4.\nFor items 3 and 4 you will not receive any discount at all.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> prices = [1,2,3,4,5]\n<strong>Output:</strong> [1,2,3,4,5]\n<strong>Explanation:</strong> In this case, for all items, you will not receive any discount at all.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> prices = [10,1,1,6]\n<strong>Output:</strong> [9,0,1,6]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= prices.length &lt;= 500</code></li>\n\t<li><code>1 &lt;= prices[i] &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [
+    "Use brute force: For the ith item in the shop with a loop find the first position j satisfying the conditions and apply the discount, otherwise, the discount is 0."
+  ],
+  "metaData": "{\n  \"name\": \"finalPrices\",\n  \"params\": [\n    {\n      \"name\": \"prices\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"400.8K\", \"totalSubmission\": \"476.6K\", \"totalAcceptedRaw\": 400792, \"totalSubmissionRaw\": 476645, \"acRate\": \"84.1%\"}",
+  "likes": 2923,
+  "dislikes": 153,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[8,4,6,2,3]",
+    "[1,2,3,4,5]",
+    "[10,1,1,6]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 8, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 6, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"dream11\", \"name\": \"Dream11\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Monotonic Stack",
+      "slug": "monotonic-stack"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> finalPrices(vector<int>& prices) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] finalPrices(int[] prices) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def finalPrices(self, prices: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def finalPrices(self, prices):\n        \"\"\"\n        :type prices: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} prices\n * @return {number[]}\n */\nvar finalPrices = function(prices) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function finalPrices(prices: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] FinalPrices(int[] prices) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* finalPrices(int* prices, int pricesSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func finalPrices(prices []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun finalPrices(prices: IntArray): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func finalPrices(_ prices: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn final_prices(prices: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} prices\n# @return {Integer[]}\ndef final_prices(prices)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $prices\n     * @return Integer[]\n     */\n    function finalPrices($prices) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> finalPrices(List<int> prices) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def finalPrices(prices: Array[Int]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec final_prices(prices :: [integer]) :: [integer]\n  def final_prices(prices) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec final_prices(Prices :: [integer()]) -> [integer()].\nfinal_prices(Prices) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (final-prices prices)\n  (-> (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2623",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe have an integer array `prices` listing the prices of items from a shop. Items can receive a special discount based on the price of the next item on the list that is less than or equal to it (if such an item exists). In other words, the discount for `prices[i]` is `prices[j]`, where `j > i`, `prices[j] <= prices[i]`, and `j` is the smallest such index that satisfies these conditions.\n\nThe task is to calculate the final price for each item, after applying this special discount, and return these final prices in an array called answer.\n    \n---\n\n### Approach 1: Brute-Force\n\n#### Intuition\n\nSince the constraints are small, we can solve this problem using a brute-force approach. For each item in the `prices` array, we need to find a price that is smaller or equal to it and appears later in the array. This price will be our discount amount. We then subtract this discount from the original price to get the final discounted price.\n\nTo implement this, let's start by creating a copy of the `prices` array called `result`. We'll loop through the `prices` array and apply the discount we find for each element to the corresponding element in the `result` array.\n\nFor each element in the `prices` array, we'll run another loop starting from the next element to the right. If we find a price that is less than or equal to the current element, we'll subtract this price from the original price in the `result` array and stop looking further. If we don't find any suitable discount after checking all subsequent prices, the item's price in the `result` array will remain unchanged.\n\nAfter processing all the prices in this manner, the `result` array will contain the final discounted prices for each item. We can then return this array as our answer.\n\n#### Algorithm\n\n- Initialize a variable `n` to store the length of the input `prices` array.\n- Initialize a `result` array by creating a copy of the input `prices` array. This ensures we have a copy of the original `prices` to work with.\n- Start an outer loop that iterates from `0` to `n - 1`, with loop variable `i`:\n  - Start an inner loop that iterates from index `i + 1` to `n - 1`, with loop variable `j`.\n    - If `prices[j]` is less than or equal to `prices[i]`:\n      - Calculate the discounted price by subtracting `prices[j]` from `prices[i]`.\n      - Store the calculated discounted price in `result[i]`.\n      - Break the inner loop as we have found the first valid discount.\n- Return the `result` array containing all final prices after discounts.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/cotSxu8J/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"cotSxu8J\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input array `prices`.\n\n- Time complexity: $O(n^2)$\n\n    The algorithm uses two nested loops. The outer loop iterates through each element of the array, and for each element, the inner loop can potentially iterate through all remaining elements. In the worst case, where prices are in strictly increasing order, for each element `i`, we need to check all elements from `i + 1` to `n - 1`. Thus, the time complexity is quadratic, $O(n^2)$.\n\n- Space complexity: $O(n)$\n\n    The algorithm creates a new array `result` of the same size as the input array to store the final prices. Besides this, only a constant amount of extra space is used for loop variables and temporary calculations. \n    \n    Therefore, the space complexity is $O(n)$.  \n\n---\n\n### Approach 2: Monotonic Stack\n\n#### Intuition\n\nLet's focus on a key part of the problem: for any given item, we need to find the first price that is smaller or equal to it and comes after it. This is similar to a classic problem known as finding the \"next smaller element,\" which can be efficiently solved using a stack. But why does a stack work so well here?\n\nImagine we are processing prices from left to right. At each step, we need to determine if the current price can serve as a discount for any previous prices. The stack helps us keep track of those previous prices that haven't found their discount yet.\n\nThe key intuition is that when we find a price that is smaller than some earlier prices, it must be the discount for those earlier prices that are larger than it. We only care about the most recent of these prices because we want the first available discount.\n\nSo, for each element, our stack must contain all the most recent prices before that element that are greater than it. This implies that each element present in the stack must be in increasing order of value. This is called a monotonic stack.\n\nWhen we encounter an element that is smaller than the top of the stack, this means a discount can be applied to the stack element. We continue popping prices from the stack and applying the discount until the stack is empty or the top price is less than the current price. Then, we push the current price to the top of the stack, to wait for a discount which may come further down. This way, we can both apply discounts and also maintain the monotonic property of the stack.\n\nTo implement this idea, we'll maintain a `stack` of indices (not prices, since we need the positions to apply discounts). We iterate over the `prices` array and check if the current price is less than or equal to the price at the top of the `stack`. If it is, the current element can be used as a discount to the elements waiting in the `stack`. We remove each larger price from the `stack` and apply the discount, then add the current price to the `stack`. Any prices left on the `stack` at the end of the main loop had no discount available.\n\nThe slideshow below demonstrates this algorithm in action:\n\n!?!../Documents/1475/slideshow.json:916,756!?!\n\n<br>\n\n> Note: If you are unfamiliar with the workings of monotonic stacks, try out these problems to practice:\n> - [496. Next Greater Element I 🔗](https://leetcode.com/problems/next-greater-element-i/)\n> - [503. Next Greater Element II 🔗](https://leetcode.com/problems/next-greater-element-ii/)\n> - [739. Daily Temperatures 🔗](https://leetcode.com/problems/daily-temperatures/)\n\n> For a more comprehensive understanding of stacks, check out the [Stack Explore Card 🔗](https://leetcode.com/explore/learn/card/queue-stack/230/usage-stack/). This resource provides an in-depth look at the stack data structure, explaining its key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n#### Algorithm\n\n- Initialize: \n  - a `result` array by creating a copy of the input `prices` array to store the discounted prices.\n  - an empty `stack` that will store indices of prices.\n- For each index `i` of the prices array:\n  - Start a while loop that continues as long as:\n    1. The `stack` is not empty, AND\n    2. The price at the index stored at the `stack`'s top is greater than or equal to the current price\n    - Inside the while loop, pop the top index from the `stack`.\n    - Calculate the discounted price by subtracting the current price from the price at the popped index.\n    - Store the result in the `result` array at the popped index.\n  - Add the current index `i` to the stack.\n- Return the `result` array containing all final prices after discounts.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/EMaz6crS/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"EMaz6crS\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input array `prices`.\n\n- Time complexity: $O(n)$\n\n    The algorithm iterates through the array once with a single loop. Although there is a while loop inside, each element can be pushed and popped from the `stack` exactly once. This means the total number of operations on the `stack` across all iterations is at most $2 \\cdot n$ ($n$ pushes and $n$ pops). \n    \n    Thus, the time complexity is $O(2 \\cdot n) = O(n)$.\n\n- Space complexity: $O(n)$\n\n    The algorithm uses a `result` array of size $n$ to store the final prices. Additionally, in the worst case scenario (when prices are in strictly increasing order), the stack could store all $n$ indices. \n    \n    Thus, the total space complexity is linear, $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

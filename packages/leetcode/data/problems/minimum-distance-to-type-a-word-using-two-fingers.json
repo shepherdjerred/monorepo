@@ -1,0 +1,131 @@
+{
+  "questionId": "1443",
+  "questionFrontendId": "1320",
+  "title": "Minimum Distance to Type a Word Using Two Fingers",
+  "titleSlug": "minimum-distance-to-type-a-word-using-two-fingers",
+  "difficulty": "Hard",
+  "content": "<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/01/02/leetcode_keyboard.png\" style=\"width: 349px; height: 209px;\" />\n<p>You have a keyboard layout as shown above in the <strong>X-Y</strong> plane, where each English uppercase letter is located at some coordinate.</p>\n\n<ul>\n\t<li>For example, the letter <code>&#39;A&#39;</code> is located at coordinate <code>(0, 0)</code>, the letter <code>&#39;B&#39;</code> is located at coordinate <code>(0, 1)</code>, the letter <code>&#39;P&#39;</code> is located at coordinate <code>(2, 3)</code> and the letter <code>&#39;Z&#39;</code> is located at coordinate <code>(4, 1)</code>.</li>\n</ul>\n\n<p>Given the string <code>word</code>, return <em>the minimum total <strong>distance</strong> to type such string using only two fingers</em>.</p>\n\n<p>The <strong>distance</strong> between coordinates <code>(x<sub>1</sub>, y<sub>1</sub>)</code> and <code>(x<sub>2</sub>, y<sub>2</sub>)</code> is <code>|x<sub>1</sub> - x<sub>2</sub>| + |y<sub>1</sub> - y<sub>2</sub>|</code>.</p>\n\n<p><strong>Note</strong> that the initial positions of your two fingers are considered free so do not count towards your total distance, also your two fingers do not have to start at the first letter or the first two letters.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> word = &quot;CAKE&quot;\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> Using two fingers, one optimal way to type &quot;CAKE&quot; is: \nFinger 1 on letter &#39;C&#39; -&gt; cost = 0 \nFinger 1 on letter &#39;A&#39; -&gt; cost = Distance from letter &#39;C&#39; to letter &#39;A&#39; = 2 \nFinger 2 on letter &#39;K&#39; -&gt; cost = 0 \nFinger 2 on letter &#39;E&#39; -&gt; cost = Distance from letter &#39;K&#39; to letter &#39;E&#39; = 1 \nTotal distance = 3\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> word = &quot;HAPPY&quot;\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> Using two fingers, one optimal way to type &quot;HAPPY&quot; is:\nFinger 1 on letter &#39;H&#39; -&gt; cost = 0\nFinger 1 on letter &#39;A&#39; -&gt; cost = Distance from letter &#39;H&#39; to letter &#39;A&#39; = 2\nFinger 2 on letter &#39;P&#39; -&gt; cost = 0\nFinger 2 on letter &#39;P&#39; -&gt; cost = Distance from letter &#39;P&#39; to letter &#39;P&#39; = 0\nFinger 1 on letter &#39;Y&#39; -&gt; cost = Distance from letter &#39;A&#39; to letter &#39;Y&#39; = 4\nTotal distance = 6\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= word.length &lt;= 300</code></li>\n\t<li><code>word</code> consists of uppercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Use dynamic programming.",
+    "dp[i][j][k]: smallest movements when you have one finger on i-th char and the other one on j-th char already having written k first characters from word."
+  ],
+  "metaData": "{\n  \"name\": \"minimumDistance\",\n  \"params\": [\n    {\n      \"name\": \"word\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"38K\", \"totalSubmission\": \"63.9K\", \"totalAcceptedRaw\": 37999, \"totalSubmissionRaw\": 63914, \"acRate\": \"59.5%\"}",
+  "likes": 1051,
+  "dislikes": 39,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Time to Type Word Using Special Typewriter\", \"titleSlug\": \"minimum-time-to-type-word-using-special-typewriter\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"CAKE\"",
+    "\"HAPPY\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minimumDistance(string word) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minimumDistance(String word) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumDistance(self, word: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumDistance(self, word):\n        \"\"\"\n        :type word: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} word\n * @return {number}\n */\nvar minimumDistance = function(word) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumDistance(word: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinimumDistance(string word) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minimumDistance(char* word) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumDistance(word string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumDistance(word: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumDistance(_ word: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_distance(word: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} word\n# @return {Integer}\ndef minimum_distance(word)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $word\n     * @return Integer\n     */\n    function minimumDistance($word) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimumDistance(String word) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumDistance(word: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_distance(word :: String.t) :: integer\n  def minimum_distance(word) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_distance(Word :: unicode:unicode_binary()) -> integer().\nminimum_distance(Word) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-distance word)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

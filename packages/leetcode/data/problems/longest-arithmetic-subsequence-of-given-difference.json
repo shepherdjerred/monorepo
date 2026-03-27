@@ -1,0 +1,142 @@
+{
+  "questionId": "1330",
+  "questionFrontendId": "1218",
+  "title": "Longest Arithmetic Subsequence of Given Difference",
+  "titleSlug": "longest-arithmetic-subsequence-of-given-difference",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>arr</code> and an integer <code>difference</code>, return the length of the longest subsequence in <code>arr</code> which is an arithmetic sequence such that the difference between adjacent elements in the subsequence equals <code>difference</code>.</p>\n\n<p>A <strong>subsequence</strong> is a sequence that can be derived from <code>arr</code> by deleting some or no elements without changing the order of the remaining elements.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [1,2,3,4], difference = 1\n<strong>Output:</strong> 4\n<strong>Explanation: </strong>The longest arithmetic subsequence is [1,2,3,4].</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [1,3,5,7], difference = 1\n<strong>Output:</strong> 1\n<strong>Explanation: </strong>The longest arithmetic subsequence is any single element.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [1,5,7,8,5,3,4,2,1], difference = -2\n<strong>Output:</strong> 4\n<strong>Explanation: </strong>The longest arithmetic subsequence is [7,5,3,1].\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= arr.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-10<sup>4</sup> &lt;= arr[i], difference &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Use dynamic programming.",
+    "Let dp[i] be the maximum length of a subsequence of the given difference whose last element is i.",
+    "dp[i] = 1 + dp[i-k]"
+  ],
+  "metaData": "{\n  \"name\": \"longestSubsequence\",\n  \"params\": [\n    {\n      \"name\": \"arr\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"difference\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"171K\", \"totalSubmission\": \"314.8K\", \"totalAcceptedRaw\": 171046, \"totalSubmissionRaw\": 314835, \"acRate\": \"54.3%\"}",
+  "likes": 3380,
+  "dislikes": 92,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Destroy Sequential Targets\", \"titleSlug\": \"destroy-sequential-targets\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,4]\n1",
+    "[1,3,5,7]\n1",
+    "[1,5,7,8,5,3,4,2,1]\n-2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int longestSubsequence(vector<int>& arr, int difference) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int longestSubsequence(int[] arr, int difference) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def longestSubsequence(self, arr: List[int], difference: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def longestSubsequence(self, arr, difference):\n        \"\"\"\n        :type arr: List[int]\n        :type difference: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arr\n * @param {number} difference\n * @return {number}\n */\nvar longestSubsequence = function(arr, difference) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function longestSubsequence(arr: number[], difference: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int LongestSubsequence(int[] arr, int difference) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int longestSubsequence(int* arr, int arrSize, int difference) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func longestSubsequence(arr []int, difference int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun longestSubsequence(arr: IntArray, difference: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func longestSubsequence(_ arr: [Int], _ difference: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn longest_subsequence(arr: Vec<i32>, difference: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} arr\n# @param {Integer} difference\n# @return {Integer}\ndef longest_subsequence(arr, difference)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $arr\n     * @param Integer $difference\n     * @return Integer\n     */\n    function longestSubsequence($arr, $difference) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int longestSubsequence(List<int> arr, int difference) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def longestSubsequence(arr: Array[Int], difference: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec longest_subsequence(arr :: [integer], difference :: integer) :: integer\n  def longest_subsequence(arr, difference) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec longest_subsequence(Arr :: [integer()], Difference :: integer()) -> integer().\nlongest_subsequence(Arr, Difference) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (longest-subsequence arr difference)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1856",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nAs shown in the picture below, we have found some arithmetic subsequences with a common difference of `-2`. The task is to find the length of the longest arithmetic subsequence.\n\n![img](../Figures/1218/intro.png)\n\n\n\n---\n\n### Approach: Dynamic Programming\n\n\n#### Intuition   \n\nOne possible approach to solving this problem is to iterate through each element `arr[i]`, and for each such `arr[i]`, we look for the longest arithmetic subsequence that starts with `arr[i]`. We can simply iterate through the rest of the array starting from `arr[i+1]`, and for each such element `arr[j]`, check if `arr[j] - arr[i] = difference`. If it is, we have found the next element `arr[i] + difference` of the arithmetic subsequence and we can continue to look for the next element `arr[i] + difference * 2` in the same way. \n\n\nWe keep track of the length of the arithmetic subsequence that we find and update the maximum length found so far.\n\n![img](../Figures/1218/1.png)\n\nHowever, this brute force approach takes $$O(n^2)$$ time, which is likely to exceed the time limit, as we need to iterate through the rest of the array for each element `arr[i]`. \n\n<br>\n\nTo improve the time complexity of our solution, we can use dynamic programming (DP). DP is a technique where we solve subproblems and use their solutions to solve larger problems. In this case, we can use DP to avoid iterating through the array for each `arr[i]`.\n\n> If you are not familiar with dynamic programming, you can refer to our [Dynamic Programming Explore Card](https://leetcode.com/explore/featured/card/dynamic-programming/) on LeetCode.\n\nThe key idea of the DP approach is to use a hash map `dp` to store the maximum length of an arithmetic subsequence that ends with each element in `arr`. We initialize `dp` as empty. Then, for each element `arr[i]`, we check if `arr[i] - difference` is already present in `dp`. \n\n\n- If it is, let's say `dp[arr[i] - difference] = before_a`. It means there exists an arithmetic subsequence of length `before_a` that ends with `arr[i] - difference`. Since we can append `arr[i]` to this sequence, we update `dp[arr[i]]` to be `dp[arr[i] - difference] + 1`. \n\n- Otherwise, we simply set `dp[arr[i]] = 1`, as an element on its own is technically an arithmetic subsequence.\n\n\n<br>\n\nAs shown in the picture below, during the iteration, if we want the longest arithmetic subsequence ending with `3`, we need to find the longest arithmetic subsequence ending with `5` previously. If we have saved the maximum length of a subsequence that ends with each previous element in `dp`, we can easily look into `dp` and find if a subsequence that ends with `5` exists.\n\n\n\n![img](../Figures/1218/2.png)\n\n<br>\n\nPlease refer to the slides below as a detailed example:\n\n!?!../Documents/1218/s1.json:601,301!?!\n\n\nAfter iterating through the entire array, we can find the maximum value in `dp`, which is the length of the longest arithmetic subsequence in `arr`, or alternatively we can keep track of the maximum `dp[arr[i]]` during the iteration by `answer = max(answer, dp[arr[i]])`\n\n\n<br>\n\n#### Algorithm\n\n1) Initialize an empty hash map `dp`, set `answer = 1`.\n2) Iterate over `arr`, for each index `i`. \n3) Get `before_a`, the maximum length of an arithmetic subsequence that ends with `arr[i] - difference`:\n\n    - If `arr[i] - difference` is in `dp`, `before_a = dp[arr[i] - difference]`.\n\n    - Otherwise, `before_a = 0`.\n\n4) Set `dp[arr[i]] = before_a + 1`, update `answer` as `answer = max(answer, dp[arr[i]])`.\n\n5) Return `answer` when the iteration ends.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/XNGpmDC5/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"XNGpmDC5\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of the input array `arr`.\n\n* Time complexity: $$O(n)$$\n\n    - We need to iterate through `arr` once, and each hash map lookup and update takes constant time on average.\n    \n\n* Space complexity: $$O(n)$$\n\n    - We need to store the maximum length of an arithmetic subsequence that ends with each element `arr[i]` in the array, with at most $$O(n)$$ possible different `arr[i]` values.\n\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

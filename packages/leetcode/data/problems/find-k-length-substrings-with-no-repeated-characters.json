@@ -1,0 +1,141 @@
+{
+  "questionId": "1084",
+  "questionFrontendId": "1100",
+  "title": "Find K-Length Substrings With No Repeated Characters",
+  "titleSlug": "find-k-length-substrings-with-no-repeated-characters",
+  "difficulty": "Medium",
+  "content": "<p>Given a string <code>s</code> and an integer <code>k</code>, return <em>the number of substrings in </em><code>s</code><em> of length </em><code>k</code><em> with no repeated characters</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;havefunonleetcode&quot;, k = 5\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> There are 6 substrings they are: &#39;havef&#39;,&#39;avefu&#39;,&#39;vefun&#39;,&#39;efuno&#39;,&#39;etcod&#39;,&#39;tcode&#39;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;home&quot;, k = 5\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> Notice k can be larger than the length of s. In this case, it is not possible to find any substring.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>s</code> consists of lowercase English letters.</li>\n\t<li><code>1 &lt;= k &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [
+    "How to check efficiently each K-length substring?",
+    "First store the first leftmost K-length substring in a hashTable or array of frequencies.",
+    "Then iterate through the rest of characters and erase the first element and add the next element from the right. If in the hashTable we have K different character we add 1 to the counter. After that return as answer the counter."
+  ],
+  "metaData": "{\n  \"name\": \"numKLenSubstrNoRepeats\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"56.1K\", \"totalSubmission\": \"73.3K\", \"totalAcceptedRaw\": 56105, \"totalSubmissionRaw\": 73338, \"acRate\": \"76.5%\"}",
+  "likes": 607,
+  "dislikes": 11,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"havefunonleetcode\"\n5",
+    "\"home\"\n5"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numKLenSubstrNoRepeats(string s, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numKLenSubstrNoRepeats(String s, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numKLenSubstrNoRepeats(self, s: str, k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numKLenSubstrNoRepeats(self, s, k):\n        \"\"\"\n        :type s: str\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {number} k\n * @return {number}\n */\nvar numKLenSubstrNoRepeats = function(s, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numKLenSubstrNoRepeats(s: string, k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumKLenSubstrNoRepeats(string s, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numKLenSubstrNoRepeats(char* s, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numKLenSubstrNoRepeats(s string, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numKLenSubstrNoRepeats(s: String, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numKLenSubstrNoRepeats(_ s: String, _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn num_k_len_substr_no_repeats(s: String, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {Integer} k\n# @return {Integer}\ndef num_k_len_substr_no_repeats(s, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param Integer $k\n     * @return Integer\n     */\n    function numKLenSubstrNoRepeats($s, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numKLenSubstrNoRepeats(String s, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numKLenSubstrNoRepeats(s: String, k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec num_k_len_substr_no_repeats(s :: String.t, k :: integer) :: integer\n  def num_k_len_substr_no_repeats(s, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec num_k_len_substr_no_repeats(S :: unicode:unicode_binary(), K :: integer()) -> integer().\nnum_k_len_substr_no_repeats(S, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (num-k-len-substr-no-repeats s k)\n  (-> string? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1302",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Brute Force\n\n#### Intuition\n\nThe input string consists only of lowercase English letters, meaning the longest possible substring with all unique characters can have at most 26 characters. This is because there are only 26 distinct letters, and introducing any additional character would require repetition. This insight immediately tells us that if `k` is greater than 26, it's impossible to find a valid substring of length `k` with all unique characters, so we can directly return 0.  \n\nFor cases where `k` is at most 26, we can take a brute-force approach to check every possible substring of length `k` and determine whether it contains repeated characters. To efficiently check for duplicates, we can use either a hash table or a frequency array. As we iterate through each substring, we insert its characters into the data structure one by one. If we encounter a character that already exists in our set, we know that the substring contains duplicates and is therefore invalid.\n\nThe algorithm is visualized below:\n\n!?!../Documents/1100/slideshow1.json:960,540!?!\n\n#### Algorithm\n\n- Check if `k > 26`. If true, return `0` as no substring >26 can have all unique chars (only 26 lowercase letters).  \n- Initialize `n` as `s.length()` to store string length and `answer` as `0` to count valid substrings.  \n- Iterate over all starting indices `i` of substrings:  \n  - Initialize `freq[26]` to track char counts in the current substring.  \n  - Set `isUnique` as `true` to assume no repeating chars in the substring.  \n  - Iterate over the substring of length `k` starting at `i`:  \n    - For each char `ch`, increment its count in `freq`.  \n    - If `freq[ch - 'a'] > 1`, set `isUnique` to `false` and break (repeating char found).  \n  - If `isUnique` is still `true`, increment `answer` (substring has all unique chars).  \n- Return `answer` as the total number of valid substrings.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/4XZduhrM/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"4XZduhrM\"></iframe>\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of $$s$$, $$k$$ be the given substring length, and $$m$$ be the number of unique characters allowed in the string. In this case, $$m = 26$$.\n\n- Time Complexity: $$O(n \\cdot \\min(m, k))$$  \n\n    At first glance, the complexity might appear to be $$O(n \\cdot k)$$ since, for each index, we check whether the substring of length $$k$$ starting at that index contains repeated characters. However, this check is only performed when $$k \\leq m$$. If $$k > m$$, we immediately return 0. This means $$k$$ is effectively bounded by $$m$$, reducing the complexity to $$O(n \\cdot \\min(m, k))$$.  \n\n    Since $$m = 26$$ in this case, it can be treated as a constant, simplifying the complexity to $$O(n)$$.\n\n- Space Complexity: $$O(m)$$  \n\n    The only extra space used is for a frequency array of size $$m$$, which is 26 in this case. Since this is a constant, the space complexity simplifies to $$O(1)$$.\n\n---\n\n### Approach 2: Sliding Window\n\n#### Intuition\n\nThe problem requires us to count the number of substrings of length `k` that contain only unique characters. Instead of checking every possible substring individually, we can frame the problem differently: we need to find all *windows* of length `k` in the string that consist of distinct characters. This naturally leads to a Sliding Window approach, where we maintain a moving window of length at most `k` while ensuring that all characters within it remain unique.\n\nThe sliding window technique relies on two pointers, `left` and `right`, which represent the boundaries of our current window. As we traverse the string, we expand the window by moving `right` forward, adding new characters to a hash table or frequency array to keep track of their occurrences. If we encounter a duplicate character, we contract the window by moving `left` forward and removing elements from the data structure until all characters in the window are unique again. \n\nThroughout this process, the window's size is always at most `k`, i.e., `right - left + 1 ≤ k`. If the window reaches exactly `k` in length while containing only distinct characters, we count it as a valid substring. At this point, we slide the window forward by incrementing `left`, ensuring that the window size remains within the limit while checking for further valid substrings.\n\nThe algorithm is visualized below:\n\n!?!../Documents/1100/slideshow2.json:960,540!?!\n\n#### Algorithm\n\n- Check if `k > 26`. If true, return `0` as no substring greater than 26 can have all unique chars (only 26 lowercase letters).  \n- Initialize `answer` as `0` to count valid substrings and `n` as length of the input string.  \n- Initialize `left` and `right` pointers to `0` for sliding window and a frequency array of size 26 to track char counts.  \n- While `right < n`:  \n  - Increment count of current char (`s[right]`) in frequency array.  \n  - If count of current char exceeds `1`, move `left` forward and decrement count of `s[left]` until count of current char becomes `1`.  \n  - If window size (`right - left + 1`) equals `k`:  \n    - Increment `answer` (valid substring found).  \n    - Decrement count of `s[left]` and move `left` forward to slide window.  \n  - Move `right` forward to expand window.  \n- Return `answer` as the total number of valid substrings.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/hruNJMn6/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"hruNJMn6\"></iframe>\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of $$s$$ and $$m$$ be the number of unique characters allowed in the string. Here, $$m = 26$$.\n\n- Time Complexity: $$O(n)$$  \n\n    At first glance, the nested loop might suggest a complexity of $$O(n^2)$$. However, note that both loops only move the $$left$$ or $$right$$ pointer forward, and this happens while $$right < n$$. Each character is visited at most twice—once by the $$right$$ pointer and once by the $$left$$ pointer—leading to a total of $$O(2n)$$ operations, which simplifies to $$O(n)$$.  \n\n- Space Complexity: $$O(m)$$  \n\n    The only extra space used is a frequency array of size $$m$$, which is 26 in this case. Since this is constant, the space complexity simplifies to $$O(1)$$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

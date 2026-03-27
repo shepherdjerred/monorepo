@@ -1,0 +1,144 @@
+{
+  "questionId": "1160",
+  "questionFrontendId": "1079",
+  "title": "Letter Tile Possibilities",
+  "titleSlug": "letter-tile-possibilities",
+  "difficulty": "Medium",
+  "content": "<p>You have <code>n</code>&nbsp;&nbsp;<code>tiles</code>, where each tile has one letter <code>tiles[i]</code> printed on it.</p>\n\n<p>Return <em>the number of possible non-empty sequences of letters</em> you can make using the letters printed on those <code>tiles</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> tiles = &quot;AAB&quot;\n<strong>Output:</strong> 8\n<strong>Explanation: </strong>The possible sequences are &quot;A&quot;, &quot;B&quot;, &quot;AA&quot;, &quot;AB&quot;, &quot;BA&quot;, &quot;AAB&quot;, &quot;ABA&quot;, &quot;BAA&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> tiles = &quot;AAABBC&quot;\n<strong>Output:</strong> 188\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> tiles = &quot;V&quot;\n<strong>Output:</strong> 1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= tiles.length &lt;= 7</code></li>\n\t<li><code>tiles</code> consists of uppercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Try to build the string with a backtracking DFS by considering what you can put in every position."
+  ],
+  "metaData": "{\r\n  \"name\": \"numTilePossibilities\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"tiles\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"255.4K\", \"totalSubmission\": \"305.7K\", \"totalAcceptedRaw\": 255376, \"totalSubmissionRaw\": 305745, \"acRate\": \"83.5%\"}",
+  "likes": 3141,
+  "dislikes": 90,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"AAB\"",
+    "\"AAABBC\"",
+    "\"V\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numTilePossibilities(string tiles) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numTilePossibilities(String tiles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numTilePossibilities(self, tiles: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numTilePossibilities(self, tiles):\n        \"\"\"\n        :type tiles: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} tiles\n * @return {number}\n */\nvar numTilePossibilities = function(tiles) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numTilePossibilities(tiles: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumTilePossibilities(string tiles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numTilePossibilities(char* tiles) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numTilePossibilities(tiles string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numTilePossibilities(tiles: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numTilePossibilities(_ tiles: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn num_tile_possibilities(tiles: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} tiles\n# @return {Integer}\ndef num_tile_possibilities(tiles)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $tiles\n     * @return Integer\n     */\n    function numTilePossibilities($tiles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numTilePossibilities(String tiles) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numTilePossibilities(tiles: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec num_tile_possibilities(tiles :: String.t) :: integer\n  def num_tile_possibilities(tiles) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec num_tile_possibilities(Tiles :: unicode:unicode_binary()) -> integer().\nnum_tile_possibilities(Tiles) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (num-tile-possibilities tiles)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2677",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Recursion\n\n#### Intuition\n\nLet's think about how we naturally form different sequences from a set of letters. Imagine we have Scrabble tiles with the letters \"A\", \"A\", and \"B\". How would we manually find all possible sequences? We would likely start with single letters (\"A\", \"B\"), then try two-letter combinations (\"AA\", \"AB\"), and finally three-letter combinations (\"AAB\").\n\nA point to note in this manual process is that at each step, we make a choice about whether to use each available letter. For example, when starting with \"AAB\", we first decide: \"Should I use the first \"A\"?\" If we use it, we then face the same type of decision with our remaining letters. If we don't use it, we still have all our letters available for future choices.\n\nThis decision-making pattern, where each choice reduces the problem to a smaller version of itself and follows a repetitive structure, naturally suggests a recursive approach. At each level of the recursion (or decision point), we have two options: either use an available letter and continue exploring, or skip it and move to the next letter.\n\nThe diagram below illustrates the structure of a recursion tree for this problem:\n\n![](../Figures/1079/recursion_tree.png)\n\nHowever, there's a subtle complexity we need to address. Consider the input `\"AAB\"` again. If we're not careful, we might count the same sequence multiple times because we have duplicate letters. For instance, we could form `\"AB\"` by using either the first or second `\"A\"`.\n\nTo solve this, we’ll store all the sequences we generate in a hash set. Hash sets allow for quick lookups and keep the characters unique due to the set property, so we can check whether a particular sequence has already been found.\n\nLet's create a recursive function `generateSequences` which creates all possible letter sequences. We'll also maintain a boolean array `used` of size equal to that of `tiles`. Each index in `used` tells us whether the character at that index in `tiles` has been used in the current sequence or not.\n\nThe first step in the recursive function is to add the current sequence to the hash set. This is because all intermediate sequences are also valid combinations and not just the ones where we use all the tiles. Next, we’ll iterate over each character in `tiles`. If a character hasn’t been used yet, we’ll add it to the current sequence and recurse. After exploring that path, we’ll backtrack and mark the letter as unused to allow us to try different combinations.\n\nWe start the recursion by calling the function with an empty string. When the recursion completes, the hash set will contain all possible letter combinations. Finally, we return the size of the hash set minus one, since the problem asks for non-empty sequences only.\n\n> For a more comprehensive understanding of hash tables, check out the [Hash Table Explore Card](https://leetcode.com/explore/learn/card/hash-table/). This resource provides an in-depth look at hash tables, explaining their key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n#### Algorithm\n\n- Initialize: \n  - a hash set called `sequences` to store the unique sequences.\n  - a variable `len` to store the length of the input string `tiles`.\n- Create a boolean array `used` of size `len` to track the used characters\n- Call the recursive helper function `generateSequences` with the initial parameters: `tiles`, an empty string, `used` array, and the `sequences` set.\n- Return the size of the `sequences` set minus 1 (to exclude the empty string).\n\nHelper method `generateSequences(tiles, current, used, sequences)`:\n\n- Add the `current` sequence to the `sequences` set.\n- Initialize a loop that runs from position `0` to the length of `tiles`. For each position:\n  - Check if the character at the current position is not used. If not used:\n    - Mark the current position as used in the `used` array.\n    - Make a recursive call with: `tiles`, `current` string + character at the current position, `used` array, and `sequences` set.\n    - After the recursive call returns, mark the current position as unused (backtrack).\n- When the loop ends, return to the previous recursive call.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/DGSVqd6c/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"DGSVqd6c\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input string `tiles`.\n\n- Time complexity: $O(n \\cdot n!)$\n\n    The time complexity is determined by two main factors. First, for each position, we have at most $n$ choices (in the first level of recursion). At each subsequent level, we have one less choice as characters get used. This creates a pattern similar to $n \\cdot (n-1) \\cdot (n-2) \\cdot ... \\cdot 1$, which is $n!$. Additionally, at each step, we perform string concatenation which takes $O(n)$ time. Therefore, the total time complexity is $O(n \\cdot n!)$.\n\n- Space complexity: $O(n \\cdot n!)$\n\n    The space complexity has multiple components. First, the recursion stack can go up to depth $n$, using $O(n)$ space. The set `sequences` will store all possible unique sequences. For a string of length $n$, we can have sequences of length $1$ to $n$, and each sequence can be made from $n$ possible characters (with repetition allowed). This means the hash set can store up to $O(n!)$ sequences, and each sequence can be of length $O(n)$. Therefore, the total space complexity is $O(n \\cdot n!)$.\n\n---\n\n### Approach 2: Optimized Recursion\n\n#### Intuition\n\nImagine we're playing with Scrabble tiles again, but this time we have the string \"AAABBC\". We can make an important observation here: what really matters isn't the position of each letter, but rather how many of each letter we have available. Whether we use the first \"A\" or the second \"A\" doesn't change the sequences we can create - we just need to know we have three \"A\"s to work with.\n\nThis insight leads us to our first key decision: instead of tracking individual letters, we can track the frequency of each letter. Think of it like having separate piles for each letter - three tiles in the \"A\" pile, two in the \"B\" pile, and one in the \"C\" pile. To implement this, we can maintain an array `charCount` where each index represents a letter (0 for \"A\", 1 for \"B\", etc.), and the value represents how many of that letter we have.\n\nNow, let's think about how we build sequences using these frequency counts. At each step, we're asking ourselves: \"Which letter should I add to my current sequence?\" We can loop over all 26 letters and use any letter that still has a positive count. This is fundamentally different from our previous approach where we were making yes/no decisions about each position in `tiles`.\n\nThis incremental building of the sequence using the remaining letters suggests a recursive approach. We'll pass `charCount` to the recursive function and start building the sequence by eliminating each available character one by one. Remember that we also need to count all intermediate sequences (where `charCount` is not empty yet), because these are also valid letter tile possibilities.\n\nNotice that nowhere in our algorithm do we work with the actual sequence itself. Each unique sequence is determined by the number of letters available in `charCount`, not the sequence. This means we no longer need to maintain a hash set to store visited sequences, saving significant space.\n\nOur main function calls the recursive method with the full `charCount` array. The result returned by it is our required answer.\n\n#### Algorithm\n\n- Initialize an integer array `charCount` of size `26` to store the frequency of each uppercase letter.\n- Iterate through each character of `tiles`:\n  - Increment the count at the index (character - 'A') in the `charCount` array.\n- Call the recursive helper function `findSequences` with the `charCount` array.\n- Return the result from `findSequences`.\n\nHelper method `findSequences(charCount)`:\n\n- Initialize a variable `totalCount` to `0` to track the number of possible sequences.\n- Start a loop that runs from position `0` to `25` (for 26 letters):\n  - Check if the count of the current character is `0`. If true:\n    - Skip to the next iteration.\n  - If not `0`: \n    - Increment `totalCount` by `1` (counting the current character as a sequence).\n    - Decrement the count of the current character in the `charCount` array.\n    - Make a recursive call with the updated `charCount` array.\n    - Add the result of the recursive call to `totalCount`.\n    - Increment the count of the current character back (backtrack).\n- Return `totalCount`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/TujH9fTX/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"TujH9fTX\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input string `tiles`.\n\n- Time complexity: $O(n!)$\n\n    The time complexity comes from the fact that for each position in our sequence, we can choose any of the remaining available characters. At each recursive call, we try all remaining characters, and the number of choices decreases by $1$ each time since we're using frequency counting to handle duplicates. For an input string of length $n$, at the first level we have $n$ choices, then $(n-1)$ choices, and so on, leading to $n \\cdot (n-1) \\cdot (n-2) ... 1$ possibilities. This recursive pattern of decreasing choices at each level results in a time complexity of $O(n!)$.\n\n    > [!NOTE]\n    > A common misconception is that the time complexity of this problem is $O(2^n)$, stemming from the idea that each character has a binary decision, either to include or exclude. This may seem valid in problems involving combinations or subsets, but here, the goal is to generate all possible permutations of the tiles. Since we're considering character frequencies, the complexity grows factorially, not exponentially, leading to $O(n!)$. Each recursive call handles one tile from a decreasing pool of remaining tiles, generating distinct sequences.\n    > \n    > Another misconception is that the time complexity is $O(26^n)$, based on the assumption that there are 26 possible characters at each recursive step. However, the actual complexity depends on the tile frequencies. The recursion operates within the constraints of the available tiles, not an arbitrary 26 choices per call.\n\n- Space complexity: $O(n)$\n\n    The space complexity has two parts. First, the fixed-size array `charCount` takes $O(1)$ space as it always has $26$ elements regardless of input size. Second, the recursion stack can go up to depth $n$ as each recursive call uses one character.\n    \n    Therefore, the total space complexity is $O(n)$.\n\n---\n\n### Approach 3: Permutations and Combinations\n\n#### Intuition\n\nConsider a sequence \"ABC\". Generating it actually has two steps:\n1. Choosing the three tiles \"A\", \"B\", and \"C\".\n2. Arranging them in order to form \"ABC\".\n\nNotice that after step 1, we can create 5 more sequences: \"BAC\", \"CBA\", \"BCA\", \"ACB\", and \"CAB.\" These are all the permutations of \"ABC\".\n\nThe total number of permutations that can be generated from $n$ unique characters is $n!$. For the characters \"A\", \"B\", and \"C\", the number of unique characters is 3, so 6 sequences can be generated from them.\n\nHowever, we need to account for cases where there are multiple occurrences of the same character. For example, consider the tiles \"A\", \"A\", and \"B\". This will generate only 3 unique sequences of length 3: \"AAB\", \"ABA\", and \"BAA\". This is because swapping the first and second \"A\" doesn’t create a new sequence, so they can’t be counted separately.\n\nTo account for this, we modify our formula to the following: if we have 3 characters with frequencies $n_1$, $n_2$, and $n_3$, the number of $3$ length sequences are:\n\n$$\n\\begin{aligned}\n    \\frac{(n_1 + n_2 + n_3)!}{(n_1)! \\cdot (n_2)! \\cdot (n_3)!}\n\\end{aligned}\n$$\n\nThe above formula can be extended to $m$ characters of different frequencies.\n\nSo now, our task is to generate all combinations of characters from the given tiles. We can use a recursive method to do this. The function iterates over the tiles string and makes two choices at each step: whether to pick the current character or not. This generates all possible combinations of characters, which we then pass to a helper method called `countPermutations`.\n\nThe `countPermutations` method counts the frequency of each character in the generated combination using an array called `charCount` (similar to the previous approach). It then applies the formula above to calculate all possible permutations of the current combination.\n\nThe total permutations for each combination are returned by the recursive function. The cumulative sum of all such combinations is our final answer, which we return at the end.\n\n#### Algorithm\n\n- Initialize a hash set `seen` to store unique sequences.\n- Convert `seen` to a sorted string `sortedTiles`.\n- Call the recursive helper function `generateSequences` with initial parameters. Subtract 1 from the result and return it.\n\nHelper method `factorial(n)`:\n\n- Check if `n` is less than or equal to `1`:\n  - If `true`, return `1`.\n- Initialize a variable `result` to `1`.\n- Loop `num` from `2` to `n`:\n  - Multiply the result by `num`.\n- Return the final `result`.\n\nHelper method `countPermutations(seq)`:\n\n- Initialize an integer array `charCount` of size `26` for character frequencies.\n- Iterate through each character in the input `seq`:\n  - Increment the count at index (character - 'A') in `charCount`.\n- Set a variable `total` as the `factorial` of the length of `seq`. \n- Divide the `total` by the factorial of each character's frequency in `charCount`.\n- Return the final `total`.\n\nHelper method `generateSequences(tiles, current, pos, seen)`:\n\n- Check if the current `pos` has reached the length of `tiles`. If true and the `current` sequence is new (added to `seen` set):\n  - Return the number of permutations for the current sequence.\n- If true but the sequence is already seen:\n  - Return `0`.\n- Make two recursive calls and sum their results:\n  - One excluding the current character (same sequence, next position).\n  - One including the current character (sequence + current character, next position).\n- Return the sum of both recursive calls.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/oW4cyKrY/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"oW4cyKrY\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input string `tiles`.\n\n- Time complexity: $O(2^n \\cdot n)$\n\n    The time complexity is determined by several components: \n    1. The initial sorting takes $O(n \\log n)$ time. \n    2. In the `generateSequences` function, we create a binary recursion tree where at each position we have two choices (include or exclude), leading to $2^n$ possible sequences. For each unique sequence, we calculate permutations which involves iterating over the sequence ($O(n)$) and performing factorial calculations ($O(n)$). \n    3. The factorial calculations themselves are $O(n)$ as they iterate from $1$ to at most $n$. \n   \n    Therefore, the dominant factor is generating and processing all possible sequences, giving us a time complexity of $O(2^n \\cdot n)$.\n\n- Space complexity: $O(2^n \\cdot n)$\n\n    The space complexity also has multiple components. \n    1. The recursion stack can go up to depth $n$, using $O(n)$ space. \n    2. The hash set `seen` stores unique combinations of characters. In the worst case, with all distinct characters, we could have $2^n$ different combinations as each character can either be included or excluded. Each sequence in the set can be up to length $n$. So, the set uses $O(2^n \\cdot n)$ space.\n    3. The `charCount` array in `countPermutations` is constant space $O(1)$ as it's always size $26$. \n    \n    Thus, the dominant factor is the space needed for storing unique sequences in the `seen` set, making the total space complexity $O(2^n \\cdot n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

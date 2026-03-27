@@ -1,0 +1,53 @@
+{
+  "questionId": "1565",
+  "questionFrontendId": "1440",
+  "title": "Evaluate Boolean Expression",
+  "titleSlug": "evaluate-boolean-expression",
+  "difficulty": "Medium",
+  "content": "<p>Table <code>Variables</code>:</p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| name          | varchar |\n| value         | int     |\n+---------------+---------+\nIn SQL, name is the primary key for this table.\nThis table contains the stored variables and their values.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table <code>Expressions</code>:</p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| left_operand  | varchar |\n| operator      | enum    |\n| right_operand | varchar |\n+---------------+---------+\nIn SQL, (left_operand, operator, right_operand) is the primary key for this table.\nThis table contains a boolean expression that should be evaluated.\noperator is an enum that takes one of the values (&#39;&lt;&#39;, &#39;&gt;&#39;, &#39;=&#39;)\nThe values of left_operand and right_operand are guaranteed to be in the Variables table.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Evaluate the boolean expressions in <code>Expressions</code> table.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nVariables table:\n+------+-------+\n| name | value |\n+------+-------+\n| x    | 66    |\n| y    | 77    |\n+------+-------+\nExpressions table:\n+--------------+----------+---------------+\n| left_operand | operator | right_operand |\n+--------------+----------+---------------+\n| x            | &gt;        | y             |\n| x            | &lt;        | y             |\n| x            | =        | y             |\n| y            | &gt;        | x             |\n| y            | &lt;        | x             |\n| x            | =        | x             |\n+--------------+----------+---------------+\n<strong>Output:</strong> \n+--------------+----------+---------------+-------+\n| left_operand | operator | right_operand | value |\n+--------------+----------+---------------+-------+\n| x            | &gt;        | y             | false |\n| x            | &lt;        | y             | true  |\n| x            | =        | y             | false |\n| y            | &gt;        | x             | true  |\n| y            | &lt;        | x             | false |\n| x            | =        | x             | true  |\n+--------------+----------+---------------+-------+\n<strong>Explanation:</strong> \nAs shown, you need to find the value of each boolean expression in the table using the variables table.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create Table If Not Exists Variables (name varchar(3), value int)\", \"Create Table If Not Exists Expressions (left_operand varchar(3), operator ENUM('>', '<', '='), right_operand varchar(3))\"], \"mssql\": [\"Create Table Variables (name varchar(3), value int)\", \"Create Table Expressions (left_operand varchar(3), operator varchar(3) NOT NULL CHECK (operator IN ('>', '<', '=')), right_operand varchar(3))\"], \"oraclesql\": [\"Create Table Variables (name varchar(3), value int)\", \"Create Table Expressions (left_operand varchar(3), operator varchar(3) NOT NULL CHECK (operator IN ('>', '<', '=')), right_operand varchar(3))\"], \"database\": true, \"name\": \"eval_expression\", \"pythondata\": [\"Variables = pd.DataFrame([], columns=['name', 'value']).astype({'name':'object', 'value':'Int64'})\", \"Expressions = pd.DataFrame([], columns=['left_operand', 'operator', 'right_operand']).astype({'left_operand':'object', 'operator':'object', 'right_operand':'object'})\"], \"postgresql\": [\"Create Table If Not Exists Variables (name varchar(3), value int)\\n\", \"Create Table If Not Exists Expressions (left_operand varchar(3), operator VARCHAR(30) CHECK (operator IN ('>', '<', '=')), right_operand varchar(3))\\n\"], \"database_schema\": {\"Variables\": {\"name\": \"VARCHAR(3)\", \"value\": \"INT\"}, \"Expressions\": {\"left_operand\": \"VARCHAR(3)\", \"operator\": \"ENUM('>', '<', '=')\", \"right_operand\": \"VARCHAR(3)\"}}}",
+  "stats": "{\"totalAccepted\": \"38.6K\", \"totalSubmission\": \"53.9K\", \"totalAcceptedRaw\": 38627, \"totalSubmissionRaw\": 53867, \"acRate\": \"71.7%\"}",
+  "likes": 231,
+  "dislikes": 41,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Variables\":[\"name\",\"value\"],\"Expressions\":[\"left_operand\",\"operator\",\"right_operand\"]},\"rows\":{\"Variables\":[[\"x\",66],[\"y\",77]],\"Expressions\":[[\"x\",\">\",\"y\"],[\"x\",\"<\",\"y\"],[\"x\",\"=\",\"y\"],[\"y\",\">\",\"x\"],[\"y\",\"<\",\"x\"],[\"x\",\"=\",\"x\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"point72\", \"name\": \"Point72\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef eval_expression(variables: pd.DataFrame, expressions: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

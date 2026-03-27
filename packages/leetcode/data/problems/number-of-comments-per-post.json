@@ -1,0 +1,53 @@
+{
+  "questionId": "1377",
+  "questionFrontendId": "1241",
+  "title": "Number of Comments per Post",
+  "titleSlug": "number-of-comments-per-post",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Submissions</code></p>\n\n<pre>\n+---------------+----------+\n| Column Name   | Type     |\n+---------------+----------+\n| sub_id        | int      |\n| parent_id     | int      |\n+---------------+----------+\nThis table may have duplicate rows.\nEach row can be a post or comment on the post.\nparent_id is null for posts.\nparent_id for comments is <code>sub_id</code> for another post in the table.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to find the number of comments per post. The result table should contain <code>post_id</code> and its corresponding <code>number_of_comments</code>.</p>\n\n<p>The <code>Submissions</code> table may contain duplicate comments. You should count the number of <strong>unique comments</strong> per post.</p>\n\n<p>The <code>Submissions</code> table may contain duplicate posts. You should treat them as one post.</p>\n\n<p>The result table should be <strong>ordered</strong> by <code>post_id</code> in <strong>ascending order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nSubmissions table:\n+---------+------------+\n| sub_id  | parent_id  |\n+---------+------------+\n| 1       | Null       |\n| 2       | Null       |\n| 1       | Null       |\n| 12      | Null       |\n| 3       | 1          |\n| 5       | 2          |\n| 3       | 1          |\n| 4       | 1          |\n| 9       | 1          |\n| 10      | 2          |\n| 6       | 7          |\n+---------+------------+\n<strong>Output:</strong> \n+---------+--------------------+\n| post_id | number_of_comments |\n+---------+--------------------+\n| 1       | 3                  |\n| 2       | 2                  |\n| 12      | 0                  |\n+---------+--------------------+\n<strong>Explanation:</strong> \nThe post with id 1 has three comments in the table with id 3, 4, and 9. The comment with id 3 is repeated in the table, we counted it <strong>only once</strong>.\nThe post with id 2 has two comments in the table with id 5 and 10.\nThe post with id 12 has no comments in the table.\nThe comment with id 6 is a comment on a deleted post with id 7 so we ignored it.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Submissions (sub_id int, parent_id int)\"], \"mssql\": [\"Create table Submissions (sub_id int, parent_id int)\"], \"oraclesql\": [\"Create table Submissions (sub_id int, parent_id int)\"], \"database\": true, \"name\": \"count_comments\", \"pythondata\": [\"Submissions = pd.DataFrame([], columns=['sub_id', 'parent_id']).astype({'sub_id':'Int64', 'parent_id':'Int64'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Submissions (sub_id int, parent_id int)\"], \"database_schema\": {\"Submissions\": {\"sub_id\": \"INT\", \"parent_id\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"41.2K\", \"totalSubmission\": \"62.7K\", \"totalAcceptedRaw\": 41163, \"totalSubmissionRaw\": 62712, \"acRate\": \"65.6%\"}",
+  "likes": 187,
+  "dislikes": 547,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Submissions\":[\"sub_id\",\"parent_id\"]},\"rows\":{\"Submissions\":[[1,null],[2,null],[1,null],[12,null],[3,1],[5,2],[3,1],[4,1],[9,1],[10,2],[6,7]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef count_comments(submissions: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

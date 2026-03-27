@@ -1,0 +1,141 @@
+{
+  "questionId": "1575",
+  "questionFrontendId": "1465",
+  "title": "Maximum Area of a Piece of Cake After Horizontal and Vertical Cuts",
+  "titleSlug": "maximum-area-of-a-piece-of-cake-after-horizontal-and-vertical-cuts",
+  "difficulty": "Medium",
+  "content": "<p>You are given a rectangular cake of size <code>h x w</code> and two arrays of integers <code>horizontalCuts</code> and <code>verticalCuts</code> where:</p>\n\n<ul>\n\t<li><code>horizontalCuts[i]</code> is the distance from the top of the rectangular cake to the <code>i<sup>th</sup></code> horizontal cut and similarly, and</li>\n\t<li><code>verticalCuts[j]</code> is the distance from the left of the rectangular cake to the <code>j<sup>th</sup></code> vertical cut.</li>\n</ul>\n\n<p>Return <em>the maximum area of a piece of cake after you cut at each horizontal and vertical position provided in the arrays</em> <code>horizontalCuts</code> <em>and</em> <code>verticalCuts</code>. Since the answer can be a large number, return this <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/05/14/leetcode_max_area_2.png\" style=\"width: 225px; height: 240px;\" />\n<pre>\n<strong>Input:</strong> h = 5, w = 4, horizontalCuts = [1,2,4], verticalCuts = [1,3]\n<strong>Output:</strong> 4 \n<strong>Explanation:</strong> The figure above represents the given rectangular cake. Red lines are the horizontal and vertical cuts. After you cut the cake, the green piece of cake has the maximum area.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/05/14/leetcode_max_area_3.png\" style=\"width: 225px; height: 240px;\" />\n<pre>\n<strong>Input:</strong> h = 5, w = 4, horizontalCuts = [3,1], verticalCuts = [1]\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> The figure above represents the given rectangular cake. Red lines are the horizontal and vertical cuts. After you cut the cake, the green and yellow pieces of cake have the maximum area.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> h = 5, w = 4, horizontalCuts = [3], verticalCuts = [3]\n<strong>Output:</strong> 9\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= h, w &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= horizontalCuts.length &lt;= min(h - 1, 10<sup>5</sup>)</code></li>\n\t<li><code>1 &lt;= verticalCuts.length &lt;= min(w - 1, 10<sup>5</sup>)</code></li>\n\t<li><code>1 &lt;= horizontalCuts[i] &lt; h</code></li>\n\t<li><code>1 &lt;= verticalCuts[i] &lt; w</code></li>\n\t<li>All the elements in <code>horizontalCuts</code> are distinct.</li>\n\t<li>All the elements in <code>verticalCuts</code> are distinct.</li>\n</ul>\n",
+  "hints": [
+    "Sort the arrays, then compute the maximum difference between two consecutive elements for horizontal cuts and vertical cuts.",
+    "The answer is the product of these maximum values in horizontal cuts and vertical cuts."
+  ],
+  "metaData": "{\n  \"name\": \"maxArea\",\n  \"params\": [\n    {\n      \"name\": \"h\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"w\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"horizontalCuts\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"verticalCuts\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"176.2K\", \"totalSubmission\": \"425.4K\", \"totalAcceptedRaw\": 176187, \"totalSubmissionRaw\": 425445, \"acRate\": \"41.4%\"}",
+  "likes": 2643,
+  "dislikes": 353,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "5\n4\n[1,2,4]\n[1,3]",
+    "5\n4\n[3,1]\n[1]",
+    "5\n4\n[3]\n[3]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"ixl\", \"name\": \"IXL\"}, {\"timesEncountered\": 2, \"slug\": \"bny-mellon\", \"name\": \"BNY Mellon\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxArea(int h, int w, vector<int>& horizontalCuts, vector<int>& verticalCuts) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxArea(int h, int w, int[] horizontalCuts, int[] verticalCuts) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxArea(self, h: int, w: int, horizontalCuts: List[int], verticalCuts: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxArea(self, h, w, horizontalCuts, verticalCuts):\n        \"\"\"\n        :type h: int\n        :type w: int\n        :type horizontalCuts: List[int]\n        :type verticalCuts: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} h\n * @param {number} w\n * @param {number[]} horizontalCuts\n * @param {number[]} verticalCuts\n * @return {number}\n */\nvar maxArea = function(h, w, horizontalCuts, verticalCuts) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxArea(h: number, w: number, horizontalCuts: number[], verticalCuts: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxArea(int h, int w, int[] horizontalCuts, int[] verticalCuts) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxArea(int h, int w, int* horizontalCuts, int horizontalCutsSize, int* verticalCuts, int verticalCutsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxArea(h int, w int, horizontalCuts []int, verticalCuts []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxArea(h: Int, w: Int, horizontalCuts: IntArray, verticalCuts: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxArea(_ h: Int, _ w: Int, _ horizontalCuts: [Int], _ verticalCuts: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_area(h: i32, w: i32, horizontal_cuts: Vec<i32>, vertical_cuts: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} h\n# @param {Integer} w\n# @param {Integer[]} horizontal_cuts\n# @param {Integer[]} vertical_cuts\n# @return {Integer}\ndef max_area(h, w, horizontal_cuts, vertical_cuts)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $h\n     * @param Integer $w\n     * @param Integer[] $horizontalCuts\n     * @param Integer[] $verticalCuts\n     * @return Integer\n     */\n    function maxArea($h, $w, $horizontalCuts, $verticalCuts) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxArea(int h, int w, List<int> horizontalCuts, List<int> verticalCuts) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxArea(h: Int, w: Int, horizontalCuts: Array[Int], verticalCuts: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_area(h :: integer, w :: integer, horizontal_cuts :: [integer], vertical_cuts :: [integer]) :: integer\n  def max_area(h, w, horizontal_cuts, vertical_cuts) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_area(H :: integer(), W :: integer(), HorizontalCuts :: [integer()], VerticalCuts :: [integer()]) -> integer().\nmax_area(H, W, HorizontalCuts, VerticalCuts) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-area h w horizontalCuts verticalCuts)\n  (-> exact-integer? exact-integer? (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1142",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nCalculating the area of every possible piece of cake can get out of hand very quickly. In the first example alone, there are already 12 pieces of cake, and our input can have up to 100,000 vertical and horizontal cuts. We need a smarter way to find the area of the largest piece of cake.\n\nThe key insight to solve this problem is that not all of the pairs of horizontal and vertical cuts matter. Let's take a step back - the area of a cake piece is defined by `width * height`. If we were to consider **only** the horizontal cuts, then we would end up with many pieces of cake with `width = w` and varying heights. For each new piece, making a vertical cut will change the width, but not the height.\n\nLet's use the first test case in the problem description as an example. If we were to only apply the horizontal cuts `[1, 2, 4]`, we will end up with 4 pieces of cake, all with `width = 4`. Take the piece of cake with `height = 2` between the cuts at `2` and `4`, and make any vertical cut you want - notice that the height will always be `2`. The same logic can be applied when considering the vertical cuts first - we will have many pieces of cake with `height = h` and varying widths.\n\nTherefore, we know the largest piece of cake must have a height equal to the tallest height after applying only the horizontal cuts, and it will have a width equal to the widest width after applying only the vertical cuts.\n\n!?!../Documents/1465_Max_Area_Cake.json:960,540!?!\n\n</br>\n\n---\n\n### Approach: Sort\n\n**Intuition**\n\nAs mentioned above, we can find the max height and the max width separately. Our final answer will be `maxHeight * maxWidth`. Each height and width is defined by the distance between 2 cuts. In the first example, the max height of `2` is defined by the distance between cuts `2` and `4` (4 - 2 = 2). To find all heights and widths, we must first sort our inputs `horizontalCuts` and `verticalCuts`. This will ensure that all of the cuts that are beside each other on the cake are also beside each other in the array. Then, we can iterate through the sorted inputs one at a time and find each height or width by simply taking the difference between two adjacent cuts.\n\nOne thing to be careful about is the edges. For cuts in the middle, the distance is defined by the difference between two cuts. However, for the edges, they are defined by the cake's dimensions. \n\n- The top-most cut's height will be equal to `horizontalCuts[0]`, while the bottom-most cut's height will be equal to `h - horizontalCuts[horizontalCuts.length - 1]`.\n- The left-most cut's width will be equal to `verticalCuts[0]`, while the right-most cut's width will be equal to `w - verticalCuts[verticalCuts.length - 1]`.\n\n**Algorithm**\n\n1. Sort both `horizontalCuts` and `verticalCuts` in ascending order.\n\n2. Initialize a variable `maxHeight` as the larger of the top and bottom edge: `maxHeight = max(horizontalCuts[0], h - horizontalCuts[horizontalCuts.length - 1])`.\n\n3. Iterate through `horizontalCuts` starting from index 1 (skip the 0th index since it represents the edge cut, which we accounted for in the previous step). At each iteration, find the height defined by the $$i^{th}$$ cut and the nearest cut above, `horizontalCuts[i] - horizontalCuts[i - 1]`. Update `maxHeight` if necessary.\n\n4. Initialize a variable `maxWidth` as the larger of the left and right edge: `maxWidth = max(verticalCuts[0], w - verticalCuts[verticalCuts.length - 1])`.\n\n5. Iterate through `verticalCuts` starting from index 1. At each iteration, find the width defined by the $$i^{th}$$ cut and the nearest cut to the left, `verticalCuts[i] - verticalCuts[i - 1]`. Update `maxWidth` if necessary.\n\n6. Our maximum area is `maxHeight * maxWidth`. Don't forget the modulo $$10^{9} + 7$$, and depending on what language you're using, be careful of overflow. Return the maximum area.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/KjK8F3aC/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"KjK8F3aC\"></iframe>\n\n\n**Complexity Analysis**\n\nGiven $$N$$ as the length of `horizontalCuts` and $$M$$ as the length of `verticalCuts`,\n\n* Time complexity: $$O(N \\cdot \\log(N) + M \\cdot \\log(M))$$\n\n    Sorting an array of length $$n$$ costs $$n \\cdot logn$$ time. We need to sort both `horizontalCuts` and `verticalCuts`, which is why both are present in the time complexity. Although we also iterate through both arrays, which costs $$O(N)$$ and $$O(M)$$ time, these iterations are not as expensive as the sorting, and by the rules of Big O, do not get included in the final time complexity.\n\n* Space complexity: $$O(1)$$\n\n    Regardless of the input size, we only ever need to use 2 variables: `maxHeight` and `maxWidth`.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

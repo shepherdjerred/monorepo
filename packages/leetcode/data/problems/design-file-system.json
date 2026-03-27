@@ -1,0 +1,145 @@
+{
+  "questionId": "1125",
+  "questionFrontendId": "1166",
+  "title": "Design File System",
+  "titleSlug": "design-file-system",
+  "difficulty": "Medium",
+  "content": "<p>You are asked to design a file system&nbsp;that allows you to create new paths and associate them with different values.</p>\n\n<p>The format of a path is&nbsp;one or more concatenated strings of the form:&nbsp;<code>/</code> followed by one or more lowercase English letters. For example, &quot;<code>/leetcode&quot;</code>&nbsp;and &quot;<code>/leetcode/problems&quot;</code>&nbsp;are valid paths while an empty&nbsp;string <code>&quot;&quot;</code> and <code>&quot;/&quot;</code>&nbsp;are not.</p>\n\n<p>Implement the&nbsp;<code>FileSystem</code> class:</p>\n\n<ul>\n\t<li><code>bool createPath(string path, int value)</code>&nbsp;Creates a new <code>path</code> and associates a <code>value</code> to it if possible and returns <code>true</code>.&nbsp;Returns <code>false</code>&nbsp;if the path <strong>already exists</strong> or its parent path <strong>doesn&#39;t exist</strong>.</li>\n\t<li><code>int get(string path)</code>&nbsp;Returns the value associated with <code>path</code> or returns&nbsp;<code>-1</code>&nbsp;if the path doesn&#39;t exist.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \n[&quot;FileSystem&quot;,&quot;createPath&quot;,&quot;get&quot;]\n[[],[&quot;/a&quot;,1],[&quot;/a&quot;]]\n<strong>Output:</strong> \n[null,true,1]\n<strong>Explanation:</strong> \nFileSystem fileSystem = new FileSystem();\n\nfileSystem.createPath(&quot;/a&quot;, 1); // return true\nfileSystem.get(&quot;/a&quot;); // return 1\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> \n[&quot;FileSystem&quot;,&quot;createPath&quot;,&quot;createPath&quot;,&quot;get&quot;,&quot;createPath&quot;,&quot;get&quot;]\n[[],[&quot;/leet&quot;,1],[&quot;/leet/code&quot;,2],[&quot;/leet/code&quot;],[&quot;/c/d&quot;,1],[&quot;/c&quot;]]\n<strong>Output:</strong> \n[null,true,true,2,false,-1]\n<strong>Explanation:</strong> \nFileSystem fileSystem = new FileSystem();\n\nfileSystem.createPath(&quot;/leet&quot;, 1); // return true\nfileSystem.createPath(&quot;/leet/code&quot;, 2); // return true\nfileSystem.get(&quot;/leet/code&quot;); // return 2\nfileSystem.createPath(&quot;/c/d&quot;, 1); // return false because the parent path &quot;/c&quot; doesn&#39;t exist.\nfileSystem.get(&quot;/c&quot;); // return -1 because this path doesn&#39;t exist.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= path.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= value &lt;= 10<sup>9</sup></code></li>\n\t<li>Each <code>path</code> is <strong>valid</strong> and consists of lowercase English letters and <code>&#39;/&#39;</code>.</li>\n\t<li>At most <code>10<sup>4</sup></code> calls <strong>in total</strong> will be made to <code>createPath</code> and <code>get</code>.</li>\n</ul>\n",
+  "hints": [
+    "What if you think of a tree hierarchy for the files?.",
+    "A path is a node in the tree.",
+    "Use a hash table to store the valid paths along with their values."
+  ],
+  "metaData": "{\n  \"classname\": \"FileSystem\",\n  \"maxbytesperline\": 400000,\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"name\": \"createPath\",\n      \"params\": [\n        {\n          \"type\": \"string\",\n          \"name\": \"path\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"value\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"boolean\"\n      }\n    },\n    {\n      \"name\": \"get\",\n      \"params\": [\n        {\n          \"type\": \"string\",\n          \"name\": \"path\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"systemdesign\": true,\n  \"params\": [\n    {\n      \"name\": \"inputs\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"inputs\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<String>\",\n    \"dealloc\": true\n  }\n}",
+  "stats": "{\"totalAccepted\": \"89.9K\", \"totalSubmission\": \"138.2K\", \"totalAcceptedRaw\": 89946, \"totalSubmissionRaw\": 138176, \"acRate\": \"65.1%\"}",
+  "likes": 642,
+  "dislikes": 80,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"FileSystem\",\"createPath\",\"get\"]\n[[],[\"/a\",1],[\"/a\"]]",
+    "[\"FileSystem\",\"createPath\",\"createPath\",\"get\",\"createPath\",\"get\"]\n[[],[\"/leet\",1],[\"/leet/code\",2],[\"/leet/code\"],[\"/c/d\",1],[\"/c\"]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"doordash\", \"name\": \"DoorDash\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"atlassian\", \"name\": \"Atlassian\"}, {\"timesEncountered\": 4, \"slug\": \"capital-one\", \"name\": \"Capital One\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"airbnb\", \"name\": \"Airbnb\"}, {\"timesEncountered\": 2, \"slug\": \"coinbase\", \"name\": \"Coinbase\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Trie",
+      "slug": "trie"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class FileSystem {\npublic:\n    FileSystem() {\n        \n    }\n    \n    bool createPath(string path, int value) {\n        \n    }\n    \n    int get(string path) {\n        \n    }\n};\n\n/**\n * Your FileSystem object will be instantiated and called as such:\n * FileSystem* obj = new FileSystem();\n * bool param_1 = obj->createPath(path,value);\n * int param_2 = obj->get(path);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class FileSystem {\n\n    public FileSystem() {\n        \n    }\n    \n    public boolean createPath(String path, int value) {\n        \n    }\n    \n    public int get(String path) {\n        \n    }\n}\n\n/**\n * Your FileSystem object will be instantiated and called as such:\n * FileSystem obj = new FileSystem();\n * boolean param_1 = obj.createPath(path,value);\n * int param_2 = obj.get(path);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class FileSystem:\n\n    def __init__(self):\n        \n\n    def createPath(self, path: str, value: int) -> bool:\n        \n\n    def get(self, path: str) -> int:\n        \n\n\n# Your FileSystem object will be instantiated and called as such:\n# obj = FileSystem()\n# param_1 = obj.createPath(path,value)\n# param_2 = obj.get(path)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class FileSystem(object):\n\n    def __init__(self):\n        \n\n    def createPath(self, path, value):\n        \"\"\"\n        :type path: str\n        :type value: int\n        :rtype: bool\n        \"\"\"\n        \n\n    def get(self, path):\n        \"\"\"\n        :type path: str\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your FileSystem object will be instantiated and called as such:\n# obj = FileSystem()\n# param_1 = obj.createPath(path,value)\n# param_2 = obj.get(path)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar FileSystem = function() {\n    \n};\n\n/** \n * @param {string} path \n * @param {number} value\n * @return {boolean}\n */\nFileSystem.prototype.createPath = function(path, value) {\n    \n};\n\n/** \n * @param {string} path\n * @return {number}\n */\nFileSystem.prototype.get = function(path) {\n    \n};\n\n/** \n * Your FileSystem object will be instantiated and called as such:\n * var obj = new FileSystem()\n * var param_1 = obj.createPath(path,value)\n * var param_2 = obj.get(path)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class FileSystem {\n    constructor() {\n        \n    }\n\n    createPath(path: string, value: number): boolean {\n        \n    }\n\n    get(path: string): number {\n        \n    }\n}\n\n/**\n * Your FileSystem object will be instantiated and called as such:\n * var obj = new FileSystem()\n * var param_1 = obj.createPath(path,value)\n * var param_2 = obj.get(path)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class FileSystem {\n\n    public FileSystem() {\n        \n    }\n    \n    public bool CreatePath(string path, int value) {\n        \n    }\n    \n    public int Get(string path) {\n        \n    }\n}\n\n/**\n * Your FileSystem object will be instantiated and called as such:\n * FileSystem obj = new FileSystem();\n * bool param_1 = obj.CreatePath(path,value);\n * int param_2 = obj.Get(path);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} FileSystem;\n\n\nFileSystem* fileSystemCreate() {\n    \n}\n\nbool fileSystemCreatePath(FileSystem* obj, char* path, int value) {\n    \n}\n\nint fileSystemGet(FileSystem* obj, char* path) {\n    \n}\n\nvoid fileSystemFree(FileSystem* obj) {\n    \n}\n\n/**\n * Your FileSystem struct will be instantiated and called as such:\n * FileSystem* obj = fileSystemCreate();\n * bool param_1 = fileSystemCreatePath(obj, path, value);\n \n * int param_2 = fileSystemGet(obj, path);\n \n * fileSystemFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type FileSystem struct {\n    \n}\n\n\nfunc Constructor() FileSystem {\n    \n}\n\n\nfunc (this *FileSystem) CreatePath(path string, value int) bool {\n    \n}\n\n\nfunc (this *FileSystem) Get(path string) int {\n    \n}\n\n\n/**\n * Your FileSystem object will be instantiated and called as such:\n * obj := Constructor();\n * param_1 := obj.CreatePath(path,value);\n * param_2 := obj.Get(path);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class FileSystem() {\n\n    fun createPath(path: String, value: Int): Boolean {\n        \n    }\n\n    fun get(path: String): Int {\n        \n    }\n\n}\n\n/**\n * Your FileSystem object will be instantiated and called as such:\n * var obj = FileSystem()\n * var param_1 = obj.createPath(path,value)\n * var param_2 = obj.get(path)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass FileSystem {\n\n    init() {\n        \n    }\n    \n    func createPath(_ path: String, _ value: Int) -> Bool {\n        \n    }\n    \n    func get(_ path: String) -> Int {\n        \n    }\n}\n\n/**\n * Your FileSystem object will be instantiated and called as such:\n * let obj = FileSystem()\n * let ret_1: Bool = obj.createPath(path, value)\n * let ret_2: Int = obj.get(path)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct FileSystem {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl FileSystem {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn create_path(&self, path: String, value: i32) -> bool {\n        \n    }\n    \n    fn get(&self, path: String) -> i32 {\n        \n    }\n}\n\n/**\n * Your FileSystem object will be instantiated and called as such:\n * let obj = FileSystem::new();\n * let ret_1: bool = obj.create_path(path, value);\n * let ret_2: i32 = obj.get(path);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class FileSystem\n    def initialize()\n        \n    end\n\n\n=begin\n    :type path: String\n    :type value: Integer\n    :rtype: Boolean\n=end\n    def create_path(path, value)\n        \n    end\n\n\n=begin\n    :type path: String\n    :rtype: Integer\n=end\n    def get(path)\n        \n    end\n\n\nend\n\n# Your FileSystem object will be instantiated and called as such:\n# obj = FileSystem.new()\n# param_1 = obj.create_path(path, value)\n# param_2 = obj.get(path)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class FileSystem {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param String $path\n     * @param Integer $value\n     * @return Boolean\n     */\n    function createPath($path, $value) {\n        \n    }\n  \n    /**\n     * @param String $path\n     * @return Integer\n     */\n    function get($path) {\n        \n    }\n}\n\n/**\n * Your FileSystem object will be instantiated and called as such:\n * $obj = FileSystem();\n * $ret_1 = $obj->createPath($path, $value);\n * $ret_2 = $obj->get($path);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class FileSystem {\n\n  FileSystem() {\n    \n  }\n  \n  bool createPath(String path, int value) {\n    \n  }\n  \n  int get(String path) {\n    \n  }\n}\n\n/**\n * Your FileSystem object will be instantiated and called as such:\n * FileSystem obj = FileSystem();\n * bool param1 = obj.createPath(path,value);\n * int param2 = obj.get(path);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class FileSystem() {\n\n    def createPath(path: String, value: Int): Boolean = {\n        \n    }\n\n    def get(path: String): Int = {\n        \n    }\n\n}\n\n/**\n * Your FileSystem object will be instantiated and called as such:\n * val obj = new FileSystem()\n * val param_1 = obj.createPath(path,value)\n * val param_2 = obj.get(path)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule FileSystem do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec create_path(path :: String.t, value :: integer) :: boolean\n  def create_path(path, value) do\n    \n  end\n\n  @spec get(path :: String.t) :: integer\n  def get(path) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# FileSystem.init_()\n# param_1 = FileSystem.create_path(path, value)\n# param_2 = FileSystem.get(path)\n\n# FileSystem.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec file_system_init_() -> any().\nfile_system_init_() ->\n  .\n\n-spec file_system_create_path(Path :: unicode:unicode_binary(), Value :: integer()) -> boolean().\nfile_system_create_path(Path, Value) ->\n  .\n\n-spec file_system_get(Path :: unicode:unicode_binary()) -> integer().\nfile_system_get(Path) ->\n  .\n\n\n%% Your functions will be called as such:\n%% file_system_init_(),\n%% Param_1 = file_system_create_path(Path, Value),\n%% Param_2 = file_system_get(Path),\n\n%% file_system_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define file-system%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; create-path : string? exact-integer? -> boolean?\n    (define/public (create-path path value)\n      )\n    ; get : string? -> exact-integer?\n    (define/public (get path)\n      )))\n\n;; Your file-system% object will be instantiated and called as such:\n;; (define obj (new file-system%))\n;; (define param_1 (send obj create-path path value))\n;; (define param_2 (send obj get path))"
+    }
+  ],
+  "solution": {
+    "id": "1094",
+    "content": "[TOC]\n\n## Solution\n---\n\n### Approach 1: Dictionary for storing paths\n\n**Intuition**\n\nThis first approach is pretty much a simulation-based approach for solving this problem. We call it a simulation-based approach because it doesn't use any fancy data-structure for storing the paths and pretty much, we do what the problem asks us to do for both the functions. We simply need a key-value data structure with some additional processing to verify the validity of a path being added. Naturally, a `HashMap` or a `dictionary` seems to be a good data structure to go with.\n\nLet's look at a visual representation of how a HashMap would look as we keep on adding more paths to it. The following represents the state of the file system after adding the following paths: `/a`, `/a/b`, `/a/b/c`, and `/a/b/e`.\n\n![HashMap](../Figures/1166/img1.png)\n\n\n*Figure 1. A HashMap containing the various paths in the file system and their keys.*\n\n\nRetrieving the value corresponding to a path is relatively simple because the path itself represents a key in the HashMap. However, for adding a new path, we can simply retrieve the `parent path` e.g. `/a/b` is the parent path for `/a/b/c` and similarly for `/a/b/e`, and then check if the parent path exists in the HashMap as a key or not.\n\n **Algorithm**\n\n 1. Initialize a dictionary or a `HashMap` called `paths` that will have the key as the `path` input to our `create` function and the value would be the `value` passed to the function.\n 2. For our `create` function, we have three steps that we need to do:\n     1. Step-1 is that we do a basic verification of the path being valid or not. Here we check if the path is empty, or `\"/\"` or if the path already exists in our dictionary. If any of these conditions are met, we simply return `false`.\n     2. The second step is to obtain the parent path of the provided `path` and check its presence in the dictionary. If the parent path doesn't exist, then we simply return false. Else, we move on.\n\n     > Note that checking for just the parent is enough because the presence of the parent path ensures that the grandparent (and other ancestors by this logic) would also exist in the dictionary.\n\n     3. Finally, we insert the provided `path` and `value` into the dictionary and return true.\n\n 3. For the `get` function, we simply return a default value of `-1` if the `path` doesn't exist inside the dictionary. Else, we return the actual value.\n\n<iframe src=\"https://leetcode.com/playground/CiiHfxTp/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"CiiHfxTp\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $\\mathcal{O}(M)$, where $M$ is the length of `path`. We spend $\\mathcal{O}(M)$ to find the last `\"/\"` and another $\\mathcal{O}(M)$ to obtain the parent substring. Inserting or searching in a HashMap/dictionary also takes $\\mathcal{O}(M)$ time in this case, since hashing a string of length $M$ requires scanning all its characters. Thus, the total time per operation remains $\\mathcal{O}(M)$.\n\n* Space Complexity: $\\mathcal{O}(K \\cdot M)$, where $K$ is the number of unique paths added. This is because we may need to store up to $K$ distinct strings, each of length up to $M$.\n\n---\n\n### Approach 2: Trie based approach\n\n**Intuition**\n\nThere is another great data structure which we can use for approaching this particular problem and that is the `Trie` data structure. In order to read more about this data structure and other use cases, please refer to our [Explore Card](https://leetcode.com/explore/learn/card/trie/) for the same. A problem that we see with our previous problem is that for adding a path of length `M`, we need to add all of its $$\\frac{M \\times (M - 1)}{2}$$ ancestors which would end up occupying a lot of space in our HashMap based solution since each of these ancestors would occupy a key in the dictionary.\n\n> We can instead make use of a Trie here because the common prefixes for various strings can be represented by a common branch in the Trie and that ends up saving a lot of space. Additionally, sub-paths along a branch can also be represented easily without cloning the Trie branch. For example all the ancestors of /a/b/c/d/e i.e. /a, /a/b, /a/b/c, /a/b/c/d can be marked on the single branch representing the path /a/b/c/d/e and that is a lot of space saving for this problem.\n\nHere's how a Trie would look like after we have added the following paths to it: `/a`, `/a/b`, `/a/b/c`, `/a/b/e`, `/a/e`.\n\n![HashMap](../Figures/1166/img2.png)\n\n\n*Figure 2. A Trie representation showing the various paths we added to the File System.*\n\n\n **Algorithm**\n\n 1. The basic data structure that is used for representing a Trie is a dictionary. The dictionary and other potential flags/data values can be a part of a custom `TreeNode` data structure. For this problem, we will have a `TrieNode` data structure that will contain three things\n         1. The string representing the path name.\n         2. The value corresponding to this path.\n         3. And finally, a dictionary representing the outgoing connections to other `TrieNodes`.\n 2. The root of our trie will be a `TrieNode` containing the empty string.\n 3. *Create()* ~\n     1. First, we will split the given path into various components using `/` as the delimiter. So for the path `/a/b/c`, we will have four components namely ` `, `a`, `b`, and `c`.\n\n         ![HashMap](../Figures/1166/img3.png)\n\n         *Figure 3. Let's consider an example Trie.*\n\n     2. Initialize a `TrieNode` called `curr` which will be equal to the root node of the trie. Note that we always start at the root node and then go down based on the various path components.\n\n         ![HashMap](../Figures/1166/img4.png)\n\n         *Figure 4. Initialize the \"curr\" node.*\n\n     3. We will iterate over all of these components and for each of them, we will do the following:\n         1. Check if the component exists in `curr`'s dictionary . If it doesn't we return false unless it is the last component of the path in which case we add it to the current dictionary.\n         2. If the current component exists in the `curr` node, we obtain the value which will be another `TrieNode` and update `curr` to be equal to that node.\n         3. Eventually, we will process the last component of the path. If that exists in the trie as well, we return `false` in accordance with the problem statement. Else, we add it to the trie by creating a new node with path as `path` and value as `value` i.e. the input parameters.\n\n             ![HashMap](../Figures/1166/img5.png)\n\n             *Figure 5. Add the last component to the Trie.*\n\n4. *Get()* ~\n    1. To check if a path exists in the trie, we need to verify if all its components, along with the proper connections exist in the trie.\n    2. Split the given path into various components using `/` as the delimiter.\n    3. Initialize a `TrieNode` called `curr` which will be equal to the root node of the trie.\n    4. We will iterate over all of these components and for each of them, we will do the following:\n        1. Check if the component exists in `curr`'s dictionary .\n        2. If the current component exists in the `curr` node, we obtain the value which will be another `TrieNode` and update `curr` to be equal to that node.\n        3. If it doesn't exist, we return `false`.\n    5. Return `true`.\n\n<iframe src=\"https://leetcode.com/playground/bsD5Unuy/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"bsD5Unuy\"></iframe>\n\n**Complexity Analysis**\n\nBefore we get into the complexity analysis, let's see why one might prefer the Trie approach. The main advantage of the trie based approach is that we are able to save on space. All the paths sharing common prefixes can be represented by a common branch in the tree. The disadvantage however is that the `get` operation no longer remains $O(1)$.\n\n* Time Complexity:\n\n  * `create`: It takes $O(M)$ to add a path of length $M$ (splitting into $T$ components and inserting them into the trie).\n  * `get`: It takes $O(M)$ to find a path of length $M$ (splitting into $T$ components and traversing them in the trie).\n\n* Space Complexity:\n\n  * `create`: In the worst case, none of the paths have any common prefixes. In such a case, each unique path containing $T$ components will contribute $T$ new nodes in the trie, giving $O(T)$ space per path.\n  * `get`: Requires $O(M)$ temporary space for storing the split components of the path.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

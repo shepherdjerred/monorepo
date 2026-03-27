@@ -1,0 +1,143 @@
+{
+  "questionId": "1211",
+  "questionFrontendId": "1286",
+  "title": "Iterator for Combination",
+  "titleSlug": "iterator-for-combination",
+  "difficulty": "Medium",
+  "content": "<p>Design the <code>CombinationIterator</code> class:</p>\n\n<ul>\n\t<li><code>CombinationIterator(string characters, int combinationLength)</code> Initializes the object with a string <code>characters</code> of <strong>sorted distinct</strong> lowercase English letters and a number <code>combinationLength</code> as arguments.</li>\n\t<li><code>next()</code> Returns the next combination of length <code>combinationLength</code> in <strong>lexicographical order</strong>.</li>\n\t<li><code>hasNext()</code> Returns <code>true</code> if and only if there exists a next combination.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;CombinationIterator&quot;, &quot;next&quot;, &quot;hasNext&quot;, &quot;next&quot;, &quot;hasNext&quot;, &quot;next&quot;, &quot;hasNext&quot;]\n[[&quot;abc&quot;, 2], [], [], [], [], [], []]\n<strong>Output</strong>\n[null, &quot;ab&quot;, true, &quot;ac&quot;, true, &quot;bc&quot;, false]\n\n<strong>Explanation</strong>\nCombinationIterator itr = new CombinationIterator(&quot;abc&quot;, 2);\nitr.next();    // return &quot;ab&quot;\nitr.hasNext(); // return True\nitr.next();    // return &quot;ac&quot;\nitr.hasNext(); // return True\nitr.next();    // return &quot;bc&quot;\nitr.hasNext(); // return False\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= combinationLength &lt;= characters.length &lt;= 15</code></li>\n\t<li>All the characters of <code>characters</code> are <strong>unique</strong>.</li>\n\t<li>At most <code>10<sup>4</sup></code> calls will be made to <code>next</code> and <code>hasNext</code>.</li>\n\t<li>It is guaranteed that all calls of the function <code>next</code> are valid.</li>\n</ul>\n",
+  "hints": [
+    "Generate all combinations as a preprocessing.",
+    "Use bit masking to generate all the combinations."
+  ],
+  "metaData": "{\n  \"classname\": \"CombinationIterator\",\n  \"maxbytesperline\": 200000,\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"string\",\n        \"name\": \"characters\"\n      },\n      {\n        \"type\": \"integer\",\n        \"name\": \"combinationLength\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"name\": \"next\",\n      \"params\": [],\n      \"return\": {\n        \"type\": \"string\"\n      }\n    },\n    {\n      \"name\": \"hasNext\",\n      \"params\": [],\n      \"return\": {\n        \"type\": \"boolean\"\n      }\n    }\n  ],\n  \"systemdesign\": true,\n  \"params\": [\n    {\n      \"name\": \"inputs\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"inputs\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<String>\",\n    \"dealloc\": true\n  }\n}",
+  "stats": "{\"totalAccepted\": \"82.1K\", \"totalSubmission\": \"113K\", \"totalAcceptedRaw\": 82134, \"totalSubmissionRaw\": 112981, \"acRate\": \"72.7%\"}",
+  "likes": 1390,
+  "dislikes": 108,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"CombinationIterator\",\"next\",\"hasNext\",\"next\",\"hasNext\",\"next\",\"hasNext\"]\n[[\"abc\",2],[],[],[],[],[],[]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Iterator",
+      "slug": "iterator"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class CombinationIterator {\npublic:\n    CombinationIterator(string characters, int combinationLength) {\n        \n    }\n    \n    string next() {\n        \n    }\n    \n    bool hasNext() {\n        \n    }\n};\n\n/**\n * Your CombinationIterator object will be instantiated and called as such:\n * CombinationIterator* obj = new CombinationIterator(characters, combinationLength);\n * string param_1 = obj->next();\n * bool param_2 = obj->hasNext();\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class CombinationIterator {\n\n    public CombinationIterator(String characters, int combinationLength) {\n        \n    }\n    \n    public String next() {\n        \n    }\n    \n    public boolean hasNext() {\n        \n    }\n}\n\n/**\n * Your CombinationIterator object will be instantiated and called as such:\n * CombinationIterator obj = new CombinationIterator(characters, combinationLength);\n * String param_1 = obj.next();\n * boolean param_2 = obj.hasNext();\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class CombinationIterator:\n\n    def __init__(self, characters: str, combinationLength: int):\n        \n\n    def next(self) -> str:\n        \n\n    def hasNext(self) -> bool:\n        \n\n\n# Your CombinationIterator object will be instantiated and called as such:\n# obj = CombinationIterator(characters, combinationLength)\n# param_1 = obj.next()\n# param_2 = obj.hasNext()"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class CombinationIterator(object):\n\n    def __init__(self, characters, combinationLength):\n        \"\"\"\n        :type characters: str\n        :type combinationLength: int\n        \"\"\"\n        \n\n    def next(self):\n        \"\"\"\n        :rtype: str\n        \"\"\"\n        \n\n    def hasNext(self):\n        \"\"\"\n        :rtype: bool\n        \"\"\"\n        \n\n\n# Your CombinationIterator object will be instantiated and called as such:\n# obj = CombinationIterator(characters, combinationLength)\n# param_1 = obj.next()\n# param_2 = obj.hasNext()"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} characters\n * @param {number} combinationLength\n */\nvar CombinationIterator = function(characters, combinationLength) {\n    \n};\n\n/**\n * @return {string}\n */\nCombinationIterator.prototype.next = function() {\n    \n};\n\n/**\n * @return {boolean}\n */\nCombinationIterator.prototype.hasNext = function() {\n    \n};\n\n/** \n * Your CombinationIterator object will be instantiated and called as such:\n * var obj = new CombinationIterator(characters, combinationLength)\n * var param_1 = obj.next()\n * var param_2 = obj.hasNext()\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class CombinationIterator {\n    constructor(characters: string, combinationLength: number) {\n        \n    }\n\n    next(): string {\n        \n    }\n\n    hasNext(): boolean {\n        \n    }\n}\n\n/**\n * Your CombinationIterator object will be instantiated and called as such:\n * var obj = new CombinationIterator(characters, combinationLength)\n * var param_1 = obj.next()\n * var param_2 = obj.hasNext()\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class CombinationIterator {\n\n    public CombinationIterator(string characters, int combinationLength) {\n        \n    }\n    \n    public string Next() {\n        \n    }\n    \n    public bool HasNext() {\n        \n    }\n}\n\n/**\n * Your CombinationIterator object will be instantiated and called as such:\n * CombinationIterator obj = new CombinationIterator(characters, combinationLength);\n * string param_1 = obj.Next();\n * bool param_2 = obj.HasNext();\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} CombinationIterator;\n\n\nCombinationIterator* combinationIteratorCreate(char* characters, int combinationLength) {\n    \n}\n\nchar* combinationIteratorNext(CombinationIterator* obj) {\n    \n}\n\nbool combinationIteratorHasNext(CombinationIterator* obj) {\n    \n}\n\nvoid combinationIteratorFree(CombinationIterator* obj) {\n    \n}\n\n/**\n * Your CombinationIterator struct will be instantiated and called as such:\n * CombinationIterator* obj = combinationIteratorCreate(characters, combinationLength);\n * char* param_1 = combinationIteratorNext(obj);\n \n * bool param_2 = combinationIteratorHasNext(obj);\n \n * combinationIteratorFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type CombinationIterator struct {\n    \n}\n\n\nfunc Constructor(characters string, combinationLength int) CombinationIterator {\n    \n}\n\n\nfunc (this *CombinationIterator) Next() string {\n    \n}\n\n\nfunc (this *CombinationIterator) HasNext() bool {\n    \n}\n\n\n/**\n * Your CombinationIterator object will be instantiated and called as such:\n * obj := Constructor(characters, combinationLength);\n * param_1 := obj.Next();\n * param_2 := obj.HasNext();\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class CombinationIterator(characters: String, combinationLength: Int) {\n\n    fun next(): String {\n        \n    }\n\n    fun hasNext(): Boolean {\n        \n    }\n\n}\n\n/**\n * Your CombinationIterator object will be instantiated and called as such:\n * var obj = CombinationIterator(characters, combinationLength)\n * var param_1 = obj.next()\n * var param_2 = obj.hasNext()\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass CombinationIterator {\n\n    init(_ characters: String, _ combinationLength: Int) {\n        \n    }\n    \n    func next() -> String {\n        \n    }\n    \n    func hasNext() -> Bool {\n        \n    }\n}\n\n/**\n * Your CombinationIterator object will be instantiated and called as such:\n * let obj = CombinationIterator(characters, combinationLength)\n * let ret_1: String = obj.next()\n * let ret_2: Bool = obj.hasNext()\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct CombinationIterator {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl CombinationIterator {\n\n    fn new(characters: String, combinationLength: i32) -> Self {\n        \n    }\n    \n    fn next(&self) -> String {\n        \n    }\n    \n    fn has_next(&self) -> bool {\n        \n    }\n}\n\n/**\n * Your CombinationIterator object will be instantiated and called as such:\n * let obj = CombinationIterator::new(characters, combinationLength);\n * let ret_1: String = obj.next();\n * let ret_2: bool = obj.has_next();\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class CombinationIterator\n\n=begin\n    :type characters: String\n    :type combination_length: Integer\n=end\n    def initialize(characters, combination_length)\n        \n    end\n\n\n=begin\n    :rtype: String\n=end\n    def next()\n        \n    end\n\n\n=begin\n    :rtype: Boolean\n=end\n    def has_next()\n        \n    end\n\n\nend\n\n# Your CombinationIterator object will be instantiated and called as such:\n# obj = CombinationIterator.new(characters, combination_length)\n# param_1 = obj.next()\n# param_2 = obj.has_next()"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class CombinationIterator {\n    /**\n     * @param String $characters\n     * @param Integer $combinationLength\n     */\n    function __construct($characters, $combinationLength) {\n        \n    }\n  \n    /**\n     * @return String\n     */\n    function next() {\n        \n    }\n  \n    /**\n     * @return Boolean\n     */\n    function hasNext() {\n        \n    }\n}\n\n/**\n * Your CombinationIterator object will be instantiated and called as such:\n * $obj = CombinationIterator($characters, $combinationLength);\n * $ret_1 = $obj->next();\n * $ret_2 = $obj->hasNext();\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class CombinationIterator {\n\n  CombinationIterator(String characters, int combinationLength) {\n    \n  }\n  \n  String next() {\n    \n  }\n  \n  bool hasNext() {\n    \n  }\n}\n\n/**\n * Your CombinationIterator object will be instantiated and called as such:\n * CombinationIterator obj = CombinationIterator(characters, combinationLength);\n * String param1 = obj.next();\n * bool param2 = obj.hasNext();\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class CombinationIterator(_characters: String, _combinationLength: Int) {\n\n    def next(): String = {\n        \n    }\n\n    def hasNext(): Boolean = {\n        \n    }\n\n}\n\n/**\n * Your CombinationIterator object will be instantiated and called as such:\n * val obj = new CombinationIterator(characters, combinationLength)\n * val param_1 = obj.next()\n * val param_2 = obj.hasNext()\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule CombinationIterator do\n  @spec init_(characters :: String.t, combination_length :: integer) :: any\n  def init_(characters, combination_length) do\n    \n  end\n\n  @spec next() :: String.t\n  def next() do\n    \n  end\n\n  @spec has_next() :: boolean\n  def has_next() do\n    \n  end\nend\n\n# Your functions will be called as such:\n# CombinationIterator.init_(characters, combination_length)\n# param_1 = CombinationIterator.next()\n# param_2 = CombinationIterator.has_next()\n\n# CombinationIterator.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec combination_iterator_init_(Characters :: unicode:unicode_binary(), CombinationLength :: integer()) -> any().\ncombination_iterator_init_(Characters, CombinationLength) ->\n  .\n\n-spec combination_iterator_next() -> unicode:unicode_binary().\ncombination_iterator_next() ->\n  .\n\n-spec combination_iterator_has_next() -> boolean().\ncombination_iterator_has_next() ->\n  .\n\n\n%% Your functions will be called as such:\n%% combination_iterator_init_(Characters, CombinationLength),\n%% Param_1 = combination_iterator_next(),\n%% Param_2 = combination_iterator_has_next(),\n\n%% combination_iterator_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define combination-iterator%\n  (class object%\n    (super-new)\n    \n    ; characters : string?\n    ; combination-length : exact-integer?\n    (init-field\n      characters\n      combination-length)\n    \n    ; next : -> string?\n    (define/public (next)\n      )\n    ; has-next : -> boolean?\n    (define/public (has-next)\n      )))\n\n;; Your combination-iterator% object will be instantiated and called as such:\n;; (define obj (new combination-iterator% [characters characters] [combination-length combination-length]))\n;; (define param_1 (send obj next))\n;; (define param_2 (send obj has-next))"
+    }
+  ],
+  "solution": {
+    "id": "945",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Disclaimer\n\nThis is a review article, and the goal is to propose 5 different solutions and to discuss a possible interview strategy. If you'd like to read a more detailed explanation of each solution, please check the following articles:\n\n[Combinations](https://leetcode.com/articles/combinations/).\n\n[Subsets](https://leetcode.com/articles/subsets/).\n\n#### Precomputation or Next Combination: Why It's Risky to Use Backtracking\n\nThe interpretation of this problem depends on the interviewer. There are three possible scenarios:\n\n- You could be asked to implement $$\\mathcal{O}(1)$$ runtime by precomputing all the combinations. \n\n- Or, you could be asked to save space, use no pre-computation, and implement the `nextCombination` function to generate each new combination from the previous one during the runtime. \n\n- Or, the interviewer could let you choose one of the problems above and then ask you to implement the second one as a follow-up. \n\nThat's why it's a risky strategy [to compute combinations using standard backtacking](https://leetcode.com/articles/combinations/).\nTo precompute all the combinations using backtracking is doable.\n\n<iframe src=\"https://leetcode.com/playground/XRnuyWGx/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"XRnuyWGx\"></iframe>\n\nAs a follow-up, you could be asked to rewrite your algorithm by implementing `nextCombination` function, and that could be quite stressful during the interview if you choose backtracking.\n\n#### Overview: Bitmasking and Algorithm L\n\nIn this article, we're going to consider Bitmasking and Algorithm L. These two approaches could be easily used both for the precomputation, and the `nextCombination` function.\n\n![pic](../Figures/1286/overall4.png)\n\n**Bitmasking**\n\nIt's more simple to generate numbers than combinations. So let us generate numbers, and then use their binary representations, bitmasks.\n\nThe idea is that we map each bitmask of length n to a combination. Each bit is mapped to a character, the lowest bit to the last character, the highest bit - to the first character.\n\n![pic](../Figures/1286/lowest_bit22.png)\n \nThe character `characters[i]` is present in the combination if bit at the `n - 1 - i`*th* position is set.\n\n![pic](../Figures/1286/present22.png)\n\n$$\n(1111)_2 - abcd \\\\\n(0011)_2 - cd \\\\\n(0101)_2 - bd \\\\\n(0110)_2 - bc \\\\\n(1001)_2 - ad \\\\\n(1010)_2 - ac \\\\ \n(1100)_2 - ab\n$$\n\n![pic](../Figures/1286/bitmasks2.png)\n\nIn this article, we're going to keep the bitmasking approach as simple as possible, having $$\\mathcal{O}(2^N \\cdot N)$$ time complexity for the precomputation case. \n\n**Algorithm L by D. E. Knuth**\n\n![pic](../Figures/1286/algorithm_l2.png)\n\nAlgorithm L is an efficient BFS approach to generate lexicographic (_i.e._ binary sorted) combinations. It works by generating the combinations of indexes.\n\nThe advantage of this algorithm is that it \"jumps\" from one combination to another instead of brute-forcing $$2^N$$ bitmasks. In total, there are $$C^k_N$$ combinations of length $$k$$, and hence one needs $$\\mathcal{O}(k C_N^k)$$ time for the precomputation. \n\n> This approach is better than simple bitmasking: $$\\mathcal{O}(k C_N^k)$$ vs $$\\mathcal{O}(2^N \\cdot N)$$.  \n\n<br/>\n<br/>\n\n---\n### Approach 1: Bitmasking: Precomputation\n\n![pic](../Figures/1286/pre_bitmasks2.png)\n\n**Algorithm**\n\n- Generate all possible binary bitmasks of length $$n$$: from $$0$$ to $$2^n - 1$$.\n\n- Use bitmasks with $$k$$ set bits to generate combinations with $$k$$ elements. If the `n - 1 - j`*th* bit is set in the bitmask, it indicates the presence of the character `characters[j]` in the combination, and vice versa. \n\n>Bit manipulation trick.\nTo test if the `i`*th* bit is set in the bitmask, check the following: `bitmask & (1 << i) != 0`. It shifts the first 1-bit i positions to the left and then uses logical AND operation to eliminate all bits from bitmask but `i`*th*. Hence, the result is nonzero only if `i`*th* bit is set in the bitmask.\n\n- Now you have all combinations precomputed. Pop them out one \nby one at each request. \n\n![pic](../Figures/1286/bitmasking2.png)\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/PypkmJ5j/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"PypkmJ5j\"></iframe>\n\n\n**Complexity Analysis**\n\n- Time Complexity: \n    - $$\\mathcal{O}(2^N \\cdot N)$$ to generate $$2^N$$ bitmasks and then count a number of bits set in each bitmask in $$\\mathcal{O}(N)$$ time. \n    \n    - $$\\mathcal{O}(1)$$ runtime, _i.e._ for each `next()` call. \n\n- Space Complexity: $$\\mathcal{O}(k \\cdot C_N^k)$$ to keep $$C_N^k$$ combinations of length $$k$$.\n\n<br/>\n<br/>\n\n---\n### Approach 2: Bitmasking: Next Combination\n\n![pic](../Figures/1286/bitmasks2.png)\n\nDuring pre-computation, we've generated combinations in the _descending_ order. That was done to pop them out later in the _ascending_ order easily.\n\n> For the runtime generation at each `next()` call, the strategy should be changed: the combinations should be generated directly in _ascending_ order. \n\n**Algorithm**\n\n- Start from the \"highest\" bitmask: \n$$\n1^{(k)}0^{(n - k)} = \\underbrace{1...1}_\\text{k times} \\space \\underbrace{0...0}_\\text{n-k times}\n$$.\n\n- At each step, generate a combination out of the current bitmask. If the `n - 1 - j`*th* bit is set in the bitmask, that means the presence of the character `characters[j]` in the combination, and vice versa. \n\n- Generate the next bitmask. Decrease bitmask gradually till you meet a bitmask with exactly $$k$$ set bits.  \n\n![pic](../Figures/1286/approach222.png)\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/FZMyaw9n/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"FZMyaw9n\"></iframe>\n\n\n**Complexity Analysis**\n\n- Time Complexity: $$\\mathcal{O}(2^N \\cdot N / C_N^k)$$ in average. \nTo generate $$C_N^k$$ combinations, one has to parse $$2^N$$ bitmasks and to check the number of bits set in each bitmask, which makes an average computation cost per combination to be equal to $$\\mathcal{O}(2^N \\cdot N / C_N^k)$$.\n\n- Space Complexity: $$\\mathcal{O}(k)$$ to keep the current combination of \nlength $$k$$.\n\n<br/>\n<br/>\n\n---\n### Approach 3: Algorithm L by D. E. Knuth: Lexicographic Combinations: Precomputation\n\nAlgorithm L is an efficient BFS that generates one by one the _combinations of indexes_. Here is how it works:\n\n![pic](../Figures/1286/algorithm_l2.png)\n\n$$\n3210 - abcd \\\\\n01 - cd \\\\\n02 - bd \\\\\n12 - bc \\\\\n03 - ad \\\\\n13 - ac \\\\\n23 - ab \\\\\n$$\n\n**Algorithm**\n\nThe algorithm is quite straightforward:\n\n- Initialize `nums` to be a list of integers from $$0$$ to $$k$$. Add $$n$$ as the last element. It serves as a sentinel. Set the pointer at the beginning of the list `j = 0`.\n\n- While `j < k`:\n\n    - Convert the first $$k$$ elements (_i.e._ all elements but the sentinel) from `nums` into the combination to save.\n\n    - Find the first number in `nums` such that `nums[j + 1] != nums[j] + 1` and increase it by one `nums[j] += 1` to move to the next combination.\n\n- Now you have all combinations precomputed. Pop them out one by one at each request. \n\n<iframe src=\"https://leetcode.com/playground/2aJQdnaQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"2aJQdnaQ\"></iframe>\n\n\n**Complexity Analysis**\n\n- Time Complexity: $$\\mathcal{O}(k \\times C_N^k)$$ for the precomputation and $$\\mathcal{O}(1)$$ during the runtime, i.e. for each `next()` call. The algorithm generates a new combination from the previous one in $$\\mathcal{O}(k)$$ time and then uses $$\\mathcal{O}(k)$$ time to save it for later usage. In total, there are $$C_N^k$$ combinations, that make precomputation time complexity to be equal to $$\\mathcal{O}(k \\times C_N^k)$$. Runtime complexity is $$\\mathcal{O}(1)$$.\n\n- Space Complexity: $$\\mathcal{O}(k \\times C_N^k)$$ to keep $$C_N^k$$ combinations of length $$k$$.\n\n<br/>\n<br/>\n\n---\n### Approach 4: Algorithm L by D. E. Knuth: Lexicographic Combinations: Next Combination\n\n> For the runtime generation, the strategy should be changed: the combinations will be generated directly in the _ascending_ order.\n\n![pic](../Figures/1286/l_reversed2.png)\n\n**Algorithm**\n\n- Initialize `nums` as a list of integers from $$0$$ to $$k$$. \n\n- At each step:\n\n    - Convert nums into the combination to save.\n    \n    - Generate the next combination:\n    \n        - Set the pointer at the end of the list `j = k - 1`.\n    \n        - Find the greatest j, where j < k, such that `nums[j] != n - k + j` \n        and increase `nums[j]` by one `nums[j] += 1`.\n        \n        - Set `nums[i] = nums[j] + i - j` for \n        every `i` in range `(j + 1, k)` to move to the next combination.\n        \n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/RG7cNcfC/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"RG7cNcfC\"></iframe>\n\n\n**Complexity Analysis**\n\n- Time Complexity: $$\\mathcal{O}(k)$$ both for `init()` and `next()` functions. The algorithm generates a new combination from the previous one in $$\\mathcal{O}(k)$$ time. \n\n- Space Complexity: $$\\mathcal{O}(k)$$ to keep the current combination of length $$k$$.\n\n<br/>\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

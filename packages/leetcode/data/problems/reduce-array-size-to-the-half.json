@@ -1,0 +1,149 @@
+{
+  "questionId": "1464",
+  "questionFrontendId": "1338",
+  "title": "Reduce Array Size to The Half",
+  "titleSlug": "reduce-array-size-to-the-half",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>arr</code>. You can choose a set of integers and remove all the occurrences of these integers in the array.</p>\n\n<p>Return <em>the minimum size of the set so that <strong>at least</strong> half of the integers of the array are removed</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [3,3,3,3,5,5,5,2,2,7]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> Choosing {3,7} will make the new array [5,5,5,2,2] which has size 5 (i.e equal to half of the size of the old array).\nPossible sets of size 2 are {3,5},{3,2},{5,2}.\nChoosing set {2,7} is not possible as it will make the new array [3,3,3,3,5,5,5] which has a size greater than half of the size of the old array.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [7,7,7,7,7,7]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The only possible set you can choose is {7}. This will make the new array empty.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= arr.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>arr.length</code> is even.</li>\n\t<li><code>1 &lt;= arr[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Count the frequency of each integer in the array.",
+    "Start with an empty set, add to the set the integer with the maximum frequency.",
+    "Keep Adding the integer with the max frequency until you remove at least half of the integers."
+  ],
+  "metaData": "{\n  \"name\": \"minSetSize\",\n  \"params\": [\n    {\n      \"name\": \"arr\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"231.7K\", \"totalSubmission\": \"334.1K\", \"totalAcceptedRaw\": 231725, \"totalSubmissionRaw\": 334100, \"acRate\": \"69.4%\"}",
+  "likes": 3366,
+  "dislikes": 153,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[3,3,3,3,5,5,5,2,2,7]",
+    "[7,7,7,7,7,7]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"akuna-capital\", \"name\": \"Akuna Capital\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minSetSize(vector<int>& arr) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minSetSize(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minSetSize(self, arr: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minSetSize(self, arr):\n        \"\"\"\n        :type arr: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arr\n * @return {number}\n */\nvar minSetSize = function(arr) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minSetSize(arr: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinSetSize(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minSetSize(int* arr, int arrSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minSetSize(arr []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minSetSize(arr: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minSetSize(_ arr: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_set_size(arr: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} arr\n# @return {Integer}\ndef min_set_size(arr)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $arr\n     * @return Integer\n     */\n    function minSetSize($arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minSetSize(List<int> arr) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minSetSize(arr: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_set_size(arr :: [integer]) :: integer\n  def min_set_size(arr) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_set_size(Arr :: [integer()]) -> integer().\nmin_set_size(Arr) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-set-size arr)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "874",
+    "content": "[TOC]\n\n## Solution\n\n### Overview\n\nThe problem requires us to perform \"removal operations\" until the array is no more than half it's original length. Each \"removal operation\" involves choosing a number and removing all occurrences of it. The goal is to perform the minimum possible number of these \"removal operations\" and return that number.\n\nFor example, consider the following array.\n\n![The example array: 3, 5, 4, 3, 2, 6, 2, 2, 1, 9, 7, 5](../Figures/1338/example_sequence.png)\n\nIt makes sense to remove the numbers that *occur the most times*. i.e. it doesn't make sense to remove the `9`, because that will only shorten the array by 1. Instead, choosing `2` would shorten the array by 3 (as `2` occurs 3 times). We can repeatedly apply this **greedy** strategy until the array is of no more than half its original length.\n\n> While the length of arr is greater than `n / 2`, find the number in arr that occurs the most times and remove all occurrences of it.\n\nDoing this will require 2 steps:\n\n1. Counting how many times each number occurs.\n2. Removing the numbers with the highest counts until we've removed at least `n / 2` numbers in total.\n\nWe'll now look at a couple of different algorithms that apply this greedy strategy.\n\n<br />\n\n---\n\n### Approach 1: Sorting\n\n**Intuition**\n\nWe'll use the example array from above.\n\n![The example array: 3, 5, 4, 3, 2, 6, 2, 2, 1, 9, 7, 5](../Figures/1338/example_sequence.png)\n\nAs identified above, the first step is to count how many times each number occurs. This would be a lot easier to do if all identical numbers were side-by-side. The simplest way of achieving this is to sort `arr` using a built-in sort.\n\n![First step is to sort the input array, arr.](../Figures/1338/sort_list.png)\n\nNext, we need to do the actual counting.\n\n![Putting the counts into a new array, counts.](../Figures/1338/to_counts.png)\n\nNotice that we can simply insert the counts into a new array (called `counts`). We don't need to remember what the original number associated with each count was (because the return type is simply how many unique numbers we needed to remove).\n\nThe second step is to start picking off numbers with the highest number of occurrences. To make this easier, we'll start by *reverse-sorting* (largest to smallest) the `counts` array.\n\n![Reverse sorting the counts array.](../Figures/1338/sort_counts.png)\n\nNow that we've reverse-sorted `counts`, we can iterate down it, adding up the counts we want to take. Remember that each number in `counts` represent one of the unique numbers in `arr`. Therefore, of the numbers we remove from `counts`:\n\n- Their **sum** represents how many numbers we've removed from `arr`. We want to remove at least `arr.length / 2` of them.\n- The number of counts removed represents how many *unique numbers* have been removed from `arr`. This is the \"set size\" we ultimately need to return.\n\nTherefore, we need a simple loop that iterates over `counts`, and keeps track of these 2 amounts. \n\nHere is a short animation that shows this last step.\n\n!?!../Documents/1338_counts_accumulation.json:960,540!?!\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/JybHU2Hr/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"JybHU2Hr\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity : $$O(n \\, \\log \\, n)$$.\n    \n    The first step, sorting, requires $$O(n \\, \\log \\, n)$$ time, assuming the use of a built-in sorting algorithm (i.e. assuming that you didn't write your own selection sort or bubble sort!).\n\n    The second step, generating `counts`, takes $$O(n)$$ time, because it's a linear scan of the $$n$$ items in `arr`, applying an $$O(1)$$ operation to each.\n\n    The third step, reverse sorting `counts`, takes $$O(n \\, \\log \\, n)$$ time, because it has a length of at most $$n$$.\n\n    Computing the size of the minimum set also takes $$O(n)$$, because it is a linear scan of the `counts` array (which has a length of at most $$n$$).\n\n    This gives us $$O(n \\, \\log \\, n) + O(n) + O(n \\, \\log \\, n) + O(n) = O(n \\, \\log \\, n)$$, because the $$O(n)$$ parts are insignificant compared to the $$O(n \\, \\log \\, n)$$.\n\n\n- Space Complexity : $$O(n)$$.\n\n    In the worst case, all the numbers in `arr` will be unique, leading to a `counts` array of length $$n$$, and a space complexity of $$O(n)$$.\n    \n    Most programming languages use a *built in* sorting algorithm that requires $$O(n)$$ space. There are a few that only use $$O(\\log \\,n)$$ space. Most prioritize time over space.\n\n    Regardless of what space your sorting algorithm is using, the $$O(n)$$ space from the first part pulls the overall space complexity to $$O(n)$$.\n\n**Further Optimizations**\n\nThere are a couple of ways to optimize the space complexity of Approach 1 further. Applying these will result in an algorithm with a time complexity of $$O(n \\, \\log \\, n)$$ and a space complexity of $$O(1)$$. This is an interesting contrast to Approach 3's $$O(n)$$ time complexity but $$O(n)$$ space.\n\nFirstly, we can write the `counts` array values directly into `arr` (the input array) using the Two Pointer Technique. Any extra space at the end should be `0`'ed (or simply deleted if using a language like Python). This works, because we don't need to look at `arr` again. Here is some pseudocode to do this.\n\n```text\nwp = 0\nrp = 1\nrun_length = 1\nwhile rp <= arr.length:\n    if rp == arr.length or arr[rp - 1] != arr[rp]:\n        arr[wp] = run_length\n        wp += 1\n        run_length = 1\n    else:\n        run_length += 1\n    rp += 1\nfor i = wp to arr.length:\n    arr[i] = 0\n```\n\nSecondly, we could use an $$O(1)$$ space sorting algorithm, such as Heapsort or In-Place Merge Sort. It's likely you'd need to write this yourself.\n\nApplying **both** optimizations will give a space complexity of $$O(1)$$. \n\n</br>\n\n---\n\n### Approach 2: Hashing/ Counting\n\n**Intuition**\n\nA better way of doing the first step is to use a `Multiset` (also known as a `Counter` or `Bag`). A `Multiset` is, as the name suggests, a type of Set that allows duplicates. It is implemented using a `HashMap`, where the **key** is the set items, and the **value** is an integer stating how many times the item is in the set. In C++, it is called `multiset`. In Python, it is `Counter`. In Java and JavaScript, you will have to make your own using a `HashMap`.\n\nFor this problem, the keys will be each unique number in `arr`, and the values will be how many times each occurred. Building this up using a `HashMap` is straightforward (`Counter` and `multiset` are even easier!).\n\n```text\nmultiset = new Hash Map\nfor number in arr:\n    if number is not in multiset keys:\n       add number to multiset keys with value of 0\n    increment value for number by 1\n```\n\nNow we need to determine which counts to take, to minimise the final set size. The simplest way is to extract the *values*, sort them, and then proceed in the same way as Approach 1. \n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/YRH8oufS/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"YRH8oufS\"></iframe>\n\n\n**Complexity Analysis**\n\n- Time Complexity : $$O(n \\, \\log \\, n)$$.\n\n    The first step requires examining each of the $$n$$ numbers and then placing them into the `HashMap` (or `multiset` or `Counter`). Because inserting an item into a HashMap takes $$O(1)$$ time, this gives an overall time complexity of $$O(n)$$.\n\n    Extracting the values from the `HashMap` is $$O(n)$$. The rest has a *worst case* of $$O(n \\, \\log \\, n)$$, just like in Approach 1. \n\n    In practice, this approach is always more efficient than Approach 1, often by a considerable amount. We have assumed the worst case—that `counts` is the same size as `arr`. However for most cases, `counts` will be much smaller than `arr`. The previous algorithm was performing an $$O(n \\, \\log \\, n)$$ sorting operation on both `arr` and `counts`, whereas this one only performs it on the (likely) smaller `counts` array.\n    \n    Note that Python's `most_common(...)` method for `Counter` is *not* $$O(n)$$.\n\n\n- Space Complexity : $$O(n)$$.\n    \n    In the worst case, where all numbers in `arr` are unique, the Multiset will require $$O(n)$$ space.\n\n</br>\n\n---\n\n### Approach 3: Hashing and Bucket Sort\n\n**Intuition**\n\n*This approach is probably not needed for an interview, however, it is interesting that it is possible to get the time complexity of this algorithm down to $$O(n)$$, and the techniques used here could potentially apply to other algorithmic problems you might face.*\n\nIn the above approach, the overall time complexity was $$O(n \\, \\log \\, n)$$, because we sorted the `counts` array. Instead of using an $$O(n \\, \\log \\, n)$$ sort though, we could instead use **Bucket Sort** on the counts.\n\n**Bucket Sort** starts by identifying the *largest* number, $$m$$, in the array to be sorted. It then creates a new array of length $$m$$, initialized to zeroes. It goes through each of the $$n$$ numbers in the original array, putting them into the array index that corresponds to their value. An item is put into an index simply by incrementing the value at that index by 1. For example, here is how the `counts` array looks put into buckets.\n\n![Counts array put into buckets.](../Figures/1338/counts_into_buckets.png)\n\nAfter putting all the items into their respective \"buckets\", we usually then convert the input back into a standard array. However, we're not going to do that here. We can process the items in the \"bucket\" form, and in fact it's more efficient to do so for this problem.\n\nAssuming the items to be sorted *are all positive integers* (it can be adapted to work with negatives too), Bucket Sort's time and space complexity is proportional to the number of items to be sorted, and to the size of the largest item, i.e. where $$m$$ is the largest item in the array, and $$n$$ is the number of items in the array, the time complexity is $$O(\\max(n, m)) = O(n + m)$$, and the space complexity is $$O(m)$$. Therefore, bucket sort generally works well when $$m$$ is low and $$n$$ is high (i.e. lots of numbers within a small range.).\n\nHere we know that the maximum number in `counts` couldn't possibly be higher than $$n$$. If it was higher than $$n$$, then there has to have been more items in `arr` to begin with, which would be a contradiction! We also know that the numbers are all positive integers (a negative count makes no sense in this context). Therefore, this problem is a suitable candidate for Bucket Sort, and with $$m ≤ n$$, the time complexity simplifies to $$O(n + n) = O(n)$$. \n\nTo make the algorithm a little more efficient in practice, we can identify what the largest count is while doing the first part of the algorithm. We then know that this is the largest bucket we'll need. This will mean too that when we go to get numbers out of the buckets, we won't be having to go past lots of zeroes before we hit the first meaningful data point.\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/GuLJg9Jg/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"GuLJg9Jg\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity : $$O(n)$$.\n\n    The first step is the same as Approach 2, with a cost of $$O(n)$$.\n\n    The bucket sorting, as explained above, is also $$O(n)$$.\n\n    Therefore, the total time complexity of this algorithm is $$O(n)$$.\n\n\n- Space Complexity : $$O(n)$$.\n\n    We require $$O(n)$$ extra space for the `HashMap`, and then up to $$O(n)$$ extra space to do the Bucket Sort.\n\n\n</br>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

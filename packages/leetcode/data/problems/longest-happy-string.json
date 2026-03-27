@@ -1,0 +1,140 @@
+{
+  "questionId": "1304",
+  "questionFrontendId": "1405",
+  "title": "Longest Happy String",
+  "titleSlug": "longest-happy-string",
+  "difficulty": "Medium",
+  "content": "<p>A string <code>s</code> is called <strong>happy</strong> if it satisfies the following conditions:</p>\n\n<ul>\n\t<li><code>s</code> only contains the letters <code>&#39;a&#39;</code>, <code>&#39;b&#39;</code>, and <code>&#39;c&#39;</code>.</li>\n\t<li><code>s</code> does not contain any of <code>&quot;aaa&quot;</code>, <code>&quot;bbb&quot;</code>, or <code>&quot;ccc&quot;</code> as a substring.</li>\n\t<li><code>s</code> contains <strong>at most</strong> <code>a</code> occurrences of the letter <code>&#39;a&#39;</code>.</li>\n\t<li><code>s</code> contains <strong>at most</strong> <code>b</code> occurrences of the letter <code>&#39;b&#39;</code>.</li>\n\t<li><code>s</code> contains <strong>at most</strong> <code>c</code> occurrences of the letter <code>&#39;c&#39;</code>.</li>\n</ul>\n\n<p>Given three integers <code>a</code>, <code>b</code>, and <code>c</code>, return <em>the <strong>longest possible happy </strong>string</em>. If there are multiple longest happy strings, return <em>any of them</em>. If there is no such string, return <em>the empty string </em><code>&quot;&quot;</code>.</p>\n\n<p>A <strong>substring</strong> is a contiguous sequence of characters within a string.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> a = 1, b = 1, c = 7\n<strong>Output:</strong> &quot;ccaccbcc&quot;\n<strong>Explanation:</strong> &quot;ccbccacc&quot; would also be a correct answer.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> a = 7, b = 1, c = 0\n<strong>Output:</strong> &quot;aabaa&quot;\n<strong>Explanation:</strong> It is the only correct answer in this case.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= a, b, c &lt;= 100</code></li>\n\t<li><code>a + b + c &gt; 0</code></li>\n</ul>\n",
+  "hints": [
+    "Use a greedy approach.",
+    "Use the letter with the maximum current limit that can be added without breaking the condition."
+  ],
+  "metaData": "{\n  \"name\": \"longestDiverseString\",\n  \"params\": [\n    {\n      \"name\": \"a\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"b\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"c\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"217.9K\", \"totalSubmission\": \"332.6K\", \"totalAcceptedRaw\": 217889, \"totalSubmissionRaw\": 332644, \"acRate\": \"65.5%\"}",
+  "likes": 2798,
+  "dislikes": 320,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Reorganize String\", \"titleSlug\": \"reorganize-string\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "1\n1\n7",
+    "7\n1\n0"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 14, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 7, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"geico\", \"name\": \"Geico\"}, {\"timesEncountered\": 2, \"slug\": \"rakuten\", \"name\": \"Rakuten\"}, {\"timesEncountered\": 2, \"slug\": \"wayfair\", \"name\": \"Wayfair\"}, {\"timesEncountered\": 2, \"slug\": \"capgemini\", \"name\": \"Capgemini\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string longestDiverseString(int a, int b, int c) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String longestDiverseString(int a, int b, int c) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def longestDiverseString(self, a: int, b: int, c: int) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def longestDiverseString(self, a, b, c):\n        \"\"\"\n        :type a: int\n        :type b: int\n        :type c: int\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} a\n * @param {number} b\n * @param {number} c\n * @return {string}\n */\nvar longestDiverseString = function(a, b, c) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function longestDiverseString(a: number, b: number, c: number): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string LongestDiverseString(int a, int b, int c) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* longestDiverseString(int a, int b, int c) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func longestDiverseString(a int, b int, c int) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun longestDiverseString(a: Int, b: Int, c: Int): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func longestDiverseString(_ a: Int, _ b: Int, _ c: Int) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn longest_diverse_string(a: i32, b: i32, c: i32) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} a\n# @param {Integer} b\n# @param {Integer} c\n# @return {String}\ndef longest_diverse_string(a, b, c)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $a\n     * @param Integer $b\n     * @param Integer $c\n     * @return String\n     */\n    function longestDiverseString($a, $b, $c) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String longestDiverseString(int a, int b, int c) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def longestDiverseString(a: Int, b: Int, c: Int): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec longest_diverse_string(a :: integer, b :: integer, c :: integer) :: String.t\n  def longest_diverse_string(a, b, c) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec longest_diverse_string(A :: integer(), B :: integer(), C :: integer()) -> unicode:unicode_binary().\nlongest_diverse_string(A, B, C) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (longest-diverse-string a b c)\n  (-> exact-integer? exact-integer? exact-integer? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2529",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Priority Queue\n\n#### Intuition\n\nWe are given three integers `a`, `b`, and `c`, representing the number of characters `a`, `b`, and `c` we can use. The goal is to create the longest string possible with these characters while making sure that no three consecutive characters are the same.\n\nTo make the string as long as possible, we should try to use the character that appears most often without breaking the rule about three consecutive characters. If using the most frequent character would cause three in a row, we use the next most frequent character instead. Refer to the appendix section, to understand the mathematical proof of this approach.\n\nWe can use a max-heap to solve this problem efficiently. The heap lets us pick the character with the highest remaining count, and switch to the next character if needed to avoid triples.\n\nFirst, we put the counts of `a`, `b`, and `c` into a max-heap. If adding the most frequent character would create three in a row, we pick the second most frequent one. After adding a character, we reduce its count. If it still has characters left, we put it back into the heap.\n\nBy always selecting the character with the highest count, except when it would break the rule, we ensure the string is as long as possible.\n\n#### Algorithm\n\n1. Create a max-heap `pq` to store the counts of `a`, `b`, and `c` in descending order of their counts and a string `ans` to store the string answer.\n2. Push `(a, 'a')`, `(b, 'b')`, and `(c, 'c')` into the heap if their counts are greater than 0.\n3. Iterate Until `pq` is Empty:\n    - Pop the most frequent character from the heap.\n    - If adding this character would result in three consecutive identical characters in the answer string, do the following:\n        - Check the next most frequent character by popping it from the heap.\n        - Add this second character to the answer. If its `count` is still positive after use, push it back into the heap.\n        - Push the previously popped character (the most frequent) back into the heap without adding it to the answer yet.\n    - Otherwise, if the character can be added without violating the three-consecutive rule, append it to `ans` and decrement its `count`.\n    - If a character’s count is still greater than 0 after being appended, push it back into the heap.\n4. Once the heap is empty and no more characters can be added, return the constructed string `ans` as the result.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/YJHseUCT/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"YJHseUCT\"></iframe>\n\n#### Complexity Analysis\n\n- Time complexity: $O(a + b + c)$\n\n    Each operation on the priority queue (insertion or removal) takes $O(log k)$ time, where `k` is the number of distinct characters. In this case, `k` is equal to 3, so each heap operation takes $O(log 3)$, which simplifies to $O(1)$ time.\n    \n    In each iteration, one character is either added to the result string or skipped, and there are `a+b+c` characters in total. Therefore, the total number of iterations is proportional to `a+b+c`.\n    \n    Thus, the overall time complexity is $O(a + b + c)$.\n\n- Space complexity: $O(1)$\n\n    The space complexity is $O(1)$, as the heap contains at most three elements and the result string uses $O(a+b+c)$ space (not counted in the solution space).\n\n---\n\n### Approach 2: Using Counters\n\n#### Intuition\n\nSince we need to track the counts of only three characters, we can use three integer counters instead of a priority queue.\n\nSimilar to the previous approach, we add the most frequent character to the string, and also track how many times we add each letter in a row using separate counters (`curra`, `currb`, and `currc`).\n\nIf one of these counters reaches 2, we stop adding that letter. Instead, we add the second most-frequent letter with a counter of 0. By repeating this process, we can create the longest possible string.\n\n#### Algorithm\n\n1. Set `curra`, `currb`, and `currc` to 0. These integers will track the current count of consecutive 'a's, 'b's, and 'c's added to the result string.\n2. Calculate `totalIterations` as the sum of `a`, `b`, and `c`.\n3. Initialize an empty string `ans` to store the final result.\n4. Iterate Through Total Iterations:\n    - For each iteration from 0 to `totalIterations - 1`, determine which character to add to the result string:\n        - Condition for 'a':\n            - If 'a' has the highest count compared to 'b' and 'c' and its consecutive count `curra` is less than 2, or if 'a' has remaining characters and either `currb` or `currc` equals 2, then add 'a' to the string.\n            - Decrement the count of 'a' and increment `curra`. Reset `currb` and `currc` to 0.\n        - Condition for 'b':\n            - If 'b' has the highest count compared to 'a' and 'c' and its consecutive count `currb` is less than 2, or if 'b' has remaining characters and either `curra` or `currc ` equals 2, then add 'b' to the string.\n            - Decrement the count of 'b' and increment `currb`. Reset `curra` and `currc` to 0.\n        - Condition for 'c':\n            - If 'c' has the highest count compared to 'a' and 'b' and its consecutive count `currc` is less than 2, or if 'c' has remaining characters and either `curra` or `currb` equals 2, then add 'c' to the string.\n            - Decrement the count of 'c' and increment `currc`. Reset `curra` and `currb` to 0.\n5. Return the `ans` string.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/WY764vDH/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"WY764vDH\"></iframe>\n\n#### Complexity Analysis\n\n- Time complexity: $O(a + b + c)$\n\n    We iterate through the string for a total of `a+b+c` iterations, which is the maximum possible length of the string. Each iteration involves a constant amount of work (checking conditions and appending a character to the result).\n\n- Space complexity: $O(1)$\n\n    The space used for the counters `curra`, `currb`, and `currc` is constant and does not depend on the input size, so it does not affect the overall space complexity.\n\n---\n\n### Appendix: Mathematical Proof for the greedy approach\n\nTo mathematically prove that the algorithm produces an optimal solution, let’s assume two cases based on the values of `a`, `b`, `c` (for simplicity, assume `a`≤`b`≤`c`). First, we'll calculate the maximum possible value of `c` that can be fully utilised to create a happy string.\n\nSince `c` is the most frequent character, we can form groups where two `c` characters are followed by one `a` or one `b`, such as: `cc-a`, `cc-b`. This way, each group that contains two `c` characters requires at least one `a` or `b` character. We can use up to `a + b` groups of two `c`s, which consumes 2 * (`a`+`b`) `c` characters in total. We can add 2 `c`s after this sequence, which makes it 2 * (`a` + `b` + 1). \n\nTherefore, if there are more than 2 * (`a` + `b` + 1) `c`s, we can not construct a happy string without removing some `c` characters.\n\nCase 1: `c` ≤ 2 * (`a` + `b` + 1)\n\nIn our algorithm, we had added the most frequently occuring characters in the string, while alternating other characters to avoid three consecutive characters. The algorithm will operate in three steps:\n\n1. Step 1: Decrement `c` and alternate with `a` or `b`:\n   - Since `c` is the most frequent, the algorithm attempts to balance the character counts by constructing pairs of `c` with either `a` or `b`, ensuring no three consecutive characters are the same.\n   - In each step:\n     - `c` is decremented by 2 (two `c` characters are added), and either `a` or `b` is decremented by 1.\n     - Since `c` ≤ 2 (`a` + `b` + 1), and each time we pick `a` or `b`, we also select 2 occurences of `c`. This guarantees that eventually `c` will be reduced to match `b` or `a`.\n     - Since `b` > `a`, `c` would reach the value of `b` before `a`.\n\n2. Step 2: Alternate `b` and `c` until `a` = `b`:\n   - After Phase 1, we reach `b` = `c`.\n   - Now, we alternate between adding `b` and `c` characters, ensuring we do not exceed two consecutive characters.\n   - In each step, both `b` and `c` are decremented by 1 and added to the string until `a` = `b`.\n\n3. Step 3: All counts are equal, alternate until depletion:\n   - At this point, `a` = `b` = `c`.\n   - The algorithm can simply alternate among `a`, `b`, and `c` characters, decrementing each by 1 in each cycle.\n   - This continues until all counts reach 0, exhausting all characters.\n\nConclusion: Since the algorithm reaches zero for all counts simultaneously, it has used all `a + b + c` characters, achieving an optimal solution.\n\nCase 2: `c` > 2 * (`a` + `b` + 1)\n\n1. Limit on Usage of 'c' Characters: It is impossible to use more than 2 * (`a` + `b` + 1) `c` characters without violating the consecutive constraint (as adding more would lead to three consecutive `c`s).\n  \n2. Optimal Length: Assuming we remove all extra `c`s from the string, the algorithm will construct a string of length `a` + `b` + 2 * (`a` + `b` + 1), as this is the maximum number of characters that can be used while obeying the no-three-consecutive rule.\n\nTherefore, the algorithm is proven to give an optimal solution in both cases, either using all characters or maximizing the string length given the constraints.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

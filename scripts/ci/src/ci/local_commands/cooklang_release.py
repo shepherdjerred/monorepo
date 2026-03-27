@@ -25,7 +25,7 @@ def register(subparsers: argparse._SubParsersAction) -> None:  # type: ignore[ty
     p = subparsers.add_parser("cooklang-release", help="Release cooklang-for-obsidian plugin")
     p.add_argument("--version", dest="cooklang_version", required=True, help="Release version")
     p.add_argument("--confirm", action="store_true", help="Confirm push to external repo")
-    p.add_argument("--token", default=None, help="GitHub token (default: GITHUB_TOKEN env or gh auth token)")
+    p.add_argument("--token", default=None, help="GitHub token (default: GH_TOKEN env or gh auth token)")
     p.set_defaults(func=run)
 
 
@@ -35,7 +35,7 @@ def _repo_root() -> Path:
 
 
 def _get_token() -> str:
-    token = os.environ.get("GITHUB_TOKEN", "")
+    token = os.environ.get("GH_TOKEN", "")
     if token:
         return token
     result = subprocess.run(["gh", "auth", "token"], capture_output=True, text=True, check=False)
@@ -50,7 +50,7 @@ def run(args: argparse.Namespace, config: ReleaseConfig) -> None:
 
     token = args.token or _get_token()
     if not token and not dry_run:
-        print("Error: GITHUB_TOKEN or `gh auth token` required", file=sys.stderr)
+        print("Error: GH_TOKEN or `gh auth token` required", file=sys.stderr)
         sys.exit(1)
 
     repo_root = _repo_root()

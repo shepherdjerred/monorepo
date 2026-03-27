@@ -1,0 +1,139 @@
+{
+  "questionId": "1559",
+  "questionFrontendId": "1463",
+  "title": "Cherry Pickup II",
+  "titleSlug": "cherry-pickup-ii",
+  "difficulty": "Hard",
+  "content": "<p>You are given a <code>rows x cols</code> matrix <code>grid</code> representing a field of cherries where <code>grid[i][j]</code> represents the number of cherries that you can collect from the <code>(i, j)</code> cell.</p>\n\n<p>You have two robots that can collect cherries for you:</p>\n\n<ul>\n\t<li><strong>Robot #1</strong> is located at the <strong>top-left corner</strong> <code>(0, 0)</code>, and</li>\n\t<li><strong>Robot #2</strong> is located at the <strong>top-right corner</strong> <code>(0, cols - 1)</code>.</li>\n</ul>\n\n<p>Return <em>the maximum number of cherries collection using both robots by following the rules below</em>:</p>\n\n<ul>\n\t<li>From a cell <code>(i, j)</code>, robots can move to cell <code>(i + 1, j - 1)</code>, <code>(i + 1, j)</code>, or <code>(i + 1, j + 1)</code>.</li>\n\t<li>When any robot passes through a cell, It picks up all cherries, and the cell becomes an empty cell.</li>\n\t<li>When both robots stay in the same cell, only one takes the cherries.</li>\n\t<li>Both robots cannot move outside of the grid at any moment.</li>\n\t<li>Both robots should reach the bottom row in <code>grid</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/04/29/sample_1_1802.png\" style=\"width: 374px; height: 501px;\" />\n<pre>\n<strong>Input:</strong> grid = [[3,1,1],[2,5,1],[1,5,5],[2,1,1]]\n<strong>Output:</strong> 24\n<strong>Explanation:</strong> Path of robot #1 and #2 are described in color green and blue respectively.\nCherries taken by Robot #1, (3 + 2 + 5 + 2) = 12.\nCherries taken by Robot #2, (1 + 5 + 5 + 1) = 12.\nTotal of cherries: 12 + 12 = 24.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/04/23/sample_2_1802.png\" style=\"width: 500px; height: 452px;\" />\n<pre>\n<strong>Input:</strong> grid = [[1,0,0,0,0,0,1],[2,0,0,0,0,3,0],[2,0,9,0,0,0,0],[0,3,0,5,4,0,0],[1,0,2,3,0,0,6]]\n<strong>Output:</strong> 28\n<strong>Explanation:</strong> Path of robot #1 and #2 are described in color green and blue respectively.\nCherries taken by Robot #1, (1 + 9 + 5 + 2) = 17.\nCherries taken by Robot #2, (1 + 3 + 4 + 3) = 11.\nTotal of cherries: 17 + 11 = 28.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>rows == grid.length</code></li>\n\t<li><code>cols == grid[i].length</code></li>\n\t<li><code>2 &lt;= rows, cols &lt;= 70</code></li>\n\t<li><code>0 &lt;= grid[i][j] &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "Use dynamic programming, define DP[i][j][k]: The maximum cherries that both robots can take  starting on the ith row, and column j and k of Robot 1 and 2 respectively."
+  ],
+  "metaData": "{\n  \"name\": \"cherryPickup\",\n  \"params\": [\n    {\n      \"name\": \"grid\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"232K\", \"totalSubmission\": \"320.8K\", \"totalAcceptedRaw\": 232019, \"totalSubmissionRaw\": 320757, \"acRate\": \"72.3%\"}",
+  "likes": 4472,
+  "dislikes": 56,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[3,1,1],[2,5,1],[1,5,5],[2,1,1]]",
+    "[[1,0,0,0,0,0,1],[2,0,0,0,0,3,0],[2,0,9,0,0,0,0],[0,3,0,5,4,0,0],[1,0,2,3,0,0,6]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 3, \"slug\": \"sprinklr\", \"name\": \"Sprinklr\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"rubrik\", \"name\": \"Rubrik\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int cherryPickup(vector<vector<int>>& grid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int cherryPickup(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def cherryPickup(self, grid: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def cherryPickup(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} grid\n * @return {number}\n */\nvar cherryPickup = function(grid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function cherryPickup(grid: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CherryPickup(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int cherryPickup(int** grid, int gridSize, int* gridColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func cherryPickup(grid [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun cherryPickup(grid: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func cherryPickup(_ grid: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn cherry_pickup(grid: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} grid\n# @return {Integer}\ndef cherry_pickup(grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $grid\n     * @return Integer\n     */\n    function cherryPickup($grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int cherryPickup(List<List<int>> grid) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def cherryPickup(grid: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec cherry_pickup(grid :: [[integer]]) :: integer\n  def cherry_pickup(grid) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec cherry_pickup(Grid :: [[integer()]]) -> integer().\ncherry_pickup(Grid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (cherry-pickup grid)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1019",
+    "content": "[TOC]\n\n### Overview\nYou probably can guess from the problem title that this problem is an extension of the original [Cherry Pickup](https://leetcode.com/problems/cherry-pickup/). \n\nIn this problem, we do not need to return to the starting point but have two robots instead of one. However, the essence of this problem does not change, and the same method is still available.\n\nBelow, we will discuss two similar approaches: *Dynamic Programming (Top Down)* and *Dynamic Programming (Bottom Up)*.\n\nThe first one is also known as dfs with memoization or memoization dp, and the second one is also known as tabulation dp. They have the same main idea but different coding approaches.\n\n---\n### Approach #1: Dynamic Programming (Top Down)\n\n**Intuition**\n\n>In this part, we will explain how to think of this approach step by step.\n>\n>If you are only interested in the pure algorithm, you can jump to the algorithm part.\n\nWe need to move two robots! Note that the order of moving robot1 or robot2 does not matter since it would not impact the cherries we can pick. The number of cherries we can pick only depends on the tracks of our robots.\n\nTherefore, we can move the robot1 and robot2 in any order we want. We aim to apply DP, so we are looking for an order that suitable for DP.\n\nLet's try a few possible moving orders.\n\nCan we move robot1 firstly to the bottom row, and then move robot2?\n\nMaybe not. In this case, the movement of robot1 will impact the movement of robot2. In other words, the optimal track of robot2 depends on the track of robot1. If we want to apply DP, we need to record the whole track of robot1 as the state. The number of sub-problems is too much.\n\nIn fact, in any case, when we move one robot several steps earlier than the other, the movement of the first robot will impact the movement of the second robot.\n\nUnless we move them **synchronously** (i.e., move one step of robot1 and robot2 at the same time).\n\nLet's define the DP state as `(row1, col1, row2, col2)`, where `(row1, col1)` represents the location of robot1, and `(row2, col2)` represents the location of robot2.\n\nIf we move them synchronously, robot1 and robot2 will always on the same row. Therefore, `row1 == row2`.\n\nLet `row = row1`. The DP state is simplified to `(row, col1, col2)`, where `(row, col1)` represents the location of robot1, and `(row, col2)` represents the location of robot2.\n\nOK, time to define the DP function.\n\n>Since it's a top-down DP approach, we try to solve the problem with the DP function. Check approach 2 for DP array (bottom-up).\n\nLet `dp(row, col1, col2)` return the maximum cherries we can pick if robot1 starts at `(row, col1)` and robot2 starts at `(row, col2)`.\n\n>You can try changing different `dp` meaning to yield some other similar approaches. For example, let `dp(row, col1, col2)` mean the maximum cherries we can pick if robot1 **ends** at `(row, col1)` and robot2 **ends** at `(row, col2)`.\n\nThe base cases are that robot1 and robot2 both start at the bottom line. In this case, they do not need to move. All we need to do is to collect the cherries at current cells. Remember not to double count if robot1 and robot2 are at exactly the same cell.\n\nIn other cases, we need to add the maximum cherries robots can pick in the future. Here comes the transition function.\n\nSince we move robots synchronously, and each robot has three different movements for one step, we totally have $$3*3 = 9$$ possible movements for two robots:\n\n```text\n    ROBOT1 | ROBOT2\n------------------------\n LEFT DOWN |  LEFT DOWN\n LEFT DOWN |       DOWN\n LEFT DOWN | RIGHT DOWN\n      DOWN |  LEFT DOWN\n      DOWN |       DOWN\n      DOWN | RIGHT DOWN\nRIGHT DOWN |  LEFT DOWN\nRIGHT DOWN |       DOWN  \nRIGHT DOWN | RIGHT DOWN  \n```\n\nThe maximum cherries robots can pick in the future would be the max of those 9 movements, which is the maximum of `dp(row+1, new_col1, new_col2)`, where `new_col1` can be `col1`, `col1+1`, or `col1-1`, and `new_col2` can be `col2`, `col2+1`, or `col2-1`.\n\nRemember to use a map or an array to store the results of our `dp` function to prevent redundant calculating.\n\n**Algorithm**\n\nDefine a `dp` function that takes three integers `row`, `col1`, and `col2` as input.\n\n`(row, col1)` represents the location of robot1, and `(row, col2)` represents the location of robot2.\n\nThe `dp` function returns the maximum cherries we can pick if robot1 starts at `(row, col1)` and robot2 starts at `(row, col2)`.\n\nIn the `dp` function:\n\n- Collect the cherry at `(row, col1)` and `(row, col2)`. Do not double count if `col1 == col2`.\n\n- If we do not reach the last row, we need to add the maximum cherries we can pick in the future.\n\n- The maximum cherries we can pick in the future is the maximum of `dp(row+1, new_col1, new_col2)`, where `new_col1` can be `col1`, `col1+1`, or `col1-1`, and `new_col2` can be `col2`, `col2+1`, or `col2-1`.\n\n- Return the total cherries we can pick.\n\nFinally, return `dp(row=0, col1=0, col2=last_column)` in the main function.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/ci5CrUra/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ci5CrUra\"></iframe>\n\n**Complexity Analysis**\n\nLet $$M$$ be the number of rows in `grid` and $$N$$ be the number of columns in `grid`.\n\n* Time Complexity: $$\\mathcal{O}(MN^2)$$, since our `helper` function have three variables as input, which have $$M$$, $$N$$, and $$N$$ possible values respectively. In the worst case, we have to calculate them all once, so that would cost $$\\mathcal{O}(M \\cdot N \\cdot N) = \\mathcal{O}(MN^2)$$. Also, since we save the results after calculating, we would not have repeated calculation.\n\n* Space Complexity: $$\\mathcal{O}(MN^2)$$, since our `helper` function have three variables as input, and they have $$M$$, $$N$$, and $$N$$ possible values respectively. We need a map with size of $$\\mathcal{O}(M \\cdot N \\cdot N) = \\mathcal{O}(MN^2)$$ to store the results.\n\n---\n\n### Approach #2: Dynamic Programming (Bottom Up)\n\n**Intuition**\n\nSimilarly, we need a three-dimension array `dp[row][col1][col2]` to store calculated results:\n\n`dp[row][col1][col2]` represents the maximum cherries we can pick if robot1 starts at `(row, col1)` and robot2 starts at `(row, col2)`.\n\nRemember, we move robot1 and robot2 synchronously, so they are always on the same row.\n\nThe base cases are that robot1 and robot2 both start at the bottom row. In this case, we only need to calculate the cherry at current cells.\n\nOtherwise, apply the transition equation to get the maximum cherries we can pick in the future.\n\nSince the base case is at the bottom row, we need to iterate from the bottom row to the top row when filling the `dp` array.\n\n>You can use state compression to save the first dimension since we only need `dp[row+1]` when calculating `dp[row]`.\n\n>You can change the meaning of `dp[row][col1][col2]` and some corresponding codes to get some other similar approaches. For example, let `dp[row][col1][col2]` mean the maximum cherries we can pick if robot1 **ends** at `(row, col1)` and robot2 **ends** at `(row, col2)`.\n\n**Algorithm**\n\nDefine a three-dimension `dp` array where each dimension has a size of `m`, `n`, and `n` respectively.\n\n`dp[row][col1][col2]` represents the maximum cherries we can pick if robot1 starts at `(row, col1)` and robot2 starts at `(row, col2)`.\n\nTo compute `dp[row][col1][col2]` (transition equation):\n\n- Collect the cherry at `(row, col1)` and `(row, col2)`. Do not double count if `col1 == col2`.\n\n- If we are not in the last row, we need to add the maximum cherries we can pick in the future.\n\n- The maximum cherries we can pick in the future is the maximum of `dp[row+1][new_col1][new_col2]`, where `new_col1` can be `col1`, `col1+1`, or `col1-1`, and `new_col2` can be `col2`, `col2+1`, or `col2-1`.\n\nFinally, return `dp[0][0][last_column]`.\n\n>State compression can be used to save the first dimension: `dp[col1][col2]`. Just reuse the dp array after iterating one row.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/DvwFT49y/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"DvwFT49y\"></iframe>\n\n**Complexity Analysis**\n\nLet $$M$$ be the number of rows in `grid` and $$N$$ be the number of columns in `grid`.\n\n* Time Complexity: $$\\mathcal{O}(MN^2)$$, since our dynamic programming has three nested for-loops, which have $$M$$, $$N$$, and $$N$$ iterations respectively. In total, it costs $$\\mathcal{O}(M \\cdot N \\cdot N) = \\mathcal{O}(MN^2)$$.\n\n* Space Complexity: $$\\mathcal{O}(MN^2)$$ if not use state compression, since our `dp` array has $$\\mathcal{O}(M \\cdot N \\cdot N) = \\mathcal{O}(MN^2)$$ elements. $$\\mathcal{O}(N^2)$$ if use state compression, since we can reuse the first dimension, and our `dp` array only has $$\\mathcal{O}(N \\cdot N) = \\mathcal{O}(N^2)$$ elements.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

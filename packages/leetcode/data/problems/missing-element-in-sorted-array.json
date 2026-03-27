@@ -1,0 +1,137 @@
+{
+  "questionId": "1059",
+  "questionFrontendId": "1060",
+  "title": "Missing Element in Sorted Array",
+  "titleSlug": "missing-element-in-sorted-array",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code> which is sorted in <strong>ascending order</strong> and all of its elements are <strong>unique</strong> and given also an integer <code>k</code>, return the <code>k<sup>th</sup></code> missing number starting from the leftmost number of the array.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [4,7,9,10], k = 1\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> The first missing number is 5.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [4,7,9,10], k = 3\n<strong>Output:</strong> 8\n<strong>Explanation:</strong> The missing numbers are [5,6,8,...], hence the third missing number is 8.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,4], k = 3\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> The missing numbers are [3,5,6,7,...], hence the third missing number is 6.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>7</sup></code></li>\n\t<li><code>nums</code> is sorted in <strong>ascending order,</strong> and all the elements are <strong>unique</strong>.</li>\n\t<li><code>1 &lt;= k &lt;= 10<sup>8</sup></code></li>\n</ul>\n\n<p>&nbsp;</p>\n<strong>Follow up:</strong> Can you find a logarithmic time complexity (i.e., <code>O(log(n))</code>) solution?",
+  "hints": [
+    "First define a function f(x) that counts the number of missing elements until x.",
+    "Then use binary search with the given function f(x) to find the kth missing element."
+  ],
+  "metaData": "{\r\n  \"name\": \"missingElement\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"k\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"170.4K\", \"totalSubmission\": \"285.5K\", \"totalAcceptedRaw\": 170352, \"totalSubmissionRaw\": 285462, \"acRate\": \"59.7%\"}",
+  "likes": 1738,
+  "dislikes": 69,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[4,7,9,10]\n1",
+    "[4,7,9,10]\n3",
+    "[1,2,4]\n3"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"paypal\", \"name\": \"PayPal\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int missingElement(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int missingElement(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def missingElement(self, nums: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def missingElement(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number}\n */\nvar missingElement = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function missingElement(nums: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MissingElement(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int missingElement(int* nums, int numsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func missingElement(nums []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun missingElement(nums: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func missingElement(_ nums: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn missing_element(nums: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Integer}\ndef missing_element(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Integer\n     */\n    function missingElement($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int missingElement(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def missingElement(nums: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec missing_element(nums :: [integer], k :: integer) :: integer\n  def missing_element(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec missing_element(Nums :: [integer()], K :: integer()) -> integer().\nmissing_element(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (missing-element nums k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1859",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nWe have filled in the missing numbers and can see that the third missing number is 8. However, we need to pay attention to the size of k (potentially up to $10^8$) in the problem - we cannot traverse the numbers one by one as it may lead to a time limit exceeded error.\n\n\n![img](../Figures/1060/intro.png)\n\n\n\n---\n\n### Approach 1: Iteration\n\n\n#### Intuition   \n\nSo we cannot traverse all integers one by one. Instead, we can traverse the `nums` array. Of course, the difference between two adjacent numbers in \"nums\" may not necessarily be `1`. Therefore, we can calculate how many missing elements exist between these two numbers.\n\n\nFor each index `i`, we can set `missed_in_gap = nums[i] - nums[i - 1] - 1` to get the number of missing elements between the interval `[nums[i], nums[i - 1]]`. \n\n![img](../Figures/1060/1.png)\n\n\n<br>\n\nNow, let's see how we can solve the problem. We start from `i = 1` and check if the interval `[nums[i - 1], nums[i]]` contains less than `k` missing elements. \n\n![img](../Figures/1060/2.png)\n\nIf it contains missing elements less than `k`, which is `missed_in_gap < k`, then the $$k^{th}$$ missing element must be on the right side of `nums[i]`, so we can reduce `k` by `missed_in_gap`, and move on to the next interval `[nums[i], nums[i + 1]]` by incrementing `i` by 1.\n\n\n![img](../Figures/1060/3.png)\n\n\n![img](../Figures/1060/4.png)\n\n\n![img](../Figures/1060/5.png)\n\nIf we have finished the iteration while there is still `k` left, the $$k^{th}$$ missing element is at the $$k^{th}$$ position to the right of `nums[n - 1]`, which is `answer = nums[n - 1] + k`. \n\n![img](../Figures/1060/6.png)\n\n<br>\n\nOtherwise (`missed_in_gap >= k`,), the $$k^{th}$$ missing element must be between `nums[i - 1]` and `nums[i]`. The $$k^{th}$$ missing element is at the $$k^{th}$$ position to the right of `nums[i - 1]`, which is `answer = nums[i - 1] + k`. \n\n![img](../Figures/1060/7.png)\n\nAs shown in the picture above, `i = 1`, the count is `missed_in_gap = nums[1] - nums[0] - 1 = 2 = k`, which means the $$2^{nd}$$ missing element is within the range `(4, 7)`. We can get it using `answer = nums[0] + 2 = 6`.\n\n\n<br>\n\n#### Algorithm\n\n1) Let `n` be the size of `nums`.\n2) Iterate over index `i` from `1` to `n`, for each index:\n    - Calculate the number of missing elements between `nums[i - 1]` and `nums[i]` as `missed_in_gap = nums[i] - nums[i - 1] - 1`.\n    - If `missed_in_gap` is greater than or equal to `k`, return `nums[i - 1] + k`. Otherwise, reduce `k` by `missed_in_gap` and repeat step 2.\n    - Otherwise, return `nums[i - 1] + k`.\n3) If we have reached the end of `nums` and `k` is still larger than 0, return `nums[-1] + k`.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/TGbskRzn/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"TGbskRzn\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of the input array `nums`.\n\n* Time complexity: $$O(n)$$\n\n    - The algorithm requires iterating over the entire array at most once to calculate the number of missing elements between each adjacent pair of numbers.\n    \n\n* Space complexity: $$O(1)$$\n\n    - We only use a constant amount of extra space for variables `missed_in_gap` and `i`.\n\n<br/>\n\n\n\n---\n\n### Approach 2: Binary Search\n\n#### Intuition   \n\n\nAnother approach to solving this problem is to use binary search. Instead of focusing on the number of missing elements in every two adjacent numbers like `nums[i]` and `nums[i + 1]`. We will focus on the total number of missing elements on `nums[i]`'s left, that is, within the range `[nums[0], nums[i]]`.\n\nFor an index `i`, we can get the number of missing elements on its left using the following observation. The total number of integers within the range of `[nums[0], nums[i]]` is `nums[i] - nums[0] + 1`. We know that there are `i + 1` existing elements, so the number of missing elements is:\n\n`(nums[i] - nums[0] + 1) - (i + 1) = nums[i] - nums[0] - i`.\n\n![img](../Figures/1060/b2.png)\n\nGiven an index `i`:\n\n- If `nums[i] - nums[0] - i >= k`, the $$k^{th}$$ missing element is on `nums[i]`'s left.\n- Otherwise, the $$k^{th}$$ missing element is on `nums[i]`'s right.\n\nAnother key point is, the number of missing elements increases as `i` moves to the right. \n\n![img](../Figures/1060/b1.png)\n\n\n<br>\n\nNow is the time for binary search, we can define the search space as `left = 0, right = n - 1`. We will then find the midpoint of the range using `mid = right - (right - left) / 2` and calculate the number of missing elements between `nums[mid]` and `nums[0]`. \nWe use `nums[mid] - nums[0] - i` as mentioned above to decide which direction to move the search range:\n\n- If the count is less than `k`, we can update the search range to the right side of the `mid`. \n- Otherwise, we update the search range to the left side of the `mid`.\n\nWe can repeat this process until `left >= right`. At this point, `left`, is **the rightmost index** such that `[nums[0], nums[left]]` has fewer missing elements than `k`.\n\n\nThe answer, the $$k^{th}$$ missing element must be somewhere to the right of `nums[left]`. There will be no elements in the array between the answer and `nums[left]`. \n\n\nWe don't know the `answer` yet, but let's focus on the range `[nums[0], answer]`. We know that it contains `left + 1` elements from the input array, and `k` missing elements (by definition, the last element of the range `answer` is the $k^{th}$ missing element). Therefore the total number of elements in the range is:\n\n`elements from the input + missing elements = left + 1 + k`\n\nFinally, as we know, `answer - nums[0] + 1` is the size of the range. Setting these equations equal to each other, we can rearrange for `answer`.\n\n`answer - nums[0] + 1 = left + 1 + k` -> `answer = nums[0] + left + k`.\n\n\n\n\n<br>\n\n#### Algorithm\n\n1) Let `n` be the size of `nums`. Initialize the boundaries of the search space, set `left = 0` and `right = n - 1`.\n2) While `left` is less than `right`, repeat step 3 and 4.\n\n3) Calculate the midpoint of `left` and `right` as `mid = right - (right - left) // 2`.\n\n4) Calculate the number of missing elements between `nums[mid]` and `nums[0]` as `nums[mid] - nums[0] - mid`.\n    - If the count of missing elements calculated in last step is less than `k`, set `left = mid`. \n    - Otherwise, set `right = mid - 1`.\n\n5) Return `nums[0] + k + left`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/S7vXugPo/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"S7vXugPo\"></iframe>\n\n\n#### Complexity Analysis\n\nLLet $$n$$ be the length of the input array `nums`.\n\n* Time complexity: $$O(\\log n)$$\n\n    - The algorithm repeatedly divides the search space in half using binary search until it finds the $$k^{th}$$ missing element.\n    \n\n* Space complexity: $$O(1)$$\n\n    - The algorithm only uses a constant amount of extra space for variables `left`, `right`, and `mid`.\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

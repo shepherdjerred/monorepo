@@ -19,6 +19,14 @@ pre-commit:
                 - name: gitleaks
                   run: gitleaks protect --staged --redact --no-banner
 
+                - name: env-var-names
+                  glob: "**/*.{ts,rs,py,fish,tmpl,yaml,yml,env,md,sh,swift}"
+                  exclude:
+                    - "archive/**"
+                    - "**/generated/**"
+                    - "**/node_modules/**"
+                  run: bash scripts/check-env-var-names.sh {staged_files}
+
                 - name: merge-conflicts
                   glob: "*.{ts,tsx,js,jsx,json,yml,yaml,md,rs,sh,bzl,toml,astro}"
                   exclude:

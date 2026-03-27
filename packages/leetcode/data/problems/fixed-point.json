@@ -1,0 +1,136 @@
+{
+  "questionId": "1066",
+  "questionFrontendId": "1064",
+  "title": "Fixed Point",
+  "titleSlug": "fixed-point",
+  "difficulty": "Easy",
+  "content": "<p>Given an array of distinct integers <code>arr</code>, where <code>arr</code> is sorted in <strong>ascending order</strong>, return the smallest index <code>i</code> that satisfies <code>arr[i] == i</code>. If there is no such index, return <code>-1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [-10,-5,0,3,7]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> For the given array, <code>arr[0] = -10, arr[1] = -5, arr[2] = 0, arr[3] = 3</code>, thus the output is 3.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [0,2,5,8,17]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> <code>arr[0] = 0</code>, thus the output is 0.</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [-10,-5,3,4,7,9]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> There is no such <code>i</code> that <code>arr[i] == i</code>, thus the output is -1.</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= arr.length &lt; 10<sup>4</sup></code></li>\n\t<li><code>-10<sup>9</sup> &lt;= arr[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n\n<p>&nbsp;</p>\n<strong>Follow up:</strong> The <code>O(n)</code> solution is very straightforward. Can we do better?",
+  "hints": [
+    "Loop over the array and check the first index i such A[i] == i"
+  ],
+  "metaData": "{\n  \"name\": \"fixedPoint\",\n  \"params\": [\n    {\n      \"name\": \"arr\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"49.4K\", \"totalSubmission\": \"77.4K\", \"totalAcceptedRaw\": 49357, \"totalSubmissionRaw\": 77356, \"acRate\": \"63.8%\"}",
+  "likes": 442,
+  "dislikes": 67,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[-10,-5,0,3,7]",
+    "[0,2,5,8,17]",
+    "[-10,-5,3,4,7,9]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int fixedPoint(vector<int>& arr) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int fixedPoint(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def fixedPoint(self, arr: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def fixedPoint(self, arr):\n        \"\"\"\n        :type arr: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arr\n * @return {number}\n */\nvar fixedPoint = function(arr) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function fixedPoint(arr: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FixedPoint(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int fixedPoint(int* arr, int arrSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func fixedPoint(arr []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun fixedPoint(arr: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func fixedPoint(_ arr: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn fixed_point(arr: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} arr\n# @return {Integer}\ndef fixed_point(arr)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $arr\n     * @return Integer\n     */\n    function fixedPoint($arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int fixedPoint(List<int> arr) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def fixedPoint(arr: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec fixed_point(arr :: [integer]) :: integer\n  def fixed_point(arr) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec fixed_point(Arr :: [integer()]) -> integer().\nfixed_point(Arr) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (fixed-point arr)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1301",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nIn an interview setting, it's important to clarify the problem constraints. Because constraints sometimes help us to guess the expected time complexity of the solution. In this problem, the length of the array can be at max $$10^4$$. In most cases, we can solve a problem involving $$\\leq$$ $$10^8$$ operations with an $$O(N)$$ time complexity solution. A simple linear search solution with $$O(N)$$ time and $$O(1)$$ space complexity would be enough to pass the test cases. But most probably this solution would invite a follow-up, asking to do better. Hence, we will discuss a better-optimized solution than linear search in this article.\n\n> To solve this problem in linear time, we could simply iterate over the array from left to right and return the first index `i` at which `arr[i] == i`. Iterating over the entire array would require $$N$$ operations, hence, $$O(N)$$ time complexity. Furthermore, this naive approach does not require any extra space, so it would have $$O(1)$$ space complexity.\n</br>\n\n---\n\n### Approach 1: Binary Search\n\n**Intuition**\n\nRemember that the array we are given is **sorted** in ascending order. Whenever you are working with **sorted** data, it is always worth considering whether binary search can be applied to the current problem. Hence, let's see if we can use binary search to solve this problem more efficiently.\n\n> If you're not familiar with Binary Search, check out our [Explore Card](https://leetcode.com/explore/learn/card/binary-search/]).\n\nGenerally, a binary search solution has the following steps:\n   \n1. Define the search boundary for the answer variable, say `[left, right]`. This range defines the possible values of the answer to the problem.\n2. Find the midpoint of the above range; here, we will define the midpoint as `mid = (left + right) / 2`.\n3. Check if $$mid$$ can be the answer to our problem.\n\n    - Based on the above check, we redefine our search boundary. Precisely, we reduce the search space to half of the original search space.\n    - We either reduce it to `[left, mid - 1]` or `[mid + 1, right]`.\n    - The method used to check if $$mid$$ can be the answer is problem-dependent. We will discuss this in the latter part of the article.\n\n4. When `mid could be the answer, then set `answer` equal to `mid`. When the size of the search space is reduced to `0` i.e., `left > right`, we can stop the process and return the current value of `answer`.\n\nLet's try to map each of the above steps to the given problem.\n\n-  The answer to the problem (if there is any) is an index in the given array. Hence we can define the left and right boundaries as `0` and `N - 1`, respectively. Here, `N` is the size of the given array.\n- Find `mid = (left + right) / 2`.\n- Check if `mid` can be the answer, there can be three possibilities:\n\n  - `arr[mid] = mid`: This means that `mid` is a possible answer, so we will set `answer` equal to `mid`. However, because we need to find the smallest index, we will keep looking for a smaller index in the left part of `arr` by reducing the search space to `[left, mid - 1]`. We do not include the index `mid` in the search space as we just stored this index in our answer variable.\n  - `arr[mid] < mid` : Let's analyze this scenario:\n\n     ![fig](../Figures/1064/Slide1.PNG)\n     \n     In the above figure, we assumed that the solution is on the left side of `mid` but we ended up with a contradictory inequality. **This means that when `arr[mid]` is less than `mid`, it is impossible to have the answer on the left side of `mid`.** Therefore, we will move towards the right side by changing: `left = mid + 1`.\n\n  - `arr[mid] > mid` : \n\n    ![fig](../Figures/1064/Slide2.PNG)\n    \n    In the above figure, we assumed that the solution is on the right side of `mid` but we ended up with a contradictory inequality. **This means that when `arr[mid]` is greater than `mid`, it is impossible to have the answer on the right side of `mid`.** Therefore, we will move towards the left side by changing: `right = mid - 1`.\n\nTo summarize, the above proof shows that if `arr[mid]` is greater than or equal to `mid`, then we will reduce the right boundary and search to the left of `mid`, otherwise we will reduce our left boundary search to the right of `mid`. For those of us who are less comfortable with mathematical proofs, we can also come to this realization visually. Consider the plot shown below. The orange line represents `mid`, and the gray line represents `arr[mid]`. The possible answer(s), when `arr[mid]` equals `mid`, is where the two lines meet. From this, we can see that if `mid` is greater than `arr[mid]`, we should move to the right to find where the two lines meet and vice versa.\n\n![fig](../Figures/1064/Slide7.png)\n\nThe below slideshow demonstrates the algorithm:\n\n!?!../Documents/1064_fixed_point.json:960,720!?! <br>\n\n**Algorithm**\n\n1. Initialize the value of `left` to `0`, `right` to `N - 1` and `answer` to `-1`.\n2. While the size of search space is not zero i.e., `left <= right` perform the following steps:\n\n    - Find mid as `mid = (left + right) / 2`.\n    - Compare `arr[mid]` and `mid`\n\n        - `arr[mid] = mid`. Store `mid` in `answer`. Move to the left half by changing `right` to `mid - 1`\n        - `arr[mid] < mid`. Move to the right half by changing `left` to `mid + 1`\n        - `arr[mid] > mid`. Move to the left half by changing `right` to `mid - 1`\n3. Return `answer`.\n       \n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/DrLnSr4A/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"DrLnSr4A\"></iframe>\n\n\n**Complexity Analysis**\n\nHere, $$N$$ is the size of the given array.\n\n* Time complexity: $$O(\\log N)$$\n\n   The time complexity equals the number of times the while loop gets executed. Because the operations inside the while loop take $$O(1)$$ time. After every execution in the while loop, we discard half of the remaining search space. The size of the search space decreases as follows: $$N$$, $$N / 2$$, $$N / 4$$, $$N / 8$$...........$$1$$. Therefore, it takes $$\\log N$$ operations to reduce the size $$N$$ search space to zero. Hence, the time complexity is $$O(\\log N)$$.\n\n* Space complexity: $$O(1)$$\n   \n   We don't require any extra space to perform the binary search. Hence, the space complexity is constant.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

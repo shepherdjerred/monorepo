@@ -1,0 +1,137 @@
+{
+  "questionId": "967",
+  "questionFrontendId": "931",
+  "title": "Minimum Falling Path Sum",
+  "titleSlug": "minimum-falling-path-sum",
+  "difficulty": "Medium",
+  "content": "<p>Given an <code>n x n</code> array of integers <code>matrix</code>, return <em>the <strong>minimum sum</strong> of any <strong>falling path</strong> through</em> <code>matrix</code>.</p>\n\n<p>A <strong>falling path</strong> starts at any element in the first row and chooses the element in the next row that is either directly below or diagonally left/right. Specifically, the next element from position <code>(row, col)</code> will be <code>(row + 1, col - 1)</code>, <code>(row + 1, col)</code>, or <code>(row + 1, col + 1)</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/11/03/failing1-grid.jpg\" style=\"width: 499px; height: 500px;\" />\n<pre>\n<strong>Input:</strong> matrix = [[2,1,3],[6,5,4],[7,8,9]]\n<strong>Output:</strong> 13\n<strong>Explanation:</strong> There are two falling paths with a minimum sum as shown.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/11/03/failing2-grid.jpg\" style=\"width: 164px; height: 365px;\" />\n<pre>\n<strong>Input:</strong> matrix = [[-19,57],[-40,-5]]\n<strong>Output:</strong> -59\n<strong>Explanation:</strong> The falling path with a minimum sum is shown.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == matrix.length == matrix[i].length</code></li>\n\t<li><code>1 &lt;= n &lt;= 100</code></li>\n\t<li><code>-100 &lt;= matrix[i][j] &lt;= 100</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"minFallingPathSum\",\n  \"params\": [\n    {\n      \"name\": \"matrix\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"652.6K\", \"totalSubmission\": \"1.1M\", \"totalAcceptedRaw\": 652583, \"totalSubmissionRaw\": 1073207, \"acRate\": \"60.8%\"}",
+  "likes": 6988,
+  "dislikes": 175,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Falling Path Sum II\", \"titleSlug\": \"minimum-falling-path-sum-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[2,1,3],[6,5,4],[7,8,9]]",
+    "[[-19,57],[-40,-5]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 8, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"dream11\", \"name\": \"Dream11\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minFallingPathSum(vector<vector<int>>& matrix) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minFallingPathSum(int[][] matrix) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minFallingPathSum(self, matrix: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minFallingPathSum(self, matrix):\n        \"\"\"\n        :type matrix: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} matrix\n * @return {number}\n */\nvar minFallingPathSum = function(matrix) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minFallingPathSum(matrix: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinFallingPathSum(int[][] matrix) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minFallingPathSum(int** matrix, int matrixSize, int* matrixColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minFallingPathSum(matrix [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minFallingPathSum(matrix: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minFallingPathSum(_ matrix: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_falling_path_sum(matrix: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} matrix\n# @return {Integer}\ndef min_falling_path_sum(matrix)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $matrix\n     * @return Integer\n     */\n    function minFallingPathSum($matrix) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minFallingPathSum(List<List<int>> matrix) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minFallingPathSum(matrix: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_falling_path_sum(matrix :: [[integer]]) :: integer\n  def min_falling_path_sum(matrix) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_falling_path_sum(Matrix :: [[integer()]]) -> integer().\nmin_falling_path_sum(Matrix) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-falling-path-sum matrix)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1448",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Overview\nGiven a 2D `matrix(row, col)`, we have to find the sum of the minimum falling path in a matrix.\nTo begin with, let's try to understand, what is a falling path?\nTo put it in simple words, it is a path that satisfies the following criteria,\n 1. A falling path is a path that begins at **any** cell in the first row of the matrix and ends at **any** cell in the last row of the matrix.\n2. From a certain cell `(row, col)` in the falling path, we can only move to 3 possible cells, `(row + 1, col)` , `(row + 1, col + 1)`, `(row + 1, col - 1)`.\n\n\n<center>\n<img src=\"../Figures/931/931_overview.png\">\n</center>\n\nAs the name suggests, the falling path sum is the sum of values of all the cells in the chosen path. Our goal is to find the minimum sum from all possible paths. Let's consider different approaches that can be used to solve this problem. We will begin with the brute force approach and optimize it using dynamic programming.\n\n\n<br>\n\n---\n\n### Approach 1: Brute Force Using Depth First Search\n\n**Intuition**\n\nBrute Force is generally the straightforward approach to solving the problem. You can think of the brute force approach as\n\n \"Given pen and paper in your hand, how will you try to solve the problem\"?\n\nThough the brute force approach is considered to be the most exhaustive and unoptimized approach, implementing this approach first gives a deeper understanding of the basis of the problem, which can further help to shape a better-optimized solution.\n\nLet's understand the brute force approach with the following example,\n\n![Example Problem](../Figures/931/931_example_problem.png)\n\n> Before reading the following section, try to find the minimum falling path for the above matrix on your own.\n\nIn this example, if we start at cell `(0, 1)`, the next cell in the path could be `(1, 0)`, `(1, 1)`, or `(1, 2)`. From the current position, we cannot determine which path will give us the minimum path sum, so let's try all the possible paths.\n\n![Example Problem](../Figures/931/931_example_3possibilities.png)\n\nThe minimum path sum from cell `(0, 1)` is \"5\" - going from `(0, 1)` to `(1, 2)`. Does that mean that we can greedily choose this path and move ahead, discarding the other paths?\nLet's find the minimum falling path if we choose the path with the sum \"5\" i.e `(0, 1)` to `(1, 2)`.\n\n![Example Problem, Explore One Path](../Figures/931/931_Explore_greedy_path.png)\n\nThus, the minimum falling path sum is \"14\". Now, let's explore other paths starting from cell `(0, 1)`.\n\n![Example Problem, Explore All Path](../Figures/931/931_Explore_All_Paths.png)\n\nThe minimum falling path sum is now \"13\" i.e `(0, 1)` -> `(1, 1)` -> `(2, 0)`.\n\nThis proves that the greedy approach will not work for this problem. A sub-path with the lowest subset-sum cannot guarantee the lowest sum for the entire path. We must explore all possible paths to find the one with the smallest sum.\n\nSince we have to try all paths from any cell, the solution must generate all the possible falling paths and track the one with a minimum sum. To try all possible combinations, we can perform a depth-first search on the matrix.\n\n>The Depth First Search is an exhaustive search process wherein we will traverse all the cells in a path. On reaching the end of the path, we must undo our last step in the current path and try a different possible next step to extend the path.\n\nNote: This approach is a brute force solution, and it is not expected to pass all test cases. This approach is included because, often, an intuitive way to approach problems like this one is to start by building a brute force solution and then modify it to achieve an optimized solution.\n\n\n**Algorithm**\n\n1. Implement a Depth First Search algorithm, by defining a recursive function, `findMinFallingPathSum(row, col)`, that recursively explores all the paths from the current cell (defined by parameters `row` and `col`).\n   - Define Base Case:\n  In any recursive function, we must define the terminating condition i.e the base case. When the terminating condition is satisfied, we will exit the recursive search process. The base cases are as follows,\n      - The `row` or `col` values are not within the matrix boundaries.\n      - We have reached the last row. In this case, we will return the value of the current cell and not make any other recursive calls.\n   - _Recursively explore all paths:_ If the base case is not satisfied, it means that we have not reached the end of our current path, and we must try all options to extend our path and find the one with the minimum sum:\n\n```\nminimumPath = Minimum(findMinFallingPathSum(row + 1, col + 1),\n                      findMinFallingPathSum(row + 1, col),\n                      findMinFallingPathSum(row + 1, col - 1))\n```\n\n2. Now that we have defined the recursive function, we must find the minimum falling path for all possible starting cells. A starting cell is any cell in the top row.\n\n   For this, we have to iterate using a _for_ loop and find the minimum falling path for cell in $$0^{th}$$ row and columns ranging from $$0$$ to $$\\text{matrix.length} - 1$$. Define a variable `minFallingSum` to track the minimum of all the falling paths found so far and return the result.\n\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/bQkVJeGv/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"bQkVJeGv\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the length of `matrix`.\n\n* Time Complexity: $$O({N} \\cdot 3^{N})$$ The solution takes the form of a 3-ary recursion tree where there are 3 possibilities for every node in the tree. The time complexity can be derived as follows,\n - The maximum depth of the recursion tree is equal to the number of rows in the matrix i.e $$N$$.\n - Each level (`level`) of the recursion tree will contain approximately $$3^\\text{level}$$ nodes. For example, at level $$0$$ there are $$3^0$$ nodes, for level 1, $$3^{1}$$ nodes, and so on. Thus, the maximum number of nodes at level $$N$$ would be approximately $$3^{N}$$.\n - Thus the time complexity is roughly, $$O({N} \\cdot 3^{N})$$.\n\n The time complexity is exponential, hence this approach is exhaustive and results in _Time Limit Exceeded (TLE)_.\n\n* Space Complexity: $$O(N)$$ This space will be used to store the recursion stack. As the maximum depth of the tree is $$N$$, we will not have more than $$N$$ recursive calls on the call stack at any time.\n\n\n<br>\n\n---\n\n### Approach 2: Top Down Dynamic Programming\n\n**Intuition**\n\nThe brute force approach is exhaustive. To come up with the optimized solution for the problem, let's take a deeper look at the  following recursion tree,\n\n![Example Problem, Recursion Tree](../Figures/931/931_recursion_tree.png)\n\nIn the above recursion tree, we can identify the repetitive sub-paths (circled in the same color). For example, `findMinPathSum(1, 0)` is calculated twice, `findMinPathSum(1, 1)` is calculated three times, and so on.\n\nRepeated calculation of the same subproblems is the root cause of the exponential time complexity in the previous approach.  Although, what if our algorithm could remember the result for a subproblem when it is computed the first time and reuses the stored result every other time?\n\n> Pretend you are on a treasure hunt. On reaching point A, you travel to the destination and don't find anything there. You go back to some other path which again takes you to point A. You wouldn't explore the same path from point A again. You would say, \"I have been here before; I know where this path goes.\"\n>\n>  How can we make our algorithm think the same way? We can do so by marking every path we have visited so that if we reach the same path again, we know the result!!\n\n\nIn [Dynamic Programming](https://leetcode.com/explore/featured/card/dynamic-programming/630/an-introduction-to-dynamic-programming/4034/), when a recursive problem solves the same subproblem multiple times, it has the Overlapping Subproblem property. Such problems can be optimized using a dynamic programming technique called Memoization.\n\nAs in the previous approach, each call to `findMinFallingPathSum` will return the minimum falling path sum between the current cell and the bottom of the `matrix`. However, in this approach, we will store the result of each call in the new parameter `memo`, and when we revisit this cell in a subsequent call, we will be able to reuse the stored result.\n\n\n**Algorithm**\n\n1. In order to record the results of computation for every cell,  maintain a 2-dimensional matrix named `memo` where the value of `memo[row][col]` would give the minimum falling path starting from the cell `(row, col)`.\n\n2. Implement a Depth First Search algorithm, by defining a recursive function, `findMinFallingPathSum(row, col)`, that recursively explores all the paths from the current cell (defined by parameters `row` and `col`).\n   - Define Base Case:\n  In any recursive function, we must define the terminating condition i.e the base case. When the terminating condition is satisfied, we will exit the recursive search process. The base cases are as follows,\n      - The `row` or `col` values are not within the matrix boundaries.\n      - We have reached the last row. In this case, we will return the value of the current cell and not make any other recursive calls.\n   - _Recursively explore all paths:_ If the base case is not satisfied, it means that we have not reached the end of our current path, and we must try all options to extend our path and find the one with the minimum sum:\n\n```\nminimumPath = Minimum(findMinFallingPathSum(row + 1, col + 1),\n                      findMinFallingPathSum(row + 1, col),\n                      findMinFallingPathSum(row + 1, col - 1))\n```\n\n3. To avoid repetitive computation of the results as in the brute force approach, we make use of stored results as follows,\n\n   - Before recursively computing the result for the current cell, check if the `memo` has the result for the current cell. If so, return the result, otherwise, proceed with the recursive call to compute the result.\n\n   - After computing the result, store the result in the `memo[row][col]`.\n\n4. Iteratively find the minimum falling path for all possible starting cells i.e cells in $$0^{th}$$ row and columns ranging from $$0$$ to $$\\text{matrix.length} - 1$$. Track the minimum value in the variable `minFallingSum` and return the result.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/8PvFVKce/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"8PvFVKce\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the length of `matrix`.\n\n* Time Complexity: $$O(N^2)$$\n\n  For every cell in the matrix, we will compute the result only once and update the `memo`. For the subsequent calls, we are using the stored results that take $$O(1)$$ time. There are $$N^2$$ cells in the matrix, and thus $$N^2$$ dp states. So, the time complexity is $$O(N^2)$$.\n\n* Space Complexity: $$O(N^2)$$\n\n  The recursive call stack uses $$O(N)$$  space. As the maximum depth of the tree is $$N$$, we can’t have more than $$N$$ recursive calls on the call stack at any time. The 2D matrix `memo` uses $$O(N^2)$$ space. Thus, the space complexity is $$O(N) + O(N^2) = O(N^2)$$.\n\n\n<br>\n\n---\n\n### Approach 3: Bottom-Up Dynamic Programming (Tabulation)\n\n**Intuition**\n\nThe memoization technique follows the top-down approach. We start by finding the result for the original matrix and recursively move towards computing the result of smaller subproblems.\n\nThere is yet another technique to implement Dynamic Programming problems called bottom-up dynamic programming also known as, Tabulation. In the bottom-up approach, we start by finding the result of the smallest subproblem and iteratively move towards larger sub-problems. Being non-recursive in nature, this approach does not require maintaining a separate internal call stack for storing the intermediate state of recursion.\n\nThe results of subproblems are stored in a 2-dimensional table, `dp`. Here, the smallest sub-problem would be a matrix with only one row. Thus, we will first calculate the result for each cell in the last row (base case), call this the $$n^{th}$$ row, and store the results in `dp`. Next, when we move to the $$(n-1)^{th}$$ row, the results for the next row (i.e. the $$n^{th}$$ row) are already present. In this way, in every iteration, we are calculating and storing the result for the subsequent problem.\n\nWhile this approach does not improve the time or space complexity compared to the top-down approach, it does act as a stepping stone towards the next approach where we will improve the space complexity.\n\n\n**Algorithm**\n\nBottom-up Dynamic Programming follows an iterative approach to solving the problem. We have to start by finding the minimum falling path for the smallest possible matrix i.e the matrix having a single cell and one by one move towards the rest of the cells in the matrix.\n\n1. To compute the minimum falling path for a certain cell `(row, col)`, we must have pre-computed values for the minimum falling path for cells `(row + 1, col - 1)`, `(row + 1, col)` and `(row + 1, col + 1)`.  For this, we will iterate from $$(n-1)^{th}$$ row to $$0^{th}$$ row and from $$0^{th}$$ column to $$(n-1)^{th}$$ column.\n\n    > Note: The order of iterating the columns does not matter in this case. Even if we iterate from $$(n-1)^{th}$$ to $$0^{th}$$ column, the results would be the same.\n\n2.  Build a 2D matrix `dp` and compute the minimum falling path of current `row` and `col` as,\n     ```\n        dp[row][col] = min(dp[row + 1][col - 1],\n                           dp[row + 1][col],\n                           dp[row + 1][col + 1]) + value of current (row, col) in matrix\n      ```\n    Note: We must handle the edge cases, for example, if the col value is `0` or `n - 1`.\n\n3. Once we have the value of the minimum falling path from every cell, we must get the result from the start cell. The start cell can be any cell on the first row. Thus, we will iterate over all the cells in the first row, and return the minimum value.\n\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/CSU7NEzy/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"CSU7NEzy\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the length of `matrix`.\n* Time Complexity: $$O(N^{2})$$\n  - The nested for loop takes ($$N^{2}$$) times to fill the `dp` array.\n  - Then, takes $$N$$ time to find the minimum falling path.\n   - So, Time Complexity $$T(n) = O(N^{2}) + O(N) = O(N^{2})$$\n\n* Space Complexity: $$O(N^{2})$$. The additional space is used for `dp` array of size $$N^{2}$$.\n\n<br>\n\n---\n\n### Approach 4: Space Optimized, Bottom-Up Dynamic Programming\n\n**Intuition**\n\nThe tabulation approach used $$O(N^{2})$$ space to track the minimum falling path starting from every cell. But, in the end, to calculate the final result, we only need the minimum falling path of all the cells in the first row.\n\nFurthermore, to calculate the values for cells in the row `n`, we only need the values of the `n + 1` row. So, after finding the results for row `n`, we no longer need to store the values for the `n + 1` row. As such, we can optimize the space complexity of the tabulation approach as follows,\n\n-  Calculate the values for all the cells in the current row `n` based on results for the cells in the `n + 1` row. Let's define a 1-dimensional array, `dp`, to store the results of the `n + 1` row.\n-  As we move to the `n - 1` row, the current row becomes the `n + 1` row. So, we can discard the current values of `dp`, and begin to store the results for the current row in the `dp` array.\n\nIn this way, instead of maintaining a 2-dimensional array the size of a `matrix`, we can just define two 1-dimensional arrays, one that stores the value of the current row and the other that has the results of the previous row.\n\n**Algorithm**\n\n1.  Define a 1-dimensional array, `dp`, initialized with all values set to `0`,\n\n2.   For every row, define a 1-dimensional array, `currentRow`, to store the results of all the columns in the current row.\n\n3.  Calculate the values for all the columns in the current row, `currentRow` based on the values of the previous row stored in  array`dp`,\n\n    ```\n    currentRow[col] = min(dp[col - 1],\n                          dp[col],\n                          dp[col + 1]) + value of current (row, col) in matrix\n    ```\n      Note: We must handle the edge cases, for example, if the col value is `0` or `n - 1`.\n\n4. Once all the values of the current row are calculated, assign the values of `currentRow` to the `dp` array. The values in `dp` serve as the values of the previous row for the next iteration.\n\n   In some programming languages, this can be done by just changing the pointer reference instead of copying the values one by one.\n\n5. The process is repeated for all the rows, and at the end, we will have the results for the cells in the first row, in the `dp` array, and we can find the minimum falling path.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/XgDmGWsN/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"XgDmGWsN\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the length of `matrix`.\n\n* Time Complexity: $$O(N^{2})$$\n  - The nested for loop takes ($$N^{2}$$) time.\n  - Then, it takes $$N$$time to find the minimum falling path.\n  - So, Time Complexity $$T(n) = O(N^{2}) + O(N) = O(N^{2})$$\n\n* Space Complexity: $$O(N)$$.\n  - We are using two 1-dimensional arrays `dp` and `currentRow` of size $$N$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

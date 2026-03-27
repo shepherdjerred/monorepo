@@ -1,0 +1,58 @@
+{
+  "questionId": "1670",
+  "questionFrontendId": "1527",
+  "title": "Patients With a Condition",
+  "titleSlug": "patients-with-a-condition",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Patients</code></p>\n\n<pre>\n+--------------+---------+\n| Column Name  | Type    |\n+--------------+---------+\n| patient_id   | int     |\n| patient_name | varchar |\n| conditions   | varchar |\n+--------------+---------+\npatient_id is the primary key (column with unique values) for this table.\n&#39;conditions&#39; contains 0 or more code separated by spaces. \nThis table contains information of the patients in the hospital.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to find the patient_id, patient_name, and conditions of the patients who have Type I Diabetes. Type I Diabetes always starts with <code>DIAB1</code> prefix.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nPatients table:\n+------------+--------------+--------------+\n| patient_id | patient_name | conditions   |\n+------------+--------------+--------------+\n| 1          | Daniel       | YFEV COUGH   |\n| 2          | Alice        |              |\n| 3          | Bob          | DIAB100 MYOP |\n| 4          | George       | ACNE DIAB100 |\n| 5          | Alain        | DIAB201      |\n+------------+--------------+--------------+\n<strong>Output:</strong> \n+------------+--------------+--------------+\n| patient_id | patient_name | conditions   |\n+------------+--------------+--------------+\n| 3          | Bob          | DIAB100 MYOP |\n| 4          | George       | ACNE DIAB100 | \n+------------+--------------+--------------+\n<strong>Explanation:</strong> Bob and George both have a condition that starts with DIAB1.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Patients (patient_id int, patient_name varchar(30), conditions varchar(100))\"], \"mssql\": [\"Create table Patients (patient_id int, patient_name varchar(30), conditions varchar(100))\"], \"oraclesql\": [\"Create table Patients (patient_id int, patient_name varchar(30), conditions varchar(100))\"], \"database\": true, \"name\": \"find_patients\", \"pythondata\": [\"Patients = pd.DataFrame([], columns=['patient_id', 'patient_name', 'conditions']).astype({'patient_id':'int64', 'patient_name':'object', 'conditions':'object'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Patients (patient_id int, patient_name varchar(30), conditions varchar(100))\"], \"database_schema\": {\"Patients\": {\"patient_id\": \"INT\", \"patient_name\": \"VARCHAR(30)\", \"conditions\": \"VARCHAR(100)\"}}}",
+  "stats": "{\"totalAccepted\": \"437.4K\", \"totalSubmission\": \"1.1M\", \"totalAcceptedRaw\": 437441, \"totalSubmissionRaw\": 1126892, \"acRate\": \"38.8%\"}",
+  "likes": 870,
+  "dislikes": 652,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Patients\": [\"patient_id\", \"patient_name\", \"conditions\"]}, \"rows\": {\"Patients\": [[1, \"Daniel\", \"YFEV COUGH\"], [2, \"Alice\", \"\"], [3, \"Bob\", \"DIAB100 MYOP\"], [4, \"George\", \"ACNE DIAB100\"], [5, \"Alain\", \"DIAB201\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_patients(patients: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "2010",
+    "content": "[TOC]\n\n# Solution\n\n---\n\n## pandas\n\n### Overview\n\nWe need to identify patients who have a specific medical condition: Type I Diabetes. The condition codes are stored in a space-separated string. If a condition code starts with `\"DIAB1\"`, it indicates Type I Diabetes.\n\n---\n\n### Approach 1: Using Regular Expression Word Boundaries or Spaces\n\n#### Intuition\n\nIf you are not familiar with regular expressions, check out problem [1517](https://leetcode.com/problems/find-users-with-valid-e-mails/) first.\n\nWhen working with textual data in Pandas, regular expressions (regex) are a powerful tool for pattern matching within strings. For this problem, our objective is to identify patients diagnosed with Type I Diabetes based on their condition codes. The codes are stored within a space-separated string in the `conditions` column of a DataFrame.\n\nType I Diabetes is indicated by codes that start with \"DIAB1\". We need to account for two cases:\n1. The condition string starts with \"DIAB1\".\n2. \"DIAB1\" starts after a space within the condition string.\n\nTo handle both cases, we use a regular expression that matches either the start of the string or the presence of a space before \"DIAB1\". The updated regex pattern `(^|\\s)DIAB1` ensures we match Type I Diabetes whether it appears at the start of the string or after a space.\n\nUsing Pandas' `.str.contains()` method with this regex pattern allows us to filter the DataFrame to only include rows where the `conditions` column contains a condition code starting with \"DIAB1\" at the appropriate positions, thus identifying patients with Type I Diabetes.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Ue44Xhu7/shared\" frameBorder=\"0\" width=\"100%\" height=\"123\" name=\"Ue44Xhu7\"></iframe>\n\n---\n\n### Approach 2: Without Using Regular Expressions\n\n#### Intuition\n\nIf you are not familiar with regular expressions, no worries, the problem can still be solved! We can do so by breaking the problem down into the cases that we need to consider.\n\nThis problem boils down to two cases:\n\n1. The condition code starts with `\"DIAB1\"`.\n\n    **Result Table:**\n\n    ```\n    +------------+--------------+--------------+\n    | patient_id | patient_name | conditions   |\n    +------------+--------------+--------------+\n    | 3          | Bob          | DIAB100 MYOP |\n    +------------+--------------+--------------+\n    ```\n\n2. The condition code contains `\" DIAB1\"` where there is a space in front.\n\n    **Result Table:**\n\n    ```\n    +------------+--------------+--------------+\n    | patient_id | patient_name | conditions   |\n    +------------+--------------+--------------+\n    | 4          | George       | ACNE DIAB100 | \n    +------------+--------------+--------------+\n    ```\n\nThese are the only ways that a condition code can indicate Type I Diabetes. Therefore, we can simply check for these two cases.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/NsEoBPVo/shared\" frameBorder=\"0\" width=\"100%\" height=\"123\" name=\"NsEoBPVo\"></iframe>\n\n\n**Result Table:**\n```\n+------------+--------------+--------------+\n| patient_id | patient_name | conditions   |\n+------------+--------------+--------------+\n| 3          | Bob          | DIAB100 MYOP |\n| 4          | George       | ACNE DIAB100 | \n+------------+--------------+--------------+\n```\n\n---\n\n\n## Database\n\n### Approach 1: Using Regular Expression Word Boundaries or Spaces\n\n#### Intuition\n\nIf you are not familiar with regular expressions, check out problem [1517](https://leetcode.com/problems/find-users-with-valid-e-mails/) first.\n\nIn SQL, regular expressions provide a flexible way to search for patterns within text columns. For this problem, we aim to select records of patients who have Type I Diabetes, which is identified by condition codes starting with \"DIAB1\". These codes are part of a space-separated list in the `conditions` column.\n\nTo handle both cases:\n1. The condition starts with `\"DIAB1\"`.\n2. `\"DIAB1\"` is preceded by a space in the string.\n\nThe challenge lies in accurately identifying codes that start with \"DIAB1\" without accidentally selecting codes that contain it in the middle of another word. We can use regular expressions with word boundaries or spaces in our SQL query. The `REGEXP` operator in SQL, with the pattern `(^|[[:space:]])DIAB1.*`, ensures that we match Type I Diabetes codes whether they appear at the start or after a space.\n\n#### Implementation\n\n```mysql []\nSELECT patient_id, patient_name, conditions\nFROM Patients\nWHERE conditions REGEXP '(^|[[:space:]])DIAB1';\n```\n---\n\n<br>\n\n### Approach 2: Without Using Regular Expressions\n\nIf you are not familiar with regular expressions, no worries, the problem can still be solved! We can do so by breaking the problem down into the cases that we need to consider.\n\n#### Intuition\n\nThis problem boils down to two cases:\n\n1. The condition code starts with `\"DIAB1\"`.\n\n    **Result Table:**\n    ```\n    +------------+--------------+--------------+\n    | patient_id | patient_name | conditions   |\n    +------------+--------------+--------------+\n    | 3          | Bob          | DIAB100 MYOP |\n    +------------+--------------+--------------+\n    ```\n\n1. The condition code contains `\" DIAB1\"` where there is a space in front.\n\n    **Result Table:**\n    ```\n    +------------+--------------+--------------+\n    | patient_id | patient_name | conditions   |\n    +------------+--------------+--------------+\n    | 4          | George       | ACNE DIAB100 | \n    +------------+--------------+--------------+\n    ```\n\nThese are the only ways that a condition code can indicate Type I Diabetes. Therefore, we can simply check for these two cases.\n\n\n#### Implementation\n\n```mysql []\nSELECT patient_id, patient_name, conditions\nFROM Patients\nWHERE conditions LIKE 'DIAB1%' OR conditions LIKE '% DIAB1%';\n```\n\n**Result Table:**\n```\n+------------+--------------+--------------+\n| patient_id | patient_name | conditions   |\n+------------+--------------+--------------+\n| 3          | Bob          | DIAB100 MYOP |\n| 4          | George       | ACNE DIAB100 | \n+------------+--------------+--------------+\n```",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

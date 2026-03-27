@@ -136,7 +136,7 @@ export async function createMcpGatewayDeployment(chart: Chart) {
             "canvas-token-secret",
             canvasItem.name,
           ),
-          key: "api-token",
+          key: "CANVAS_API_TOKEN",
         }),
         CANVAS_BASE_URL: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
@@ -144,7 +144,7 @@ export async function createMcpGatewayDeployment(chart: Chart) {
             "canvas-url-secret",
             canvasItem.name,
           ),
-          key: "base-url",
+          key: "CANVAS_BASE_URL",
         }),
         // Piazza configuration (cookie-based auth to bypass SSO/2FA)
         PIAZZA_COOKIES: EnvValue.fromSecretValue({
@@ -153,7 +153,7 @@ export async function createMcpGatewayDeployment(chart: Chart) {
             "piazza-cookies-secret",
             piazzaItem.name,
           ),
-          key: "cookies",
+          key: "PIAZZA_COOKIES",
         }),
         PIAZZA_COURSES: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
@@ -161,7 +161,7 @@ export async function createMcpGatewayDeployment(chart: Chart) {
             "piazza-courses-secret",
             piazzaItem.name,
           ),
-          key: "courses",
+          key: "PIAZZA_COURSES",
         }),
         // GitHub configuration - @modelcontextprotocol/server-github expects GITHUB_TOKEN
         GITHUB_TOKEN: EnvValue.fromSecretValue({
@@ -170,7 +170,7 @@ export async function createMcpGatewayDeployment(chart: Chart) {
             "github-token-secret",
             mcpGatewayCredentials.name,
           ),
-          key: "gh-token",
+          key: "GH_TOKEN",
         }),
         // Fastmail JMAP configuration
         JMAP_SESSION_URL: EnvValue.fromValue(
@@ -182,7 +182,7 @@ export async function createMcpGatewayDeployment(chart: Chart) {
             "fastmail-jmap-token-secret",
             mcpGatewayCredentials.name,
           ),
-          key: "fastmail-token",
+          key: "FASTMAIL_TOKEN",
         }),
         // Gmail IMAP configuration - @automatearmy/email-reader-mcp expects USER_EMAIL and USER_PASS
         USER_EMAIL: EnvValue.fromValue("shepherdjerred@gmail.com"),
@@ -192,7 +192,7 @@ export async function createMcpGatewayDeployment(chart: Chart) {
             "gmail-pass-secret",
             mcpGatewayCredentials.name,
           ),
-          key: "gmail-token",
+          key: "GMAIL_TOKEN",
         }),
       },
       volumeMounts: [

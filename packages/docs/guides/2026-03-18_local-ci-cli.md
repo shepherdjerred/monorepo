@@ -42,7 +42,7 @@ ci-local --dry-run homelab-deploy --all                 # everything
 | `--auto-commit` | Commit versions.ts changes (does not push) |
 | `--wait-healthy` | Poll ArgoCD until apps report Healthy |
 
-**Env vars**: `GH_TOKEN`, `CHARTMUSEUM_USERNAME`, `CHARTMUSEUM_PASSWORD`, `ARGOCD_TOKEN`
+**Env vars**: `GH_TOKEN`, `CHARTMUSEUM_USERNAME`, `CHARTMUSEUM_PASSWORD`, `ARGOCD_AUTH_TOKEN`
 
 **Steps executed** (in order):
 1. Resolve targets (expand aliases, map to images/charts/argo apps)
@@ -95,7 +95,7 @@ ci-local --dry-run argocd-sync --app birmel --wait-healthy
 | `--wait-healthy` | Poll until Healthy |
 | `--timeout SECONDS` | Health check timeout (default: 300) |
 
-**Env vars**: `ARGOCD_TOKEN`
+**Env vars**: `ARGOCD_AUTH_TOKEN`
 
 ### `tofu-apply`
 
@@ -121,7 +121,7 @@ ci-local --dry-run site-deploy --target sjer.red webring
 |------|-------------|
 | `--target NAME [NAME...]` | Site names (6 available) |
 
-**Env vars**: `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` (for S3 targets); `CF_ACCOUNT_ID`, `CF_R2_ACCESS_KEY_ID`, `CF_R2_SECRET_ACCESS_KEY` (for R2)
+**Env vars**: `SEAWEEDFS_ACCESS_KEY_ID`, `SEAWEEDFS_SECRET_ACCESS_KEY` (for S3 targets); `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_R2_ACCESS_KEY_ID`, `CLOUDFLARE_R2_SECRET_ACCESS_KEY` (for R2)
 
 ### `cooklang-release`
 
@@ -138,7 +138,7 @@ ci-local cooklang-release --version 2.0.0 --confirm      # for real
 | `--confirm` | Required for non-dry-run (pushes to external repo) |
 | `--token TOKEN` | GitHub token override |
 
-**Env vars**: `GITHUB_TOKEN` (or `--token`, or `gh auth token`)
+**Env vars**: `GH_TOKEN` (or `--token`, or `gh auth token`)
 
 ### `clauderon-release`
 
@@ -154,7 +154,7 @@ ci-local --dry-run clauderon-release --version 1.0.0 --all-targets    # cross-co
 | `--version VERSION` | Release version (required) |
 | `--all-targets` | Cross-compile for Linux x86_64 + arm64 (requires `cross`) |
 
-**Env vars**: `GITHUB_TOKEN` (or `gh auth token`)
+**Env vars**: `GH_TOKEN` (or `gh auth token`)
 
 ### `tag-release`
 
@@ -168,7 +168,7 @@ ci-local --dry-run tag-release --tag v1.2.3
 |------|-------------|
 | `--tag NAME` | Tag name (required) |
 
-**Env vars**: `GH_TOKEN` or `GITHUB_TOKEN`
+**Env vars**: `GH_TOKEN` or `GH_TOKEN`
 
 ### `npm-publish`
 

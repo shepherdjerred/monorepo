@@ -1,0 +1,145 @@
+{
+  "questionId": "1074",
+  "questionFrontendId": "1086",
+  "title": "High Five",
+  "titleSlug": "high-five",
+  "difficulty": "Easy",
+  "content": "<p>Given a list of the scores of different students, <code>items</code>, where <code>items[i] = [ID<sub>i</sub>, score<sub>i</sub>]</code> represents one score from a student with <code>ID<sub>i</sub></code>, calculate each student&#39;s <strong>top five average</strong>.</p>\n\n<p>Return <em>the answer as an array of pairs </em><code>result</code><em>, where </em><code>result[j] = [ID<sub>j</sub>, topFiveAverage<sub>j</sub>]</code><em> represents the student with </em><code>ID<sub>j</sub></code><em> and their <strong>top five average</strong>. Sort </em><code>result</code><em> by </em><code>ID<sub>j</sub></code><em> in <strong>increasing order</strong>.</em></p>\n\n<p>A student&#39;s <strong>top five average</strong> is calculated by taking the sum of their top five scores and dividing it by <code>5</code> using <strong>integer division</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> items = [[1,91],[1,92],[2,93],[2,97],[1,60],[2,77],[1,65],[1,87],[1,100],[2,100],[2,76]]\n<strong>Output:</strong> [[1,87],[2,88]]\n<strong>Explanation: </strong>\nThe student with ID = 1 got scores 91, 92, 60, 65, 87, and 100. Their top five average is (100 + 92 + 91 + 87 + 65) / 5 = 87.\nThe student with ID = 2 got scores 93, 97, 77, 100, and 76. Their top five average is (100 + 97 + 93 + 77 + 76) / 5 = 88.6, but with integer division their average converts to 88.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> items = [[1,100],[7,100],[1,100],[7,100],[1,100],[7,100],[1,100],[7,100],[1,100],[7,100]]\n<strong>Output:</strong> [[1,100],[7,100]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= items.length &lt;= 1000</code></li>\n\t<li><code>items[i].length == 2</code></li>\n\t<li><code>1 &lt;= ID<sub>i</sub> &lt;= 1000</code></li>\n\t<li><code>0 &lt;= score<sub>i</sub> &lt;= 100</code></li>\n\t<li>For each <code>ID<sub>i</sub></code>, there will be <strong>at least</strong> five scores.</li>\n</ul>\n",
+  "hints": [
+    "How can we solve the problem if we have just one student?",
+    "Given an student sort their grades and get the top 5 average.",
+    "Generalize the idea to do it for many students."
+  ],
+  "metaData": "{\r\n  \"name\": \"highFive\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"items\",\r\n      \"type\": \"integer[][]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer[][]\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"123.1K\", \"totalSubmission\": \"165.8K\", \"totalAcceptedRaw\": 123075, \"totalSubmissionRaw\": 165845, \"acRate\": \"74.2%\"}",
+  "likes": 829,
+  "dislikes": 131,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Determine the Winner of a Bowling Game\", \"titleSlug\": \"determine-the-winner-of-a-bowling-game\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,91],[1,92],[2,93],[2,97],[1,60],[2,77],[1,65],[1,87],[1,100],[2,100],[2,76]]",
+    "[[1,100],[7,100],[1,100],[7,100],[1,100],[7,100],[1,100],[7,100],[1,100],[7,100]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> highFive(vector<vector<int>>& items) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[][] highFive(int[][] items) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def highFive(self, items: List[List[int]]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def highFive(self, items):\n        \"\"\"\n        :type items: List[List[int]]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} items\n * @return {number[][]}\n */\nvar highFive = function(items) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function highFive(items: number[][]): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[][] HighFive(int[][] items) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** highFive(int** items, int itemsSize, int* itemsColSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func highFive(items [][]int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun highFive(items: Array<IntArray>): Array<IntArray> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func highFive(_ items: [[Int]]) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn high_five(items: Vec<Vec<i32>>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} items\n# @return {Integer[][]}\ndef high_five(items)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $items\n     * @return Integer[][]\n     */\n    function highFive($items) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> highFive(List<List<int>> items) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def highFive(items: Array[Array[Int]]): Array[Array[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec high_five(items :: [[integer]]) :: [[integer]]\n  def high_five(items) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec high_five(Items :: [[integer()]]) -> [[integer()]].\nhigh_five(Items) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (high-five items)\n  (-> (listof (listof exact-integer?)) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1082",
+    "content": "[TOC]\n\n### Approach 1: Using Sorting\n\n**Intuition**\n\nSince we have to take into account the top 5 values corresponding to each `id`, we can sort the `items` array, first based on the `id` and next based on the `score`, i.e. items will be sorted based on *increasing* order of their ids. In case we have a tie for the value of ids, the items are then sorted based on *decreasing* order of the scores.\n\n**Algorithm**\n\nWe can implement the idea for Approach 1 simply by having a custom comparator, which sorts the array based on the increasing order of ids and in case of tie, with the decreasing order of scores.\n\nBelow is the implementation of this approach.\n\n<iframe src=\"https://leetcode.com/playground/AkQrrVfL/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"AkQrrVfL\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: Assuming $$N$$ is the total number of items, sorting the items takes $$O(N \\log N)$$ time and traversing the sorted array takes $$O(N)$$ time. Hence the overall time complexity of this approach is $$O(N \\log N)$$.\n\n* Space Complexity: $$O(N)$$, the space used by `solution`.\n\n### Approach 2: Using Map and Max Heap\n\n**Intuition**\n\nWe can notice here that the only scores that contribute towards the calculation of the average are the top 5 scores. Therefore, if we only need the top 5 scores for each of the id we can ignore the rest of the scores. This can be done using a max heap.\n\n**Algorithm**\n\nWe can maintain a max heap of all the scores for every id. This way, we can simply obtain the top 5 scores for each of the id by obtaining the first 5 elements from the max heap (which are indeed the top 5). Additionally, we would also need a map where the id of the student will be used as the key (as we want scores for the same id to be clubbed together in the same max heap).\n\nNote that we'll be using an ordered map (or a tree map) in this case as we want the final output scores to be in sorted order (which we can obtain by directly iterating over the keys of the map).\n\nBelow is the implementation of this approach.\n\n<iframe src=\"https://leetcode.com/playground/i9k3oDSk/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"i9k3oDSk\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: Assuming $$N$$ is the total number of items, finding a key in the map takes $$O(\\log N)$$ time. Similarly pushing an item in the max heap also takes $$O(\\log N)$$ time. Hence to insert all the $$N$$ elements, the total time taken is $$O(N \\log N)$$. Iterating over the map takes $$O(N)$$ time and extracting the top 5 elements is a constant time operation. Hence the overall time taken is $$O(N \\log N)$$.\n\n* Space Complexity: $$O(N)$$, the space used by `allScores`.\n\n### Approach 3: Using Map and Min Heap\n\n**Intuition**\n\nTill now, we have used a max heap using which we can obtain the top 5 elements by simply popping them out of the max heap one by one. However, for this, we have to store all the scores for each id in the max heap. This is inefficient. Since we are only interested in obtaining the top 5 scores, we do not need to store all the scores.\n\nThis can be made efficient using a min heap. In this approach, we will keep a min heap of the top 5 scores for each of the id. Whenever we encounter a score for an id, which is greater than the minimum score present in the min heap of that particular id, we update our min heap by adding the current score and removing the minimum score. This way, the size of the min heap never exceeds 5 which is a much more efficient implementation than keeping all the scores in the heap.\n\n**Algorithm**\n\nFor each of the id, we can keep inserting all the scores in the corresponding min heap. Whenever we reach a state where the size of the min heap exceeds 5, we'll simply remove the minimum element from the min heap, thereby making sure that the size of the min heap never exceeds 5.\n\nBelow is the implementation of this approach.\n\n<iframe src=\"https://leetcode.com/playground/RHC2zb68/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"RHC2zb68\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: Assuming $$N$$ is the total number of items, finding a key in the map takes $$O(\\log N)$$ time. Here since we are using a min heap, the size of which is upper bounded (by k = 5 elements) hence pushing an item in the heap takes $$O(1)$$ time. Hence to insert all the $$N$$ elements, the total time taken is $$O(N)$$. Iterating over the map takes $$O(N)$$ time and extracting all the elements from the min heap is a constant time operation. Hence the overall time taken is $$O(N \\log N)$$.\n\n* Space Complexity: $$O(N)$$, the space used by `allScores`.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

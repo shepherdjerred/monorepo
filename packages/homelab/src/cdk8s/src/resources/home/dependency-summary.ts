@@ -64,16 +64,16 @@ export function createDependencySummaryCronJob(chart: Chart) {
                       valueFrom: {
                         secretKeyRef: {
                           name: secretItem.name,
-                          key: "openai_api_key",
+                          key: "OPENAI_API_KEY",
                         },
                       },
                     },
                     {
-                      name: "GITHUB_TOKEN",
+                      name: "GH_TOKEN",
                       valueFrom: {
                         secretKeyRef: {
                           name: secretItem.name,
-                          key: "github_token",
+                          key: "GH_TOKEN",
                         },
                       },
                     },
@@ -91,7 +91,7 @@ export function createDependencySummaryCronJob(chart: Chart) {
                       valueFrom: {
                         secretKeyRef: {
                           name: secretItem.name,
-                          key: "postal_api_key",
+                          key: "POSTAL_API_KEY",
                         },
                       },
                     },

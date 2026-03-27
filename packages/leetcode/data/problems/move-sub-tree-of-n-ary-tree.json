@@ -1,0 +1,104 @@
+{
+  "questionId": "1655",
+  "questionFrontendId": "1516",
+  "title": "Move Sub-Tree of N-Ary Tree",
+  "titleSlug": "move-sub-tree-of-n-ary-tree",
+  "difficulty": "Hard",
+  "content": "<p>Given the <code>root</code> of an <span data-keyword=\"n-ary-tree\">N-ary tree</span> of unique values, and two nodes of the tree <code>p</code> and <code>q</code>.</p>\n\n<p>You should move the subtree of the node <code>p</code> to become a direct child of node <code>q</code>. If <code>p</code> is already a direct child of <code>q</code>, do not change anything. Node <code>p</code> <strong>must be</strong> the last child in the children list of node <code>q</code>.</p>\n\n<p>Return <em>the root of the tree</em> after adjusting it.</p>\n\n<p>&nbsp;</p>\n\n<p>There are 3 cases for nodes <code>p</code> and <code>q</code>:</p>\n\n<ol>\n\t<li>Node <code>q</code> is in the sub-tree of node <code>p</code>.</li>\n\t<li>Node <code>p</code> is in the sub-tree of node <code>q</code>.</li>\n\t<li>Neither node <code>p</code> is in the sub-tree of node <code>q</code> nor node <code>q</code> is in the sub-tree of node <code>p</code>.</li>\n</ol>\n\n<p>In cases 2 and 3, you just need to move <code><span>p</span></code> (with its sub-tree) to be a child of <code>q</code>, but in case 1 the tree may be disconnected, thus you need to reconnect the tree again. <strong>Please read the examples carefully before solving this problem.</strong></p>\n\n<p>&nbsp;</p>\n\n<p><em>Nary-Tree input serialization is represented in their level order traversal, each group of children is separated by the null value (See examples).</em></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/11/08/sample_4_964.png\" style=\"width: 296px; height: 241px;\" /></p>\n\n<p>For example, the above tree is serialized as <code>[1,null,2,3,4,5,null,null,6,7,null,8,null,9,10,null,null,11,null,12,null,13,null,null,14]</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/07/13/move_e1.jpg\" style=\"width: 450px; height: 188px;\" />\n<pre>\n<strong>Input:</strong> root = [1,null,2,3,null,4,5,null,6,null,7,8], p = 4, q = 1\n<strong>Output:</strong> [1,null,2,3,4,null,5,null,6,null,7,8]\n<strong>Explanation:</strong> This example follows the second case as node p is in the sub-tree of node q. We move node p with its sub-tree to be a direct child of node q.\nNotice that node 4 is the last child of node 1.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/07/13/move_e2.jpg\" style=\"width: 281px; height: 281px;\" />\n<pre>\n<strong>Input:</strong> root = [1,null,2,3,null,4,5,null,6,null,7,8], p = 7, q = 4\n<strong>Output:</strong> [1,null,2,3,null,4,5,null,6,null,7,8]\n<strong>Explanation:</strong> Node 7 is already a direct child of node 4. We don&#39;t change anything.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/07/13/move_e3.jpg\" style=\"width: 450px; height: 331px;\" />\n<pre>\n<strong>Input:</strong> root = [1,null,2,3,null,4,5,null,6,null,7,8], p = 3, q = 8\n<strong>Output:</strong> [1,null,2,null,4,5,null,7,8,null,null,null,3,null,6]\n<strong>Explanation:</strong> This example follows case 3 because node p is not in the sub-tree of node q and vice-versa. We can move node 3 with its sub-tree and make it as node 8&#39;s child.\n</pre>\n\n<p><strong class=\"example\">Example 4:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2025/08/01/untitled-diagramdrawio.png\" style=\"width: 500px; height: 175px;\" />\n<pre>\n<strong>Input:</strong> root = [1,null,2,3,null,4], p = 1, q = 4\n<strong>Output:</strong> [4,null,1,null,2,3]\n<strong>Explanation:</strong> This example follows case 1 because node q is in the sub-tree of node p. Disconnect 4 with its parent and move node 1 with its sub-tree and make it as node 4&#39;s child.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The total number of nodes is between <code>[2, 1000]</code>.</li>\n\t<li>Each node has a <strong>unique</strong> value.</li>\n\t<li><code>p != null</code></li>\n\t<li><code>q != null</code></li>\n\t<li><code>p</code> and <code>q</code> are two different nodes (i.e. <code>p != q</code>).</li>\n</ul>\n",
+  "hints": [
+    "Disconnect node p from its parent and append it to the children list of node q.",
+    "If q was in the sub-tree of node p (case 1), get the parent node of p and replace p in its children list with q.",
+    "If p was the root of the tree, make q the root of the tree."
+  ],
+  "metaData": "{\n  \"name\": \"moveSubTree\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"p\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"q\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"manual\": true,\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"csharp\",\n    \"javascript\",\n    \"ruby\",\n    \"swift\",\n    \"golang\",\n    \"python3\",\n    \"scala\",\n    \"kotlin\",\n    \"php\",\n    \"typescript\"\n  ], \"typescriptCustomType\" : \"class _Node {\\n    val: number\\n    children: _Node[]\\n\\n    constructor(val?: number, children?: _Node[]) {\\n        this.val = (val===undefined ? 0 : val)\\n        this.children = (children===undefined ? [] : children)\\n    }\\n}\\n\"\n\n}",
+  "stats": "{\"totalAccepted\": \"2.7K\", \"totalSubmission\": \"4.5K\", \"totalAcceptedRaw\": 2689, \"totalSubmissionRaw\": 4502, \"acRate\": \"59.7%\"}",
+  "likes": 34,
+  "dislikes": 67,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Find Root of N-Ary Tree\", \"titleSlug\": \"find-root-of-n-ary-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,null,2,3,null,4,5,null,6,null,7,8]\n4\n1",
+    "[1,null,2,3,null,4,5,null,6,null,7,8]\n7\n4",
+    "[1,null,2,3,null,4,5,null,6,null,7,8]\n3\n8",
+    "[1,null,2,3,null,4]\n1\n4"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/*\n// Definition for a Node.\nclass Node {\npublic:\n    int val;\n    vector<Node*> children;\n\n    Node() {}\n\n    Node(int _val) {\n        val = _val;\n    }\n\n    Node(int _val, vector<Node*> _children) {\n        val = _val;\n        children = _children;\n    }\n};\n*/\n\nclass Solution {\npublic:\n    Node* moveSubTree(Node* root, Node* p, Node* q) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/*\n// Definition for a Node.\nclass Node {\n    public int val;\n    public List<Node> children;\n\n    \n    public Node() {\n        children = new ArrayList<Node>();\n    }\n    \n    public Node(int _val) {\n        val = _val;\n        children = new ArrayList<Node>();\n    }\n    \n    public Node(int _val,ArrayList<Node> _children) {\n        val = _val;\n        children = _children;\n    }\n};\n*/\n\nclass Solution {\n    public Node moveSubTree(Node root, Node p, Node q) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "\"\"\"\n# Definition for a Node.\nclass Node:\n    def __init__(self, val: Optional[int] = None, children: Optional[List['Node']] = None):\n        self.val = val\n        self.children = children if children is not None else []\n\"\"\"\n\nclass Solution:\n    def moveSubTree(self, root: 'Node', p: 'Node', q: 'Node') -> 'Node':\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "\"\"\"\n# Definition for a Node.\nclass Node(object):\n    def __init__(self, val=None, children=None):\n        self.val = val\n        self.children = children if children is not None else []\n\"\"\"\n\nclass Solution(object):\n    def moveSubTree(self, root, p, q):\n        \"\"\"\n        :type root: Node\n        :type p: Node\n        :type q: Node\n        :rtype: Node\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * // Definition for a Node.\n * function Node(val, children) {\n *    this.val = val === undefined ? 0 : val;\n *    this.children = children === undefined ? [] : children;\n * };\n */\n\n/**\n * @param {Node} root\n * @param {Node} p\n * @param {Node} q\n * @return {Node}\n */\nvar moveSubTree = function(root, p, q) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for _Node.\n * class _Node {\n *     val: number\n *     children: _Node[]\n * \n *     constructor(val?: number, children?: _Node[]) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.children = (children===undefined ? [] : children)\n *     }\n * }\n */\n\nfunction moveSubTree(root: _Node | null, p: _Node | null, q: _Node | null): _Node | null {\n\t\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/*\n// Definition for a Node.\npublic class Node {\n    public int val;\n    public IList<Node> children;\n    \n    public Node() {\n        val = 0;\n        children = new List<Node>();\n    }\n\n    public Node(int _val) {\n        val = _val;\n        children = new List<Node>();\n    }\n    \n    public Node(int _val, List<Node> _children) {\n        val = _val;\n        children = _children;\n    }\n}\n*/\n\npublic class Solution {\n    public Node MoveSubTree(Node root, Node p, Node q) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a Node.\n * type Node struct {\n *     Val int\n *     Children []*Node\n * }\n */\n\nfunc moveSubTree(root *Node, p *Node, q *Node) *Node {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Definition for a Node.\n * class Node(var `val`: Int) {\n *     var children: List<Node?> = listOf()\n * }\n */\n\nclass Solution {\n    fun moveSubTree(root: Node?, p: Node?, q: Node?): Node? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a Node.\n * public class Node {\n *     public var val: Int\n *     public var children: [Node]\n *     public init(_ val: Int) {\n *         self.val = val\n *         self.children = []\n *     }\n * }\n */\n\nclass Solution {\n    func moveSubTree(_ root: Node?, _ p: Node?, _ q: Node?) -> Node? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a Node.\n# class Node\n#     attr_accessor :val, :children\n#     def initialize(val=0, children=[])\n#         @val = val\n#         @children = children\n#     end\n# end\n\n# @param {TreeNode} root\n# @param {TreeNode} p\n# @param {TreeNode} q\n# @return {Integer}\ndef move_sub_tree(root, p, q)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a Node.\n * class Node {\n *     public $val = null;\n *     public $children = null;\n *     function __construct($val = 0) {\n *         $this->val = $val;\n *         $this->children = array();\n *     }\n * }\n */\n\nclass Solution {\n\n    /**\n     * @param Node $root\n     * @param Node $p\n     * @param Node $q\n     * @return Node\n     */\n    function moveSubTree($root, $p, $q) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a Node.\n * class Node(var _value: Int) {\n *   var value: Int = _value\n *   var children: List[Node] = List()\n * }\n */\n\nobject Solution {\n    def moveSubTree(root: Node, p: Node, q: Node): Node = {\n        \n    }\n}"
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,138 @@
+{
+  "questionId": "940",
+  "questionFrontendId": "904",
+  "title": "Fruit Into Baskets",
+  "titleSlug": "fruit-into-baskets",
+  "difficulty": "Medium",
+  "content": "<p>You are visiting a farm that has a single row of fruit trees arranged from left to right. The trees are represented by an integer array <code>fruits</code> where <code>fruits[i]</code> is the <strong>type</strong> of fruit the <code>i<sup>th</sup></code> tree produces.</p>\n\n<p>You want to collect as much fruit as possible. However, the owner has some strict rules that you must follow:</p>\n\n<ul>\n\t<li>You only have <strong>two</strong> baskets, and each basket can only hold a <strong>single type</strong> of fruit. There is no limit on the amount of fruit each basket can hold.</li>\n\t<li>Starting from any tree of your choice, you must pick <strong>exactly one fruit</strong> from <strong>every</strong> tree (including the start tree) while moving to the right. The picked fruits must fit in one of your baskets.</li>\n\t<li>Once you reach a tree with fruit that cannot fit in your baskets, you must stop.</li>\n</ul>\n\n<p>Given the integer array <code>fruits</code>, return <em>the <strong>maximum</strong> number of fruits you can pick</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> fruits = [<u>1,2,1</u>]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> We can pick from all 3 trees.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> fruits = [0,<u>1,2,2</u>]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> We can pick from trees [1,2,2].\nIf we had started at the first tree, we would only pick from trees [0,1].\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> fruits = [1,<u>2,3,2,2</u>]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> We can pick from trees [2,3,2,2].\nIf we had started at the first tree, we would only pick from trees [1,2].\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= fruits.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= fruits[i] &lt; fruits.length</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"totalFruit\",\n  \"params\": [\n    {\n      \"name\": \"fruits\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"807.4K\", \"totalSubmission\": \"1.6M\", \"totalAcceptedRaw\": 807411, \"totalSubmissionRaw\": 1590736, \"acRate\": \"50.8%\"}",
+  "likes": 6182,
+  "dislikes": 588,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Longest Nice Subarray\", \"titleSlug\": \"longest-nice-subarray\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Fruits Into Baskets II\", \"titleSlug\": \"fruits-into-baskets-ii\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,1]",
+    "[0,1,2,2]",
+    "[1,2,3,2,2]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 11, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 10, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 3, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"netflix\", \"name\": \"Netflix\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int totalFruit(vector<int>& fruits) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int totalFruit(int[] fruits) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def totalFruit(self, fruits: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def totalFruit(self, fruits):\n        \"\"\"\n        :type fruits: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} fruits\n * @return {number}\n */\nvar totalFruit = function(fruits) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function totalFruit(fruits: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int TotalFruit(int[] fruits) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int totalFruit(int* fruits, int fruitsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func totalFruit(fruits []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun totalFruit(fruits: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func totalFruit(_ fruits: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn total_fruit(fruits: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} fruits\n# @return {Integer}\ndef total_fruit(fruits)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $fruits\n     * @return Integer\n     */\n    function totalFruit($fruits) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int totalFruit(List<int> fruits) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def totalFruit(fruits: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec total_fruit(fruits :: [integer]) :: integer\n  def total_fruit(fruits) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec total_fruit(Fruits :: [integer()]) -> integer().\ntotal_fruit(Fruits) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (total-fruit fruits)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1662",
+    "content": "[TOC]\r\n\r\n## Solution\r\n\r\n--- \r\n\r\n### Overview\r\n\r\nIn this problem, we are given an input array representing different types of fruits and two baskets.\r\n\r\n![img](../Figures/904/904-example_1.png)\r\n\r\nWe want to collect some fruits from a subarray. However, each basket can only hold one type of fruit. In other words, we can collect **at most 2 types of fruits**.\r\n\r\nTake the picture below as an example:\r\n\r\n![img](../Figures/904/904-example_2.png)\r\n\r\nThe task is to find out the **maximum number of fruits** we can collect under this premise.\r\n\r\nTo start with, we focus on the mathematical part of the problem, this question equals: \r\nGiven an array of integers, find the longest subarray that contains at most 2 unique integers. (We will call such subarray a **valid** subarray for convenience)\r\n\r\n---\r\n\r\n### Approach 1: Brute Force\r\n\r\n#### Intuition   \r\n\r\nLet's start with the most straightforward method, brute force! That is, to check every subarray and find out the longest valid one.\r\n\r\nThe steps are simple: \r\n1. Iterate over all subarrays.\r\n2. For each subarray, we count the types of fruits it contains. If the subarray has no more than 2 types of fruits, meaning it is valid, we take its length to update the maximum length.\r\n\r\nTake the following slides as an example:\r\n\r\n!?!../Documents/904/s1.json:601,301!?!\r\n\r\n\r\n<br>\r\n\r\n#### Algorithm\r\n\r\n1) Initialize `max_picked = 0` to track the maximum number of fruits we can collect.\r\n2) Iterate over the left index `left` of subarrays.\r\n3) For every subarray start at index `left`, iterate over every index `right` to fix the end of subarray.\r\n4) For each subarray `(left, right)`, count the types of fruits it contains.\r\n    - If there are no more than 2 types, this subarray is valid, we take its length to update `max_picked`.\r\n    - Otherwise, if the current subarray is **invalid**, we move on to the next subarray.\r\n5) Once we finish the iteration, return `max_picked` as the maximum number of fruits we can collect.\r\n\r\n\r\n#### Implementation\r\n\r\n<iframe src=\"https://leetcode.com/playground/Pft3NkMk/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Pft3NkMk\"></iframe>\r\n\r\n\r\n#### Complexity Analysis\r\n\r\nLet $$n$$ be the length of the input array `fruits`.\r\n\r\n* Time complexity: $$O(n^3)$$\r\n\r\n    - We have three nested loops, the first loop for the left index `left`, the second loop for the right index `right`, and the third loop for the index `currentIndex` between `left` and `right`. \r\n    - In each step, we need to add the current fruit to the set `basket`, which takes constant time.\r\n    - For each subarray, we need to calculate the size of the `basket` after the iteration, which also takes constant time.\r\n    - Therefore, the overall time complexity is $$O(n^3)$$. \r\n    \r\n\r\n* Space complexity: $$O(n)$$\r\n\r\n    - During the iteration, we need to count the types of fruits in every subarray and store them in a hash set. In the worst-case scenario, there could be $$O(n)$$ different types in some subarrays, thus it requires $$O(n)$$ space complexity.\r\n    - Therefore, the overall space complexity is $$O(n)$$.\r\n\r\n<br/>\r\n\r\n\r\n---\r\n\r\n### Approach 2: Optimized Brute Force \r\n\r\n#### Intuition\r\n\r\nThere are 3 nested loops in approach 1, so as tons of duplicated calculations. Let's try a better method to reduce the workload!\r\n\r\n\r\n**No inner loop**\r\n\r\nLet's look at the subarrays generated in every iteration. \r\n\r\nFor every consecutive subarray, the only difference is that the second subarray has one added fruit, while the rest fruits are the same! Therefore, to get the types of fruits in the second subarray, we just need to add the new fruit to the `basket` of the first subarray, rather than initializing an empty set and recounting all the fruits again!\r\n\r\n![img](../Figures/904/904-no_dup.png)\r\n\r\n\r\n**Early stop**\r\nTake a look at the picture below, suppose the iteration of `right` stops by here, do we need to continue the iteration of `right` until it reaches the end of the array? \r\n\r\n![img](../Figures/904/904-early_stop.png)\r\n\r\nNo! Since the current window already has more than 2 types of fruits, adding more fruits from the right side does not decrease the number of types, which means that the rest of the windows also have more than 2 types of fruits. Hence, it is time to stop iterating over `right`, and start over from the next `left`.\r\n\r\nTherefore, we only need two nested loops, the outer loop for the left index `left` and the inner loop for the right index `right`. Take the following slides as an example: \r\n\r\n!?!../Documents/904/s2.json:601,301!?!\r\n\r\n<br>\r\n\r\n#### Algorithm\r\n\r\n1) Initialize `max_picked` as 0.\r\n2) Iterate over `left`, the left index of the subarray.\r\n3) For every subarray start at index `left`, we iterate over every index `right` to fix the end of subarray, and calculate the types of fruits in this subarray.\r\n    - If there are no more than 2 types, this subarray is valid, we update `max_picked` with the length of this subarray.\r\n    - Otherwise, the current subarray, as well as all the longer subarrays (with the same left index `left`) are **invalid**. Move on to the next left index `left + 1`.\r\n4) Once we finish the iteration, return `max_picked` as the maximum number of fruits we can collect.\r\n\r\n\r\n#### Implementation\r\n\r\n<iframe src=\"https://leetcode.com/playground/hR65bbdp/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"hR65bbdp\"></iframe>\r\n\r\n\r\n#### Complexity Analysis\r\n\r\nLet $$n$$ be the length of the input array `fruits`.\r\n\r\n* Time complexity: $$O(n^2)$$\r\n\r\n    - Compared with approach 1, we only have two nested loops now. \r\n    - In each iteration step, we need to add the current fruit to the hash set `basket`, which takes constant time.\r\n    - To sum up, the overall time complexity is $$O(n^2)$$\r\n    \r\n\r\n* Space complexity: $$O(1)$$\r\n\r\n    - During the iteration, we need to count the number of types in every possible subarray and update the maximum length. Since we used the early stop method, thus the types will never exceed 3. Therefore, the space complexity is $$O(1)$$\r\n\r\n\r\n<br/>\r\n\r\n\r\n---\r\n\r\n### Approach 3: Sliding Window\r\n\r\n#### Intuition   \r\n\r\nCan we further reduce the time complexity? The answer is Yes! \r\n\r\nRecall how we restart the iteration in approach 2:\r\n\r\n> If the current fruit at index `right` makes our window `(left, right)` have 3 types of fruit, we need to break the iteration over `right` and start over from index `left + 1`.\r\n\r\nThe question is, is this step necessary? Do we need to recalculate the types of fruits from `left + 1` again?\r\n\r\nIf we have found a valid window of size `k` starting at index `left`, even though we want to restart at `left + 1`, there is no need to recalculate the fruit type from `left + 1` all to way to `right`, which represent windows of size no larger than `k`. We only need to look for windows larger than `k`!\r\n\r\n\r\n![img](../Figures/904/904_sw_exp.png)\r\n\r\n\r\nThus the logic becomes very clear: we let indexes `left` and `right` represent the size of the longest valid window we have encountered so far. In further iterations, instead of looking for smaller windows, we just check if the newly added fruit expands the window. \r\n\r\nMore specifically: we always add fruits from the right side to temporarily increase the window size by 1 (Let's say from `k` to `k + 1`), and if the new window is valid, it means that we have managed to find a larger window of size `k + 1`, great! Otherwise, this means that we haven't encountered a valid window of size `k + 1` yet, so we should go back to the previous window size, by removing one fruit from the left side of the window.\r\n\r\nTake the following slides as an example:\r\n\r\n!?!../Documents/904/s4.json:601,301!?!\r\n\r\n\r\n<br>\r\n\r\n#### Algorithm\r\n\r\n1) Start with an empty window with `left` and `right` as its left and right index.\r\n2) We iterate over `right` and add `fruits[right]` to this window.\r\n    - If the number is no larger than 2, meaning that we collect no more than 2 types of fruits, this subarray is valid.\r\n    - Otherwise, it is not the right time to expand the window and we must keep its size. Since we have added one fruit from the right side, we should remove one fruit from the left side of the window, and increment `left` by 1.\r\n4) Once we are done iterating, the difference between `left` and `right` stands for the longest valid subarray we encountered, i.e. the maximum number of fruits we can collect.\r\n\r\n\r\n#### Implementation\r\n\r\n<iframe src=\"https://leetcode.com/playground/9vU2xey5/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"9vU2xey5\"></iframe>\r\n\r\n\r\n#### Complexity Analysis\r\n\r\nLet $$n$$ be the length of the input array `fruits`.\r\n\r\n* Time complexity: $$O(n)$$\r\n\r\n    - Both indexes `left` and `right` only monotonically increased during the iteration, thus we have at most $$2 \\cdot n$$ steps, \r\n    - At each step, we update the hash set by addition or deletion of one fruit, which takes constant time.\r\n    - In summary, the overall time complexity is $$O(n)$$\r\n    \r\n\r\n* Space complexity: $$O(n)$$\r\n\r\n    - In the worst-case scenario, there might be at most $$O(n)$$ types of fruits inside the window. Take the picture below as an example. Imagine that we have an array of fruits like the following. (The first half is all one kind of fruit, while the second half is `n/2` types of fruits)\r\n\r\n    ![img](../Figures/904/904_sc_1.png) \r\n\r\n    In the first half of the iteration, the window size is expanded to `n/2`, i.e. $$O(n)$$. In the second half of the iteration, since we have to keep the window size, so it will contain all the `n/2` types of fruits and end up with $$O(n)$$ space.\r\n\r\n    ![img](../Figures/904/904_sc_2.png) \r\n\r\n    - Therefore, the space complexity is $$O(n)$$.\r\n\r\n<br/>\r\n\r\n\r\n---\r\n\r\n### Approach 4: Sliding Window II\r\n\r\n#### Intuition   \r\n\r\nIn the previous approach, we keep the window size non-decreasing. However, we might run into cases where the window contains $$O(n)$$ types of fruits and takes $$O(n)$$ space.\r\n\r\n\r\nThis can be optimized by making sure that there are always at most 2 types of fruits in the window. After adding a new fruit from the right side `right`, if the current window has more than 2 types of fruit, we keep removing fruits from the left side `left` until the current window has only 2 types of fruit. Note that the window size may become smaller than before, thus we cannot rely on `left` and `right` to keep track of the maximum number of fruits we can collect. Instead, we can just use a variable `max_picked` to keep track of the maximum window size we encountered.\r\n\r\n![img](../Figures/904/904_sc_3.png) \r\n\r\nFor the details on the implementation, let's take a look at the following slides.\r\n\r\n!?!../Documents/904/s3.json:601,301!?!\r\n\r\n\r\n<br>\r\n\r\n#### Algorithm\r\n\r\n1) Initialize `max_picked = 0` as the maximum fruits we can collect, and use hash map `basket` to record the types of fruits in the current window.\r\n2) Start with an empty window having `left = 0` and `right = 0` as its left and right index.\r\n3) We iterate over `right` and add `fruits[right]` to this window.\r\n    - If there are no more than 2 types of fruits, this subarray is **valid**.\r\n    - Otherwise, we need to keep removing fruits from the left side until there are only 2 types of fruits in the window.\r\n    \r\n    Then we update `max_picked` as `max(max_picked, right - left + 1)`.\r\n4) Once we finish iterating, return `max_picked` as the maximum number of fruits we can collect.\r\n\r\n\r\n#### Implementation\r\n\r\n<iframe src=\"https://leetcode.com/playground/7gkiU8R7/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"7gkiU8R7\"></iframe>\r\n\r\n#### Complexity Analysis\r\n\r\nLet $$n$$ be the length of the input array `fruits`.\r\n\r\n* Time complexity: $$O(n)$$\r\n\r\n    - Similarly, both indexes `left` and `right` are only monotonically increasing during the iteration, thus we have at most $$2 \\cdot n$$ steps, \r\n    - At each step, we update the hash set by addition or deletion of one fruit, which takes constant time. Note that the number of additions or deletions does not exceed $$n$$. \r\n    - To sum up, the overall time complexity is $$O(n)$$\r\n    \r\n\r\n* Space complexity: $$O(1)$$\r\n\r\n    - We maintain the number of fruit types contained in the window in time. Therefore, at any given time, there are at most 3 types of fruits in the window or the hash map `basket`. \r\n    - In summary, the space complexity is $$O(1)$$.\r\n\r\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

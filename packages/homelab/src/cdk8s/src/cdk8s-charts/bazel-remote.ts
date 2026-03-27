@@ -75,7 +75,7 @@ export function createBazelRemoteChart(app: App) {
                   valueFrom: {
                     secretKeyRef: {
                       name: S3_CREDENTIALS_SECRET_NAME,
-                      key: "access_key",
+                      key: "SEAWEEDFS_ACCESS_KEY_ID",
                     },
                   },
                 },
@@ -84,7 +84,7 @@ export function createBazelRemoteChart(app: App) {
                   valueFrom: {
                     secretKeyRef: {
                       name: S3_CREDENTIALS_SECRET_NAME,
-                      key: "secret_key",
+                      key: "SEAWEEDFS_SECRET_ACCESS_KEY",
                     },
                   },
                 },

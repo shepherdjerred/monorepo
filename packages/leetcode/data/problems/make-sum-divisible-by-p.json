@@ -1,0 +1,142 @@
+{
+  "questionId": "1694",
+  "questionFrontendId": "1590",
+  "title": "Make Sum Divisible by P",
+  "titleSlug": "make-sum-divisible-by-p",
+  "difficulty": "Medium",
+  "content": "<p>Given an array of positive integers <code>nums</code>, remove the <strong>smallest</strong> subarray (possibly <strong>empty</strong>) such that the <strong>sum</strong> of the remaining elements is divisible by <code>p</code>. It is <strong>not</strong> allowed to remove the whole array.</p>\n\n<p>Return <em>the length of the smallest subarray that you need to remove, or </em><code>-1</code><em> if it&#39;s impossible</em>.</p>\n\n<p>A <strong>subarray</strong> is defined as a contiguous block of elements in the array.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [3,1,4,2], p = 6\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The sum of the elements in nums is 10, which is not divisible by 6. We can remove the subarray [4], and the sum of the remaining elements is 6, which is divisible by 6.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [6,3,5,2], p = 9\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> We cannot remove a single element to get a sum divisible by 9. The best way is to remove the subarray [5,2], leaving us with [6,3] with sum 9.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3], p = 3\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> Here the sum is 6. which is already divisible by 3. Thus we do not need to remove anything.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= p &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Use prefix sums to calculate the subarray sums.",
+    "Suppose you know the remainder for the sum of the entire array. How does removing a subarray affect that remainder? What remainder does the subarray need to have in order to make the rest of the array sum up to be divisible by k?",
+    "Use a map to keep track of the rightmost index for every prefix sum % p."
+  ],
+  "metaData": "{\n  \"name\": \"minSubarray\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"p\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"224.7K\", \"totalSubmission\": \"527.3K\", \"totalAcceptedRaw\": 224671, \"totalSubmissionRaw\": 527272, \"acRate\": \"42.6%\"}",
+  "likes": 2873,
+  "dislikes": 195,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Subarray Sums Divisible by K\", \"titleSlug\": \"subarray-sums-divisible-by-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Divisibility Array of a String\", \"titleSlug\": \"find-the-divisibility-array-of-a-string\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,1,4,2]\n6",
+    "[6,3,5,2]\n9",
+    "[1,2,3]\n3"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 2, \"slug\": \"samsung\", \"name\": \"Samsung\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minSubarray(vector<int>& nums, int p) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minSubarray(int[] nums, int p) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minSubarray(self, nums: List[int], p: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minSubarray(self, nums, p):\n        \"\"\"\n        :type nums: List[int]\n        :type p: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} p\n * @return {number}\n */\nvar minSubarray = function(nums, p) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minSubarray(nums: number[], p: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinSubarray(int[] nums, int p) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minSubarray(int* nums, int numsSize, int p) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minSubarray(nums []int, p int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minSubarray(nums: IntArray, p: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minSubarray(_ nums: [Int], _ p: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_subarray(nums: Vec<i32>, p: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} p\n# @return {Integer}\ndef min_subarray(nums, p)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $p\n     * @return Integer\n     */\n    function minSubarray($nums, $p) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minSubarray(List<int> nums, int p) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minSubarray(nums: Array[Int], p: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_subarray(nums :: [integer], p :: integer) :: integer\n  def min_subarray(nums, p) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_subarray(Nums :: [integer()], P :: integer()) -> integer().\nmin_subarray(Nums, P) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-subarray nums p)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2456",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Brute Force (Time Limit Exceeded)\n\n#### Intuition\n\nOur goal is to remove the smallest subarray so that the sum of the remaining elements is divisible by `p`.\n\nIf the total sum of the array is already divisible by `p`, there's no need to remove any subarray. However, if the total sum isn't divisible by `p`, we need to find a subarray to remove. The remainder of the total sum divided by `p` is the part we want to \"eliminate\" by removing a subarray whose sum's remainder matches this remainder.\n\nTo do this, we can check every possible subarray by starting at each index and calculating the sum of all subarrays that begin at this index. For each subarray, we compute the remaining sum of the elements after removing it. If the remaining sum becomes divisible by `p`, we record the length of the subarray. We keep track of the smallest such subarray length as we proceed through all possibilities.\n\nThis is inefficient because we compute the sum for every subarray, leading to quadratic time complexity. So, this will work for small arrays but will struggle with larger inputs, leading to TLE.\n\n#### Algorithm\n\n- Calculate the size of the input array `nums` and the total sum of its elements, using `long long` to avoid overflow.\n- If the `totalSum` is already divisible by `p`, return 0 (no subarray needs to be removed).\n- Calculate the `target` remainder that needs to be removed (i.e., `totalSum % p`).\n- Initialize `minLen` to the size of the array `n` to keep track of the minimum subarray length.\n\n- Iterate over all possible starting indices of subarrays:\n  - For each `start` index, initialize `subSum` to 0.\n  - Iterate through all possible ending indices from the `start` index:\n    - Accumulate the sum of the subarray from `start` to `end`.\n    - Calculate the `remainingSum` after removing the current subarray, using `(totalSum - subSum) % p`.\n    - If `remainingSum` is 0:\n      - Update `minLen` to the smaller value between `minLen` and the length of the current subarray (`end - start + 1`).\n\n- After checking all possible subarrays, return:\n  - `-1` if no valid subarray was found (i.e., `minLen` remains equal to `n`).\n  - Otherwise, return `minLen` as the length of the smallest subarray that can be removed.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/iNWeeVwK/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"iNWeeVwK\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `nums` array.\n\n- Time complexity: $O(n^2)$\n\n    The outer loop runs $n$ times, iterating over the starting index of the subarray. The inner loop also runs up to $n$ times for each iteration of the outer loop, as it sums the elements from the starting index to the end. Therefore, the overall time complexity of this nested loop structure results in $O(n^2)$.\n\n- Space complexity: $O(1)$\n\n    The algorithm uses a constant amount of extra space, as it only stores a few variables (like `totalSum`, `target`, `subSum`, and `minLen`). The space used does not depend on the size of the input array, making the space complexity constant.\n\n---\n\n### Approach 2: Prefix Sum Modulo\n\n#### Intuition\n\nWe want to reduce the number of subarray checks while still solving the problem correctly. Usually, when we have a problem that involves the summation of a subarray, we resort to prefix sums. This lowers the time complexity of computing subarray summations to $O(1)$, as `sum(i, j) = sum(0, j) - sum(0, i-1)`.\n\nWe need to remove a subarray such that the sum of the remaining elements is divisible by `p`. This indicates that the remainder of the sum of the elements, after removing the subarray, must be zero when divided by `p`. We aim to use this information to find subarrays quickly.\n\nInstead of trying all subarrays, we keep track of the prefix sum as we iterate through the array. For each index, we compute the current prefix sum modulo `p`. The remainder of the total sum modulo `p` gives us a \"target\" remainder we want to eliminate. This is where modular arithmetic becomes useful: if, at some point in our prefix sum, we find that removing a certain portion of the array will leave a sum divisible by `p`, we have our solution.\n\nTo speed this up, we use a hash map to store the latest occurrence of each remainder (prefix sum modulo `p`). By doing so, when we encounter the same remainder later on, we know that the subarray between these two occurrences can be removed to make the sum divisible by `p`. This allows us to find the smallest subarray length in linear time, drastically improving the efficiency of the algorithm.\n\nThis is how we construct the formula for the smallest subarray removal:\n\n![Prefix Sum Modulo](../Figures/1590/equation.png)\n\n#### Algorithm\n\n- Initialize `n` as the size of `nums` and `totalSum` to 0.\n\n- Calculate the total sum and target remainder:\n  - Iterate over each element in `nums` to compute `totalSum` as the sum of all elements modulo `p`.\n  - Set `target` as `totalSum % p`.\n  - If `target` is 0, return 0 (the array is already divisible by `p`).\n\n- Use a hash map to track prefix sums modulo `p`:\n  - Initialize `modMap` with `0` mapped to `-1` to handle cases where the entire prefix is the answer.\n  - Initialize `currentSum` to 0 and `minLen` to `n`.\n\n- Iterate over the array:\n  - Update `currentSum` with the current element, taking modulo `p`.\n  - Calculate `needed` as the difference between `currentSum` and `target`, adjusted to be positive by adding `p` and taking modulo `p`.\n  - Check if `needed` exists in `modMap`:\n    - If it does, calculate the length of the subarray and update `minLen` if it's smaller.\n  - Store the current remainder and its index in `modMap`.\n\n- Return the result:\n  - If `minLen` is still `n`, return `-1` (no valid subarray found).\n  - Otherwise, return `minLen`.\n\n\nThe algorithm is visualized below:\n\n!?!../Documents/1590/prefixsum.json:940,605!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/XASDc7Wd/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"XASDc7Wd\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `nums` array.\n\n- Time complexity: $O(n)$\n\n    The algorithm iterates through the `nums` array twice: once to calculate the total sum and again to find the minimum length of the subarray that needs to be removed. Both of these operations take linear time, resulting in an overall time complexity of $O(n)$.\n\n- Space complexity: $O(n)$\n\n    The algorithm uses a hash map (`modMap`) to store the remainders and their corresponding indices. In the worst case, this hash map could store up to $n$ different remainders (one for each element in the array), leading to a space complexity of $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

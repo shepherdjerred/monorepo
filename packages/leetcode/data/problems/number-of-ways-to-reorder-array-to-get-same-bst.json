@@ -1,0 +1,169 @@
+{
+  "questionId": "1692",
+  "questionFrontendId": "1569",
+  "title": "Number of Ways to Reorder Array to Get Same BST",
+  "titleSlug": "number-of-ways-to-reorder-array-to-get-same-bst",
+  "difficulty": "Hard",
+  "content": "<p>Given an array <code>nums</code> that represents a permutation of integers from <code>1</code> to <code>n</code>. We are going to construct a binary search tree (BST) by inserting the elements of <code>nums</code> in order into an initially empty BST. Find the number of different ways to reorder <code>nums</code> so that the constructed BST is identical to that formed from the original array <code>nums</code>.</p>\n\n<ul>\n\t<li>For example, given <code>nums = [2,1,3]</code>, we will have 2 as the root, 1 as a left child, and 3 as a right child. The array <code>[2,3,1]</code> also yields the same BST but <code>[3,2,1]</code> yields a different BST.</li>\n</ul>\n\n<p>Return <em>the number of ways to reorder</em> <code>nums</code> <em>such that the BST formed is identical to the original BST formed from</em> <code>nums</code>.</p>\n\n<p>Since the answer may be very large, <strong>return it modulo </strong><code>10<sup>9</sup> + 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2026/02/23/1569_ex0.png\" style=\"width: 160px; height: 160px;\" />\n<pre>\n<strong>Input:</strong> nums = [2,1,3]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> We can reorder nums to be [2,3,1] which will yield the same BST. There are no other ways to reorder nums which will yield the same BST.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2026/02/23/1569_ex.png\" style=\"width: 270px; height: 270px;\" />\n<pre>\n<strong>Input:</strong> nums = [3,4,5,1,2]\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> The following 5 arrays will yield the same BST: \n[3,1,2,4,5]\n[3,1,4,2,5]\n[3,1,4,5,2]\n[3,4,1,2,5]\n[3,4,1,5,2]\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2026/02/23/1569_ex2.png\" style=\"width: 205px; height: 205px;\" />\n<pre>\n<strong>Input:</strong> nums = [1,2,3]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> There are no other orderings of nums that will yield the same BST.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= nums.length</code></li>\n\t<li>All integers in <code>nums</code> are <strong>distinct</strong>.</li>\n</ul>\n",
+  "hints": [
+    "Use a divide and conquer strategy.",
+    "The first number will always be the root. Consider the numbers smaller and larger than the root separately. When merging the results together, how many ways can you order x elements in x+y positions?"
+  ],
+  "metaData": "{\n  \"name\": \"numOfWays\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"62.9K\", \"totalSubmission\": \"116.5K\", \"totalAcceptedRaw\": 62920, \"totalSubmissionRaw\": 116462, \"acRate\": \"54.0%\"}",
+  "likes": 1858,
+  "dislikes": 210,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[2,1,3]",
+    "[3,4,5,1,2]",
+    "[1,2,3]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Divide and Conquer",
+      "slug": "divide-and-conquer"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Binary Search Tree",
+      "slug": "binary-search-tree"
+    },
+    {
+      "name": "Memoization",
+      "slug": "memoization"
+    },
+    {
+      "name": "Combinatorics",
+      "slug": "combinatorics"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numOfWays(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numOfWays(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numOfWays(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numOfWays(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar numOfWays = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numOfWays(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumOfWays(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numOfWays(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numOfWays(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numOfWays(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numOfWays(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn num_of_ways(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef num_of_ways(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function numOfWays($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numOfWays(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numOfWays(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec num_of_ways(nums :: [integer]) :: integer\n  def num_of_ways(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec num_of_ways(Nums :: [integer()]) -> integer().\nnum_of_ways(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (num-of-ways nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1890",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach: Recursion\n\n#### Intuition   \n\nWe can make the following conclusions:\n\n- The first element of `nums` always corresponds to the root node of the corresponding BST.\n\n- According to the definition of a binary search tree (BST), all elements less than the root value belong to the left subtree, while all elements greater than the root value belong to the right subtree (as shown in the figure below). Let's temporarily ignore the specific structure of the left and right subtrees for now.\n\n![img](../Figures/1569/1.png)\n\n\nLet `dfs(nums)` denote the number of permutations of `nums` that result in the same BST as `nums`. When iterating over the elements of `nums[1:]`, we can construct two subtrees using the subsequences `left_nodes = [1, 2]` and `right_nodes = [4, 5]` by adding each element to either the left or right subtree of the root. As long as the **relative position** of the elements within `[1, 2]` or `[4, 5]` remains unchanged, rearranging their positions in `nums` does not affect the construction of the subtrees. \n\n\n\n> It should be noted that maintaining the relative positions of the numbers in each sequence does not necessarily mean that rearranging the order will always result in a different BST. However, this issue will be addressed in the next level of the subproblem, which will be considered in `dfs(left_nodes)` or `dfs(right_nodes)` by allowing the order to be changed. In the current level of recursion `dfs(nums)`, we do not consider the issue of the next level.\n\n\n![img](../Figures/1569/6.png)\n\n\nTherefore, we obtain the following recursive relation:\n$$\\text{dfs(nums)} = \\text{dfs(left\\_nodes)} \\cdot \\text{dfs(right\\_nodes)}$$\n\nHowever, it is important to note that the actual number of valid permutations may exceed the calculated number from above. This is because there are some permutations that do not alter the relative order of the nodes in `left_nodes` and `right_nodes` thus resulting in the same BST.\n\n<br>\n\nFor instance, let's consider the original array `[3,4,5,1,2]`. Here, we use `[1, 2]` to construct the left subtree and `[4, 5]` to construct the right subtree. If we only change the positions of `1` and `2` in `nums[1:]` without altering their relative order, the subsequences used to construct the left and right subtree will still be `[1, 2]` and `[4, 5]`, resulting in the same left subtree.\n\n\n![img](../Figures/1569/2.png)\n\n\nThis implies that we need to adjust the formula by multiplying it with a coefficient ($$P$$) that represents the number of permutations that preserve the relative order of nodes in the two subsequence `left_nodes` and `right_nodes`. This leads to the modified equation:\n\n$$\\text{dfs(nums)} = P\\cdot \\text{dfs(left\\_nodes)} \\cdot \\text{dfs(right\\_nodes)}$$\n\n\nIt is possible to arbitrarily select two cells to hold the nodes of the left subtree, and there are 6 permutations that generate the same `left_nodes` and `right_nodes`. Therefore, we set $$P=6$$ in the above equation.\n\n![img](../Figures/1569/3.png)\n\n\nIn general, for an array of length `m` with `left` nodes in the left subtree, then the number of valid permutations is equal to the number of ways of selecting `k` cells from `m - 1` cells (excluding the first cell that represents the root). This can be expressed using the binomial coefficient formula:\n\n$$C_{m-1}^\\text{left} = \\binom{m-1}{\\text{left}} = \\frac{(m-1)!}{\\text{left}!(m-1-\\text{left})!}$$\n\n\n\n<details> <summary>\n        <b> &ensp; If you are not aware of the binomial coefficient, let's get a brief idea about it (click to expand) We have hidden this section in order to keep the main content coherent. Our focus is on practical applications rather than on specific implementations and theories. </b> </summary>\n\n<br>\n\nTo efficiently compute the binomial coefficients, we can use Pascal's triangle and precompute a table to avoid repetitive calculations. To build this table, we first determine the number of rows we need based on the size of `nums`, denoted as `m`. We create a $$m \\times m$$ table to represent the first `m - 1` rows of Pascal's triangle.\n\nThe numbers in Pascal's triangle are generated by summing the two numbers directly above it. We initialize the first column and the main diagonal as `1`. We then iterate over the lower-left half of the table, starting from `table[2][1]`, and compute `table[i][j]` as the sum of `table[i - 1][j - 1]` and `table[i - 1][j]`.\n\n![img](../Figures/1569/5.png)\n\nAfter building the table, we can efficiently compute the value of $$C_n^k$$ by directly looking up `table[n][k]`.\n\n</details>\n\n<br>\n\nNow we can recursively solve this problem by dividing `nums` into two subsequences `left_nodes` (of length `k`) and `right_nodes`, and the number of valid permutations is denoted as \n$$ \\text{dfs(nums)} \\\\= P\\cdot \\text{dfs(left\\_nodes)} \\cdot \\text{dfs(right\\_nodes)} \\\\= C_{n}^{k}\\cdot \\text{dfs(left\\_nodes)} \\cdot \\text{dfs(right\\_nodes)}$$. \n\n\nwhere $$C_{n}^{k}$$ can be obtained by using the precomputed table we discussed before or built-in functions. We treat the calls to `dfs` on the two subsequences as subproblems, and recursively solve them. The algorithm always selects the first element as the root value, and the size of the input array gradually decreases as the recursion progresses.\n\n\nIf the input array `nums` contains one or two elements, it only has one permutation that constructs the same BST (which is `nums` itself). Thus we have `dfs(nums) = 1` when `nums.length < 3`, which are the base cases.\n\n\n<br>\n\nTake the picture below as a detailed example.\n\n- For `nums = [5, 1, 8, 3, 7, 9, 4, 2, 6]`, we need to keep the relative order in `[1, 3, 4, 2]` and `[8, 7, 9, 6]` unchanged, there could be $$C_8^4$$ different permutations.\n\n- Now we move on to the left subtree constructed by `[1, 3, 4, 2]`, there is no left subtree for `root = 1` so we have the coefficient as $$C_3^0$$.\n\n- For the right subtree constructed by `[3, 2, 4]`, we have the coefficient as $$C_2^1$$.\n\nand so on.\n\n![img](../Figures/1569/40.png)\n\nTherefore, the number of permutations is equal to the product of all coefficients, which is $$\\text{answer} = C_8^4 \\cdot C_3^0 \\cdot C_3^2 \\cdot C_2^1  \\cdot 1 \\cdot 1 \\cdot 1$$. \n\nLastly, don't forget to return $$(\\text{answer} - 1) \\% (10^9 +7)$$ as we don't count the original `nums` as a valid permutation.\n\n\n<br>\n\n#### Algorithm\n\n\n1) Define a function `dfs(nums)` as the number of valid permutations.\n    - If the size of `nums` is less than 3, meaning there are 0, 1, or 2 nodes, the function returns 1, as there is only one possible permutation in each of these cases.\n    - Otherwise, the function selects the first element of `nums` as the value of the root node. It then partitions the remaining elements `nums[1:]` into two subsequences, `left_nodes` and `right_nodes`, representing the values of the nodes in the left and right subtrees, respectively.\n    - Let `m` be the size of `nums` and `k` be the size of `left_nodes`. Return the product of `dfs(left_nodes) * dfs(right_nodes)` and $$C_n^k$$.\n\n2) In Java or C++, we need to build a table of Pascal's of size $$m \\times m$$, since there are at most $$m - 1$$ nodes in a subtree, \n    - Initialize the first column and the main diagonal of the table to `1`.\n    - Iterate over each empty cell in the lower left triangle of `table` from top to bottom and from left to right. Set `table[i][j]` as `table[i - 1][j] + table[i - 1][j - 1]`.\n\n    Return `table[n][k]` if we need to compute $$C_n^k$$.\n\n\n3) Return `(dfs(nums) - 1) % (1_000_000_007)`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/NmZAKnGX/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"NmZAKnGX\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$m$$ be the size of `nums`.\n\n* Time complexity: $$O(m^2)$$\n    - In Java or C++, a table of Pascal's triangle of size $$m \\times m$$ is built, which takes $$O(m^2)$$ time.\n    - `dfs(nums)` recursively calls itself to process the left and right subtrees of the current node `nums[0]`. Since the total size of the subtrees decreases by 1 at each level of the recursion, the maximum height of the recursion tree is $$m$$. Thus the total time complexity of the recursive solution is $$O(m^2)$$ because in each call we are doing $$O(m)$$ work creating the subsequences.\n\n    \n\n* Space complexity: $$O(m^2)$$ or $$O(m)$$\n\n    - In Java or C++, a table of Pascal's triangle of size $$m \\times m$$ is built.\n    - The recursive solution uses the call stack to keep track of the current subtree being processed. The maximum depth of the call stack is equal to the height of the BST constructed from the input array. In the worst case, `nums` may form a degenerate BST (e.g., a sorted array), which has a height of $$m - 1$$, and the stack can hold up to $$m - 1$$ calls, resulting in a space complexity of $$O(m)$$.\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

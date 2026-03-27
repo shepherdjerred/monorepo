@@ -1,0 +1,136 @@
+{
+  "questionId": "1626",
+  "questionFrontendId": "1502",
+  "title": "Can Make Arithmetic Progression From Sequence",
+  "titleSlug": "can-make-arithmetic-progression-from-sequence",
+  "difficulty": "Easy",
+  "content": "<p>A sequence of numbers is called an <strong>arithmetic progression</strong> if the difference between any two consecutive elements is the same.</p>\n\n<p>Given an array of numbers <code>arr</code>, return <code>true</code> <em>if the array can be rearranged to form an <strong>arithmetic progression</strong>. Otherwise, return</em> <code>false</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [3,5,1]\n<strong>Output:</strong> true\n<strong>Explanation: </strong>We can reorder the elements as [1,3,5] or [5,3,1] with differences 2 and -2 respectively, between each consecutive elements.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [1,2,4]\n<strong>Output:</strong> false\n<strong>Explanation: </strong>There is no way to reorder the elements to obtain an arithmetic progression.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= arr.length &lt;= 1000</code></li>\n\t<li><code>-10<sup>6</sup> &lt;= arr[i] &lt;= 10<sup>6</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Consider that any valid arithmetic progression will be in sorted order.",
+    "Sort the array, then check if the differences of all consecutive elements are equal."
+  ],
+  "metaData": "{\n  \"name\": \"canMakeArithmeticProgression\",\n  \"params\": [\n    {\n      \"name\": \"arr\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"334.1K\", \"totalSubmission\": \"483.7K\", \"totalAcceptedRaw\": 334127, \"totalSubmissionRaw\": 483652, \"acRate\": \"69.1%\"}",
+  "likes": 2333,
+  "dislikes": 120,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Arithmetic Subarrays\", \"titleSlug\": \"arithmetic-subarrays\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,5,1]",
+    "[1,2,4]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 13, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool canMakeArithmeticProgression(vector<int>& arr) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean canMakeArithmeticProgression(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def canMakeArithmeticProgression(self, arr: List[int]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def canMakeArithmeticProgression(self, arr):\n        \"\"\"\n        :type arr: List[int]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arr\n * @return {boolean}\n */\nvar canMakeArithmeticProgression = function(arr) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function canMakeArithmeticProgression(arr: number[]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool CanMakeArithmeticProgression(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool canMakeArithmeticProgression(int* arr, int arrSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func canMakeArithmeticProgression(arr []int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun canMakeArithmeticProgression(arr: IntArray): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func canMakeArithmeticProgression(_ arr: [Int]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn can_make_arithmetic_progression(arr: Vec<i32>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} arr\n# @return {Boolean}\ndef can_make_arithmetic_progression(arr)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $arr\n     * @return Boolean\n     */\n    function canMakeArithmeticProgression($arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool canMakeArithmeticProgression(List<int> arr) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def canMakeArithmeticProgression(arr: Array[Int]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec can_make_arithmetic_progression(arr :: [integer]) :: boolean\n  def can_make_arithmetic_progression(arr) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec can_make_arithmetic_progression(Arr :: [integer()]) -> boolean().\ncan_make_arithmetic_progression(Arr) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (can-make-arithmetic-progression arr)\n  (-> (listof exact-integer?) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1847",
+    "content": "[TOC]\r\n\r\n## Solution\r\n\r\n\r\n\r\n\r\n\r\n\r\n---\r\n\r\n### Approach 1: Sort\r\n\r\n#### Intuition   \r\n\r\nLet's start with the most intuitive method. Since we want to determine if `arr` can make an arithmetic progression, we can first sort the `arr` and then check if the difference between each pair of adjacent numbers is equal.\r\n\r\n![img](../Figures/1502/1.png)\r\n\r\n<br>\r\n\r\n#### Algorithm\r\n\r\n1) Sort `arr`.\r\n2) Record the first pair difference `diff = arr[1] - arr[0]`.\r\n3) Iterate over the sorted `arr` from `i = 2`, check if every pair difference equals `diff`, return `False` if not.\r\n4) Return `True` when the iteration ends.\r\n\r\n\r\n\r\n#### Implementation\r\n\r\n<iframe src=\"https://leetcode.com/playground/gcv2A2GF/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"gcv2A2GF\"></iframe>\r\n\r\n\r\n#### Complexity Analysis\r\n\r\nLet $$n$$ be the length of the input array `arr`.\r\n\r\n* Time complexity: $$O(n\\cdot\\log n)$$\r\n\r\n    - Sorting `arr` takes $$O(n\\cdot\\log n)$$ time on average.\r\n    - Iterating the sorted `arr` takes $$O(n)$$ time.\r\n    - Therefore, the overall time complexity is $$O(n\\cdot\\log n)$$.\r\n    \r\n\r\n* Space complexity: $$O(n)$$ or $$O(\\log n)$$\r\n    - Some extra space is used when we sort $$\\text{arr}$$ in place. The space complexity of the sorting algorithm depends on the programming language.\r\n        - In python, the `sort` method sorts a list using the Timsort algorithm, which is a combination of Merge Sort and Insertion Sort and uses $$O(n)$$ additional space.\r\n        - In C++, the sort() function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with worst-case space complexity of $$O(\\log n)$$.\r\n        - In Java, Arrays.sort() is implemented using a variant of the Quick Sort algorithm which has a space complexity of $$O(\\log n)$$.\r\n    - We then traverse both arrays and calculate the cumulative product sum, this step takes $$O(1)$$ extra space.\r\n    - To sum up, the overall space complexity is $$O(n)$$ for Python and $$O(\\log n)$$ for C++ and Java.\r\n\r\n<br/>\r\n\r\n---\r\n\r\n### Approach 2: Set\r\n\r\n#### Intuition   \r\n\r\nActually, we don't need to sort `arr`. Instead, we can take advantage of a feature of the arithmetic sequence: the difference between any two adjacent terms is equal. \r\n\r\n\r\nLet's assume we have an arithmetic sequence where the first term is `min_value` and every successive element has a common difference `diff`. Then, the difference between each number `arr[i]` and `min_value` must be divisible by `diff`. We can determine `diff` by finding the minimum and maximum values, taking their difference, and dividing by the number of elements between the minimum and maximum which is `n - 1`. `diff = (max_value - min_value) / (n - 1)`.\r\n\r\n![img](../Figures/1502/2.png)\r\n\r\nNext, we traverse `arr` and check if each element `arr[i]` belongs to this arithmetic sequence. If the difference between `arr[i]` and `min_value` is a multiple of `diff`, then `arr[i]` belongs to this sequence, otherwise, it does not. \r\n\r\nThis strategy might not work if there are duplicate elements. For example, let `arr = [1, 2, 3, 2, 5]`. `diff` would be `(5 - 1) / 4 = 1`. The algorithm will be \"tricked\" since each element will pass the test (arr[i] - 1 divisible by 1).\r\n\r\nTo counteract this, we will use a set `number_set` to store all the elements we encounter. After traversing the array, if the size of the set is equal to `n`, then the numbers are distinct and must form an arithmetic sequence from `min_value` to `max_value`. As shown in the picture below, `[3, 9, 7, 1, 5]` forms an arithmetic sequence while `[2, 9, 7, 1, 5]` doesn't.\r\n\r\n![img](../Figures/1502/2_1.png)\r\n\r\nNote that we need to consider some special cases: \r\n\r\n- If `max_value - min_value` is not divisible by `n - 1`, it means `arr` can't form an arithmetic sequence, return `false`.\r\n- If we have `diff = 0`, it means that all the numbers in `arr` are equal, and we can return `true` directly.\r\n\r\n<br>\r\n\r\n#### Algorithm\r\n\r\n1) Find the minimum value `min_value` and the maximum value `max_value` of `arr`, let `n` be the length of `arr`.\r\n\r\n2) Check if `max_value - min_value` is divisible by `n - 1`, return `false` if not. Otherwise, set `diff = (max_value - min_value) / (n - 1)`.\r\n\r\n3) Initialize an empty set `number_set`.\r\n\r\n4) Iterate over `arr`, for each number `arr[i]`:\r\n    - Check if `arr[i] - min_value` is divisible by `diff`, return `false` if not.\r\n    - Add `arr[i]` to `number_set`.\r\n\r\n5) Return `true` if the size of `number_set` equals `n`, return `false` otherwise.  \r\n\r\n\r\n#### Implementation\r\n\r\n<iframe src=\"https://leetcode.com/playground/2cchpqmo/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"2cchpqmo\"></iframe>\r\n\r\n\r\n#### Complexity Analysis\r\n\r\nLet $$n$$ be the length of the input array `arr`.\r\n\r\n* Time complexity: $$O(n)$$\r\n\r\n    - Finding the minimum and maximum values takes $$O(n)$$ time.\r\n    - We iterate over `arr`, for each element `arr[i]`, we verify if it belongs to the arithmetic sequence then add it to the hash set, which takes $$O(1)$$ time.\r\n    \r\n\r\n* Space complexity: $$O(n)$$\r\n\r\n    - We create a set to store all visited elements, there might be at most $$n$$ distinct elements in the set. \r\n\r\n<br/>\r\n\r\n\r\n\r\n---\r\n\r\n### Approach 3: In-place Modification\r\n\r\n#### Intuition   \r\n\r\nIn the previous solution, we used a set `number_set` to store all the traversed numbers in `arr`. However, by making in-place adjustments to the original array, we can actually avoid this extra space overhead. Note that it is usually not considered good practice to modify the input and you should clarify with an interviewer. We are including this approach for completeness.\r\n\r\n\r\nWe will continue to use ideas from the previous approach. First, find the maximum value `max_value` and the minimum value `min_value` of `arr`, and calculate the common difference `diff` as `diff = (max_value - min_value) / (n - 1)`. \r\n\r\n![img](../Figures/1502/3.png)\r\n\r\nNow we have the common difference `diff` and the first term `min_value`. Given a number `arr[i]`, we can calculate its position `j` in the arithmetic sequence as `j = (arr[i] - min_value) / diff`. \r\n\r\nIf `j` is already equal to `i`, then this number `arr[i]` is already in the correct position and we can move on to the next `i`. Otherwise, we swap `arr[i]` with `arr[j]`. We can put one number (`arr[i]`) in its correct position with each step.\r\n\r\n\r\nIn reference to the following image, for `i = 0`, `arr[i] = 3` is not in the correct position, so we compute the correct index `j` it belongs to using `j = (arr[i] - 1) / diff = 1`, then we swap `arr[0]` with `arr[1]`. Note that we don't need to create the sorted `arr`, it is just for reference in the image.\r\n\r\n![img](../Figures/1502/3_1.png)\r\n\r\nPlease refer to the following slides as an detailed example:\r\n\r\n!?!../Documents/1502/s1.json:601,301!?!\r\n\r\n<br>\r\n\r\nNote that we need to consider some special cases: \r\n\r\n- If `max_value - min_value` is not divisible by `n - 1`, it means `arr` can't form an arithmetic sequence, return `false`.\r\n- If we have `arr[i] = arr[j], (i != j)`, return `false`. This is the case mentioned in the previous approach where duplicate elements can \"trick\" our strategy. In the previous approach, we used a set to detect this case.\r\n\r\n\r\n<br>\r\n\r\n#### Algorithm\r\n\r\n1) Find the minimum value `min_value` and the maximum value `max_value` of `arr`, let `n` be the length of `arr`.\r\n\r\n2) Check if `max_value - min_value` is divisible by `n - 1`, return `false` if not. Otherwise, set `diff = (max_value - min_value) / (n - 1)`.\r\n\r\n3) Set the starting index `i` as `i = 0`, while `i < n`:\r\n    \r\n    - If `arr[i]` equals `min_value + i * diff`, move on by letting `i = i + 1`.\r\n    - Else if `arr[i] - min_value` is not divisible by `diff`, return false.\r\n    - Otherwise, find the correct index that `arr[i]` belongs to using `j = (arr[i] - min_value) / diff`. If `arr[i] = arr[j]`, return `false`, otherwise, swap `arr[i]` with `arr[j]`.\r\n\r\n    Repeat step 3.\r\n\r\n\r\n5) Return `true` when the while loop ends.\r\n\r\n\r\n#### Implementation\r\n\r\n<iframe src=\"https://leetcode.com/playground/NqMcRyQ9/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"NqMcRyQ9\"></iframe>\r\n\r\n\r\n#### Complexity Analysis\r\n\r\nLet $$n$$ be the length of the input array `arr`.\r\n\r\n* Time complexity: $$O(n)$$\r\n\r\n    - Finding the minimum and maximum values takes $$O(n)$$ time.\r\n    - We used a while loop to help place every element `arr[i]` in its correct position. Each `arr[i]` is visited and swapped only once, thus the while loop takes at most $$O(n)$$ time as well. \r\n\r\n\r\n* Space complexity: $$O(1)$$\r\n\r\n    - We modified `arr` in place.\r\n\r\n\r\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

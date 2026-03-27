@@ -1,0 +1,134 @@
+{
+  "questionId": "1012",
+  "questionFrontendId": "972",
+  "title": "Equal Rational Numbers",
+  "titleSlug": "equal-rational-numbers",
+  "difficulty": "Hard",
+  "content": "<p>Given two strings <code>s</code> and <code>t</code>, each of which represents a non-negative rational number, return <code>true</code> if and only if they represent the same number. The strings may use parentheses to denote the repeating part of the rational number.</p>\n\n<p>A <strong>rational number</strong> can be represented using up to three parts: <code>&lt;IntegerPart&gt;</code>, <code>&lt;NonRepeatingPart&gt;</code>, and a <code>&lt;RepeatingPart&gt;</code>. The number will be represented in one of the following three ways:</p>\n\n<ul>\n\t<li><code>&lt;IntegerPart&gt;</code>\n\n\t<ul>\n\t\t<li>For example, <code>12</code>, <code>0</code>, and <code>123</code>.</li>\n\t</ul>\n\t</li>\n\t<li><code>&lt;IntegerPart&gt;<strong>&lt;.&gt;</strong>&lt;NonRepeatingPart&gt;</code>\n\t<ul>\n\t\t<li>For example, <code>0.5</code>, <code>1.</code>, <code>2.12</code>, and <code>123.0001</code>.</li>\n\t</ul>\n\t</li>\n\t<li><code>&lt;IntegerPart&gt;<strong>&lt;.&gt;</strong>&lt;NonRepeatingPart&gt;<strong>&lt;(&gt;</strong>&lt;RepeatingPart&gt;<strong>&lt;)&gt;</strong></code>\n\t<ul>\n\t\t<li>For example, <code>0.1(6)</code>, <code>1.(9)</code>, <code>123.00(1212)</code>.</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>The repeating portion of a decimal expansion is conventionally denoted within a pair of round brackets. For example:</p>\n\n<ul>\n\t<li><code>1/6 = 0.16666666... = 0.1(6) = 0.1666(6) = 0.166(66)</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;0.(52)&quot;, t = &quot;0.5(25)&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> Because &quot;0.(52)&quot; represents 0.52525252..., and &quot;0.5(25)&quot; represents 0.52525252525..... , the strings represent the same number.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;0.1666(6)&quot;, t = &quot;0.166(66)&quot;\n<strong>Output:</strong> true\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;0.9(9)&quot;, t = &quot;1.&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> &quot;0.9(9)&quot; represents 0.999999999... repeated forever, which equals 1.  [<a href=\"https://en.wikipedia.org/wiki/0.999...\" target=\"_blank\">See this link for an explanation.</a>]\n&quot;1.&quot; represents the number 1, which is formed correctly: (IntegerPart) = &quot;1&quot; and (NonRepeatingPart) = &quot;&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>Each part consists only of digits.</li>\n\t<li>The <code>&lt;IntegerPart&gt;</code> does not have leading zeros (except for the zero itself).</li>\n\t<li><code>1 &lt;= &lt;IntegerPart&gt;.length &lt;= 4</code></li>\n\t<li><code>0 &lt;= &lt;NonRepeatingPart&gt;.length &lt;= 4</code></li>\n\t<li><code>1 &lt;= &lt;RepeatingPart&gt;.length &lt;= 4</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"isRationalEqual\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"t\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"9.9K\", \"totalSubmission\": \"21.5K\", \"totalAcceptedRaw\": 9911, \"totalSubmissionRaw\": 21484, \"acRate\": \"46.1%\"}",
+  "likes": 106,
+  "dislikes": 218,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"0.(52)\"\n\"0.5(25)\"",
+    "\"0.1666(6)\"\n\"0.166(66)\"",
+    "\"0.9(9)\"\n\"1.\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool isRationalEqual(string s, string t) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean isRationalEqual(String s, String t) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def isRationalEqual(self, s: str, t: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def isRationalEqual(self, s, t):\n        \"\"\"\n        :type s: str\n        :type t: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {string} t\n * @return {boolean}\n */\nvar isRationalEqual = function(s, t) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function isRationalEqual(s: string, t: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool IsRationalEqual(string s, string t) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool isRationalEqual(char* s, char* t) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func isRationalEqual(s string, t string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun isRationalEqual(s: String, t: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func isRationalEqual(_ s: String, _ t: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn is_rational_equal(s: String, t: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {String} t\n# @return {Boolean}\ndef is_rational_equal(s, t)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param String $t\n     * @return Boolean\n     */\n    function isRationalEqual($s, $t) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool isRationalEqual(String s, String t) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def isRationalEqual(s: String, t: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec is_rational_equal(s :: String.t, t :: String.t) :: boolean\n  def is_rational_equal(s, t) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec is_rational_equal(S :: unicode:unicode_binary(), T :: unicode:unicode_binary()) -> boolean().\nis_rational_equal(S, T) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (is-rational-equal s t)\n  (-> string? string? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "656",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach 1: Fraction Class\n\n**Intuition**\n\nAs both numbers represent a fraction, we need a fraction class to handle fractions.  It should help us add two fractions together, keeping the answer in lowest terms.\n\n**Algorithm**\n\nWe need to make sense of the fraction we are given.  The hard part is the repeating part.\n\nSay we have a string like `S = \"0.(12)\"`.  It represents (for $$r = \\frac{1}{100}$$):\n\n$$\nS = \\frac{12}{100} + \\frac{12}{10000} + \\frac{12}{10^6} + \\frac{12}{10^8} + \\frac{12}{10^{10}} + \\cdots\n$$\n\n$$\nS = 12 * (r + r^2 + r^3 + \\cdots)\n$$\n\n$$\nS = 12 * \\frac{r}{1-r}\n$$\n\nas the sum $$(r + r^2 + r^3 + \\cdots)$$ is a geometric sum.\n\nIn general, for a repeating part $$x$$ with length $$k$$, we have $$r = 10^{-k}$$ and the contribution is $$\\frac{xr}{1-r}$$.\n\nThe other two parts are easier, as it is just a literal interpretation of the value.\n\n<iframe src=\"https://leetcode.com/playground/NkchnjYr/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"NkchnjYr\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(1)$$, if we take the length of $$S, T$$ as $$O(1)$$.\n\n* Space Complexity:  $$O(1)$$.\n<br />\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

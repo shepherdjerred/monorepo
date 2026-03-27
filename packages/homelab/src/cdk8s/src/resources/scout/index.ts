@@ -72,7 +72,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
         "aws-access-key-id",
         onePasswordItem.name,
       ),
-      key: "s3-access-key-id",
+      key: "AWS_ACCESS_KEY_ID",
     }),
     AWS_SECRET_ACCESS_KEY: EnvValue.fromSecretValue({
       secret: Secret.fromSecretName(
@@ -80,7 +80,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
         "aws-access-key-secret",
         onePasswordItem.name,
       ),
-      key: "s3-secret-access-key",
+      key: "AWS_SECRET_ACCESS_KEY",
     }),
     AWS_ENDPOINT_URL: EnvValue.fromValue(
       "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
@@ -92,15 +92,15 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
         "discord-token-secret",
         onePasswordItem.name,
       ),
-      key: "discord-api-token",
+      key: "DISCORD_TOKEN",
     }),
-    RIOT_API_TOKEN: EnvValue.fromSecretValue({
+    RIOT_API_KEY: EnvValue.fromSecretValue({
       secret: Secret.fromSecretName(
         chart,
         "riot-api-key-secret",
         onePasswordItem.name,
       ),
-      key: "riot-api-key",
+      key: "RIOT_API_KEY",
     }),
     S3_BUCKET_NAME: EnvValue.fromValue(s3BucketName),
     SENTRY_DSN: EnvValue.fromSecretValue({
@@ -109,7 +109,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
         "sentry-dsn-secret",
         onePasswordItem.name,
       ),
-      key: "sentry-dsn",
+      key: "SENTRY_DSN",
     }),
     ENVIRONMENT: EnvValue.fromValue(stage),
     DATABASE_URL: EnvValue.fromValue("file:/data/db.sqlite"),
@@ -126,7 +126,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
               "openai-api-key-secret",
               onePasswordItem.name,
             ),
-            key: "open-api-key",
+            key: "OPENAI_API_KEY",
           }),
           GEMINI_API_KEY: EnvValue.fromSecretValue({
             secret: Secret.fromSecretName(
@@ -134,7 +134,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
               "gemini-api-key-secret",
               onePasswordItem.name,
             ),
-            key: "gemini-api-key",
+            key: "GEMINI_API_KEY",
           }),
           ELEVENLABS_API_KEY: EnvValue.fromSecretValue({
             secret: Secret.fromSecretName(
@@ -142,7 +142,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
               "elevenlabs-api-key-secret",
               onePasswordItem.name,
             ),
-            key: "elevenlabs-api-key",
+            key: "ELEVENLABS_API_KEY",
           }),
           ELEVENLABS_VOICE_ID: EnvValue.fromSecretValue({
             secret: Secret.fromSecretName(
@@ -150,7 +150,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
               "elevenlabs-voice-id-secret",
               onePasswordItem.name,
             ),
-            key: "elevenlabs-voice-id",
+            key: "ELEVENLABS_VOICE_ID",
           }),
         }
       : baseEnvVariables;

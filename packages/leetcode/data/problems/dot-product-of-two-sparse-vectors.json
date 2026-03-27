@@ -1,0 +1,124 @@
+{
+  "questionId": "1713",
+  "questionFrontendId": "1570",
+  "title": "Dot Product of Two Sparse Vectors",
+  "titleSlug": "dot-product-of-two-sparse-vectors",
+  "difficulty": "Medium",
+  "content": "<p>Given two sparse vectors, compute their dot product.</p>\n\n<p>Implement class <code>SparseVector</code>:</p>\n\n<ul data-indent=\"0\" data-stringify-type=\"unordered-list\">\n\t<li><code>SparseVector(nums)</code>&nbsp;Initializes the object with the vector <code>nums</code></li>\n\t<li><code>dotProduct(vec)</code>&nbsp;Compute the dot product between the instance of <em>SparseVector</em> and <code>vec</code></li>\n</ul>\n\n<p>A <strong>sparse vector</strong> is a vector that has mostly zero values, you should store the sparse vector&nbsp;<strong>efficiently </strong>and compute the dot product between two <em>SparseVector</em>.</p>\n\n<p><strong>Follow up:&nbsp;</strong>What if only one of the vectors is sparse?</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [1,0,0,2,3], nums2 = [0,3,0,4,0]\n<strong>Output:</strong> 8\n<strong>Explanation:</strong> v1 = SparseVector(nums1) , v2 = SparseVector(nums2)\nv1.dotProduct(v2) = 1*0 + 0*3 + 0*0 + 2*4 + 3*0 = 8\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [0,1,0,0,0], nums2 = [0,0,0,0,2]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> v1 = SparseVector(nums1) , v2 = SparseVector(nums2)\nv1.dotProduct(v2) = 0*0 + 1*0 + 0*0 + 0*0 + 0*2 = 0\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [0,1,0,0,2,0,0], nums2 = [1,0,0,0,3,0,4]\n<strong>Output:</strong> 6\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == nums1.length == nums2.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10^5</code></li>\n\t<li><code>0 &lt;= nums1[i], nums2[i]&nbsp;&lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "Because the vector is sparse, use a data structure that stores the index and value where the element is nonzero."
+  ],
+  "metaData": "{\n  \"name\": \"dotProduct\",\n  \"params\": [\n    {\n      \"name\": \"v1\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"v2\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"manual\": true\n}",
+  "stats": "{\"totalAccepted\": \"405.1K\", \"totalSubmission\": \"450.6K\", \"totalAcceptedRaw\": 405056, \"totalSubmissionRaw\": 450577, \"acRate\": \"89.9%\"}",
+  "likes": 1313,
+  "dislikes": 170,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,0,0,2,3]\n[0,3,0,4,0]",
+    "[0,1,0,0,0]\n[0,0,0,0,2]",
+    "[0,1,0,0,2,0,0]\n[1,0,0,0,3,0,4]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"pinterest\", \"name\": \"Pinterest\"}, {\"timesEncountered\": 2, \"slug\": \"general-motors\", \"name\": \"General Motors\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class SparseVector {\npublic:\n    \n    SparseVector(vector<int> &nums) {\n        \n    }\n    \n    // Return the dotProduct of two sparse vectors\n    int dotProduct(SparseVector& vec) {\n        \n    }\n};\n\n// Your SparseVector object will be instantiated and called as such:\n// SparseVector v1(nums1);\n// SparseVector v2(nums2);\n// int ans = v1.dotProduct(v2);"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class SparseVector {\n    \n    SparseVector(int[] nums) {\n        \n    }\n    \n\t// Return the dotProduct of two sparse vectors\n    public int dotProduct(SparseVector vec) {\n        \n    }\n}\n\n// Your SparseVector object will be instantiated and called as such:\n// SparseVector v1 = new SparseVector(nums1);\n// SparseVector v2 = new SparseVector(nums2);\n// int ans = v1.dotProduct(v2);"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class SparseVector:\n    def __init__(self, nums: List[int]):\n        \n\n    # Return the dotProduct of two sparse vectors\n    def dotProduct(self, vec: 'SparseVector') -> int:\n        \n\n# Your SparseVector object will be instantiated and called as such:\n# v1 = SparseVector(nums1)\n# v2 = SparseVector(nums2)\n# ans = v1.dotProduct(v2)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class SparseVector:\n    def __init__(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        \"\"\"\n        \n\n    # Return the dotProduct of two sparse vectors\n    def dotProduct(self, vec):\n        \"\"\"\n        :type vec: 'SparseVector'\n        :rtype: int\n        \"\"\"\n        \n\n# Your SparseVector object will be instantiated and called as such:\n# v1 = SparseVector(nums1)\n# v2 = SparseVector(nums2)\n# ans = v1.dotProduct(v2)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {SparseVector}\n */\nvar SparseVector = function(nums) {\n    \n};\n\n// Return the dotProduct of two sparse vectors\n/**\n * @param {SparseVector} vec\n * @return {number}\n */\nSparseVector.prototype.dotProduct = function(vec) {\n    \n};\n\n// Your SparseVector object will be instantiated and called as such:\n// let v1 = new SparseVector(nums1);\n// let v2 = new SparseVector(nums2);\n// let ans = v1.dotProduct(v2);"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class SparseVector {\n    constructor(nums: number[]) {\n\t\t\n    }\n\n\t// Return the dotProduct of two sparse vectors\n    dotProduct(vec: SparseVector): number {\n\t\t\n    }\n}\n\n/**\n * Your SparseVector object will be instantiated and called as such:\n * var v1 = new SparseVector(nums1)\n * var v2 = new SparseVector(nums1)\n * var ans = v1.dotProduct(v2)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class SparseVector {\n    \n    public SparseVector(int[] nums) {\n        \n    }\n    \n    // Return the dotProduct of two sparse vectors\n    public int DotProduct(SparseVector vec) {\n        \n    }\n}\n\n// Your SparseVector object will be instantiated and called as such:\n// SparseVector v1 = new SparseVector(nums1);\n// SparseVector v2 = new SparseVector(nums2);\n// int ans = v1.DotProduct(v2);"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} SparseVector;\n\n\nSparseVector* sparseVectorCreate(int* nums, int numsSize) {\n    \n}\n\n// Return the dotProduct of two sparse vectors\nint sparseVectordotProduct(SparseVector* obj, SparseVector* vec) {\n  \n}\n\n/**\n * Your SparseVector struct will be instantiated and called as such:\n * SparseVector* v1 = sparseVectorCreate(nums1, nums1Size);\n * SparseVector* v2 = sparseVectorCreate(nums2, nums2Size);\n * int ans = sparseVectordotProduct(v1, v2);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type SparseVector struct {\n    \n}\n\nfunc Constructor(nums []int) SparseVector {\n    \n}\n\n// Return the dotProduct of two sparse vectors\nfunc (this *SparseVector) dotProduct(vec SparseVector) int {\n    \n}\n\n/**\n * Your SparseVector object will be instantiated and called as such:\n * v1 := Constructor(nums1);\n * v2 := Constructor(nums2);\n * ans := v1.dotProduct(v2);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class SparseVector(nums: IntArray) {\n    // Return the dotProduct of two sparse vectors\n    fun dotProduct(vec: SparseVector): Int {\n        \n    }\n}\n\n/**\n * Your SparseVector object will be instantiated and called as such:\n * var v1 = SparseVector(nums1)\n * var v2 = SparseVector(nums2)\n * val ans = v1.dotProduct(v2)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass SparseVector {\n    \n    init(_ nums: [Int]) {\n        \n    }\n\n    // Return the dotProduct of two sparse vectors\n    func dotProduct(_ vec: SparseVector) -> Int {\n        \n    }\n}\n\n/**\n * Your SparseVector object will be instantiated and called as such:\n * let v1 = SparseVector(nums1)\n * let v2 = SparseVector(nums2)\n * let ans = v1.dotProduct(v2)\n*/"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct SparseVector {\n\t\n}\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl SparseVector {\n    fn new(nums: Vec<i32>) -> Self {\n        \n    }\n\t\n    // Return the dotProduct of two sparse vectors\n    fn dot_product(&self, vec: SparseVector) -> i32 {\n        \n    }\n}\n\n/**\n * Your SparseVector object will be instantiated and called as such:\n * let v1 = SparseVector::new(nums1);\n * let v2 = SparseVector::new(nums2);\n * let ans = v1.dot_product(v2);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class SparseVector\n\n=begin\n    :type nums: Integer[]\n=end\n    def initialize(nums)\n        \n    end\n\n# Return the dotProduct of two sparse vectors\n=begin\n    :type vec: SparseVector\n    :rtype: Integer\n=end\n    def dotProduct(vec)\n        \n    end\nend\n\n# Your SparseVector object will be instantiated and called as such:\n# v1 = SparseVector.new(nums1)\n# v2 = SparseVector.new(nums2)\n# ans = v1.dotProduct(v2)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class SparseVector {\n    /**\n     * @param Integer[] $nums\n     */\n    function __construct($nums) {\n        \n    }\n    \n    // Return the dotProduct of two sparse vectors\n    /**\n     * @param SparseVector $vec\n     * @return Integer\n     */\n    function dotProduct($vec) {\n        \n    }\n}\n\n/**\n * Your SparseVector object will be instantiated and called as such:\n * $v1 = new SparseVector($nums1);\n * $v2 = new SparseVector($nums2);\n * $ans = $v1->dotProduct($v2);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class SparseVector(nums: Array[Int]) {\n    // Return the dotProduct of two sparse vectors\n    def dotProduct(vec: SparseVector): Int = {\n        \n    }\n}\n\n/**\n * Your SparseVector object will be instantiated and called as such:\n * var v1 = new SparseVector(nums1)\n * var v2 = new SparseVector(nums2)\n * val ans = v1.dotProduct(v2)\n */"
+    }
+  ],
+  "solution": {
+    "id": "1068",
+    "content": "[TOC]\n\n## Solution\n\nA sparse vector is a vector that has mostly zero values, while a dense vector is a vector where most of the elements are non-zero. It is inefficient to store a sparse vector as a one-dimensional array (Approach 1). Instead, we can store the non-zero values and their corresponding indices in a dictionary, with the index being the key (Approach 2). Alternatively, we can represent elements of a sparse vector as an array of pairs for each non-zero value. Each pair has an integer index and a numerical value (Approach 3).\n\nA related question is [LeetCode 311. Sparse Matrix Multiplication](https://leetcode.com/problems/sparse-matrix-multiplication/).\n\n---\n\n### Approach 1: Non-efficient Array Approach\n\n#### Intuition\n\nWe ignore the sparsity of the array and store the original array.\n\n#### Algorithm\n\n<iframe src=\"https://leetcode.com/playground/e6zKv8fG/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"e6zKv8fG\"></iframe>\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of the input array.\n\n* Time complexity: $$O(n)$$ for both constructing the sparse vector and calculating the dot product.\n\n* Space complexity: $$O(1)$$ for constructing the sparse vector as we simply save a reference to the input array and $$O(1)$$ for calculating the dot product.\n\n---\n\n### Approach 2: Hash Table\n\n#### Intuition\n\nStore the non-zero values and their corresponding indices in a dictionary, with the index being the key. Any index that is not present corresponds to a value 0 in the input array.\n\n#### Algorithm\n\n<iframe src=\"https://leetcode.com/playground/KqZCp4s3/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"KqZCp4s3\"></iframe>\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of the input array and $$L$$ be the number of non-zero elements.\n\n* Time complexity: $$O(n)$$ for creating the Hash Map; $$O(L)$$ for calculating the dot product.\n\n* Space complexity: $$O(L)$$ for creating the Hash Map, as we only store elements that are non-zero. $$O(1)$$ for calculating the dot product.\n\n---\n\n### Approach 3: Index-Value Pairs\n\n#### Intuition\n\nWe can also represent elements of a sparse vector as a list of <index, value> pairs. We use two pointers to iterate through the two vectors to calculate the dot product.\n\n#### Algorithm\n\n<iframe src=\"https://leetcode.com/playground/YKoYiLwj/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"YKoYiLwj\"></iframe>\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of the input array and $$L$$ and $$L_{2}$$ be the number of non-zero elements for the two vectors.\n\n* Time complexity: $$O(n)$$ for creating the <index, value> pair for non-zero values; $$O(L+L_{2})$$ for calculating the dot product.\n\n* Space complexity: $$O(L)$$ for creating the <index, value> pairs for non-zero values. $$O(1)$$ for calculating the dot product.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

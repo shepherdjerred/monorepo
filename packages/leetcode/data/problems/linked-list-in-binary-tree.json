@@ -1,0 +1,144 @@
+{
+  "questionId": "1484",
+  "questionFrontendId": "1367",
+  "title": "Linked List in Binary Tree",
+  "titleSlug": "linked-list-in-binary-tree",
+  "difficulty": "Medium",
+  "content": "<p>Given a binary tree <code>root</code> and a&nbsp;linked list with&nbsp;<code>head</code>&nbsp;as the first node.&nbsp;</p>\n\n<p>Return True if all the elements in the linked list starting from the <code>head</code> correspond to some <em>downward path</em> connected in the binary tree&nbsp;otherwise return False.</p>\n\n<p>In this context downward path means a path that starts at some node and goes downwards.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/02/12/sample_1_1720.png\" style=\"width: 220px; height: 280px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> head = [4,2,8], root = [1,4,4,null,2,2,null,1,null,6,8,null,null,null,null,1,3]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> Nodes in blue form a subpath in the binary Tree.  \n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/02/12/sample_2_1720.png\" style=\"width: 220px; height: 280px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> head = [1,4,2,6], root = [1,4,4,null,2,2,null,1,null,6,8,null,null,null,null,1,3]\n<strong>Output:</strong> true\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> head = [1,4,2,6,8], root = [1,4,4,null,2,2,null,1,null,6,8,null,null,null,null,1,3]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> There is no path in the binary tree that contains all the elements of the linked list from <code>head</code>.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree will be in the range <code>[1, 2500]</code>.</li>\n\t<li>The number of nodes in the list will be in the range <code>[1, 100]</code>.</li>\n\t<li><code>1 &lt;= Node.val&nbsp;&lt;= 100</code>&nbsp;for each node in the linked list and binary tree.</li>\n</ul>\n",
+  "hints": [
+    "Create recursive function, given a pointer in a Linked List and any node in the Binary Tree. Check if all the elements in the linked list starting from the head correspond to some downward path in the binary tree."
+  ],
+  "metaData": "{\n  \"name\": \"isSubPath\",\n  \"params\": [\n    {\n      \"name\": \"head\",\n      \"type\": \"ListNode\"\n    },\n    {\n      \"type\": \"TreeNode\",\n      \"name\": \"root\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"208.6K\", \"totalSubmission\": \"401.5K\", \"totalAcceptedRaw\": 208552, \"totalSubmissionRaw\": 401527, \"acRate\": \"51.9%\"}",
+  "likes": 3028,
+  "dislikes": 90,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[4,2,8]\n[1,4,4,null,2,2,null,1,null,6,8,null,null,null,null,1,3]",
+    "[1,4,2,6]\n[1,4,4,null,2,2,null,1,null,6,8,null,null,null,null,1,3]",
+    "[1,4,2,6,8]\n[1,4,4,null,2,2,null,1,null,6,8,null,null,null,null,1,3]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"soundhound\", \"name\": \"SoundHound\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\n/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    bool isSubPath(ListNode* head, TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode() {}\n *     ListNode(int val) { this.val = val; }\n *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n * }\n */\n/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public boolean isSubPath(ListNode head, TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\n# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def isSubPath(self, head: Optional[ListNode], root: Optional[TreeNode]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for singly-linked list.\n# class ListNode(object):\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\n# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def isSubPath(self, head, root):\n        \"\"\"\n        :type head: Optional[ListNode]\n        :type root: Optional[TreeNode]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for singly-linked list.\n * function ListNode(val, next) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.next = (next===undefined ? null : next)\n * }\n */\n/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {ListNode} head\n * @param {TreeNode} root\n * @return {boolean}\n */\nvar isSubPath = function(head, root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *     val: number\n *     next: ListNode | null\n *     constructor(val?: number, next?: ListNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.next = (next===undefined ? null : next)\n *     }\n * }\n */\n\n/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction isSubPath(head: ListNode | null, root: TreeNode | null): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public int val;\n *     public ListNode next;\n *     public ListNode(int val=0, ListNode next=null) {\n *         this.val = val;\n *         this.next = next;\n *     }\n * }\n */\n/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public bool IsSubPath(ListNode head, TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     struct ListNode *next;\n * };\n */\n/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nbool isSubPath(struct ListNode* head, struct TreeNode* root) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for singly-linked list.\n * type ListNode struct {\n *     Val int\n *     Next *ListNode\n * }\n */\n/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc isSubPath(head *ListNode, root *TreeNode) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var li = ListNode(5)\n * var v = li.`val`\n * Definition for singly-linked list.\n * class ListNode(var `val`: Int) {\n *     var next: ListNode? = null\n * }\n */\n/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun isSubPath(head: ListNode?, root: TreeNode?): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public var val: Int\n *     public var next: ListNode?\n *     public init() { self.val = 0; self.next = nil; }\n *     public init(_ val: Int) { self.val = val; self.next = nil; }\n *     public init(_ val: Int, _ next: ListNode?) { self.val = val; self.next = next; }\n * }\n */\n/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func isSubPath(_ head: ListNode?, _ root: TreeNode?) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for singly-linked list.\n// #[derive(PartialEq, Eq, Clone, Debug)]\n// pub struct ListNode {\n//   pub val: i32,\n//   pub next: Option<Box<ListNode>>\n// }\n// \n// impl ListNode {\n//   #[inline]\n//   fn new(val: i32) -> Self {\n//     ListNode {\n//       next: None,\n//       val\n//     }\n//   }\n// }\n// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn is_sub_path(head: Option<Box<ListNode>>, root: Option<Rc<RefCell<TreeNode>>>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for singly-linked list.\n# class ListNode\n#     attr_accessor :val, :next\n#     def initialize(val = 0, _next = nil)\n#         @val = val\n#         @next = _next\n#     end\n# end\n# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {ListNode} head\n# @param {TreeNode} root\n# @return {Boolean}\ndef is_sub_path(head, root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a singly-linked list.\n * class ListNode {\n *     public $val = 0;\n *     public $next = null;\n *     function __construct($val = 0, $next = null) {\n *         $this->val = $val;\n *         $this->next = $next;\n *     }\n * }\n */\n/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param ListNode $head\n     * @param TreeNode $root\n     * @return Boolean\n     */\n    function isSubPath($head, $root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *   int val;\n *   ListNode? next;\n *   ListNode([this.val = 0, this.next]);\n * }\n */\n/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  bool isSubPath(ListNode? head, TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode(_x: Int = 0, _next: ListNode = null) {\n *   var next: ListNode = _next\n *   var x: Int = _x\n * }\n */\n/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def isSubPath(head: ListNode, root: TreeNode): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for singly-linked list.\n#\n# defmodule ListNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           next: ListNode.t() | nil\n#         }\n#   defstruct val: 0, next: nil\n# end\n\n# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec is_sub_path(head :: ListNode.t | nil, root :: TreeNode.t | nil) :: boolean\n  def is_sub_path(head, root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for singly-linked list.\n%%\n%% -record(list_node, {val = 0 :: integer(),\n%%                     next = null :: 'null' | #list_node{}}).\n\n%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec is_sub_path(Head :: #list_node{} | null, Root :: #tree_node{} | null) -> boolean().\nis_sub_path(Head, Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for singly-linked list:\n#|\n\n; val : integer?\n; next : (or/c list-node? #f)\n(struct list-node\n  (val next) #:mutable #:transparent)\n\n; constructor\n(define (make-list-node [val 0])\n  (list-node val #f))\n\n|#\n\n; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (is-sub-path head root)\n  (-> (or/c list-node? #f) (or/c tree-node? #f) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2427",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a binary tree and a linked list. Our task is to determine if the linked list is represented by any downward path in the binary tree. A downward path in the binary tree is defined as a path that starts at any node and extends to its subsequent child nodes, going downward.\n\n---\n\n### Approach 1: DFS\n\n#### Intuition\n\nA direct approach is to explore every possible path in the tree using Depth-First Search (DFS). This method allows us to examine each path fully before moving to the next.\n\nWe begin at the root of the tree and compare its value to the head of the linked list. If they match, we continue by checking the left and right children of the tree node against the next node in the linked list. If the tree node's value does not match the linked list node, we stop exploring that path since it can't lead to a match. We then backtrack and try the next possible path.\n\n#### Algorithm\n\n- If `root` is null, return `false` (base case).\n\n- Call `checkPath(root, head)` to start checking for the linked list path in the tree.\n\n- `checkPath` function:\n  - If `node` is null, return `false` (base case).\n  - Call `dfs(node, head)` to check if a matching path starts from `node`.\n    - If `dfs` returns `true`, return `true` (a matching path is found).\n  - Recursively call `checkPath` on both left and right subtrees with the same `head`.\n\n- `dfs` function:\n  - If `head` is null, return `true` (all nodes in the list have been matched).\n  - If `node` is null, return `false` (reached end of the tree without matching all nodes).\n  - If the value of `node` does not match `head`, return `false` (value mismatch).\n  - Recursively call `dfs` on both left and right children of `node` with `head->next`.\n\n- Return `true` if `checkPath` or `dfs` finds a matching path; otherwise, continue checking.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/6JiUxUZa/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"6JiUxUZa\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the tree and $m$ be the length of the linked list.\n\n- Time complexity: $O(n \\times m)$\n\n    In the worst case, we might need to check every node in the tree as a potential starting point for the linked list. For each node, we might need to traverse up to m nodes in the linked list.\n\n- Space complexity: $O(n + m)$\n\n    The space complexity remains the same as Approach 1 due to the recursive nature of the solution.\n\n---\n\n### Approach 2: Iterative Approach\n\n#### Intuition\n\nA common rule of thumb is that all approaches solvable via recursion can also be solved using a stack to mimic the call stack's nature. Unlike recursion, where each function call adds a new frame to the call stack, using a stack avoids the risk of stack overflow errors in cases where the depth of recursion is too large (e.g., in a very deep tree).\n\nWe start by putting the root of the tree onto the stack. This stack helps us explore the tree without recursion. We repeatedly take the top node from the stack and check if there is a path from this node that matches the linked list. If there is, we return true. If not, we add the node's left and right children to the stack for further checking.\n\nTo match the path, we use another stack to keep track of pairs of tree nodes and linked list nodes. We compare each pair, and if they match, we continue with the next node in the linked list and the children of the current tree node. If we find that the entire linked list matches a path in the tree, we return true.\n\nIf we finish checking all possible paths without finding a match, we return false.\n\nThe algorithm is visualized below:\n\n!?!../Documents/1367/iterative.json:1135,835!?!\n\n> Fun fact: Iterative approaches often provide more control over traversal, allowing you to access every path and create patterns that do not follow traditional recursion rules.\n\n#### Algorithm\n \n- Check if `root` is null:\n  - If `root` is null, return `false` (base case).\n\n- Initialize a stack `nodes` and push `root` onto the stack.\n\n- While the stack `nodes` is not empty:\n  - Pop the top `node` from the stack.\n  - Call `isMatch(node, head)` to check if the linked list `head` matches a path starting from `node`.\n    - If `isMatch` returns `true`, return `true` (a matching path is found).\n  - If `node` has a left child, push it onto the stack.\n  - If `node` has a right child, push it onto the stack.\n\n- If no matching path is found after checking all nodes, return `false`.\n\n- `isMatch` function:\n  - Initialize a stack `s` and push a pair `{node, lst}` onto it.\n  \n  - While the stack `s` is not empty:\n    - Pop the top pair `{currentNode, currentList}` from the stack.\n    - While both `currentNode` and `currentList` are not null:\n      - If `currentNode->val` does not match `currentList->val`, break (no match).\n      - Move to the next node in the linked list (`currentList = currentList->next`).\n      - If `currentList` is not null:\n        - If `currentNode` has a left child, push `{currentNode->left, currentList}` onto the stack.\n        - If `currentNode` has a right child, push `{currentNode->right, currentList}` onto the stack.\n        - Break to continue with the next pair in the stack.\n    - If `currentList` becomes null, return `true` (all nodes in the list matched).\n\n- Return `false` if no matching path is found after exploring all possibilities.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/GzvsGb96/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"GzvsGb96\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the tree and $m$ be the length of the linked list.\n\n- Time complexity: $O(n \\times m)$\n\n    We potentially visit each node in the tree once. For each node, we might need to check up to `m` nodes in the linked list.\n\n- Space complexity: $O(n)$\n\n    The space is used by the stack, which in the worst case might contain all nodes of the tree. We don't need extra space for the linked list traversal as it's done iteratively.\n\n---\n\n### Approach 3: Knuth-Morris-Pratt (KMP) Algorithm\n\n#### Intuition\n\nApproach 3 is more advanced and requires an understanding of the Knuth-Morris-Pratt (KMP) string-matching algorithm. We suggest reviewing [28. Find the Index of the First Occurrence in a String - Easy Tagged](https://leetcode.com/problems/find-the-index-of-the-first-occurrence-in-a-string/description/) and solving it using the KMP algorithm before diving into this approach.\n \nThe previous approaches all involve searching the tree from the root and checking each path independently, which can be repetitive. By adjusting the idea behind the KMP algorithm, we can reduce this repetition and optimize the approach. \n\nThe KMP algorithm efficiently finds occurrences of a pattern (in this case, the linked list) within a text by using a prefix table, or failure function, to skip unnecessary comparisons.\n\nThe key to KMP is the prefix table, also known as the failure function. This table helps us understand how to skip certain comparisons based on what we’ve already matched.\n\nWe first build a table that indicates the longest proper prefix of the pattern that is also a suffix. This table tells us where to resume the search in the pattern after a mismatch. For example, consider the pattern `ABABCABAB`. The prefix table for this pattern helps us understand that if a mismatch occurs after `AB`, we don’t need to start from the beginning of the pattern but can skip to the next best position that aligns with what we’ve already matched.\n\nAs we search for the pattern in the text, if we encounter a mismatch, the prefix table tells us how far back we should go in the pattern to continue the search efficiently. Instead of starting the comparison from the beginning of the pattern again, we use the prefix table to skip over parts of the pattern that have already been matched. This reduces unnecessary comparisons.\n\nSimilarly, we construct the prefix table for the linked list by following the same principle of finding the longest prefix that is also a suffix. This helps in efficiently finding where to resume the search if a mismatch occurs while traversing paths in the tree.\n\nWe perform a DFS on the tree, treating each node's value as part of the text where we want to match our pattern (the linked list). As we traverse the tree, if a mismatch occurs, the prefix table tells us how much of the pattern we can skip, based on what we’ve already matched. \n\n> Note: Running through a dry run of this approach will help you get a better grip on how it works. It’s a great way to see the logic in action with a few concrete examples and spot any issues.\n\n#### Algorithm\n \n- Build the pattern and prefix table from the linked list:\n  - Initialize `pattern` with the value of the head node of the linked list.\n  - Initialize `prefixTable` with `0` to store prefix lengths.\n  - Iterate through the linked list to construct `pattern` and `prefixTable`:\n    - For each value, update the `patternIndex` to find matching prefixes using the `prefixTable`.\n    - Add the current value to `pattern` and update `prefixTable` accordingly.\n    - Move to the next node in the linked list.\n\n- Perform DFS to search for the pattern in the tree:\n  - Call `searchInTree` with the root of the tree, starting pattern index `0`, and the `pattern` and `prefixTable`.\n\n- `searchInTree` function:\n  - If `node` is null, return `false` (base case).\n  \n  - Update `patternIndex` to find the matching prefix:\n    - If the current node value does not match the pattern at `patternIndex`, use the `prefixTable` to backtrack to the correct index.\n    - Increment `patternIndex` if there is a match.\n  \n  - Check if the entire `pattern` has been matched (`patternIndex == pattern.size()`):\n    - If matched, return `true`.\n\n  - Recursively search in both left and right subtrees of the current `node`:\n    - Return `true` if either subtree contains a matching path; otherwise, continue searching.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/H3NN3rA5/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"H3NN3rA5\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the tree and $m$ be the length of the linked list.\n\n- Time complexity: $O(2^{k - 1} \\cdot m)$\n\n    The complexity of building the `prefixTable` for the KMP pattern is $O(m)$. However, the primary bottleneck is in the `searchInTree` function, which performs a DFS on the binary tree with $n$ nodes. \n\n    While traversing the tree, the algorithm repeatedly evaluates portions of the `pattern`, and due to the tree structure, a mismatch can trigger repetitive re-evaluation of the `prefixTable` across multiple nodes. In the worst case, this could result in up to $O(2^{k - 1} \\cdot m)$ time complexity, where $m = 2k - 1$, as each failed match can lead to exponential time growth due to repeated pattern comparisons.\n\n* Space complexity: $O(n + m)$\n\n    We need $O(m)$ space for the pattern and prefix table. The recursive call stack in the worst case (skewed tree) can take up to $O(n)$ space.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

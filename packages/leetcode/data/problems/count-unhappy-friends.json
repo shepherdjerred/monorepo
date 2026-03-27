@@ -1,0 +1,131 @@
+{
+  "questionId": "1705",
+  "questionFrontendId": "1583",
+  "title": "Count Unhappy Friends",
+  "titleSlug": "count-unhappy-friends",
+  "difficulty": "Medium",
+  "content": "<p>You are given a list of&nbsp;<code>preferences</code>&nbsp;for&nbsp;<code>n</code>&nbsp;friends, where <code>n</code> is always <strong>even</strong>.</p>\n\n<p>For each person <code>i</code>,&nbsp;<code>preferences[i]</code>&nbsp;contains&nbsp;a list of friends&nbsp;<strong>sorted</strong> in the <strong>order of preference</strong>. In other words, a friend earlier in the list is more preferred than a friend later in the list.&nbsp;Friends in&nbsp;each list are&nbsp;denoted by integers from <code>0</code> to <code>n-1</code>.</p>\n\n<p>All the friends are divided into pairs.&nbsp;The pairings are&nbsp;given in a list&nbsp;<code>pairs</code>,&nbsp;where <code>pairs[i] = [x<sub>i</sub>, y<sub>i</sub>]</code> denotes <code>x<sub>i</sub></code>&nbsp;is paired with <code>y<sub>i</sub></code> and <code>y<sub>i</sub></code> is paired with <code>x<sub>i</sub></code>.</p>\n\n<p>However, this pairing may cause some of the friends to be unhappy.&nbsp;A friend <code>x</code>&nbsp;is unhappy if <code>x</code>&nbsp;is paired with <code>y</code>&nbsp;and there exists a friend <code>u</code>&nbsp;who&nbsp;is paired with <code>v</code>&nbsp;but:</p>\n\n<ul>\n\t<li><code>x</code>&nbsp;prefers <code>u</code>&nbsp;over <code>y</code>,&nbsp;and</li>\n\t<li><code>u</code>&nbsp;prefers <code>x</code>&nbsp;over <code>v</code>.</li>\n</ul>\n\n<p>Return <em>the number of unhappy friends</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 4, preferences = [[1, 2, 3], [3, 2, 0], [3, 1, 0], [1, 2, 0]], pairs = [[0, 1], [2, 3]]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong>\nFriend 1 is unhappy because:\n- 1 is paired with 0 but prefers 3 over 0, and\n- 3 prefers 1 over 2.\nFriend 3 is unhappy because:\n- 3 is paired with 2 but prefers 1 over 2, and\n- 1 prefers 3 over 0.\nFriends 0 and 2 are happy.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 2, preferences = [[1], [0]], pairs = [[1, 0]]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> Both friends 0 and 1 are happy.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 4, preferences = [[1, 3, 2], [2, 3, 0], [1, 3, 0], [0, 2, 1]], pairs = [[1, 3], [0, 2]]\n<strong>Output:</strong> 4\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 500</code></li>\n\t<li><code>n</code>&nbsp;is even.</li>\n\t<li><code>preferences.length&nbsp;== n</code></li>\n\t<li><code>preferences[i].length&nbsp;== n - 1</code></li>\n\t<li><code>0 &lt;= preferences[i][j] &lt;= n - 1</code></li>\n\t<li><code>preferences[i]</code>&nbsp;does not contain <code>i</code>.</li>\n\t<li>All values in&nbsp;<code>preferences[i]</code>&nbsp;are unique.</li>\n\t<li><code>pairs.length&nbsp;== n/2</code></li>\n\t<li><code>pairs[i].length&nbsp;== 2</code></li>\n\t<li><code>x<sub>i</sub> != y<sub>i</sub></code></li>\n\t<li><code>0 &lt;= x<sub>i</sub>, y<sub>i</sub>&nbsp;&lt;= n - 1</code></li>\n\t<li>Each person is contained in <strong>exactly one</strong> pair.</li>\n</ul>\n",
+  "hints": [
+    "Create a matrix “rank” where rank[i][j] holds how highly friend ‘i' views ‘j’. This allows for O(1) comparisons between people"
+  ],
+  "metaData": "{\n  \"name\": \"unhappyFriends\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"preferences\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"pairs\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"34.3K\", \"totalSubmission\": \"54.8K\", \"totalAcceptedRaw\": 34306, \"totalSubmissionRaw\": 54822, \"acRate\": \"62.6%\"}",
+  "likes": 307,
+  "dislikes": 887,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "4\n[[1,2,3],[3,2,0],[3,1,0],[1,2,0]]\n[[0,1],[2,3]]",
+    "2\n[[1],[0]]\n[[1,0]]",
+    "4\n[[1,3,2],[2,3,0],[1,3,0],[0,2,1]]\n[[1,3],[0,2]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int unhappyFriends(int n, vector<vector<int>>& preferences, vector<vector<int>>& pairs) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int unhappyFriends(int n, int[][] preferences, int[][] pairs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def unhappyFriends(self, n: int, preferences: List[List[int]], pairs: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def unhappyFriends(self, n, preferences, pairs):\n        \"\"\"\n        :type n: int\n        :type preferences: List[List[int]]\n        :type pairs: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} preferences\n * @param {number[][]} pairs\n * @return {number}\n */\nvar unhappyFriends = function(n, preferences, pairs) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function unhappyFriends(n: number, preferences: number[][], pairs: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int UnhappyFriends(int n, int[][] preferences, int[][] pairs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int unhappyFriends(int n, int** preferences, int preferencesSize, int* preferencesColSize, int** pairs, int pairsSize, int* pairsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func unhappyFriends(n int, preferences [][]int, pairs [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun unhappyFriends(n: Int, preferences: Array<IntArray>, pairs: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func unhappyFriends(_ n: Int, _ preferences: [[Int]], _ pairs: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn unhappy_friends(n: i32, preferences: Vec<Vec<i32>>, pairs: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} preferences\n# @param {Integer[][]} pairs\n# @return {Integer}\ndef unhappy_friends(n, preferences, pairs)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $preferences\n     * @param Integer[][] $pairs\n     * @return Integer\n     */\n    function unhappyFriends($n, $preferences, $pairs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int unhappyFriends(int n, List<List<int>> preferences, List<List<int>> pairs) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def unhappyFriends(n: Int, preferences: Array[Array[Int]], pairs: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec unhappy_friends(n :: integer, preferences :: [[integer]], pairs :: [[integer]]) :: integer\n  def unhappy_friends(n, preferences, pairs) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec unhappy_friends(N :: integer(), Preferences :: [[integer()]], Pairs :: [[integer()]]) -> integer().\nunhappy_friends(N, Preferences, Pairs) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (unhappy-friends n preferences pairs)\n  (-> exact-integer? (listof (listof exact-integer?)) (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

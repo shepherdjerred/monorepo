@@ -40,11 +40,11 @@ ENVIRONMENT VARIABLES:
     CLAUDERON_RP_ID             WebAuthn RP ID (default: hostname from ORIGIN)
 
     Credentials (env var or file in ~/.clauderon/secrets/):
-        GITHUB_TOKEN            GitHub API token
+        GH_TOKEN                GitHub API token
         CLAUDE_CODE_OAUTH_TOKEN Anthropic OAuth token
         OPENAI_API_KEY          OpenAI API key
         CODEX_API_KEY           Codex API key (alias of OPENAI_API_KEY)
-        PAGERDUTY_TOKEN         PagerDuty API token (or PAGERDUTY_API_KEY)
+        PAGERDUTY_TOKEN         PagerDuty API token
         SENTRY_AUTH_TOKEN       Sentry authentication token
         GRAFANA_API_KEY         Grafana API key
         NPM_TOKEN               npm registry token
@@ -1027,7 +1027,7 @@ fn handle_config_command(cmd: &ConfigCommands) {
             // Credential summary
             println!("CREDENTIALS:");
             let secrets_dir = home.join(".clauderon/secrets");
-            print_credential_status("GitHub", "GITHUB_TOKEN", "github_token", &secrets_dir);
+            print_credential_status("GitHub", "GH_TOKEN", "github_token", &secrets_dir);
             print_credential_status(
                 "Anthropic",
                 "CLAUDE_CODE_OAUTH_TOKEN",
@@ -1110,7 +1110,7 @@ fn handle_config_command(cmd: &ConfigCommands) {
             println!();
 
             println!("CREDENTIALS:");
-            print_env_detailed("GITHUB_TOKEN", "GitHub API token", None);
+            print_env_detailed("GH_TOKEN", "GitHub API token", None);
             print_env_detailed("CLAUDE_CODE_OAUTH_TOKEN", "Anthropic OAuth token", None);
             print_env_detailed("OPENAI_API_KEY", "OpenAI API key", None);
             print_env_detailed(
@@ -1119,7 +1119,6 @@ fn handle_config_command(cmd: &ConfigCommands) {
                 None,
             );
             print_env_detailed("PAGERDUTY_TOKEN", "PagerDuty API token", None);
-            print_env_detailed("PAGERDUTY_API_KEY", "PagerDuty API key (alt)", None);
             print_env_detailed("SENTRY_AUTH_TOKEN", "Sentry auth token", None);
             print_env_detailed("GRAFANA_API_KEY", "Grafana API key", None);
             print_env_detailed("NPM_TOKEN", "npm registry token", None);
@@ -1147,7 +1146,7 @@ fn handle_config_command(cmd: &ConfigCommands) {
             println!("{:<20} {:<12} {:<30}", "SERVICE", "STATUS", "SOURCE");
             println!("{}", "-".repeat(62));
 
-            print_credential_row("GitHub", "GITHUB_TOKEN", "github_token", &secrets_dir);
+            print_credential_row("GitHub", "GH_TOKEN", "github_token", &secrets_dir);
             print_credential_row(
                 "Anthropic",
                 "CLAUDE_CODE_OAUTH_TOKEN",

@@ -1,0 +1,145 @@
+{
+  "questionId": "1350",
+  "questionFrontendId": "1233",
+  "title": "Remove Sub-Folders from the Filesystem",
+  "titleSlug": "remove-sub-folders-from-the-filesystem",
+  "difficulty": "Medium",
+  "content": "<p>Given a list of folders <code>folder</code>, return <em>the folders after removing all <strong>sub-folders</strong> in those folders</em>. You may return the answer in <strong>any order</strong>.</p>\n\n<p>If a <code>folder[i]</code> is located within another <code>folder[j]</code>, it is called a <strong>sub-folder</strong> of it. A sub-folder of <code>folder[j]</code> must start with <code>folder[j]</code>, followed by a <code>&quot;/&quot;</code>. For example, <code>&quot;/a/b&quot;</code> is a sub-folder of <code>&quot;/a&quot;</code>, but <code>&quot;/b&quot;</code> is not a sub-folder of <code>&quot;/a/b/c&quot;</code>.</p>\n\n<p>The format of a path is one or more concatenated strings of the form: <code>&#39;/&#39;</code> followed by one or more lowercase English letters.</p>\n\n<ul>\n\t<li>For example, <code>&quot;/leetcode&quot;</code> and <code>&quot;/leetcode/problems&quot;</code> are valid paths while an empty string and <code>&quot;/&quot;</code> are not.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> folder = [&quot;/a&quot;,&quot;/a/b&quot;,&quot;/c/d&quot;,&quot;/c/d/e&quot;,&quot;/c/f&quot;]\n<strong>Output:</strong> [&quot;/a&quot;,&quot;/c/d&quot;,&quot;/c/f&quot;]\n<strong>Explanation:</strong> Folders &quot;/a/b&quot; is a subfolder of &quot;/a&quot; and &quot;/c/d/e&quot; is inside of folder &quot;/c/d&quot; in our filesystem.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> folder = [&quot;/a&quot;,&quot;/a/b/c&quot;,&quot;/a/b/d&quot;]\n<strong>Output:</strong> [&quot;/a&quot;]\n<strong>Explanation:</strong> Folders &quot;/a/b/c&quot; and &quot;/a/b/d&quot; will be removed because they are subfolders of &quot;/a&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> folder = [&quot;/a/b/c&quot;,&quot;/a/b/ca&quot;,&quot;/a/b/d&quot;]\n<strong>Output:</strong> [&quot;/a/b/c&quot;,&quot;/a/b/ca&quot;,&quot;/a/b/d&quot;]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= folder.length &lt;= 4 * 10<sup>4</sup></code></li>\n\t<li><code>2 &lt;= folder[i].length &lt;= 100</code></li>\n\t<li><code>folder[i]</code> contains only lowercase letters and <code>&#39;/&#39;</code>.</li>\n\t<li><code>folder[i]</code> always starts with the character <code>&#39;/&#39;</code>.</li>\n\t<li>Each folder name is <strong>unique</strong>.</li>\n</ul>\n",
+  "hints": [
+    "Sort the folders lexicographically.",
+    "Insert the current element in an array and then loop until we get rid of all of their subfolders, repeat this until no element is left."
+  ],
+  "metaData": "{\n  \"name\": \"removeSubfolders\",\n  \"params\": [\n    {\n      \"name\": \"folder\",\n      \"type\": \"string[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<string>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"265K\", \"totalSubmission\": \"337.1K\", \"totalAcceptedRaw\": 264955, \"totalSubmissionRaw\": 337065, \"acRate\": \"78.6%\"}",
+  "likes": 1657,
+  "dislikes": 231,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"/a\",\"/a/b\",\"/c/d\",\"/c/d/e\",\"/c/f\"]",
+    "[\"/a\",\"/a/b/c\",\"/a/b/d\"]",
+    "[\"/a/b/c\",\"/a/b/ca\",\"/a/b/d\"]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"verkada\", \"name\": \"Verkada\"}, {\"timesEncountered\": 2, \"slug\": \"nuro\", \"name\": \"Nuro\"}], \"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 9, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 9, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Trie",
+      "slug": "trie"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> removeSubfolders(vector<string>& folder) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<String> removeSubfolders(String[] folder) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def removeSubfolders(self, folder: List[str]) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def removeSubfolders(self, folder):\n        \"\"\"\n        :type folder: List[str]\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} folder\n * @return {string[]}\n */\nvar removeSubfolders = function(folder) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function removeSubfolders(folder: string[]): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<string> RemoveSubfolders(string[] folder) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** removeSubfolders(char** folder, int folderSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func removeSubfolders(folder []string) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun removeSubfolders(folder: Array<String>): List<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func removeSubfolders(_ folder: [String]) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn remove_subfolders(folder: Vec<String>) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} folder\n# @return {String[]}\ndef remove_subfolders(folder)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $folder\n     * @return String[]\n     */\n    function removeSubfolders($folder) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> removeSubfolders(List<String> folder) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def removeSubfolders(folder: Array[String]): List[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec remove_subfolders(folder :: [String.t]) :: [String.t]\n  def remove_subfolders(folder) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec remove_subfolders(Folder :: [unicode:unicode_binary()]) -> [unicode:unicode_binary()].\nremove_subfolders(Folder) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (remove-subfolders folder)\n  (-> (listof string?) (listof string?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2535",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach 1: Using Set\n\n#### Intuition\n\nThe challenge is to efficiently determine when one folder is a sub-folder of another by finding folder paths and identifying hierarchical relationships. We can achieve this by storing all folder paths in a set, allowing us to quickly check if a folder is nested within another.\n\nOnce we have the set, the next logical step is to look at each folder in the list and check its “parent” paths by trimming off one part of the path at a time. For instance, if we have a folder `\"/a/b/c\"`, we’d first check `\"/a/b\"`, then `\"/a\"`. If any of these exist in the set, it means the current folder is a sub-folder, so we can skip it. On the other hand, if no parent path exists in the set, we can conclude it’s an independent folder and add it to our result.\n\nBy breaking each folder down like this, we can establish a relationship between folders and sub-folders. This approach is straightforward to understand if we’re dealing with a small number of folders, but it's not very efficient for large inputs since it involves checking multiple prefixes for each folder.\n\n#### Algorithm\n\n- Create a set `folderSet` containing all folder paths from the `folder` array for quick look-up.\n- Initialize an empty array `result` to store folders that are not sub-folders.\n\n- For each folder `f` in `folder`:\n  - Set a flag `isSubFolder` to `false`.\n  - Initialize `prefix` with the value of `f` to represent the current folder path.\n  \n  - Use a loop to check each parent path of `prefix`:\n    - Find the position of the last `/` in `prefix` and remove everything after it to get the parent path.\n    - If no `/` is found, break out of the loop (no more parent paths).\n    \n    - Check if this parent path exists in `folderSet`:\n      - If it does, mark `isSubFolder` as `true` and exit the loop since `f` is a sub-folder.\n    \n  - If `isSubFolder` is still `false` after checking all parent paths, add `f` to `result`.\n\n- After all, folders have been processed, return `result` which contains only the top-level folders (non-sub-folders).\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/WTTqXHwm/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"WTTqXHwm\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the number of folders and $L$ be the maximum length of a folder path.\n\n- Time Complexity: $O(N \\cdot L + N \\cdot L^2) = O(N \\cdot L^2)$\n\n    Constructing the unordered set `folderSet` from the input array `folder` takes $O(N)$. However, each string insertion requires $O(L)$. So, initializing the set takes $O(N \\cdot L)$.\n    \n    The primary operation involves iterating over each folder path in the `folder` array, which is $O(N)$.\n    \n    - For each folder, the algorithm checks all possible prefixes (up to `L` levels deep) in the `folderSet`. This involves:\n    - Finding the position of the last '/' character in the `prefix` string, which takes $O(L)$ in the worst case.\n    - Creating a substring for each prefix level, which is also $O(L)$.\n    - Searching for each prefix in the set, which is $O(L)$.\n    \n    Therefore, checking all prefixes of one folder takes $O(L^2)$, and for $N$ folders, this results in $O(N \\cdot L^2)$.\n    \n    The initialization and main loop lead to a time complexity of $O(N \\cdot L + N \\cdot L^2) \\approx O(N \\cdot L^2)$, as $O(N \\cdot L^2)$ dominates.\n\n- Space complexity: $O(N \\cdot L)$\n\n    The `folderSet` stores each of the $N$ folder paths. Each path can be as long as $L$, so the space complexity for the set is $O(N \\cdot L)$.\n  \n    The array `result` stores each non-subfolder path. In the worst case, if none of the folders are subfolders, this array also takes $O(N \\cdot L)$ space.\n  \n    Minor additional space is used for variables like `isSubFolder` and `prefix`. This additional space is constant, $O(1)$, and does not affect the overall complexity.\n    \n    The dominant space usage is from the `folderSet` and `result` array, leading to a total space complexity of $O(N \\cdot L)$.\n\n---\n\n### Approach 2: Using Sorting\n\n#### Intuition\n\nTo filter out sub-folders, we can take advantage of the natural order of paths by sorting the list of folders alphabetically. In this order, any sub-folder will appear directly after its parent folder. We can then filter sub-folders in a single pass through the sorted list.\n\nStarting with an empty result list, we add the first folder. As we continue through the list, each folder is either a sub-folder of the last added folder (if it starts with that path plus a `/`) or it's an independent folder. For example, if the last added folder was `\"/a\"`, any folder beginning with `\"/a/\"` is a sub-folder and can be skipped. Otherwise, we add the folder to the result list.\n\n!?!../Documents/1233/approach2.json:985,735!?!\n\n#### Algorithm\n\n- Sort the `folder` array alphabetically so that any sub-folder appears immediately after its parent folder.\n- Initialize an empty array `result` to store non-sub-folder paths and add the first folder in `folder` to `result` as a baseline.\n\n- For each folder `folder[i]` starting from the second folder:\n  - Retrieve the last folder path added to `result` and append a `/` to it, storing it as `lastFolder`.\n  \n  - Check if `folder[i]` starts with `lastFolder`:\n    - If it does, skip this folder since it is a sub-folder of `lastFolder`.\n    - Otherwise, add `folder[i]` to `result` because it is not a sub-folder.\n    \n- After iterating through all folders, return `result`, which contains only the top-level folders (non-sub-folders).\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Eu4kVp7L/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Eu4kVp7L\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the number of folders and $L$ be the maximum length of a folder path.\n\n- Time complexity: $O(N \\cdot L \\log N)$ \n\n    Sorting takes $O(N \\cdot \\log N)$ comparisons, but each comparison can involve up to $L$ characters (the maximum length of a folder path). Therefore, this step has a time complexity of $O(N \\cdot L \\log N)$.\n\n    The loop runs $N-1$ times. For each folder, it does the following:\n    - Retrieves the last folder from `result` and appends a `'/'` to it, which takes $O(L)$ time.\n    - Uses compare to check if the current folder starts with the last added folder. This comparison will take $O(L)$ time in the worst case.\n    Thus, the overall time complexity for this part is: $O(N \\cdot L)$\n\n    Therefore, combining the sorting and iteration steps, the total time complexity is: $O(N \\cdot L \\log N) + O(N \\cdot L)$\n\n    Since $O(N \\cdot L \\log N)$ dominates $O(N \\cdot L)$, we can simplify the time complexity to $O(N \\cdot L \\log N)$.\n\n- Space complexity: $O(N \\cdot L)$\n\n    The `result` array stores each folder that is not a sub-folder. In the worst case, every folder is added to `result`, which requires $O(N \\cdot L)$ space.\n\n    The space taken by the sorting algorithm depends on the language of implementation:\n\n    In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log N)$.\n    In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worst-case space complexity of $O(\\log N)$.\n    In Python, the `sort()` method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has a space complexity of $O(N)$.\n\n    Thus, the total space complexity is $O(N \\cdot L)$\n\n---\n\n### Approach 3: Using Trie\n\n#### Intuition\n\nA Trie is well-suited for this problem because it allows us to build folder paths incrementally, marking endpoints where folders end. With this structure, any folder that tries to extend beyond an endpoint can be identified as a sub-folder.\n\nWe start with an empty Trie and insert folder paths by splitting each path into its components (e.g., `\"/a/b/c\"` becomes `[\"a\", \"b\", \"c\"]`). As we insert each part, we check if we’ve reached an endpoint in the Trie. If so, we can skip the current folder as it’s a sub-folder. Otherwise, we continue inserting the remaining parts. At the end of each path, we mark it as an endpoint.\n\nThis way, any future folder that follows an existing path will encounter the endpoint, confirming it as a sub-folder. This is extremely effective for handling deeply nested folder structures.\n\n#### Algorithm\n\n- Define a `TrieNode` class with:\n  - A boolean `isEndOfFolder` to indicate if the node marks the end of a folder.\n  - A map called `children` to store child folder nodes.\n\n- Create a `TrieNode` root in the `Solution` class to start building the Trie.\n\n- The `removeSubfolders` method:\n  - For each folder path in `folder`:\n    - Split the path into folder names using `/` as the delimiter.\n    - Start from the root node and traverse through the folder names:\n      - For each folder, if it is not an empty string:\n        - If the current folder does not exist in the children, add it as a new `TrieNode`.\n        - Move to the child node corresponding to the current folder.\n    - Mark the last node of the path as `isEndOfFolder = true`.\n\n- Initialize an empty array called `result` to store non-sub-folder paths.\n\n- For each folder path in `folder` again:\n  - Split the path into folder names.\n  - Initialize a boolean `isSubfolder` to `false` to track if the current path is a sub-folder.\n  - Start from the root node and traverse through the folder names:\n    - For each folder, if it is not an empty string:\n      - Retrieve the next node corresponding to the current folder name.\n      - If `nextNode.isEndOfFolder` is `true` and it is not the last folder in the path, mark `isSubfolder` as `true` and break the loop.\n    - If the path is not a sub-folder, add it to `result`.\n\n- Return `result`, which contains only the top-level folders (non-sub-folders).\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ArGwbzYZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ArGwbzYZ\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the number of folders and $L$ be the maximum length of a folder path.\n\n- Time complexity: $O(N \\times L)$\n\n    For each folder path in `folderPaths`, the algorithm parses the path and inserts it into the Trie. Parsing each path takes $O(L)$ time.\n    \n    For each segment, checking and inserting into Trie’s map also takes $O(L)$ time on average due to hash table operations (insertions and lookups in the map). Therefore, building the Trie for all $N$ paths results in a total time complexity of $O(N \\times L)$.\n\n    For each folder path, the algorithm traverses the Trie to check if it is a subfolder. Again, parsing the path takes $O(L)$, and each lookup in the map takes $O(1)$ on average. Therefore, checking all $N$ folder paths also requires $O(N \\times L)$ time.\n\n    Overall, both the Trie-building and subfolder-checking phases have a time complexity of $O(N \\times L)$, so the total time complexity is: $O(N \\times L)$\n\n- Space complexity: $O(N \\times L)$\n    \n    Each folder path can create up to $L$ nodes in the Trie, depending on the path depth. In the worst case, if all folder paths are unique, we would end up storing all $N \\times L$ segments. Therefore, the space required for the Trie structure is $O(N \\times L)$.\n\n    The `result` array stores up to $N$ folder paths, so its space requirement is $O(N)$. Intermediate variables like `iss` and `string` use $O(L)$ space for each folder path.\n   \n    Since the Trie is the most space-consuming data structure in this solution, the overall space complexity is: $O(N \\times L)$\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

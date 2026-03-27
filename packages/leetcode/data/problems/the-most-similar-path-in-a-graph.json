@@ -1,0 +1,137 @@
+{
+  "questionId": "1687",
+  "questionFrontendId": "1548",
+  "title": "The Most Similar Path in a Graph",
+  "titleSlug": "the-most-similar-path-in-a-graph",
+  "difficulty": "Hard",
+  "content": "<p>We have <code>n</code> cities and <code>m</code> bi-directional <code>roads</code> where <code>roads[i] = [a<sub>i</sub>, b<sub>i</sub>]</code> connects city <code>a<sub>i</sub></code> with city <code>b<sub>i</sub></code>. Each city has a name consisting of exactly three upper-case English letters given in the string array <code>names</code>. Starting at any city <code>x</code>, you can reach any city <code>y</code> where <code>y != x</code> (i.e., the cities and the roads are forming an undirected connected graph).</p>\n\n<p>You will be given a string array <code>targetPath</code>. You should find a path in the graph of the <strong>same length</strong> and with the <strong>minimum edit distance</strong> to <code>targetPath</code>.</p>\n\n<p>You need to return <em>the order of the nodes in the path with the minimum edit distance</em>. The&nbsp;path should be of the same length of <code>targetPath</code> and should be valid (i.e., there should be a direct road between <code>ans[i]</code> and <code>ans[i + 1]</code>). If there are multiple answers return any one of them.</p>\n\n<p>The <strong>edit distance</strong> is defined as follows:</p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/08/08/edit.jpg\" style=\"width: 403px; height: 273px;\" />\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/08/08/e1.jpg\" style=\"width: 213px; height: 300px;\" />\n<pre>\n<strong>Input:</strong> n = 5, roads = [[0,2],[0,3],[1,2],[1,3],[1,4],[2,4]], names = [&quot;ATL&quot;,&quot;PEK&quot;,&quot;LAX&quot;,&quot;DXB&quot;,&quot;HND&quot;], targetPath = [&quot;ATL&quot;,&quot;DXB&quot;,&quot;HND&quot;,&quot;LAX&quot;]\n<strong>Output:</strong> [0,2,4,2]\n<strong>Explanation:</strong> [0,2,4,2], [0,3,0,2] and [0,3,1,2] are accepted answers.\n[0,2,4,2] is equivalent to [&quot;ATL&quot;,&quot;LAX&quot;,&quot;HND&quot;,&quot;LAX&quot;] which has edit distance = 1 with targetPath.\n[0,3,0,2] is equivalent to [&quot;ATL&quot;,&quot;DXB&quot;,&quot;ATL&quot;,&quot;LAX&quot;] which has edit distance = 1 with targetPath.\n[0,3,1,2] is equivalent to [&quot;ATL&quot;,&quot;DXB&quot;,&quot;PEK&quot;,&quot;LAX&quot;] which has edit distance = 1 with targetPath.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/08/08/e2.jpg\" style=\"width: 300px; height: 300px;\" />\n<pre>\n<strong>Input:</strong> n = 4, roads = [[1,0],[2,0],[3,0],[2,1],[3,1],[3,2]], names = [&quot;ATL&quot;,&quot;PEK&quot;,&quot;LAX&quot;,&quot;DXB&quot;], targetPath = [&quot;ABC&quot;,&quot;DEF&quot;,&quot;GHI&quot;,&quot;JKL&quot;,&quot;MNO&quot;,&quot;PQR&quot;,&quot;STU&quot;,&quot;VWX&quot;]\n<strong>Output:</strong> [0,1,0,1,0,1,0,1]\n<strong>Explanation:</strong> Any path in this graph has edit distance = 8 with targetPath.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/08/09/e3.jpg\" style=\"width: 600px; height: 106px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> n = 6, roads = [[0,1],[1,2],[2,3],[3,4],[4,5]], names = [&quot;ATL&quot;,&quot;PEK&quot;,&quot;LAX&quot;,&quot;ATL&quot;,&quot;DXB&quot;,&quot;HND&quot;], targetPath = [&quot;ATL&quot;,&quot;DXB&quot;,&quot;HND&quot;,&quot;DXB&quot;,&quot;ATL&quot;,&quot;LAX&quot;,&quot;PEK&quot;]\n<strong>Output:</strong> [3,4,5,4,3,2,1]\n<strong>Explanation:</strong> [3,4,5,4,3,2,1] is the only path with edit distance = 0 with targetPath.\nIt&#39;s equivalent to [&quot;ATL&quot;,&quot;DXB&quot;,&quot;HND&quot;,&quot;DXB&quot;,&quot;ATL&quot;,&quot;LAX&quot;,&quot;PEK&quot;]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 100</code></li>\n\t<li><code>m == roads.length</code></li>\n\t<li><code>n - 1 &lt;= m &lt;= (n * (n - 1) / 2)</code></li>\n\t<li><code>0 &lt;= a<sub>i</sub>, b<sub>i</sub> &lt;= n - 1</code></li>\n\t<li><code>a<sub>i</sub> != b<sub>i</sub></code></li>\n\t<li>The graph is guaranteed to be <strong>connected</strong> and each pair of nodes may have <strong>at most one</strong> direct road.</li>\n\t<li><code>names.length == n</code></li>\n\t<li><code>names[i].length == 3</code></li>\n\t<li><code>names[i]</code> consists of upper-case English letters.</li>\n\t<li>There can be two cities with <strong>the same</strong> name.</li>\n\t<li><code>1 &lt;= targetPath.length &lt;= 100</code></li>\n\t<li><code>targetPath[i].length == 3</code></li>\n\t<li><code>targetPath[i]</code> consists of upper-case English letters.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> If each node can be visited only once in the path, What should you change in your solution?</p>\n",
+  "hints": [
+    "Create an array dp where dp[i][j] is the min edit distance for the path starting at node i and compared to index j of the targetPath.",
+    "Traverse the dp array to obtain a valid answer."
+  ],
+  "metaData": "{\n  \"name\": \"mostSimilar\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"roads\"\n    },\n    {\n      \"type\": \"string[]\",\n      \"name\": \"names\"\n    },\n    {\n      \"type\": \"string[]\",\n      \"name\": \"targetPath\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<integer>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"17.9K\", \"totalSubmission\": \"30.1K\", \"totalAcceptedRaw\": 17879, \"totalSubmissionRaw\": 30095, \"acRate\": \"59.4%\"}",
+  "likes": 380,
+  "dislikes": 187,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "5\n[[0,2],[0,3],[1,2],[1,3],[1,4],[2,4]]\n[\"ATL\",\"PEK\",\"LAX\",\"DXB\",\"HND\"]\n[\"ATL\",\"DXB\",\"HND\",\"LAX\"]",
+    "4\n[[1,0],[2,0],[3,0],[2,1],[3,1],[3,2]]\n[\"ATL\",\"PEK\",\"LAX\",\"DXB\"]\n[\"ABC\",\"DEF\",\"GHI\",\"JKL\",\"MNO\",\"PQR\",\"STU\",\"VWX\"]",
+    "6\n[[0,1],[1,2],[2,3],[3,4],[4,5]]\n[\"ATL\",\"PEK\",\"LAX\",\"ATL\",\"DXB\",\"HND\"]\n[\"ATL\",\"DXB\",\"HND\",\"DXB\",\"ATL\",\"LAX\",\"PEK\"]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> mostSimilar(int n, vector<vector<int>>& roads, vector<string>& names, vector<string>& targetPath) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<Integer> mostSimilar(int n, int[][] roads, String[] names, String[] targetPath) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def mostSimilar(self, n: int, roads: List[List[int]], names: List[str], targetPath: List[str]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def mostSimilar(self, n, roads, names, targetPath):\n        \"\"\"\n        :type n: int\n        :type roads: List[List[int]]\n        :type names: List[str]\n        :type targetPath: List[str]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} roads\n * @param {string[]} names\n * @param {string[]} targetPath\n * @return {number[]}\n */\nvar mostSimilar = function(n, roads, names, targetPath) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function mostSimilar(n: number, roads: number[][], names: string[], targetPath: string[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<int> MostSimilar(int n, int[][] roads, string[] names, string[] targetPath) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* mostSimilar(int n, int** roads, int roadsSize, int* roadsColSize, char** names, int namesSize, char** targetPath, int targetPathSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func mostSimilar(n int, roads [][]int, names []string, targetPath []string) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun mostSimilar(n: Int, roads: Array<IntArray>, names: Array<String>, targetPath: Array<String>): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func mostSimilar(_ n: Int, _ roads: [[Int]], _ names: [String], _ targetPath: [String]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn most_similar(n: i32, roads: Vec<Vec<i32>>, names: Vec<String>, target_path: Vec<String>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} roads\n# @param {String[]} names\n# @param {String[]} target_path\n# @return {Integer[]}\ndef most_similar(n, roads, names, target_path)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $roads\n     * @param String[] $names\n     * @param String[] $targetPath\n     * @return Integer[]\n     */\n    function mostSimilar($n, $roads, $names, $targetPath) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> mostSimilar(int n, List<List<int>> roads, List<String> names, List<String> targetPath) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def mostSimilar(n: Int, roads: Array[Array[Int]], names: Array[String], targetPath: Array[String]): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec most_similar(n :: integer, roads :: [[integer]], names :: [String.t], target_path :: [String.t]) :: [integer]\n  def most_similar(n, roads, names, target_path) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec most_similar(N :: integer(), Roads :: [[integer()]], Names :: [unicode:unicode_binary()], TargetPath :: [unicode:unicode_binary()]) -> [integer()].\nmost_similar(N, Roads, Names, TargetPath) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (most-similar n roads names targetPath)\n  (-> exact-integer? (listof (listof exact-integer?)) (listof string?) (listof string?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1670",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### A Dynamic Programming Approach\n\n>**Note.** For this approach, we assume that you already know the fundamentals of dynamic programming and are figuring out how to apply it to a wide range of problems, such as this one. If you are not yet at this stage, we recommend checking out our relevant [Explore Card content on dynamic programming](https://leetcode.com/explore/featured/card/dynamic-programming/) before coming back to this approach.\n\n#### Intuition\n\nLet's start by looking at an easier problem. Instead of trying to find the optimal path, let's try to find the minimum edit distance (an integer).\n\nWe use dynamic programming. Let `targetPath[0..i]` denote the prefix of `targetPath` ending at the `i`-th element. \n\nThen, we can define `dp[i][v]` as the minimum edit distance between `targetPath[0..i]` and a path ending at the vertex `v` (so this path must also have a length of `i + 1` as well as end at vertex `v`). \n\nWhile this DP definition might be confusing when you read it for the first time, the following example will help you to get a better understanding.\n\n>![Example](../Figures/1548/example_2.jpg)\n<br/>\nLet `targetPath = [\"LAX\", \"ABC\", \"LAX\", \"DEF\", \"HTU\", \"XYZ\"]` and `v = 1`. Consider the prefix `targetPath[0..3] = [\"LAX\", \"ABC\", \"LAX\", \"DEF\"]`. We want to find `dp[3][1]`. Here are some (not all) possible paths of length 4 ending at the vertex `1`.\n<br/>\n* `[2,0,3,1]` is equivalent to `[\"LAX\", \"ATL\", \"DXB\", \"PEK\"]` which has edit distance = 3 with `targetPath[0..3]`.\n* `[3,2,0,1]` is equivalent to `[\"DXB\", \"LAX\", \"ATL\", \"PEK\"]` which has edit distance = 4 with `targetPath[0..3]`.\n* `[2,0,2,1]` is equivalent to `[\"LAX\", \"ATL\", \"LAX\", \"PEK\"]` which has edit distance = 2 with `targetPath[0..3]`.\n* `[2,1,2,1]` is equivalent to `[\"LAX\", \"PEK\", \"LAX\", \"PEK\"]` which has edit distance = 2 with `targetPath[0..3]`.\n<br/>\nThe minimum edit distance is $2$, thus `dp[3][1]=2`.\n\nThe base case of the DP is when `i = 0` (path of length `1`), for general `v`. How do we find `dp[0][v]`? The `[0]` part of the state `[0][v]` corresponds to `targetPath[0..0]`, i.e. the first element of the `targetPath`, and the `[v]` part corresponds to a vertex `v` in the graph. Since our path only has a length of `1`, the path must be `[v]`. \n\n`dp[0][v]` is then by definition equal to`editDistance([targetPath[0]], [v])`. Therefore:\n\n`dp[0][v] = 0` if `names[v] = targetPath[0]`\n\n`dp[0][v] = 1` if `names[v] != targetPath[0]`\n\nfor all `v` in the graph.\n\nFor `i > 0`, we want to calculate `dp[i][v]` using the calculated values in `dp[i - 1]`. Let us recall the definition of our DP – `dp[i][v]` is the minimum `editDistance(targetPath[0..i], path)` over all `path`s ending at the vertex `v`. The last vertex of the `path` is `v`, however we do not know its second last vertex. Fortunately, we know that this vertex must be a neighbor of `v`, since they are adjacent vertices in the `path`.\n\nSo we can iterate over all possible candidates `u` for the second last vertex of the `path` and update `dp[i][v]` with `dp[i - 1][u]`. If `names[v] != targetPath[i]`, then the current vertex `v` is a mismatch and we will need to also add `1`.\n\nOne can imagine the transition from `dp[i - 1][u]` to `dp[i][v]` as appending an element `targetPath[i]` to the target path and appending the vertex `v` to the current path.\n\nThis gives us our recurrence relation:\n\n`dp[i][v] = mismatch + min(dp[i - 1][u])`, where `u` is a neighbor of `v` and `mismatch = 0` if `names[v] = targetPath[i]`, or `1` otherwise.\n\nNow, we have solved the problem of finding the minimum edit distance. However, the problem wants an actual path, not just an integer. To handle this, on top of `dp[i][v]`, we will also maintain an array `p[i][v]` which represents the previous vertex before `v` in the optimal path. We can use this array `p` to reconstruct the path at the end.\n\n#### Algorithm\n\nLet `k` be the length of `targetPath`.\n\n1. Declare arrays `dp` and `p` for dynamic programming. The sizes should be `dp[k][n]` and `p[k][n]`.\n2. For each vertex `v`, initialize `dp[0][v]`. Set `dp[0][v] = 0` if the name of the vertex equals the first element of the target path, and `dp[0][v] = 1` otherwise. For `i > 1`, initialize `dp[i][v]` with some sufficiently large values (e.g. `k+1`).\n3. For each `i` from `1` to `k-1` do the following.\n\t* Iterate over all edges `(u, v)`. We consider the edges in both directions, so we will also consider `(v, u)`. For each edge:\n\t\t* Calculate $\\text{cur} = \\text{dp}[i - 1][u] (+1 \\quad \\text{if names}[v] \\ne R_i)$.\n\t\t* If `cur < dp[i][v]`, update `dp[i][v]` with `cur` and `p[i][v]` with `u`.\n4. Find the vertex `v` that minimizes `dp[k-1][v]`. It is the last vertex of the optimal path. Initialize an answer array with this vertex.\n5. For each `i` from `k-1` to `1`, set `v` to `p[i][v]` (the previous vertex in the path) and append `v` to the answer.\n6. Reverse the answer since we appended the vertices in the reversed order. Return the answer.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/9g3vetsA/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"9g3vetsA\"></iframe>\n\n\n#### Complexity Analysis\n\n* Time complexity: $O(m \\cdot k)$.\n\nWe spend some time initializing the arrays and reconstructing the answer, but this is dominated by calculating the DP inside the nested for loops. The outer loop iterates from `1` to `k-1`, and the inner one iterates over $O(m)$ edges. Inside each iteration, we do $O(1)$ work. This gives us a time complexity of $O(m \\cdot k)$. \n\n* Space complexity: $O(n \\cdot k)$.\n\nWe store arrays `dp` and `p` for dynamic programming. These arrays are both of size `[k][n]`.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

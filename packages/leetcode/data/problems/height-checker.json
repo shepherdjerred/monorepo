@@ -1,0 +1,140 @@
+{
+  "questionId": "1137",
+  "questionFrontendId": "1051",
+  "title": "Height Checker",
+  "titleSlug": "height-checker",
+  "difficulty": "Easy",
+  "content": "<p>A school is trying to take an annual photo of all the students. The students are asked to stand in a single file line in <strong>non-decreasing order</strong> by height. Let this ordering be represented by the integer array <code>expected</code> where <code>expected[i]</code> is the expected height of the <code>i<sup>th</sup></code> student in line.</p>\n\n<p>You are given an integer array <code>heights</code> representing the <strong>current order</strong> that the students are standing in. Each <code>heights[i]</code> is the height of the <code>i<sup>th</sup></code> student in line (<strong>0-indexed</strong>).</p>\n\n<p>Return <em>the <strong>number of indices</strong> where </em><code>heights[i] != expected[i]</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> heights = [1,1,4,2,1,3]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> \nheights:  [1,1,<u>4</u>,2,<u>1</u>,<u>3</u>]\nexpected: [1,1,<u>1</u>,2,<u>3</u>,<u>4</u>]\nIndices 2, 4, and 5 do not match.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> heights = [5,1,2,3,4]\n<strong>Output:</strong> 5\n<strong>Explanation:</strong>\nheights:  [<u>5</u>,<u>1</u>,<u>2</u>,<u>3</u>,<u>4</u>]\nexpected: [<u>1</u>,<u>2</u>,<u>3</u>,<u>4</u>,<u>5</u>]\nAll indices do not match.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> heights = [1,2,3,4,5]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong>\nheights:  [1,2,3,4,5]\nexpected: [1,2,3,4,5]\nAll indices match.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= heights.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= heights[i] &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "Build the correct order of heights by sorting another array, then compare the two arrays."
+  ],
+  "metaData": "{\n  \"name\": \"heightChecker\",\n  \"params\": [\n    {\n      \"name\": \"heights\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}\n",
+  "stats": "{\"totalAccepted\": \"633.7K\", \"totalSubmission\": \"776.5K\", \"totalAcceptedRaw\": 633687, \"totalSubmissionRaw\": 776461, \"acRate\": \"81.6%\"}",
+  "likes": 1786,
+  "dislikes": 122,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,1,4,2,1,3]",
+    "[5,1,2,3,4]",
+    "[1,2,3,4,5]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Counting Sort",
+      "slug": "counting-sort"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int heightChecker(vector<int>& heights) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int heightChecker(int[] heights) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def heightChecker(self, heights: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def heightChecker(self, heights):\n        \"\"\"\n        :type heights: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} heights\n * @return {number}\n */\nvar heightChecker = function(heights) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function heightChecker(heights: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int HeightChecker(int[] heights) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int heightChecker(int* heights, int heightsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func heightChecker(heights []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun heightChecker(heights: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func heightChecker(_ heights: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn height_checker(heights: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} heights\n# @return {Integer}\ndef height_checker(heights)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $heights\n     * @return Integer\n     */\n    function heightChecker($heights) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int heightChecker(List<int> heights) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def heightChecker(heights: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec height_checker(heights :: [integer]) :: integer\n  def height_checker(heights) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec height_checker(Heights :: [integer()]) -> integer().\nheight_checker(Heights) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (height-checker heights)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2338",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nIn this problem, we are required to find the number of elements that are different than the respective index if the array is sorted. We must sort the given array and compare the sorted and unsorted arrays.\n\n![slide1](../Figures/1051/Slide1.jpg)\n\n**Key Observation:** The purpose of this problem is to evaluate the interviewee's understanding of sorting algorithms and their ability to implement these algorithms without relying on built-in sort methods.\n\nThere are a variety of sorting algorithms such as Bubble Sort, Insertion Sort, Selection Sort, Merge Sort, Heap Sort, Quick Sort, Counting Sort, Radix Sort, and others. \n\n![slide1](../Figures/1051/Slide2.jpg)\n\nWe attached a list of time complexities of some popular sorting algorithms. Here, `n` is the number of elements in the array, `k` is the size of buckets used, and `d` is the number of digits in the maximum element in the array.\n\nIn this article, we will concentrate on five algorithms that are deemed efficient and reasonable to implement during a real interview setting for this particular problem - **Bubble Sort, Merge Sort, Heap Sort, Counting Sort, and Radix Sort**. We will give brief descriptions of these algorithms but won't cover them in great detail.   \nFor those who would like to explore these and other sorting algorithms in greater detail, we are providing a link to our [Sorting Leetbook](https://leetcode.com/explore/learn/card/sorting/693/introduction/4431/). \n\n**Note:** We highly recommend implementing the other sorting algorithms on your own, too, for more practice.\n\n---\n\n### Approach 1: Bubble Sort\n\n#### Intuition\n\nBubble Sort is a classic sorting algorithm known for its simplicity. Bubble Sort operates by repeatedly stepping through the list, comparing adjacent elements, and swapping them if they are in the wrong order. The pass through the list is repeated until the list is sorted.\n\nHere's a breakdown of how Bubble Sort works:\n- **Iterate through the list:** Bubble Sort starts at the beginning of the list and compares adjacent pairs of elements.\n\n- **Compare adjacent elements:** For each pair of adjacent elements, Bubble Sort compares them and swaps them if they are in the wrong order.\n- **Repeat until sorted:** Bubble Sort continues making passes through the list, comparing and swapping adjacent elements until the entire list is sorted.\n\n![slide0](../Figures/1051/Slide3.jpg)\n\n#### Algorithm\n\n\n1. Create a function called `bubbleSort` which takes in the original array `arr` as a parameter.\n    - Initialize the variable `n` with the length of the array `arr`.\n    - Iterate through the array `arr` from index `i = 0` to `n - 1`.\n        - Initialize a nested loop from index `j = 0` to `n - i - 1`.\n            - In each iteration, compare the current element `arr[j]` with the next element `arr[j + 1]`.\n            - If `arr[j]` is greater than `arr[j + 1]`, swap the elements to place the smaller element before the larger one.\n\n2. Create a new array, `sortedHeights`, with the same elements as the `heights` array.\n3. Sort the `sortedHeights` array using the `bubbleSort` function.\n4. Iterate through all indices of the `heights` array, comparing each element with the corresponding element in the `sortedHeights` array. Count the number of indices where the elements differ.\n5. Return the total count of indices with differing elements.\n\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/NRF5s4bC/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"NRF5s4bC\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $n$ is the number of elements in the `heights` array.\n\n* Time complexity: $O(n^2)$          \n  - To sort the array we iterate on the array $n - 1$ times, each iteration will take $O(n)$ time. Thus, sorting will take $O(n^2)$ time.\n  - While comparing sorted and unsorted arrays, we again iterate on $n$ elements, which will take $O(n)$ time.\n  - Thus, overall it takes $O(n + n^2) = O(n^2)$ time.\n\n* Space complexity: $O(n)$    \n  - The sorting happens in place, but we created an additional array `sortedHeights` of size $n$.\n  - Thus, overall we use $O(n)$ space. \n\n\n\n\n---\n\n### Approach 2: Merge Sort\n\n#### Intuition\n\nMerge Sort is a divide-and-conquer sorting algorithm. The intuition behind it is to divide the data set into smaller and smaller sub-arrays until it is easy to sort, and then merge the sorted sub-arrays back into a larger sorted array.\n\nThe steps for implementing Merge Sort are as follows:  \n - **Divide the data set into two equal parts:** The first step in the Merge Sort algorithm is to divide the data set into two equal halves. This is done by finding the middle point of the data set and splitting the data into two parts.\n\n - **Recursively sort each half:** Once the data set is divided into two halves, the Merge Sort function is called recursively on each half. The recursive calls continue until each half of the data is sorted into single-element arrays.\n - **Merge the sorted halves:** Once each half of the data is sorted, the two halves are merged back into one final sorted array. The merging process involves comparing the first elements of each half and inserting the smaller element into the final array. This process continues until one of the halves is empty. The remaining elements of the other half are then inserted into the final array.\n - **Repeat the process until the entire data is sorted:** The Merge Sort function is called recursively until the entire data set is sorted.\n\n![slide2](../Figures/1051/Slide4.jpg)\n\n#### Algorithm\n\n1. Create a helper function called `merge` which takes in the original array `arr`, indices `left`, `mid`, `right`, and a temporary array `tempArr` as parameters.\n    - Calculate the start indices and sizes of the two halves of the array. The first half starts from the `left` index and the second half starts from `mid + 1`.\n    - Copy elements of both halves into the temporary array.\n    - Merge the sub-arrays from the temporary array `tempArr` back into the array `arr` in a sorted order using a while loop. The loop runs until either the first half or second half is completely merged. In each iteration, the smaller of the two elements from the first and second half is copied into the array `arr`.\n    - Copy any remaining elements from the first half or second half into the array `arr`.\n\n2. Create a recursive function called `mergeSort`, which takes in the original array `arr`, indices `left` and `right`, and a temporary array `tempArr` as parameters.\n    - Check if the `left` index is greater than or equal to the `right` index. If it is, we return from the function.\n    - Calculate the `mid` index.\n    - Sort the first and second halves of the array recursively by calling the `mergeSort` function.\n    - Merge the sorted halves by calling the `merge` function. \n\n3. Create a temporary array `temporaryArray` with the same size as the `heights` array.\n4. Create a new array, `sortedHeights`, with the same elements as the `heights` array.\n5. Sort the `sortedHeights` array using the `mergeSort` function.\n6. Iterate through all indices of the `heights` array, comparing each element with the corresponding element in the `sortedHeights` array. Count the number of indices where the elements differ.\n7. Return the total count of indices with differing elements.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/Aw5jM37K/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Aw5jM37K\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $n$ is the number of elements in the `heights` array.\n\n* Time complexity: $O(n \\log n)$          \n  - While sorting, we divide the `arr` array into two halves till there is only one element in the array, which will lead to $O(\\log n)$ steps.  \n  $n \\rarr n/2 \\rarr n/4 \\rarr ... \\rarr 1 \\space (\\text{k steps}) $   \n  $ n / 2^{(k-1)} = 1 \\implies $ $k \\approx \\log n$\n  - After each division, we merge those respective halves which will take $O(n)$ time each. Thus, sorting will take $O(n \\log n)$ time.\n  - While comparing sorted and unsorted arrays, we again iterate on $n$ elements, which will take $O(n)$ time.\n  - Thus, overall it takes $O(n + n \\log n) = O(n \\log n)$ time.\n\n* Space complexity: $O(n)$    \n  - The recursive stack will take $O(\\log n)$ space, and we used additional arrays, `temporaryArray` and `sortedHeights` of size $n$ each.\n  - Thus, overall we use $O(\\log n + 2n) = O(n)$ space. \n\n\n\n\n---\n\n### Approach 3: Heap Sort\n\n#### Intuition\n\nThe intuition behind Heap Sort is to organize the elements of the data set into a binary heap (a max binary heap, or a min binary heap), which provides a fast way to access the largest (or smallest) element. We will implement Heap Sort using a max binary heap. A max binary heap is a complete binary tree-based data structure where a parent node must be greater than or equal to its children nodes. This property ensures that the largest element is always at the root node of the max binary heap.\n\nThe steps for implementing Heap Sort are as follows:  \n\n- **Build the binary heap:** Organize the elements of the array into a max binary heap such that the parent node is either greater than or equal to its children nodes. In the resulting max binary heap we will have the largest element at the root node.\n\n- **Swap the root node and the last element:** Swap the root node (which is the largest element) with the last element in the heap. This places the largest element at the end of the array.\n\n- **Rebuild the heap:** Rebuild the heap with the new root node to satisfy the heap property without considering the already swapped elements from the array.\n\n- **Repeat steps 2 and 3:** Repeat steps 2 and 3 until the binary heap is empty and the array is sorted in ascending order.\n\n![slide3](../Figures/1051/Slide5.jpg)\n\n!?!../Documents/1051/slideshow.json:1200,750!?!\n\n#### Algorithm\n\n1. Create a function `heapify` that takes the original array `arr`, size `n`, and index `i` as input.\n    - Initialize `largest` as `i`.\n    - Calculate the left child of node `i` as `2 * i + 1` and the right child as `2 * i + 2`.\n    - If the left child of node `i` is less than `n` and the value of the left child is greater than the value at `largest`, then set `largest` to `left`.\n    - If the right child of node `i` is less than `n` and the value of the right child is greater than the value at `largest`, then set `largest` to `right`.\n    - If `largest` is not equal to `i`, then swap the values at `i` and `largest`, and call `heapify` on the affected sub-tree rooted at `largest`.\n\n2. Create a function `heapSort` that takes an array `arr` as input.\n    - Initialize `n` as the size of the array.\n    - Build the max heap by calling `heapify` function on each node (except leaf nodes).\n    - Then, traverse the elements of the array `arr` from end to beginning, and for each element swap the root with the last element and call `heapify` on the reduced array to make sure it remains a max heap.\n\n3. Create a new array, `sortedHeights`, with the same elements as the `heights` array.\n4. Sort the `sortedHeights` array using the `heapSort` function.\n5. Iterate through all indices of the `heights` array, comparing each element with the corresponding element in the `sortedHeights` array. Count the number of indices where the elements differ.\n6. Return the total count of indices with differing elements.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/UaUiF6ng/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"UaUiF6ng\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $n$ is the number of elements in the `heights` array.\n\n* Time complexity: $O(n \\log n)$          \n  - Initially, heapifying the whole `nums` array will take $O(n)$ time. \n  - While heapifying the `nums` array after swapping the first element with the last, we traverse the height of the complete binary tree made using $n$ elements, which leads to $O(\\log n)$ time operations, and this heapifying is done $n$ times, once for each element. Thus, sorting will take $O(n + n \\log n) = O(n \\log n)$ time.\n  - While comparing sorted and unsorted arrays, we again iterate on $n$ elements, which will take $O(n)$ time.\n  - Thus, overall it takes $O(n + n \\log n) = O(n \\log n)$ time.\n\n* Space complexity: $O(n)$    \n  - The recursive stack will take $O(\\log n)$ space, the sorting happens in place.\n  - We created an additional array `sortedHeights` of size $n$.\n  - Thus, overall we use $O(n)$ space. \n\n     \n\n---\n\n\n### Approach 4: Counting Sort\n\n\n#### Intuition\n\nThe intuition behind counting sort is to count the frequency of each element in the input array and then place the elements in their correct positions based on their values and frequencies. Counting sort is a non-comparative sorting algorithm and is useful in situations where the elements in the array have a limited range.\n\n\nThe steps for implementing Counting Sort are as follows:  \n\n- **Create a counting hash map:** Create a hash map that stores the frequency of each element.\n\n- **Find the minimum and maximum values:** Iterate over the input array to find the minimum and maximum elements that will be used later on.\n\n- **Count the frequency of each element:** Loop through the input array and increase the count of the corresponding element in the counting hash map.\n\n- **Place elements in the original array:** Loop through the range of elements in the input array from the minimum value to the maximum value and place each element in its proper position in the original array based on the frequency in the hash map.\n\n\n![slide4](../Figures/1051/Slide7.jpg)\n\n#### Algorithm\n\n1. Create a function `countingSort` to sort the original array `arr`.\n    - Create a counting hash map `counts` to store the count of each element of the array.\n    - Find the minimum and maximum values `minVal` and `maxVal` in the array.\n    - Iterate through the array `arr` and update the count of each element in the hash map.\n    - Initialize a variable `index` to zero, which will be used to store the sorted elements in the array `arr`.\n    - Start a loop that goes from the minimum value `minVal` to the maximum value `maxVal`. \n         - For each value `val` in the loop, check if its count in the hash map `counts` is greater than zero. If it is, overwrite that value in the array `arr` starting at the `index` position. Update the `index` and decrease the count of the value in the hash map `counts` by `1`.\n    - The input array `arr` should now be sorted.\n\n2. Create a new array, `sortedHeights`, with the same elements as the `heights` array.\n3. Sort the `sortedHeights` array using the `countingSort` function.\n4. Iterate through all indices of the `heights` array, comparing each element with the corresponding element in the `sortedHeights` array. Count the number of indices where the elements differ.\n5. Return the total count of indices with differing elements.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/PG3xMqqk/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"PG3xMqqk\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $n$ is the number of elements in the `heights` array, and $k$ is the range of value of its elements (minimum value to maximum value).\n\n* Time complexity: $O(n + k)$          \n  - We iterate on the array elements while counting the frequency and finding minimum and maximum values, taking $O(n)$ time.\n  - Then we iterate on the input array's element's range, which will take $O(k)$ time. Thus, sorting will take $O(n + k)$ time.\n  - While comparing sorted and unsorted arrays, we again iterate on $n$ elements, which will take $O(n)$ time.\n  - Thus, overall it takes $O(n + n + k) = O(n + k)$ time.\n\n* Space complexity: $O(n)$    \n  - We use a hash map `counts` which might store all $O(n)$ elements of the input array in worst-case.\n  - We created an additional array `sortedHeights` of size $n$.\n  - Thus, overall we use $O(n)$ space. \n\n\n\n---\n\n### Approach 5: Radix Sort\n\n#### Intuition\n\nThe intuition behind radix sort is that it takes advantage of the fact that integers have a finite number of digits and each digit can have a limited number of values (0 to 9). Instead of comparing elements, it sorts elements by the individual digits of the integers.\n\n\n> This approach is not expected by the interviewer and is a bit complex to code during an interview setting, but we are listing it here to show you how you can use a radix sort on integer arrays.\n\nThe steps for implementing Radix Sort are as follows:  \n\n- **Sort array using bucket sort:** For each place value (unit place to last place) sort the array using counting/bucket sort. \n\n- **Bucket Sort:** We need 10 buckets for each digit (0 - 9), and we will push array elements into their respective bucket and fetch the elements from each bucket one by one in the order it was pushed in the bucket.\n\n![slide5](../Figures/1051/Slide8.jpg)\n\n\n![slide5](../Figures/1051/Slide9.jpg)\n\n\n#### Algorithm\n\n1. Create a function, `bucketSort`, which takes an array `arr` and an integer `placeValue` (indicating the place according to which the array will be sorted) as input.\n    - Create 2D array `buckets` with `10` rows, to store respective bucket elements together.\n    - Loop through each element in `arr`, find the digit of the number based on the current place value, and store it in the respective bucket.\n    - Overwrite `arr` with the elements stored in each bucket in the correct order.\n\n2. Create a function `radixSort` which takes an array `arr` as input.\n    - Find the maximum absolute value `maxElement` in `arr` and find the number of digits `maxDigits` in the maximum element.\n    - Loop through the digits, starting from the least significant digit place, and call `bucketSort` for each place value.\n\n3. Create a new array, `sortedHeights`, with the same elements as the `heights` array.\n4. Sort the `sortedHeights` array using the `radixSort` function.\n5. Iterate through all indices of the `heights` array, comparing each element with the corresponding element in the `sortedHeights` array. Count the number of indices where the elements differ.\n6. Return the total count of indices with differing elements.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/8zBNPf5z/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"8zBNPf5z\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $n$ is the number of elements in the `heights` array, $d$ is the number of digits in the maximum element, and $b = 10$ is the size of the bucket used.\n\n* Time complexity: $O(d \\cdot (n + b))$          \n  - We iterate on the array elements to find the maximum number and then find the count of its digits, taking $O(n + d)$ time.\n  - Then we sort the array for each integer place which will take $O(n + b)$ time, thus for all $d$ places it will take $O(d \\cdot (n + b))$ time. Thus, sorting will take $O((n + d) + d \\cdot (n + b)) = O(d \\cdot (n + b))$ time.\n  - While comparing sorted and unsorted arrays, we again iterate on $n$ elements, which will take $O(n)$ time.\n  - Therefore, overall it takes $O(n + d \\cdot (n + b)) = O(d \\cdot (n + b))$ time.\n\n\n* Space complexity: $O(n + b)$    \n  - We create an additional array `sortedHeights` of size $n$ and `buckets` which use $O(n + b)$ space.\n  - Thus, overall we use $O(n+ b)$ space.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

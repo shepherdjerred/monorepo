@@ -1,0 +1,137 @@
+{
+  "questionId": "941",
+  "questionFrontendId": "905",
+  "title": "Sort Array By Parity",
+  "titleSlug": "sort-array-by-parity",
+  "difficulty": "Easy",
+  "content": "<p>Given an integer array <code>nums</code>, move all the even integers at the beginning of the array followed by all the odd integers.</p>\n\n<p>Return <em><strong>any array</strong> that satisfies this condition</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [3,1,2,4]\n<strong>Output:</strong> [2,4,3,1]\n<strong>Explanation:</strong> The outputs [4,2,3,1], [2,4,1,3], and [4,2,1,3] would also be accepted.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [0]\n<strong>Output:</strong> [0]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 5000</code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 5000</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"sortArrayByParity\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"1M\", \"totalSubmission\": \"1.3M\", \"totalAcceptedRaw\": 1009457, \"totalSubmissionRaw\": 1319679, \"acRate\": \"76.5%\"}",
+  "likes": 5691,
+  "dislikes": 157,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Sort Array By Parity II\", \"titleSlug\": \"sort-array-by-parity-ii\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sort Even and Odd Indices Independently\", \"titleSlug\": \"sort-even-and-odd-indices-independently\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Largest Number After Digit Swaps by Parity\", \"titleSlug\": \"largest-number-after-digit-swaps-by-parity\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,1,2,4]",
+    "[0]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"ebay\", \"name\": \"eBay\"}, {\"timesEncountered\": 2, \"slug\": \"couchbase\", \"name\": \"Couchbase\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> sortArrayByParity(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] sortArrayByParity(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def sortArrayByParity(self, nums: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def sortArrayByParity(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number[]}\n */\nvar sortArrayByParity = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function sortArrayByParity(nums: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] SortArrayByParity(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* sortArrayByParity(int* nums, int numsSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func sortArrayByParity(nums []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun sortArrayByParity(nums: IntArray): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func sortArrayByParity(_ nums: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn sort_array_by_parity(nums: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer[]}\ndef sort_array_by_parity(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer[]\n     */\n    function sortArrayByParity($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> sortArrayByParity(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def sortArrayByParity(nums: Array[Int]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec sort_array_by_parity(nums :: [integer]) :: [integer]\n  def sort_array_by_parity(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec sort_array_by_parity(Nums :: [integer()]) -> [integer()].\nsort_array_by_parity(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (sort-array-by-parity nums)\n  (-> (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "559",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach 1: Sort\n\n**Intuition and Algorithm**\n\nUse a custom comparator when sorting, to sort by parity.\n\n<iframe src=\"https://leetcode.com/playground/QtegwFN3/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"QtegwFN3\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N \\log N)$$, where $$N$$ is the length of `A`.\n\n* Space Complexity:  $$O(N)$$ for the sort, depending on the built-in implementation of `sort`.\n<br />\n<br />\n\n\n---\n### Approach 2: Two Pass\n\n**Intuition and Algorithm**\n\nWrite all the even elements first, then write all the odd elements.\n\n<iframe src=\"https://leetcode.com/playground/gYZ6ypth/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"gYZ6ypth\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N)$$, where $$N$$ is the length of `A`.\n\n* Space Complexity:  $$O(N)$$, the space used by the answer.\n<br />\n<br />\n\n\n---\n### Approach 3: In-Place\n\n**Intuition**\n\nIf we want to do the sort in-place, we can use quicksort, a standard textbook algorithm.\n\n**Algorithm**\n\nWe'll maintain two pointers `i` and `j`.  The loop invariant is everything below `i` has parity `0` (ie. `A[k] % 2 == 0` when `k < i`), and everything above `j` has parity `1`.\n\nThen, there are 4 cases for `(A[i] % 2, A[j] % 2)`:\n\n* If it is `(0, 1)`, then everything is correct: `i++` and `j--`.\n\n* If it is `(1, 0)`, we swap them so they are correct, then continue.\n\n* If it is `(0, 0)`, only the `i` place is correct, so we `i++` and continue.\n\n* If it is `(1, 1)`, only the `j` place is correct, so we `j--` and continue.\n\nThroughout all 4 cases, the loop invariant is maintained, and `j-i` is getting smaller.  So eventually we will be done with the array sorted as desired.\n\n<iframe src=\"https://leetcode.com/playground/LzeP93gL/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"LzeP93gL\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N)$$, where $$N$$ is the length of `A`.  Each step of the while loop makes `j-i` decrease by at least one.  (Note that while quicksort is $$O(N \\log N)$$ normally, this is $$O(N)$$ because we only need one pass to sort the elements.)\n\n* Space Complexity:  $$O(1)$$ in additional space complexity.\n<br />\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

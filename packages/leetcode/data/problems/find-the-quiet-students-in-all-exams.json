@@ -1,0 +1,53 @@
+{
+  "questionId": "1546",
+  "questionFrontendId": "1412",
+  "title": "Find the Quiet Students in All Exams",
+  "titleSlug": "find-the-quiet-students-in-all-exams",
+  "difficulty": "Hard",
+  "content": "<p>Table: <code>Student</code></p>\n\n<pre>\n+---------------------+---------+\n| Column Name         | Type    |\n+---------------------+---------+\n| student_id          | int     |\n| student_name        | varchar |\n+---------------------+---------+\nstudent_id is the primary key (column with unique values) for this table.\nstudent_name is the name of the student.</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Exam</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| exam_id       | int     |\n| student_id    | int     |\n| score         | int     |\n+---------------+---------+\n(exam_id, student_id) is the primary key (combination of columns with unique values) for this table.\nEach row of this table indicates that the student with student_id had a score points in the exam with id exam_id.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>A <strong>quiet student</strong> is the one who took at least one exam and did not score the highest or the lowest score.</p>\n\n<p>Write a solution&nbsp;to report the students <code>(student_id, student_name)</code> being quiet in all exams. Do not return the student who has never taken any exam.</p>\n\n<p>Return the result table <strong>ordered</strong> by <code>student_id</code>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nStudent table:\n+-------------+---------------+\n| student_id  | student_name  |\n+-------------+---------------+\n| 1           | Daniel        |\n| 2           | Jade          |\n| 3           | Stella        |\n| 4           | Jonathan      |\n| 5           | Will          |\n+-------------+---------------+\nExam table:\n+------------+--------------+-----------+\n| exam_id    | student_id   | score     |\n+------------+--------------+-----------+\n| 10         |     1        |    70     |\n| 10         |     2        |    80     |\n| 10         |     3        |    90     |\n| 20         |     1        |    80     |\n| 30         |     1        |    70     |\n| 30         |     3        |    80     |\n| 30         |     4        |    90     |\n| 40         |     1        |    60     |\n| 40         |     2        |    70     |\n| 40         |     4        |    80     |\n+------------+--------------+-----------+\n<strong>Output:</strong> \n+-------------+---------------+\n| student_id  | student_name  |\n+-------------+---------------+\n| 2           | Jade          |\n+-------------+---------------+\n<strong>Explanation:</strong> \nFor exam 1: Student 1 and 3 hold the lowest and high scores respectively.\nFor exam 2: Student 1 hold both highest and lowest score.\nFor exam 3 and 4: Student 1 and 4 hold the lowest and high scores respectively.\nStudent 2 and 5 have never got the highest or lowest in any of the exams.\nSince student 5 is not taking any exam, he is excluded from the result.\nSo, we only return the information of Student 2.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Student (student_id int, student_name varchar(30))\", \"Create table If Not Exists Exam (exam_id int, student_id int, score int)\"], \"mssql\": [\"Create table Student (student_id int, student_name varchar(30))\", \"Create table Exam (exam_id int, student_id int, score int)\"], \"oraclesql\": [\"Create table Student (student_id int, student_name varchar(30))\", \"Create table Exam (exam_id int, student_id int, score int)\"], \"database\": true, \"name\": \"find_quiet_students\", \"pythondata\": [\"Student = pd.DataFrame([], columns=['student_id', 'student_name']).astype({'student_id':'Int64', 'student_name':'object'})\", \"Exam = pd.DataFrame([], columns=['exam_id', 'student_id', 'score']).astype({'exam_id':'Int64', 'student_id':'Int64', 'score':'Int64'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Student (student_id int, student_name varchar(30))\\n\", \"Create table If Not Exists Exam (exam_id int, student_id int, score int)\"], \"database_schema\": {\"Student\": {\"student_id\": \"INT\", \"student_name\": \"VARCHAR(30)\"}, \"Exam\": {\"exam_id\": \"INT\", \"student_id\": \"INT\", \"score\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"35.2K\", \"totalSubmission\": \"60.7K\", \"totalAcceptedRaw\": 35236, \"totalSubmissionRaw\": 60672, \"acRate\": \"58.1%\"}",
+  "likes": 228,
+  "dislikes": 28,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Student\": [\"student_id\", \"student_name\"], \"Exam\": [\"exam_id\", \"student_id\", \"score\"]}, \"rows\": {\"Student\": [[1, \"Daniel\"], [2, \"Jade\"], [3, \"Stella\"], [4, \"Jonathan\"], [5, \"Will\"]], \"Exam\": [[10, 1, 70], [10, 2, 80], [10, 3, 90], [20, 1, 80], [30, 1, 70], [30, 3, 80], [30, 4, 90], [40, 1, 60], [40, 2, 70], [40, 4, 80]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_quiet_students(student: pd.DataFrame, exam: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

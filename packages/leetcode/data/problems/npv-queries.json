@@ -1,0 +1,58 @@
+{
+  "questionId": "1551",
+  "questionFrontendId": "1421",
+  "title": "NPV Queries",
+  "titleSlug": "npv-queries",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>NPV</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| id            | int     |\n| year          | int     |\n| npv           | int     |\n+---------------+---------+\n(id, year) is the primary key (combination of columns with unique values) of this table.\nThe table has information about the id and the year of each inventory and the corresponding net present value.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Queries</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| id            | int     |\n| year          | int     |\n+---------------+---------+\n(id, year) is the primary key (combination of columns with unique values) of this table.\nThe table has information about the id and the year of each inventory query.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to find the <code>npv</code> of each query of the <code>Queries</code> table.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nNPV table:\n+------+--------+--------+\n| id   | year   | npv    |\n+------+--------+--------+\n| 1    | 2018   | 100    |\n| 7    | 2020   | 30     |\n| 13   | 2019   | 40     |\n| 1    | 2019   | 113    |\n| 2    | 2008   | 121    |\n| 3    | 2009   | 12     |\n| 11   | 2020   | 99     |\n| 7    | 2019   | 0      |\n+------+--------+--------+\nQueries table:\n+------+--------+\n| id   | year   |\n+------+--------+\n| 1    | 2019   |\n| 2    | 2008   |\n| 3    | 2009   |\n| 7    | 2018   |\n| 7    | 2019   |\n| 7    | 2020   |\n| 13   | 2019   |\n+------+--------+\n<strong>Output:</strong> \n+------+--------+--------+\n| id   | year   | npv    |\n+------+--------+--------+\n| 1    | 2019   | 113    |\n| 2    | 2008   | 121    |\n| 3    | 2009   | 12     |\n| 7    | 2018   | 0      |\n| 7    | 2019   | 0      |\n| 7    | 2020   | 30     |\n| 13   | 2019   | 40     |\n+------+--------+--------+\n<strong>Explanation:</strong> \nThe npv value of (7, 2018) is not present in the NPV table, we consider it 0.\nThe npv values of all other queries can be found in the NPV table.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create Table If Not Exists NPV (id int, year int, npv int)\", \"Create Table If Not Exists Queries (id int, year int)\"], \"mssql\": [\"Create Table NPV (id int, year int, npv int)\", \"Create Table Queries (id int, year int)\"], \"oraclesql\": [\"Create Table NPV (id int, year int, npv int)\", \"Create Table Queries (id int, year int)\"], \"database\": true, \"name\": \"npv_queries\", \"pythondata\": [\"NPV = pd.DataFrame([], columns=['id', 'year', 'npv']).astype({'id':'Int64', 'year':'Int64', 'npv':'Int64'})\", \"Queries = pd.DataFrame([], columns=['id', 'year']).astype({'id':'Int64', 'year':'Int64'})\\n\"], \"postgresql\": [\"\\nCreate Table If Not Exists NPV (id int, year int, npv int)\\n\", \"Create Table If Not Exists Queries (id int, year int)\"], \"database_schema\": {\"NPV\": {\"id\": \"INT\", \"year\": \"INT\", \"npv\": \"INT\"}, \"Queries\": {\"id\": \"INT\", \"year\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"31.5K\", \"totalSubmission\": \"38K\", \"totalAcceptedRaw\": 31478, \"totalSubmissionRaw\": 37981, \"acRate\": \"82.9%\"}",
+  "likes": 61,
+  "dislikes": 297,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"NPV\":[\"id\",\"year\",\"npv\"],\"Queries\":[\"id\",\"year\"]},\"rows\":{\"NPV\":[[1,2018,100],[7,2020,30],[13,2019,40],[1,2019,113],[2,2008,121],[3,2009,21],[11,2020,99],[7,2019,0]],\"Queries\":[[1,2019],[2,2008],[3,2009],[7,2018],[7,2019],[7,2020],[13,2019]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef npv_queries(npv: pd.DataFrame, queries: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "2047",
+    "content": "[TOC]\n\n# Solution\n\n---\n\n### Overview\n\nSuppose you're managing the financials of various inventories, each identified by a unique ID and year. You're interested in understanding the net present value (NPV) of these inventories. The NPV helps in determining the profitability of an investment or project.\n\nYou have two tables:\n\n1. **NPV**: This contains known NPV values for specific inventory IDs and years.\n2. **Queries**: This contains a list of inventory IDs and years for which you want to retrieve NPV values.\n\nHowever, not all inventory-year combinations in the `Queries` table might have a corresponding NPV value in the `NPV` table. In such cases, it's assumed that the NPV is 0.\n\nYour task is to fetch the NPV values for each entry in the Queries table. If a particular combination doesn't exist in the NPV table, it should return 0 for that entry.\n\n---\n\n## pandas\n### Approach 1: Merging DataFrames\n\n#### Intuition\n\n**Flowchart: Finding NPV for Each Query**\n![fig](../Figures/1421/1421-1.png)\n\nThis task involves aligning entries from the `queries` DataFrame with their respective NPV values from the `npv` DataFrame.\n\nOriginal `queries` DataFrame:\n\n<table>\n  <tr>\n    <th>id</th>\n    <th>year</th>\n  </tr>\n  <tr>\n    <td>1</td>\n    <td>2019</td>\n  </tr>\n  <tr>\n    <td>2</td>\n    <td>2008</td>\n  </tr>\n  <tr>\n    <td>3</td>\n    <td>2009</td>\n  </tr>\n  <tr>\n    <td>7</td>\n    <td>2018</td>\n  </tr>\n  <tr>\n    <td>7</td>\n    <td>2019</td>\n  </tr>\n<tr>\n    <td>7</td>\n    <td>2020</td>\n  </tr>\n<tr>\n    <td>13</td>\n    <td>2019</td>\n  </tr>\n</table>\n<br>\n\nOriginal `npv` DataFrame:\n\n<table>\n  <tr>\n    <th>id</th>\n    <th>year</th>\n    <th>npv</th>\n  </tr>\n  <tr>\n    <td>1</td>\n    <td>2018</td>\n    <td>100</td>\n  </tr>\n  <tr>\n    <td>7</td>\n    <td>2020</td>\n    <td>30</td>\n  </tr>\n  <tr>\n    <td>13</td>\n    <td>2019</td>   \n    <td>40</td>\n  </tr>\n  <tr>\n    <td>1</td>\n    <td>2019</td>\n    <td>113</td>\n  </tr>\n  <tr>\n    <td>2</td>\n    <td>2008</td>\n    <td>121</td>\n  </tr>\n<tr>\n    <td>3</td>\n    <td>2009</td>\n    <td>12</td>\n  </tr>\n<tr>\n    <td>11</td>\n    <td>2020</td>\n    <td>99</td>\n  </tr>\n<tr>\n    <td>7</td>\n    <td>2019</td>\n    <td>0</td>\n  </tr>\n</table>\n<br>\n\nThe primary objective is to find the NPV for each `id`-`year` combination specified in the `queries` DataFrame. To achieve this, we can combine the `queries` DataFrame with the `npv` DataFrame. \n\nWe do this in Pandas using the `merge` operation.\n\n```python\nresult = pd.merge(queries, npv, on=['id', 'year'], how='left')\n```\n<br>\n\nResulting DataFrame `result`:\n<table>\n  <tr>\n    <th>id</th>\n    <th>year</th>\n    <th>npv</th>\n  </tr>\n  <tr>\n    <td>1</td>\n    <td>2019</td>\n    <td>113</td>\n  </tr>\n  <tr>\n    <td>2</td>\n    <td>2008</td>\n    <td>121</td>\n  </tr>\n  <tr>\n    <td>3</td>\n    <td>2009</td>   \n    <td>12</td>\n  </tr>\n  <tr>\n    <td>7</td>\n    <td>2018</td>\n    <td>NaN</td>\n  </tr>\n  <tr>\n    <td>7</td>\n    <td>2019</td>\n    <td>0</td>\n  </tr>\n<tr>\n    <td>7</td>\n    <td>2020</td>\n    <td>30</td>\n  </tr>\n<tr>\n    <td>13</td>\n    <td>2019</td>\n    <td>40</td>\n  </tr>\n</table>\n<br>\n\nBy specifying `how='left'`, we ensure that all rows from the `queries` DataFrame are retained, and whenever there's no match in the `npv` DataFrame, Pandas will fill in NaN for the missing values.\n\nAfter the merge, there may be cases where the `queries` DataFrame has `id`-`year` combinations that are not present in the `npv` DataFrame. In such scenarios, the NPV values will be NaN. We replace these NaN values to make our output consistent and interpretable. By using the `fillna()` method, we can replace all NaN values in the 'npv' column with 0.\n\n```python\nresult['npv'].fillna(0, inplace=True)\n```\n\nUpdated DataFrame `result`:\n<table>\n  <tr>\n    <th>id</th>\n    <th>year</th>\n    <th>npv</th>\n  </tr>\n  <tr>\n    <td>1</td>\n    <td>2019</td>\n    <td>113</td>\n  </tr>\n  <tr>\n    <td>2</td>\n    <td>2008</td>\n    <td>121</td>\n  </tr>\n  <tr>\n    <td>3</td>\n    <td>2009</td>   \n    <td>12</td>\n  </tr>\n  <tr>\n    <td>7</td>\n    <td>2018</td>\n    <td>0</td>\n  </tr>\n  <tr>\n    <td>7</td>\n    <td>2019</td>\n    <td>0</td>\n  </tr>\n<tr>\n    <td>7</td>\n    <td>2020</td>\n    <td>30</td>\n  </tr>\n<tr>\n    <td>13</td>\n    <td>2019</td>\n    <td>40</td>\n  </tr>\n</table>\n<br>\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/XhVpf3xE/shared\" frameBorder=\"0\" width=\"100%\" height=\"157\" name=\"XhVpf3xE\"></iframe>\n\n---\n\n## Database\n### Approach 1: JOIN with a fallback to DEFAULT\n\n#### Intuition\n\nThe goal is to match rows from the `Queries` table with the `NPV` table and retrieve the NPV for each query.\n\nSQL provides the `LEFT JOIN` operation, which we use when we want to match rows from two tables based on certain columns and want to keep all rows from the left table, regardless of whether there's a match in the right table.\n\n```sql\nSELECT Q.id,\n       Q.year,\n       N.npv\nFROM Queries Q\nLEFT JOIN NPV N ON Q.id = N.id AND Q.year = N.year;\n```\n\nThe `LEFT JOIN` ensures that all entries from `Queries` are displayed in the output. When there's no match in `NPV`, the NPV value will be `NULL`.\n\nNext, we need to handle situations where a row from `Queries` doesn't have a corresponding match in the `NPV` table. To manage such instances effectively, SQL provides functions such as `COALESCE` and `IFNULL`.\n\nBoth of these functions help in replacing NULL with a default value:\n\n - `COALESCE` function returns the first non-null value from its list of arguments.\n\n    ```sql\n    COALESCE(N.npv, 0) AS npv\n    ```\n\n    In the code snippet above, if `N.npv` is `NULL`, the `COALESCE` function will use `0` as the default value.\n\n- `IFNULL` is another useful function that can be used as an alternative. It returns the first argument if it is not NULL, otherwise, it returns the second argument.\n\n    ```sql\n    IFNULL(N.npv, 0) AS npv\n    ```\n\n#### Implementation\n\nBased on the understanding above, the solution can be implemented as:\n\n```sql\nSELECT \n  Q.id, \n  Q.year, \n  COALESCE(N.npv, 0) AS npv \nFROM \n  Queries Q \n  LEFT JOIN NPV N ON Q.id = N.id \n  AND Q.year = N.year;\n```\n\nAlternatively, using `IFNULL`:\n\n\n```sql\nSELECT \n  Q.id, \n  Q.year, \n  IFNULL(N.npv, 0) AS npv \nFROM \n  Queries Q \n  LEFT JOIN NPV N ON Q.id = N.id \n  AND Q.year = N.year;\n```",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

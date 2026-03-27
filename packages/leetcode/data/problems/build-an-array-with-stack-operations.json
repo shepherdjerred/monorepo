@@ -1,0 +1,140 @@
+{
+  "questionId": "1552",
+  "questionFrontendId": "1441",
+  "title": "Build an Array With Stack Operations",
+  "titleSlug": "build-an-array-with-stack-operations",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>target</code> and an integer <code>n</code>.</p>\n\n<p>You have an empty stack with the two following operations:</p>\n\n<ul>\n\t<li><strong><code>&quot;Push&quot;</code></strong>: pushes an integer to the top of the stack.</li>\n\t<li><strong><code>&quot;Pop&quot;</code></strong>: removes the integer on the top of the stack.</li>\n</ul>\n\n<p>You also have a stream of the integers in the range <code>[1, n]</code>.</p>\n\n<p>Use the two stack operations to make the numbers in the stack (from the bottom to the top) equal to <code>target</code>. You should follow the following rules:</p>\n\n<ul>\n\t<li>If the stream of the integers is not empty, pick the next integer from the stream and push it to the top of the stack.</li>\n\t<li>If the stack is not empty, pop the integer at the top of the stack.</li>\n\t<li>If, at any moment, the elements in the stack (from the bottom to the top) are equal to <code>target</code>, do not read new integers from the stream and do not do more operations on the stack.</li>\n</ul>\n\n<p>Return <em>the stack operations needed to build </em><code>target</code> following the mentioned rules. If there are multiple valid answers, return <strong>any of them</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> target = [1,3], n = 3\n<strong>Output:</strong> [&quot;Push&quot;,&quot;Push&quot;,&quot;Pop&quot;,&quot;Push&quot;]\n<strong>Explanation:</strong> Initially the stack s is empty. The last element is the top of the stack.\nRead 1 from the stream and push it to the stack. s = [1].\nRead 2 from the stream and push it to the stack. s = [1,2].\nPop the integer on the top of the stack. s = [1].\nRead 3 from the stream and push it to the stack. s = [1,3].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> target = [1,2,3], n = 3\n<strong>Output:</strong> [&quot;Push&quot;,&quot;Push&quot;,&quot;Push&quot;]\n<strong>Explanation:</strong> Initially the stack s is empty. The last element is the top of the stack.\nRead 1 from the stream and push it to the stack. s = [1].\nRead 2 from the stream and push it to the stack. s = [1,2].\nRead 3 from the stream and push it to the stack. s = [1,2,3].\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> target = [1,2], n = 4\n<strong>Output:</strong> [&quot;Push&quot;,&quot;Push&quot;]\n<strong>Explanation:</strong> Initially the stack s is empty. The last element is the top of the stack.\nRead 1 from the stream and push it to the stack. s = [1].\nRead 2 from the stream and push it to the stack. s = [1,2].\nSince the stack (from the bottom to the top) is equal to target, we stop the stack operations.\nThe answers that read integer 3 from the stream are not accepted.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= target.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= n &lt;= 100</code></li>\n\t<li><code>1 &lt;= target[i] &lt;= n</code></li>\n\t<li><code>target</code> is strictly increasing.</li>\n</ul>\n",
+  "hints": [
+    "Use “Push” for numbers to be kept in target array and [“Push”, “Pop”] for numbers to be discarded."
+  ],
+  "metaData": "{\n  \"name\": \"buildArray\",\n  \"params\": [\n    {\n      \"name\": \"target\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"n\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<string>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"255.4K\", \"totalSubmission\": \"315.4K\", \"totalAcceptedRaw\": 255413, \"totalSubmissionRaw\": 315352, \"acRate\": \"81.0%\"}",
+  "likes": 1235,
+  "dislikes": 541,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Operations to Collect Elements\", \"titleSlug\": \"minimum-operations-to-collect-elements\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,3]\n3",
+    "[1,2,3]\n3",
+    "[1,2]\n4"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> buildArray(vector<int>& target, int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<String> buildArray(int[] target, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def buildArray(self, target: List[int], n: int) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def buildArray(self, target, n):\n        \"\"\"\n        :type target: List[int]\n        :type n: int\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} target\n * @param {number} n\n * @return {string[]}\n */\nvar buildArray = function(target, n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function buildArray(target: number[], n: number): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<string> BuildArray(int[] target, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** buildArray(int* target, int targetSize, int n, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func buildArray(target []int, n int) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun buildArray(target: IntArray, n: Int): List<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func buildArray(_ target: [Int], _ n: Int) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn build_array(target: Vec<i32>, n: i32) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} target\n# @param {Integer} n\n# @return {String[]}\ndef build_array(target, n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $target\n     * @param Integer $n\n     * @return String[]\n     */\n    function buildArray($target, $n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> buildArray(List<int> target, int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def buildArray(target: Array[Int], n: Int): List[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec build_array(target :: [integer], n :: integer) :: [String.t]\n  def build_array(target, n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec build_array(Target :: [integer()], N :: integer()) -> [unicode:unicode_binary()].\nbuild_array(Target, N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (build-array target n)\n  (-> (listof exact-integer?) exact-integer? (listof string?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2163",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach: Simulate\n\n**Intuition**\n\nIn this problem, we are given two stack operations:\n\n- Push a number to the stack\n- Pop off the top of the stack\n\nThe numbers that we push to the stack are ordered from `1` to `n`. Each number is available only once, so if we pop a number from the stack, that number is permanently gone. This means we want to pop every number that does not appear in `target` and should never pop any number that does appear in `target`.\n\nWe stop once the stack is equal to `target` and we are allowed to return any valid answer. Because `target` is always sorted and the stream of numbers always comes in ascending order, we can build `target` one element at a time, starting with the first element.\n\nLet's use an integer `i` that represents the most recently pushed number. Initially, `i = 0` as no numbers have been pushed yet.\n\n![example](../Figures/1441/1.png)\n<br>\n\nIn this example, the first number we need to reach in `target` is `3`. Before we can reach `3`, we need to go through `1, 2`. However, we don't want either `1` or `2` in the answer, so we can immediately pop `1` after pushing it, and pop `2` after pushing it. Essentially, we are only pushing them to move forward until we reach `3`.\n\n![example](../Figures/1441/2.png)\n<br>\n\n![example](../Figures/1441/3.png)\n<br>\n\nNow, we are ready to push `3`, so we do so.\n\n![example](../Figures/1441/4.png)\n<br>\n\nTo get to the next number `6`, we must first go through `4, 5`. Again, we don't want either `4` or `5` in the answer, so we can immediately pop `4` after pushing it, and pop `5` after pushing it.\n\n![example](../Figures/1441/5.png)\n<br>\n\n![example](../Figures/1441/6.png)\n<br>\n\nNow, we are ready to push `6`, so we do so.\n\n![example](../Figures/1441/7.png)\n<br>\n\nWe continue this process for each number in `target`. This brings us to our solution. We iterate over each `num` in `target`:\n\n- We push and immediately pop the current number, then increment `i`, and repeat the process until we are ready to push `num`.\n- When are we ready to push `num`? Recall that `i` represents the most recently pushed number. Thus, we are ready to push `num` when the most recently pushed number is `i = num - 1`.\n- Once we are ready, we simply push and increment `i`.\n\n**Algorithm**\n\n1. Initialize the answer `ans` and the integer `i = 0`.\n2. For each `num` in `target`:\n    - While `i < num - 1`:\n        - Add `\"Push\"` to `ans`.\n        - Add `\"Pop\"` to `ans`.\n        - Increment `i`.\n    - Add `\"Push\"` to `ans`.\n    - Increment `i`.\n3. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/8EWijpYD/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"8EWijpYD\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(n)$$\n\n    Let `k` denote the largest (final) element in `target`. We push (and maybe pop) every number from `1` until `k`. This gives us a maximum of $$2k$$ operations. In the worst case scenario, `k = n`, which gives us a time complexity of $$O(n)$$.\n\n* Space complexity: $$O(1)$$\n\n    We don't count the answer as part of the space complexity. Thus, we aren't using any extra space other than the integer `i`.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

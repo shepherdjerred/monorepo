@@ -1,0 +1,147 @@
+{
+  "questionId": "1477",
+  "questionFrontendId": "1352",
+  "title": "Product of the Last K Numbers",
+  "titleSlug": "product-of-the-last-k-numbers",
+  "difficulty": "Medium",
+  "content": "<p>Design an algorithm that accepts a stream of integers and retrieves the product of the last <code>k</code> integers of the stream.</p>\n\n<p>Implement the <code>ProductOfNumbers</code> class:</p>\n\n<ul>\n\t<li><code>ProductOfNumbers()</code> Initializes the object with an empty stream.</li>\n\t<li><code>void add(int num)</code> Appends the integer <code>num</code> to the stream.</li>\n\t<li><code>int getProduct(int k)</code> Returns the product of the last <code>k</code> numbers in the current list. You can assume that always the current list has at least <code>k</code> numbers.</li>\n</ul>\n\n<p>The test cases are generated so that, at any time, the product of any contiguous sequence of numbers will fit into a single 32-bit integer without overflowing.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;ProductOfNumbers&quot;,&quot;add&quot;,&quot;add&quot;,&quot;add&quot;,&quot;add&quot;,&quot;add&quot;,&quot;getProduct&quot;,&quot;getProduct&quot;,&quot;getProduct&quot;,&quot;add&quot;,&quot;getProduct&quot;]\n[[],[3],[0],[2],[5],[4],[2],[3],[4],[8],[2]]\n\n<strong>Output</strong>\n[null,null,null,null,null,null,20,40,0,null,32]\n\n<strong>Explanation</strong>\nProductOfNumbers productOfNumbers = new ProductOfNumbers();\nproductOfNumbers.add(3);        // [3]\nproductOfNumbers.add(0);        // [3,0]\nproductOfNumbers.add(2);        // [3,0,2]\nproductOfNumbers.add(5);        // [3,0,2,5]\nproductOfNumbers.add(4);        // [3,0,2,5,4]\nproductOfNumbers.getProduct(2); // return 20. The product of the last 2 numbers is 5 * 4 = 20\nproductOfNumbers.getProduct(3); // return 40. The product of the last 3 numbers is 2 * 5 * 4 = 40\nproductOfNumbers.getProduct(4); // return 0. The product of the last 4 numbers is 0 * 2 * 5 * 4 = 0\nproductOfNumbers.add(8);        // [3,0,2,5,4,8]\nproductOfNumbers.getProduct(2); // return 32. The product of the last 2 numbers is 4 * 8 = 32 \n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= num &lt;= 100</code></li>\n\t<li><code>1 &lt;= k &lt;= 4 * 10<sup>4</sup></code></li>\n\t<li>At most <code>4 * 10<sup>4</sup></code> calls will be made to <code>add</code> and <code>getProduct</code>.</li>\n\t<li>The product of the stream at any point in time will fit in a <strong>32-bit</strong> integer.</li>\n</ul>\n\n<p>&nbsp;</p>\n<strong>Follow-up: </strong>Can you implement <strong>both</strong> <code>GetProduct</code> and <code>Add</code> to work in <code>O(1)</code> time complexity instead of <code>O(k)</code> time complexity?",
+  "hints": [
+    "Keep all prefix products of numbers in an array, then calculate the product of last K elements in O(1) complexity.",
+    "When a zero number is added, clean the array of prefix products."
+  ],
+  "metaData": "{\n  \"classname\": \"ProductOfNumbers\",\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"num\"\n        }\n      ],\n      \"name\": \"add\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"k\"\n        }\n      ],\n      \"name\": \"getProduct\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"260.4K\", \"totalSubmission\": \"413.9K\", \"totalAcceptedRaw\": 260436, \"totalSubmissionRaw\": 413940, \"acRate\": \"62.9%\"}",
+  "likes": 2164,
+  "dislikes": 108,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"ProductOfNumbers\",\"add\",\"add\",\"add\",\"add\",\"add\",\"getProduct\",\"getProduct\",\"getProduct\",\"add\",\"getProduct\"]\n[[],[3],[0],[2],[5],[4],[2],[3],[4],[8],[2]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"target\", \"name\": \"Target\"}, {\"timesEncountered\": 2, \"slug\": \"tekion\", \"name\": \"Tekion\"}, {\"timesEncountered\": 2, \"slug\": \"starbucks\", \"name\": \"Starbucks\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Data Stream",
+      "slug": "data-stream"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class ProductOfNumbers {\npublic:\n    ProductOfNumbers() {\n        \n    }\n    \n    void add(int num) {\n        \n    }\n    \n    int getProduct(int k) {\n        \n    }\n};\n\n/**\n * Your ProductOfNumbers object will be instantiated and called as such:\n * ProductOfNumbers* obj = new ProductOfNumbers();\n * obj->add(num);\n * int param_2 = obj->getProduct(k);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class ProductOfNumbers {\n\n    public ProductOfNumbers() {\n        \n    }\n    \n    public void add(int num) {\n        \n    }\n    \n    public int getProduct(int k) {\n        \n    }\n}\n\n/**\n * Your ProductOfNumbers object will be instantiated and called as such:\n * ProductOfNumbers obj = new ProductOfNumbers();\n * obj.add(num);\n * int param_2 = obj.getProduct(k);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class ProductOfNumbers:\n\n    def __init__(self):\n        \n\n    def add(self, num: int) -> None:\n        \n\n    def getProduct(self, k: int) -> int:\n        \n\n\n# Your ProductOfNumbers object will be instantiated and called as such:\n# obj = ProductOfNumbers()\n# obj.add(num)\n# param_2 = obj.getProduct(k)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class ProductOfNumbers(object):\n\n    def __init__(self):\n        \n\n    def add(self, num):\n        \"\"\"\n        :type num: int\n        :rtype: None\n        \"\"\"\n        \n\n    def getProduct(self, k):\n        \"\"\"\n        :type k: int\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your ProductOfNumbers object will be instantiated and called as such:\n# obj = ProductOfNumbers()\n# obj.add(num)\n# param_2 = obj.getProduct(k)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar ProductOfNumbers = function() {\n    \n};\n\n/** \n * @param {number} num\n * @return {void}\n */\nProductOfNumbers.prototype.add = function(num) {\n    \n};\n\n/** \n * @param {number} k\n * @return {number}\n */\nProductOfNumbers.prototype.getProduct = function(k) {\n    \n};\n\n/** \n * Your ProductOfNumbers object will be instantiated and called as such:\n * var obj = new ProductOfNumbers()\n * obj.add(num)\n * var param_2 = obj.getProduct(k)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class ProductOfNumbers {\n    constructor() {\n        \n    }\n\n    add(num: number): void {\n        \n    }\n\n    getProduct(k: number): number {\n        \n    }\n}\n\n/**\n * Your ProductOfNumbers object will be instantiated and called as such:\n * var obj = new ProductOfNumbers()\n * obj.add(num)\n * var param_2 = obj.getProduct(k)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class ProductOfNumbers {\n\n    public ProductOfNumbers() {\n        \n    }\n    \n    public void Add(int num) {\n        \n    }\n    \n    public int GetProduct(int k) {\n        \n    }\n}\n\n/**\n * Your ProductOfNumbers object will be instantiated and called as such:\n * ProductOfNumbers obj = new ProductOfNumbers();\n * obj.Add(num);\n * int param_2 = obj.GetProduct(k);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} ProductOfNumbers;\n\n\nProductOfNumbers* productOfNumbersCreate() {\n    \n}\n\nvoid productOfNumbersAdd(ProductOfNumbers* obj, int num) {\n    \n}\n\nint productOfNumbersGetProduct(ProductOfNumbers* obj, int k) {\n    \n}\n\nvoid productOfNumbersFree(ProductOfNumbers* obj) {\n    \n}\n\n/**\n * Your ProductOfNumbers struct will be instantiated and called as such:\n * ProductOfNumbers* obj = productOfNumbersCreate();\n * productOfNumbersAdd(obj, num);\n \n * int param_2 = productOfNumbersGetProduct(obj, k);\n \n * productOfNumbersFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type ProductOfNumbers struct {\n    \n}\n\n\nfunc Constructor() ProductOfNumbers {\n    \n}\n\n\nfunc (this *ProductOfNumbers) Add(num int)  {\n    \n}\n\n\nfunc (this *ProductOfNumbers) GetProduct(k int) int {\n    \n}\n\n\n/**\n * Your ProductOfNumbers object will be instantiated and called as such:\n * obj := Constructor();\n * obj.Add(num);\n * param_2 := obj.GetProduct(k);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class ProductOfNumbers() {\n\n    fun add(num: Int) {\n        \n    }\n\n    fun getProduct(k: Int): Int {\n        \n    }\n\n}\n\n/**\n * Your ProductOfNumbers object will be instantiated and called as such:\n * var obj = ProductOfNumbers()\n * obj.add(num)\n * var param_2 = obj.getProduct(k)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass ProductOfNumbers {\n\n    init() {\n        \n    }\n    \n    func add(_ num: Int) {\n        \n    }\n    \n    func getProduct(_ k: Int) -> Int {\n        \n    }\n}\n\n/**\n * Your ProductOfNumbers object will be instantiated and called as such:\n * let obj = ProductOfNumbers()\n * obj.add(num)\n * let ret_2: Int = obj.getProduct(k)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct ProductOfNumbers {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl ProductOfNumbers {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn add(&self, num: i32) {\n        \n    }\n    \n    fn get_product(&self, k: i32) -> i32 {\n        \n    }\n}\n\n/**\n * Your ProductOfNumbers object will be instantiated and called as such:\n * let obj = ProductOfNumbers::new();\n * obj.add(num);\n * let ret_2: i32 = obj.get_product(k);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class ProductOfNumbers\n    def initialize()\n        \n    end\n\n\n=begin\n    :type num: Integer\n    :rtype: Void\n=end\n    def add(num)\n        \n    end\n\n\n=begin\n    :type k: Integer\n    :rtype: Integer\n=end\n    def get_product(k)\n        \n    end\n\n\nend\n\n# Your ProductOfNumbers object will be instantiated and called as such:\n# obj = ProductOfNumbers.new()\n# obj.add(num)\n# param_2 = obj.get_product(k)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class ProductOfNumbers {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param Integer $num\n     * @return NULL\n     */\n    function add($num) {\n        \n    }\n  \n    /**\n     * @param Integer $k\n     * @return Integer\n     */\n    function getProduct($k) {\n        \n    }\n}\n\n/**\n * Your ProductOfNumbers object will be instantiated and called as such:\n * $obj = ProductOfNumbers();\n * $obj->add($num);\n * $ret_2 = $obj->getProduct($k);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class ProductOfNumbers {\n\n  ProductOfNumbers() {\n    \n  }\n  \n  void add(int num) {\n    \n  }\n  \n  int getProduct(int k) {\n    \n  }\n}\n\n/**\n * Your ProductOfNumbers object will be instantiated and called as such:\n * ProductOfNumbers obj = ProductOfNumbers();\n * obj.add(num);\n * int param2 = obj.getProduct(k);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class ProductOfNumbers() {\n\n    def add(num: Int): Unit = {\n        \n    }\n\n    def getProduct(k: Int): Int = {\n        \n    }\n\n}\n\n/**\n * Your ProductOfNumbers object will be instantiated and called as such:\n * val obj = new ProductOfNumbers()\n * obj.add(num)\n * val param_2 = obj.getProduct(k)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule ProductOfNumbers do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec add(num :: integer) :: any\n  def add(num) do\n    \n  end\n\n  @spec get_product(k :: integer) :: integer\n  def get_product(k) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# ProductOfNumbers.init_()\n# ProductOfNumbers.add(num)\n# param_2 = ProductOfNumbers.get_product(k)\n\n# ProductOfNumbers.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec product_of_numbers_init_() -> any().\nproduct_of_numbers_init_() ->\n  .\n\n-spec product_of_numbers_add(Num :: integer()) -> any().\nproduct_of_numbers_add(Num) ->\n  .\n\n-spec product_of_numbers_get_product(K :: integer()) -> integer().\nproduct_of_numbers_get_product(K) ->\n  .\n\n\n%% Your functions will be called as such:\n%% product_of_numbers_init_(),\n%% product_of_numbers_add(Num),\n%% Param_2 = product_of_numbers_get_product(K),\n\n%% product_of_numbers_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define product-of-numbers%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; add : exact-integer? -> void?\n    (define/public (add num)\n      )\n    ; get-product : exact-integer? -> exact-integer?\n    (define/public (get-product k)\n      )))\n\n;; Your product-of-numbers% object will be instantiated and called as such:\n;; (define obj (new product-of-numbers%))\n;; (send obj add num)\n;; (define param_2 (send obj get-product k))"
+    }
+  ],
+  "solution": {
+    "id": "2675",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n\n### Approach: Prefix Product\n\n#### Intuition\n\nWe need to implement the `ProductOfNumbers` class initialized with an empty integer stream that supports two operations:\n\n1. `add(int num)`: Add `num` to the stream.  \n2. `getProduct(int k)`: Return the product of the last `k` integers in the stream. It's guaranteed that the product of the last `k` integers would fit into a 32-bit integer.\n\nWhile the problem seems simple, the constraints - especially the potential size of the stream - make it clear that a brute force solution won’t work. A brute force approach would involve iterating over the last `k` integers each time a query is made, but this would be inefficient given the constraints of the problem (the stream size and `k` are both bound by `4 * 10^4`).\n\nTo think of an optimized approach, let’s first consider the `add` function in which we need to find the sum of the last `k` integers. A natural solution here is a prefix sum approach. **Prefix sum** refers to an array where each element at index `i` represents the sum of the elements in the original array from the beginning up to the `i`-th element. This allows us to efficiently compute the sum of any subarray by subtracting two prefix sums. More specifically, by storing the cumulative sum of all integers up to the current index in an array, we can quickly compute the sum of the last `k` integers by simply taking the difference between two prefix sums: `prefixSum[size] - prefixSum[size - k]`. This gives us the sum in constant time. \n\nNow, let’s apply a similar idea for the product. Instead of maintaining a prefix sum, we can maintain a **prefix product** array. This array will store the product of all integers encountered in the stream up to the current index. When we need the product of the last `k` integers, we can calculate it in constant time using the formula `prefixProduct[size] / prefixProduct[size - k]`, just like we did for the sum. \n\nBut there's one edge case here: the presence of a `0` in the stream complicates things. If we encounter a `0`, it nullifies all the products that come after it. For example, if the last `k` integers include a `0`, the product of those integers will always be `0`, regardless of the other numbers. This creates an issue when trying to calculate the product of the last `k` integers, especially if the `0` occurred earlier in the stream, long before the last `k` elements.\n\nTo address this, we can reset the **prefix product array** whenever we encounter a `0`. This ensures that once a `0` is encountered, the product calculation is reset, and any future products that involve the `0` will correctly result in `0`. When the product array is reset, we initialize it with `1` to start fresh. \n\nNow, when answering a query to return the product of the last `k` integers, we can check the size of the prefix product array. If the size is less than or equal to `k`, we know that the last `k` integers must include a `0`, so we return `0`. Otherwise, we simply compute the product using the formula `prefixProduct[size] / prefixProduct[size - k]`.\n\n#### Algorithm\n\nConstructor - `ProductOfNumbers()`\n- Initialize the `prefixProduct` list with `{1}` to handle multiplication logic without special cases for the initial product.  \n- Set `size` to `0` to indicate that the product list is initially empty.\n\nHelper Function - `add(int num)`\n- If `num == 0`:  \n    - Reset the `prefixProduct` list to `{1}`.\n    - Reset `size` to `0` to indicate an empty product list.  \n- Otherwise:  \n    - Append the cumulative product of the current number by multiplying it with the last value in the `prefixProduct` list.  \n    - Increment `size`.\n\nHelper Function - `getProduct(int k)`\n- If `k > size`:  \n    - Return `0` because this implies that a `0` had appeared within the last `k` elements, making the product `0`.\n- Otherwise:  \n    - Return the result of dividing `prefixProduct[size]` by `prefixProduct[size - k]` to get the product of the last `k` elements.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/kDeYBmvc/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"kDeYBmvc\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of elements added to the `ProductOfNumbers` object using the `add` method, and let $k$ be the parameter passed to the `getProduct` method.\n\n- Time Complexity: $O(n)$\n\n    `add` method:\n    - When adding a number, the operation involves appending to the `prefix_product` list and updating the `size`. If the number is `0`, the list is reset. \n    - Appending to a list and resetting the list are both $O(1)$ operations.\n    - Therefore, the time complexity of the `add` method is $O(1)$.\n    \n    `getProduct` method:\n    - The `getProduct` method involves a division operation to compute the product of the last $k$ elements.\n    - Division and accessing elements in a list are $O(1)$ operations.\n    - Therefore, the time complexity of the `getProduct` method is $O(1)$.\n\n      Therefore the `add` method runs in $O(1)$ time per operation, and the `getProduct` method also runs in $O(1)$ time per operation. For $n$ operations, the total time complexity is $O(n)$.\n   \n- Space Complexity: $O(n)$\n\n    The `prefixProduct` list stores the cumulative product of the numbers added. In the worst case, when no `0` is added, the list grows linearly with the number of elements added. Therefore, the space complexity is $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,137 @@
+{
+  "questionId": "1064",
+  "questionFrontendId": "1015",
+  "title": "Smallest Integer Divisible by K",
+  "titleSlug": "smallest-integer-divisible-by-k",
+  "difficulty": "Medium",
+  "content": "<p>Given a positive integer <code>k</code>, you need to find the <strong>length</strong> of the <strong>smallest</strong> positive integer <code>n</code> such that <code>n</code> is divisible by <code>k</code>, and <code>n</code> only contains the digit <code>1</code>.</p>\n\n<p>Return <em>the <strong>length</strong> of </em><code>n</code>. If there is no such <code>n</code>, return -1.</p>\n\n<p><strong>Note:</strong> <code>n</code> may not fit in a 64-bit signed integer.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> k = 1\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The smallest answer is n = 1, which has length 1.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> k = 2\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> There is no such positive integer n divisible by 2.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> k = 3\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The smallest answer is n = 111, which has length 3.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= k &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "11111 = 1111 * 10 + 1\r\nWe only need to store remainders modulo K.",
+    "If we never get a remainder of 0, why would that happen, and how would we know that?"
+  ],
+  "metaData": "{\n  \"name\": \"smallestRepunitDivByK\",\n  \"params\": [\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"186.1K\", \"totalSubmission\": \"342.2K\", \"totalAcceptedRaw\": 186074, \"totalSubmissionRaw\": 342175, \"acRate\": \"54.4%\"}",
+  "likes": 1646,
+  "dislikes": 1167,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "1",
+    "2",
+    "3"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int smallestRepunitDivByK(int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int smallestRepunitDivByK(int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def smallestRepunitDivByK(self, k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def smallestRepunitDivByK(self, k):\n        \"\"\"\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} k\n * @return {number}\n */\nvar smallestRepunitDivByK = function(k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function smallestRepunitDivByK(k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int SmallestRepunitDivByK(int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int smallestRepunitDivByK(int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func smallestRepunitDivByK(k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun smallestRepunitDivByK(k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func smallestRepunitDivByK(_ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn smallest_repunit_div_by_k(k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} k\n# @return {Integer}\ndef smallest_repunit_div_by_k(k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $k\n     * @return Integer\n     */\n    function smallestRepunitDivByK($k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int smallestRepunitDivByK(int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def smallestRepunitDivByK(k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec smallest_repunit_div_by_k(k :: integer) :: integer\n  def smallest_repunit_div_by_k(k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec smallest_repunit_div_by_k(K :: integer()) -> integer().\nsmallest_repunit_div_by_k(K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (smallest-repunit-div-by-k k)\n  (-> exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1002",
+    "content": "[TOC]\n\n## Solution\n\n### Overview\n\nIt's an interesting problem that requires a little observation and insight. It's recommended to try a few numbers to find out some regular patterns. Below, we will discuss a simple approach to solve this problem.\n\n---\n\n### Approach: Checking Loop\n\n**Intuition**\n\nWe need to do two things:\n\n1. check if the required number `N` exists.\n2. find out `length(N)`.\n\nThe second one is easy: we only need to keep multiplying `N` by 10 and adding 1 until `N%K==0`. However, since `N` might overflow, we need to use the remainder. The pseudo-code is as follows:\n\n<pre>\nremainder = 1\nlength_N = 1\n\nwhile remainder%K != 0\n    N = remainder*10 + 1\n    remainder = N%K\n    length_N += 1\n\nreturn length_N\n</pre>\n\nSince the `remainder` and `N` have the same remainder of `K`, it is OK to use `remainder` instead of `N`.\n\nNow, the only problem is how to check whether the required number `N` exists.\n\nNotice that if `N` does not exist, this while loop will continue endlessly. However, the possible values of `remainder` are limited -- ranging from `0` to `K-1`. Therefore, if the while-loop continues forever, the `remainder` repeats. Also, if `remainder` repeats, then it gets into a loop. Hence, the while-loop is endless if and only if the `remainder` repeats.\n\nIn this case, we can check if the `remainder` repeats to check if the while-loop is endless:\n\n<pre>\nremainder = 1\nlength_N = 1\n\nseen_remainders = set()\n\nwhile remainder%K != 0\n    N = remainder*10 + 1\n    remainder = N%K\n    length_N += 1\n\n    if remainder in seen_remainders\n        return -1\n    else\n        seen_remainders.add(remainder)\n\nreturn length_N\n</pre>\n\nNow we have an algorithm that can solve the problem. \n\nFurthermore, we can improve this algorithm with [Pigeonhole Principle](https://en.wikipedia.org/wiki/Pigeonhole_principle). Recall that the number of possible values of `remainder` (ranging from `0` to `K-1`) is limited, and in fact, the number is `K`. As a result, if the while-loop continues more than `K` times, and hasn't stopped, then we can conclude that `remainder` repeats -- you can not have more than `K` different `remainder`.\n\nHence, if `N` exists, the while-loop must return `length_N` in the first `K` loops. Otherwise, it goes into an infinite loop.\n\nTherefore, we can just run the while-loop `K` times, and return -1 if not stopped.\n\n\n**Algorithm**\n\nWe just run the while-loop `K` times, check if the remainder is 0, and return -1 if not stopped.\n\n> Note: After reading the Algorithm part, it is recommended to try writing the code on your own before reading the solution code.\n\n<iframe src=\"https://leetcode.com/playground/QJucZJak/shared\" frameBorder=\"0\" width=\"100%\" height=\"259\" name=\"QJucZJak\"></iframe>\n\nThere are a few interesting points worth pointing out in the code above:\n\n1. We initialize `remainder` to 0, not 1, to keep code consistency because in the first loop the `remainder` changes to 1. You can also initialize it as 1, but it requires a little change in code.\n2. We only run the loop `K` times at most, not `K+1`. This is because if it does not stop in the previous `K` loop, it will continue the `K+1`-th iteration, which must have repeated `remainder`. Therefore, it is not necessary to check the `K+1`-th iteration.\n\nAlso, note that `111...111` can never be divided by 2 or 5 because its last digit is never an even number or 5. You can just return -1 if you find that 2 or 5 is a factor of `K`.\n\n**Complexity Analysis**\n\n- Time Complexity: $\\mathcal{O}(K)$ since we at most run the loop $$\\mathcal{O}(K)$$ times.\n\n- Space Complexity: $$\\mathcal{O}(1)$$ since we only use three ints: `K`, `remainder`, and `length_N`.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,117 @@
+{
+  "questionId": "1745",
+  "questionFrontendId": "1602",
+  "title": "Find Nearest Right Node in Binary Tree",
+  "titleSlug": "find-nearest-right-node-in-binary-tree",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>root</code> of a binary tree and a node <code>u</code> in the tree, return <em>the <strong>nearest</strong> node on the <strong>same level</strong> that is to the <strong>right</strong> of</em> <code>u</code><em>, or return</em> <code>null</code> <em>if </em><code>u</code> <em>is the rightmost node in its level</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/24/p3.png\" style=\"width: 241px; height: 161px;\" />\n<pre>\n<strong>Input:</strong> root = [1,2,3,null,4,5,6], u = 4\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> The nearest node on the same level to the right of node 4 is node 5.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/23/p2.png\" style=\"width: 101px; height: 161px;\" />\n<pre>\n<strong>Input:</strong> root = [3,null,4,2], u = 2\n<strong>Output:</strong> null\n<strong>Explanation:</strong> There are no nodes to the right of 2.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[1, 10<sup>5</sup>]</code>.</li>\n\t<li><code>1 &lt;= Node.val &lt;= 10<sup>5</sup></code></li>\n\t<li>All values in the tree are <strong>distinct</strong>.</li>\n\t<li><code>u</code> is a node in the binary tree rooted at <code>root</code>.</li>\n</ul>\n",
+  "hints": [
+    "Use BFS, traverse the tree level by level and always push the left node first",
+    "When you reach the target node, mark  a boolean variable true",
+    "If you meet another node in the same level after marking the boolean true, return this node.",
+    "If you did not meet new nodes in the same level and started traversing a new level, return Null"
+  ],
+  "metaData": "{\n  \"name\": \"findNeartestRightNode\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"TreeNode\"\n    },\n    {\n      \"type\": \"TreeNode\",\n      \"name\": \"u\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"TreeNode\"\n  },\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"c\",\n    \"csharp\",\n    \"javascript\",\n    \"ruby\",\n    \"swift\",\n    \"golang\",\n    \"python3\",\n    \"scala\",\n    \"kotlin\",\n    \"php\",\n    \"typescript\"\n  ],\n  \"manual\": true\n}",
+  "stats": "{\"totalAccepted\": \"25K\", \"totalSubmission\": \"33.3K\", \"totalAcceptedRaw\": 25023, \"totalSubmissionRaw\": 33332, \"acRate\": \"75.1%\"}",
+  "likes": 333,
+  "dislikes": 10,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,2,3,null,4,5,6]\n4",
+    "[3,null,4,2]\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    TreeNode* findNearestRightNode(TreeNode* root, TreeNode* u) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public TreeNode findNearestRightNode(TreeNode root, TreeNode u) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def findNearestRightNode(self, root: TreeNode, u: TreeNode) -> Optional[TreeNode]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def findNearestRightNode(self, root, u):\n        \"\"\"\n        :type root: TreeNode\n        :type u: TreeNode\n        :rtype: TreeNode\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @param {TreeNode} u\n * @return {TreeNode}\n */\nvar findNearestRightNode = function(root, u) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n/**\n * @param {TreeNode} root\n * @param {TreeNode} u\n * @return {TreeNode}\n */\nfunction findNearestRightNode(root: TreeNode, u: TreeNode): TreeNode | null {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public TreeNode FindNearestRightNode(TreeNode root, TreeNode u) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\n\n\nstruct TreeNode* findNearestRightNode(struct TreeNode* root, struct TreeNode* u){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc findNearestRightNode(root *TreeNode, u *TreeNode) *TreeNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun findNearestRightNode(root: TreeNode?, u: TreeNode?): TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func findNearestRightNode(_ root: TreeNode?, _ u: TreeNode?) -> TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @param {TreeNode} u\n# @return {TreeNode}\ndef find_nearest_right_node(root, u)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @param TreeNode $u\n     * @return TreeNode\n     */\n    function findNearestRightNode($root, $u) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def findNearestRightNode(root: TreeNode, u: TreeNode): TreeNode = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "1024",
+    "content": "[TOC]\n\n## Video Solution\n\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/493564000?texttrack=en\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n---\n\n### Overview\n\n**DFS vs. BFS**\n\nThere are two ways to traverse the tree: DFS _depth first search_ and BFS _breadth first search_. Here is a small summary\n\n![diff](../Figures/1602/traversals.png)\n\nBFS traverses level by level, and DFS first goes to the leaves.\n\n![diff](../Figures/1602/dfs_bfs2.png)\n\n> Which approach to choose, BFS or DFS?\n\n- The problem is to return the nearest node on the same level that is to the right of `u`, so it's way more natural to implement BFS here.\n\n- Time complexity is the same $$\\mathcal{O}(N)$$ both for DFS and BFS since one has to visit all nodes.\n\n- Space complexity is $$\\mathcal{O}(H)$$ for DFS and $$\\mathcal{O}(D)$$ for BFS, where $$H$$ is a tree height, and $$D$$ is a tree diameter. They both result in $$\\mathcal{O}(N)$$ space in the worst-case scenarios: skewed tree for DFS and complete tree for BFS.\n\nLet's use the opportunity to check out three different BFS implementations with the queue, Approach 1 - Approach 3.\n\nIf you prefer to use DFS on the interviews - check Approach 4.\n\n**BFS implementation**\n\nAll three implementations use the queue in a standard BFS way:\n\n- Push the root into the queue.\n\n- Pop-out a node from the _left_.\n\n- Push the _left_ child into the queue, and then push the _right_ child.\n\n![diff](../Figures/1602/implem2.png)\n\n**Three BFS approaches**\n\nThe difference is how to identify the end of the level:\n\n- Two queues, one for the previous level and one for the current.\n\n- One queue with a sentinel to mark the end of the level.\n\n- One queue + level size measurement.\n\n<br />\n<br />\n\n\n---\n### Approach 1: BFS: Two Queues\n\nLet's use two queues: one for the current level, and one for the next. The idea is to pop the nodes one by one from the current level and push their children into the next level queue.\n\n![diff](../Figures/1602/levels.png)\n\n**Algorithm**\n\n- Initiate two queues: one for the current level, and one for the next. Add root into `nextLevel` queue.\n\n- While `nextLevel` queue is not empty:\n\n    - Initiate the current level: `currLevel = nextLevel`, and empty the next level `nextLevel`.\n\n    - While the current level queue is not empty:\n\n        - Pop-out a node from the current level queue.\n\n        - If this node is `u`, return the next node from the queue. If there are no more nodes in `nextLevel` queue, return `null`.\n\n        - Add first _left_ and then _right_ child node into `nextLevel` queue.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/CPT8KcAd/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"CPT8KcAd\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$ since one has to visit each node.\n\n* Space complexity: $$\\mathcal{O}(D)$$ to keep the queues, where $$D$$ is a tree diameter. Let's use the last level to estimate the queue size. This level could contain up to $$N/2$$ tree nodes in the case of [complete binary tree](https://leetcode.com/problems/count-complete-tree-nodes/).\n<br />\n<br />\n\n\n---\n### Approach 2: BFS: One Queue + Sentinel\n\nAnother approach is to push all the nodes in one queue and to use a [sentinel node](https://en.wikipedia.org/wiki/Sentinel_node) to separate the levels. Typically, one could use `null` as a sentinel.\n\n![diff](../Figures/1602/sentinel.png)\n\nThe first step is to initiate the first level: `root` + `null` as a sentinel. Once it's done, continue to pop the nodes one by one from the left and push their children to the right. Stop each time the current node is `null` because it means we hit the end of the current level. Each stop is a time to push `null` in the queue to mark the end of the next level.\n\n**Algorithm**\n\n- Initiate the queue by adding a root. Add `null` sentinel to mark the end of the first level.\n\n- Initiate the current node as `root`.\n\n- While the queue is not empty:\n\n    - Pop the current node from the queue `curr = queue.poll()`.\n\n    - If this node is `u`, return the next node from the queue. If there are no more nodes in the queue, return `null`.\n\n    - If the current node is not `null`:\n\n        - Add first _left_ and then _right_ child node into the queue.\n\n        - Update the current node: `curr = queue.poll()`.\n\n    - Now, the current node is null, _i.e._ we reached the end of the current level. If the queue is not empty, push the null node as a sentinel, to mark the end of the next level.\n\n**Implementation**\n\nNote that `ArrayDeque` in Java doesn't support null elements, and hence the data structure to use here is `LinkedList`.\n\n<iframe src=\"https://leetcode.com/playground/4yUuC3po/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"4yUuC3po\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$ since one has to visit each node.\n\n* Space complexity: $$\\mathcal{O}(D)$$ to keep the queues, where $$D$$ is a tree diameter. Let's use the last level to estimate the queue size. This level could contain up to $$N/2$$ tree nodes in the case of [complete binary tree](https://leetcode.com/problems/count-complete-tree-nodes/).\n<br />\n<br />\n\n\n---\n### Approach 3: BFS: One Queue + Level Size Measurements\n\nInstead of using the sentinel, we could write down the length of the current level.\n\n![diff](../Figures/1602/length.png)\n\n**Algorithm**\n\n- Initiate the queue by adding a root.\n\n- While the queue is not empty:\n\n    - Write down the length of the current level: `levelLength = queue.size()`.\n\n    - Iterate over `i` from `0` to `level_length - 1`:\n\n        - Pop the current node from the queue: `node = queue.poll()`.\n\n        - If this node is `u`, return the next node from the queue. Check that the next node is on the same level: `i != levelLength - 1`, otherwise return `null`.\n\n        - Add first _left_ and then _right_ child node into the queue.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/Hcdr6xaE/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Hcdr6xaE\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$ since one has to visit each node.\n\n* Space complexity: $$\\mathcal{O}(D)$$ to keep the queues, where $$D$$ is a tree diameter. Let's use the last level to estimate the queue size. This level could contain up to $$N/2$$ tree nodes in the case of [complete binary tree](https://leetcode.com/problems/count-complete-tree-nodes/).\n<br />\n<br />\n\n\n___\n### Approach 4: Recursive DFS: Preorder Traversal\n\nEveryone likes recursive DFS because of its simplicity, so let's add it here as well. The idea is straightforward: to perform a standard preorder traversal of the tree, starting each time from the leftmost child.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/WxtAbVra/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"WxtAbVra\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$ since one has to visit each node.\n\n* Space complexity: $$\\mathcal{O}(H)$$ to keep the recursion stack, where $$H$$ is the tree height. The worst-case situation is a skewed tree when $$H = N$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

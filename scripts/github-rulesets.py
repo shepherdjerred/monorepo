@@ -14,7 +14,7 @@ Usage:
     uv run github-rulesets.py [--dry-run] [--apply] [--list]
 
 Environment:
-    GITHUB_TOKEN: Personal access token with repo permissions
+    GH_TOKEN: Personal access token with repo permissions
 """
 
 import os
@@ -325,9 +325,9 @@ def apply_rulesets(client: GitHubClient, dry_run: bool = True) -> None:
 
 
 def main() -> None:
-    token = os.environ.get("GITHUB_TOKEN")
+    token = os.environ.get("GH_TOKEN")
     if not token:
-        print("Error: GITHUB_TOKEN environment variable is required")
+        print("Error: GH_TOKEN environment variable is required")
         print("Create one at: https://github.com/settings/tokens")
         print("Required scopes: repo")
         sys.exit(1)

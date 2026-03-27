@@ -1,0 +1,138 @@
+{
+  "questionId": "1102",
+  "questionFrontendId": "1150",
+  "title": "Check If a Number Is Majority Element in a Sorted Array",
+  "titleSlug": "check-if-a-number-is-majority-element-in-a-sorted-array",
+  "difficulty": "Easy",
+  "content": "<p>Given an integer array <code>nums</code> sorted in non-decreasing order and an integer <code>target</code>, return <code>true</code> <em>if</em> <code>target</code> <em>is a <strong>majority</strong> element, or </em><code>false</code><em> otherwise</em>.</p>\n\n<p>A <strong>majority</strong> element in an array <code>nums</code> is an element that appears more than <code>nums.length / 2</code> times in the array.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2,4,5,5,5,5,5,6,6], target = 5\n<strong>Output:</strong> true\n<strong>Explanation:</strong> The value 5 appears 5 times and the length of the array is 9.\nThus, 5 is a majority element because 5 &gt; 9/2 is true.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [10,100,101,101], target = 101\n<strong>Output:</strong> false\n<strong>Explanation:</strong> The value 101 appears 2 times and the length of the array is 4.\nThus, 101 is not a majority element because 2 &gt; 4/2 is false.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= nums[i], target &lt;= 10<sup>9</sup></code></li>\n\t<li><code>nums</code> is sorted in non-decreasing order.</li>\n</ul>\n",
+  "hints": [
+    "How to check if a given number target is a majority element?.",
+    "Find the frequency of target and compare it to the length of the array.",
+    "You can find the frequency of an element using Binary Search since the array is sorted.",
+    "Using Binary Search, find the first and last occurrences of A. Then just calculate the difference between the indexes of these occurrences."
+  ],
+  "metaData": "{\r\n  \"name\": \"isMajorityElement\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"target\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"62K\", \"totalSubmission\": \"103.5K\", \"totalAcceptedRaw\": 61998, \"totalSubmissionRaw\": 103500, \"acRate\": \"59.9%\"}",
+  "likes": 480,
+  "dislikes": 36,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Majority Element\", \"titleSlug\": \"majority-element\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Majority Element II\", \"titleSlug\": \"majority-element-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,4,5,5,5,5,5,6,6]\n5",
+    "[10,100,101,101]\n101"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool isMajorityElement(vector<int>& nums, int target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean isMajorityElement(int[] nums, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def isMajorityElement(self, nums: List[int], target: int) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def isMajorityElement(self, nums, target):\n        \"\"\"\n        :type nums: List[int]\n        :type target: int\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} target\n * @return {boolean}\n */\nvar isMajorityElement = function(nums, target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function isMajorityElement(nums: number[], target: number): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool IsMajorityElement(int[] nums, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool isMajorityElement(int* nums, int numsSize, int target) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func isMajorityElement(nums []int, target int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun isMajorityElement(nums: IntArray, target: Int): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func isMajorityElement(_ nums: [Int], _ target: Int) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn is_majority_element(nums: Vec<i32>, target: i32) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} target\n# @return {Boolean}\ndef is_majority_element(nums, target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $target\n     * @return Boolean\n     */\n    function isMajorityElement($nums, $target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool isMajorityElement(List<int> nums, int target) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def isMajorityElement(nums: Array[Int], target: Int): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec is_majority_element(nums :: [integer], target :: integer) :: boolean\n  def is_majority_element(nums, target) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec is_majority_element(Nums :: [integer()], Target :: integer()) -> boolean().\nis_majority_element(Nums, Target) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (is-majority-element nums target)\n  (-> (listof exact-integer?) exact-integer? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1863",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach 1: Frequency Count\n\n**Intuition**\n\nWe have $N$ integers in the list `nums` arranged in non-decreasing order and an element `target`; we need to return `true` if the element `target` appears more than `N / 2` times or `false` otherwise. In this approach we will iterate over the complete list `nums` and if the element is equal to `target` we will increment the counter `count`. In the end, we will return if `count` is greater than `N / 2`.\n\n**Algorithm**\n\n1. Initialize the variable `count` to `0`.\n2. Iterate over the list `nums`, and for each element `num`, If `num = target`, then increment the variable `count`\n3. If `count` is greater than `nums.length / 2`, return `true` or `false` otherwise.\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/6rBk4aWa/shared\" frameBorder=\"0\" width=\"100%\" height=\"242\" name=\"6rBk4aWa\"></iframe>\n\n\n**Complexity Analysis**\n\nHere, $N$ is the size of list `nums`.\n\n* Time complexity: $O(N)$.\n\n  We iterate over each element in the list `nums`, hence the total time complexity will be $O(N)$.\n\n* Space complexity: $O(1)$.\n\n  We only need one variable, `count`, to keep the frequency of `target`, and hence the space complexity is constant.\n  <br/>\n\n---\n### Approach 2: Binary Search (Two Pass)\n\n**Intuition**\n\nIn the previous approach, we didn't use the fact that the elements are arranged in a non-decreasing order. Since the elements are given in order, all elements that are equal to the `target` will be together. If we somehow find the starting and ending point of this subarray where each element is `target`, we can find the number of times the element `target` appears.\n\nOne way to do this is to iterate the list and find the first and last instance of `target` and then subtract the indices to find the number of instances. A more efficient way is to use binary search to find the first and last instance of `target`. To find the first instance, we will find the `lower_bound` which is the first element that is equal to or greater than the element, and to find the last instance we can use the `upper_bound` which is the first element that is greater than the given element. If the difference between these two indices is greater than the `nums.length / 2`, we return `true` or `false` otherwise.\n\n![fig](../Figures/1150/1150A.png)\n\n**Algorithm**\n\n1. Find the index of the first instance of the element `target` using binary search and store it in the variable `firstIndex`.\n2. Find the index of the element next to the last instance of `target` using binary search and store it in the variable `nextToLastIndex`.\n3. Note if the element `target` isn't present in the list, both the above variables would have the same value so that the difference equates to `0`.\n4. If `(nextToLastIndex - firstIndex) > nums.length / 2`, we return `true` or `false` otherwise.\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/MSuzJmRt/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"MSuzJmRt\"></iframe>\n\n\n> **Note:** C++ has built-in binary search implementations to find the lower and upper bound. The corresponding C++ code is below:\n\n\n<iframe src=\"https://leetcode.com/playground/RgrFKvat/shared\" frameBorder=\"0\" width=\"100%\" height=\"208\" name=\"RgrFKvat\"></iframe>\n\n\n**Complexity Analysis**\n\nHere, $N$ is the size of the list `nums`.\n\n* Time complexity: $O(\\log N)$.\n\n  We applied binary search twice to find the two indices. Each binary search costs $O(\\log N)$ because the search space is halved at every iteration. Hence the total time complexity equals $O(\\log N)$.\n\n* Space complexity: $O(1)$.\n\n  The binary search doesn't require any space apart from a few variables, and hence the space complexity is constant.\n  <br/>\n\n---\n### Approach 3: Binary Search (One Pass)\n\n**Intuition**\n\nInstead of applying the binary search twice to find both indices, we can solve the problem with just one binary search to find the index of the first instance of `target`. Then instead of finding the last index of `target` too, what we can do is check if the element at index `firstIndex + num.length / 2` is equal to `target` or not. This is because we only need to find if there are more than `num.length / 2` instances of `target`, not the exact count of `target`. If at `num.length / 2` places ahead of the first index, the element is equal to `target`, then we know `target` is a majority element in the given list.\n\n**Algorithm**\n\n1. Find the index of the first instance of the element `target` using binary search and store it in the variable `firstIndex`.\n2. If the size of list `nums` is more than `firstIndex + nums.length / 2` and the element at this index is equal to `target`, return `true` or `false` otherwise.\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/Wbq9hWBA/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Wbq9hWBA\"></iframe>\n\n\n> **Note:** C++ has built-in binary search implementations to find the lower and upper bound. The corresponding C++ code is below:\n\n\n<iframe src=\"https://leetcode.com/playground/nJTUBaAW/shared\" frameBorder=\"0\" width=\"100%\" height=\"191\" name=\"nJTUBaAW\"></iframe>\n\n**Complexity Analysis**\n\nHere, $N$ is the size of the list `nums`.\n\n* Time complexity: $O(\\log N)$.\n\n  We applied binary search just once to find the `firstIndex` and then checked the element at particular index. Hence the total time complexity is equal to $O(\\log N)$.\n\n* Space complexity: $O(1)$.\n\n  The binary search doesn't require any space apart from a few variables,  and hence the space complexity is constant.\n  <br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

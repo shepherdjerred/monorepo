@@ -1,0 +1,157 @@
+{
+  "questionId": "1150",
+  "questionFrontendId": "1214",
+  "title": "Two Sum BSTs",
+  "titleSlug": "two-sum-bsts",
+  "difficulty": "Medium",
+  "content": "<p>Given the roots of two binary search trees, <code>root1</code> and <code>root2</code>, return <code>true</code> if and only if there is a node in the first tree and a node in the second tree whose values sum up to a given integer <code>target</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/02/10/ex1.png\" style=\"width: 369px; height: 169px;\" />\n<pre>\n<strong>Input:</strong> root1 = [2,1,4], root2 = [1,0,3], target = 5\n<strong>Output:</strong> true\n<strong>Explanation: </strong>2 and 3 sum up to 5.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/02/10/ex2.png\" style=\"width: 453px; height: 290px;\" />\n<pre>\n<strong>Input:</strong> root1 = [0,-10,10], root2 = [5,1,7,0,2], target = 18\n<strong>Output:</strong> false\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in each tree is in the range <code>[1, 5000]</code>.</li>\n\t<li><code>-10<sup>9</sup> &lt;= Node.val, target &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "How can you reduce this problem to the classical Two Sum problem?",
+    "Do an in-order traversal of each tree to convert them to sorted arrays.",
+    "Solve the classical Two Sum problem."
+  ],
+  "metaData": "{\r\n  \"name\": \"twoSumBSTs\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"root1\",\r\n      \"type\": \"TreeNode\"\r\n    },\r\n    {\r\n      \"name\": \"root2\",\r\n      \"type\": \"TreeNode\"\r\n    },\r\n    {\r\n      \"name\": \"target\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"61.2K\", \"totalSubmission\": \"89.8K\", \"totalAcceptedRaw\": 61191, \"totalSubmissionRaw\": 89767, \"acRate\": \"68.2%\"}",
+  "likes": 578,
+  "dislikes": 46,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Two Sum IV - Input is a BST\", \"titleSlug\": \"two-sum-iv-input-is-a-bst\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,1,4]\n[1,0,3]\n5",
+    "[0,-10,10]\n[5,1,7,0,2]\n18"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Search Tree",
+      "slug": "binary-search-tree"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    bool twoSumBSTs(TreeNode* root1, TreeNode* root2, int target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public boolean twoSumBSTs(TreeNode root1, TreeNode root2, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def twoSumBSTs(self, root1: Optional[TreeNode], root2: Optional[TreeNode], target: int) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def twoSumBSTs(self, root1, root2, target):\n        \"\"\"\n        :type root1: Optional[TreeNode]\n        :type root2: Optional[TreeNode]\n        :type target: int\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root1\n * @param {TreeNode} root2\n * @param {number} target\n * @return {boolean}\n */\nvar twoSumBSTs = function(root1, root2, target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction twoSumBSTs(root1: TreeNode | null, root2: TreeNode | null, target: number): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public bool TwoSumBSTs(TreeNode root1, TreeNode root2, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nbool twoSumBSTs(struct TreeNode* root1, struct TreeNode* root2, int target) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc twoSumBSTs(root1 *TreeNode, root2 *TreeNode, target int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun twoSumBSTs(root1: TreeNode?, root2: TreeNode?, target: Int): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func twoSumBSTs(_ root1: TreeNode?, _ root2: TreeNode?, _ target: Int) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn two_sum_bs_ts(root1: Option<Rc<RefCell<TreeNode>>>, root2: Option<Rc<RefCell<TreeNode>>>, target: i32) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root1\n# @param {TreeNode} root2\n# @param {Integer} target\n# @return {Boolean}\ndef two_sum_bs_ts(root1, root2, target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root1\n     * @param TreeNode $root2\n     * @param Integer $target\n     * @return Boolean\n     */\n    function twoSumBSTs($root1, $root2, $target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  bool twoSumBSTs(TreeNode? root1, TreeNode? root2, int target) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def twoSumBSTs(root1: TreeNode, root2: TreeNode, target: Int): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec two_sum_bs_ts(root1 :: TreeNode.t | nil, root2 :: TreeNode.t | nil, target :: integer) :: boolean\n  def two_sum_bs_ts(root1, root2, target) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec two_sum_bs_ts(Root1 :: #tree_node{} | null, Root2 :: #tree_node{} | null, Target :: integer()) -> boolean().\ntwo_sum_bs_ts(Root1, Root2, Target) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (two-sum-bs-ts root1 root2 target)\n  (-> (or/c tree-node? #f) (or/c tree-node? #f) exact-integer? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1861",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Brute Force\n\n#### Intuition   \n\nStart with the brute force approach, we just want to find all the values in the two trees and try every combination. To implement it, we can perform a traversal on each tree and add the values to the respective lists `node_list1` and `node_list2`. We then iterate through the two lists using a nested loop and check if the sum of any two elements `value1 + value2` equals the target. If it does, we can return true.\n\n\nSuppose we perform a preorder traversal of `root1`.\n\n\n![img](../Figures/1214/1.png)\n\nSimilarly, we can store the value of each node of `root2` in `node_list2`.\n\n![img](../Figures/1214/2.png)\n\nNow we need to try every pair of values from `node_list1` and `node_list2`. It requires a nested iteration.\n\n\n#### Algorithm\n\n1) Create two empty lists `node_list1` and `node_list2`.\n\n2) Perform a DFS over `root1` and add the value of each node to `node_list1`, perform a DFS over `root2` and add the value of each node to `node_list2`.\n\n\n3) Iterate over elements in `node_list1`, for each element `value1`, we iterate over `node_list2` and look for `target - value2`.\n    - If `target - value1` is in `node_list2`, return `True`.\n\n    - Otherwise, move on to the next element of `node_list1`.\n\n4) If we finish the nested iteration without finding a valid pair, return `False`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/CereQGT9/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"CereQGT9\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$m$$, $$n$$ be the number of nodes in the two trees.\n\n* Time complexity: $$O(m \\cdot n)$$\n\n    - We need to visit every node in both trees to collect the value of each node into two lists `node_list1` and `node_list2`, this takes $$O(m + n)$$ as each node will be visited once.\n    - Then we iterate through both lists using a nested loop. The time complexity of the nested loop is $$O(m\\cdot n)$$ in the worst-case scenario.\n    \n\n* Space complexity: $$O(m + n)$$\n\n    - We save the value of each node in two lists `node_list1` and `node_list2`.\n\n<br/>\n\n---\n\n### Approach 2: Binary Search\n\n#### Intuition   \n\nThe previous solution does not take advantage of the nature of a binary search tree:\n\n- The left subtree of a node contains only nodes with values less than the node's value.\n- The right subtree contains only nodes with values greater than the node's value.\n\nTherefore, instead of nested loops, we can traverse all nodes of the `root1` and for each value `value1`. For each value `value1`, we have to find the node with a value of `target - value1` on the another tree `root2`, which can be implemented using binary search:\n\n- If `node.val == target - value1`, it means that we find a valid pair. Return `true`.\n- If `node.val < target - value1`, it means that `target - value1` might be in the right subtree of `node`, so we move on to its right child.\n- If `node.val > target - value1`, it means that `target - value1` might be in the left subtree of `node`, so we move on to its left child.\n\n![img](../Figures/1214/b1.png)\n\nIf we can't find `target - value1`, we will move on to the next node in `root1` and repeat the binary search.\n\n![img](../Figures/1214/b2.png)\n\n\n<br>\n\n#### Algorithm\n\n1) Traverse over `root1` using DFS.\n\n2) For each node of `root1`, we search on `root2` for the node with a value of `target - value1`. For each node `node2` on `root2`:\n    - If `node2.val = target - value1`, it means we find a pair, return `True`.\n    - If `node2.val < target - value1`, we move on to the left subtree of `node2`.\n    - If `node2.val > target - value1`, we move on to the right subtree of `node2`.\n\n    If we can't find `target - value1` on `root2`, move on to the next node of `root1`. \n\n3) If we can't find a valid pair after the nested iteration, return `False`.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/QZ9XV8iz/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"QZ9XV8iz\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$m$$, $$n$$ be the number of nodes in the two trees.\n\n* Time complexity: $$O(m \\cdot\\log n)$$\n\n    - Each node in `root1` is visited once.\n    - For each `value1`, we search for `target - value1` in `root2`, the average steps it takes is $$O(h)$$ where $$h$$ is the height of the tree. Assume that both trees are balanced, the height of `root1` and `root2` is $$O(\\log m)$$ and $$O(\\log n)$$, respectively.\n    \n\n* Space complexity: $$O(\\log m + \\log n)$$\n    - The space complexity of DFS over a binary tree is $$O(h)$$, where $$h$$ is the tree's height. This is because the DFS algorithm uses a call stack to keep track of the nodes it has visited, and the maximum size of the call stack is proportional to the height of the DFS tree. Assume that both trees are balanced, then the height of `root1` and `root2` is $$O(\\log m)$$ and $$O(\\log n)$$, respectively.\n\n<br/>\n\n\n---\n\n### Approach 3: Hash Set\n\n#### Intuition   \n\nRecall from approach 1 where we save the values of the two trees in two lists. If we need to find `target - value1` in `node_list2`, we may traverse the entire list, which takes $$O(n)$$ time.\n\n\nHowever, if we save the values of `root2` in a hash set `node_set2`, we can determine if `node_set2` contains `target - value1` in $$O(1)$$ time.\n\n![img](../Figures/1214/3.png)\n\nTherefore, we collect the value of each node in `root1` in `node_set1` and collect the value of each node in `root2` in `node_set2`. Then we iterate over each element in `node_set1` and find out if `value1` is in this hash set. \n\n#### Algorithm\n\n1) Create two empty hash sets `node_set1` and `node_set2`.\n\n2) Traverse over `root1` and add the value of each node to `node_set1`, traverse over `root2` and add the value of each node to `node_set2`.\n\n3) Iterate over elements in `node_set1`, for each element `value1`, check if `target - value1` is in `node_set2`.\n    - If `target - values` in `node_set2`, return `True`.\n    - Otherwise, move on to the next element of `node_set1`.\n\n4) If we finish the iteration without finding a valid pair, return `False`.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/jEvh4rwH/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"jEvh4rwH\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$m$$, $$n$$ be the number of nodes in the two trees.\n\n* Time complexity: $$O(m + n)$$\n\n    - We need to visit every node in both trees to collect the value of each node into two lists `node_set1` and `node_set2`, which takes $$O(m + n)$$ as each node will be visited once, and an add operation takes $$O(1)$$ time on a hash set.\n    - We iterate over elements in `node_set1` which contains $$O(m)$$ steps, checking if `target - value1` in `node_set2` at each step takes $$O(1)$$ time.\n    \n\n* Space complexity: $$O(m + n)$$\n\n    - We save the value of each node in two hash sets `node_set1` and `node_set2`.\n\n<br/>\n---\n\n### Approach 4: Two Pointers\n\n\n#### Intuition   \n\nIn a binary search tree, an inorder traversal visits the nodes in sorted order. This is because we go left (smaller values) until we can't anymore. We only go right (larger values) once we're done with the left subtree.\n\n\n\nIt implies that we can inorder traverse over `root1` and `root2`, and collect the value of each node in `node_list1` and `node_list2`, so both lists are already sorted.\n\n\nIn order to find a valid pair whose sum is `target`, we can assign two pointers `pointer1` and `pointer2`, which point to the first (the smallest) element of `node_list1` and the last (the largest) element  of `node_list2`, respectively.\n\n![img](../Figures/1214/sorted_edit.png)\n\nThen we keep comparing the sum of `value1 = node_list1[pointer1]` and `value2 = node_list2[pointer2]` with `target`:\n\n- If `value1 + value2 = target`, it means that there exists a pair whose sum is `target`.\n\n\n- If `value1 + value2 < target`, we need a larger `value1` or a larger `value2`. However, we traverse `node_list2` backward in descending order, which means that we have already tried all values larger than `value2`, there are no possible candidates in `node_list2`, so we have to try a larger `value1` by incrementing `pointer1` by 1.\n\n\n- If `value1 + value2 > target`, we need a smaller `value1` or a smaller `value2`. Similarly, since we traverse `node_list1` in ascending order, we have already tried all values smaller than `value1`, so we can only try a smaller `value2` by decrementing `pointer2` by 1.\n\n\n\n<br>\n\n#### Algorithm\n\n1) Create two empty lists `node_list1` and `node_list2`.\n\n2) Perform an inorder traversal over `root1` and add the value of each node to `node_list1`, and perform an inorder traversal over `root2` then add the value of each node to `node_list2`.\n\n\n3) Initialize two pointers `pointer1 = 0` and `pointer2 = len(node_list2) - 1` that point to the first element of `node_list1` and the last element of `node_list2`, respectively.\n\n4) While `pointer1 < len(node_list1)` and `pointer2 >= 0`, we compare `node_list1[pointer1] + node_list2[pointer2]` with `target`:\n    - If `node_list1[pointer1] + node_list2[pointer2] = target`, return `True`.\n    - If `node_list1[pointer1] + node_list2[pointer2] < target`, increment `pointer1` by 1.\n    - If `node_list1[pointer1] + node_list2[pointer2] > target`, decrement `pointer2` by 1.\n\n5) If we can't find a valid pair after the iteration, return `False`. \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/m2trK5B6/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"m2trK5B6\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$m$$, $$n$$ be the number of nodes in the two trees.\n\n* Time complexity: $$O(m + n)$$\n\n    - We need to visit every node in both trees to collect the value of each node into two lists `node_list1` and `node_list2`, this takes $$O(m + n)$$ as each node will be visited once.\n    - In the while loop, both pointers only move in one direction, each element is visited only once, thus this iteration takes $$O(m + n)$$ time.\n    \n\n* Space complexity: $$O(m + n)$$\n\n    - We save the value of each node in two lists `node_list1` and `node_list2`.\n\n<br/>\n\n\n\n\n\n\n---\n\n### Approach 5: Morris Traversal\n\n> This approach is very advanced and more of an extension that you wouldn't be expected to come up with in an interview. We have included it for completeness.\n\n\n#### Intuition   \n\nRecall the DFS solutions which have $O(h)$ space complexity ($$h$$ is the height of the tree), let's think about why we need that much space:\n\nImagine we are in the middle of an inorder traversal, and the current root node `root` has left and right subtrees. As we finish visiting the last node `pre` of the left subtree, we would like to continue visiting `root` and the right subtree of `root`, but how?\n\n\n![img](../Figures/1214/mor1.png)\n\n\nThis approach takes $$O(h)$$ space because we need to track all the previous root nodes so that we can always return to each root and visit its right subtree once we have finished visiting its left subtree! The stack holds $$h$$ nodes on the recursive path so that we can backtrack to the root node `root`.\n\nWe can modify the tree in place to avoid using this extra space. Note that the node `pre` always has no right child, so we can let `root` be its right child! Therefore, whenever we finished visiting `pre`, we can just visit its right child and return to `root`!\n\n![img](../Figures/1214/mor2.png)\n\n\nThe node `pre` of node `current` is the rightmost node in the left subtree of `current`. Therefore, we can recursively find the `pre` node of `current`, and modify `pre`'s right pointer to `current`. Then move on to the left child of `current`.\n\n![img](../Figures/1214/mor3.png)\n\nIn the following traversal, if we find that a node `pre` has a right child, it means that we have previously modified it and we can return to the node `current` by simply visiting `pre.right`. Then we reset the right pointer of `pre` to null.\n\n\n\nWe don't need an auxiliary stack to store the node on the recursive path, thus only $$O(1)$$ space is needed.\n\nTake the following figure as an example of how we implement an inorder morris traversal.\n\n\n![img](../Figures/1214/mor4.png)\n\n\n<br>\n\n> This solution involves modifying the original binary search trees, so it is not generally recommended. If you want to try this approach in an interview, it is best to determine in advance with the interviewer the requirements of the question.\n\n\n<br>\n\nNow that we have a method to traverse a binary tree by inorder morris traversal, we can use the two-pointers method similar to the one in approach 4, where we use two-pointers on two sorted lists. Specifically, let `pointer1` and `pointer2` point to the first element of `node_list1` and the last element of `node_list2`, respectively. Likewise, we create two iterators over `root1` and `root2` using inorder morris traversal:\n\n\n- `iterator1` performs inorder morris traversal of `root1`, so that the values of the visited nodes are in ascending order.\n\n- `iterator2` performs backward inorder morris traversal of `root2`, so that the values of the visited nodes are in descending order.\n\n\n\n![img](../Figures/1214/mor5.png)\n\n\n> To implement backward inorder morris traversal, we just traverse right before left instead of left before right, so it will yield the largest values first.\n\n\n\n\nNow we can start comparing the sum of values of the two nodes being visited with `target`, which is similar to the solution of the previous approach where we compare the sum of values of the two pointers to `target`:\n- If `value1 + value2 == target`, it means that we find a valid pair, return `True`.\n- If `value1 + value2 < target`, we should look for a larger value in `root1`, so we move `iterator1` to the next node (with a larger value than `value1`).\n- If `value1 + value2 > target`, we should look for a smaller value in `root2`, so we move `iterator2` to the next node (with a smaller value than `value2`).\n\n\n\n<details>\n\n<summary> There are some problems on LeetCode that can be solved by Morris Traversal, you can get practise on these problems! (click to show)</summary>\n\n<br>\n\n- [94. Binary Tree Inorder Traversal](https://leetcode.com/problems/binary-tree-Inorder-traversal/) \n- [144. Binary Tree Preorder Traversal](https://leetcode.com/problems/binary-tree-preorder-traversal/) \n\n\n</details>\n\n\n<br>\n\n#### Algorithm\n\n1) Build two iterators `iterator1` and `iterator2` that perform inorder morris traversal over `root1` and backward inorder morris traversal over `root2`, respectively.\n\n\n2) Start with the smallest element of `root1` and the largest element of `root2`.\n\n\n3) While both iterators have non-empty values, we compare `value1 + value2` with `target`:\n    - If `value1 + value2 = target`, return `True`.\n    - If `value1 + value2 < target`, move on to the next node of `iterator1`.\n    - If `value1 + value2 > target`, move on to the next node of `iterator2`.\n\n5) If we can't find a valid pair after the iteration, return `False`. \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/QDmtubQd/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"QDmtubQd\"></iframe>\n\n\n> In Python, the keyword `yield` is used in the context of generators, which are a type of iterator. An iterator is an object that can be iterated (i.e., looped) upon and returns one value at a time. The advantage of iterator is that it allows us to process large amounts of data without having to store all of it in memory, which can be especially useful for this problem. \n>\n>When we traverse both trees using inorder Morris Traversal, we only need the values of two current nodes at a time. By using the keyword `yield` in Morris Traversal allows us to return the nodes of the binary tree one at a time, without having to save all of the nodes in memory.\n>\n> You can refer to [yield-expression](https://docs.python.org/3/reference/expressions.html#yield-expressions) for more information.\n\n\n#### Complexity Analysis\n\nLet $$m$$, $$n$$ be the number of nodes in the two trees.\n\n* Time complexity: $$O(m + n)$$\n\n    - There are $n-1$ edges in a tree (by definition). Each edge is visited at most two times: first, when we find `last` and second when we traverse the nodes. We visited each node at most 2 times, which takes $O(n)$ time. Refer to the picture below, the colored edges stand for the revisited edges when finding the 'last' nodes.\n\n    ![img](../Figures/1214/morris_time.png)\n        \n    When visiting each node, other than traversing edges we do $O(1)$ work, so the time complexity is $O(n)$. \n\n    - We build two iterators to traverse `root1` and `root2`.\n    \n\n* Space complexity: $$O(1)$$\n\n    - In Morris traversal, we need to track two nodes `pre` and `current` which take constant space. Since we take advantage of the right child of some leaf nodes there is no need for extra space.\n\n    - The same is true for the reversed Morris traversal.\n\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

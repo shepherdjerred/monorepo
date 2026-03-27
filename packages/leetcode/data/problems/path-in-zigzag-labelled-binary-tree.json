@@ -1,0 +1,134 @@
+{
+  "questionId": "1194",
+  "questionFrontendId": "1104",
+  "title": "Path In Zigzag Labelled Binary Tree",
+  "titleSlug": "path-in-zigzag-labelled-binary-tree",
+  "difficulty": "Medium",
+  "content": "<p>In an infinite binary tree where every node has two children, the nodes are labelled in row order.</p>\n\n<p>In the odd numbered rows (ie., the first, third, fifth,...), the labelling is left to right, while in the even numbered rows (second, fourth, sixth,...), the labelling is right to left.</p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/06/24/tree.png\" style=\"width: 300px; height: 138px;\" /></p>\n\n<p>Given the <code>label</code> of a node in this tree, return the labels in the path from the root of the tree to the&nbsp;node with that <code>label</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> label = 14\n<strong>Output:</strong> [1,3,4,14]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> label = 26\n<strong>Output:</strong> [1,2,6,10,26]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= label &lt;= 10^6</code></li>\n</ul>\n",
+  "hints": [
+    "Based on the label of the current node, find what the label must be for the parent of that node."
+  ],
+  "metaData": "{\n  \"name\": \"pathInZigZagTree\",\n  \"params\": [\n    {\n      \"name\": \"label\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<integer>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"53.4K\", \"totalSubmission\": \"70.5K\", \"totalAcceptedRaw\": 53386, \"totalSubmissionRaw\": 70454, \"acRate\": \"75.8%\"}",
+  "likes": 1548,
+  "dislikes": 331,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Cycle Length Queries in a Tree\", \"titleSlug\": \"cycle-length-queries-in-a-tree\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "14",
+    "26"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> pathInZigZagTree(int label) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<Integer> pathInZigZagTree(int label) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def pathInZigZagTree(self, label: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def pathInZigZagTree(self, label):\n        \"\"\"\n        :type label: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} label\n * @return {number[]}\n */\nvar pathInZigZagTree = function(label) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function pathInZigZagTree(label: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<int> PathInZigZagTree(int label) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* pathInZigZagTree(int label, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func pathInZigZagTree(label int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun pathInZigZagTree(label: Int): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func pathInZigZagTree(_ label: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn path_in_zig_zag_tree(label: i32) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} label\n# @return {Integer[]}\ndef path_in_zig_zag_tree(label)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $label\n     * @return Integer[]\n     */\n    function pathInZigZagTree($label) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> pathInZigZagTree(int label) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def pathInZigZagTree(label: Int): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec path_in_zig_zag_tree(label :: integer) :: [integer]\n  def path_in_zig_zag_tree(label) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec path_in_zig_zag_tree(Label :: integer()) -> [integer()].\npath_in_zig_zag_tree(Label) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (path-in-zig-zag-tree label)\n  (-> exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": null
+}

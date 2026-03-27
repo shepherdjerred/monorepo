@@ -1,0 +1,143 @@
+{
+  "questionId": "1329",
+  "questionFrontendId": "1217",
+  "title": "Minimum Cost to Move Chips to The Same Position",
+  "titleSlug": "minimum-cost-to-move-chips-to-the-same-position",
+  "difficulty": "Easy",
+  "content": "<p>We have <code>n</code> chips, where the position of the <code>i<sup>th</sup></code> chip is <code>position[i]</code>.</p>\n\n<p>We need to move all the chips to <strong>the same position</strong>. In one step, we can change the position of the <code>i<sup>th</sup></code> chip from <code>position[i]</code> to:</p>\n\n<ul>\n\t<li><code>position[i] + 2</code> or <code>position[i] - 2</code> with <code>cost = 0</code>.</li>\n\t<li><code>position[i] + 1</code> or <code>position[i] - 1</code> with <code>cost = 1</code>.</li>\n</ul>\n\n<p>Return <em>the minimum cost</em> needed to move all the chips to the same position.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/08/15/chips_e1.jpg\" style=\"width: 750px; height: 217px;\" />\n<pre>\n<strong>Input:</strong> position = [1,2,3]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> First step: Move the chip at position 3 to position 1 with cost = 0.\nSecond step: Move the chip at position 2 to position 1 with cost = 1.\nTotal cost is 1.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/08/15/chip_e2.jpg\" style=\"width: 750px; height: 306px;\" />\n<pre>\n<strong>Input:</strong> position = [2,2,2,3,3]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> We can move the two chips at position  3 to position 2. Each move has cost = 1. The total cost = 2.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> position = [1,1000000000]\n<strong>Output:</strong> 1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= position.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= position[i] &lt;= 10^9</code></li>\n</ul>\n",
+  "hints": [
+    "The first move keeps the parity of the element as it is.",
+    "The second move changes the parity of the element.",
+    "Since the first move is free, if all the numbers have the same parity, the answer would be zero.",
+    "Find the minimum cost to make all the numbers have the same parity."
+  ],
+  "metaData": "{\n  \"name\": \"minCostToMoveChips\",\n  \"params\": [\n    {\n      \"name\": \"position\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"168.6K\", \"totalSubmission\": \"231.5K\", \"totalAcceptedRaw\": 168605, \"totalSubmissionRaw\": 231549, \"acRate\": \"72.8%\"}",
+  "likes": 2457,
+  "dislikes": 351,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Number of Operations to Move All Balls to Each Box\", \"titleSlug\": \"minimum-number-of-operations-to-move-all-balls-to-each-box\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Split With Minimum Sum\", \"titleSlug\": \"split-with-minimum-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3]",
+    "[2,2,2,3,3]",
+    "[1,1000000000]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"morgan-stanley\", \"name\": \"Morgan Stanley\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minCostToMoveChips(vector<int>& position) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minCostToMoveChips(int[] position) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minCostToMoveChips(self, position: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minCostToMoveChips(self, position):\n        \"\"\"\n        :type position: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} position\n * @return {number}\n */\nvar minCostToMoveChips = function(position) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minCostToMoveChips(position: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinCostToMoveChips(int[] position) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minCostToMoveChips(int* position, int positionSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minCostToMoveChips(position []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minCostToMoveChips(position: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minCostToMoveChips(_ position: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_cost_to_move_chips(position: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} position\n# @return {Integer}\ndef min_cost_to_move_chips(position)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $position\n     * @return Integer\n     */\n    function minCostToMoveChips($position) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minCostToMoveChips(List<int> position) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minCostToMoveChips(position: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_cost_to_move_chips(position :: [integer]) :: integer\n  def min_cost_to_move_chips(position) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_cost_to_move_chips(Position :: [integer()]) -> integer().\nmin_cost_to_move_chips(Position) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-cost-to-move-chips position)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1008",
+    "content": "[TOC]\n\n## Solution\n\n### Overview\n\nThough marked as \"Easy\", this problem is a little tricky and requires some observations and insights. It's recommended to try a few examples to find out some regular patterns. \n\nBelow, we will discuss a simple approach to solve this problem.\n\n---\n\n### Approach 1: Moving Chips Cleverly\n\n**Intuition**\n\nNotice that we have two types of costs:\n\n1. Costs `0` when moving to `position[i] + 2` or `position[i] - 2`.\n2. Costs `1` when moving to `position[i] + 1` or `position[i] - 1`.\n\nSince move to `position[i] + 2` or `position[i] - 2` is free, it is natural to think that firstly moving chips as close as possible, with 0 cost.\n\n**In fact, we can move all chips at even positions to position `0`, and move all chips at the odd positions to position `1`.**\n\nThen, we only have many chips at position `0` and other chips at position `1`. Next, we only need to move those two piles together.\n\nGiven two piles of chips located at `0` and `1` respectively, intuitively it would be less effort-taking (i.e. less cost) to move the smaller pile to the larger one, which makes the total cost to:\n\n$$\nCost = min(even\\_cnt, odd\\_cnt)\n$$\n\nwhere $$even\\_cnt$$ represents the number of chips at the even positions, and $$odd\\_cnt$$ represents the number of chips at the odd positions.\n\nGood, now we have a not bad cost. Can we do better?\n\nWell, now we will prove that this cost is the smallest possible one.\n\n> As for the final position of those chips pile, there are only two possibilities:\n> 1. The final position is at the even position, or\n> 2. The final position is at the odd position.\n> \n> In the first case, we at least need to cost `odd_cnt` to move all the chips at the odd positions to the even positions. \n> Similarly, in the second case, we at least need to cost `even_cnt`.\n> \n> Therefore, `min(even_cnt, odd_cnt)` is the smallest possible cost.\n\nIn conclusion, the policy we gave above will achieve the smallest possible cost. What we need to return is just `min(even_cnt, odd_cnt)`.\n\n**Algorithm**\n\nWe just need to count the number of chips at the even positions and the number of chips at the odd positions and return the smaller one.\n\n<iframe src=\"https://leetcode.com/playground/4Vxz2Arq/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"4Vxz2Arq\"></iframe>\n\nYou can also count either the odd or the even numbers, and then deduct that number from the length to obtain the other one.\n\n**Complexity Analysis**\n\nLet $$N$$ be the length of `position`.\n\n- Time Complexity : $$\\mathcal{O}(N)$$ since we need to iterate `position` once.\n\n- Space Complexity : $$\\mathcal{O}(1)$$ since we only use two ints: `even_cnt` and `odd_cnt`.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

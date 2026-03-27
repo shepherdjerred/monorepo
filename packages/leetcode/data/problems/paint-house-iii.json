@@ -1,0 +1,137 @@
+{
+  "questionId": "1583",
+  "questionFrontendId": "1473",
+  "title": "Paint House III",
+  "titleSlug": "paint-house-iii",
+  "difficulty": "Hard",
+  "content": "<p>There is a row of <code>m</code> houses in a small city, each house must be painted with one of the <code>n</code> colors (labeled from <code>1</code> to <code>n</code>), some houses that have been painted last summer should not be painted again.</p>\n\n<p>A neighborhood is a maximal group of continuous houses that are painted with the same color.</p>\n\n<ul>\n\t<li>For example: <code>houses = [1,2,2,3,3,2,1,1]</code> contains <code>5</code> neighborhoods <code>[{1}, {2,2}, {3,3}, {2}, {1,1}]</code>.</li>\n</ul>\n\n<p>Given an array <code>houses</code>, an <code>m x n</code> matrix <code>cost</code> and an integer <code>target</code> where:</p>\n\n<ul>\n\t<li><code>houses[i]</code>: is the color of the house <code>i</code>, and <code>0</code> if the house is not painted yet.</li>\n\t<li><code>cost[i][j]</code>: is the cost of paint the house <code>i</code> with the color <code>j + 1</code>.</li>\n</ul>\n\n<p>Return <em>the minimum cost of painting all the remaining houses in such a way that there are exactly</em> <code>target</code> <em>neighborhoods</em>. If it is not possible, return <code>-1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> houses = [0,0,0,0,0], cost = [[1,10],[10,1],[10,1],[1,10],[5,1]], m = 5, n = 2, target = 3\n<strong>Output:</strong> 9\n<strong>Explanation:</strong> Paint houses of this way [1,2,2,1,1]\nThis array contains target = 3 neighborhoods, [{1}, {2,2}, {1,1}].\nCost of paint all houses (1 + 1 + 1 + 1 + 5) = 9.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> houses = [0,2,1,2,0], cost = [[1,10],[10,1],[10,1],[1,10],[5,1]], m = 5, n = 2, target = 3\n<strong>Output:</strong> 11\n<strong>Explanation:</strong> Some houses are already painted, Paint the houses of this way [2,2,1,2,2]\nThis array contains target = 3 neighborhoods, [{2,2}, {1}, {2,2}]. \nCost of paint the first and last house (10 + 1) = 11.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> houses = [3,1,2,3], cost = [[1,1,1],[1,1,1],[1,1,1],[1,1,1]], m = 4, n = 3, target = 3\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> Houses are already painted with a total of 4 neighborhoods [{3},{1},{2},{3}] different of target = 3.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == houses.length == cost.length</code></li>\n\t<li><code>n == cost[i].length</code></li>\n\t<li><code>1 &lt;= m &lt;= 100</code></li>\n\t<li><code>1 &lt;= n &lt;= 20</code></li>\n\t<li><code>1 &lt;= target &lt;= m</code></li>\n\t<li><code>0 &lt;= houses[i] &lt;= n</code></li>\n\t<li><code>1 &lt;= cost[i][j] &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Use Dynamic programming.",
+    "Define dp[i][j][k] as the minimum cost where we have k neighborhoods in the first i houses and the i-th house is painted with the color j."
+  ],
+  "metaData": "{\n  \"name\": \"minCost\",\n  \"params\": [\n    {\n      \"name\": \"houses\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"cost\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"m\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"n\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"target\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"72.1K\", \"totalSubmission\": \"117.8K\", \"totalAcceptedRaw\": 72087, \"totalSubmissionRaw\": 117801, \"acRate\": \"61.2%\"}",
+  "likes": 2135,
+  "dislikes": 156,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Number of Distinct Roll Sequences\", \"titleSlug\": \"number-of-distinct-roll-sequences\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Paint House IV\", \"titleSlug\": \"paint-house-iv\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[0,0,0,0,0]\n[[1,10],[10,1],[10,1],[1,10],[5,1]]\n5\n2\n3",
+    "[0,2,1,2,0]\n[[1,10],[10,1],[10,1],[1,10],[5,1]]\n5\n2\n3",
+    "[3,1,2,3]\n[[1,1,1],[1,1,1],[1,1,1],[1,1,1]]\n4\n3\n3"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 2, \"slug\": \"paypal\", \"name\": \"PayPal\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minCost(vector<int>& houses, vector<vector<int>>& cost, int m, int n, int target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minCost(int[] houses, int[][] cost, int m, int n, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minCost(self, houses: List[int], cost: List[List[int]], m: int, n: int, target: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minCost(self, houses, cost, m, n, target):\n        \"\"\"\n        :type houses: List[int]\n        :type cost: List[List[int]]\n        :type m: int\n        :type n: int\n        :type target: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} houses\n * @param {number[][]} cost\n * @param {number} m\n * @param {number} n\n * @param {number} target\n * @return {number}\n */\nvar minCost = function(houses, cost, m, n, target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minCost(houses: number[], cost: number[][], m: number, n: number, target: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinCost(int[] houses, int[][] cost, int m, int n, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minCost(int* houses, int housesSize, int** cost, int costSize, int* costColSize, int m, int n, int target) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minCost(houses []int, cost [][]int, m int, n int, target int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minCost(houses: IntArray, cost: Array<IntArray>, m: Int, n: Int, target: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minCost(_ houses: [Int], _ cost: [[Int]], _ m: Int, _ n: Int, _ target: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_cost(houses: Vec<i32>, cost: Vec<Vec<i32>>, m: i32, n: i32, target: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} houses\n# @param {Integer[][]} cost\n# @param {Integer} m\n# @param {Integer} n\n# @param {Integer} target\n# @return {Integer}\ndef min_cost(houses, cost, m, n, target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $houses\n     * @param Integer[][] $cost\n     * @param Integer $m\n     * @param Integer $n\n     * @param Integer $target\n     * @return Integer\n     */\n    function minCost($houses, $cost, $m, $n, $target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minCost(List<int> houses, List<List<int>> cost, int m, int n, int target) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minCost(houses: Array[Int], cost: Array[Array[Int]], m: Int, n: Int, target: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_cost(houses :: [integer], cost :: [[integer]], m :: integer, n :: integer, target :: integer) :: integer\n  def min_cost(houses, cost, m, n, target) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_cost(Houses :: [integer()], Cost :: [[integer()]], M :: integer(), N :: integer(), Target :: integer()) -> integer().\nmin_cost(Houses, Cost, M, N, Target) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-cost houses cost m n target)\n  (-> (listof exact-integer?) (listof (listof exact-integer?)) exact-integer? exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1313",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nThere are `m` houses, of which some have been already painted, and others still need to be painted with one of `n` colors. We need to paint these houses to minimize the cost while ensuring that there are exactly `target` number of neighborhoods. A continuous group of houses with the same color is considered a single neighborhood.\n\nThere are two characteristics of this problem that we should take note of at this time. First, as we iterate over houses, we must decide what color to paint each unpainted house. The optimal choice will depend on how we have painted the previous houses, as this choice can affect the total number of neighborhoods. In other words, each decision we make is affected by the previous decisions we have made. Second, the problem is asking to minimize the cost of painting all unpainted houses. These two characteristics suggest that we may be able to solve this problem using dynamic programming.\n</br>\n\n---\n\n### Approach 1: Top-Down Dynamic Programming\n\n**Intuition**\n\nLet's start with the first house. If it is already painted, then we have nothing to do and can move on to the next house. Otherwise, we can choose any color, from `1` to `n`, and spend the corresponding cost to paint the house that color. Note that we need to count the number of neighborhoods as well. So after visiting a house, we need to update the number of neighborhoods. Let's say the current number of neighborhoods is equal to `neighborhoodCount`. When we reach a particular house, we will compare its color with the previous house color. If the colors don't match, we will increment the value `neighborhoodCount` by `1` and recursively move on to the next house with updated values.\n\nThis way, we can try every possible color for unpainted houses and find the cost. After traversing all of the houses, if the number of neighborhoods equals `target`, then we can compare the cost with the minimum cost we have achieved so far and update it accordingly.\n\nFor this recursive approach, what are the parameters that we need to track? The first parameter is the index of the house that we are currently considering as we traverse the houses. Since the number of neighborhoods must equal `target`, we also need a variable to store the count of the neighborhoods. Finally, we must also keep track of the previous house color, and when the current house color does not match the previous house color, we know that we are at the start of a new neighborhood.\n\nHence, we need to keep track of three things:\n1. The index of the house that we are currently considering.\n2. The color of the previous house.\n3. The current number of neighborhoods.\n\nThis recursive approach will have repeated subproblems; this can be observed in the figure below. Notice the green nodes are repeated subproblems signifying that we have already solved these subproblems before.\n\n![fig](../Figures/1473/1473A.png)\n\nTo avoid recalculating results for previously seen subproblems, we will memoize the result for each subproblem. So the next time we need to calculate the result for the same set of parameters `{current index, neighborhood count, previous house color}`, we can simply look up the result in constant time instead of recalculating the result.\n\n**Algorithm**\n\n1. Start with:\n\n   - The current index `currIndex` as `0`; this is the index of the house we are currently considering.\n   - The current number of neighborhoods `neighborhoodCount` as `0`. \n   - The color of the previous house `prevHouseColor` as `0` (we choose to initialize this value as `0` to guarantee that the first house will always be counted as the start of a new neighborhood).\n\n2. If the house at `currIndex` is already painted (not equal to `0`), we can recursively move on to the next house with the updated value of `neighborhoodCount`. Remember to increment `neighborhoodCount` if the color of the house at `currIndex` does not equal `prevHouseColor`. Also, update `prevHouseColor` to the color of the current house.\n3. If the house is not painted, iterate over colors from `1` to `n`, and for each color, try painting the house at `currIndex` with that color, then recursively move on to the next house with updated values. Store the minimum cost corresponding to any color from `1` to `n` in the variable `minCost`.\n4. Return the value `minCost` and also store it in the memoization table `memo` corresponding to the current state, which is defined by `currIndex`, `neighborhoodCount`, and `prevHouseColor`. \n5. Base cases: \n   - If we have traversed over all the houses i.e., `currIndex == m`, we will return the cost `0` if the `neighborhoodCount` is equal to `target`, otherwise we return the value `MAX_COST` which is the maximum possible cost plus `1`.\n   - If the number of neighborhoods `neighborhoodCount` is more than the target neighborhoods `neighborhoodCount > targetCount`, then the answer is not possible. Hence we return `MAX_COST`.\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/WwhyqvTH/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"WwhyqvTH\"></iframe>\n\n\n**Complexity Analysis**\n\nHere, $$M$$ is the number of houses, $$N$$ is the number of colors and $$T$$ is the number of target neighborhoods.\n\n* Time complexity: $$O(M \\cdot T \\cdot N^2)$$\n\n  Each state is defined by the values `currIndex`, `neighborhoodCount`, and `prevHouseColor`. Hence, there will be $$M \\cdot T \\cdot N$$ possible states, and in the worst-case scenario, we must visit most of the states to solve the original problem. Each recursive call requires $$O(N)$$ time as we might need to iterate over all the colors. Thus, the total time complexity is equal to $$O(M \\cdot T \\cdot N^2)$$.\n\n* Space complexity: $$O(M \\cdot T \\cdot N)$$\n\n  The memoization results are stored in the table `memo` with size $$M \\cdot T \\cdot N$$. Also, stack space in the recursion is equal to the maximum number of active functions. The maximum number of active functions will be at most $$M$$ i.e., one function call for every house. Hence, the space complexity is $$O(M \\cdot T \\cdot N)$$.\n<br/>\n\n---\n\n### Approach 2: Bottom-Up Dynamic Programming\n\n**Intuition**\n\nIn the previous approach, the recursive calls incurred stack space. We can avoid this by applying the same approach iteratively, which is often faster than the top-down approach. We will follow a similar approach to the previous one. However, this time we will iterate over the states by starting from the base case and ending at the initial query. \n\nSuppose we want to find the minimum cost to paint the first `house` number of houses with `neighborhoods` number of neighborhoods. Let's see how we can break this problem into subproblems. The house at the index `house` can be painted with one of the `n` colors, so we iterate over the colors, and for each color `color`, there will be one of the two following scenarios:\n\n  - The house at index `house` is already painted, and the color of the house does not match `color`.\n\n    - In this case, we do not need to do anything since we cannot paint a house that is already painted.\n\n  - The house at index `house` is not painted yet, or it is already painted the color `color`.\n\n    - In this case, if the house is not painted, we will paint the house at index `house` with the color `color` for the corresponding cost. If the house is already painted, the corresponding cost will be `0`. Since we are trying to find the minimum cost for the state defined by {`house`, `neighborhoods`, and `color`}, we must iterate over all of the color options (`prevColor`) for the previous house to do so.\n\n      - If the `color` and `prevColor` are not the same, the subproblem will be {`house - 1`, `neighborhoods - 1`, `prevColor`} because whenever two adjacent houses are not the same color, this marks the start of a new neighborhood.\n      - If the `color` and `prevColor` are the same, the subproblem will be {`house - 1`, `neighborhoods`, `color`}. This is because the neighborhoods won't change as the house at index `house` will be added to the previous neighborhood.\n\n\nThe only case where we don't need to break the problem into subproblems (base cases) is when we only have the first house. For this base case, the value of the neighborhood will be `1`, and we can assign the cost for each color from `1` to `n` according to the cost to paint the house at index `0` that color.\n\nOnce we have found the cost for all possible combinations of houses, color, and neighborhoods, we can find the minimum cost to paint all the houses with the `target` number of neighborhoods. This value will be present in the array `memo[m - 1][target]`, and the minimum value in this array would be our answer. That particular index represents the color that we should use to paint the last house (if it was not painted originally).\n\n**Algorithm**\n\n1. Initialize the values for base case i.e., `house = 0`, `neighborhoods = 1`. Iterate over the colors from `1` to `n` and assign the corresponding cost if the house is not painted. Otherwise, if the house is already painted with the same color, assign the cost as `0`.\n2. Iterate over house index `house` from `1` to `m - 1`, and neighborhoods count `neighborhoods` from `1` to the minimum of `(house + 1, target)` (for `0` indexed `house`, `house + 1` is the maximum number of neighborhoods possible)), and color for the current house, from `1` to `n`. For each of these iterations:\n\n   - If the house at index `house` is already painted and the color is not the same as `color`, then continue, since we never repaint a painted house.\n   - Initialize the cost for current parameters `currCost` to `MAX_COST` which is the maximum possible cost plus `1`.\n   - Iterate over the color options for the previous house `prevColor` from `1` to `n`, for each `prevColor`:\n\n       - If the `color` and `prevColor` are different, assign the minimum of `currCost` and `memo[house - 1][neighborhoods - 1][prevColor - 1]` to `currCost`.\n       - If the `color` and `prevColor` match, assign the minimum of `currCost` and `memo[house - 1][neighborhoods][color - 1]` to `currCost`.\n       - **Note:** We used `color - 1` and `prevColor - 1` instead of `color` and `prevColor` respectively as we are using `0` based indexing.\n\n    - Assign the cost to paint the current house at index `house` with `color` in the variable `costToPaint`.\n    - Assign the value `currCost + costToPaint` to `memo[house][neighborhoods][color - 1]`.\n3. Find the minimum cost among all the options to paint the last house with `target` number of neighborhoods, store it in the `minCost`.\n4. Return `minCost`.\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/P2SBaxD9/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"P2SBaxD9\"></iframe>\n\n\n**Complexity Analysis**\n\nHere, $$M$$ is the number of houses, $$N$$ is the number of colors and $$T$$ is the number of target neighborhoods.\n\n* Time complexity: $$O(M \\cdot T \\cdot N^2)$$\n\n   Each state is defined by the values `house`, `neighborhoods`, and `color`. Hence, there will be $$M \\cdot T \\cdot N$$ possible states, and in the worst-case scenario, we must visit most of the states to solve the original problem. Each state (subproblem) requires $$O(N)$$ time as we iterate over all the colors for `prevColor`. Thus, the total time complexity is equal to $$O(M \\cdot T \\cdot N^2)$$.\n\n* Space complexity: $$O(M \\cdot T \\cdot N)$$\n\n  The results are stored in the table `memo` with size $$M \\cdot T \\cdot N$$. Hence, the space complexity is equal to $$O(M \\cdot T \\cdot N)$$.\n<br/>\n\n---\n\n### Approach 3: Bottom-Up Dynamic Programming (Space Optimized)\n\n**Intuition**\n\nIn the previous approach, to find the minimum cost to paint the current house the color `color`, we use the cost that has been already calculated for the previous house (the hosue at index `house - 1`). Even though the recurrence relation only uses the cost corresponding to the previous house, we allocate enough space to store the cost for every house, which is unnecessary. Observing the code for the previous approach, we can see that we either used `memo[house - 1][neighborhoods - 1][prevColor - 1]` or `memo[house - 1][neighborhoods][color - 1]` to find the cost for the house at index `house`. This means we only referred to the cost for the previous house.\n\nTherefore, in this approach, we will only store the costs that correspond to the previous house. With the help of the results for the previous house, we will find the cost for the current house and then store it to be used as the previous house result by the next house. This way, we don’t need to store the result for every house simultaneously; instead, we can just store the result for the current and previous houses.\n\n**Algorithm**\n\n1. Store the results for the base cases in `prevMemo`. The results are the cost for each color from `1` to `n` when we are at the first house (`house = 0`) and the number of neighborhoods is `1`.\n2. Iterate over house index `house` from `1` to `m - 1`,\n\n   - Create a new table `memo`; this table will store the results for the current house. \n\n   - Iterate over neighborhoods count `neighborhoods` from `1` to minimum of `(house + 1, target)` and iterate over color for the current house `color` from `1` to `n`. For each iteration:\n\n     - If the house at index `house` is already painted and the color is not the same as `color`, then continue, since we never repaint a painted house.\n     - Initialize the cost for current options `currCost` to `MAX_COST` which is the maximum possible cost plus `1`.\n     - Iterate over the color option for the previous house `prevColor` from `1` to `n`, for each `prevColor`:\n\n       - If the `color` and `prevColor` are different, assign the minimum of `currCost` and `prevMemo[neighborhoods - 1][prevColor - 1]` to `currCost`.\n       - If the `color` and `prevColor` match, assign the minimum of `currCost` and `prevMemo[neighborhoods][color - 1]` to `currCost`.\n    - Assign the cost to paint the current house at index `house` with `color` in the variable `costToPaint`.\n    - Assign the value `currCost + costToPaint` to `memo[neighborhoods][color - 1]`.\n    - Update the table `prevMemo` to store the results for the current house by assigning it to `memo`.\n3. Find the minimum cost among all the options to paint the last house with `target` number of neighborhoods, store it in the `minCost`.\n4. Return `minCost`.\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/NGoEvHsR/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"NGoEvHsR\"></iframe>\n\n\n**Complexity Analysis**\n\nHere, $$M$$ is the number of houses, $$N$$ is the number of colors and $$T$$ is the number of target neighborhoods.\n\n* Time complexity: $$O(M \\cdot T \\cdot N^2)$$\n\n  We are iterating over the houses from $$1$$ to $$M$$ and for each house, store the results in the table `memo` by iterating over each neighbor and color. Therefore, we have $$T \\cdot N$$ states for each house, and each such state will take $$O(N)$$ operations to iterate over the `prevColor` options. Hence the total time complexity is $$O(M \\cdot T \\cdot N^2)$$.\n\n* Space complexity: $$O(T \\cdot N)$$\n\n  The results are stored in the arrays `memo` and `prevMemo`, each with a size of $$T \\cdot N$$. Hence, the space complexity equals $$O(T \\cdot N)$$.\n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,137 @@
+{
+  "questionId": "945",
+  "questionFrontendId": "909",
+  "title": "Snakes and Ladders",
+  "titleSlug": "snakes-and-ladders",
+  "difficulty": "Medium",
+  "content": "<p>You are given an <code>n x n</code> integer matrix <code>board</code> where the cells are labeled from <code>1</code> to <code>n<sup>2</sup></code> in a <a href=\"https://en.wikipedia.org/wiki/Boustrophedon\" target=\"_blank\"><strong>Boustrophedon style</strong></a> starting from the bottom left of the board (i.e. <code>board[n - 1][0]</code>) and alternating direction each row.</p>\n\n<p>You start on square <code>1</code> of the board. In each move, starting from square <code>curr</code>, do the following:</p>\n\n<ul>\n\t<li>Choose a destination square <code>next</code> with a label in the range <code>[curr + 1, min(curr + 6, n<sup>2</sup>)]</code>.\n\n\t<ul>\n\t\t<li>This choice simulates the result of a standard <strong>6-sided die roll</strong>: i.e., there are always at most 6 destinations, regardless of the size of the board.</li>\n\t</ul>\n\t</li>\n\t<li>If <code>next</code> has a snake or ladder, you <strong>must</strong> move to the destination of that snake or ladder. Otherwise, you move to <code>next</code>.</li>\n\t<li>The game ends when you reach the square <code>n<sup>2</sup></code>.</li>\n</ul>\n\n<p>A board square on row <code>r</code> and column <code>c</code> has a snake or ladder if <code>board[r][c] != -1</code>. The destination of that snake or ladder is <code>board[r][c]</code>. Squares <code>1</code> and <code>n<sup>2</sup></code> are not the starting points of any snake or ladder.</p>\n\n<p>Note that you only take a snake or ladder at most once per dice roll. If the destination to a snake or ladder is the start of another snake or ladder, you do <strong>not</strong> follow the subsequent&nbsp;snake or ladder.</p>\n\n<ul>\n\t<li>For example, suppose the board is <code>[[-1,4],[-1,3]]</code>, and on the first move, your destination square is <code>2</code>. You follow the ladder to square <code>3</code>, but do <strong>not</strong> follow the subsequent ladder to <code>4</code>.</li>\n</ul>\n\n<p>Return <em>the least number of dice rolls required to reach the square </em><code>n<sup>2</sup></code><em>. If it is not possible to reach the square, return </em><code>-1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2018/09/23/snakes.png\" style=\"width: 500px; height: 394px;\" />\n<pre>\n<strong>Input:</strong> board = [[-1,-1,-1,-1,-1,-1],[-1,-1,-1,-1,-1,-1],[-1,-1,-1,-1,-1,-1],[-1,35,-1,-1,13,-1],[-1,-1,-1,-1,-1,-1],[-1,15,-1,-1,-1,-1]]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> \nIn the beginning, you start at square 1 (at row 5, column 0).\nYou decide to move to square 2 and must take the ladder to square 15.\nYou then decide to move to square 17 and must take the snake to square 13.\nYou then decide to move to square 14 and must take the ladder to square 35.\nYou then decide to move to square 36, ending the game.\nThis is the lowest possible number of moves to reach the last square, so return 4.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> board = [[-1,-1],[-1,3]]\n<strong>Output:</strong> 1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == board.length == board[i].length</code></li>\n\t<li><code>2 &lt;= n &lt;= 20</code></li>\n\t<li><code>board[i][j]</code> is either <code>-1</code> or in the range <code>[1, n<sup>2</sup>]</code>.</li>\n\t<li>The squares labeled <code>1</code> and <code>n<sup>2</sup></code> are not the starting points of any snake or ladder.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"snakesAndLadders\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"board\",\r\n      \"type\": \"integer[][]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"360.3K\", \"totalSubmission\": \"750.3K\", \"totalAcceptedRaw\": 360308, \"totalSubmissionRaw\": 750341, \"acRate\": \"48.0%\"}",
+  "likes": 3648,
+  "dislikes": 1349,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Most Profitable Path in a Tree\", \"titleSlug\": \"most-profitable-path-in-a-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[-1,-1,-1,-1,-1,-1],[-1,-1,-1,-1,-1,-1],[-1,-1,-1,-1,-1,-1],[-1,35,-1,-1,13,-1],[-1,-1,-1,-1,-1,-1],[-1,15,-1,-1,-1,-1]]",
+    "[[-1,-1],[-1,3]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 29, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 7, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"cisco\", \"name\": \"Cisco\"}, {\"timesEncountered\": 2, \"slug\": \"anduril\", \"name\": \"Anduril\"}, {\"timesEncountered\": 2, \"slug\": \"zomato\", \"name\": \"Zomato\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int snakesAndLadders(vector<vector<int>>& board) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int snakesAndLadders(int[][] board) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def snakesAndLadders(self, board: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def snakesAndLadders(self, board):\n        \"\"\"\n        :type board: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} board\n * @return {number}\n */\nvar snakesAndLadders = function(board) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function snakesAndLadders(board: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int SnakesAndLadders(int[][] board) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int snakesAndLadders(int** board, int boardSize, int* boardColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func snakesAndLadders(board [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun snakesAndLadders(board: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func snakesAndLadders(_ board: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn snakes_and_ladders(board: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} board\n# @return {Integer}\ndef snakes_and_ladders(board)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $board\n     * @return Integer\n     */\n    function snakesAndLadders($board) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int snakesAndLadders(List<List<int>> board) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def snakesAndLadders(board: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec snakes_and_ladders(board :: [[integer]]) :: integer\n  def snakes_and_ladders(board) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec snakes_and_ladders(Board :: [[integer()]]) -> integer().\nsnakes_and_ladders(Board) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (snakes-and-ladders board)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1642",
+    "content": "[TOC]\r\n\r\n## Solution\r\n\r\n---\r\n\r\n### Overview\r\n\r\nAfter carefully analyzing the problem, we can model the grid as a graph. Each square is a node. There are edges between squares within `6` of each other, and the snakes and ladders add new edges.\r\n\r\n**The problem is asking us for the minimum number of moves, which suggests this is a shortest-path problem**\r\n\r\n> Given an unweighted directed graph, the shortest path problem is the problem of finding a path from one vertex to another, such that the number of edges is the minimum possible.\r\n\r\nWe can consider our input as an unweighted directed graph. The edges are moves corresponding to the results of a 6-sided die roll.\r\n\r\nHave a look at the example board.\r\n\r\n![An example board](../Figures/909/909_example.drawio.png)\r\n\r\nIn the left-most board there are $6$ edges outgoing from cell $1$.\r\n\r\n* We roll $1$ on the die. Go to cell $2$. Use the ladder and go to cell $15$. We have an edge $1 \\to 15$.\r\n* We roll $2$ on the die. Move to cell $3$. We have an edge $1 \\to 3$.\r\n* We roll $3$ on the die. There is an edge $1 \\to 4$.\r\n* We roll $4$ on the die. There is an edge $1 \\to 5$.\r\n* We roll $5$ on the die. There is an edge $1 \\to 6$.\r\n* We roll $6$ on the die. There is an edge $1 \\to 7$.\r\n\r\nIn the middle picture, we see that cell $13$ also has $6$ outgoing edges.\r\n\r\nIn the right-most picture, we see only $2$ outgoing edges: $34 \\to 35$ and $34 \\to 36$ because we can't go outside the board.\r\n\r\nThere is an algorithm for solving the shortest path problem in an unweighted graph – breadth-first search. It is feasible to implement during an interview.\r\n\r\n>**Note.** If you are unfamiliar with this algorithm, we highly recommend you visiting the [Graph Explore Card](https://leetcode.com/explore/featured/card/graph/620/breadth-first-search-in-graph/3883/) and watch the video explanations to gain a general understanding as this is a standard graph algorithm which is used frequently in shortest path problems. We will focus on how to implement it.\r\n\r\n---\r\n\r\n### Approach 1: Breadth-first search\r\n\r\n#### Intuition\r\n\r\nBreadth-first search is an algorithm for finding the shortest path in *unweighted* graphs (directed or undirected).\r\n\r\nThis algorithm uses a queue. If this data structure is new to you, we encourage you to visit the [queue and stack explore card](https://leetcode.com/explore/learn/card/queue-stack/). The explore card will help you understand the data structure and practice using it before proceeding.\r\n\r\nThe queue data structure has two primary operations:\r\n\r\n* `enqueue`: add an element to the end of the queue.\r\n* `dequeue`: remove the first element in the queue.\r\n\r\nC++, Java, Python and other programming languages have built-in queue implementations.\r\n\r\nThe breadth-first search operates as follows. It maintains a queue of vertices (nodes). It starts with only the starting vertex (cell `1` in this problem). Then it processes the vertices one by one in the queue. Let's say we are processing some vertex. There are (possibly zero) outgoing edges from this vertex. If these edges lead to unvisited vertices, push these vertices to the queue. The algorithm terminates when it has visited all vertices.\r\n\r\n#### Algorithm\r\n\r\n1. Find the cell $(\\text{row}, \\text{column})$ associated with each label from $1$ to $n^2$. Start from the bottom left cell and traverse the board alternately left to right and right to left. One can do this by maintaining the order of columns and reversing it after each row.\r\n \r\n2. Maintain a queue of cells and an array to store distances to all cells from the first one. By distance to the cell, we mean the least number of moves required to reach it. The distance from the first cell to itself is $0$. Mark all other cells as initially unreachable from the first one (we denote the distance to such cells with $-1$). Push the first cell to the queue. \r\n\r\n3. While the queue is not empty:\r\n\r\n* Pop a cell from the queue. Let's say its label is $\\text{curr}$. For each square $\\text{next}$ with a label in the range $\\text{curr} + 1$ to $\\min(\\text{curr} + 6, n^2)$ (as described by the problem), if $\\text{next}$ has a snake or a ladder, set $\\text{destination}$ to the destination of that snake or ladder. Otherwise, set $\\text{destination}$ to $\\text{next}$.\r\n\r\n* If $\\text{dist[destination]}$ is $-1$ (i.e. the $\\text{destination}$ has not been visited yet) set $\\text{dist[destination]}$ to $\\text{dist[curr]} + 1$ (the number of moves to get to the current cell, plus one more move to get to $\\text{destination}$) and push $\\text{destination}$ on to the queue.\r\n\r\n4. Return the distance to cell $n^2$. If it is unreachable, the result will be $-1$.\r\n\r\n#### Implementation\r\n\r\n\r\n<iframe src=\"https://leetcode.com/playground/HmwkuFLo/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"HmwkuFLo\"></iframe>\r\n\r\n\r\n#### Complexity Analysis\r\n\r\nLet $n$ be the number of rows and columns.\r\n\r\n* Time complexity: $O(n^2)$.\r\n\r\n\tWe run BFS on a graph whose vertices are the board cells, and the edges are moves between them. There are $n^2$ vertices and no more than $6 n^2=O(n^2)$ edges.\r\n\t\r\n\tThe time complexity of BFS is $O(|V| + |E|)$, where $|V|$ is the number of vertices and $|E|$ is the number of edges. We have $|V|=n^2$ and $|E| < 6 n^2$, thus the total time complexity for BFS is $O(7n^2) = O(n^2)$. We also spend some time associating each `(row, col)` with a label, but this also costs $O(n^2)$, so the overall time complexity is $O(n^2)$.\r\n\r\n* Space complexity: $O(n^2)$.\r\n\r\n\tWe maintain `cells` for each label from $1$ to $n^2$, `dist` for distances to all cells and a queue for BFS. The `columns` array takes only $O(n)$ space.\r\n\r\n---\r\n\r\n### Approach 2: Dijkstra's algorithm\r\n\r\n>**Note.** For this approach, we assume that you already know the fundamentals of Dijkstra's algorithm and are figuring out how to apply it to a wide range of problems, such as this one. If you aren't yet at this stage, we recommend checking out our relevant [Explore Card content on Dijkstra's algorithm](https://leetcode.com/explore/featured/card/graph/622/single-source-shortest-path-algorithm/3862/) before coming back to this approach.\r\n\r\n#### Intuition\r\n\r\nBFS solves the shortest path problem for unweighted graphs, and Dijkstra's algorithm solves it for weighted graphs. We can treat an unweighted graph as a weighted graph where all the weights are equal to 1. Dijkstra's approach is harder to understand and slower than BFS. However, we are including this approach just for practice purposes. In an interview, BFS is the better option.\r\n\r\nIn an interview, you need to be careful. Going straight to Dijkstra's algorithm could make you come across as somebody who tends to [overengineer](https://en.wikipedia.org/wiki/Overengineering) code. After all, there is nothing wrong with the BFS approach.\r\n\r\nDijkstra's uses a priority queue/heap data structure for storing the vertices.\r\n\r\n#### Algorithm\r\n\r\n1. Find the cell $\\text{(row, column)}$ associated with each label from $1$ to $n^2$. Start from the bottom left cell and traverse the board alternately left to right and right to left. One can do this by maintaining the order of columns and reversing it after each row. (The same as in the previous approach.)\r\n\r\n2. Maintain distances to all cells from the first one. Also, maintain a priority queue of cells as pairs $\\text{(distance, label)}$. By distance to the cell, we mean the least number of moves required to reach it. The distance from the first cell to itself is $0$. Mark all other cells as initially unreachable from the first one (we denote the distance to such cells with $-1$). Push the first cell ($\\text{distance=0, label=1}$) to the priority queue.\r\n\r\n3. While the priority queue is not empty:\r\n\r\n* Pop the cell (the pair $\\text{(distance, curr)}$) from the priority queue. If $\\text{distance}$ is not equal to $\\text{dist[curr]}$, the value $\\text{distance}$ is outdated, so move on. Otherwise, choose a square $\\text{next}$ with a label in the range $\\text{curr} + 1$ to $\\min(\\text{curr} + 6, n^2)$. If $\\text{next}$ has a snake or a ladder, set $\\text{destination}$ to the destination of that snake or ladder. Otherwise, set $\\text{destination}$ to $\\text{next}$.\r\n\r\n* If $\\text{dist[destination]}$ is $-1$ (i.e. we haven't found a path to $\\text{destination}$ yet) or $\\text{dist[curr]} + 1$ is less than $\\text{dist[destination]}$ (we've just found a shorter path) set $\\text{dist[destination]}$ to $\\text{dist[curr]} + 1$ and push the pair $(\\text{dist[destination], destination})$ to the priority queue.\r\n\r\n4. Return the distance to cell $n^2$. If it is unreachable, the result will be $-1$.\r\n\r\n\r\n#### Implementation\r\n\r\n\r\n<iframe src=\"https://leetcode.com/playground/48Z6LQbF/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"48Z6LQbF\"></iframe>\r\n\r\n\r\n#### Complexity Analysis\r\n\r\nLet $n$ be the number of columns and rows of the board.\r\n\r\n* Time complexity: $O(n^2 \\cdot \\log n)$.\r\n\r\n\tDijkstra's algorithm with a binary heap works in $O(|V| + |E| \\log |V|)$, where $|V|$ is the number of vertices and $|E|$ is the number of edges. As mentioned earlier in the BFS approach, in this problem, we have $|V| = n^2, |E| < 6n^2$.\r\n\t\r\n* Space complexity: $O(n^2)$.\r\n\t\r\n\tThe space complexity of Dijkstra's algorithm is $O(|V|)=O(n^2)$ because we need to store $|V|$ vertices in our data structure (we use a priority queue and an array of distances). Also, we have the `cells` of size $O(n^2)$ and `columns` of size $O(n)$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

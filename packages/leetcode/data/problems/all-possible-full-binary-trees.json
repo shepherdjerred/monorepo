@@ -1,0 +1,145 @@
+{
+  "questionId": "930",
+  "questionFrontendId": "894",
+  "title": "All Possible Full Binary Trees",
+  "titleSlug": "all-possible-full-binary-trees",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer <code>n</code>, return <em>a list of all possible <strong>full binary trees</strong> with</em> <code>n</code> <em>nodes</em>. Each node of each tree in the answer must have <code>Node.val == 0</code>.</p>\n\n<p>Each element of the answer is the root node of one possible tree. You may return the final list of trees in <strong>any order</strong>.</p>\n\n<p>A <strong>full binary tree</strong> is a binary tree where each node has exactly <code>0</code> or <code>2</code> children.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://s3-lc-upload.s3.amazonaws.com/uploads/2018/08/22/fivetrees.png\" style=\"width: 700px; height: 400px;\" />\n<pre>\n<strong>Input:</strong> n = 7\n<strong>Output:</strong> [[0,0,0,null,null,0,0,null,null,0,0],[0,0,0,null,null,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,null,null,null,null,0,0],[0,0,0,0,0,null,null,0,0]]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 3\n<strong>Output:</strong> [[0,0,0]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 20</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"allPossibleFBT\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<TreeNode>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"213.4K\", \"totalSubmission\": \"257.9K\", \"totalAcceptedRaw\": 213395, \"totalSubmissionRaw\": 257852, \"acRate\": \"82.8%\"}",
+  "likes": 5246,
+  "dislikes": 368,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "7",
+    "3"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Recursion",
+      "slug": "recursion"
+    },
+    {
+      "name": "Memoization",
+      "slug": "memoization"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    vector<TreeNode*> allPossibleFBT(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public List<TreeNode> allPossibleFBT(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def allPossibleFBT(self, n: int) -> List[Optional[TreeNode]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def allPossibleFBT(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: List[Optional[TreeNode]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {number} n\n * @return {TreeNode[]}\n */\nvar allPossibleFBT = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction allPossibleFBT(n: number): Array<TreeNode | null> {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public IList<TreeNode> AllPossibleFBT(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\n/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nstruct TreeNode** allPossibleFBT(int n, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc allPossibleFBT(n int) []*TreeNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun allPossibleFBT(n: Int): List<TreeNode?> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func allPossibleFBT(_ n: Int) -> [TreeNode?] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn all_possible_fbt(n: i32) -> Vec<Option<Rc<RefCell<TreeNode>>>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {Integer} n\n# @return {TreeNode[]}\ndef all_possible_fbt(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param Integer $n\n     * @return TreeNode[]\n     */\n    function allPossibleFBT($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  List<TreeNode?> allPossibleFBT(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def allPossibleFBT(n: Int): List[TreeNode] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec all_possible_fbt(n :: integer) :: [TreeNode.t | nil]\n  def all_possible_fbt(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec all_possible_fbt(N :: integer()) -> [#tree_node{} | null].\nall_possible_fbt(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (all-possible-fbt n)\n  (-> exact-integer? (listof (or/c tree-node? #f)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1905",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nGiven an integer `n`, our task is to return a list of root nodes of all possible full binary trees with `n` nodes.\n\n---\n\n### Approach 1: Recursion + Memoization (Top-Down DP)\n\n#### Intuition\n\nAs stated in the description, each node in a full binary tree has either `0` or `2` children. Because there is a root node, a full binary tree will always have an **odd** number of nodes (root node + even child nodes).\n\nTo find all the possible permutations of full binary trees with `n` nodes, we can use one node as the `root` node and split the other `n - 1` nodes between the left and right subtrees in all possible ways. Let us say we place `i` nodes in the left subtree and `n - i - 1` in the right subtree.\n\nNow, we create a list of root nodes called `left` for all possible full binary trees that can be formed using `i` nodes. Similarly, we create a list of root nodes called `right` for all the full binary trees using `n - i - 1` nodes. We can now create a new full binary tree by choosing one element from `left` to be the left child and one element from `right` to be the right child. To generate all full binary trees, we will iterate over all pairs between `left, right`.\n\nAs we know any full binary tree must have an odd number of nodes, `i` and `n - 1 - i` should be odd as well to form full binary trees that are being used as the left and right subtrees. As a result, we move the value of `i` from `i = 1` till `n - 1` incrementing `i` by `2` each time so that we just loop on odd numbers of `i`. Since we have odd `n` and odd `i`, `n - 1 - i` would also be an odd number.\n\nNotice that generating the lists `left` and `right` is the same as the original problem, just with a different value of `n`. We can implement this approach using recursion as we are breaking down a problem with `n` nodes to smaller, repetitive subproblems with `i` and `n - i - 1` nodes (for `i = 1` till `n - 1`, incrementing `i` by `2`) to compute the answer for `n` nodes.\n\nWe can convert the given method `allPossibleFBT` in the implementation into a recursive function as we only need the number of nodes as the parameter to create a list of nodes for all possible full binary tree using recursion. Here is a visual representation of the recursion tree with `7` nodes:\n\n![img](../Figures/894/894-1.png)\n\nSeveral subproblems, such as `allPossibleFBT(3)`, `allPossibleFBT(5)`, etc., are solved multiple times in the partial recursion tree shown above. If we draw the entire recursion tree, we can see that there are many subproblems that are solved repeatedly.\n\nTo avoid this issue, we store the solution of the subproblem in a hashmap that stores the mapping from the number of nodes to the list of root nodes of all possible full binary trees that can be formed with the same number of nodes. When we encounter the same subproblem again, we simply refer to this map to get the required list of `TreeNode`. This is called **memoization**.\n\n#### Algorithm\n\n1. Create a hash map `memo` where `memo[i]` contains the list of root nodes of all possible full binary trees with `i` nodes.\n2. If `n` is even, we return an empty list as we cannot form any full binary tree with even number of nodes.\n3. If `n == 1`, we simply return a list with single node.\n4. If we already have solved this subproblem, i.e., `memo` contains the key `n`, we return `memo[n]`.\n5. We have odd `n`. We declare a list of `TreeNode` called `res` to store the list of root nodes of all possible full binary trees with `n` nodes.\n6. Iterate from `i = 1` to `n - 1` incrementing `i` by `2` after each iteration:\n    - Create a list of `TreeNode` called `left` to store the root nodes for all possible full binary trees using `i` nodes. We perform `left = allPossibleFBT(i)`.\n    - Create a list of `TreeNode` called `right` to store the root nodes for all possible full binary trees using `n - 1 - i` nodes. We perform `right = allPossibleFBT(n - i - 1)`.\n    - Iterate over both the lists `left` and `right` using two loops. For each element `count` in `left` and `r` in `right`, we create a new `root` node and set `root.left = l` and `root.right = r`. We add `root` into our answer variable `res`.\n6. Set `memo[n]` equal to `res`.\n7. Return `res`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/KpYEVWSK/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"KpYEVWSK\"></iframe>\n\n#### Complexity Analysis\n\nNote, the time and space complexity of this problem is difficult to derive exactly. In an interview, do your best to calculate an upper bound while explaining your thought process.\n\n* Time complexity: $O(2^{n/2})$.\n    - The maximum number of nodes that can be in the left subtree of a full binary tree with `n `nodes is `n - 2`, since one node is the root of the tree and one node must be in the right subtree. Therefore, the total number of possible full binary trees with `n` nodes can be calculated by considering all possible combinations of the number of nodes in the left and right subtrees, such that the sum of the number of nodes in the left and right subtrees is equal to `n - 1`.\n    - We can express the total number of possible full binary trees with `n` nodes as a recurrence relation `T(n) = T(1) * T(n - 2) + T(3) * T(n - 4) + ... + T(n - 2) * T(1)`, where the summation goes over all odd numbers from `1` to `n - 2`. Solving this recurrence relation using dynamic programming shows that `T(n)` is equal to the $n^{th}$ [Catalan number](https://en.wikipedia.org/wiki/Catalan_number), which is bounded by $2^{n/2}$.\n    - Our implementation generates all of these trees taking $O(2^{n/2})$ time.\n\n* Space complexity: $O(n \\cdot 2^{n/2})$.\n    - The algorithm uses memoization to store the results of subproblems. Specifically, it uses a hash map called `memo` to store the results of subproblems that have already been solved.\n    - For every subproblem with `n` nodes, the algorithm may need to store up to $2^{n/2}$ `TreeNode` objects in the `memo` hash map. This is because there can be up to $2^{n/2}$ possible full binary trees with `n` nodes, and the algorithm needs to store all of them in order to return the result for the subproblem with `n` number of nodes. There are maximum of `n/2` subproblems (with nodes `1`, `3`, .. `n - 1`) and hence the space complexity of the algorithm is $O(n \\cdot 2^{n/2})$.\n\n---\n\n### Approach 2: Iterative Dynamic Programming\n\n#### Intuition\n\nWe used memoization in the preceding approach to store the answers to subproblems in order to solve a larger problem. We can also use a bottom-up approach to solve such problems without using recursion. We build answers to subproblems iteratively first, then use them to build answers to larger problems.\n\nWe create a list `dp[n + 1]` where `dp[i]` will store a list of root nodes for all possible full binary trees using `i` nodes. This is analogous to what `memo[i]` was in the previous approach.\n\nWe push a single node to `dp[1]` which acts as the base case. \n\nWe form the answer with a smaller number of nodes and move on to form answers for a bigger number of nodes. We run an outer loop from `count = 3` to `count = n` incrementing `count` by `2` after each iteration. This loop controls the total number of nodes `count` under consideration. Please keep in mind that we are only iterating over odd numbers of nodes because the answer for even numbers of nodes is an empty list. Note that here, `count` represents `n` in the previous approach. We have to use a different variable name since we are now implementing the algorithm iteratively and `n` is static per test case.\n\nTo get the list of root nodes for all possible full binary trees with `count` nodes, we would split the `count` nodes with `i` nodes in the left subtree and `count - i - 1` in the right subtree in the same manner as described previously. As we are executing in bottom-up manner, we will already have the list of root nodes for all possible full binary trees with `i` and `count - i - 1` nodes.\n\nWe create a new instance of `TreeNode` called `root` and set the left child of `root` to an element in `dp[i]` and set the right child of `root` to an element in `dp[l - i - 1]` to form a new full binary tree with `count` nodes. We will iterate over all the elements in `dp[i]` and `dp[count - i - 1]` to form all the full binary trees in this split.\n\nWe would run an inner loop to move `i` from `1` to `count - 2` (one node is used as root, `count - 2` nodes are used in the left subtree, leaving at least one node for the right subtree) incrementing `i` by `2` to split the `count` nodes in all the possible ways between the left and right subtree.\n\n#### Algorithm\n\n1. If `n` is even, we return an empty list as we cannot form any full binary tree with even number of nodes.\n2. Create a list `dp[n + 1]` where `dp[i]` will store a list of root nodes for all possible full binary trees using `i` nodes. We initialize each list `dp[i]` to an empty list for `i = 0` to `n`.\n3. We push a single node into `dp[1]` because with `n = 1` we can just have a root node in the tree.\n4. Iterate from `count = 3` till `count = n` incrementing `count` by `2` after each iteration. The outer loop corresponds to the total number of nodes under consideration. We start an inner loop from `i = 1` to `count - 2` incrementing `i` by `2` which represents the number of nodes in the left subtree under consideration. We perform the following in this loop:\n    - Create a variable `j = n - i - 1`. It presents the number of nodes in the right subtree under consideration.\n    - We can form a new full binary tree by creating a new node which acts as a root node and assigning its left child to any element in `dp[i]` and right child to any element in `dp[j]`. As a result, we iterate over both the lists `dp[i]` and `dp[j]` using two loops. For each element `left` in `dp[i]` and `right` in `dp[j]`, we create a new `root` node and set `root.left = left` and `root.right = right` to form all the full binary trees in this split. We add `root` to `dp[count]`.\n5. Return `dp[n]`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Vxs5u5PG/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Vxs5u5PG\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity: $O(2^{n/2})$.\n    - There are a maximum of $2^{n/2}$ possible full binary trees with `n` nodes (where `n` is an odd number) and the algorithm generates all of them without solving any subproblem twice. The time complexity is similar to the previous approach.\n\n* Space complexity: $O(n \\cdot 2^{n/2})$.\n    - Similar to the `memo` hash map used in the previous approach, `dp[i]` will store the list of root nodes for all possible full binary trees with `i` nodes. As there can be a maximum of $2^{n/2}$ possible full binary trees with `n` nodes, `dp` will consume $O(n \\cdot 2^{n/2})$ space to store the list of nodes corresponding to all the number of nodes from `1` to `n`.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

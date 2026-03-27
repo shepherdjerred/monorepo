@@ -1,0 +1,58 @@
+{
+  "questionId": "1340",
+  "questionFrontendId": "1226",
+  "title": "The Dining Philosophers",
+  "titleSlug": "the-dining-philosophers",
+  "difficulty": "Medium",
+  "content": "<p>Five silent philosophers&nbsp;sit at a round table with bowls of spaghetti. Forks are placed between each pair of adjacent philosophers.</p>\n\n<p>Each philosopher must alternately think and eat. However, a philosopher can only eat spaghetti when they have both left and right forks. Each fork can be held by only one philosopher and so a philosopher can use the fork only if it is not being used by another philosopher. After an individual philosopher finishes eating, they need to put down both forks so that the forks become available to others. A philosopher can take the fork on their right or the one on their left as they become available, but cannot start eating before getting both forks.</p>\n\n<p>Eating is not limited by the remaining amounts of spaghetti or stomach space; an infinite supply and an infinite demand are assumed.</p>\n\n<p>Design a discipline of behaviour (a concurrent algorithm) such that no philosopher will starve;&nbsp;<i>i.e.</i>, each can forever continue to alternate between eating and thinking, assuming that no philosopher can know when others may want to eat or think.</p>\n\n<p style=\"text-align: center\"><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/09/24/an_illustration_of_the_dining_philosophers_problem.png\" style=\"width: 400px; height: 415px;\" /></p>\n\n<p style=\"text-align: center\"><em>The problem statement and the image above are taken from <a href=\"https://en.wikipedia.org/wiki/Dining_philosophers_problem\" target=\"_blank\">wikipedia.org</a></em></p>\n\n<p>&nbsp;</p>\n\n<p>The philosophers&#39; ids are numbered from <strong>0</strong> to <strong>4</strong> in a <strong>clockwise</strong> order. Implement the function&nbsp;<code>void wantsToEat(philosopher, pickLeftFork, pickRightFork, eat, putLeftFork, putRightFork)</code> where:</p>\n\n<ul>\n\t<li><code>philosopher</code>&nbsp;is the id of the philosopher who wants to eat.</li>\n\t<li><code>pickLeftFork</code>&nbsp;and&nbsp;<code>pickRightFork</code>&nbsp;are functions you can call to pick the corresponding forks of that philosopher.</li>\n\t<li><code>eat</code>&nbsp;is a function you can call to let the philosopher eat once he has picked&nbsp;both forks.</li>\n\t<li><code>putLeftFork</code>&nbsp;and&nbsp;<code>putRightFork</code>&nbsp;are functions you can call to put down the corresponding forks of that philosopher.</li>\n\t<li>The philosophers are assumed to be thinking as long as they are not asking to eat (the function is not being called with their number).</li>\n</ul>\n\n<p>Five threads, each representing a philosopher, will&nbsp;simultaneously use one object of your class to simulate the process. The function may be called for the same philosopher more than once, even before the last call ends.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 1\n<strong>Output:</strong> [[3,2,1],[3,1,1],[3,0,3],[3,1,2],[3,2,2],[4,2,1],[4,1,1],[2,2,1],[2,1,1],[1,2,1],[2,0,3],[2,1,2],[2,2,2],[4,0,3],[4,1,2],[4,2,2],[1,1,1],[1,0,3],[1,1,2],[1,2,2],[0,1,1],[0,2,1],[0,0,3],[0,1,2],[0,2,2]]\n<strong>Explanation:</strong>\nn is the number of times each philosopher will call the function.\nThe output array describes the calls you made to the functions controlling the forks and the eat function, its format is:\noutput[i] = [a, b, c] (three integers)\n- a is the id of a philosopher.\n- b specifies the fork: {1 : left, 2 : right}.\n- c specifies the operation: {1 : pick, 2 : put, 3 : eat}.</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 60</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"foobar\",\n  \"params\": [\n    {\n      \"name\": \"target\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"languages\": [\n    \"java\",\n    \"python\",\n    \"python3\",\n    \"cpp\",\n    \"golang\",\n    \"rust\"\n  ],\n  \"manual\": true\n}",
+  "stats": "{\"totalAccepted\": \"55K\", \"totalSubmission\": \"101.8K\", \"totalAcceptedRaw\": 55030, \"totalSubmissionRaw\": 101805, \"acRate\": \"54.1%\"}",
+  "likes": 409,
+  "dislikes": 373,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "1"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Concurrency",
+      "slug": "concurrency"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class DiningPhilosophers {\npublic:\n    DiningPhilosophers() {\n        \n    }\n\n    void wantsToEat(int philosopher,\n                    function<void()> pickLeftFork,\n                    function<void()> pickRightFork,\n                    function<void()> eat,\n                    function<void()> putLeftFork,\n                    function<void()> putRightFork) {\n\t\t\n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class DiningPhilosophers {\n\n    public DiningPhilosophers() {\n        \n    }\n\n    // call the run() method of any runnable to execute its code\n    public void wantsToEat(int philosopher,\n                           Runnable pickLeftFork,\n                           Runnable pickRightFork,\n                           Runnable eat,\n                           Runnable putLeftFork,\n                           Runnable putRightFork) throws InterruptedException {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class DiningPhilosophers:\n\n    # call the functions directly to execute, for example, eat()\n    def wantsToEat(self,\n                   philosopher: int,\n                   pickLeftFork: 'Callable[[], None]',\n                   pickRightFork: 'Callable[[], None]',\n                   eat: 'Callable[[], None]',\n                   putLeftFork: 'Callable[[], None]',\n                   putRightFork: 'Callable[[], None]') -> None:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class DiningPhilosophers(object):\n\n    # call the functions directly to execute, for example, eat()\n    def wantsToEat(self, philosopher, pickLeftFork, pickRightFork, eat, putLeftFork, putRightFork):\n        \"\"\"\n        :type philosopher: int\n        :type pickLeftFork: method\n        :type pickRightFork: method\n        :type eat: method\n        :type putLeftFork: method\n        :type putRightFork: method\n        :rtype: void\n        \"\"\"\n        "
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type DiningPhilosophers struct {\n}\n\nfunc (this *DiningPhilosophers) wantsToEat(\n    philosopher int,\n    pickLeftFork func(),\n    pickRightFork func(),\n    eat func(),\n    putLeftFork func(),\n    putRightFork func(),\n) {\n    // TODO: implement your solution here\n}\n"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct DiningPhilosophers;\n\nimpl DiningPhilosophers {\n    fn new() -> Self {\n        DiningPhilosophers\n    }\n\n    // Callbacks are like LeetCode: each used exactly once\n    fn wants_to_eat<F1, F2, F3, F4, F5>(\n        &self,\n        philosopher: i32,\n        pick_left_fork: F1,\n        pick_right_fork: F2,\n        eat: F3,\n        put_left_fork: F4,\n        put_right_fork: F5,\n    )\n    where\n        F1: FnOnce(),\n        F2: FnOnce(),\n        F3: FnOnce(),\n        F4: FnOnce(),\n        F5: FnOnce(),\n    {\n        // TODO: implement your dining philosophers solution here\n        // You can translate your C++ logic into Rust inside this function.\n    }\n}\n"
+    }
+  ],
+  "solution": null
+}

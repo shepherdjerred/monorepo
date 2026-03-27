@@ -3,7 +3,7 @@
 Usage: uv run -m ci.clauderon_upload
 
 Required env vars:
-  GITHUB_TOKEN - GitHub token for release asset upload
+  GH_TOKEN - GitHub token for release asset upload
 """
 from __future__ import annotations
 
@@ -24,9 +24,9 @@ def main() -> None:
         print("No clauderon release detected, skipping", flush=True)
         return
 
-    token = os.environ.get("GITHUB_TOKEN", "")
+    token = os.environ.get("GH_TOKEN", "")
     if not token:
-        print("GITHUB_TOKEN not set, skipping clauderon upload", flush=True)
+        print("GH_TOKEN not set, skipping clauderon upload", flush=True)
         return
 
     print(f"Downloading clauderon v{version} artifacts", flush=True)

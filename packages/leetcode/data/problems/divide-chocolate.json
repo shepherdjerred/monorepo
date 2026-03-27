@@ -1,0 +1,138 @@
+{
+  "questionId": "1192",
+  "questionFrontendId": "1231",
+  "title": "Divide Chocolate",
+  "titleSlug": "divide-chocolate",
+  "difficulty": "Hard",
+  "content": "<p>You have one chocolate bar that consists of some chunks. Each chunk has its own sweetness given by the array&nbsp;<code>sweetness</code>.</p>\n\n<p>You want to share the chocolate with your <code>k</code>&nbsp;friends so you start cutting the chocolate bar into <code>k + 1</code>&nbsp;pieces using&nbsp;<code>k</code>&nbsp;cuts, each piece consists of some <strong>consecutive</strong> chunks.</p>\n\n<p>Being generous, you will eat the piece with the <strong>minimum total sweetness</strong> and give the other pieces to your friends.</p>\n\n<p>Find the <strong>maximum total sweetness</strong> of the&nbsp;piece you can get by cutting the chocolate bar optimally.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> sweetness = [1,2,3,4,5,6,7,8,9], k = 5\n<strong>Output:</strong> 6\n<b>Explanation: </b>You can divide the chocolate to [1,2,3], [4,5], [6], [7], [8], [9]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> sweetness = [5,6,7,8,9,1,2,3,4], k = 8\n<strong>Output:</strong> 1\n<b>Explanation: </b>There is only one way to cut the bar into 9 pieces.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> sweetness = [1,2,2,1,2,2,1,2,2], k = 2\n<strong>Output:</strong> 5\n<b>Explanation: </b>You can divide the chocolate to [1,2,2], [1,2,2], [1,2,2]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= k &lt; sweetness.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= sweetness[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "After dividing the array into K+1 sub-arrays, you will pick the sub-array with the minimum sum.",
+    "Divide the sub-array into K+1 sub-arrays such that the minimum sub-array sum is as maximum as possible.",
+    "Use binary search with greedy check."
+  ],
+  "metaData": "{\n  \"name\": \"maximizeSweetness\",\n  \"params\": [\n    {\n      \"name\": \"sweetness\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"70.2K\", \"totalSubmission\": \"116K\", \"totalAcceptedRaw\": 70187, \"totalSubmissionRaw\": 115979, \"acRate\": \"60.5%\"}",
+  "likes": 1040,
+  "dislikes": 77,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Split Array Largest Sum\", \"titleSlug\": \"split-array-largest-sum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Capacity To Ship Packages Within D Days\", \"titleSlug\": \"capacity-to-ship-packages-within-d-days\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,4,5,6,7,8,9]\n5",
+    "[5,6,7,8,9,1,2,3,4]\n8",
+    "[1,2,2,1,2,2,1,2,2]\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximizeSweetness(vector<int>& sweetness, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximizeSweetness(int[] sweetness, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximizeSweetness(self, sweetness: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximizeSweetness(self, sweetness, k):\n        \"\"\"\n        :type sweetness: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} sweetness\n * @param {number} k\n * @return {number}\n */\nvar maximizeSweetness = function(sweetness, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximizeSweetness(sweetness: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaximizeSweetness(int[] sweetness, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maximizeSweetness(int* sweetness, int sweetnessSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximizeSweetness(sweetness []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximizeSweetness(sweetness: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximizeSweetness(_ sweetness: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximize_sweetness(sweetness: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} sweetness\n# @param {Integer} k\n# @return {Integer}\ndef maximize_sweetness(sweetness, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $sweetness\n     * @param Integer $k\n     * @return Integer\n     */\n    function maximizeSweetness($sweetness, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximizeSweetness(List<int> sweetness, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximizeSweetness(sweetness: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximize_sweetness(sweetness :: [integer], k :: integer) :: integer\n  def maximize_sweetness(sweetness, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximize_sweetness(Sweetness :: [integer()], K :: integer()) -> integer().\nmaximize_sweetness(Sweetness, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximize-sweetness sweetness k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1203",
+    "content": "[TOC]\n\n## Solution\n\n--- \n### Overview\n\nIn this problem, we are asked to cut a chocolate bar into `k + 1` pieces having one or more consecutive chunks. Each chunk has a sweetness value, the sweetness of a piece is equal to the total sweetness of all chunks in the piece, and we always receive the piece with the **minimum total sweetness**. Our goal is to find a way to **maximize** the sweetness of the piece that we take.\n\n\n<br/>\n\n---\n\n### Approach 1: Binary Search + Greedy\n\n\n**Intuition**   \n\nWe can simplify the problem a little bit by thinking about it abstractly and focusing on the mathematical part: the chocolate bar is represented by a list of non-zero integers, the sum of a contiguous subarray stands for the sweetness of the chocolate piece represented by this subarray. Here the task is to find the maximum possible minimum sum of all subarrays after dividing the array into `k + 1` contiguous subarrays. \n\nAt first glance, this looks like an **optimization problem**, where we need to find the best cutting plan (the plan that has the maximum value for us among all possible cutting plans). A cutting plan is a plan that distributes `k + 1` contiguous pieces of chocolate bar with no leftover chunks of chocolate.\n\nHowever, before we get lost optimizing a cutting plan, let's consider this problem from a different perspective:\n\nIn every distinct cutting plan, there is always a minimum value (the sweetness of the chocolate piece for us). Hence, we have a collection of all possible minimum values (we will call it **workable value** from now on) from all cutting plans. Likewise, we will call any minimum value that cannot result from a valid cutting plan an **unworkable value**.\n\nFor example, for a given chocolate bar, we have `i` cutting plans and the collection of all workable values is `[a, b, c, d]`. In this example, all the other numbers besides `a`, `b`, `c`, and `d` are unworkable. The workable values might distribute like below. Note that the figure does not necessarily stand for the true case; it's just a representative since the actual distribution of the workable values is still unknown to us! \n\n![limits](../Figures/1231/bin_0.png)\n\nThus the original question becomes: how can we find the maximum workable value among all workable values `a`, `b`, `c`, and `d`?\n\nWe could use a brute force approach and try every possible combination of `k` cuts from the `N - 1` positions where the chocolate bar can be cut, and then select the combination that results in us getting a piece with the optimal minimum sweetness. However, there are $$N - 1 \\choose k$$ ways we can cut the chocolate bar `k` times, and many of the combinations may have the same minimum sweetness value, so this is probably not the most efficient approach. However, since we are only interested in the minimum sweetness value, rather than trying every possible combination of cuts, we could instead try every possible minimum sweetness value.\n\nWe can start with a large number `x` which must be unworkable, for example, the sum of total sweetness plus 1, that is `x = sum(sweetness) + 1`. Since this number is larger than the sweetness of the entire chocolate bar, there is no way we can cut a piece with the sweetness of this number from the bar. Therefore, `x` and all larger numbers must be unworkable. Then our task is to reduce `x` by one each time until `x` becomes a workable value; this will be the answer.\n\n- Test if the value `x - 1` works, that is, cut the chocolate into `k + 1` pieces of which the minimum sweetness is `x - 1`.\n\n- If `x - 1` works, then we have found the maximum workable value!\n\n- However, if `x - 1` still doesn't work, we go ahead and check if the value `x - 2` works.\n\n- If `x - 2` doesn't work, we will move on to test whether `x - 3` works.\n\n\n- So on so forth till we find the first value that works.\n\n\nInteresting! We no longer need to optimize the cutting plan. We can just try every value to see if it works or not, and we will still find the final answer! In other words, we convert this **optimization** problem into a **decision** problem posed as a series of yes-no questions.\n\n![limits](../Figures/1231/tree.png)\n\n---\n\nDon't celebrate too early, here comes two questions for this new decision problem:\n\n- Given a minimum sweetness `x`, how do we check if a cutting plan exists? That is, to answer the yes-no questions above.\n\n- Is there a more efficient method to find the maximum workable value `x`?\n\n\nLet's solve these two questions one by one.\n\n---\n\nA straightforward approach to verify if a cutting plan works is as follows. Once we have selected a minimal sweetness `x` to test, we just need to traverse the chocolate bar chunk by chunk and sum the sweetness. Once the total sweetness of a piece reaches `x`, then we cut the current piece off of the bar and start building the next piece. Since we want to see if the cutting plan works in the best case, there is no need to add any more chunks to a piece once it reaches the minimum sweetness `x`. \nFor this approach, there are two possible ending conditions: \n  1. We reach the end of the chocolate bar. \n  2. Everyone has a piece with sweetness no less than `x`.\n\nThus, if we meet the first ending condition and not everyone has received a chunk of chocolate, then we know `x` is not a workable value.  On the other hand, if we meet the second ending condition, then we know that `x` is a workable value. \n\nLet's get our hands dirty by going through two examples. Imagine you have a chocolate bar that consists of 9 chunks indicated by the list in the figure below, and you would like to cut it into 5 pieces for your four friends and yourself.\n![limits](../Figures/1231/case1_1.png)\n\nIn case 1, for demonstration purposes, we will select 5 as the minimum value.  This means that every piece should have a sweetness of at least 5.\n\n![limits](../Figures/1231/case1_2.png)\n\nLet's cut the first chocolate piece for the first person.  We start on the left side of the chocolate bar and count the total sweetness accumulated so far.\n\n![limits](../Figures/1231/case1_3.png)\n\nWhen we take the third chunk into account, the total sweetness is 6, which is not less than 5. So let's cut this piece off and give it to the first person. Job well done! (Partially)\n\n\n![limits](../Figures/1231/case1_4.png)\n\nLet's pick up from where we just cut the chocolate and start counting chunks for the second person.\n\n![limits](../Figures/1231/case1_5.png)\n\nOnce we reach the fifth chunk, the total sweetness of the current piece is 4 + 5 = 9, which is not less than 5, so we can cut this piece off and give it to the second person.\n\n\n![limits](../Figures/1231/case1_6.png)\n\nWe will repeat this process for the third person.\n\n![limits](../Figures/1231/case1_7.png)\n\nFinally, every person (including yourself) has a valid piece with sweetness no less than 5. Job done!\n\n---\n\nIn case 2, since we know that 5 works, let's try a larger value.  For demonstration purposes, we will select 8 as the minimum value.  This means that every piece should have a sweetness of at least 8. Let's test if this plan works!\n\n![limits](../Figures/1231/case2_1.png)\n\nAs before, we will start by cutting chocolate for the first person.\n\n![limits](../Figures/1231/case2_2.png)\n\nNotice that the minimum sweetness is 8 in this case, and we get a total sweetness that is not less than 8 after taking the fourth piece into account. \n\n![limits](../Figures/1231/case2_3.png)\n\nOops, the last person does not have a piece with sweetness of at least 8, which means we failed at cutting chocolate!\n\n\n---\n\nNow we understand how to cut the chocolate with any given minimum value. Let's move on to the second question: Is there a better method of searching for the optimal minimum value?\n\nA key observation that we can make from the first example is:\n> If a cutting plan with the minimum value of `x` exists, then there also exists a cutting plan with the minimum value of `x - 1`. In other words, since 5 is a workable value, 4 is guaranteed to be a workable value.\n\nIn the cutting plan for value `x`, every piece has sweetness no less than `x`, which is no less than `x - 1` as well, so the cutting plan for the value of `x` will automatically work for the value of `x - 1`!\n\nWait a second, we are asked to find the cutting plan where the minimum sweetness piece has a value of **exactly** `x`, but this plan does not guarantee that. For instance, in the first example 5 was a workable value, but none of the pieces had a value of **exactly** 5.  So how can we handle this special case?\n\nTake the figure below as an example, where 3 people share a chocolate bar that consists of 3 chunks of sweetness 8.\n\n![limits](../Figures/1231/law_1.png)\n\nIf we set 8 as the minimum value, we can find a workable cutting plan and this plan has the exact minimum value 8. However, if we set 6 as the minimum value, the original cutting plan for a minimum value of 8 still works for 6, but we can not find any piece with the sweetness of exactly 6!\n\nFortunately, we do not need to worry about the special case above. The reason is that when a fixed cutting plan with the minimal value `x` exists but we can not find a single piece with the sweetness of exactly `x`, it means that every piece has a sweetness greater than `x`. Thus the minimum sweetness in this cutting plan must be a workable value. \n\nHence, once we find a cutting plan with a minimum workable value of `x`, there are only two possible scenarios:\n  1. There exists a piece with a sweetness of exactly `x`. \n  2. There does not exist a piece with an exact sweetness of `x`.  However, a workable value exists that is **larger than** `x`.\n\nNote that we do not need to worry about the possibility of there always being a larger workable value. This is because if the minimum value of `x` does not work, then the value of `x + 1` also will not work. Similarly, according to the previous law, if `x` works, then `x - 1` will work.\n\nThis idea is presented visually in the figure below.\n\n![limits](../Figures/1231/law.png)\n\nTherefore, the workable values (the sweetness we can get) distribute like the figure below, we are supposed to get the maximum workable value among all the workable values.\n\n![limits](../Figures/1231/bin.png)\n\n>This quality, a division of the workable and unworkable values at the optimal value, tells us that **binary search** is a promising method.\n\n---\n\nThus, let's see how we can apply binary search to solve this problem.  Anytime we approach a problem using binary search, we should consider these three common questions:\n- What is the search space?\n- How can we reduce the search space? \n- When can we return the result?\n\nLet's solve these three questions one by one.\n\n>The boundaries of the search space are the minimum possible answer (lower boundary) and the maximum possible answer (upper boundary). Therefore, our binary search will not miss any possible workable value.\n\nIn this problem, the left boundary `left` is the minimum of sweetness, that is `left = min(sweetness)`, since `left` is the smallest possible sweetness for this piece of chocolate. (There is no piece with sweetness less than `left`!)\n\nThe right boundary `right` is the total sweetness of the chocolate bar (`total`) divided by the number of people `k + 1` , that is `total / (k + 1)`. It is the largest possible sweetness we can get for ourselves. Note that if the sweetness of the chunk for us is larger than this value, say `total / (k + 1) + 1`, this will still be the smallest sweetness.  Thus, the total sweetness is no less than `(total / (k + 1) + 1) * (k + 1)` which is strictly larger than `total`, meaning any value larger than `total / (k + 1)` is impossible.\n\n\nTherefore, we can assign the lower boundary `left = min(sweetness)` and the upper boundary `right = total / (k + 1)`. The optimal minimum sweetness must be within this range.\n\n>Since we are looking for the maximum possible value, thus the middle value should be `mid = (left + right + 1) / 2`.\n\nIf we can successfully cut the chocolate into `k + 1` pieces and every piece has a sweetness no less than `mid`, this means `mid` is a workable value and that there may exist a larger workable value. Thus, we can eliminate the search space `[left, mid)` and continue searching on the remaining interval `[mid, right]`. Accordingly, we will reassign the left boundary `left` as `mid`, that is to say, `left = mid`.\n\nOn the other hand, if we cannot cut the chocolate into `k + 1` pieces with sweetness no less than `mid`, this means the current value `mid` is too large. Therefore we should eliminate the search space `[mid, right]` and continue searching on the remaining half `[left, mid)` containing values smaller than `mid`. Therefore, we reassign the right boundary `right` as `mid - 1`, that is to say, `right = mid - 1`.\n\n**Why do we use `mid = (left + right + 1) / 2` here instead of `mid = (left + right) / 2`?**\n \nTo understand why let's consider the example in the figure below:\n\n![limits](../Figures/1231/eliminate.png)\n\nConsider the case where `left` is already at the maximum workable value and `right` is the minimum unworkable value, as described in the figure above. We are only one step away from finishing the binary search. If we use `mid = (left + right) / 2`, then `mid` will be equal to `left` for which a workable plan exists. According to the rule for how we reduce the search space, we will set `left = mid` for the next search.  Thus, the new search space is `[mid, right] = [left, right]`, which is exactly the same as our previous search space.  Thus, the search will loop forever!\n\nHowever, using `mid = (left + right + 1) / 2` means we will now set `mid` equal to `right` instead. Since the new `mid` is not workable, we will create the new search space according to the rule, that is `[left, mid - 1] = [left, left]`. Since the left boundary equals the right boundary, we can successfully stop the binary search and return either boundary as the correct answer!\n\n\n---\n\n<details>\n\n<summary>There are many other interesting problems that can be solved by performing a binary search to find the optimal value. You can practice using the binary search approach on the following problems! (click to show)</summary>\n\n<br>\n\n- [410. Split Array Largest Sum](https://leetcode.com/problems/split-array-largest-sum/) \n- [774. Minimize Max Distance to Gas Station](https://leetcode.com/problems/minimize-max-distance-to-gas-station/) \n- [875. Koko Eating Bananas](https://leetcode.com/problems/koko-eating-bananas/) \n- [1011. Capacity To Ship Packages Within D Days](https://leetcode.com/problems/capacity-to-ship-packages-within-d-days/) \n\n</details>\n\n\n\n**Algorithm**\n\n1) Set up the two boundaries (`left` and `right`) of the search space, that is: `left = 1 `, `right = total / (k + 1)`.\n\n2) Get the middle value from `left` and `right`, that is `mid = (left + right + 1) / 2`.\n\n3) Check if we can cut the chocolate into `k + 1` pieces with sweetness no less than `mid`, where `mid` is our current guess at the optimal workable value.\n\n4) If cutting the chocolate bar in this method results in everyone receiving a piece of chocolate that is at least as sweet as `mid`, then let `left = mid`. Otherwise, let `right = mid - 1`. \n\n5) Repeat the **steps 2, 3, and 4** until the two boundaries overlap, i.e., `left == right`, which means that you have found the maximum total sweetness of a piece you can receive by cutting the chocolate bar optimally. We can return either `left` or `right` as the answer.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/Qk7V7Sjc/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Qk7V7Sjc\"></iframe>\n\n\n**Complexity Analysis**\n\nLet $$n$$ be the number of chunks in the chocolate and $$S$$ be the total sweetness of the chocolate bar.\n\n* Time complexity: $$O(n \\cdot \\log(S / (k + 1)))$$\n\n    The lower and upper bounds are `min(sweetness)` and `S / (k + 1)` respectively. In the worst case (when `k` is small), the right boundary will have the same magnitude as `S`, and the left boundary will be 1. Thus, the maximum possible time complexity for a single binary search is $$O(\\log S)$$.\n    For every single search, we need to traverse the chocolate bar in order to allocate chocolate chunks to everyone, which takes $$O(n)$$ time. \n    \n\n* Space complexity: $$O(1)$$\n\n    For every search, we just need to count the number of people who receive a piece of chocolate with enough sweetness, and the total chocolate sweetness for the current people, both only cost constant space.\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

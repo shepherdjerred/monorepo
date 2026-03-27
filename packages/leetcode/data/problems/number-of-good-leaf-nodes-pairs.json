@@ -1,0 +1,142 @@
+{
+  "questionId": "1653",
+  "questionFrontendId": "1530",
+  "title": "Number of Good Leaf Nodes Pairs",
+  "titleSlug": "number-of-good-leaf-nodes-pairs",
+  "difficulty": "Medium",
+  "content": "<p>You are given the <code>root</code> of a binary tree and an integer <code>distance</code>. A pair of two different <strong>leaf</strong> nodes of a binary tree is said to be good if the length of <strong>the shortest path</strong> between them is less than or equal to <code>distance</code>.</p>\n\n<p>Return <em>the number of good leaf node pairs</em> in the tree.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/07/09/e1.jpg\" style=\"width: 250px; height: 250px;\" />\n<pre>\n<strong>Input:</strong> root = [1,2,3,null,4], distance = 3\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The leaf nodes of the tree are 3 and 4 and the length of the shortest path between them is 3. This is the only good pair.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/07/09/e2.jpg\" style=\"width: 250px; height: 182px;\" />\n<pre>\n<strong>Input:</strong> root = [1,2,3,4,5,6,7], distance = 3\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The good pairs are [4,5] and [6,7] with shortest path = 2. The pair [4,6] is not good because the length of ther shortest path between them is 4.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> root = [7,1,4,6,null,5,3,null,null,null,null,null,2], distance = 3\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The only good pair is [2,5].\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the <code>tree</code> is in the range <code>[1, 2<sup>10</sup>].</code></li>\n\t<li><code>1 &lt;= Node.val &lt;= 100</code></li>\n\t<li><code>1 &lt;= distance &lt;= 10</code></li>\n</ul>\n",
+  "hints": [
+    "Start DFS from each leaf node. stop the DFS when the number of steps done > distance.",
+    "If you reach another leaf node within distance steps, add 1 to the answer.",
+    "Note that all pairs will be counted twice so divide the answer by 2."
+  ],
+  "metaData": "{\n  \"name\": \"countPairs\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"TreeNode\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"distance\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"161.5K\", \"totalSubmission\": \"224.9K\", \"totalAcceptedRaw\": 161453, \"totalSubmissionRaw\": 224903, \"acRate\": \"71.8%\"}",
+  "likes": 2500,
+  "dislikes": 111,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,2,3,null,4]\n3",
+    "[1,2,3,4,5,6,7]\n3",
+    "[7,1,4,6,null,5,3,null,null,null,null,null,2]\n3"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bytedance\", \"name\": \"ByteDance\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    int countPairs(TreeNode* root, int distance) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public int countPairs(TreeNode root, int distance) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def countPairs(self, root: Optional[TreeNode], distance: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def countPairs(self, root, distance):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :type distance: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @param {number} distance\n * @return {number}\n */\nvar countPairs = function(root, distance) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction countPairs(root: TreeNode | null, distance: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public int CountPairs(TreeNode root, int distance) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nint countPairs(struct TreeNode* root, int distance) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc countPairs(root *TreeNode, distance int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun countPairs(root: TreeNode?, distance: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func countPairs(_ root: TreeNode?, _ distance: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn count_pairs(root: Option<Rc<RefCell<TreeNode>>>, distance: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @param {Integer} distance\n# @return {Integer}\ndef count_pairs(root, distance)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @param Integer $distance\n     * @return Integer\n     */\n    function countPairs($root, $distance) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  int countPairs(TreeNode? root, int distance) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def countPairs(root: TreeNode, distance: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec count_pairs(root :: TreeNode.t | nil, distance :: integer) :: integer\n  def count_pairs(root, distance) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec count_pairs(Root :: #tree_node{} | null, Distance :: integer()) -> integer().\ncount_pairs(Root, Distance) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (count-pairs root distance)\n  (-> (or/c tree-node? #f) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2375",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nGiven the root of a binary tree, we need to find the number of distinct pairs of leaf nodes whose shortest path distance is less than the given `distance`. The shortest path length between nodes is defined as the minimum number of edges traversed.  \n\n---\n\n### Approach 1: Graph Conversion + BFS \n\n### Intuition\n\nBecause we're interested only in the leaf nodes of the tree, we can start by using any tree traversal algorithm (pre-order, in-order, or post-order) to identify all the leaf nodes.  \n\nHowever, once we have a leaf node, traversing back up the tree to explore paths to other leaf nodes is challenging because we lack direct access to its parent/ancestor nodes. In a binary tree, each node references only its children. To overcome this, we can convert the binary tree into an undirected graph. This allows nodes to reference both their parents and children, simplifying traversal.  \n\nAfter converting the tree to a graph, we can apply graph traversal algorithms to find the shortest paths between leaf nodes. Breadth-first search (BFS) is particularly suitable for this task as it finds the shortest paths in graphs with unweighted edges. In our newly converted graph, all edges are considered unweighted since they all have equal cost. We can run BFS from each leaf node, and for each leaf node that BFS encounters within the given `distance`, we count it as a good leaf node pair.\n\n### Algorithm\n\n1. Initialize an adjacency list to convert the tree into a graph.\n2. Initialize a set to store the leaf nodes of the tree.\n3. Use a helper method `traverseTree` to traverse the tree to build the graph and find the leaf nodes. Maintain the current node as well as the parent node in the parameters.\n    * If the current node is a leaf node, add it to the set initialize in step 2.\n    * In the adjacency list, add the current node to the parent node's list of neighbors. Also, add the parent node to the current node's list of neighbors.\n    * Recursively call `traverseTree` for the current node's left child and right child.\n4. Initialize an `ans` variable to count the number of good leaf node pairs.\n5. Iterate through each leaf node in the set:\n    * Run BFS for the current leaf node. BFS can be terminated early once all nodes that are a `distance` away from the current leaf node are discovered. Increment `ans` for every leaf node encountered in each BFS run. \n6. Return `ans / 2`. We count each pair twice so we need to divide by 2 to get the actual count.\n\n### Implementation\n\n<iframe src=\"https://leetcode.com/playground/5F4hkKjP/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"5F4hkKjP\"></iframe>\n\n### Complexity Analysis\n\nLet $N$ be the size of the binary tree given by `root`.\n\n* Time Complexity: $O(N^2)$\n\n    Traversing the tree to build the graph and find the list of leaf nodes takes $O(N)$ time. This is because there are `N` total nodes to process and each node takes constant time to be processed (adding to the graph and set are constant time operations). \n\n    BFS runs for each leaf node in the binary tree. The number of leaf nodes is linearly proportional to the total size of the tree. In the worst case, each BFS traversal covers the entire graph, which takes $O(N)$ time. Therefore, the overall time complexity is $O(N^2)$.  \n\n* Space Complexity: $O(N)$\n\n    The adjacency list, set of leaf nodes, BFS queue, and BFS seen set all require $O(N)$ space individually. Therefore, the overall space complexity remains $O(N)$  \n\n### Approach 2: Post-Order Traversal \n\n### Intuition \n\nIn a binary tree, the shortest path between any two nodes will always go through their lowest common ancestor (LCA). The LCA of two nodes `x` and `y` is the deepest node that is an ancestor to both `x` and `y`. Utilizing this insight, we can efficiently count the shortest paths between leaf nodes that traverse each node `n` in the tree. For every node `n`, we consider paths between all pairs of descendant leaf nodes under `n` and check if they are within the specified `distance`. Since `n` serves as the LCA for these leaf nodes, these paths are inherently the shortest.  \n\nTo achieve this efficiently, we use a post-order traversal of the tree. In this traversal, calculations for each node `root` are performed after recursively processing its left and right subtrees. For our problem, this involves counting all shortest paths between leaf nodes passing through `root`. By leveraging results from recursive calls on the left and right subtrees, we can efficiently find the total count of such paths across the entire tree. \n\nSuppose each recursive call returns the count of leaf nodes that are a distance `d` away for all possible values of `d`.\n\n![Subtrees returning leaf node counts for each distance](../Figures/1530/TreeWithDistanceCounts.png)\n\nIn this illustration, the recursive call to the left subtree rooted at `node 4` returns 1 leaf node at distance 0 from `node 4`. Similarly, the recursive call to the right subtree rooted at `node 5` returns 2 leaf nodes at distance 1 from `node 5`. This allows us to compute the number of optimal shortest paths through `node 2` by iterating over distance pairs. For instance, the distance of the shortest leaf node path that goes through `node 2` is computed as `2 + leftSubtreeLeafNodeDistance + rightSubtreeLeafNodeDistance = 2 + 0 + 1 = 3`. In this scenario, because there is 1 leaf node in the left subtree and 2 leaf nodes in the right subtree, the total number of pairs for this distance is `numberOfLeafNodesInLeftSubtree * numberOfLeafNodesInRightSubtree = 1 * 2 = 2`. We only count the pairs whose shortest path distance is less than or equal to `distance` for our final answer. \n\n![Stitching leaf node path that goes through current node](../Figures/1530/TreeWithPath.png)\n\nFinally, once these computations are completed, the next step is to return the counts of leaf nodes for all distances `d` from the current node. This is achieved by shifting all the counts returned from the left and right subtree by 1. For instance, 1 leaf node that is a distance 0 from `node 4` will translate to 1 leaf node that is a distance 1 from `node 2`.\n\n### Algorithm\n\n1. Define `postOrder(TreeNode currentNode, int distance)` helper function. This function will return an array that contains the count of leaf nodes for all possible distances from `currentNode` (`currentNode[0]` to `currentNode[10]`), as well as the total number of good leaf nodes pairs rooted at `currentNode` (`currentNode[11]`).\n    * If `currentNode` is `null`, then return an empty array with all 0s.\n    * If `currentNode` is a leaf node, then return an array where the count for leaf nodes with distance 0 is set to 1.\n    * Recursively call `postOrder` on the left subtree and store the result in the `left` array.\n    * Recursively call `postOrder` on the right subtree and store the result in the `right` array.\n    * Initialize a `current` array.\n    * Shift the counts in `left` and `right` by 1 in `current`. Specifically, for each distance `d`:\n        * `current[d+1] = left[d] + right[d]`.\n    * Initialize `current[11]` to `left[11] + right[11]`. This is the total number of good leaf nodes pairs under the left and right subtrees.\n    * For all distance pairs `(d1, d2)`:\n        * If `2 + d1 + d2 <= distance`, then `current[11] += left[d1] * right[d2]`.\n    * Return `current`.\n2. Return `postOrder(root, distance)[11]`, the total number of good leaf nodes pairs rooted at `root`.\n \n### Implementation\n\n<iframe src=\"https://leetcode.com/playground/iFMqvTzM/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"iFMqvTzM\"></iframe>\n\n### Complexity Analysis\n\nLet $N$ be the size of the binary tree rooted at `root`, $D$ be the maximum distance given by `distance`, and $H$ be the height of the binary tree.\n\n* Time Complexity: $O(N \\cdot D^2)$\n\n    The post-order traversal visits each node, which will take $O(N)$ linear time. At each node, constructing the `current` array involves iterating through the `left` and `right` arrays, and checking distance pairs to find paths within `distance`. Given the constant size (12), constructing `current` is $O(1)$.  \n\n    Checking distance pairs takes $O(D^2)$ time. Therefore, the total time complexity is $O(N \\cdot D^2)$.\n\n* Space Complexity: $O(H)$\n\n    The recursion call stack, `current` array, `left` array, and `right` array all contribute to the space complexity. The maximum depth of the call stack will be proportional to the height of the tree. The arrays (`current`, `left`, `right`) have constant space (12 elements), $O(1)$. Thus, the overall space complexity is $O(H)$.\n\n### Approach 3: Post-Order Traversal With Prefix Sum Counting\n\n### Intuition \n\nIn the previous approach, evaluating all possible leaf node distance pairs involves an expensive $O(N^2)$ operation. This is because for each leaf node, we need to compare its distance with every other leaf node, leading to a quadratic time complexity.  \n\nHowever, we can optimize this process by recognizing that only specific pairs $(d1, d2)$ need to be considered. Specifically, we are interested in pairs where $2 + d1 + d2 \\leq \\text{distance}$. This condition ensures that the combined distance does not exceed the given threshold.  \n\nTo count these pairs more efficiently, we iterate over possible values of `d2`. For each `d2`, we count all valid `d1` values that satisfy $0 \\leq d1 \\leq \\text{distance} - d2 - 2$. This constraint helps us focus only on pairs that meet the distance requirement.  \n\nThe total number of good pairs for a specific `d2` can be calculated as $(\\text{left}[0] \\times \\text{right}[d2]) + (\\text{left}[1] \\times \\text{right}[d2]) + \\ldots + (\\text{left}[\\text{distance} - d2 - 2] \\times \\text{right}[d2])$. This expression sums the products of corresponding counts of distances from the left and right subtrees.  \n\nTo simplify, we can rewrite this sum as $\\text{right}[d2] \\times (\\text{left}[0] + \\text{left}[1] + \\ldots + \\text{left}[\\text{distance} - d2 - 2])$. The term inside the parentheses is a prefix sum of the left subtree distances, which we can compute efficiently.  \n\n### Algorithm\n\n1. Define the `postOrder(TreeNode currentNode, int distance)` helper function. This function will return an array that contains the count of leaf nodes for all possible distances from `currentNode` (`currentNode[0]` to `currentNode[10]`), as well as the total number of good leaf node pairs rooted at `currentNode` (`currentNode[11]`).  \n    * If `currentNode` is `null`, then return an empty array with all 0s.  \n    * If `currentNode` is a leaf node, then return an array where the count for leaf nodes with distance 0 is set to 1.  \n    * Recursively call `postOrder` on the left subtree and store the result in the `left` array.  \n    * Recursively call `postOrder` on the right subtree and store the result in the `right` array.  \n    * Initialize a `current` array.  \n    * Shift the counts in `left` and `right` by 1 in `current`. Specifically, for each distance `d`:  \n        * `current[d+1] = left[d] + right[d]`.  \n    * Initialize `current[11]` to `left[11] + right[11]`. This is the total number of good leaf node pairs under the left and right subtrees.  \n    * Initialize `prefixSum` and `i` to 0  \n    * For all `d2` from `distance - 2` to `1`:  \n        * `prefixSum += left[i++]`  \n        * `current[11] += prefixSum * right[d2]`  \n    * Return `current`.  \n2. Return `postOrder(root, distance)[11]`, the total number of good leaf nodes pairs rooted at `root`.  \n\n### Implementation\n\n<iframe src=\"https://leetcode.com/playground/FJd3EZsA/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"FJd3EZsA\"></iframe>\n\n### Complexity Analysis\n\nLet $N$ be the size of the binary tree rooted at `root`, $D$ be the maximum distance given by `distance`, and $H$ be the height of the binary tree.\n\n* Time Complexity: $O(N \\cdot D)$\n\n    Similar to the previous approach, the post-order traversal which will take $O(N)$ time, where constructing `current` for a given node is $O(1)$.  \n\n    Counting all the good leaf node distance pairs will take $O(D)$ time. Therefore, the total time complexity is $O(N \\cdot D)$.\n\n* Space Complexity: $O(H)$\n\n    Just like before, the maximum depth of the call stack will be proportional to the height of the tree. The arrays (`current`, `left`, `right`) have constant space (12 elements), $O(1)$. Thus, the overall space complexity is $O(H)$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

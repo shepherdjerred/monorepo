@@ -1,0 +1,139 @@
+{
+  "questionId": "1424",
+  "questionFrontendId": "1298",
+  "title": "Maximum Candies You Can Get from Boxes",
+  "titleSlug": "maximum-candies-you-can-get-from-boxes",
+  "difficulty": "Hard",
+  "content": "<p>You have <code>n</code> boxes labeled from <code>0</code> to <code>n - 1</code>. You are given four arrays: <code>status</code>, <code>candies</code>, <code>keys</code>, and <code>containedBoxes</code> where:</p>\n\n<ul>\n\t<li><code>status[i]</code> is <code>1</code> if the <code>i<sup>th</sup></code> box is open and <code>0</code> if the <code>i<sup>th</sup></code> box is closed,</li>\n\t<li><code>candies[i]</code> is the number of candies in the <code>i<sup>th</sup></code> box,</li>\n\t<li><code>keys[i]</code> is a list of the labels of the boxes you can open after opening the <code>i<sup>th</sup></code> box.</li>\n\t<li><code>containedBoxes[i]</code> is a list of the boxes you found inside the <code>i<sup>th</sup></code> box.</li>\n</ul>\n\n<p>You are given an integer array <code>initialBoxes</code> that contains the labels of the boxes you initially have. You can take all the candies in <strong>any open box</strong> and you can use the keys in it to open new boxes and you also can use the boxes you find in it.</p>\n\n<p>Return <em>the maximum number of candies you can get following the rules above</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> status = [1,0,1,0], candies = [7,5,4,100], keys = [[],[],[1],[]], containedBoxes = [[1,2],[3],[],[]], initialBoxes = [0]\n<strong>Output:</strong> 16\n<strong>Explanation:</strong> You will be initially given box 0. You will find 7 candies in it and boxes 1 and 2.\nBox 1 is closed and you do not have a key for it so you will open box 2. You will find 4 candies and a key to box 1 in box 2.\nIn box 1, you will find 5 candies and box 3 but you will not find a key to box 3 so box 3 will remain closed.\nTotal number of candies collected = 7 + 4 + 5 = 16 candy.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> status = [1,0,0,0,0,0], candies = [1,1,1,1,1,1], keys = [[1,2,3,4,5],[],[],[],[],[]], containedBoxes = [[1,2,3,4,5],[],[],[],[],[]], initialBoxes = [0]\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> You have initially box 0. Opening it you can find boxes 1,2,3,4 and 5 and their keys.\nThe total number of candies will be 6.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == status.length == candies.length == keys.length == containedBoxes.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 1000</code></li>\n\t<li><code>status[i]</code> is either <code>0</code> or <code>1</code>.</li>\n\t<li><code>1 &lt;= candies[i] &lt;= 1000</code></li>\n\t<li><code>0 &lt;= keys[i].length &lt;= n</code></li>\n\t<li><code>0 &lt;= keys[i][j] &lt; n</code></li>\n\t<li>All values of <code>keys[i]</code> are <strong>unique</strong>.</li>\n\t<li><code>0 &lt;= containedBoxes[i].length &lt;= n</code></li>\n\t<li><code>0 &lt;= containedBoxes[i][j] &lt; n</code></li>\n\t<li>All values of <code>containedBoxes[i]</code> are unique.</li>\n\t<li>Each box is contained in one box at most.</li>\n\t<li><code>0 &lt;= initialBoxes.length &lt;= n</code></li>\n\t<li><code>0 &lt;= initialBoxes[i] &lt; n</code></li>\n</ul>\n",
+  "hints": [
+    "Use Breadth First Search (BFS) to traverse all possible boxes you can open. Only push to the queue the boxes the you have with their keys."
+  ],
+  "metaData": "{\n  \"name\": \"maxCandies\",\n  \"params\": [\n    {\n      \"name\": \"status\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"candies\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"keys\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"containedBoxes\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"initialBoxes\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"105.4K\", \"totalSubmission\": \"155.5K\", \"totalAcceptedRaw\": 105383, \"totalSubmissionRaw\": 155469, \"acRate\": \"67.8%\"}",
+  "likes": 775,
+  "dislikes": 226,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,0,1,0]\n[7,5,4,100]\n[[],[],[1],[]]\n[[1,2],[3],[],[]]\n[0]",
+    "[1,0,0,0,0,0]\n[1,1,1,1,1,1]\n[[1,2,3,4,5],[],[],[],[],[]]\n[[1,2,3,4,5],[],[],[],[],[]]\n[0]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"airbnb\", \"name\": \"Airbnb\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"lyft\", \"name\": \"Lyft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxCandies(vector<int>& status, vector<int>& candies, vector<vector<int>>& keys, vector<vector<int>>& containedBoxes, vector<int>& initialBoxes) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxCandies(int[] status, int[] candies, int[][] keys, int[][] containedBoxes, int[] initialBoxes) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxCandies(self, status: List[int], candies: List[int], keys: List[List[int]], containedBoxes: List[List[int]], initialBoxes: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxCandies(self, status, candies, keys, containedBoxes, initialBoxes):\n        \"\"\"\n        :type status: List[int]\n        :type candies: List[int]\n        :type keys: List[List[int]]\n        :type containedBoxes: List[List[int]]\n        :type initialBoxes: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} status\n * @param {number[]} candies\n * @param {number[][]} keys\n * @param {number[][]} containedBoxes\n * @param {number[]} initialBoxes\n * @return {number}\n */\nvar maxCandies = function(status, candies, keys, containedBoxes, initialBoxes) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxCandies(status: number[], candies: number[], keys: number[][], containedBoxes: number[][], initialBoxes: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxCandies(int[] status, int[] candies, int[][] keys, int[][] containedBoxes, int[] initialBoxes) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxCandies(int* status, int statusSize, int* candies, int candiesSize, int** keys, int keysSize, int* keysColSize, int** containedBoxes, int containedBoxesSize, int* containedBoxesColSize, int* initialBoxes, int initialBoxesSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxCandies(status []int, candies []int, keys [][]int, containedBoxes [][]int, initialBoxes []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxCandies(status: IntArray, candies: IntArray, keys: Array<IntArray>, containedBoxes: Array<IntArray>, initialBoxes: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxCandies(_ status: [Int], _ candies: [Int], _ keys: [[Int]], _ containedBoxes: [[Int]], _ initialBoxes: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_candies(status: Vec<i32>, candies: Vec<i32>, keys: Vec<Vec<i32>>, contained_boxes: Vec<Vec<i32>>, initial_boxes: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} status\n# @param {Integer[]} candies\n# @param {Integer[][]} keys\n# @param {Integer[][]} contained_boxes\n# @param {Integer[]} initial_boxes\n# @return {Integer}\ndef max_candies(status, candies, keys, contained_boxes, initial_boxes)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $status\n     * @param Integer[] $candies\n     * @param Integer[][] $keys\n     * @param Integer[][] $containedBoxes\n     * @param Integer[] $initialBoxes\n     * @return Integer\n     */\n    function maxCandies($status, $candies, $keys, $containedBoxes, $initialBoxes) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxCandies(List<int> status, List<int> candies, List<List<int>> keys, List<List<int>> containedBoxes, List<int> initialBoxes) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxCandies(status: Array[Int], candies: Array[Int], keys: Array[Array[Int]], containedBoxes: Array[Array[Int]], initialBoxes: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_candies(status :: [integer], candies :: [integer], keys :: [[integer]], contained_boxes :: [[integer]], initial_boxes :: [integer]) :: integer\n  def max_candies(status, candies, keys, contained_boxes, initial_boxes) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_candies(Status :: [integer()], Candies :: [integer()], Keys :: [[integer()]], ContainedBoxes :: [[integer()]], InitialBoxes :: [integer()]) -> integer().\nmax_candies(Status, Candies, Keys, ContainedBoxes, InitialBoxes) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-candies status candies keys containedBoxes initialBoxes)\n  (-> (listof exact-integer?) (listof exact-integer?) (listof (listof exact-integer?)) (listof (listof exact-integer?)) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2764",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach: Breadth-First Search\n\n#### Intuition\n\nWe can solve this problem using **breadth-first search** combined with a **queue**.\n\nFor the $\\textit{i}$-th box, we can only obtain the candies inside if we own the box (either from the beginning or from some other box) and can open it (either it is already open from the beginning or we have obtained the key to it). We use the array $\\text{hasBox}$ to indicate whether each box is owned, and the array $\\text{canOpen}$ to indicate whether each box can be opened. Before the search begins, we only have the boxes listed in the array $\\textit{initialBoxes}$, and can open those boxes corresponding to $\\textit{status}$ array values of $\\textit{1}$. Any box that meets these two conditions before the search starts is placed into the queue.\n\nDuring the breadth-first search, in each iteration, we take the box at the front of the queue, $\\textit{k}$, open it, and obtain the candies inside, the boxes in $\\textit{containedBoxes}[\\textit{k}]$, and the keys in $\\textit{keys}[\\textit{k}]$. We add the candies to the answer and then iterate over each box and each key. When enumerating boxes, if a box can be opened, we add it to the end of the queue; similarly, when enumerating keys, if the corresponding box is already owned, we add that box to the end of the queue. When the queue is empty, the search ends, and we have obtained the maximum number of candies possible.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/JTrKBp4c/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"JTrKBp4c\"></iframe>\n\n#### Complexity Analysis\n\n+ Time complexity: $O(n^2)$.\n  \n  The problem does not guarantee that each key appears no more than once across all boxes. While each list of keys is unique per box, the same key can appear in multiple boxes. Similarly, boxes in `containedBoxes` can also repeat. Therefore, during the breadth-first search, we may process up to $O(n^2)$ total keys and contained boxes, resulting in a worst-case time complexity of $O(n^2)$.\n\n+ Space complexity: $O(n)$.\n  \n  We need to use several arrays and queues, each of length $n$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

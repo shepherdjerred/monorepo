@@ -1,0 +1,136 @@
+{
+  "questionId": "1529",
+  "questionFrontendId": "1432",
+  "title": "Max Difference You Can Get From Changing an Integer",
+  "titleSlug": "max-difference-you-can-get-from-changing-an-integer",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer <code>num</code>. You will apply the following steps to <code>num</code> <strong>two</strong> separate times:</p>\n\n<ul>\n\t<li>Pick a digit <code>x (0 &lt;= x &lt;= 9)</code>.</li>\n\t<li>Pick another digit <code>y (0 &lt;= y &lt;= 9)</code>. Note <code>y</code> can be equal to <code>x</code>.</li>\n\t<li>Replace all the occurrences of <code>x</code> in the decimal representation of <code>num</code> by <code>y</code>.</li>\n</ul>\n\n<p>Let <code>a</code> and <code>b</code> be the two results from applying the operation to <code>num</code> <em>independently</em>.</p>\n\n<p>Return <em>the max difference</em> between <code>a</code> and <code>b</code>.</p>\n\n<p>Note that neither <code>a</code> nor <code>b</code> may have any leading zeros, and <strong>must not</strong> be 0.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = 555\n<strong>Output:</strong> 888\n<strong>Explanation:</strong> The first time pick x = 5 and y = 9 and store the new integer in a.\nThe second time pick x = 5 and y = 1 and store the new integer in b.\nWe have now a = 999 and b = 111 and max difference = 888\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = 9\n<strong>Output:</strong> 8\n<strong>Explanation:</strong> The first time pick x = 9 and y = 9 and store the new integer in a.\nThe second time pick x = 9 and y = 1 and store the new integer in b.\nWe have now a = 9 and b = 1 and max difference = 8\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= num &lt;= 10<sup>8</sup></code></li>\n</ul>\n",
+  "hints": [
+    "We need to get the max and min value after changing num and the answer is max - min.",
+    "Use brute force, try all possible changes and keep the minimum and maximum values."
+  ],
+  "metaData": "{\n  \"name\": \"maxDiff\",\n  \"params\": [\n    {\n      \"name\": \"num\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"112.7K\", \"totalSubmission\": \"231K\", \"totalAcceptedRaw\": 112678, \"totalSubmissionRaw\": 230973, \"acRate\": \"48.8%\"}",
+  "likes": 599,
+  "dislikes": 377,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "555",
+    "9"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"trexquant\", \"name\": \"Trexquant\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"mercari\", \"name\": \"Mercari\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxDiff(int num) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxDiff(int num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxDiff(self, num: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxDiff(self, num):\n        \"\"\"\n        :type num: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} num\n * @return {number}\n */\nvar maxDiff = function(num) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxDiff(num: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxDiff(int num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxDiff(int num) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxDiff(num int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxDiff(num: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxDiff(_ num: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_diff(num: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} num\n# @return {Integer}\ndef max_diff(num)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $num\n     * @return Integer\n     */\n    function maxDiff($num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxDiff(int num) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxDiff(num: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_diff(num :: integer) :: integer\n  def max_diff(num) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_diff(Num :: integer()) -> integer().\nmax_diff(Num) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-diff num)\n  (-> exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2773",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Enumeration\n\n#### Intuition\n\nTo maximize the difference between $a$ and $b$, we aim to find the largest and smallest integers that can be obtained from $\\textit{num}$, to be used as $a$ and $b$, respectively.\n\nAccording to the problem description, we can arbitrarily choose two digits $x$ and $y$, and replace all occurrences of $x$ in $\\textit{num}$ with $y$. Since both $x$ and $y$ range from $0$ to $9$, there are at most $10 \\times 10 = 100$ different replacement methods.\n\nTherefore, we can use a double loop to enumerate all possible replacements. Among all the resulting integers, we find the maximum and minimum values and assign them to $a$ and $b$.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/kuRZqpFu/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"kuRZqpFu\"></iframe>\n\n#### Complexity Analysis\n\n- Time complexity: $O(d^2 \\log (\\textit{num}))$, where $d = 10$, since $\\textit{num}$ is a \"decimal\" number.\n  \n  We use a double loop to enumerate all possible replacement methods, which takes $O(d^2)$ time. For each replacement method, we convert $\\textit{num}$ to a string and perform the replacement operation. The time required for this is proportional to the number of digits in $\\textit{num}$, which is $O(\\log (\\textit{num}))$.\n\n- Space complexity: $O(\\log (\\textit{num}))$.\n\n  The algorithm stores string representations of the input number, which have length proportional to the number of digits.\n\n### Approach 2: Greedy\n\n#### Intuition\n\nIf we want to find the largest number, the best strategy is to find a high-order digit and change it to $9$. Similarly, if we want to find the smallest number, the best strategy is to find a high-order digit and change it to $0$.\n\n**Finding the largest number**\n\nTo find the largest number, we iterate through each digit of $\\textit{num}$ from left to right (most significant to least significant). If the digit at the current position is not $9$, we replace all occurrences of that digit with $9$ to obtain the largest possible number.\n\n**Finding the smallest number**\n\nTo find the smallest number, we again iterate through each digit of $\\textit{num}$ from left to right. If the digit at the current position is not $0$, we replace all occurrences of that digit with $0$ to obtain the smallest possible number.\n\nWait, if we replace digits with $0$, could we end up with leading zeros? For example, if $\\textit{num} = 123$ and we replace the highest digit $1$ with $0$, the result would be $023$, which introduces a leading zero and is not a valid number. Therefore, we must handle the issue of leading zeros carefully:\n\n- If we are enumerating the most significant digit, we can only replace it with $1$; otherwise, the result will have a leading zero.\n\n- For all other digits:\n  - If the current digit is different from the most significant digit, we can replace it with $0$.\n  - If the current digit is equal to the most significant digit, we skip it. This is because when we evaluated the most significant digit, we already decided not to replace it, either due to the leading zero restriction or because we chose a different replacement. So we skip further replacement of this digit.\n\nBy greedily identifying the high-order digits to replace, we can find both the maximum and minimum values, and thereby determine the final result.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/CT7rXYgj/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"CT7rXYgj\"></iframe>\n\n#### Complexity Analysis\n\n- Time complexity: $O(\\log (\\textit{num}))$.\n  \n  We only need to enumerate each digit of $\\textit{num}$ at most once.\n\n- Space complexity: $O(\\log (\\textit{num}))$.\n\n  The algorithm stores string representations of the input number, which have length proportional to the number of digits.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

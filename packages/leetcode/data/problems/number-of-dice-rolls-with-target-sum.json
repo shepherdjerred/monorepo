@@ -1,0 +1,132 @@
+{
+  "questionId": "1263",
+  "questionFrontendId": "1155",
+  "title": "Number of Dice Rolls With Target Sum",
+  "titleSlug": "number-of-dice-rolls-with-target-sum",
+  "difficulty": "Medium",
+  "content": "<p>You have <code>n</code> dice, and each dice has <code>k</code> faces numbered from <code>1</code> to <code>k</code>.</p>\n\n<p>Given three integers <code>n</code>, <code>k</code>, and <code>target</code>, return <em>the number of possible ways (out of the </em><code>k<sup>n</sup></code><em> total ways) </em><em>to roll the dice, so the sum of the face-up numbers equals </em><code>target</code>. Since the answer may be too large, return it <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 1, k = 6, target = 3\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> You throw one die with 6 faces.\nThere is only one way to get a sum of 3.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 2, k = 6, target = 7\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> You throw two dice, each with 6 faces.\nThere are 6 ways to get a sum of 7: 1+6, 2+5, 3+4, 4+3, 5+2, 6+1.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 30, k = 30, target = 500\n<strong>Output:</strong> 222616187\n<strong>Explanation:</strong> The answer must be returned modulo 10<sup>9</sup> + 7.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n, k &lt;= 30</code></li>\n\t<li><code>1 &lt;= target &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [
+    "Use dynamic programming.  The states are how many dice are remaining, and what sum total you have rolled so far."
+  ],
+  "metaData": "{\n  \"name\": \"numRollsToTarget\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"target\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"350.6K\", \"totalSubmission\": \"563.2K\", \"totalAcceptedRaw\": 350587, \"totalSubmissionRaw\": 563225, \"acRate\": \"62.2%\"}",
+  "likes": 5330,
+  "dislikes": 186,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Equal Sum Arrays With Minimum Number of Operations\", \"titleSlug\": \"equal-sum-arrays-with-minimum-number-of-operations\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Missing Observations\", \"titleSlug\": \"find-missing-observations\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "1\n6\n3",
+    "2\n6\n7",
+    "30\n30\n500"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"coindcx\", \"name\": \"CoinDCX\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numRollsToTarget(int n, int k, int target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numRollsToTarget(int n, int k, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numRollsToTarget(self, n: int, k: int, target: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numRollsToTarget(self, n, k, target):\n        \"\"\"\n        :type n: int\n        :type k: int\n        :type target: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number} k\n * @param {number} target\n * @return {number}\n */\nvar numRollsToTarget = function(n, k, target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numRollsToTarget(n: number, k: number, target: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumRollsToTarget(int n, int k, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numRollsToTarget(int n, int k, int target) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numRollsToTarget(n int, k int, target int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numRollsToTarget(n: Int, k: Int, target: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numRollsToTarget(_ n: Int, _ k: Int, _ target: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn num_rolls_to_target(n: i32, k: i32, target: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer} k\n# @param {Integer} target\n# @return {Integer}\ndef num_rolls_to_target(n, k, target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer $k\n     * @param Integer $target\n     * @return Integer\n     */\n    function numRollsToTarget($n, $k, $target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numRollsToTarget(int n, int k, int target) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numRollsToTarget(n: Int, k: Int, target: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec num_rolls_to_target(n :: integer, k :: integer, target :: integer) :: integer\n  def num_rolls_to_target(n, k, target) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec num_rolls_to_target(N :: integer(), K :: integer(), Target :: integer()) -> integer().\nnum_rolls_to_target(N, K, Target) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (num-rolls-to-target n k target)\n  (-> exact-integer? exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1462",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nWe have `n` dice, each having `k` faces with a number from `1` to `k`. We need to find the number of ways to roll these $$n$$ dice such that the sum of numbers on them is equal to `target`.\n\nThere are two characteristics of this problem that we should take note of at this time. First, as we iterate over the dice, we need to decide the number for each dice. The feasible options for number at the current dice depend upon the current sum, which is in turn dependent on the number we chose for the previous dice. It implies each decision we make is affected by the previous decisions we have made. Second, the problem is asking to count all the ways to roll `n` dice. These two characteristics suggest that we may be able to solve this problem using dynamic programming. We will be covering two dynamic programming approaches namely, Top-Down and Bottom-Up.\n</br>\n\n---\n\n### Approach 1: Top-Down Dynamic Programming\n\n**Intuition**\n\nA common way to come up with a DP solution is to start with brute force. Let's start with a brute-force solution and then optimize it. In a brute-force solution, we can go through each possible outcome and count those with the result equal to `target`. To do this, we can iterate over the numbers `1` to `k` for each dice and add it to a variable to keep the current sum value and recursively move to the next dice. In the end, after iterating over all the dice, we can check if the current sum is equal to the `target`. If they are equal, we will increment the variable representing the number of possible ways.\n\nFor this recursive approach, what are the parameters that we need to track? The first parameter is the index of the die that we are currently considering as we traverse the dice. Secondly, we need to keep track of the sum of values that we chose for the previous dice.\n\nIn this approach, we will have to iterate over all the $$k^n$$ possibilities, and hence is not efficient. If we observe the below figure, there are repeated subproblems. Notice the green nodes are repeated subproblems signifying that we have already solved these subproblems before. To avoid recalculating results for previously seen subproblems, we will memoize the result for each subproblem. So the next time we need to calculate the result for the same set of parameters `{index, sum}`, we can simply look up the result in constant time instead of recalculating the result.\n\n![fig](../Documents/1155_re/1155_re.svg)\n\n**Algorithm**\n\n1. Start with:\n   - The dice index `diceIndex` is `0`; this is the index of the die we are currently considering.\n   - The sum of numbers on the previous dice `currSum` as `0`.\n2. Initialize the variable `ways` to `0`. Iterate over the values from `1` to `k`, for each value `i`:\n    - If the current die can have value `i`, i.e., `currSum` after adding `i` will not exceed the `target` value. Then update the value of `currSum` and recursively move to the next die. Add the value returned by this recursive call to `ways`\n    - Else, if this value is not possible, then break from the loop as the greater values will not satisfy the above condition as well.\n3. Base cases:\n    - If we have iterated over all the dice, i.e., `diceIndex = n`, then check if the `currSum` is equal to target or not.\n4. Return the value `ways` and also store it in the memoization table `memo` corresponding to the current state, which is defined by `diceIndex` and `currSum`.\n\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/VD6LQFqZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"VD6LQFqZ\"></iframe>\n\n**Complexity Analysis**\n\nHere, $$N$$ is the number of dice, $$K$$ is the number of faces each dice have, and $$T$$ is the `target` value.\n\n* Time complexity: $$O(N * T * K)$$\n\n   Each state is defined by the `diceIndex` and the `currSum`. Hence, there will be $$N * T$$ states, and in the worst, we must visit most of the states to solve the original problem. Each recursive call will require $$O(K)$$ time as we iterate over the possible values from $$1$$ to $$K$$. Therefore, the total time required will be equal to $$O(N * T * K)$$.\n\n* Space complexity: $$O(N * T)$$ \n  \n  The memoization results are stored in the table memo with size $$N * T$$. Also, stack space in the recursion is equal to the maximum number of active functions. The maximum number of active functions will be at most $$N$$, i.e., one function call for every die. Hence, the space complexity is $$O(N * T)$$.\n<br/>\n\n---\n\n### Approach 2: Bottom-Up Dynamic Programming\n\n**Intuition**\n\nIn the previous approach, the recursive calls incurred stack space. We can avoid this by applying the same approach iteratively, which is often faster than the top-down approach. We will follow a similar approach to the previous one. However, this time we will iterate over the states by starting from the base case and ending at the initial query.\n\nAs per the previous approach, the recursive equation will be: `memo[diceIndex][currSum] = memo[diceIndex + 1][currSum + i]` for each `i` in the range `[1, K]`. This is because for the current dice we add the value `i` to `currentSum` and move on to the next dice. Starting from the base case we will initialize `memo[n][target]` to `1`, this is because there is only one way if no dice left and the sum is equal to target. Then we can find values for `diceIndex = n - 1` and `currSum` values in the range `[0, target]` by iterating over the values `[0, K]` for `i` using the above recursive equation.\n\n\n**Algorithm**\n\n1. Initialize `memo[n][target]` to `1` and all other values to `0`.\n2. Iterate over the `diceIndex` from `n - 1` to `0`; for each dice value, iterate over the `currSum` from `0` to `target`. For each such state corresponding to `diceIndex` and `currSum`:\n\n    - Initialize `ways` to `0`.\n    - Iterate over values from `1` to `K` as `i` and for each valid value of `i` (adding `i` to `currSum` doesn't exceed `target`) add the value `memo[diceIndex + 1][currSum + i]` to `ways`.\n    - Assign the `ways` to `memo[diceIndex][currSum]`.\n3. Return the value `memo[0][0]`.\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/chgSrK6h/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"chgSrK6h\"></iframe>\n\n\n**Complexity Analysis**\n\nHere, $$N$$ is the number of dice, $$K$$ is the number of faces each dice have, and $$T$$ is the `target` value.\n\n* Time complexity: $$O(N * T * K)$$\n\n  We have three nested loops, the first one iterate over dices from $$N - 1$$ to $$0$$, the second one iterate over sum value from $$0$$ to $$T$$, and the third value iterate over the possible values of dice face from $$1$$ to $$K$$. Hence, the total time complexity would be equal to $$O(N * T * K)$$.\n \n* Space complexity: $$O(N * T)$$ \n\n  The results are stored in the array `memo`, with the size of $$N * T$$. Hence, the space complexity is equal to $$O(N * T)$$.\n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

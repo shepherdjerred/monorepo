@@ -1,0 +1,137 @@
+{
+  "questionId": "1319",
+  "questionFrontendId": "1207",
+  "title": "Unique Number of Occurrences",
+  "titleSlug": "unique-number-of-occurrences",
+  "difficulty": "Easy",
+  "content": "<p>Given an array of integers <code>arr</code>, return <code>true</code> <em>if the number of occurrences of each value in the array is <strong>unique</strong> or </em><code>false</code><em> otherwise</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [1,2,2,1,1,3]\n<strong>Output:</strong> true\n<strong>Explanation:</strong>&nbsp;The value 1 has 3 occurrences, 2 has 2 and 3 has 1. No two values have the same number of occurrences.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [1,2]\n<strong>Output:</strong> false\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [-3,0,1,-3,1,1,1,-3,10,0]\n<strong>Output:</strong> true\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= arr.length &lt;= 1000</code></li>\n\t<li><code>-1000 &lt;= arr[i] &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [
+    "Find the number of occurrences of each element in the array using a hash map.",
+    "Iterate through the hash map and check if there is a repeated value."
+  ],
+  "metaData": "{\n  \"name\": \"uniqueOccurrences\",\n  \"params\": [\n    {\n      \"name\": \"arr\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"969.7K\", \"totalSubmission\": \"1.2M\", \"totalAcceptedRaw\": 969672, \"totalSubmissionRaw\": 1232669, \"acRate\": \"78.7%\"}",
+  "likes": 5557,
+  "dislikes": 155,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,2,2,1,1,3]",
+    "[1,2]",
+    "[-3,0,1,-3,1,1,1,-3,10,0]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool uniqueOccurrences(vector<int>& arr) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean uniqueOccurrences(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def uniqueOccurrences(self, arr: List[int]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def uniqueOccurrences(self, arr):\n        \"\"\"\n        :type arr: List[int]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arr\n * @return {boolean}\n */\nvar uniqueOccurrences = function(arr) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function uniqueOccurrences(arr: number[]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool UniqueOccurrences(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool uniqueOccurrences(int* arr, int arrSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func uniqueOccurrences(arr []int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun uniqueOccurrences(arr: IntArray): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func uniqueOccurrences(_ arr: [Int]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn unique_occurrences(arr: Vec<i32>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} arr\n# @return {Boolean}\ndef unique_occurrences(arr)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $arr\n     * @return Boolean\n     */\n    function uniqueOccurrences($arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool uniqueOccurrences(List<int> arr) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def uniqueOccurrences(arr: Array[Int]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec unique_occurrences(arr :: [integer]) :: boolean\n  def unique_occurrences(arr) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec unique_occurrences(Arr :: [integer()]) -> boolean().\nunique_occurrences(Arr) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (unique-occurrences arr)\n  (-> (listof exact-integer?) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1593",
+    "content": "[TOC]\n\n## Video Solution\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/784178884\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n---\n\n### Approach 1: Counting Sort\n\n#### Intuition\n\nWe are given an integer array, and we need to check if the frequency of each element in the array is unique or not.\n\n![fig](../Figures/1207/1207A.png)\n\n![fig](../Figures/1207/1207B.png)\n\nWe can make use of the fact that the integers in the array will always be in the range `[-1000, 1000]`. This range is of length `2000`, and therefore we need an array of the same size to store the frequency of each element.\n\nCounting sort is a sorting technique that is based on the keys between specific ranges.\nIn this technique, we perform sorting by counting objects having distinct key values like hashing.\n\nNow we have the frequencies of all elements of array `arr` in an array of size `2000`, and we need to check if all non-zero elements in this array are unique or not (i.e. all frequencies are unique or not). To check this, we will sort the array and then can check if any two consecutive elements are the same or not.\n\nNote: The array `arr`'s elements could be negative as well. Hence we will add `K = 1000` to each element to make it non-negative.\n\n#### Algorithm\n\n1. Store the frequencies of elements of array `arr` in the array `freq`.\n2. Sort the array `freq` in ascending order.\n3. Iterate over the array `freq`, and for each non-zero value, check if the next value is the same. If yes, return `false`.\n4. We can return `true` after iterating over the whole array.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/Sv9qBYc5/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Sv9qBYc5\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $N$ is the size of array `arr`, and $K$ is equal to `1000`.\n\n* Time complexity: $O(N + K\\log K)$.\n\n  We first iterate over the array `arr` to store the frequency in the array `freq`. This takes $O(N)$ time. Then we sort the array `freq` that has a size of `2K = 2000`. Hence it takes $O(2K \\log 2K)$ time that can be simplified to $O(K \\log K)$. In the end, we iterate over the array `freq` to check duplicate values, and this takes $O(2K)$ time. Therefore the total time complexity is equal to $O(N + K\\log K)$.\n\n* Space complexity: $O(K)$.\n\n  The only space required is the frequency array `freq` of size `2K` to store the frequency of all the elements. Thus, the total space complexity is equal to $O(K)$.\n\n---\n\n### Approach 2: HashMap & HashSet\n\n#### Intuition\n\nIf we have the frequencies of all elements, we can put them in a hash set. If the size of the hash set is equal to the number of elements, it implies that the frequencies are unique. Hence, we will find the frequencies of all elements in a hash map and then put them in a hash set.\n\n#### Algorithm\n\n1. Store the frequencies of elements in the array `arr` in the hash map `freq`.\n2. Iterate over the hash map `freq` and insert the frequencies of all unique elements of array `arr` in the hash set `freqSet`.\n3. Return `true` if the size of hash set `freqSet` is equal to the size of hash map `freq`, otherwise return `false`.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/UajBGQmf/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"UajBGQmf\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $N$ is the size of array `arr`.\n\n* Time complexity: $O(N)$.\n\n  We iterate over the array `arr` to find the frequency and store them in the hash map `freq`. Then, we insert these frequencies in the hash set `freqSet`, which has the insertion complexity of $O(1)$. Hence, the total time complexity is equal to $O(N)$.\n\n\n* Space complexity: $O(N)$.\n\n  We are storing the $N$ frequencies in the hash map `freq` that takes $O(1)$ space for each element. We also store the frequency count in the hash set. Therefore, the total space complexity is equal to $O(N)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "questionId": "1270",
+  "questionFrontendId": "1172",
+  "title": "Dinner Plate Stacks",
+  "titleSlug": "dinner-plate-stacks",
+  "difficulty": "Hard",
+  "content": "<p>You have an infinite number of stacks arranged in a row and numbered (left to right) from <code>0</code>, each of the stacks has the same maximum capacity.</p>\n\n<p>Implement the <code>DinnerPlates</code> class:</p>\n\n<ul>\n\t<li><code>DinnerPlates(int capacity)</code> Initializes the object with the maximum capacity of the stacks <code>capacity</code>.</li>\n\t<li><code>void push(int val)</code> Pushes the given integer <code>val</code> into the leftmost stack with a size less than <code>capacity</code>.</li>\n\t<li><code>int pop()</code> Returns the value at the top of the rightmost non-empty stack and removes it from that stack, and returns <code>-1</code> if all the stacks are empty.</li>\n\t<li><code>int popAtStack(int index)</code> Returns the value at the top of the stack with the given index <code>index</code> and removes it from that stack or returns <code>-1</code> if the stack with that given index is empty.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;DinnerPlates&quot;, &quot;push&quot;, &quot;push&quot;, &quot;push&quot;, &quot;push&quot;, &quot;push&quot;, &quot;popAtStack&quot;, &quot;push&quot;, &quot;push&quot;, &quot;popAtStack&quot;, &quot;popAtStack&quot;, &quot;pop&quot;, &quot;pop&quot;, &quot;pop&quot;, &quot;pop&quot;, &quot;pop&quot;]\n[[2], [1], [2], [3], [4], [5], [0], [20], [21], [0], [2], [], [], [], [], []]\n<strong>Output</strong>\n[null, null, null, null, null, null, 2, null, null, 20, 21, 5, 4, 3, 1, -1]\n\n<strong>Explanation:</strong> \nDinnerPlates D = DinnerPlates(2);  // Initialize with capacity = 2\nD.push(1);\nD.push(2);\nD.push(3);\nD.push(4);\nD.push(5);         // The stacks are now:  2  4\n                                           1  3  5\n                                           ﹈ ﹈ ﹈\nD.popAtStack(0);   // Returns 2.  The stacks are now:     4\n                                                       1  3  5\n                                                       ﹈ ﹈ ﹈\nD.push(20);        // The stacks are now: 20  4\n                                           1  3  5\n                                           ﹈ ﹈ ﹈\nD.push(21);        // The stacks are now: 20  4 21\n                                           1  3  5\n                                           ﹈ ﹈ ﹈\nD.popAtStack(0);   // Returns 20.  The stacks are now:     4 21\n                                                        1  3  5\n                                                        ﹈ ﹈ ﹈\nD.popAtStack(2);   // Returns 21.  The stacks are now:     4\n                                                        1  3  5\n                                                        ﹈ ﹈ ﹈ \nD.pop()            // Returns 5.  The stacks are now:      4\n                                                        1  3 \n                                                        ﹈ ﹈  \nD.pop()            // Returns 4.  The stacks are now:   1  3 \n                                                        ﹈ ﹈   \nD.pop()            // Returns 3.  The stacks are now:   1 \n                                                        ﹈   \nD.pop()            // Returns 1.  There are no stacks.\nD.pop()            // Returns -1.  There are still no stacks.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= capacity &lt;= 2 * 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= val &lt;= 2 * 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= index &lt;= 10<sup>5</sup></code></li>\n\t<li>At most <code>2 * 10<sup>5</sup></code> calls will be made to <code>push</code>, <code>pop</code>, and <code>popAtStack</code>.</li>\n</ul>\n",
+  "hints": [
+    "Use a data structure to save the plate status. You may need to operate the exact index. Maintain the leftmost vacant stack and the rightmost non-empty stack.",
+    "Use a list of stack to store the plate status. Use heap to maintain the leftmost and rightmost valid stack."
+  ],
+  "metaData": "{\n  \"classname\": \"DinnerPlates\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer\",\n        \"name\": \"capacity\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"val\"\n        }\n      ],\n      \"name\": \"push\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [],\n      \"name\": \"pop\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"index\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"integer\"\n      },\n      \"name\": \"popAtStack\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"23.7K\", \"totalSubmission\": \"70.5K\", \"totalAcceptedRaw\": 23732, \"totalSubmissionRaw\": 70548, \"acRate\": \"33.6%\"}",
+  "likes": 517,
+  "dislikes": 69,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"DinnerPlates\",\"push\",\"push\",\"push\",\"push\",\"push\",\"popAtStack\",\"push\",\"push\",\"popAtStack\",\"popAtStack\",\"pop\",\"pop\",\"pop\",\"pop\",\"pop\"]\n[[2],[1],[2],[3],[4],[5],[0],[20],[21],[0],[2],[],[],[],[],[]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class DinnerPlates {\npublic:\n    DinnerPlates(int capacity) {\n        \n    }\n    \n    void push(int val) {\n        \n    }\n    \n    int pop() {\n        \n    }\n    \n    int popAtStack(int index) {\n        \n    }\n};\n\n/**\n * Your DinnerPlates object will be instantiated and called as such:\n * DinnerPlates* obj = new DinnerPlates(capacity);\n * obj->push(val);\n * int param_2 = obj->pop();\n * int param_3 = obj->popAtStack(index);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class DinnerPlates {\n\n    public DinnerPlates(int capacity) {\n        \n    }\n    \n    public void push(int val) {\n        \n    }\n    \n    public int pop() {\n        \n    }\n    \n    public int popAtStack(int index) {\n        \n    }\n}\n\n/**\n * Your DinnerPlates object will be instantiated and called as such:\n * DinnerPlates obj = new DinnerPlates(capacity);\n * obj.push(val);\n * int param_2 = obj.pop();\n * int param_3 = obj.popAtStack(index);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class DinnerPlates:\n\n    def __init__(self, capacity: int):\n        \n\n    def push(self, val: int) -> None:\n        \n\n    def pop(self) -> int:\n        \n\n    def popAtStack(self, index: int) -> int:\n        \n\n\n# Your DinnerPlates object will be instantiated and called as such:\n# obj = DinnerPlates(capacity)\n# obj.push(val)\n# param_2 = obj.pop()\n# param_3 = obj.popAtStack(index)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class DinnerPlates(object):\n\n    def __init__(self, capacity):\n        \"\"\"\n        :type capacity: int\n        \"\"\"\n        \n\n    def push(self, val):\n        \"\"\"\n        :type val: int\n        :rtype: None\n        \"\"\"\n        \n\n    def pop(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n    def popAtStack(self, index):\n        \"\"\"\n        :type index: int\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your DinnerPlates object will be instantiated and called as such:\n# obj = DinnerPlates(capacity)\n# obj.push(val)\n# param_2 = obj.pop()\n# param_3 = obj.popAtStack(index)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} capacity\n */\nvar DinnerPlates = function(capacity) {\n    \n};\n\n/** \n * @param {number} val\n * @return {void}\n */\nDinnerPlates.prototype.push = function(val) {\n    \n};\n\n/**\n * @return {number}\n */\nDinnerPlates.prototype.pop = function() {\n    \n};\n\n/** \n * @param {number} index\n * @return {number}\n */\nDinnerPlates.prototype.popAtStack = function(index) {\n    \n};\n\n/** \n * Your DinnerPlates object will be instantiated and called as such:\n * var obj = new DinnerPlates(capacity)\n * obj.push(val)\n * var param_2 = obj.pop()\n * var param_3 = obj.popAtStack(index)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class DinnerPlates {\n    constructor(capacity: number) {\n        \n    }\n\n    push(val: number): void {\n        \n    }\n\n    pop(): number {\n        \n    }\n\n    popAtStack(index: number): number {\n        \n    }\n}\n\n/**\n * Your DinnerPlates object will be instantiated and called as such:\n * var obj = new DinnerPlates(capacity)\n * obj.push(val)\n * var param_2 = obj.pop()\n * var param_3 = obj.popAtStack(index)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class DinnerPlates {\n\n    public DinnerPlates(int capacity) {\n        \n    }\n    \n    public void Push(int val) {\n        \n    }\n    \n    public int Pop() {\n        \n    }\n    \n    public int PopAtStack(int index) {\n        \n    }\n}\n\n/**\n * Your DinnerPlates object will be instantiated and called as such:\n * DinnerPlates obj = new DinnerPlates(capacity);\n * obj.Push(val);\n * int param_2 = obj.Pop();\n * int param_3 = obj.PopAtStack(index);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} DinnerPlates;\n\n\nDinnerPlates* dinnerPlatesCreate(int capacity) {\n    \n}\n\nvoid dinnerPlatesPush(DinnerPlates* obj, int val) {\n    \n}\n\nint dinnerPlatesPop(DinnerPlates* obj) {\n    \n}\n\nint dinnerPlatesPopAtStack(DinnerPlates* obj, int index) {\n    \n}\n\nvoid dinnerPlatesFree(DinnerPlates* obj) {\n    \n}\n\n/**\n * Your DinnerPlates struct will be instantiated and called as such:\n * DinnerPlates* obj = dinnerPlatesCreate(capacity);\n * dinnerPlatesPush(obj, val);\n \n * int param_2 = dinnerPlatesPop(obj);\n \n * int param_3 = dinnerPlatesPopAtStack(obj, index);\n \n * dinnerPlatesFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type DinnerPlates struct {\n    \n}\n\n\nfunc Constructor(capacity int) DinnerPlates {\n    \n}\n\n\nfunc (this *DinnerPlates) Push(val int)  {\n    \n}\n\n\nfunc (this *DinnerPlates) Pop() int {\n    \n}\n\n\nfunc (this *DinnerPlates) PopAtStack(index int) int {\n    \n}\n\n\n/**\n * Your DinnerPlates object will be instantiated and called as such:\n * obj := Constructor(capacity);\n * obj.Push(val);\n * param_2 := obj.Pop();\n * param_3 := obj.PopAtStack(index);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class DinnerPlates(capacity: Int) {\n\n    fun push(`val`: Int) {\n        \n    }\n\n    fun pop(): Int {\n        \n    }\n\n    fun popAtStack(index: Int): Int {\n        \n    }\n\n}\n\n/**\n * Your DinnerPlates object will be instantiated and called as such:\n * var obj = DinnerPlates(capacity)\n * obj.push(`val`)\n * var param_2 = obj.pop()\n * var param_3 = obj.popAtStack(index)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass DinnerPlates {\n\n    init(_ capacity: Int) {\n        \n    }\n    \n    func push(_ val: Int) {\n        \n    }\n    \n    func pop() -> Int {\n        \n    }\n    \n    func popAtStack(_ index: Int) -> Int {\n        \n    }\n}\n\n/**\n * Your DinnerPlates object will be instantiated and called as such:\n * let obj = DinnerPlates(capacity)\n * obj.push(val)\n * let ret_2: Int = obj.pop()\n * let ret_3: Int = obj.popAtStack(index)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct DinnerPlates {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl DinnerPlates {\n\n    fn new(capacity: i32) -> Self {\n        \n    }\n    \n    fn push(&self, val: i32) {\n        \n    }\n    \n    fn pop(&self) -> i32 {\n        \n    }\n    \n    fn pop_at_stack(&self, index: i32) -> i32 {\n        \n    }\n}\n\n/**\n * Your DinnerPlates object will be instantiated and called as such:\n * let obj = DinnerPlates::new(capacity);\n * obj.push(val);\n * let ret_2: i32 = obj.pop();\n * let ret_3: i32 = obj.pop_at_stack(index);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class DinnerPlates\n\n=begin\n    :type capacity: Integer\n=end\n    def initialize(capacity)\n        \n    end\n\n\n=begin\n    :type val: Integer\n    :rtype: Void\n=end\n    def push(val)\n        \n    end\n\n\n=begin\n    :rtype: Integer\n=end\n    def pop()\n        \n    end\n\n\n=begin\n    :type index: Integer\n    :rtype: Integer\n=end\n    def pop_at_stack(index)\n        \n    end\n\n\nend\n\n# Your DinnerPlates object will be instantiated and called as such:\n# obj = DinnerPlates.new(capacity)\n# obj.push(val)\n# param_2 = obj.pop()\n# param_3 = obj.pop_at_stack(index)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class DinnerPlates {\n    /**\n     * @param Integer $capacity\n     */\n    function __construct($capacity) {\n        \n    }\n  \n    /**\n     * @param Integer $val\n     * @return NULL\n     */\n    function push($val) {\n        \n    }\n  \n    /**\n     * @return Integer\n     */\n    function pop() {\n        \n    }\n  \n    /**\n     * @param Integer $index\n     * @return Integer\n     */\n    function popAtStack($index) {\n        \n    }\n}\n\n/**\n * Your DinnerPlates object will be instantiated and called as such:\n * $obj = DinnerPlates($capacity);\n * $obj->push($val);\n * $ret_2 = $obj->pop();\n * $ret_3 = $obj->popAtStack($index);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class DinnerPlates {\n\n  DinnerPlates(int capacity) {\n    \n  }\n  \n  void push(int val) {\n    \n  }\n  \n  int pop() {\n    \n  }\n  \n  int popAtStack(int index) {\n    \n  }\n}\n\n/**\n * Your DinnerPlates object will be instantiated and called as such:\n * DinnerPlates obj = DinnerPlates(capacity);\n * obj.push(val);\n * int param2 = obj.pop();\n * int param3 = obj.popAtStack(index);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class DinnerPlates(_capacity: Int) {\n\n    def push(`val`: Int): Unit = {\n        \n    }\n\n    def pop(): Int = {\n        \n    }\n\n    def popAtStack(index: Int): Int = {\n        \n    }\n\n}\n\n/**\n * Your DinnerPlates object will be instantiated and called as such:\n * val obj = new DinnerPlates(capacity)\n * obj.push(`val`)\n * val param_2 = obj.pop()\n * val param_3 = obj.popAtStack(index)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule DinnerPlates do\n  @spec init_(capacity :: integer) :: any\n  def init_(capacity) do\n    \n  end\n\n  @spec push(val :: integer) :: any\n  def push(val) do\n    \n  end\n\n  @spec pop() :: integer\n  def pop() do\n    \n  end\n\n  @spec pop_at_stack(index :: integer) :: integer\n  def pop_at_stack(index) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# DinnerPlates.init_(capacity)\n# DinnerPlates.push(val)\n# param_2 = DinnerPlates.pop()\n# param_3 = DinnerPlates.pop_at_stack(index)\n\n# DinnerPlates.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec dinner_plates_init_(Capacity :: integer()) -> any().\ndinner_plates_init_(Capacity) ->\n  .\n\n-spec dinner_plates_push(Val :: integer()) -> any().\ndinner_plates_push(Val) ->\n  .\n\n-spec dinner_plates_pop() -> integer().\ndinner_plates_pop() ->\n  .\n\n-spec dinner_plates_pop_at_stack(Index :: integer()) -> integer().\ndinner_plates_pop_at_stack(Index) ->\n  .\n\n\n%% Your functions will be called as such:\n%% dinner_plates_init_(Capacity),\n%% dinner_plates_push(Val),\n%% Param_2 = dinner_plates_pop(),\n%% Param_3 = dinner_plates_pop_at_stack(Index),\n\n%% dinner_plates_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define dinner-plates%\n  (class object%\n    (super-new)\n    \n    ; capacity : exact-integer?\n    (init-field\n      capacity)\n    \n    ; push : exact-integer? -> void?\n    (define/public (push val)\n      )\n    ; pop : -> exact-integer?\n    (define/public (pop)\n      )\n    ; pop-at-stack : exact-integer? -> exact-integer?\n    (define/public (pop-at-stack index)\n      )))\n\n;; Your dinner-plates% object will be instantiated and called as such:\n;; (define obj (new dinner-plates% [capacity capacity]))\n;; (send obj push val)\n;; (define param_2 (send obj pop))\n;; (define param_3 (send obj pop-at-stack index))"
+    }
+  ],
+  "solution": null
+}

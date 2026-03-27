@@ -1,0 +1,149 @@
+{
+  "questionId": "1615",
+  "questionFrontendId": "1508",
+  "title": "Range Sum of Sorted Subarray Sums",
+  "titleSlug": "range-sum-of-sorted-subarray-sums",
+  "difficulty": "Medium",
+  "content": "<p>You are given the array <code>nums</code> consisting of <code>n</code> positive integers. You computed the sum of all non-empty continuous subarrays from the array and then sorted them in non-decreasing order, creating a new array of <code>n * (n + 1) / 2</code> numbers.</p>\n\n<p><em>Return the sum of the numbers from index </em><code>left</code><em> to index </em><code>right</code> (<strong>indexed from 1</strong>)<em>, inclusive, in the new array. </em>Since the answer can be a huge number return it modulo <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,4], n = 4, left = 1, right = 5\n<strong>Output:</strong> 13 \n<strong>Explanation:</strong> All subarray sums are 1, 3, 6, 10, 2, 5, 9, 3, 7, 4. After sorting them in non-decreasing order we have the new array [1, 2, 3, 3, 4, 5, 6, 7, 9, 10]. The sum of the numbers from index le = 1 to ri = 5 is 1 + 2 + 3 + 3 + 4 = 13. \n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,4], n = 4, left = 3, right = 4\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> The given array is the same as example 1. We have the new array [1, 2, 3, 3, 4, 5, 6, 7, 9, 10]. The sum of the numbers from index le = 3 to ri = 4 is 3 + 3 = 6.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,4], n = 4, left = 1, right = 10\n<strong>Output:</strong> 50\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == nums.length</code></li>\n\t<li><code>1 &lt;= nums.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 100</code></li>\n\t<li><code>1 &lt;= left &lt;= right &lt;= n * (n + 1) / 2</code></li>\n</ul>\n",
+  "hints": [
+    "Compute all sums and save it in array.",
+    "Then just go from LEFT to RIGHT index and calculate answer modulo 1e9 + 7."
+  ],
+  "metaData": "{\n  \"name\": \"rangeSum\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"n\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"left\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"right\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"186.2K\", \"totalSubmission\": \"295.2K\", \"totalAcceptedRaw\": 186181, \"totalSubmissionRaw\": 295177, \"acRate\": \"63.1%\"}",
+  "likes": 1604,
+  "dislikes": 268,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,2,3,4]\n4\n1\n5",
+    "[1,2,3,4]\n4\n3\n4",
+    "[1,2,3,4]\n4\n1\n10"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int rangeSum(vector<int>& nums, int n, int left, int right) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int rangeSum(int[] nums, int n, int left, int right) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def rangeSum(self, nums: List[int], n: int, left: int, right: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def rangeSum(self, nums, n, left, right):\n        \"\"\"\n        :type nums: List[int]\n        :type n: int\n        :type left: int\n        :type right: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} n\n * @param {number} left\n * @param {number} right\n * @return {number}\n */\nvar rangeSum = function(nums, n, left, right) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function rangeSum(nums: number[], n: number, left: number, right: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int RangeSum(int[] nums, int n, int left, int right) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int rangeSum(int* nums, int numsSize, int n, int left, int right) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func rangeSum(nums []int, n int, left int, right int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun rangeSum(nums: IntArray, n: Int, left: Int, right: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func rangeSum(_ nums: [Int], _ n: Int, _ left: Int, _ right: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn range_sum(nums: Vec<i32>, n: i32, left: i32, right: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} n\n# @param {Integer} left\n# @param {Integer} right\n# @return {Integer}\ndef range_sum(nums, n, left, right)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $n\n     * @param Integer $left\n     * @param Integer $right\n     * @return Integer\n     */\n    function rangeSum($nums, $n, $left, $right) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int rangeSum(List<int> nums, int n, int left, int right) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def rangeSum(nums: Array[Int], n: Int, left: Int, right: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec range_sum(nums :: [integer], n :: integer, left :: integer, right :: integer) :: integer\n  def range_sum(nums, n, left, right) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec range_sum(Nums :: [integer()], N :: integer(), Left :: integer(), Right :: integer()) -> integer().\nrange_sum(Nums, N, Left, Right) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (range-sum nums n left right)\n  (-> (listof exact-integer?) exact-integer? exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2393",
+    "content": "[TOC]  \n\n## Solution\n\n---\n\n### Approach 1: Brute Force\n\n#### Intuition\n\nThis problem requires us to calculate all subarray sums of the given array, store the totals in a new array, sort this new array in non-decreasing order, and then sum the elements between the given `left` and `right` indices. \n\nTo achieve this, we'll create a new array called `storeSubarray` to store the sums of each subarray. Once we've iterated through the entire given array to calculate the subarray sums, we'll sort `storeSubarray` to be in non-decreasing order. Finally, we'll calculate and return the sum of the elements between the given `left` and `right` indices of `storeSubarray`, inclusive. \n\n#### Algorithm\n\n1. Initialize an array given by `storeSubarray` to store all the subarray sums.\n2. Iterate `i` through `nums`:\n  - Initialize an integer `sum` with 0, to store the subarray sums starting at `i`.\n  - Iterate `j` from `i` to the end of `nums`:\n    - Increment `sum` with `nums[j]`.\n    - Append `sum` to the `storeSubarray` array.\n3. Sort `storeSubarray` in non-decreasing order.\n4. Initialize `rangeSum` with 0 and mod with 1000000009.\n5. Iterate all elements in `storeSubarray` between `left-1` and `right-1`:\n  - Add the current value of `storeSubarray` to rangeSum and take its modulo with `mod`.\n6. Return `rangeSum`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ekg42VMR/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"ekg42VMR\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `nums` array.\n\n- Time complexity: $O(n^2 \\cdot \\log n)$\n\n   We iterate through `nums` twice to store all the subarray sums. This operation takes $O(n^2)$ time. Then, we sort this array storing all the subarray sums. The time complexity for this operation is $O(n^2\\cdot \\log n)$. Iterating all indices between `left` and `right` also takes $O(n^2)$ time in the worst case.\n   \n   Therefore, the total time complexity is given by $O(n^2 \\cdot \\log n)$.\n\n- Space complexity: $O(n^2)$\n\n   We create a `storeSubarray` array with size proportional to $O(n^2)$. Apart from this, no additional memory is used.\n\n   Therefore, the total space complexity is given by $O(n^2)$.\n\n---\n\n### Approach 2: Priority Queue\n\n#### Intuition\n\nWe can maintain the sorted order of subarray sums using a priority queue, which stores elements in a sorted order using a heap data structure. By inserting all the subarray sums into the priority queue, we ensure that the smallest sums are always easily accessible.\n\nInserting all subarray sums into the priority queue results in the same time and space complexity as the previous approach, but it's possible to refine this strategy to optimize space complexity. \n\nIn our first approach, we created an array to store all possible subarray sums. In this approach, we'll use the priority queue to store pairs. The first element of each pair will represent the sum of the current subarray and the second element will represent the end index of that subarray. We'll initialize the priority queue with pairs representing all one-sized subarrays.\n\nAs we process the queue, we repeatedly pop the smallest element, which represents the smallest subarray sum. However, this subarray could be part of a larger subarray. To account for this, we expand the subarray by one element (incrementing the end index), update its sum, and push the updated pair back into the priority queue.\n\nOnce we have performed exactly `left` pop operations, we start accumulating the subarray sums. The process continues until we reach the `right` pop operation, at which point we return the accumulated sum.\n\n#### Algorithm\n\n- Initialize a priority queue `pq` of pairs, where each pair contains:\n  - The value of the current sum of subarray.\n  - The ending index of that subarray.\n- The priority queue is ordered by the smallest sums first.\n\n- Populate the priority queue with the initial values:\n  - Iterate through the first `n` elements of `nums` and push pairs of each element and its index into the priority queue.\n\n- Initialize `ans` to 0 to store the result and `mod` to \\(10^9 + 7\\) for the modulo operation.\n\n- Iterate from `1` to `right`:\n  - Extract the smallest sum from the priority queue (top of the queue).\n  - If the current index `i` is greater than or equal to `left`, add the value of the current pair to `ans`, taking modulo `mod` to avoid overflow.\n  - If the index of the extracted pair is less than the last index (`n-1`):\n    - Increment the index.\n    - Update the pair's value by adding the next element to the array `nums`.\n    - Push the updated pair back into the priority queue.\n\n- Return `ans` as a result.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/deXYG3zj/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"deXYG3zj\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `nums` array.\n\n- Time complexity: $O(n^2 \\cdot \\log n)$\n\n   We iterate through `nums` once to store all the one-sized subarray sums. This operation takes $O(n)$ time. Then, we iterate all indices between `left` and `right`, performing pop operation in each iteration, which takes $O(n^2 \\cdot \\log n)$ time total in the worst case.\n   \n   Therefore, the total time complexity is given by $O(n^2\\cdot \\log n)$.\n\n- Space complexity: $O(n)$\n\n   The size of `pq` never exceeds `n`. Apart from this, no additional memory is used.\n\n   Therefore, the total space complexity is given by $O(n)$.\n\n---\n\n### Approach 3: Binary Search and Sliding Window\n\n#### Intuition\n\nCan we use binary search to solve this problem? We can apply binary search if the search space is sorted. Here, our search space can be defined as the sum of the first `k` smallest subarray sums. To find the sum of all subarrays in this range, we calculate the difference between this sum at `right` and `left-1`.\n\nWe will create a binary search function that calculates the sum of the first `k` smallest subarray sums. The minimum and maximum possible values for this search space are the minimum array value and the total sum of the array, respectively. In our binary search function, for a particular `mid` value, we calculate the number of subarrays with a sum less than or equal to `mid`. If this count is greater than `k`, we need to search in the left part of the search space. Conversely, if it is less than `k`, we move to the right side.\n\nTo find the number of subarrays with a sum less than or equal to `mid`, we use the sliding window approach. We initialize two pointers, `left` and `right`, representing the ends of the window. If the sum of the window exceeds `mid`, we decrease the size of the window from the left side. We increment the count of windows for every valid `left` and `right` pair.\n\nWhile counting subarrays, we also need to calculate their sum. To do this, we can determine the number of windows an element is part of by calculating `right - left + 1`. We then multiply the current element by this number and add it to a sum variable. This sum is maintained along with the count in the binary search process.\n\n#### Algorithm\n\n**Main function - `rangeSum(nums,n,left,right)`**\n\n1. Calculate `result` as the difference of `sumOfFirstK(nums,n,right) - sumOfFirstK(nums,n,left-1)`. Return this `result` after taking modulo with `mod`.\n\n**`sumOfFirstK(nums,n,k)`**\n\n1. Initialize `minSum` and `maxSum` with minimum element value in `nums` and the total sum of `nums`, respectively.\n2. Initialize `left` with `minSum` and `right` with `maxSum`.\n3. Iterate while `left <= right`:\n    - Initialize `mid` as the mean of `left` and `right`.\n    - If `countAndSum(nums,n,mid)`'s count value is greater than or equal to `k`:\n        - Set `right` as `mid - 1`.\n    - Otherwise, set `left` as `mid + 1`.\n4. Return the difference of `sum` and `left * (count - k)`, where `count` is the calculated count value.\n\n**`countAndSum(nums,n,target)`**\n\n1. Initialize `count = 0`, `currentSum = 0`, `totalSum = 0` and `windowSum = 0`.\n2. Iterate through `nums` while `j < n` and initialize `j` and `i` with 0:\n    - Add `nums[j]` to `currentSum`.\n    - Add `nums[j]*(j-i+1)` to `windowSum`.\n    - While `currentSum` > `target`:\n        - Decrement `currentSum` from `windowSum`.\n        - Decrement `nums[i]` from `currentSum` and increment `i`.\n    - Add `j-i+1` to `count`.\n    - Add `windowSum` to `totalCount`.\n3. Return `{count,totalSum}`.\n\n!?!../Documents/1508/slideshow1.json:960,540!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/SER6g6tf/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"SER6g6tf\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size and `sum` be the total sum of the `nums` array.\n\n- Time complexity: $O(n \\log sum)$\n\n   The total size of the search space is $O(sum)$. Therefore, time complexity for binary search is $O(\\log sum)$. Inside each binary search operation, the `countAndSum` function takes $O(n)$ time.\n   \n   Therefore, the total time complexity is given by $O(n \\cdot \\log sum)$.\n\n- Space complexity: $O(1)$\n\n   Apart from some constant sized variables, no additional memory is used. Therefore, the total space complexity is given by $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

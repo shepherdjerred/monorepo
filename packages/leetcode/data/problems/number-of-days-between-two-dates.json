@@ -1,0 +1,133 @@
+{
+  "questionId": "1274",
+  "questionFrontendId": "1360",
+  "title": "Number of Days Between Two Dates",
+  "titleSlug": "number-of-days-between-two-dates",
+  "difficulty": "Easy",
+  "content": "<p>Write a program to count the number of days between two dates.</p>\n\n<p>The two dates are given as strings, their format is <code>YYYY-MM-DD</code>&nbsp;as shown in the examples.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> date1 = \"2019-06-29\", date2 = \"2019-06-30\"\n<strong>Output:</strong> 1\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> date1 = \"2020-01-15\", date2 = \"2019-12-31\"\n<strong>Output:</strong> 15\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The given dates are valid&nbsp;dates between the years <code>1971</code> and <code>2100</code>.</li>\n</ul>\n",
+  "hints": [
+    "Create a function f(date) that counts the number of days from 1900-01-01 to date. How can we calculate the answer ?",
+    "The answer is just |f(date1) - f(date2)|.",
+    "How to construct f(date) ?",
+    "For each year from 1900 to year - 1 sum up 365 or 366 in case of leap years. Then sum up for each month the number of days, consider the case when the current year is leap, finally sum up the days."
+  ],
+  "metaData": "{\n  \"name\": \"daysBetweenDates\",\n  \"params\": [\n    {\n      \"name\": \"date1\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"date2\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"73.2K\", \"totalSubmission\": \"139.4K\", \"totalAcceptedRaw\": 73171, \"totalSubmissionRaw\": 139431, \"acRate\": \"52.5%\"}",
+  "likes": 434,
+  "dislikes": 1322,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count Days Spent Together\", \"titleSlug\": \"count-days-spent-together\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"2019-06-29\"\n\"2019-06-30\"",
+    "\"2020-01-15\"\n\"2019-12-31\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"optiver\", \"name\": \"Optiver\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int daysBetweenDates(string date1, string date2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int daysBetweenDates(String date1, String date2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def daysBetweenDates(self, date1: str, date2: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def daysBetweenDates(self, date1, date2):\n        \"\"\"\n        :type date1: str\n        :type date2: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} date1\n * @param {string} date2\n * @return {number}\n */\nvar daysBetweenDates = function(date1, date2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function daysBetweenDates(date1: string, date2: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int DaysBetweenDates(string date1, string date2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int daysBetweenDates(char* date1, char* date2) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func daysBetweenDates(date1 string, date2 string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun daysBetweenDates(date1: String, date2: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func daysBetweenDates(_ date1: String, _ date2: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn days_between_dates(date1: String, date2: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} date1\n# @param {String} date2\n# @return {Integer}\ndef days_between_dates(date1, date2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $date1\n     * @param String $date2\n     * @return Integer\n     */\n    function daysBetweenDates($date1, $date2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int daysBetweenDates(String date1, String date2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def daysBetweenDates(date1: String, date2: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec days_between_dates(date1 :: String.t, date2 :: String.t) :: integer\n  def days_between_dates(date1, date2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec days_between_dates(Date1 :: unicode:unicode_binary(), Date2 :: unicode:unicode_binary()) -> integer().\ndays_between_dates(Date1, Date2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (days-between-dates date1 date2)\n  (-> string? string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

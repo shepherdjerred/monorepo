@@ -6,6 +6,7 @@ import { checkAbandonedGuilds } from "#src/league/tasks/cleanup/abandoned-guilds
 import { runDataValidation } from "#src/league/tasks/cleanup/validate-data.ts";
 import { refreshMatchTimes } from "#src/league/tasks/maintenance/refresh-match-times.ts";
 import { runWeeklyPairingUpdate } from "#src/league/tasks/pairing/index.ts";
+import { runOutreach } from "#src/league/tasks/outreach/index.ts";
 import { client } from "#src/discord/client.ts";
 import { createCronJob } from "#src/league/cron/helpers.ts";
 import { createLogger } from "#src/logger.ts";
@@ -123,6 +124,17 @@ export async function startCronJobs() {
     timezone: "UTC",
     runOnInit: false, // Don't run on init - prevents startup notifications
     logTrigger: "Posting weekly pairing win rates and surrender stats",
+  });
+
+  // run outreach checks daily at 10 AM UTC
+  logger.info("📅 Setting up outreach check job (daily 10 AM UTC)");
+  createCronJob({
+    schedule: "0 0 10 * * *",
+    jobName: "outreach_check",
+    task: () => runOutreach(client),
+    logMessage: "📬 Running outreach check",
+    timezone: "UTC",
+    runOnInit: false,
   });
 
   logger.info("✅ Cron jobs initialized successfully");

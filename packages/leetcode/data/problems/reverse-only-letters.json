@@ -1,0 +1,136 @@
+{
+  "questionId": "953",
+  "questionFrontendId": "917",
+  "title": "Reverse Only Letters",
+  "titleSlug": "reverse-only-letters",
+  "difficulty": "Easy",
+  "content": "<p>Given a string <code>s</code>, reverse the string according to the following rules:</p>\n\n<ul>\n\t<li>All the characters that are not English letters remain in the same position.</li>\n\t<li>All the English letters (lowercase or uppercase) should be reversed.</li>\n</ul>\n\n<p>Return <code>s</code><em> after reversing it</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> s = \"ab-cd\"\n<strong>Output:</strong> \"dc-ba\"\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> s = \"a-bC-dEf-ghIj\"\n<strong>Output:</strong> \"j-Ih-gfE-dCba\"\n</pre><p><strong class=\"example\">Example 3:</strong></p>\n<pre><strong>Input:</strong> s = \"Test1ng-Leet=code-Q!\"\n<strong>Output:</strong> \"Qedo1ct-eeLg=ntse-T!\"\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 100</code></li>\n\t<li><code>s</code> consists of characters with ASCII values in the range <code>[33, 122]</code>.</li>\n\t<li><code>s</code> does not contain <code>&#39;\\&quot;&#39;</code> or <code>&#39;\\\\&#39;</code>.</li>\n</ul>\n",
+  "hints": [
+    "This problem is exactly like reversing a normal string except that there are certain characters that we have to simply skip. That should be easy enough to do if you know how to reverse a string using the two-pointer approach."
+  ],
+  "metaData": "{\n  \"name\": \"reverseOnlyLetters\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"323.3K\", \"totalSubmission\": \"473.5K\", \"totalAcceptedRaw\": 323285, \"totalSubmissionRaw\": 473499, \"acRate\": \"68.3%\"}",
+  "likes": 2450,
+  "dislikes": 87,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Faulty Keyboard\", \"titleSlug\": \"faulty-keyboard\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Reverse Letters Then Special Characters in a String\", \"titleSlug\": \"reverse-letters-then-special-characters-in-a-string\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"ab-cd\"",
+    "\"a-bC-dEf-ghIj\"",
+    "\"Test1ng-Leet=code-Q!\""
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"tanium\", \"name\": \"Tanium\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 2, \"slug\": \"turing\", \"name\": \"Turing\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string reverseOnlyLetters(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String reverseOnlyLetters(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def reverseOnlyLetters(self, s: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def reverseOnlyLetters(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {string}\n */\nvar reverseOnlyLetters = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function reverseOnlyLetters(s: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string ReverseOnlyLetters(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* reverseOnlyLetters(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func reverseOnlyLetters(s string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun reverseOnlyLetters(s: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func reverseOnlyLetters(_ s: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn reverse_only_letters(s: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {String}\ndef reverse_only_letters(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return String\n     */\n    function reverseOnlyLetters($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String reverseOnlyLetters(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def reverseOnlyLetters(s: String): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec reverse_only_letters(s :: String.t) :: String.t\n  def reverse_only_letters(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec reverse_only_letters(S :: unicode:unicode_binary()) -> unicode:unicode_binary().\nreverse_only_letters(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (reverse-only-letters s)\n  (-> string? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "581",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach 1: Stack of Letters\n\n**Intuition and Algorithm**\n\nCollect the letters of `S` separately into a stack, so that popping the stack reverses the letters.  (Alternatively, we could have collected the letters into an array and reversed the array.)\n\nThen, when writing the characters of `S`, any time we need a letter, we use the one we have prepared instead.\n\n<iframe src=\"https://leetcode.com/playground/CZS4Xt2M/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"CZS4Xt2M\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N)$$, where $$N$$ is the length of `S`.\n\n* Space Complexity:  $$O(N)$$.\n<br />\n<br />\n\n\n---\n### Approach 2: Reverse Pointer\n\n**Intuition**\n\nWrite the characters of `S` one by one.  When we encounter a letter, we want to write the next letter that occurs if we iterated through the string backwards.\n\nSo we do just that: keep track of a pointer `j` that iterates through the string backwards.  When we need to write a letter, we use it.\n\n<iframe src=\"https://leetcode.com/playground/6GZqDBvz/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"6GZqDBvz\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N)$$, where $$N$$ is the length of `S`.\n\n* Space Complexity:  $$O(N)$$.\n<br />\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

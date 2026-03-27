@@ -1,0 +1,58 @@
+{
+  "questionId": "1174",
+  "questionFrontendId": "1084",
+  "title": "Sales Analysis III",
+  "titleSlug": "sales-analysis-iii",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Product</code></p>\n\n<pre>\n+--------------+---------+\n| Column Name  | Type    |\n+--------------+---------+\n| product_id   | int     |\n| product_name | varchar |\n| unit_price   | int     |\n+--------------+---------+\nproduct_id is the primary key (column with unique values) of this table.\nEach row of this table indicates the name and the price of each product.\n</pre>\n\n<p>Table: <code>Sales</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| seller_id   | int     |\n| product_id  | int     |\n| buyer_id    | int     |\n| sale_date   | date    |\n| quantity    | int     |\n| price       | int     |\n+-------------+---------+\nThis table can have duplicate rows.\nproduct_id is a foreign key (reference column) to the Product table.\nEach row of this table contains some information about one sale.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to&nbsp;report&nbsp;the <strong>products</strong> that were <strong>only</strong> sold in the first quarter of <code>2019</code>. That is, between <code>2019-01-01</code> and <code>2019-03-31</code> inclusive.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nProduct table:\n+------------+--------------+------------+\n| product_id | product_name | unit_price |\n+------------+--------------+------------+\n| 1          | S8           | 1000       |\n| 2          | G4           | 800        |\n| 3          | iPhone       | 1400       |\n+------------+--------------+------------+\nSales table:\n+-----------+------------+----------+------------+----------+-------+\n| seller_id | product_id | buyer_id | sale_date  | quantity | price |\n+-----------+------------+----------+------------+----------+-------+\n| 1         | 1          | 1        | 2019-01-21 | 2        | 2000  |\n| 1         | 2          | 2        | 2019-02-17 | 1        | 800   |\n| 2         | 2          | 3        | 2019-06-02 | 1        | 800   |\n| 3         | 3          | 4        | 2019-05-13 | 2        | 2800  |\n+-----------+------------+----------+------------+----------+-------+\n<strong>Output:</strong> \n+-------------+--------------+\n| product_id  | product_name |\n+-------------+--------------+\n| 1           | S8           |\n+-------------+--------------+\n<strong>Explanation:</strong> \nThe product with id 1 was only sold in the spring of 2019.\nThe product with id 2 was sold in the spring of 2019 but was also sold after the spring of 2019.\nThe product with id 3 was sold after spring 2019.\nWe return only product 1 as it is the product that was only sold in the spring of 2019.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Product (product_id int, product_name varchar(10), unit_price int)\", \"Create table If Not Exists Sales (seller_id int, product_id int, buyer_id int, sale_date date, quantity int, price int)\"], \"mssql\": [\"Create table Product (product_id int, product_name varchar(10), unit_price int)\", \"Create table Sales (seller_id int, product_id int, buyer_id int, sale_date date, quantity int, price int)\"], \"oraclesql\": [\"Create table Product (product_id int, product_name varchar(10), unit_price int)\", \"Create table Sales (seller_id int, product_id int, buyer_id int, sale_date date, quantity int, price int)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"sales_analysis\", \"pythondata\": [\"Product = pd.DataFrame([], columns=['product_id', 'product_name', 'unit_price']).astype({'product_id':'Int64', 'product_name':'object', 'unit_price':'Int64'})\", \"Sales = pd.DataFrame([], columns=['seller_id', 'product_id', 'buyer_id', 'sale_date', 'quantity', 'price']).astype({'seller_id':'Int64', 'product_id':'Int64', 'buyer_id':'Int64', 'sale_date':'datetime64[ns]', 'quantity':'Int64', 'price':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Product (product_id int, product_name varchar(10), unit_price int)\\n\", \"Create table If Not Exists Sales (seller_id int, product_id int, buyer_id int, sale_date date, quantity int, price int)\"], \"database_schema\": {\"Product\": {\"product_id\": \"INT\", \"product_name\": \"VARCHAR(10)\", \"unit_price\": \"INT\"}, \"Sales\": {\"seller_id\": \"INT\", \"product_id\": \"INT\", \"buyer_id\": \"INT\", \"sale_date\": \"DATE\", \"quantity\": \"INT\", \"price\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"224.8K\", \"totalSubmission\": \"474.3K\", \"totalAcceptedRaw\": 224786, \"totalSubmissionRaw\": 474295, \"acRate\": \"47.4%\"}",
+  "likes": 856,
+  "dislikes": 170,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Sales Analysis II\", \"titleSlug\": \"sales-analysis-ii\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Product\":[\"product_id\",\"product_name\",\"unit_price\"],\"Sales\":[\"seller_id\",\"product_id\",\"buyer_id\",\"sale_date\",\"quantity\",\"price\"]},\"rows\":{\"Product\":[[1,\"S8\",1000],[2,\"G4\",800],[3,\"iPhone\",1400]],\"Sales\":[[1,1,1,\"2019-01-21\",2,2000],[1,2,2,\"2019-02-17\",1,800],[2,2,3,\"2019-06-02\",1,800],[3,3,4,\"2019-05-13\",2,2800]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef sales_analysis(product: pd.DataFrame, sales: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "2070",
+    "content": "<!-- Don't delete this -->\n[TOC]\n\n# Solution\n\n---\n\n## pandas\n\n<!-- h3 for approaches -->\n### Approach 1: Filter `sales` and Merge with `product`\n\n<!-- h4 for sections -->\n#### Algorithm\nThe problem asks us to find all products that were sold **only** between `2019-01-01` and `2019-03-31`. This means that, for a given `product_id`, the following two conditions need to hold:\n- the earliest date is larger or equal to '2019-01-01', `min(sale_date) >= '2019-01-01'`\n- the latest date is smaller or equal to '2019-03-31', `max(sale_date) <= '2019-03-31'`\n\nBased on the above analysis, we begin by grouping the `sales` table according to the `product_id` column. Next, we utilize the `filter` function to select groups (product ids) that meet the aforementioned two conditions.\n```python\nstart_time = pd.to_datetime('2019-01-01')\nend_time =  pd.to_datetime('2019-03-31')\ndf = sales.groupby('product_id').filter(lambda x:\n    min(x['sale_date']) >= start_time and max(x['sale_date']) <= end_time\n)\n```\n|seller_id|product_id|buyer_id|sale_date|quantity|price|\n|---|---|---|---|---|---|\n|1|1|1|2019-01-21|2|2000|\n\n<br>\n\nNow, we have a table (data frame) that contains all product ids of our interest but there might be duplicates. Therefore, we use the `drop_duplicates` function to keep only one record for each `product_id`.\n```python\ndf = df.drop_duplicates(subset = 'product_id')\n```\n\nNext, we merge with the `product` table to find the product name for each product id.\n```python\ndf = df.merge(product, left_on = 'product_id', right_on = 'product_id')\n```\n\n|seller_id|product_id|buyer_id|sale_date|quantity|price|product_name|unit_price|\n|---|---|---|---|---|---|---|---|\n|1|1|1|2019-01-21|2|2000|S8|1000|\n\n<br>\n\nFinally, we simply return the `product_id` and `product_name` columns from the above table.\n```python\nreturn df[['product_id', 'product_name']]\n```\n\n\n<!-- h4 for sections -->\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/VgHeWSER/shared\" frameBorder=\"0\" width=\"100%\" height=\"242\" name=\"VgHeWSER\"></iframe>\n\n<br>\n-----\n\n## Database\n\n<!-- h3 for approaches -->\n### Approach 1: Group By and Use Having Clause\n\n\n<!-- h4 for sections -->\n#### Algorithm\n\nWe first join two tables `sales` and `product` on equal product ids. Then we group the table by the `product_id` column.\n\n\n```sql\nSELECT DISTINCT p.product_id, p.product_name\nFROM Sales s\nLEFT JOIN Product p ON p.product_id = s.product_id\nGROUP BY p.product_id\n```\n\nNote that we need to guarantee there are no duplicates, therefore we use the `SELECT DISTINCT` statement here.\n\nNext, we use the `HAVING` clause to select groups (product ids) of interest that satisfy the following conditions:\n- the earliest date is larger or equal to '2019-01-01', `MIN(sale_date) >= '2019-01-01'`\n- the latest date is smaller or equal to '2019-03-31', `MAX(sale_date) <= '2019-03-31'`\n\n```sql\nHAVING MIN(sale_date) >= '2019-01-01' AND MAX(sale_date) <= '2019-03-31';\n```\n\n\n<!-- h4 for sections -->\n#### Implementation\n\n```sql\nSELECT DISTINCT p.product_id, p.product_name\nFROM Sales s\nLEFT JOIN Product p ON p.product_id = s.product_id\nGROUP BY p.product_id\nHAVING MIN(sale_date) >= '2019-01-01' AND MAX(sale_date) <= '2019-03-31';\n```\n\n<br>",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

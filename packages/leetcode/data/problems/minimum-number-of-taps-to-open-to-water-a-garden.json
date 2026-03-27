@@ -1,0 +1,141 @@
+{
+  "questionId": "1451",
+  "questionFrontendId": "1326",
+  "title": "Minimum Number of Taps to Open to Water a Garden",
+  "titleSlug": "minimum-number-of-taps-to-open-to-water-a-garden",
+  "difficulty": "Hard",
+  "content": "<p>There is a one-dimensional garden on the x-axis. The garden starts at the point <code>0</code> and ends at the point <code>n</code>. (i.e., the&nbsp;length of the garden is <code>n</code>).</p>\n\n<p>There are <code>n + 1</code> taps located at points <code>[0, 1, ..., n]</code> in the garden.</p>\n\n<p>Given an integer <code>n</code> and an integer array <code>ranges</code> of length <code>n + 1</code> where <code>ranges[i]</code> (0-indexed) means the <code>i-th</code> tap can water the area <code>[i - ranges[i], i + ranges[i]]</code> if it was open.</p>\n\n<p>Return <em>the minimum number of taps</em> that should be open to water the whole garden, If the garden cannot be watered return <strong>-1</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/01/16/1685_example_1.png\" style=\"width: 525px; height: 255px;\" />\n<pre>\n<strong>Input:</strong> n = 5, ranges = [3,4,1,1,0,0]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The tap at point 0 can cover the interval [-3,3]\nThe tap at point 1 can cover the interval [-3,5]\nThe tap at point 2 can cover the interval [1,3]\nThe tap at point 3 can cover the interval [2,4]\nThe tap at point 4 can cover the interval [4,4]\nThe tap at point 5 can cover the interval [5,5]\nOpening Only the second tap will water the whole garden [0,5]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 3, ranges = [0,0,0,0]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> Even if you activate all the four taps you cannot water the whole garden.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>4</sup></code></li>\n\t<li><code>ranges.length == n + 1</code></li>\n\t<li><code>0 &lt;= ranges[i] &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "Create intervals of the area covered by each tap, sort intervals by the left end.",
+    "We need to cover the interval [0, n]. we can start with the first interval and out of all intervals that intersect with it we choose the one that covers the farthest point to the right.",
+    "What if there is a gap between intervals that is not covered ? we should stop and return -1 as there is some interval that cannot be covered."
+  ],
+  "metaData": "{\n  \"name\": \"minTaps\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"ranges\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"159.2K\", \"totalSubmission\": \"312.3K\", \"totalAcceptedRaw\": 159223, \"totalSubmissionRaw\": 312339, \"acRate\": \"51.0%\"}",
+  "likes": 3621,
+  "dislikes": 197,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "5\n[3,4,1,1,0,0]",
+    "3\n[0,0,0,0]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"squarepoint-capital\", \"name\": \"Squarepoint Capital\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 11, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"meesho\", \"name\": \"Meesho\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"morgan-stanley\", \"name\": \"Morgan Stanley\"}, {\"timesEncountered\": 2, \"slug\": \"rippling\", \"name\": \"Rippling\"}, {\"timesEncountered\": 2, \"slug\": \"akuna-capital\", \"name\": \"Akuna Capital\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minTaps(int n, vector<int>& ranges) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minTaps(int n, int[] ranges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minTaps(self, n: int, ranges: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minTaps(self, n, ranges):\n        \"\"\"\n        :type n: int\n        :type ranges: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[]} ranges\n * @return {number}\n */\nvar minTaps = function(n, ranges) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minTaps(n: number, ranges: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinTaps(int n, int[] ranges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minTaps(int n, int* ranges, int rangesSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minTaps(n int, ranges []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minTaps(n: Int, ranges: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minTaps(_ n: Int, _ ranges: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_taps(n: i32, ranges: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[]} ranges\n# @return {Integer}\ndef min_taps(n, ranges)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[] $ranges\n     * @return Integer\n     */\n    function minTaps($n, $ranges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minTaps(int n, List<int> ranges) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minTaps(n: Int, ranges: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_taps(n :: integer, ranges :: [integer]) :: integer\n  def min_taps(n, ranges) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_taps(N :: integer(), Ranges :: [integer()]) -> integer().\nmin_taps(N, Ranges) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-taps n ranges)\n  (-> exact-integer? (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2004",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Dynamic Programming\n\n>**Note.** For this approach, we assume that you already know the fundamentals of dynamic programming and are figuring out how to apply it to a wide range of problems, such as this one. If you are not yet at this stage, we recommend checking out our relevant [Explore Card content on dynamic programming](https://leetcode.com/explore/featured/card/dynamic-programming/) before coming back to this approach.\n\n#### Intuition\n\nTo solve the problem of determining the minimum number of taps needed to water the entire garden, we can employ a dynamic programming (DP) approach.\n\nLet $\\text{dp}$ be an array of length $n + 1$, where $n$ is the length of the garden. The value $\\text{dp}[i]$ represents the minimum number of taps needed to water the garden from position $0$ to position $i$.\n\nWe initialize this array with a large value like infinity for each position. By doing so, we indicate that no taps have been applied yet, and we can consider these positions as \"unreachable\" until we find a tap that can water them.\n\n**Base case**\n\nThe first step in calculating every DP is finding the base cases.\n\nIn this DP, we have a base case $\\text{dp}[0]$. We set $i = 0$ in the DP definition and obtain that $\\text{dp}[0]$ is the minimum number of taps needed to water the garden from position $0$ to position $0$ (the part of garden of zero length). Since we do not have to open any taps to water a part of zero length, thus $\\text{dp}[0] = 0$.\n\nBy setting the value of $\\text{dp}[0]$ to $0$, we establish the base case of our dynamic programming solution.\n\n**DP transitions**\n\nNow, we iterate through each tap, one by one. For each tap, we identify its leftmost and rightmost positions that can be reached and watered. The leftmost position of the $i^\\text{th}$ tap is $\\text{tap\\_start} = \\max (0, i - \\text{ranges}[i])$ and the rightmost one is $\\text{tap\\_end} = \\min (n, i + \\text{ranges}[i])$.\n\nConsider an arbitrary position $j$ inside the range of the $i^\\text{th}$ tap. By DP definition, we need $\\text{dp}[j]$ taps to water the part of the garden from position $0$ to position $j$.\n\nThus if we open these $\\text{dp}[j]$ taps and the $i^\\text{th}$ tap ($\\text{dp}[j] + 1$ taps in total), we will water the part of the garden from position $0$ to position $\\text{tap\\_end}$. It means that we can update $\\text{dp}[\\text{tap\\_end}]$ with $\\text{dp}[j] + 1$.\n\nIn particular, when position $0$ is inside the range of the $i^\\text{th}$ tap, this one tap is sufficient to water the garden from position $0$ to position $\\text{tap\\_end}$, and thus $\\text{dp}[i] = 1$. How does our DP \"know\" that $\\text{dp}[i]$ must be $1$? When considering $j = 0$, we will update $\\text{dp}[i]$ with $\\text{dp}[0] + 1 = 1$. This is how we make use of our base case $\\text{dp}[0] = 0$.\n\nSo we will iterate through the positions within the tap's range, from left to right. At each position $j$, we compare $\\text{dp}[j] + 1$ (the minimum number of taps needed at $j$ plus one) with the current value of $\\text{dp}[\\text{tap\\_end}]$. If $\\text{dp}[j] + 1$ is smaller than $\\text{dp}[\\text{tap\\_end}]$, we update $\\text{dp}[\\text{tap\\_end}]$ with $\\text{dp}[j] + 1$. By doing so, we ensure that $\\text{dp}[\\text{tap\\_end}]$ holds the optimal minimum number of taps needed to reach $\\text{tap\\_end}$ from the previous positions.\n\nAfter processing all the taps, we check the number of taps needed at the last position of the garden. If the value is still infinity, it means that the garden cannot be watered, and we return $-1$ to indicate this. Otherwise, if the value is a finite number, we return it as the minimum number of taps needed to water the entire garden.\n\n#### Algorithm\n\n1. Declare an array $\\text{dp}$ of size $n + 1$. Initialize it with infinite values (in code, we use a large number $10^9$ to represent infinity).\n2. Set $\\text{dp}[0]$ to $0$ (the base case of the DP).\n3. Iterate $i$ from $0$ to $n$ (through each tap from left to right).\n\t* Calculate the leftmost position reachable by the current tap as $\\text{tap\\_start} = \\max (0, i - \\text{ranges}[i])$.\n\t* And the rightmost position $\\text{tap\\_end} = \\min (n, i + \\text{ranges}[i])$.\n\t* Iterate through the positions $j$ from $\\text{tap\\_start}$ to $\\text{tap\\_end}$ (within the tap's reach).\n\t\t* Update $\\text{dp}[\\text{tap\\_end}]$ with $\\text{dp}[j] + 1$ if it's smaller.\n4. If $\\text{dp}[n]$ is infinite, it means that it's impossible to water the entire garden and we return $-1$.\n5. Return $\\text{dp}[n]$.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/W3PptqgM/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"W3PptqgM\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $m$ be the average range of the taps.\n\n* Time Complexity: $O(n \\cdot m)$.\n\nIterating through each tap and updating the minimum number of taps for each position within its range requires nested loops. The outer loop iterates through each of the $n + 1$ taps. The inner loop iterates through the positions within the range of each tap. The number of iterations for the inner loop is $O(m)$.\n\nOverall, the time complexity of the solution is $O(n \\cdot m)$.\n\n* Space Complexity: $O(n)$.\n\nThe space complexity is determined by the additional memory used to store the DP array. The size of the DP array is $n + 1$.\n\nTherefore, the space complexity is $O(n)$.\n\n---\n\n### Approach 2: Greedy\n\n>We highly recommend you to solve the problem [Jump Game II](https://leetcode.com/problems/jump-game-ii/) before reading this approach.\n\n#### Intuition\n\nLet the leftmost position of the tap's range be $\\text{start}$ and the rightmost position be $\\text{end}$.\n\nFirst, we compute an auxiliary array $\\text{max\\_reach}$. Let $\\text{max\\_reach}[i]$ be the maximum $\\text{end}$ over all taps having $\\text{start} = i$. We will use this array in our algorithm.\n\n>Let's reformulate our problem in a slightly different manner.\n>You start at the position $0$. You can jump from position $i$ to the right but not further that $\\text{max\\_reach}[i]$. What is the minimum number of jumps to reach position $n$?\n>In this way, we reduce our problem to [Jump Game II](https://leetcode.com/problems/jump-game-ii/).\n\nIn the greedy approach, we follow an intuitive strategy. We start with $\\text{taps} = 0$ and a pointer $\\text{curr\\_end}$. $\\text{taps}$ represents the number of taps used. The pointer $\\text{curr\\_end}$ represents the position such that we have currently watered the part of the garden from position $0$ to $\\text{curr\\_end}$. Initially $\\text{curr\\_end} = 0$ points to the start of the garden since we have not watered anything yet.\n\nAt each step, we select the tap that can water the *furthest right* in the garden (we denote this position as $\\text{next\\_end}$) among the taps that can reach $\\text{curr\\_end}$. Then we set $\\text{curr\\_end}$ to $\\text{next\\_end}$ and continue the process.\n\nWe can formulate the *subproblem* as follows: find $\\text{next\\_end}$ – the maximum $\\text{end}$ over the taps having $\\text{start} \\le \\text{curr\\_end}$ (covering the position $\\text{curr\\_end}$).\n\nThe tap is interesting only if $\\text{max\\_reach}[\\text{start}] = \\text{end}$ because otherwise there exists another tap with the same $\\text{start}$ but with greater $\\text{end}$ and it covers a bigger range.\n\nHow can we rewrite the subproblem in terms of $\\text{max\\_reach}$? We replace $\\text{start}$ with $i$ and $\\text{end}$ with $\\text{max\\_reach}[i]$ and obtain: find $\\text{next\\_end}$ – the maximum $\\text{max\\_reach}[i]$ over the positions $i \\le \\text{curr\\_end}$.\n\nAfter finding $\\text{next\\_end}$, we treat it as our new current position in the garden and assign $\\text{curr\\_end} = \\text{next\\_end}$. This allows us to move forward and continue the iteration. We also increment $\\text{taps}$, since we open one more tap ending at the position $\\text{next\\_end}$.\n\nBy iterating through the taps in this manner and selecting the tap with the furthest reach at each step, we aim to maximize the coverage of the garden with each tap selection. This strategy helps ensure that we efficiently water as much of the garden as possible with the minimum number of taps.\n\nThis process continues until we reach the end of the garden. At that point, if we have successfully selected taps that cover the entire garden, we return the count of chosen taps as the minimum number required. However, if it is not possible to water the entire garden, we return $-1$ to indicate that it cannot be achieved.\n\n#### Algorithm\n\n1. Declare the array $\\text{max\\_reach}$.\n2. Iterate $i$ from $0$ to $n$ (over the taps).\n\t* Calculate $\\text{start}$ – the leftmost and $\\text{end}$ – the rightmost positions the tap can reach.\n\t* Update $\\text{max\\_reach}[\\text{start}]$ with $\\text{end}$ if it is larger.\n3. Declare the variables $\\text{taps}$ – number of taps used, $\\text{curr\\_end}$ – current rightmost position reached, $\\text{next\\_end}$ – next rightmost position that can be reached. Initialize $\\text{taps} = 0$, $\\text{curr\\_end} = 0$, $\\text{next\\_end} = 0$.\n4. Iterate $i$ from $0$ to $n$ through the garden.\n\t* If $i > \\text{next\\_end}$, it means that the current position cannot be reached and we return $-1$.\n\t* If $i > \\text{curr\\_end}$, it means that we have to open a new tap ending at the position $\\text{next\\_end}$.\n\t\t* Increment $\\text{taps}$.\n\t\t* Set $\\text{curr\\_end}$ to $\\text{next\\_end}$.\n\t* Update $\\text{next\\_end}$ with $\\text{max\\_reach}[i]$ if it is larger.\n5. Return $\\text{taps}$.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/3BfePubr/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"3BfePubr\"></iframe>\n\n\n#### Complexity Analysis\n\n* Time Complexity: $O(n)$.\n\nWe iterate through the garden once to calculate the maximum reach for each position, and then iterate through the garden again to choose the taps and determine the minimum number of taps required. The iteration involves visiting each position in the garden once, resulting in a linear time complexity.\n\n* Space Complexity: $O(n)$.\n\nWe use additional space to store the $\\text{max\\_reach}$ array of size $n + 1$. Therefore, the space complexity is linear with respect to the size of the garden.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

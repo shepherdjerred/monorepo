@@ -1,0 +1,141 @@
+{
+  "questionId": "1386",
+  "questionFrontendId": "1260",
+  "title": "Shift 2D Grid",
+  "titleSlug": "shift-2d-grid",
+  "difficulty": "Easy",
+  "content": "<p>Given a 2D <code>grid</code> of size <code>m x n</code>&nbsp;and an integer <code>k</code>. You need to shift the <code>grid</code>&nbsp;<code>k</code> times.</p>\n\n<p>In one shift operation:</p>\n\n<ul>\n\t<li>Element at <code>grid[i][j]</code> moves to <code>grid[i][j + 1]</code>.</li>\n\t<li>Element at <code>grid[i][n - 1]</code> moves to <code>grid[i + 1][0]</code>.</li>\n\t<li>Element at <code>grid[m&nbsp;- 1][n - 1]</code> moves to <code>grid[0][0]</code>.</li>\n</ul>\n\n<p>Return the <em>2D grid</em> after applying shift operation <code>k</code> times.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/11/05/e1.png\" style=\"width: 400px; height: 178px;\" />\n<pre>\n<strong>Input:</strong> <code>grid</code> = [[1,2,3],[4,5,6],[7,8,9]], k = 1\n<strong>Output:</strong> [[9,1,2],[3,4,5],[6,7,8]]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/11/05/e2.png\" style=\"width: 400px; height: 166px;\" />\n<pre>\n<strong>Input:</strong> <code>grid</code> = [[3,8,1,9],[19,7,2,5],[4,6,11,10],[12,0,21,13]], k = 4\n<strong>Output:</strong> [[12,0,21,13],[3,8,1,9],[19,7,2,5],[4,6,11,10]]\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> <code>grid</code> = [[1,2,3],[4,5,6],[7,8,9]], k = 9\n<strong>Output:</strong> [[1,2,3],[4,5,6],[7,8,9]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m ==&nbsp;grid.length</code></li>\n\t<li><code>n ==&nbsp;grid[i].length</code></li>\n\t<li><code>1 &lt;= m &lt;= 50</code></li>\n\t<li><code>1 &lt;= n &lt;= 50</code></li>\n\t<li><code>-1000 &lt;= grid[i][j] &lt;= 1000</code></li>\n\t<li><code>0 &lt;= k &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "Simulate step by step. move grid[i][j] to grid[i][j+1]. handle last column of the grid.",
+    "Put the matrix row by row to a vector. take k % vector.length and move last k of the vector to the beginning. put the vector to the matrix back the same way."
+  ],
+  "metaData": "{\n  \"name\": \"shiftGrid\",\n  \"params\": [\n    {\n      \"name\": \"grid\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<list<integer>>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"125.1K\", \"totalSubmission\": \"184K\", \"totalAcceptedRaw\": 125069, \"totalSubmissionRaw\": 183975, \"acRate\": \"68.0%\"}",
+  "likes": 1795,
+  "dislikes": 353,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[1,2,3],[4,5,6],[7,8,9]]\n1",
+    "[[3,8,1,9],[19,7,2,5],[4,6,11,10],[12,0,21,13]]\n4",
+    "[[1,2,3],[4,5,6],[7,8,9]]\n9"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> shiftGrid(vector<vector<int>>& grid, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<List<Integer>> shiftGrid(int[][] grid, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def shiftGrid(self, grid: List[List[int]], k: int) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def shiftGrid(self, grid, k):\n        \"\"\"\n        :type grid: List[List[int]]\n        :type k: int\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} grid\n * @param {number} k\n * @return {number[][]}\n */\nvar shiftGrid = function(grid, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function shiftGrid(grid: number[][], k: number): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<IList<int>> ShiftGrid(int[][] grid, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** shiftGrid(int** grid, int gridSize, int* gridColSize, int k, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func shiftGrid(grid [][]int, k int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun shiftGrid(grid: Array<IntArray>, k: Int): List<List<Int>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func shiftGrid(_ grid: [[Int]], _ k: Int) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn shift_grid(grid: Vec<Vec<i32>>, k: i32) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} grid\n# @param {Integer} k\n# @return {Integer[][]}\ndef shift_grid(grid, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $grid\n     * @param Integer $k\n     * @return Integer[][]\n     */\n    function shiftGrid($grid, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> shiftGrid(List<List<int>> grid, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def shiftGrid(grid: Array[Array[Int]], k: Int): List[List[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec shift_grid(grid :: [[integer]], k :: integer) :: [[integer]]\n  def shift_grid(grid, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec shift_grid(Grid :: [[integer()]], K :: integer()) -> [[integer()]].\nshift_grid(Grid, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (shift-grid grid k)\n  (-> (listof (listof exact-integer?)) exact-integer? (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "848",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Simulation\n\n**Intuition**\n\nWe are given instructions on how to apply the transformation. Therefore, we could just repeat applying the transformation $$k$$ times.\n\n**Algorithm**\n\nReading explanations with lots of notation and array indexes can be confusing, and there is a lot of room for misunderstanding. A good first step might be to draw a picture (a rough sketch on a whiteboard would be fine) of each of the 3 cases to be certain that you understand them.\n\n*Element at grid[i][j] moves to grid[i][j + 1].*\n\n![Diagram showing case #1.](../Figures/1260/case1.png)\n\n*Element at grid[i][n - 1] moves to grid[i + 1][0].*\n\n![Diagram showing case #2.](../Figures/1260/case2.png)\n\n*Element at grid[m - 1][n - 1] moves to grid[0][0].*\n\n![Diagram showing case #3.](../Figures/1260/case3.png)\n\nThen, $$k$$ times, we need to create a new 2D array and follow the given rules to move the values. If we're using Java, we'll also need to then convert the output from a 2D Array to a 2D list.\n\n<iframe src=\"https://leetcode.com/playground/NTAz9bgx/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"NTAz9bgx\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(n \\cdot m \\cdot k)$$, where the grid size is $$n \\cdot m$$ and we need to apply the transform $$k$$ times.\n\n* Space Complexity: $$O(n \\cdot m)$$. We are creating a new array in each iteration of the loop. We only keep track of at most 2 arrays at a time, though. The rest are garbage collected/ free'd.\n\n<br />\n\n---\n\n### Approach 2: Simulation, Recycling Same Array\n\n**Intuition**\n\nThe previous approach created `k` new arrays. We can simplify it to do the movements in-place. To do this, let's look at how an individual value moves around the grid. Looking at the movement of a single value is a good strategy for getting started on 2D grid translation problems. The value we're looking at is the yellow square. The numbers show the order in which it moved into each cell.\n\n!?!../Documents/1260.json:960,540!?!\n\nThe movement is a straightforward pattern. The value moves in \"reading\" order, and then when it gets to the bottom right, it wraps around to the top left.\n\n![Arrow diagram showing the movement of the cell.](../Figures/1260/movement_pattern.png)\n\nWe can simulate this wrapping in-place by repeatedly moving each value \"forward\" by one place.\n\n**Algorithm**\n\nFor each step, we'll need to keep track of the current value we're moving forward. For Java, we'll need to finish by copying the input into a 2D list. If you were writing this algorithm in your own Java code and wanted it to be in-place, you would choose the same input and output type.\n\n<iframe src=\"https://leetcode.com/playground/QjTW2CVp/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"QjTW2CVp\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(n \\cdot m \\cdot k)$$, where the grid size is $$n \\cdot m$$ and we need to apply the transform $$k$$ times.\n\n* Space Complexity: Depends on whether or not the input/ output types are the same. Here on Leetcode, this depends on the language you're using.\n\n    * *If the input and output are the same type* (Python and C++): $$O(1)$$. We aren't creating any new data structures.\n\n    * *If the input and output are different types* (Java): $$O(n \\cdot m)$$. We're creating a single `n x m` 2D list.\n\nIf you were using this algorithm as part of your own code, you'd choose input and output types based on your requirements.\n\n<br />\n\n---\n\n### Approach 3: Using Modulo Arithmetic\n\n**Intuition**\n\n*Note that a solution that uses modulo arithmetic would probably be considered as \"medium\" level.*\n\nIf you're not familiar with the modulo operator, then think back to when you learned division in school. Before you learned about decimals and fractions, you probably had to determine the *quotient* and the *remainder*. For example, $$127 / 19$$ would be $$6$$, remainder $$13$$ because $$6 * 19 + 13 = 127$$. The modulo operator gives you the *remainder* if you were to do division in this way.\n\nFor the problem constraints given here, $$k$$ is never more than $$100$$. For such a low $$k$$, the simulation approach is acceptable. However, an interviewer will probably expect you to further optimize your solution so that it runs in $$O(n * m)$$ time instead of $$O(k * n * m)$$ time.\n\nIn addition to the pattern we observed in the previous approach, another good strategy for 2D grid problems that we'll use is calculating the new locations as 2 separate steps.\n\n1. What is the new column?\n2. What is the new row?\n\nLet's figure out how to do each of these steps with an example. We'll use a grid with 3 rows and 5 columns, and we'll look at the value located at $$i = 1$$ and $$j = 3$$. We'll also use $$k = 88$$.\n\n![Picture of the example we'll be working through.](../Figures/1260/example.png)\n\n*Step 1: Calculating the new column for the value*\n\nThe value's column changes exactly $$k$$ times. Every step, it moves forward by 1 column.\n\nWhich *column* will the value be in when it is moved forward $$88$$ times? Well, it starts in column $$3$$, and if the grid had an infinite number of columns, it would be in column $$3 + 88 = 91$$ at the end. However, the grid isn't infinite. We need to take into account the \"wrap around\".\n\n**The key observation is that** every 5 steps will move the value back to the same column it started in. Therefore, we want to repeatedly subtract $$5$$ from $$91$$ until we have a value less than $$5$$ left. This is exactly what the *modulo operator* does for us. It gives us what is left after these repeated subtractions (it goes about it in a very efficient way though!). $$91 % 5 = 1$$. Therefore, we know that this value's new position is *in column 0*.\n\n*Step 2: Calculating the new row for the value*\n\nNow we need to determine the new *row* that the value is in. The *row* the value is in doesn't change as often as the *column* does. For example, here the column changes but the row stays the same.\n\n![Diagram showing a case where the row does not change.](../Figures/1260/case1.png)\n\nAnd here, both the row and the column change.\n\n![Diagram showing a case where the row changes.](../Figures/1260/case2.png)\n\nThe value only moves down a row when it is moving from the last column to the first column. Therefore, determining the new row will require us to calculate how many times the value moves from the last to first column.\n\nWhen we calculated the new *column* for our example, we only looked at the ***remainder*** of $$91 / 5$$, which was $$1$$. This time however, we want to look at the ***quotient***, because the ***quotient*** tells us *how many times* we removed $$5$$ from $$91$$.\n\nDoing this calculation, we get $$91 / 5 = 18$$ (This is just division with truncation, like how it's done in programming languages).\n\nIf the number of rows was infinite, the final row would be $$1 + 18 = 19$$, as we would simply add the number of row increments to the starting row.\n\nBut of course the number of rows is not infinite, so we need to do the same thing we did to the column. Because there are 3 rows, we do $$19 % 3 = 1$$. The value will therefore end in row 1.\n\nWe have calculated that for the example above, after 88 increments, the value that started at $$(1, 3)$$ will now be at $$(1, 0)$$. We can do the same calculations for the other $$14 values in the grid$$.\n\n*Coming up with general formulae*\n\nWe now need to pull all of this together into some formulae that we can use regardless of the starting position, $$k$$ value, and size of the grid.\n\nFor the column, we calculated what column it'd end up in if the grid was infinite, and then we took it modulo the total number of columns. As a general formula, this is:\n\n```\nnew_col = (j + k) % num_cols\n```\n\nWhere $$j$$ is the column the value starts in and $$num_cols$$ is the total number of columns in the grid.\n\nThe row was a little more complicated; we needed to tackle it in several parts. Firstly, we calculated how many times it would move down by 1 row. Secondly, we calculated what the infinite row would be and then took that modulo the number of rows. This gives us the following formula:\n\n```\nnumber_of_increments = (j + k) / num_cols\nnew_row = (i + number_of_increments) % num_rows\n```\n\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/adrDuM4L/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"adrDuM4L\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(n \\cdot m)$$, where the grid size is $$n \\cdot m$$. This time, we're calculating where each value moves to in $$O(1)$$ time instead of $$O(k)$$ time. We can't do better than this in the average case, because each of the $$n \\cdot m$$ values needs to be moved to its new location.\n\n* Space Complexity: $$O(n \\cdot m)$$. We are creating a new 2D list to write the output into.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

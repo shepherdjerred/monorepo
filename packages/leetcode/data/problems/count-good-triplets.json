@@ -1,0 +1,116 @@
+{
+  "questionId": "1656",
+  "questionFrontendId": "1534",
+  "title": "Count Good Triplets",
+  "titleSlug": "count-good-triplets",
+  "difficulty": "Easy",
+  "content": "<p>Given an array of integers <code>arr</code>, and three integers&nbsp;<code>a</code>,&nbsp;<code>b</code>&nbsp;and&nbsp;<code>c</code>. You need to find the number of good triplets.</p>\r\n\r\n<p>A triplet <code>(arr[i], arr[j], arr[k])</code>&nbsp;is <strong>good</strong> if the following conditions are true:</p>\r\n\r\n<ul>\r\n\t<li><code>0 &lt;= i &lt; j &lt; k &lt;&nbsp;arr.length</code></li>\r\n\t<li><code>|arr[i] - arr[j]| &lt;= a</code></li>\r\n\t<li><code>|arr[j] - arr[k]| &lt;= b</code></li>\r\n\t<li><code>|arr[i] - arr[k]| &lt;= c</code></li>\r\n</ul>\r\n\r\n<p>Where <code>|x|</code> denotes the absolute value of <code>x</code>.</p>\r\n\r\n<p>Return<em> the number of good triplets</em>.</p>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong class=\"example\">Example 1:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> arr = [3,0,1,1,9,7], a = 7, b = 2, c = 3\r\n<strong>Output:</strong> 4\r\n<strong>Explanation:</strong>&nbsp;There are 4 good triplets: [(3,0,1), (3,0,1), (3,1,1), (0,1,1)].\r\n</pre>\r\n\r\n<p><strong class=\"example\">Example 2:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> arr = [1,1,2,2,3], a = 0, b = 0, c = 1\r\n<strong>Output:</strong> 0\r\n<strong>Explanation: </strong>No triplet satisfies all conditions.\r\n</pre>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong>Constraints:</strong></p>\r\n\r\n<ul>\r\n\t<li><code>3 &lt;= arr.length &lt;= 100</code></li>\r\n\t<li><code>0 &lt;= arr[i] &lt;= 1000</code></li>\r\n\t<li><code>0 &lt;= a, b, c &lt;= 1000</code></li>\r\n</ul>",
+  "hints": [
+    "Notice that the constraints are small enough for a brute force solution to pass.",
+    "Loop through all triplets, and count the ones that are good."
+  ],
+  "metaData": "{\n  \"name\": \"countGoodTriplets\",\n  \"params\": [\n    {\n      \"name\": \"arr\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"a\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"b\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"c\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"286.6K\", \"totalSubmission\": \"335.1K\", \"totalAcceptedRaw\": 286623, \"totalSubmissionRaw\": 335138, \"acRate\": \"85.5%\"}",
+  "likes": 1206,
+  "dislikes": 1250,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count Special Quadruplets\", \"titleSlug\": \"count-special-quadruplets\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Number of Unequal Triplets in Array\", \"titleSlug\": \"number-of-unequal-triplets-in-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,0,1,1,9,7]\n7\n2\n3",
+    "[1,1,2,2,3]\n0\n0\n1"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"turvo\", \"name\": \"Turvo\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countGoodTriplets(vector<int>& arr, int a, int b, int c) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countGoodTriplets(int[] arr, int a, int b, int c) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countGoodTriplets(self, arr: List[int], a: int, b: int, c: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countGoodTriplets(self, arr, a, b, c):\n        \"\"\"\n        :type arr: List[int]\n        :type a: int\n        :type b: int\n        :type c: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arr\n * @param {number} a\n * @param {number} b\n * @param {number} c\n * @return {number}\n */\nvar countGoodTriplets = function(arr, a, b, c) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countGoodTriplets(arr: number[], a: number, b: number, c: number): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountGoodTriplets(int[] arr, int a, int b, int c) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\nint countGoodTriplets(int* arr, int arrSize, int a, int b, int c){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countGoodTriplets(arr []int, a int, b int, c int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countGoodTriplets(arr: IntArray, a: Int, b: Int, c: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countGoodTriplets(_ arr: [Int], _ a: Int, _ b: Int, _ c: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_good_triplets(arr: Vec<i32>, a: i32, b: i32, c: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} arr\n# @param {Integer} a\n# @param {Integer} b\n# @param {Integer} c\n# @return {Integer}\ndef count_good_triplets(arr, a, b, c)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $arr\n     * @param Integer $a\n     * @param Integer $b\n     * @param Integer $c\n     * @return Integer\n     */\n    function countGoodTriplets($arr, $a, $b, $c) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countGoodTriplets(arr: Array[Int], a: Int, b: Int, c: Int): Int = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "2725",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Enumeration\n\n#### Intuition\n\nUsing $O(n^3)$ loops to enumerate all $(i, j, k)$ in sequence, where $0 \\leq i < j < k < {\\rm arr.length}$, for each set of $(i, j, k)$, determine whether ${\\rm arr}[i]$, ${\\rm arr}[j]$, and ${\\rm arr}[k]$ satisfy the condition.\n\nFinally, calculate the total number of all triplets that meet the conditions.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/aip2SkcW/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"aip2SkcW\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the array $\\textit{arr}$.\n\n* Time complexity: $O(n^3)$\n\nWe need a triple loop to judge whether all the triplets meet the conditions.\n\n* Space complexity: $O(1)$\n\nOnly a few additional variables are needed.\n\n### Approach 2: Optimized enumeration\n\n#### Intuition\n\nWe consider using the $O(n^2)$ enumeration of binary pairs $(j,k)$ satisfying $|\\rm arr[j]-\\rm arr[k]|\\le b$, and count how many $i$ satisfy the condition in this pair. Given the constraints on $i$ from the question, $|\\rm arr[i]-\\rm arr[j]|\\le a \\ \\&\\&\\ |\\rm arr[i]-\\rm arr[k]|\\le c$, we can expand the absolute values to obtain that the values that meet the conditions must be the intersection of the two intervals $[\\rm arr[j]-a,\\rm arr[j]+a]$ and $[\\rm arr[k]-c,\\rm arr[k]+c]$, which we denote as $[l,r]$. Therefore, when enumerating the binary tuple $(j,k)$, we only need to quickly count the number of $i$ that satisfy $i<j$ and the value range of $\\rm arr[i]$ is in $[l,r]$.\n\nIt is easy to think of maintaining a prefix sum array $\\rm sum$ of the frequency array $\\rm arr[i]$. For a pair $(j,k)$, we can get the answer in $O(1)$ as $\\rm sum[r]-\\rm sum[l-1]$. Consider how to maintain the condition that the indices of the numbers stored in the current frequency array satisfy the restriction $i < j$. We just need to enumerate $j$ from small to large and update the value of $\\rm arr[j]$ in the $\\rm sum$ array each time the pointer moves forward by one, ensuring that the indices of the values stored in the $\\rm sum$ array satisfy the restriction when enumerating to $j$.\n\n\"Update the value of $\\rm arr[j]$ in the $\\rm sum$ array.\" This operation is a brute-force update in this method because the value range of the array is very small. Capable readers may consider how to further optimize the complexity of this part and can consider it from the perspective of discretization or binary indexed trees, which will not be elaborated on here.  \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/347cLDL5/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"347cLDL5\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the array $\\textit{arr}$, $S$ is the upper limit of the array values, here it is $1000$.\n\n* Time complexity: $O(n^2+nS)$\n\nSince we have maintained a prefix sum array $\\rm sum$ of the frequency array $\\rm arr[i]$, for a pair $(j,k)$, we can get the answer in $O(1)$ as $\\rm sum[r]-\\rm sum[l-1]$. We only need a double loop to enumerate all the binary tuples.\n\n* Space complexity: $O(S)$\n\nWe need $O(S)$ space to maintain the prefix sum array of the frequency of $\\rm arr[i]$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

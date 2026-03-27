@@ -5,8 +5,8 @@ Usage: uv run -m ci.deploy_site --bucket sjer-red --build-dir packages/sjer.red 
        [--needs-playwright] [--target s3|r2] [--workspace-deps dep1,dep2]
 
 Required env vars:
-  S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY - SeaweedFS S3 credentials (for s3 target)
-  CF_ACCOUNT_ID, CF_R2_ACCESS_KEY_ID, CF_R2_SECRET_ACCESS_KEY - Cloudflare R2 (for r2 target)
+  SEAWEEDFS_ACCESS_KEY_ID, SEAWEEDFS_SECRET_ACCESS_KEY - SeaweedFS S3 credentials (for s3 target)
+  CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_R2_ACCESS_KEY_ID, CLOUDFLARE_R2_SECRET_ACCESS_KEY - Cloudflare R2 (for r2 target)
   BUILDKITE_BUILD_NUMBER, BUILDKITE_BRANCH
 """
 
@@ -49,9 +49,9 @@ def main() -> None:
 
     # Validate credentials
     if args.target == "r2":
-        required_vars = ["CF_ACCOUNT_ID", "CF_R2_ACCESS_KEY_ID", "CF_R2_SECRET_ACCESS_KEY"]
+        required_vars = ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_R2_ACCESS_KEY_ID", "CLOUDFLARE_R2_SECRET_ACCESS_KEY"]
     else:
-        required_vars = ["S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY"]
+        required_vars = ["SEAWEEDFS_ACCESS_KEY_ID", "SEAWEEDFS_SECRET_ACCESS_KEY"]
     missing = [v for v in required_vars if not os.environ.get(v)]
     if missing:
         print(f"Missing required env vars: {', '.join(missing)}", flush=True)

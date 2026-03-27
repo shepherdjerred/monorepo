@@ -1,0 +1,147 @@
+{
+  "questionId": "1463",
+  "questionFrontendId": "1337",
+  "title": "The K Weakest Rows in a Matrix",
+  "titleSlug": "the-k-weakest-rows-in-a-matrix",
+  "difficulty": "Easy",
+  "content": "<p>You are given an <code>m x n</code> binary matrix <code>mat</code> of <code>1</code>&#39;s (representing soldiers) and <code>0</code>&#39;s (representing civilians). The soldiers are positioned <strong>in front</strong> of the civilians. That is, all the <code>1</code>&#39;s will appear to the <strong>left</strong> of all the <code>0</code>&#39;s in each row.</p>\n\n<p>A row <code>i</code> is <strong>weaker</strong> than a row <code>j</code> if one of the following is true:</p>\n\n<ul>\n\t<li>The number of soldiers in row <code>i</code> is less than the number of soldiers in row <code>j</code>.</li>\n\t<li>Both rows have the same number of soldiers and <code>i &lt; j</code>.</li>\n</ul>\n\n<p>Return <em>the indices of the </em><code>k</code><em> <strong>weakest</strong> rows in the matrix ordered from weakest to strongest</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> mat = \n[[1,1,0,0,0],\n [1,1,1,1,0],\n [1,0,0,0,0],\n [1,1,0,0,0],\n [1,1,1,1,1]], \nk = 3\n<strong>Output:</strong> [2,0,3]\n<strong>Explanation:</strong> \nThe number of soldiers in each row is: \n- Row 0: 2 \n- Row 1: 4 \n- Row 2: 1 \n- Row 3: 2 \n- Row 4: 5 \nThe rows ordered from weakest to strongest are [2,0,3,1,4].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> mat = \n[[1,0,0,0],\n [1,1,1,1],\n [1,0,0,0],\n [1,0,0,0]], \nk = 2\n<strong>Output:</strong> [0,2]\n<strong>Explanation:</strong> \nThe number of soldiers in each row is: \n- Row 0: 1 \n- Row 1: 4 \n- Row 2: 1 \n- Row 3: 1 \nThe rows ordered from weakest to strongest are [0,2,3,1].\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == mat.length</code></li>\n\t<li><code>n == mat[i].length</code></li>\n\t<li><code>2 &lt;= n, m &lt;= 100</code></li>\n\t<li><code>1 &lt;= k &lt;= m</code></li>\n\t<li><code>matrix[i][j]</code> is either 0 or 1.</li>\n</ul>\n",
+  "hints": [
+    "Sort the matrix row indexes by the number of soldiers and then row indexes."
+  ],
+  "metaData": "{\n  \"name\": \"kWeakestRows\",\n  \"params\": [\n    {\n      \"name\": \"mat\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"421K\", \"totalSubmission\": \"566.6K\", \"totalAcceptedRaw\": 421014, \"totalSubmissionRaw\": 566560, \"acRate\": \"74.3%\"}",
+  "likes": 4345,
+  "dislikes": 242,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[1,1,0,0,0],[1,1,1,1,0],[1,0,0,0,0],[1,1,0,0,0],[1,1,1,1,1]]\n3",
+    "[[1,0,0,0],[1,1,1,1],[1,0,0,0],[1,0,0,0]]\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> kWeakestRows(vector<vector<int>>& mat, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] kWeakestRows(int[][] mat, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def kWeakestRows(self, mat: List[List[int]], k: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def kWeakestRows(self, mat, k):\n        \"\"\"\n        :type mat: List[List[int]]\n        :type k: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} mat\n * @param {number} k\n * @return {number[]}\n */\nvar kWeakestRows = function(mat, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function kWeakestRows(mat: number[][], k: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] KWeakestRows(int[][] mat, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* kWeakestRows(int** mat, int matSize, int* matColSize, int k, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func kWeakestRows(mat [][]int, k int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun kWeakestRows(mat: Array<IntArray>, k: Int): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func kWeakestRows(_ mat: [[Int]], _ k: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn k_weakest_rows(mat: Vec<Vec<i32>>, k: i32) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} mat\n# @param {Integer} k\n# @return {Integer[]}\ndef k_weakest_rows(mat, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $mat\n     * @param Integer $k\n     * @return Integer[]\n     */\n    function kWeakestRows($mat, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> kWeakestRows(List<List<int>> mat, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def kWeakestRows(mat: Array[Array[Int]], k: Int): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec k_weakest_rows(mat :: [[integer]], k :: integer) :: [integer]\n  def k_weakest_rows(mat, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec k_weakest_rows(Mat :: [[integer()]], K :: integer()) -> [integer()].\nk_weakest_rows(Mat, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (k-weakest-rows mat k)\n  (-> (listof (listof exact-integer?)) exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "865",
+    "content": "[TOC]\n\n## Solution\n\n### Overview\n\nWe'll use the following grid as our example, with `k = 5`.\n\n![The input grid.](../Figures/1337/input_grid.png)\n\nLet's say the \"strength\" of a row is the number of `1`'s (soldiers) in it. Because we need to compare rows based on their \"strength\", let's start by calculating the \"strength\" of each row. The simplest way of doing this is to loop over each row, and count how many `1`'s there are. We'll put these counts into a new array of length `m` (remember, `m` is the number of rows).\n\n![Calculating the strengths.](../Figures/1337/row_counts.png)\n\nWe need to return the `k` rows with the lowest \"strength\". So, perhaps we should sort the \"strengths\" we've found and take the first `k` from the sorted list? Doing the sort will give us the following array. The first `k` \"strengths\" are highlighted.\n\n![Sorting the strengths.](../Figures/1337/sorted_row_counts.png)\n\nHold on a minute though, the question requires us to return the *indexes* of the lowest \"strengths\"! Because of the sorting, we no longer know which \"strength\" was originally at what index. We'll need to keep track of the indexes that went with the \"strengths\".\n\nWe'll go through several different approaches for solving this problem. Some can be more easily implemented using certain programming languages.\n\n<br />\n\n---\n\n### Approach 1: Linear Search and Sorting\n\n**Intuition**\n\nThe simplest approach to this problem depends on which programming language you're using. This first approach is recommended for *Python*. It is doable in Java and C++, but requires implementing a [Comparator](https://docs.oracle.com/javase/8/docs/api/java/util/Comparator.html). This is perhaps too much work, as better options exist for those programming languages.\n\nThe first approach we'll look at is multi-tier sorting. Instead of only inserting \"strengths\" into the list, we'll also insert indexes. We can represent each \"strength\" and index pair as a `tuple`. We should put the \"strength\" *first* in each tuple because we'll be sorting based on \"strength\".\n\nFor now, we'll calculate the \"strength\" of each row using the linear search approach described above (we'll optimize it in a later approach).\n\nHere is the list of tuples you'll get for the above example.\n\n![The generated list of tuples.](../Figures/1337/tuples.png)\n\nNow we can sort the list using Python's built-in sort.\n\n![The sorted list of tuples.](../Figures/1337/sorted_tuples.png)\n\nWhen told to sort tuples, Python firstly sorts on the first element of the tuple, and then breaks any ties by sorting on the second element. Quite conveniently, this is exactly what we wanted here! Where there is a tie, the lower indexes are first. The only thing left to do is pull the indexes out of the first `k` tuples.\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/3PNP47Ef/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"3PNP47Ef\"></iframe>\n\nHere is a more Pythonic version of the code, using list comprehensions.\n\n<iframe src=\"https://leetcode.com/playground/GsKgsf9e/shared\" frameBorder=\"0\" width=\"100%\" height=\"242\" name=\"GsKgsf9e\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity : $$O(m \\cdot (n + \\log \\,m))$$.\n\n    For the first phase, we're calculating the \"strength\" of each row. Calculating the \"strength\" of a row (with this algorithm) and putting it into the list is $$O(n)$$ in the worst case, and there are $$m$$ rows. This gives us $$O(n \\cdot m)$$.\n\n    For the second phase, we are sorting the list (which is of length $$m$$). Sorting a list using the built-in sort is $$O(m \\, \\log \\, m)$$.\n\n    To get our final time, we'll add the 2 complexities together. Whether $$n \\cdot m$$ or $$m \\, \\log \\,m$$ is bigger depends on the relative sizes of $$m$$ and $$n$$. This means that we have to add them, giving  $$m \\cdot n + m \\, \\log\\,m = m \\cdot (n + \\log \\, m))$$.\n\n    If $$k$$ was really small, an optimization would be to use selection sort instead of the built in sort to avoid needing to sort the entire list.\n\n- Space Complexity : $$O(m)$$.\n\n    Constructing the list requires $$O(m)$$ space.\n\n<br />\n\n---\n\n### Approach 2: Linear Search and Map\n\n**Intuition**\n\nThis approach is recommended for Java and C++. In Python, it offers no advantage over Approach #1.\n\nAnother way we can keep track of the indexes is to put them into a `Map`. We'll go with a `HashMap` because more people are familiar with it, but a `TreeMap` could also be used (and has some nice advantages, but doesn't change the overall time complexity). The code in the next section shows both.\n\nEach time we calculate the \"strength\" of a row, we should insert the index into the `Map` under its \"strength\". Because multiple indexes could have the same \"strengths\", the values of the `Map` should be *lists* of indexes, not single values. If we do this to the entire example from above, we get the following:\n\n!?!../Documents/1337_hash_map.json:960,540!?!\n\nNext, we'll need to sort the keys and iterate over them, pulling indexes out until we have `k` of them. Remember that because of the way we generated the `Map`, the indexes within a list are already sorted. The indexes that you'll need to pull out for the above example (`k = 5`) are highlighted.\n\n![The k items that are returned.](../Figures/1337/pulling_out_k.png)\n\n**Algorithm**\n\nFirstly, here is the solution using a `HashMap`.\n\n<iframe src=\"https://leetcode.com/playground/bEgoRA4s/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"bEgoRA4s\"></iframe>\n\nSecondly, here is the solution using a `TreeMap`. The difference between a `HashMap` and a `TreeMap` is that the `TreeMap` maintains the keys in sorted order. Note that this doesn't change the overall time complexity of the algorithm though, because insertion into a `TreeMap` is more expensive (because it's having to do more work to maintain that sorted order). In terms of good coding practice, a `TreeMap` is definitely better here. I haven't provided Python code for this solution, because Python doesn't have a built in `TreeMap`.\n\n<iframe src=\"https://leetcode.com/playground/oSrQQbw9/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"oSrQQbw9\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity : $$O(m \\cdot (n + \\log \\,m))$$.\n\n\n    For each of the $$m$$ rows, we're calculating the \"strength\", which costs $$O(n)$$, and then we're inserting it into a `HashMap`, which costs $$O(1)$$. This part gives us a total of $$O(m \\cdot n)$$.\n\n    Next, we're sorting the $$m$$ keys, which costs $$O(m \\, \\log \\, m)$$. We're then pulling the values out of the `Map`, which costs $$O(k)$$. Overall, this costs $$O(m \\log m)$$ because $$k$$ is always less than $$m$$.\n\n    To get our final time, we'll add the 2 complexities together. Whether $$n \\cdot m$$ or $$m \\, \\log \\, m$$ is bigger depends on the relative sizes of $$m$$ and $$n$$. This means that we have to add them, giving $$m \\cdot n + m \\, \\log \\,m  = m \\cdot (n + \\log\\,m)$$.\n\n    Using a `TreeMap` would have had the same time complexity because inserting $$m$$ values into a tree map costs $$O(m \\, \\log \\, m)$$, and doesn't require the explicit sorting because values in a TreeMap are already sorted.\n\n- Space Complexity : $$O(m)$$.\n\n    Constructing the `Map` requires $$O(m)$$ space, regardless of whether we use a `TreeMap` or `HashMap`.\n\n<br>\n\n---\n\n### Approach 3: Binary Search and Sorting/ Map\n\n**Intuition**\n\nThis approach uses **Binary Search**. If you're not familiar with this algorithm, have a look at the [Explore Module on Binary Search](https://leetcode.com/explore/learn/card/binary-search/) and do the first couple of problems.\n\nThe way that we calculated the \"strength\" of each row wasn't very efficient. What we used above was *linear search*, because it scanned through the row until it encountered a 0 (and if the row had been all 1's, it would have had to check the entire row!). Instead, we could find the index of the *first* `0` in each row, and use this to calculate the \"strength\".\n\n![Link between index of first civilian and strength of row.](../Figures/1337/index_civillian_link.png)\n\nSo, let's think through how we could implement a *binary search* to find the first `0` in a given row.\n\nRecall that *binary search* starts by looking at the middle element. It then decides which half of the array the \"target\" element (in this case the first 0 in the row) must be in and repeats the same process on that half until there's only one element left in the search space.\n\nFor example, here is the middle of a really long row. Which half of the array is the \"target\" in?\n\n![](../Figures/1337/binary_search_example_1.png)\n\nWhat about this one? You can't actually see the target element, but it's possible to know which half it's in.\n\n![](../Figures/1337/binary_search_example_2.png)\n\nAnd what about this one?\n\n![](../Figures/1337/binary_search_example_3.png)\n\nIf the current \"middle\" element is a `0`, we know we've gone too far and the solution must be to the left. And if the current \"middle\" element is a `1`, then we know we haven't gone far enough, and the solution is to the right.\n\nHere's the pseudocode for the binary search algorithm.\n\n```python3\nlow = 0\nhigh = n\nwhile low < high:\n    mid = low + (high - low) // 2\n    if row[mid] == 1:\n        low = mid + 1\n    else:\n        high = mid\nreturn low\n```\n\nAnd here's an animation showing the algorithm in action.\n\n!?!../Documents/1337_binary_search.json:960,540!?!\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/k7toWvt5/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"k7toWvt5\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity : $$O(m \\, \\log m  n)$$.\n\n    We determined above that Approach #1 and Approach #2 both have the same time complexity. This was $$O(m \\cdot n)$$ to calculate the \"strengths\", and $$O(m \\, \\log \\, m)$$ to get them into sorted order. For this approach though, we calculated the \"strengths\" using binary search instead of linear search. Calculating each row \"strength\" cost $$O(\\log \\,n)$$, and there were $$m$$ rows to calculate. This is, therefore, $$O(m \\, \\log \\, n)$$. The second part will still be $$O(m \\, \\log \\, m)$$.\n\n    Like before, we don't know whether $$m$$ or $$n$$ is bigger. Therefore, we have to add the time complexities, which gives $$O(m \\, \\log \\,n + m \\, \\log \\, m) = O(m \\cdot (\\log \\, n + \\log \\, m)) = O(m \\, \\log \\, m n)$$.\n\n- Space Complexity : $$O(m)$$.\n\n    Same as above, as we're still relying on the same data structures.\n\n<br />\n\n---\n\n### Approach 4: Binary Search and Priority Queue\n\n**Intuition**\n\nNote: This approach is easier to code in Python than in Java/ C++, because it requires the implementation of a [Comparator](https://docs.oracle.com/javase/8/docs/api/java/util/Comparator.html).\n\nThe previous approaches use $$O(n)$$ space for gathering up row \"strength\" data. We then throw away $$n - k$$ of these, returning $$k$$ of them. Is there a way we can reduce this space usage to $$O(k)$$, by only keeping the smallest $$k$$ we've seen so far?\n\nProblems like this can often be solved using a **Priority Queue**. Recall that a Priority Queue is a data structure that allows us to insert items, and to efficiently remove the *largest* item in the case of a **Max-Priority Queue**, or the *smallest* in the case of a **Min-Priority Queue**.\n\nFor this problem, we could start by inserting `k` \"strengths\" (along with their indexes) into the Priority Queue. After that, we'd only want to insert a \"strength\"/index pair if it was one of the `k` smallest we've seen so far. We would then also need to remove the largest to bring the total back down to `k`. For this, it makes sense to use a *Max*-Priority Queue. Here is an animation showing this process.\n\n!?!../Documents/1337_priority_queue.json:960,540!?!\n\nOnce we've finished adding all the \"strengths\", we'll have the `k` smallest \"strength\"/index pairs in it. If we remove them from the PriorityQueue one-by-one, they'll be sorted from *largest to smallest*. We could either do this and then reverse, or we could iterate backwards over the output array inserting them.\n\n**Algorithm**\n\nPython has a *Min*-Priority Queue called *heapq*. We can convert it into a *Max*-Priority Queue by putting a negative sign in front of all the numbers going into it.\n\nJava's `PriorityQueue` requires a [Comparator](https://docs.oracle.com/javase/8/docs/api/java/util/Comparator.html). We can make it behave as a *Max*-Priority Queue using this.\n\n<iframe src=\"https://leetcode.com/playground/3pDhUgQF/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"3pDhUgQF\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity : $$O(m \\, \\log \\, nk)$$.\n\n    This approach is very similar to Approach #3. The only difference is that we're putting the \"strengths\" into a Priority Queue, and storing at most $$k$$ of them at a time.\n\n    Calculating the strengths is still $$O(m \\, \\log \\, n)$$.\n\n    Inserting an item into a Priority Queue has a cost of $$O(\\log\\, x)$$, where $$x$$ is the maximum number of items that will be in the Priority Queue. For this algorithm, the maximum $$x$$ value is $$k$$ (not $$m$$). Therefore, each insertion costs $$log(k)$$. There are $$m$$ of these insertions, giving a total of $$O(m \\, \\log \\,k)$$.\n\n    Like before, we need to add $$m \\, \\log \\, n + m \\, \\log \\,k$$, and again we can't assume which is bigger out of $$\\log \\, n$$ and $$\\log\\,k$$. Therefore, the total time complexity is $$m \\, \\log \\, n + m \\, \\log \\, k = m \\cdot (\\log \\, n + \\log \\, k) = O(m \\,  \\log nk)$$.\n\n- Space Complexity : $$O(k)$$.\n\n    We are keeping at most $$k$$ pieces of \"strength\" data at a time. Therefore, the space complexity is $$O(k)$$.\n\n<br />\n\n---\n\n### Approach 5: Vertical Iteration\n\n**Intuition**\n\nThere's another, completely different, way of looking at the problem which as we'll see, decreases the space usage at the cost of time. Instead of going row-by-row calculating the \"strengths\", we can instead go column-by-column. Interestingly, we don't actually calculate the row \"strengths\" at all! This approach was inspired by the code of [lenchen1112](https://leetcode.com/problems/the-k-weakest-rows-in-a-matrix/discuss/496644/Clean-Python-3-beats-100-without-sort-or-heap) on the discussion forum.\n\nOn each cell we pass that is a `0`, we check if the cell to the left was a `1`. If it was, then we're on the first `0` of that row and should add its index to our output list. Once there are `k` indexes in the output list, we simply return the list. The order in which the rows are found using this approach turns out to be the sorted order we want!\n\nHere is an animation showing the algorithm.\n\nOne edge case to be careful of is that it is possible some of the `k` rows will contain entirely `1`'s. (e.g. if the whole grid was `1`'s).\n\n!?!../Documents/1337_vertical_algorithm.json:960,540!?!\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/fawbtASM/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"fawbtASM\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity : $$O(m \\cdot n)$$.\n\n    We are visiting each of the first $$m \\cdot n - 1$$ cells at most once, and the last column of $$m$$ cells at most twice. In big-oh notation, $$O(m \\cdot (n - 1) + 2 \\cdot m) = O(m \\cdot n)$$. At each of the cells we do a simple $$O(1)$$ check to determine whether or not it should be added to the output list. The output list doesn't need any further processing, and so does not add anything further to the time complexity. This leaves us with $$O(m \\cdot n)$$.\n\n- Space Complexity : $$O(1)$$.\n\n    Because the output array is used *only* for gathering up the outputs to return, and these outputs require no further processing, this algorithm is considered to be $$O(1)$$ space. This is in contrast to the previous approaches that were also using the output array as working memory.\n\n    Another way of looking at it is that if you needed to return the output values one-by-one (i.e. a generator function) for this algorithm, the array would disappear entirely. This is not true of the earlier approaches, which still require it to gather and then sort the values.\n\n\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

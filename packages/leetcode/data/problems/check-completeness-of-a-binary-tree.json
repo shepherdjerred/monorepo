@@ -1,0 +1,137 @@
+{
+  "questionId": "998",
+  "questionFrontendId": "958",
+  "title": "Check Completeness of a Binary Tree",
+  "titleSlug": "check-completeness-of-a-binary-tree",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>root</code> of a binary tree, determine if it is a <em>complete binary tree</em>.</p>\n\n<p>In a <strong><a href=\"http://en.wikipedia.org/wiki/Binary_tree#Types_of_binary_trees\" target=\"_blank\">complete binary tree</a></strong>, every level, except possibly the last, is completely filled, and all nodes in the last level are as far left as possible. It can have between <code>1</code> and <code>2<sup>h</sup></code> nodes inclusive at the last level <code>h</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2018/12/15/complete-binary-tree-1.png\" style=\"width: 180px; height: 145px;\" />\n<pre>\n<strong>Input:</strong> root = [1,2,3,4,5,6]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> Every level before the last is full (ie. levels with node-values {1} and {2, 3}), and all nodes in the last level ({4, 5, 6}) are as far left as possible.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2018/12/15/complete-binary-tree-2.png\" style=\"width: 200px; height: 145px;\" />\n<pre>\n<strong>Input:</strong> root = [1,2,3,4,5,null,7]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> The node with value 7 isn&#39;t as far left as possible.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[1, 100]</code>.</li>\n\t<li><code>1 &lt;= Node.val &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"isCompleteTree\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"root\",\r\n      \"type\": \"TreeNode\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"318K\", \"totalSubmission\": \"538.6K\", \"totalAcceptedRaw\": 318025, \"totalSubmissionRaw\": 538588, \"acRate\": \"59.0%\"}",
+  "likes": 4540,
+  "dislikes": 62,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,2,3,4,5,6]",
+    "[1,2,3,4,5,null,7]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 53, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 10, \"slug\": \"lyft\", \"name\": \"Lyft\"}, {\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    bool isCompleteTree(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public boolean isCompleteTree(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def isCompleteTree(self, root: Optional[TreeNode]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def isCompleteTree(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {boolean}\n */\nvar isCompleteTree = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction isCompleteTree(root: TreeNode | null): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public bool IsCompleteTree(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nbool isCompleteTree(struct TreeNode* root) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc isCompleteTree(root *TreeNode) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun isCompleteTree(root: TreeNode?): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func isCompleteTree(_ root: TreeNode?) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn is_complete_tree(root: Option<Rc<RefCell<TreeNode>>>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {Boolean}\ndef is_complete_tree(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return Boolean\n     */\n    function isCompleteTree($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  bool isCompleteTree(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def isCompleteTree(root: TreeNode): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec is_complete_tree(root :: TreeNode.t | nil) :: boolean\n  def is_complete_tree(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec is_complete_tree(Root :: #tree_node{} | null) -> boolean().\nis_complete_tree(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (is-complete-tree root)\n  (-> (or/c tree-node? #f) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1787",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given the `root` of a binary tree and our task is to determine if it is a complete binary tree or not.\n\nIn a complete binary tree, every level except possibly the last is completely filled, and all nodes in the last level are as far left as possible. The last level can have between $1$ and $2^{h}$ nodes inclusive, where $h$ is the height of the tree.\n\nBefore moving on to the solution, consider some of the graph terminologies that will be used later:\n\n![img](../Figures/958/958-1.png)\n\n1. **Child**: A node that is one edge further away from a given node in a rooted tree. In the above image, nodes `3, 4` are children of `1`, which is called the parent. (When we consider `0` as the root)\n2. **Descendants**: Descendants of a node are children, children of children, and so on. In the above image, nodes `3, 4, 6, 7, 9` are all descendants of `1`.\n3. **Subtree**: A subtree of a node `T` is a tree `S` consisting of a node `T` and all of its descendants in `T`. The subtree corresponding to the root node is the entire tree.\n4. **Level**: The level of a node is the number of edges on the path from the root node to that node. Therefore, the root node has a level of `0`. If it has children, all of them have a level of `1`.\n\n---\n\n### Approach 1: Breadth First Search\n\n#### Intuition\n\nBy analyzing the definition, we can see that a binary tree is complete if there is no node to the right of the first `null` node and no node at a greater level than the first `null` node.\n\nIt means that if we traverse the tree level by level from left to right and we come across a `null` node, all subsequent nodes in this traversal should be `null` as well (should not exist). The level-order traversal array of a complete binary tree will never have a `null` node in between non-null nodes.\n\nBreadth-first search (BFS) traversal can be used to perform level-wise traversal. BFS is an algorithm for traversing or searching a graph. It traverses in a level-wise manner, i.e., all the nodes at the present level (say `l`) are explored before moving on to the nodes at the next level (`l + 1`), where a level's number is the distance from a starting node. BFS is implemented with a queue.\n\nIf you are not familiar with BFS traversal, we suggest you read our [Leetcode Explore Card](https://leetcode.com/explore/featured/card/graph/620/breadth-first-search-in-graph/).\n\nWe begin with the `root` node. We return `true` if `root` is `null` because the empty tree fits the definition of a complete binary tree. Otherwise, we initialize a boolean variable called `nullNodeFound` to keep track of whether or not we have seen a `null` node. We set it to `false` at the start.\n\nWe start a BFS traversal pushing `root` in the BFS queue. While the BFS queue is not empty, we fetch the front `node` in the queue. If `node == null`, we mark `nullNodeFound = true`. Otherwise, if `node != null`, we check if we have already visited a `null` node. If we've previously visited a `null` node and `node != null`, the given tree isn't a complete binary tree as we are encountering a node after visiting a `null` node. We return `false` in such a case.\n\nIf we haven't yet visited a `null` node and `node != null`, we push `node.left` and then `node.right` to iterate from left to right at each level.\n\nWe return `true` if we can traverse the entire tree without encountering a non-null node after a `null` node.\n\n#### Algorithm\n\n1. There is no node in the given tree if the `root` node is `null`. We return `true`.\n2. Create a boolean variable `nullNodeFound` to track whether or not a `null` node has been visited yet. We initialize it to `false`.\n3. Intiailize a `TreeNode` queue `q` and push `root` into it.\n4. While the queue is not empty:\n    - Dequeue the first element `node` from the queue.\n    - If `node == null`, mark `nullNodeFound = true`.\n    - Otherwise, if `node` is not `null`, we check to see if we have previously visited a `null` node. If `nullNodeFound == true`, it means we have `node` which is not `null` after visiting a `null` node. As a result, we return `false` in such a case. Otherwise, if we have not visited a `null` node yet, we push `node.left` and then `node.right` into the queue.\n5. We are able to traverse the entire tree without seeing a non-null node after a `null` node, we return `true`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ZDzvXr2j/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ZDzvXr2j\"></iframe>\n\n#### Complexity Analysis\n\nHere $n$ is the number of nodes.\n\n* Time complexity: $O(n)$.\n    - Each queue operation in the BFS algorithm takes $O(1)$ time, and a single node can only be pushed once, leading to $O(n)$ operations for $n$ nodes. Since we have directed edges, each edge can only be iterated once, resulting in $O(e)$ operations total while visiting all nodes, where $e$ is the number of edges. Because the given graph is a tree, there are $n - 1$ edges, so $O(n + e) = O(n)$.\n\n* Space complexity: $O(n)$.\n    - The last or second last level would have the most nodes (the last level can have multiple null nodes) in a complete binary tree. Because we are iterating by level, the BFS queue will be most crowded when all of the nodes from the last level (or second last level) are in the queue.\n    - Assume we have a complete binary tree with height $h$ and a fully filled last level having $2^h$ nodes. All the nodes at each level add up to $1 + 2 + 4 + 8 +... + 2^h = n$. This implies that $2^{h + 1} - 1 = n$, and thus $2^h = (n + 1) / 2$. Because the last level $h$ has $2^h$ nodes, the BFS queue will have $(n + 1) / 2 = O(n)$ elements in the worst-case scenario.\n\n---\n\n### Approach 2: Depth First Search\n\n#### Intuition\n\nA complete binary tree has an interesting property that we can use to find the children and parents of any node.\n\nA complete binary tree can be represented with an array. If the index of a node in the array is `i`, the element at index `2i + 1` will be its `left` child and the element at index `2i + 2` will be its `right` child. If there are a total of `n` nodes in a complete binary tree, it can be represented with an array where the nodes are ordered level by level, left to right. As we saw in the previous approach, there will be no `null` node between two non-null nodes.\n\nLet's take a look at the following array representation of a complete binary tree:\n\n![img](../Figures/958/958-2.png)\n\nThis property can be used to solve the problem.\n\nStarting with the root node and assigning it an index of `0`, we can use the above property to assign indices to all the other nodes in the tree. Let `n` represent the total number of nodes in the tree. As we saw above, the assigned index of every node must be smaller than or equal to `n` for the given tree to form a complete binary tree.\n\nIf the `index` of a `node` is greater or equal to `n`, it means a node is missing from the first `n` indices. In such a case, the tree is not a complete binary tree. The array representation of such a binary tree will have at least one `null` node in between non-null nodes.\n\nIf `index < n`, we proceed to its children. We use index as `2 * index + 1` for the left child `node.left` and `2 * index + 2` for the right child. Similarly, we determine whether or not the index of the both the children is greater than `n` or not.\n\nLet's take a look at some visual examples:\n\n![img](../Figures/958/958-3.png)\n\nFor every `node`, we can recursively iterate over its `left` and `right` children and verify if the assigned indices are smaller than `n`. We can use a depth-first search to perform this recursive traversal.\n\nIn DFS, we use a recursive function to explore nodes as far as possible along each branch. Upon reaching the end of a branch, we backtrack to the previous node and continue exploring the next branches.\n\nOnce we encounter an unvisited node, we will take one of its neighbor nodes (if exists) as the next node on this branch. Recursively call the function to take the next node as the 'starting node' and solve the subproblem.\n\nIf you are new to Depth First Search, please see our [Leetcode Explore Card](https://leetcode.com/explore/featured/card/graph/619/depth-first-search-in-graph/3882/) for more information on it!\n\nFirst, we do a simple DFS to determine the number of nodes `n`.\n\nNext, we start another DFS with `root` as `node` and assigning an index of `0` to it. If `node == null`, we have an empty subtree of `node`. For this case, we return `true`. Otherwise, we examine whether `index >= n`. If the index is greater or equal to `n`, we return `false`. Otherwise, we call dfs recursively for the left and right subtrees to see if any node in either subtree violates the complete binary tree property. To perform this recursion, we use `dfs(node->left, 2 * index + 1, n) && dfs(node->right, 2 * index + 2, n)`.\n\n#### Algorithm\n\n1. Create a `countNodes` method that takes `root` as parameter. It returns the total number of nodes in the subtree of `root`.\n2. Start a DFS traversal.\n    - We use a function `dfs` to perform the traversal. For each call, pass `node, index, n` as the parameters. `node` is a type of `TreeNode`  from which the DFS begins, `index` is the index of `node` in the complete binary tree and `n` is the total number of nodes in the given binary tree. We start (and return) with `dfs(root, 0, countNodes(root))`.\n    - If `node == null`, we return `true` because there is no node in this subtree.\n    - If `index >= n`, it means we've a non-null node having `index` greater or equal to the number of nodes in the given tree which tells that the given tree is not a complete binary tree. We return `false`.\n    - We check the left and right subtrees of `node` recursively. For the left child, we call dfs with `node.left, 2 * index + 1, n` and for the right child, we call dfs with `node.right, 2 * index + 2, n`. We join these two calls with the `&&` operator so that if any subtree violates the complete binary tree property, we return `false`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/9GDMXzFH/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"9GDMXzFH\"></iframe>\n\n#### Complexity Analysis\n\nHere $n$ is the number of nodes.\n\n* Time complexity: $O(n)$.\n    - The `dfs` function visits each node once, which takes $O(n)$ time in total. Since we have directed edges, each edge can only be iterated once, resulting in $O(e)$ operations total while visiting all nodes, where $e$ is the number of edges. As mentioned in the previous approach, $O(e) = O(n)$ since the graph is a tree.\n\n* Space complexity: $O(n)$.\n    - We are recursively calling dfs for the left child of a node first and moving from top to bottom. If we have traversed the left child of the node, we then call the dfs over its right child. So, from a node at level `l`, we only go to one node at `l + 1`, either its left or right child (and not both). As a result, the stack will contain at most one dfs call from each level. Hence, the dfs stack will grow to a height of $h$, where $h$ is the height of the tree. The worst-case scenario would be an incomplete binary with only each node just having a left child (called skewed tree). This is a `n` height tree, with $O(n)$ elements in the dfs stack.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -56,7 +56,7 @@ export function createWhisperbridgeDeployment(chart: Chart) {
             "groq-api-key",
             groqSecrets.name,
           ),
-          key: "credential",
+          key: "CREDENTIAL",
         }),
         OPENAI_BASE_URL: EnvValue.fromValue("https://api.groq.com/openai/v1"),
       },

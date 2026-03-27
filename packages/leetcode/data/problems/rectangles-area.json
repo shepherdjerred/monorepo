@@ -1,0 +1,53 @@
+{
+  "questionId": "1607",
+  "questionFrontendId": "1459",
+  "title": "Rectangles Area",
+  "titleSlug": "rectangles-area",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Points</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| id            | int     |\n| x_value       | int     |\n| y_value       | int     |\n+---------------+---------+\nid is the column with unique values for this table.\nEach point is represented as a 2D coordinate (x_value, y_value).</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to report all possible <strong>axis-aligned</strong> rectangles with a <strong>non-zero area</strong> that can be formed by any two points from the <code>Points</code> table.</p>\n\n<p>Each row in the result should contain three columns <code>(p1, p2, area)</code> where:</p>\n\n<ul>\n\t<li><code>p1</code> and <code>p2</code> are the <code>id</code>&#39;s of the two points that determine the opposite corners of a rectangle.</li>\n\t<li><code>area</code> is the area of the rectangle and must be <strong>non-zero</strong>.</li>\n</ul>\n\n<p>Return the result table <strong>ordered</strong> by <code>area</code> <strong>in descending order</strong>. If there is a tie, order them by <code>p1</code> <strong>in ascending order</strong>. If there is still a tie, order them by <code>p2</code> <strong>in ascending order</strong>.</p>\n\n<p>The&nbsp;result format is in the following table.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/03/12/rect.png\" style=\"width: 303px; height: 500px;\" />\n<pre>\n<strong>Input:</strong> \nPoints table:\n+----------+-------------+-------------+\n| id       | x_value     | y_value     |\n+----------+-------------+-------------+\n| 1        | 2           | 7           |\n| 2        | 4           | 8           |\n| 3        | 2           | 10          |\n+----------+-------------+-------------+\n<strong>Output:</strong> \n+----------+-------------+-------------+\n| p1       | p2          | area        |\n+----------+-------------+-------------+\n| 2        | 3           | 4           |\n| 1        | 2           | 2           |\n+----------+-------------+-------------+\n<strong>Explanation:</strong> \nThe rectangle formed by p1 = 2 and p2 = 3 has an area equal to |4-2| * |8-10| = 4.\nThe rectangle formed by p1 = 1 and p2 = 2 has an area equal to |2-4| * |7-8| = 2.\nNote that the rectangle formed by p1 = 1 and p2 = 3 is invalid because the area is 0.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Points (id int, x_value int, y_value int)\"], \"mssql\": [\"Create table Points (id int, x_value int, y_value int)\"], \"oraclesql\": [\"Create table Points (id int, x_value int, y_value int)\"], \"database\": true, \"name\": \"rectangles_area\", \"pythondata\": [\"Points = pd.DataFrame([], columns=['id', 'x_value', 'y_value']).astype({'id':'Int64', 'x_value':'Int64', 'y_value':'Int64'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Points (id int, x_value int, y_value int)\"], \"database_schema\": {\"Points\": {\"id\": \"INT\", \"x_value\": \"INT\", \"y_value\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"20.1K\", \"totalSubmission\": \"29.3K\", \"totalAcceptedRaw\": 20117, \"totalSubmissionRaw\": 29253, \"acRate\": \"68.8%\"}",
+  "likes": 99,
+  "dislikes": 162,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Points\":[\"id\",\"x_value\",\"y_value\"]},\"rows\":{\"Points\":[[1,2,7],[2,4,8],[3,2,10]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"twitter\", \"name\": \"X\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef rectangles_area(points: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,145 @@
+{
+  "questionId": "1413",
+  "questionFrontendId": "1292",
+  "title": "Maximum Side Length of a Square with Sum Less than or Equal to Threshold",
+  "titleSlug": "maximum-side-length-of-a-square-with-sum-less-than-or-equal-to-threshold",
+  "difficulty": "Medium",
+  "content": "<p>Given a <code>m x n</code> matrix <code>mat</code> and an integer <code>threshold</code>, return <em>the maximum side-length of a square with a sum less than or equal to </em><code>threshold</code><em> or return </em><code>0</code><em> if there is no such square</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/12/05/e1.png\" style=\"width: 335px; height: 186px;\" />\n<pre>\n<strong>Input:</strong> mat = [[1,1,3,2,4,3,2],[1,1,3,2,4,3,2],[1,1,3,2,4,3,2]], threshold = 4\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The maximum side length of square with sum less than or equal to 4 is 2 as shown.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> mat = [[2,2,2,2,2],[2,2,2,2,2],[2,2,2,2,2],[2,2,2,2,2],[2,2,2,2,2]], threshold = 1\n<strong>Output:</strong> 0\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == mat.length</code></li>\n\t<li><code>n == mat[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 300</code></li>\n\t<li><code>0 &lt;= mat[i][j] &lt;= 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= threshold &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Store prefix sum of all grids in another 2D array.",
+    "Try all possible solutions and if you cannot find one return 0.",
+    "If x is a valid answer then any y < x is also valid answer. Use binary search to find answer."
+  ],
+  "metaData": "{\n  \"name\": \"maxSideLength\",\n  \"params\": [\n    {\n      \"name\": \"mat\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"threshold\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"124.2K\", \"totalSubmission\": \"189.8K\", \"totalAcceptedRaw\": 124234, \"totalSubmissionRaw\": 189844, \"acRate\": \"65.4%\"}",
+  "likes": 1543,
+  "dislikes": 124,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[1,1,3,2,4,3,2],[1,1,3,2,4,3,2],[1,1,3,2,4,3,2]]\n4",
+    "[[2,2,2,2,2],[2,2,2,2,2],[2,2,2,2,2],[2,2,2,2,2],[2,2,2,2,2]]\n1"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"fractal-analytics\", \"name\": \"Fractal Analytics\"}, {\"timesEncountered\": 5, \"slug\": \"imc\", \"name\": \"IMC\"}, {\"timesEncountered\": 2, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxSideLength(vector<vector<int>>& mat, int threshold) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxSideLength(int[][] mat, int threshold) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxSideLength(self, mat: List[List[int]], threshold: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxSideLength(self, mat, threshold):\n        \"\"\"\n        :type mat: List[List[int]]\n        :type threshold: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} mat\n * @param {number} threshold\n * @return {number}\n */\nvar maxSideLength = function(mat, threshold) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxSideLength(mat: number[][], threshold: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxSideLength(int[][] mat, int threshold) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxSideLength(int** mat, int matSize, int* matColSize, int threshold) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxSideLength(mat [][]int, threshold int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxSideLength(mat: Array<IntArray>, threshold: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxSideLength(_ mat: [[Int]], _ threshold: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_side_length(mat: Vec<Vec<i32>>, threshold: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} mat\n# @param {Integer} threshold\n# @return {Integer}\ndef max_side_length(mat, threshold)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $mat\n     * @param Integer $threshold\n     * @return Integer\n     */\n    function maxSideLength($mat, $threshold) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxSideLength(List<List<int>> mat, int threshold) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxSideLength(mat: Array[Array[Int]], threshold: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_side_length(mat :: [[integer]], threshold :: integer) :: integer\n  def max_side_length(mat, threshold) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_side_length(Mat :: [[integer()]], Threshold :: integer()) -> integer().\nmax_side_length(Mat, Threshold) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-side-length mat threshold)\n  (-> (listof (listof exact-integer?)) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2908",
+    "content": "### Prerequisites\n\nThis problem requires knowledge of **two-dimensional prefix sums**, which are an extension of one-dimensional prefix sums.\n\nLet the size of the two-dimensional array `A` be `m × n`, with row indices in the range `[1, m]` and column indices in the range `[1, n]`.\n\nThe array `P` is the prefix sum array of `A`, where each element `P[i][j]` is defined as follows:\n\n* If both `i` and `j` are greater than `0`, then `P[i][j]` represents the sum of all elements in the rectangular region of `A` with the top-left corner at `(1, 1)` and the bottom-right corner at `(i, j)`.\n\n* If either `i` or `j` is equal to `0`, then `P[i][j] = 0`.\n\nThe prefix sum array `P` allows us to compute the sum of elements in any rectangular submatrix in $O(1)$ time. Specifically, if the top-left corner of the rectangle is `(x1, y1)` and the bottom-right corner is `(x2, y2)`, then the sum of elements in this region is:\n\n```\nsum = A[x1..x2][y1..y2]\n    = P[x2][y2] - P[x1 - 1][y2] - P[x2][y1 - 1] + P[x1 - 1][y1 - 1]\n```\n\nThe correctness of this formula follows from the **inclusion-exclusion principle**. For example, when the size of `A` is `8 × 5`, and the rectangular region to be summed has its top-left corner at `(3, 2)` and bottom-right corner at `(5, 5)`, the sum of this region is computed as `P[5][5] - P[2][5] - P[5][1] + P[2][1]`.\n\n![1292-1](../Figures/1292/1.png)\n\n\nHow can we obtain the array `P`? To compute the array `P`, we process the elements in **row-major order**. When computing `P[i][j]`, the first `i - 1` rows of `P` and the first `j - 1` elements of the `i`-th row have already been computed.\n\nConsidering the `1 × 1` rectangle ending at `(i, j)`, we can write:\n\n```\nA[i][j] = P[i][j] - P[i - 1][j] - P[i][j - 1] + P[i - 1][j - 1]\n```\n\nSince `A[i][j]`, `P[i - 1][j]`, `P[i][j - 1]`, and `P[i - 1][j - 1]` are all known at this point, we can rearrange the equation to obtain:\n\n```\nP[i][j] = P[i - 1][j] + P[i][j - 1] - P[i - 1][j - 1] + A[i][j]\n```\n\nEach value of `P[i][j]` is computed in $O(1)$ time. Therefore, the entire prefix sum array `P` can be constructed in $O(MN)$ time. After this preprocessing step, the sum of any rectangular region can be queried in constant time.\n\n**Notes:**\n\nIn most programming languages, array indices start from `0` instead of `1`. This needs to be handled carefully during implementation.\n\n### Approach 1: Binary Search\n\n#### Intuition\n\nWe first compute the prefix sum array `P` for the matrix `mat`, and then attempt to enumerate square submatrices to compute their sums.\n\nIf the size of `mat` is `m × n`, the top-left corner of a square can be any valid position in the matrix, and the maximum possible side length of a square is `min(m, n)`. A brute-force enumeration of all squares would therefore require three nested loops, resulting in a time complexity of $O(MN × \\min(M, N))$. Since the prefix sum array allows us to compute the sum of any square in $O(1)$ time, this is the total complexity of the naive approach.\n\nThis approach passes all test cases in C++, but it is too slow in Python. Therefore, optimization is necessary.\n\nBecause all elements in `mat` are **non-negative integers**, an important monotonicity property holds:\nIf there exists a square with side length `c` whose sum does not exceed the threshold, then there must also exist valid squares of side lengths `1, 2, ..., c - 1`. This is because any smaller square can be chosen inside the larger valid square.\n\nAs a result, we can apply **binary search** to find the maximum feasible side length `c`. The search range is `[1, min(m, n)]`. For a given candidate side length `c'`, we enumerate all squares of that size and check whether at least one of them satisfies the threshold condition.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/AcRe56UN/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"AcRe56UN\"></iframe>\n\n#### Complexity Analysis\n\n- Time complexity: $O(MN * \\log\\min(M, N))$.\n  \n    Binary search performs $O(\\log \\min(M, N))$ iterations. In each iteration, all squares of a fixed side length are enumerated, which takes $O(MN)$ time.\n\n- Space complexity: $O(MN)$.\n\n### Approach 2: Enumeration + Optimization\n\n#### Intuition\n\nIn Approach 1, binary search reduces the time complexity from $O(MN × \\min(M, N))$ to $O(MN × \\log \\min(M, N))$. We now consider whether it is possible to optimize the enumeration directly.\n\nThe naive enumeration consists of three nested loops:\n\n1. The first two loops enumerate the top-left corner `(i, j)` of the square.\n2. The third loop enumerates the side length `c`.\n\nThe first two loops already iterate over all valid positions and offer little room for optimization. The third loop, however, can be optimized using two observations:\n\n* Since all elements in `mat` are non-negative, once the sum of a square with side length `c` exceeds the threshold, any larger square with the same top-left corner will also exceed the threshold. Therefore, we can stop increasing `c` immediately.\n\n* If we have already found a valid square with side length `c'`, then for any subsequent top-left corner `(i, j)`, there is no need to check side lengths less than or equal to `c'`. We can start directly from `c' + 1`.\n\nApplying these two optimizations leads to the following implementation.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/HTatdivT/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"HTatdivT\"></iframe>\n\n#### Complexity Analysis\n\nTo analyze the time complexity, we categorize iterations of the third loop into two types:\n\n* **Successful enumeration:**\n  The square with side length `c` satisfies the threshold condition. Each successful enumeration increases `ans`. Since the maximum possible side length is `min(m, n)`, the total number of successful enumerations is at most `min(m, n)`.\n\n* **Failed enumeration:**\n  The square with side length `c` exceeds the threshold. In this case, the loop breaks immediately. For each top-left corner `(i, j)`, there can be at most one failed enumeration.\n\nSince there are `MN` possible top-left corners, the total number of failed enumerations is at most `MN`.\n\nCombining both cases, the total number of iterations of the innermost loop is bounded by:\n\n$$\nO(\\min(M, N) + MN) = O(MN)\n$$\n\n- Time complexity: $O(MN)$.\n  \n  Although this result may seem surprising, the amortized analysis shows that the total work is linear in the size of the matrix.\n\n- Space complexity: $O(MN)$.\n\n  The prefix sum array dominates the space usage.\n    \n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

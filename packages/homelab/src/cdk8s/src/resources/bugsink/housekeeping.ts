@@ -99,7 +99,7 @@ echo "Housekeeping complete!"
                       valueFrom: {
                         secretKeyRef: {
                           name: bugsinkSecrets.name,
-                          key: "secret-key",
+                          key: "SECRET_KEY",
                         },
                       },
                     },

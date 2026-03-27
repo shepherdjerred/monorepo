@@ -22,13 +22,13 @@ def sync(
         delete: Whether to delete files in R2 that don't exist locally.
         dry_run: If True, print what would be done without executing.
     """
-    account_id = os.environ.get("CF_ACCOUNT_ID", "")
+    account_id = os.environ.get("CLOUDFLARE_ACCOUNT_ID", "")
     endpoint_url = f"https://{account_id}.r2.cloudflarestorage.com"
     s3_path = f"s3://{bucket}/"
     env = {
         **os.environ,
-        "AWS_ACCESS_KEY_ID": os.environ.get("CF_R2_ACCESS_KEY_ID", ""),
-        "AWS_SECRET_ACCESS_KEY": os.environ.get("CF_R2_SECRET_ACCESS_KEY", ""),
+        "AWS_ACCESS_KEY_ID": os.environ.get("CLOUDFLARE_R2_ACCESS_KEY_ID", ""),
+        "AWS_SECRET_ACCESS_KEY": os.environ.get("CLOUDFLARE_R2_SECRET_ACCESS_KEY", ""),
         "AWS_DEFAULT_REGION": "auto",
     }
     cmd = [

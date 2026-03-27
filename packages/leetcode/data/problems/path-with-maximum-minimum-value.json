@@ -1,0 +1,160 @@
+{
+  "questionId": "1099",
+  "questionFrontendId": "1102",
+  "title": "Path With Maximum Minimum Value",
+  "titleSlug": "path-with-maximum-minimum-value",
+  "difficulty": "Medium",
+  "content": "<p>Given an <code>m x n</code> integer matrix <code>grid</code>, return <em>the maximum <strong>score</strong> of a path starting at </em><code>(0, 0)</code><em> and ending at </em><code>(m - 1, n - 1)</code> moving in the 4 cardinal directions.</p>\n\n<p>The <strong>score</strong> of a path is the minimum value in that path.</p>\n\n<ul>\n\t<li>For example, the score of the path <code>8 &rarr; 4 &rarr; 5 &rarr; 9</code> is <code>4</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/08/05/maxgrid1.jpg\" style=\"width: 244px; height: 245px;\" />\n<pre>\n<strong>Input:</strong> grid = [[5,4,5],[1,2,6],[7,4,6]]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The path with the maximum score is highlighted in yellow. \n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/08/05/maxgrid2.jpg\" style=\"width: 484px; height: 165px;\" />\n<pre>\n<strong>Input:</strong> grid = [[2,2,1,2,2,2],[1,2,2,2,1,2]]\n<strong>Output:</strong> 2\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/08/05/maxgrid3.jpg\" style=\"width: 404px; height: 485px;\" />\n<pre>\n<strong>Input:</strong> grid = [[3,4,6,3,4],[0,2,1,1,7],[8,8,3,2,7],[3,2,4,9,8],[4,1,2,0,0],[4,6,5,4,3]]\n<strong>Output:</strong> 3\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == grid.length</code></li>\n\t<li><code>n == grid[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 100</code></li>\n\t<li><code>0 &lt;= grid[i][j] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "What if we sort each cell of the matrix by the value?",
+    "Don't include small values in your path if you can only include large values.",
+    "Let's keep adding a possible cell to use in the path incrementally with decreasing values.",
+    "If the start and end cells are connected then we don't need to add more cells.",
+    "Use union-find data structure to check connectivity and return as answer the value of the given cell that makes start and end cells connected."
+  ],
+  "metaData": "{\n  \"name\": \"maximumMinimumPath\",\n  \"params\": [\n    {\n      \"name\": \"grid\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"72.2K\", \"totalSubmission\": \"132.1K\", \"totalAcceptedRaw\": 72151, \"totalSubmissionRaw\": 132055, \"acRate\": \"54.6%\"}",
+  "likes": 1355,
+  "dislikes": 126,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Path With Minimum Effort\", \"titleSlug\": \"path-with-minimum-effort\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[5,4,5],[1,2,6],[7,4,6]]",
+    "[[2,2,1,2,2,2],[1,2,2,2,1,2]]",
+    "[[3,4,6,3,4],[0,2,1,1,7],[8,8,3,2,7],[3,2,4,9,8],[4,1,2,0,0],[4,6,5,4,3]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximumMinimumPath(vector<vector<int>>& grid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximumMinimumPath(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumMinimumPath(self, grid: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumMinimumPath(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} grid\n * @return {number}\n */\nvar maximumMinimumPath = function(grid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumMinimumPath(grid: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaximumMinimumPath(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maximumMinimumPath(int** grid, int gridSize, int* gridColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumMinimumPath(grid [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumMinimumPath(grid: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumMinimumPath(_ grid: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_minimum_path(grid: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} grid\n# @return {Integer}\ndef maximum_minimum_path(grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $grid\n     * @return Integer\n     */\n    function maximumMinimumPath($grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumMinimumPath(List<List<int>> grid) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumMinimumPath(grid: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_minimum_path(grid :: [[integer]]) :: integer\n  def maximum_minimum_path(grid) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_minimum_path(Grid :: [[integer()]]) -> integer().\nmaximum_minimum_path(Grid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-minimum-path grid)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1310",
+    "content": "[TOC]\n\n## Solution\n\n--- \n### Overview\n\nIn this problem, we are given a 2D integer matrix. Our goal is to pick a path that starts from the top-left cell and ends at the bottom-right cell. As described in the problem, the **score** of a path is defined by the minimum value in this path.\n\nFor example, in the matrix below, the path colored in green has values of $$[5, 1, 7, 4, 6]$$, so the **score** of the green path is the minimum value $$1$$. The path colored in red has values of $$[5, 4, 5, 6, 6]$$, so the **score** of the red path is the minimum value $$4$$. We can tell that the **score** of the red path is larger than that of the green path.\n\n![limits](../Figures/1102/1102-example.drawio.png)\n\nHere our task is to find the maximum **score** among all possible paths in the given matrix.\n\n---\n\n### Approach 1: Iteration + BFS\n\n#### Intuition   \n\n\nBefore getting lost in designing a function to find the optimal path, let's try thinking about this problem from another perspective!\n\n> Given a number **S**, can we find a path from the matrix having **score** equals **S**? \n\nRecall the previous picture:\n\n![limits](../Figures/1102/1102-example.drawio.png)\n\nGiven **S = 100**, can we find a path with a minimum value that equals **100**? The answer is definitely No.\nGiven **S = 4**, can we find a path with a minimum value that equals **4**? The answer is Yes (the red path, for example).\n\nMore specifically, we could start with a large number **S** (large enough so that we can't find a path with a score more than **S**), then we check if there is a path with a score equal to **S**. If so, we have found the maximum, minimum value of all the paths. Otherwise, it means that the current **S** is too large, and we should search for a smaller value. Since we don't want to miss any possible value, we will just decrement **S** by 1. That is, we continue to check if there is a path with the value of **S - 1**.\n\n\n\n![limits](../Figures/1102/1102-decision.drawio.png)\n\n\nIn this way, we can convert the optimization problem into a decision problem: We don't need to worry about how to plan the path, but just verify if such a path exists.\n\nThen this problem is divided into two steps: \n1. We traverse decreasingly from a large starting score **S**. \n2. For each **S**, we check if there exists a path with a score equal to **S**.\n\n> 1. How to access the largest **score**?\n\nAs shown in the figure above, in order not to miss any possible minimum value, we will start with a large value $$S$$, which is the largest possible minimum value in any path. For example, we can use the largest value in the matrix and then try to find if there exists a path with a score of $$maxVal$$. If we can't find such a path, we decrease $$maxVal$$ by 1 and repeat this process until we find a path with $$maxVal$$ as the **score**.\n\n\n> 2. Given a score **S**, how can we verify if a path with this score exists?\n\n\nTo verify if such a path exists, we could use breath-first-search (BFS) on the matrix, where we only explore cells with a value greater than or equal to **S**. \n> For more information on BFS please refer to: \n[The Breadth-First Search Algorithm](https://leetcode.com/explore/featured/card/graph/620/breadth-first-search-in-graph/)\n\n!?!../Documents/1102/bfs.json:601,301!?!\n\nOne trick here is that we don't need to start with a huge score **S**, which might result in many unnecessary calculations before reaching the maximum score. Instead, we can start from the smaller value between the top-left cell and the bottom-right cell. The reason is that our path **must** include these two points, so the score of a path must be less than or equal to the smaller value of these two points. Therefore, by choosing the smaller value from the above two cells as the starting score **S**, we can reduce the search space.\n\n\n<br>\n\n#### Algorithm\n\n1) Start with the score $$curScore = min(grid[0][0], grid[R - 1][C - 1])$$, where $$R$$ and $$C$$ are the total number of rows and columns of the input grid.\n2) Perform BFS on the matrix and verify if a path exists where all values are greater than or equal to $$curScore$$:\n\t- Use a deque to store all unvisited cells with a value greater than or equal to $$curScore$$.\n\t- Pop a cell from the front of the deque, check if it has unvisited neighboring cells, and add them to the back of the deque.\n\t- If we reach the bottom-right cell successfully, then a path exists.\n\t- Otherwise, if we empty the deque before reaching the bottom-right cell, the path doesn't exist.\n3) - If there is no such path, meaning $$curScore$$ is too large, we decrease it by 1 and repeat from the step 2. \n   - Otherwise return $$curScore$$ as the answer. \n\n#### Implementation*\n\n> Note: The following implementation is included because it is an intuitive first approach and it helps lay the foundation needed to understand the following optimized approach. However, it is a brute force approach and is not expected to pass all test cases.\n\n<iframe src=\"https://leetcode.com/playground/jdwUg2pR/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"jdwUg2pR\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n, m$$ be the dimensions of the input matrix $$grid$$ and $$k$$ be the largest possible value in the matrix.\n\n* Time complexity: $$O(n\\cdot m\\cdot k)$$\n\n    - For each **value**, we BFS over the matrix to verify if a valid path exists, which takes $$O(n \\cdot m)$$ time. \n    - Before finding the first (the largest) **value**, we must try every larger value. Suppose in the worst-case scenario (when the answer is close to $$1$$), we have to try every value from $$k$$ to $$1$$, that is a total of $$k$$ iterations and $$k$$ BFS over the matrix.\n\n    - To sum up, the overall time complexity is $$O(n\\cdot m\\cdot k)$$\n    \n\n* Space complexity: $$O(n \\cdot m)$$\n\n    - In the worst-case scenario, we need to hold $$n \\cdot m$$ cells in the deque, which takes $$O(n \\cdot m)$$ space for a single BFS.\n    - We also need an auxiliary data structure to keep track of the visited status of $$n \\cdot m$$ cells in each BFS.\n    - Therefore, the overall space complexity is $$O(n \\cdot m)$$.\n\n\n<br/>\n\n\n---\n\n### Approach 2: Binary Search + Breadth First Search (BFS)\n\n#### Intuition \n\nIn the previous approach using brute force, we checked every larger score before finding out the maximum **score**, can we find a more efficient way to locate the maximum **score**?\n\nThe answer is Yes!\n\n\n![limits](../Figures/1102/1102-ana1.drawio.png)\n\nRecall the definition of the score of a path, and we can observe two laws:\n1. If we can find a path with the score of $$N$$, and we can also find a path with the score of $$N - 1$$: \nFor a path where all values are greater than or equal to $$N$$, these values are also greater than or equal to $$N - 1$$. \n\n2. If we can't find a path with the score of $$N$$, then we can't find a path with the score of $$N + 1$$ either.\nIf we can't find a path with the score of $$N$$, meaning all paths contain at least one value less than $$N$$, this value is also less than $$N + 1$$, therefore, all paths contain at least one value less than $$N + 1$$.\n\n![limits](../Figures/1102/1102-ana2.drawio.png)\n\nFor convenience, let's call a score of a path as **workable score** and those values being too large in every path as **unworkable score**.\n\nGiven these two laws, we can determine that the distribution of all the scores look like this:\n\n![limits](../Figures/1102/1102-ana3.drawio.png)\n\n\n\n\nIf the current value is a **workable score**, the maximum **workable score** should be on its right inclusively. If the current value is an **unworkable score**, then the maximum workable score should be on its left exclusively.\n\nTherefore, we can use binary search to cut off the search space by half in each step and locate the boundary that separates **workable scores** and the **unworkable scores**, which represents the maximum score of all the paths.\n\n\n<details>\n<summary>There are many other interesting problems that can be solved by performing a binary search to find the optimal value. You can practice using the binary search approach on the following problems! (click to show)</summary>\n\n<br>\n\n- [410. Split Array Largest Sum](https://leetcode.com/problems/split-array-largest-sum/) \n- [774. Minimize Max Distance to Gas Station](https://leetcode.com/problems/minimize-max-distance-to-gas-station/) \n- [875. Koko Eating Bananas](https://leetcode.com/problems/koko-eating-bananas/)\n- [1011. Capacity To Ship Packages Within D Days](https://leetcode.com/problems/capacity-to-ship-packages-within-d-days/)\n- [1231. Divide Chocolate](https://leetcode.com/problems/divide-chocolate/)\n\n</details>\n<br>\n\n#### Algorithm\n\n1) Initialize two boundaries of the binary search, \n2) While $$left < right$$, let $$middle = (left + right + 1) / 2 $$. \n3) Perform BFS on the matrix and verify if a path exists where all values are greater than or equal to $$curScore$$:\n\t- Use a deque to store all unvisited cells with a value greater than or equal to $$curScore$$.\n\t- Pop a cell from the front of the deque, check if it has unvisited neighboring cells, and add them to the back of the deque.\n\t- If we reach the bottom-right cell successfully, then a path exists.\n\t- Otherwise, if we empty the deque before reaching the bottom-right cell, the path doesn't exist.\n4) If a path exists, let $$middle = left$$. Otherwise, let $$right = middle - 1$$.\n5) Repeat steps 2, 3, and 4 until the two boundaries overlap, then return either $$left$$ or $$right$$ as the answer.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/W8LR9xhE/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"W8LR9xhE\"></iframe>\n\n#### Complexity Analysis\n\nLet $$n, m$$ be the dimensions of the input matrix $$grid$$ and $$k$$ be the largest value in the matrix.\n\n* Time complexity: $$O(n\\cdot m\\cdot \\log k)$$\n    - The initial search space is from $$1$$ to $$k$$, it takes $$\\log k$$ comparisons to reduce the search space to 1.\n    - For each **value**, we perform a BFS over the matrix to verify if a valid path exists, which takes $$O(n \\cdot m)$$ time. \n\n    - To sum up, the overall time complexity is $$O(n\\cdot m\\cdot \\log k)$$\n    \n\n* Space complexity: $$O(n \\cdot m)$$\n    - We used an array of size $$O(n\\cdot m)$$ to save the visited/unvisited status of each cell.\n    - In the worse-case scenario, we need to hold most cells in the deque, which takes $$O(n \\cdot m)$$ space for a single BFS.\n    - Therefore, the overall space complexity is $$O(n \\cdot m)$$.\n\n<br/>\n\n---\n\n### Approach 3: Binary Search + Depth First Search (DFS)\n\n#### Intuition   \n\nAs we discussed in approach 2, we used binary search to locate the largest minimum value. Here, we inherit part of the previous algorithm: we still use binary search to narrow down the search space and locate the maximum value. However, we will use a different approach to verify if a valid path exists given the target score. \n\n\n\n> For more information on DFS please refer to: \n[The Depth First Search Algorithm](https://leetcode.com/explore/featured/card/graph/619/depth-first-search-in-graph/)\n\n\n!?!../Documents/1102/dfs.json:601,301!?!\n\n#### Algorithm\n\n1) Initialize two boundaries of the binary search, let left boundary be $$left = 0$$, let right boundary be $$right = min(grid[0][0], grid[R - 1][C - 1])$$, where $$R, C$$ are the number of rows and columns of the input cell.\n2) While $$left < right$$, let $$middle = (left + right + 1) / 2 $$. \n3) Perform a DFS on the graph to find if a path where each value is greater than or equal to $$middle$$ exists.\n4) If a path exists, let $$middle = left$$. Otherwise, let $$right = middle - 1$$.\n5) Repeat steps 2, 3, and 4 until the upper and lower boundary overlap, then return either $$left$$ or $$right$$ as the answer.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/jcGcsogL/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"jcGcsogL\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n, m$$ be the dimensions of the input matrix $$grid$$ and $$k$$ be the largest value in the matrix.\n\n* Time complexity: $$O(n\\cdot m\\cdot \\log k)$$\n    - The initial search space is from $$1$$ to $$k$$, it takes $$\\log k$$ comparisons to reduce the search space to 1.\n    - For each **value**, we perform a DFS over the matrix to verify if a valid path exists, which takes $$O(n \\cdot m)$$ time. \n    - To sum up, the overall time complexity is $$O(n\\cdot m\\cdot \\log k)$$\n    \n\n* Space complexity: $$O(n \\cdot m)$$\n    - We used an array of size $$O(n\\cdot m)$$ to save the visited/unvisited status of each cell.\n    - In the worse-case scenario, we need to traverse the entire matrix, which takes $$O(n \\cdot m)$$ space for a single DFS.\n    - Therefore, the overall space complexity is $$O(n \\cdot m)$$.\n\n\n<br/>\n\n\n---\n\n### Approach 4: BFS + PriorityQueue\n\n#### Intuition   \n\nSuppose we start from the top-left cell, check its two neighbors, and then visit the neighboring cell with the larger value. We can imagine that this newly visited cell will have other neighboring cells. Once again, we can consider all cells that neighbor the two visited cells and then visit the cell with the largest value. We can repeat these steps until we reach the bottom-right cell. Now we have a path of visited cells that connects the top-left cell to the bottom-right cell. Since, at each step, we always picked the unvisited neighbor with the largest value, it is guaranteed that the smallest value seen so far is the largest possible minimum value (the largest score) in a valid path.\n\nHowever, here's the question: Suppose the input grid has $$M$$ rows and $$N$$ columns, in the worst-case scenario, we visit $$O(MN)$$ cells, while having $$O(MN)$$ neighboring cells for our next visit. Selecting the cell with the maximum value from $$O(MN)$$ cells takes $$O(MN)$$ time. Thus this approach would take $$O(M^2 N^2)$$ time. Can we find an efficient way to store all the unvisited neighboring cells and then select the cell with the maximum value? The answer is YES!\n\n> We can take advantage of a priority queue, which maintains a heap structure and allows us to select the minimum value in logarithmic time.\n\nWe store all unvisited neighboring cells in a priority queue. Among all these cells in the path, we always select the cell that the largest value. Once we remove this cell from the priority queue, we label it as **visited** and check if the cell has any **unvisited** neighbors. At each step, we will select the cell with the largest value among all unvisited cells, until we form a path that reaches the bottom-right cell. \n\nTake the slides below as an example. Note that while we only visited cells in the optimal path in this example, this would not usually be the case. This algorithm only guarantees that we will not visit any cells with a value lower than the maximum minimum path value and thus that any path created using the visited cells will not have a value lower than the maximum minimum path value. \n\n!?!../Documents/1102/dij.json:601,301!?!\n\n> Looks like Dijkstra's algorithm? \n\nThis method could potentially be considered a variant of Dijkstra's algorithm since they do have some similar features, like using a PriorityQueue to greedily select which vertex (cell) to explore next. \n\nHowever, in Dijkstra's algorithm, our goal is to find the **shortest path** to each node, by using the optimal sum of all the previous choices, thus we dynamically update the shortest path from the starting node to other nodes during the iteration. In this problem, however, our goal is to maximize the **minimum value** in the path, there is no need for us to update the minimum value for paths to other destinations. Therefore, considering this core difference, we will refer to this approach as \"BFS + PriorityQueue\".\n\nFor more information about Dijkstra's Algorithm, you can refer to the [Graph Explore Card](https://leetcode.com/explore/learn/card/graph/622/single-source-shortest-path-algorithm/3862/) or to [Wikipedia](https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm).\n\n#### Algorithm\n\n1) Initialize: \n    - an empty priority queue $$pq$$ and put the top-left cell in. \n    - the status of all the cells as unvisited.\n    - the minimum value $$min\\_val$$ as the value of the top-left cell.\n2) Pop the cell with the largest value from the priority queue, mark it as visited, and update the minimum value seen so far.\n3) Check if the current cell has any unvisited neighbors. If so, add them to the priority queue.\n4) Repeat from step 2 until we pop the bottom-right cell from the priority queue. Return the updated minimum value as the answer.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/9zQUu7aZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"9zQUu7aZ\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n, m$$ be the dimensions of the input matrix $$grid$$ and $$k$$ be the largest value in the matrix.\n\n* Time complexity: $$O(n\\cdot m\\cdot \\log (n \\cdot m))$$\n    - Pushing to or popping from the priority queue takes logarithmic time. The size of the priority queue can approach $$n \\cdot m$$, so each add/remove operation will take $$O(\\log (n \\cdot m))$$ time.  \n    - In the worst-case scenario, we will traverse every cell in the matrix, which takes $$O(n \\cdot m)$$ add/remove operations.\n    - To sum up, the overall time complexity is $$O(n \\cdot m\\cdot \\log (n \\cdot m))$$\n    \n\n* Space complexity: $$O(n \\cdot m)$$\n    - We used an array of size $$O(n \\cdot m)$$ to store the visited/unvisited status of each cell.\n    - In the worse-case scenario, we need to traverse the entire matrix, which takes $$O(n \\cdot m)$$ space for a single traversal.\n    - Therefore, the overall space complexity is $$O(n \\cdot m)$$.\n\n\n<br/>\n\n---\n\n### Approach 5: Union Find\n\n#### Intuition \n\nTake a look at the picture below. Let's say that the cells in colors are the **visited** cells, and the grey cells are the **unvisited** cells. We can tell a path has been found when the top-left cell is 4-directionally connected to the bottom-right cell.\n\n\n![limits](../Figures/1102/1102-uf-example.drawio.png)\n\nWe can maximize the score of a path by always picking the unvisited cell with the largest value. To determine what order we should visit the cells, we can sort them by their values. Then we traverse these cells in order from the largest value to the smallest value. Each time we visit a cell, we mark it as **visited** and use the union-find data structure to connect this cell with its **visited** neighbors. \n\nAfter visiting each cell, we check if the top-left cell and the bottom-right cell have been connected, if so, it means that there is at least one 4 directionally connected path between them, and the last cell we visit is the 'last piece of the puzzle' in this path. Since we are traversing the cells by their decreasing values, the value of the last visited cell is the minimum value in this path and, therefore, the maximum minimum score for all valid paths. \n\n!?!../Documents/1102/uf.json:601,381!?!\n\n\n\n\n#### Algorithm\n\n1) Sort all the cells decreasingly by their values.\n2) Iterate over the sorted cells from the largest value, for each visited cell, check if it has any 4-directionally connected visited neighbor cells, if so, we use the union-find data structure to connect it with its visited neighbors.\n3) Check if the top-left cell is connected with the bottom-right cell.\n\t- If so, return the value of the last visited cell.\n\t- Otherwise, repeat from the step 2.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Q2KPJQuD/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Q2KPJQuD\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n, m$$ be the dimensions of the input matrix $$grid$$ and $$k$$ be the largest value in the matrix.\n\n* Time complexity: $$O(n \\cdot m \\cdot \\log (n \\cdot m))$$\n    - Our first step is to sort all of the elements in the grid, which will take $$O(n \\cdot m \\cdot \\log (n \\cdot m))$$ time. \n    - Next, in the worst case, we will iterate over every element before creating a path from the top-left corner to the bottom-right corner. For each element, we will union it with each of its visited neighbors. The amortized complexity of this operation is $$O(\\alpha(n \\cdot m))$$ time where $$\\alpha$$ is the [Inverse Ackermann Function](https://en.wikipedia.org/wiki/Ackermann_function#Inverse). \n    - To sum up, the overall time complexity is $$O(n \\cdot m \\cdot (\\log (n \\cdot m) + \\alpha(n \\cdot m)))$$ which simplifies to $$O(n \\cdot m \\cdot \\log (n \\cdot m))$$. \n    \n\n* Space complexity: $$O(n \\cdot m)$$\n\n    - We used an array of size $$O(n \\cdot m)$$ to save the visited/unvisited status of each cell as well as arrays of the same size to save the root and rank of each cell in the union-find data structure.  Finally, we also used an array of size $$O(n \\cdot m)$$ to store each cell in sorted order.\n    - Therefore, the overall space complexity is $$O(n \\cdot m)$$.\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

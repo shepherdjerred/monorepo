@@ -1,0 +1,134 @@
+{
+  "questionId": "889",
+  "questionFrontendId": "859",
+  "title": "Buddy Strings",
+  "titleSlug": "buddy-strings",
+  "difficulty": "Easy",
+  "content": "<p>Given two strings <code>s</code> and <code>goal</code>, return <code>true</code><em> if you can swap two letters in </em><code>s</code><em> so the result is equal to </em><code>goal</code><em>, otherwise, return </em><code>false</code><em>.</em></p>\n\n<p>Swapping letters is defined as taking two indices <code>i</code> and <code>j</code> (0-indexed) such that <code>i != j</code> and swapping the characters at <code>s[i]</code> and <code>s[j]</code>.</p>\n\n<ul>\n\t<li>For example, swapping at indices <code>0</code> and <code>2</code> in <code>&quot;abcd&quot;</code> results in <code>&quot;cbad&quot;</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;ab&quot;, goal = &quot;ba&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> You can swap s[0] = &#39;a&#39; and s[1] = &#39;b&#39; to get &quot;ba&quot;, which is equal to goal.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;ab&quot;, goal = &quot;ab&quot;\n<strong>Output:</strong> false\n<strong>Explanation:</strong> The only letters you can swap are s[0] = &#39;a&#39; and s[1] = &#39;b&#39;, which results in &quot;ba&quot; != goal.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;aa&quot;, goal = &quot;aa&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> You can swap s[0] = &#39;a&#39; and s[1] = &#39;a&#39; to get &quot;aa&quot;, which is equal to goal.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length, goal.length &lt;= 2 * 10<sup>4</sup></code></li>\n\t<li><code>s</code> and <code>goal</code> consist of lowercase letters.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"buddyStrings\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"goal\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"293.3K\", \"totalSubmission\": \"863.6K\", \"totalAcceptedRaw\": 293266, \"totalSubmissionRaw\": 863608, \"acRate\": \"34.0%\"}",
+  "likes": 3353,
+  "dislikes": 1849,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Determine if Two Strings Are Close\", \"titleSlug\": \"determine-if-two-strings-are-close\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Check if One String Swap Can Make Strings Equal\", \"titleSlug\": \"check-if-one-string-swap-can-make-strings-equal\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Make Number of Distinct Characters Equal\", \"titleSlug\": \"make-number-of-distinct-characters-equal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"ab\"\n\"ba\"",
+    "\"ab\"\n\"ab\"",
+    "\"aa\"\n\"aa\""
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"doordash\", \"name\": \"DoorDash\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"zoho\", \"name\": \"Zoho\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool buddyStrings(string s, string goal) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean buddyStrings(String s, String goal) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def buddyStrings(self, s: str, goal: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def buddyStrings(self, s, goal):\n        \"\"\"\n        :type s: str\n        :type goal: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {string} goal\n * @return {boolean}\n */\nvar buddyStrings = function(s, goal) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function buddyStrings(s: string, goal: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool BuddyStrings(string s, string goal) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool buddyStrings(char* s, char* goal) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func buddyStrings(s string, goal string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun buddyStrings(s: String, goal: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func buddyStrings(_ s: String, _ goal: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn buddy_strings(s: String, goal: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {String} goal\n# @return {Boolean}\ndef buddy_strings(s, goal)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param String $goal\n     * @return Boolean\n     */\n    function buddyStrings($s, $goal) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool buddyStrings(String s, String goal) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def buddyStrings(s: String, goal: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec buddy_strings(s :: String.t, goal :: String.t) :: boolean\n  def buddy_strings(s, goal) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec buddy_strings(S :: unicode:unicode_binary(), Goal :: unicode:unicode_binary()) -> boolean().\nbuddy_strings(S, Goal) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (buddy-strings s goal)\n  (-> string? string? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1930",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given two strings `s` and `goal`, and we have to check if we can swap characters at two indices in the string `s`, such that string `s` will become equal to `goal`.      \n\n---\n\n### Approach\n\n#### Intuition  \n\nFirst of all, `s` and `goal` should have the same length, otherwise, they can never become equal after one swap.\n\nNow, let's assume we can change the string `s` into `goal` after swapping index `x` and `y`.    \nThus, it means initially before the swap all the characters except at indices `x` and `y` were equal in strings `s` and `goal`.\n\n![slide1](../Figures/859/Slide1.PNG)\n\nWe can iterate over all indices to check if characters at only two indices are different in strings `s` and `goal`. If we have one or more than two indices having different characters, then it will never be possible to make both strings equal with exactly one swap.\n\nAfter the swap operation, the elements at index `x` and `y` should also become equal in both strings, which means:     \n- in the string `s` the character at index `x` was present at index `y` in string `goal`, and   \n- in the string `s` the character at index `y` was present at index `x` in string `goal`\n\n![slid2](../Figures/859/Slide2.PNG)\n\n**Now, what if the strings `s` and `goal` were initially already the same?**    \n\nSay if string `s = 'aabcda'` and `goal = 'aabcda'`.    \nWe have to swap two characters in the string `s` such that it will remain the same, which can be achieved by performing the swap on two characters that are the same. \n\nSo, if `s = goal` and string `s` has at least one character appearing multiple times, then it is possible to swap two characters in `s` without changing it and keep `s = goal`.\n\nIf string `s = 'abcde'` and `goal = 'abcde'`, there is no way we can keep string `s` the same after performing one swap operation on it because there is no character appearing multiple times.\n\n#### Algorithm\n\n1. If the number of characters in string `s` and `goal` is different then they can never become equal, thus we return `false`.\n2. If `s == goal`:\n    - We can use a hash map or create an array of size `26` `frequency` to store the frequency of each character of string `s`.\n    - If any character has a frequency of more than `1` then we can swap those two same characters, thus we will return `true`. Otherwise, we return `false`.\n3. Otherwise `s != goal`. We keep two variables `firstIndex` and `secondIndex` both initialized to `-1`, to store the indices of string `s` having different characters than string `goal` at the same index. \n4. We iterate over each index `i` in string `s`:\n    - If characters at `s[i]` and `goal[i]` are not the same, then we store the current index:\n    - If `firstIndex == -1`, it means this is the first index with a different character, thus we update `firstIndex = i`. If `firstIndex != -1`, but `secondIndex == -1`, it means this is the second index with a different character, thus we update `secondIndex = i`. \n    - But if both `firstIndex` and `secondIndex` are not `-1`, then it means this is the third index with a different character and it is not possible to make both strings equal using only one swap, thus we can return `false` in this case.\n5. Check if only `firstIndex` was updated and `secondIndex == -1`, i.e. we have only one index with a different character, then we also can't make both strings equal and we return `false`.\n6. Now, all characters of both strings are the same except at two indices. So, `s[firstIndex]` must be equal to `goal[secondIndex]` and `s[secondIndex]` must be equal to `goal[firstIndex]`, to make both strings equal after swapping.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/FV6TT7WG/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"FV6TT7WG\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $n$ is the number of characters in the string `s`.\n\n* Time complexity: $$O(n)$$  \n    - We only iterate over each index of string `s` once. Thus, we will take $O(n)$ time.\n\n\n* Space complexity: $$O(1)$$\n    - In the worst case, we might use an array of size $26$ to store the frequency of each character of string `s`, which is considered as constant space usage.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

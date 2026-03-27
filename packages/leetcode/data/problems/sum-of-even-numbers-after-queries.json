@@ -1,0 +1,133 @@
+{
+  "questionId": "1027",
+  "questionFrontendId": "985",
+  "title": "Sum of Even Numbers After Queries",
+  "titleSlug": "sum-of-even-numbers-after-queries",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>nums</code> and an array <code>queries</code> where <code>queries[i] = [val<sub>i</sub>, index<sub>i</sub>]</code>.</p>\n\n<p>For each query <code>i</code>, first, apply <code>nums[index<sub>i</sub>] = nums[index<sub>i</sub>] + val<sub>i</sub></code>, then print the sum of the even values of <code>nums</code>.</p>\n\n<p>Return <em>an integer array </em><code>answer</code><em> where </em><code>answer[i]</code><em> is the answer to the </em><code>i<sup>th</sup></code><em> query</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,4], queries = [[1,0],[-3,1],[-4,0],[2,3]]\n<strong>Output:</strong> [8,6,2,4]\n<strong>Explanation:</strong> At the beginning, the array is [1,2,3,4].\nAfter adding 1 to nums[0], the array is [2,2,3,4], and the sum of even values is 2 + 2 + 4 = 8.\nAfter adding -3 to nums[1], the array is [2,-1,3,4], and the sum of even values is 2 + 4 = 6.\nAfter adding -4 to nums[0], the array is [-2,-1,3,4], and the sum of even values is -2 + 4 = 2.\nAfter adding 2 to nums[3], the array is [-2,-1,3,6], and the sum of even values is -2 + 6 = 4.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1], queries = [[4,0]]\n<strong>Output:</strong> [0]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>-10<sup>4</sup> &lt;= nums[i] &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= queries.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>-10<sup>4</sup> &lt;= val<sub>i</sub> &lt;= 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= index<sub>i</sub> &lt; nums.length</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"sumEvenAfterQueries\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"queries\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"155.1K\", \"totalSubmission\": \"225.5K\", \"totalAcceptedRaw\": 155129, \"totalSubmissionRaw\": 225484, \"acRate\": \"68.8%\"}",
+  "likes": 2139,
+  "dislikes": 323,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,2,3,4]\n[[1,0],[-3,1],[-4,0],[2,3]]",
+    "[1]\n[[4,0]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"indeed\", \"name\": \"Indeed\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> sumEvenAfterQueries(vector<int>& nums, vector<vector<int>>& queries) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] sumEvenAfterQueries(int[] nums, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def sumEvenAfterQueries(self, nums: List[int], queries: List[List[int]]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def sumEvenAfterQueries(self, nums, queries):\n        \"\"\"\n        :type nums: List[int]\n        :type queries: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number[][]} queries\n * @return {number[]}\n */\nvar sumEvenAfterQueries = function(nums, queries) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function sumEvenAfterQueries(nums: number[], queries: number[][]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] SumEvenAfterQueries(int[] nums, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* sumEvenAfterQueries(int* nums, int numsSize, int** queries, int queriesSize, int* queriesColSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func sumEvenAfterQueries(nums []int, queries [][]int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun sumEvenAfterQueries(nums: IntArray, queries: Array<IntArray>): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func sumEvenAfterQueries(_ nums: [Int], _ queries: [[Int]]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn sum_even_after_queries(nums: Vec<i32>, queries: Vec<Vec<i32>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer[][]} queries\n# @return {Integer[]}\ndef sum_even_after_queries(nums, queries)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer[][] $queries\n     * @return Integer[]\n     */\n    function sumEvenAfterQueries($nums, $queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> sumEvenAfterQueries(List<int> nums, List<List<int>> queries) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def sumEvenAfterQueries(nums: Array[Int], queries: Array[Array[Int]]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec sum_even_after_queries(nums :: [integer], queries :: [[integer]]) :: [integer]\n  def sum_even_after_queries(nums, queries) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec sum_even_after_queries(Nums :: [integer()], Queries :: [[integer()]]) -> [integer()].\nsum_even_after_queries(Nums, Queries) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (sum-even-after-queries nums queries)\n  (-> (listof exact-integer?) (listof (listof exact-integer?)) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "683",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach 1: Maintain Array Sum\n\n**Intuition and Algorithm**\n\nLet's try to maintain `S`, the sum of the array throughout one query operation.\n\nWhen acting on an array element `A[index]`, the rest of the values of `A` remain the same.  Let's remove `A[index]` from `S` if it is even, then add `A[index] + val` back (if it is even.)\n\nHere are some examples:\n\n* If we have `A = [2,2,2,2,2]`, `S = 10`, and we do `A[0] += 4`: we will update `S -= 2`, then `S += 6`.  At the end, we will have `A = [6,2,2,2,2]` and `S = 14`.\n\n* If we have `A = [1,2,2,2,2]`, `S = 8`, and we do `A[0] += 3`: we will skip updating `S` (since `A[0]` is odd), then `S += 4`.  At the end, we will have `A = [4,2,2,2,2]` and `S = 12`.\n\n* If we have `A = [2,2,2,2,2]`, `S = 10` and we do `A[0] += 1`: we will update `S -= 2`, then skip updating `S` (since `A[0] + 1` is odd.)  At the end, we will have `A = [3,2,2,2,2]` and `S = 8`.\n\n* If we have `A = [1,2,2,2,2]`, `S = 8` and we do `A[0] += 2`: we will skip updating `S` (since `A[0]` is odd), then skip updating `S` again (since `A[0] + 2` is odd.)  At the end, we will have `A = [3,2,2,2,2]` and `S = 8`.\n\nThese examples help illustrate that our algorithm actually maintains the value of `S` throughout each query operation.\n\n<iframe src=\"https://leetcode.com/playground/4PDgoSBy/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"4PDgoSBy\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N+Q)$$, where $$N$$ is the length of `A` and $$Q$$ is the number of `queries`.\n\n* Space Complexity:  $$O(Q)$$, though we only allocate $$O(1)$$ additional space.\n<br />\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

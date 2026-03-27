@@ -1,0 +1,53 @@
+{
+  "questionId": "1735",
+  "questionFrontendId": "1596",
+  "title": "The Most Frequently Ordered Products for Each Customer",
+  "titleSlug": "the-most-frequently-ordered-products-for-each-customer",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Customers</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| customer_id   | int     |\n| name          | varchar |\n+---------------+---------+\ncustomer_id is the column with unique values for this table.\nThis table contains information about the customers.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Orders</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| order_id      | int     |\n| order_date    | date    |\n| customer_id   | int     |\n| product_id    | int     |\n+---------------+---------+\norder_id is the column with unique values for this table.\nThis table contains information about the orders made by customer_id.\nNo customer will order the same product <strong>more than once</strong> in a single day.</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Products</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| product_id    | int     |\n| product_name  | varchar |\n| price         | int     |\n+---------------+---------+\nproduct_id is the column with unique values for this table.\nThis table contains information about the products.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to find the most frequently ordered product(s) for each customer.</p>\n\n<p>The result table should have the <code>product_id</code> and <code>product_name</code> for each <code>customer_id</code> who ordered at least one order.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nCustomers table:\n+-------------+-------+\n| customer_id | name  |\n+-------------+-------+\n| 1           | Alice |\n| 2           | Bob   |\n| 3           | Tom   |\n| 4           | Jerry |\n| 5           | John  |\n+-------------+-------+\nOrders table:\n+----------+------------+-------------+------------+\n| order_id | order_date | customer_id | product_id |\n+----------+------------+-------------+------------+\n| 1        | 2020-07-31 | 1           | 1          |\n| 2        | 2020-07-30 | 2           | 2          |\n| 3        | 2020-08-29 | 3           | 3          |\n| 4        | 2020-07-29 | 4           | 1          |\n| 5        | 2020-06-10 | 1           | 2          |\n| 6        | 2020-08-01 | 2           | 1          |\n| 7        | 2020-08-01 | 3           | 3          |\n| 8        | 2020-08-03 | 1           | 2          |\n| 9        | 2020-08-07 | 2           | 3          |\n| 10       | 2020-07-15 | 1           | 2          |\n+----------+------------+-------------+------------+\nProducts table:\n+------------+--------------+-------+\n| product_id | product_name | price |\n+------------+--------------+-------+\n| 1          | keyboard     | 120   |\n| 2          | mouse        | 80    |\n| 3          | screen       | 600   |\n| 4          | hard disk    | 450   |\n+------------+--------------+-------+\n<strong>Output:</strong> \n+-------------+------------+--------------+\n| customer_id | product_id | product_name |\n+-------------+------------+--------------+\n| 1           | 2          | mouse        |\n| 2           | 1          | keyboard     |\n| 2           | 2          | mouse        |\n| 2           | 3          | screen       |\n| 3           | 3          | screen       |\n| 4           | 1          | keyboard     |\n+-------------+------------+--------------+\n<strong>Explanation:</strong> \nAlice (customer 1) ordered the mouse three times and the keyboard one time, so the mouse is the most frequently ordered product for them.\nBob (customer 2) ordered the keyboard, the mouse, and the screen one time, so those are the most frequently ordered products for them.\nTom (customer 3) only ordered the screen (two times), so that is the most frequently ordered product for them.\nJerry (customer 4) only ordered the keyboard (one time), so that is the most frequently ordered product for them.\nJohn (customer 5) did not order anything, so we do not include them in the result table.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Customers (customer_id int, name varchar(10))\", \"Create table If Not Exists Orders (order_id int, order_date date, customer_id int, product_id int)\", \"Create table If Not Exists Products (product_id int, product_name varchar(20), price int)\"], \"mssql\": [\"Create table Customers (customer_id int, name varchar(10))\", \"Create table Orders (order_id int, order_date date, customer_id int, product_id int)\", \"Create table Products (product_id int, product_name varchar(20), price int)\"], \"oraclesql\": [\"Create table Customers (customer_id int, name varchar(10))\", \"Create table Orders (order_id int, order_date date, customer_id int, product_id int)\", \"Create table Products (product_id int, product_name varchar(20), price int)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"most_frequently_products\", \"pythondata\": [\"Customers = pd.DataFrame([], columns=['customer_id', 'name']).astype({'customer_id':'Int64', 'name':'object'})\", \"Orders = pd.DataFrame([], columns=['order_id', 'order_date', 'customer_id', 'product_id']).astype({'order_id':'Int64', 'order_date':'datetime64[ns]', 'customer_id':'Int64', 'product_id':'Int64'})\", \"Products = pd.DataFrame([], columns=['product_id', 'product_name', 'price']).astype({'product_id':'Int64', 'product_name':'object', 'price':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Customers (customer_id int, name varchar(10))\", \"Create table If Not Exists Orders (order_id int, order_date date, customer_id int, product_id int)\", \"Create table If Not Exists Products (product_id int, product_name varchar(20), price int)\"], \"database_schema\": {\"Customers\": {\"customer_id\": \"INT\", \"name\": \"VARCHAR(10)\"}, \"Orders\": {\"order_id\": \"INT\", \"order_date\": \"DATE\", \"customer_id\": \"INT\", \"product_id\": \"INT\"}, \"Products\": {\"product_id\": \"INT\", \"product_name\": \"VARCHAR(20)\", \"price\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"45.6K\", \"totalSubmission\": \"58.7K\", \"totalAcceptedRaw\": 45582, \"totalSubmissionRaw\": 58702, \"acRate\": \"77.6%\"}",
+  "likes": 262,
+  "dislikes": 17,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"The Most Recent Orders for Each Product\", \"titleSlug\": \"the-most-recent-orders-for-each-product\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Customers\":[\"customer_id\",\"name\"],\"Orders\":[\"order_id\",\"order_date\",\"customer_id\",\"product_id\"],\"Products\":[\"product_id\",\"product_name\",\"price\"]},\"rows\":{\"Customers\":[[1,\"Alice\"],[2,\"Bob\"],[3,\"Tom\"],[4,\"Jerry\"],[5,\"John\"]],\"Orders\":[[1,\"2020-07-31\",1,1],[2,\"2020-7-30\",2,2],[3,\"2020-08-29\",3,3],[4,\"2020-07-29\",4,1],[5,\"2020-06-10\",1,2],[6,\"2020-08-01\",2,1],[7,\"2020-08-01\",3,3],[8,\"2020-08-03\",1,2],[9,\"2020-08-07\",2,3],[10,\"2020-07-15\",1,2]],\"Products\":[[1,\"keyboard\",120],[2,\"mouse\",80],[3,\"screen\",600],[4,\"hard disk\",450]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef most_frequently_products(customers: pd.DataFrame, orders: pd.DataFrame, products: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

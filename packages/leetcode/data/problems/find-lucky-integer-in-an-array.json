@@ -1,0 +1,141 @@
+{
+  "questionId": "1510",
+  "questionFrontendId": "1394",
+  "title": "Find Lucky Integer in an Array",
+  "titleSlug": "find-lucky-integer-in-an-array",
+  "difficulty": "Easy",
+  "content": "<p>Given an array of integers <code>arr</code>, a <strong>lucky integer</strong> is an integer that has a frequency in the array equal to its value.</p>\n\n<p>Return <em>the largest <strong>lucky integer</strong> in the array</em>. If there is no <strong>lucky integer</strong> return <code>-1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [2,2,3,4]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The only lucky number in the array is 2 because frequency[2] == 2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [1,2,2,3,3,3]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> 1, 2 and 3 are all lucky numbers, return the largest of them.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [2,2,2,3,3]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> There are no lucky numbers in the array.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= arr.length &lt;= 500</code></li>\n\t<li><code>1 &lt;= arr[i] &lt;= 500</code></li>\n</ul>\n",
+  "hints": [
+    "Count the frequency of each integer in the array.",
+    "Get all lucky numbers and return the largest of them."
+  ],
+  "metaData": "{\n  \"name\": \"findLucky\",\n  \"params\": [\n    {\n      \"name\": \"arr\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"336.1K\", \"totalSubmission\": \"445K\", \"totalAcceptedRaw\": 336050, \"totalSubmissionRaw\": 445026, \"acRate\": \"75.5%\"}",
+  "likes": 1626,
+  "dislikes": 45,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[2,2,3,4]",
+    "[1,2,2,3,3,3]",
+    "[2,2,2,3,3]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findLucky(vector<int>& arr) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findLucky(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findLucky(self, arr: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findLucky(self, arr):\n        \"\"\"\n        :type arr: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arr\n * @return {number}\n */\nvar findLucky = function(arr) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findLucky(arr: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindLucky(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findLucky(int* arr, int arrSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findLucky(arr []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findLucky(arr: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findLucky(_ arr: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_lucky(arr: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} arr\n# @return {Integer}\ndef find_lucky(arr)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $arr\n     * @return Integer\n     */\n    function findLucky($arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findLucky(List<int> arr) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findLucky(arr: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_lucky(arr :: [integer]) :: integer\n  def find_lucky(arr) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_lucky(Arr :: [integer()]) -> integer().\nfind_lucky(Arr) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-lucky arr)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "922",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Brute Force\n\n**Intuition**\n\nThe simplest approach is to iterate through each number in the input array. Then for each number, iterate over the array again to count how many times that number occurs to determine whether or not it's a *lucky number*. We'll also need to keep track of the largest *lucky number* we've seen so far.\n\n```text\ndefine function find_lucky(arr):\n    largest_lucky_number = -1\n    for each num in arr:\n        occurances_of_num = count_occurances(arr, num)\n        if occurances_of_num equal to num AND num is larger than largest_lucky_number:\n            largest_lucky_number = num\n    return largest_lucky_number\n\ndefine function count_occurances(arr, candidate_num):\n    count = 0\n    for each num in arr:\n        if num equal to candidate_num:\n            count = count + 1\n    return count\n```\n\nMany programming languages have a built-in function that we can use instead of the `count_occurances(...)` function we've defined here. However, keep in mind that this operation will always be $$O(n)$$, regardless of whether you implemented it yourself or used a built-in function.\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/eY4KgXfo/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"eY4KgXfo\"></iframe>\n\n\n**Complexity Analysis**\n\nLet $$n$$ be the the length of the input array.\n\n- Time complexity : $$O(n^2)$$.\n\n    For each of the $$n$$ numbers in the input array, we're counting how many times that number appears in the array. The count operation is $$O(n)$$, and so we get $$n \\cdot O(n) = O(n^2)$$.\n\n- Space complexity : $$O(1)$$.\n\n    This approach only uses a constant number of variables to keep track of where we're up to. Therefore, it has a $$O(1)$$ space complexity.\n\n<br/>\n\n---\n\n### Approach 2: Sorting\n\n**Intuition**\n\nThe crux of this problem is counting how many times each number occurs, so that we can then determine whether or not a particular number is lucky. It would be easier to do this if the array was sorted. So, how about we just sort the array and then go from there?\n\nFor example, if the input array was as follows:\n\n```py\n[2, 7, 8, 2, 1, 2, 3, 4, 5, 2, 2, 3, 4, 4, 7, 4, 3, 7, 8, 7, 7, 7]\n```\n\nAfter sorting, we would have the following:\n\n```py\n[1, 2, 2, 2, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5, 7, 7, 7, 7, 7, 7, 8, 8]\n```\n\nFrom here, we can now search for the largest lucky number in a single pass of the array. We need to step through the array, keeping track of the length of the current streak. Once we're on the last number of the current streak, we should check whether or not that number is lucky.\n\nTo avoid needing to keep track of the largest lucky number seen, we should work from right-to-left (largest to smallest), as then when we encounter a lucky number, we know it's the largest that could possibly be in the array. Even better, we could reverse-sort instead of forward-sort. The best option will depend on which programming language you're using.\n\n```text\ndefine function findLucky(arr):\n    sort arr from largest to smallest\n    current_streak = 0\n    for each num in arr:\n        current_streak = current_streak + 1\n        if the next number in arr is different from num:\n            if num equal to current_streak:\n                return num\n            current_streak = 0\n    return -1\n```\n\nIn practice, this approach will perform well, especially for a short input array length.\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/Ss5JNWxW/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"Ss5JNWxW\"></iframe>\n\nFor those who are familiar with the `Heap` data-structure, there is a neat variant of this approach that will have the same time complexity, but a $$O(1)$$ space complexity. Here is that approach in Python. This could be done in other languages, but you'd need to confirm the \"heapify\" functionality really is $$O(1)$$ space, or implement heapify yourself.\n\n<iframe src=\"https://leetcode.com/playground/8wtbM2Lg/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"8wtbM2Lg\"></iframe>\n\n**Complexity Analysis**\n\n- Time complexity : $$O(n \\, \\log \\, n)$$.\n\n    This approach was split into 2 parts; sorting the array, and then searching for the largest lucky number in the sorted array.\n\n    Sorting an array using a built-in sorting algorithm requires $$O(n \\, \\log \\, n)$$ time. \n\n    Searching for the largest lucky number in the sorted array requires stepping through each of the $$n$$ elements in the array. Therefore, the cost of this part is $$O(n)$$.\n    \n    In big-oh notation, we drop insignificant added parts from the time complexity. Seeing as we know $$O(n \\, \\log \\, n)$$ will always be larger than $$O(n)$$, we get a final time complexity of $$O(n + n \\, \\log \\, n) = O(n \\, \\log \\, n)$$. \n\n- Space complexity : Varies from $$O(n)$$ to $$O(1)$$, depending on sorting implementation.\n\n    Most programming languages use a built-in sorting algorithm that requires $$O(n)$$ auxillary space. A few are $$O(\\log \\, n)$$ or even $$O(1)$$, but these seem to be the minority from what I've read.\n\n    Searching for the largest lucky number in the sorted array requires only $$O(1)$$ additional space, and so can be ignored.\n\n    The `Heap` variant of this approach has an $$O(1)$$ space complexity. Heapify requires only $$O(1)$$ extra space, as does removing and processing items from the heap.\n\n<br/>\n\n---\n\n### Approach 3: Counter\n\n**Intuition**\n\nIf you were finding the largest lucky number of an array by hand, you would probably just make a tally chart.\n\n![Table of sample check in times and stations](../Figures/1394/tally_chart.png)\n\nWe can do this in code, using a `HashMap` where the keys are the unique integers in the array, and the values are how many times each appeared. This is a very common usage for a `HashMap` in the programming interview world. Some programming languages have a special `HashMap` data structure specifically for this purpose, although Java does not. In the languages that have it, it might be called a `Counter`, `Bag`, or `MultiSet`.\n\nHere is some pseudocode for making the `HashMap` of `counts.`\n\n```text\ncounts = a new HashMap (number -> count)\nfor each num in arr:\n    if num is not in counts:\n        counts.put(num, 1)\n    else:\n        counts.put(num, counts.get(num) + 1)\n```\n\nThis code can be written more concisely in Java, using the `getOrDefault(...)` method of `Map`. See the Algorithm section for details on how this works (and see how awesome it is!).\n\nThe rest of the code is straightforward; we simply need to check each key/ value entry in `counts`, and if they are equal, then we know that we've found a lucky number. We don't know whether or not it's the largest one though, because `HashMap` keys are *not sorted*. Therefore, we'll need to use the pattern we used in Approach 1 of keeping track of the largest we've seen so far, until we get to the end.\n\n```text\nlargest_lucky_number = -1\nfor each number, count in counts.entries():\n    if number equal to count AND number is larger than largest_lucky_number:\n        largest_lucky_number = number\nreturn largest_lucky_number\n```\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/k3YstQQG/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"k3YstQQG\"></iframe>\n\n**Complexity Analysis**\n\n- Time complexity : $$O(n)$$.\n\n    There are two steps to this approach; building a `HashMap` of counts, and looking through the `HashMap` for the largest lucky number. \n\n    Inserting an item into a `HashMap` has a cost of $$O(1)$$. Therefore, inserting the $$n$$ items into the `HashMap` has a cost of $$n \\cdot O(1) = O(n)$$. \n\n    Iterating over all the entries in a `HashMap` has a cost of $$O(m)$$, where $$m$$ is the number of entries in the `HashMap`. In the worst case, $$m = n$$ (all numbers were unique), and therefore the cost of this is $$O(n)$$.\n\n    We get a final time complexity of $$O(n) + O(n) = O(n)$$.\n\n- Space complexity : $$O(n)$$.\n\n    In the worst case, all numbers in the `HashMap` are unique, and therefore it will take $$O(n)$$ space to store it.\n\nApproach 2 and Approach 3 are both good approaches in practice, each with its own pros and cons. \n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

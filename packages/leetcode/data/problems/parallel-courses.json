@@ -1,0 +1,137 @@
+{
+  "questionId": "1101",
+  "questionFrontendId": "1136",
+  "title": "Parallel Courses",
+  "titleSlug": "parallel-courses",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer <code>n</code>, which indicates that there are <code>n</code> courses labeled from <code>1</code> to <code>n</code>. You are also given an array <code>relations</code> where <code>relations[i] = [prevCourse<sub>i</sub>, nextCourse<sub>i</sub>]</code>, representing a prerequisite relationship between course <code>prevCourse<sub>i</sub></code> and course <code>nextCourse<sub>i</sub></code>: course <code>prevCourse<sub>i</sub></code> has to be taken before course <code>nextCourse<sub>i</sub></code>.</p>\n\n<p>In one semester, you can take <strong>any number</strong> of courses as long as you have taken all the prerequisites in the <strong>previous</strong> semester for the courses you are taking.</p>\n\n<p>Return <em>the <strong>minimum</strong> number of semesters needed to take all courses</em>. If there is no way to take all the courses, return <code>-1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/02/24/course1graph.jpg\" style=\"width: 222px; height: 222px;\" />\n<pre>\n<strong>Input:</strong> n = 3, relations = [[1,3],[2,3]]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The figure above represents the given graph.\nIn the first semester, you can take courses 1 and 2.\nIn the second semester, you can take course 3.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/02/24/course2graph.jpg\" style=\"width: 222px; height: 222px;\" />\n<pre>\n<strong>Input:</strong> n = 3, relations = [[1,2],[2,3],[3,1]]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> No course can be studied because they are prerequisites of each other.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 5000</code></li>\n\t<li><code>1 &lt;= relations.length &lt;= 5000</code></li>\n\t<li><code>relations[i].length == 2</code></li>\n\t<li><code>1 &lt;= prevCourse<sub>i</sub>, nextCourse<sub>i</sub> &lt;= n</code></li>\n\t<li><code>prevCourse<sub>i</sub> != nextCourse<sub>i</sub></code></li>\n\t<li>All the pairs <code>[prevCourse<sub>i</sub>, nextCourse<sub>i</sub>]</code> are <strong>unique</strong>.</li>\n</ul>\n",
+  "hints": [
+    "Try to think of it as a graph problem. It will be impossible to study all the courses if the graph had a cycle.",
+    "The graph is a directed acyclic graph (DAG). The answer is the longes path in this DAG.",
+    "You can use DP to find the longest path in the DAG."
+  ],
+  "metaData": "{\n  \"name\": \"minimumSemesters\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"relations\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"109.1K\", \"totalSubmission\": \"175.7K\", \"totalAcceptedRaw\": 109094, \"totalSubmissionRaw\": 175650, \"acRate\": \"62.1%\"}",
+  "likes": 1220,
+  "dislikes": 27,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Course Schedule II\", \"titleSlug\": \"course-schedule-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Parallel Courses II\", \"titleSlug\": \"parallel-courses-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Parallel Courses III\", \"titleSlug\": \"parallel-courses-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "3\n[[1,3],[2,3]]",
+    "3\n[[1,2],[2,3],[3,1]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 6, \"slug\": \"netflix\", \"name\": \"Netflix\"}, {\"timesEncountered\": 2, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Topological Sort",
+      "slug": "topological-sort"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minimumSemesters(int n, vector<vector<int>>& relations) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minimumSemesters(int n, int[][] relations) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumSemesters(self, n: int, relations: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumSemesters(self, n, relations):\n        \"\"\"\n        :type n: int\n        :type relations: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} relations\n * @return {number}\n */\nvar minimumSemesters = function(n, relations) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumSemesters(n: number, relations: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinimumSemesters(int n, int[][] relations) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minimumSemesters(int n, int** relations, int relationsSize, int* relationsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumSemesters(n int, relations [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumSemesters(n: Int, relations: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumSemesters(_ n: Int, _ relations: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_semesters(n: i32, relations: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} relations\n# @return {Integer}\ndef minimum_semesters(n, relations)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $relations\n     * @return Integer\n     */\n    function minimumSemesters($n, $relations) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimumSemesters(int n, List<List<int>> relations) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumSemesters(n: Int, relations: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_semesters(n :: integer, relations :: [[integer]]) :: integer\n  def minimum_semesters(n, relations) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_semesters(N :: integer(), Relations :: [[integer()]]) -> integer().\nminimum_semesters(N, Relations) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-semesters n relations)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1108",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nIn this problem, we need to learn all the courses as fast as possible. The number of courses we can learn in one semester is unlimited, and the only limitation is the prerequisite relationship: we can only learn those courses whose prerequisite(s) is fulfilled.\n\nThis problem is an application of [Topological sorting](https://en.wikipedia.org/wiki/Topological_sorting), and there are mainly two different kinds of solutions: BFS (Breadth-First Search) and DFS (Depth-First Search).\n\nIn this article, three approaches are introduced:\n\n1. _Breadth-First Search (Kahn's Algorithm)_\n2. _Depth-First Search: Depth-First Search: Check for Cycles + Find Longest Path_\n3. _Depth-First Search: Combine_\n\nGenerally, we recommend _Approach 1_ and _Approach 3_ since they are efficient and easy to implement. We include _Approach 2_ for a better understanding to _Approach 3_. (Therefore, it is recommended to read _Approach 2_ before _Approach 3_.)\n\nOnce you've finished this problem, you can try challenging the follow-up [1494. Parallel Courses II](https://leetcode.com/problems/parallel-courses-ii/).\n\n<br/>\n\n---\n\n### Approach 1: Breadth-First Search (Kahn's Algorithm)\n\n**Intuition**\n\nWe can treat the problem as a directed **graph** problem (the courses are nodes and the prerequisites are egdes). What we need to do is somehow iterate over all the nodes in the graph.\n\nFor iteration, we can do BFS or DFS. We introduce BFS in this approach and DFS in the following approaches.\n\nTo achieve the fastest learning speed, our strategy is:\n\n> Learn **all courses** available in each semester.\n\nThis is intuitive. Even if we deliberately choose not to learn one available course, we still need to learn it in the following semesters. There is no harm to learn it now. Also, if we learn it later, then we have to postpone all courses whose prerequisite is that course.\n\nNow, the first question is:\n\n> Where to start? (Which courses are available?)\n\nWe can not start from courses with prerequisites.\n\n> We start from nodes with **no prerequisites**.\n\nFor example, in this graph, which courses can we learn in the first semester?\n\n![Figure 1.1](../Documents/1136/1136_1_0_0.drawio.svg)\n\nYes, those courses marked with yellow can be learned in the first semester.\n\n![Figure 1.2](../Documents/1136/1136_1_0_1.drawio.svg)\n\nNow, we have learned those courses, what should we learn next?\n\n![Figure 1.3](../Documents/1136/1136_1_0_2.drawio.svg)\n\nYes, the new yellow courses can be learned, since their prerequisites are fulfilled:\n\n![Figure 1.4](../Documents/1136/1136_1_0_3.drawio.svg)\n\nKeep going until no available courses to learn.\n\nBy using this strategy to allocate courses to semesters, we are guaranteed to minimize the number of semesters needed. This is because in each semester, we're learning every course that isn't \"locked\" by a prerequisite, and so there is no possible way to be faster.\n\nLet's finish this example with Breadth-First Search:\n\n!?!../Documents/1136/1136_1_example1.json!?!\n\nIn some other cases, we can not learn all nodes. If the number of nodes we visited is strictly less than the number of total nodes, then there is not way to learn all the courses and we can do nothing but return `-1`.\n\nFor example, in this graph with a cycle, we can not learn all the courses:\n\n!?!../Documents/1136/1136_1_example2.json!?!\n\n> This approach is also called [Kahn's algorithm](https://en.wikipedia.org/wiki/Topological_sorting#Kahn's_algorithm) (with some modifications to adapt to the problem).\n\n**Algorithm**\n\n_Step 1:_ Build a directed graph from `relations`.\n\n_Step 2:_ Record the in-degree of each node. (i.e., the number of edges towards the node)\n\n_Step 3:_ Initialize a queue, `queue`. Put nodes with an in-degree of `0` into `queue`. Initialize `step = 0`, `visited_count = 0`.\n\n_Step 4:_ Start BFS: Loop until `queue` is empty:\n\n1. Initialize a queue `next_queue`to record the nodes needed in the next iteration.\n2. Increment `step`.\n3. For each `node` in `queue`:\n   1. Increment `visitedCount`\n   2. For each `end_node` reachable from `node`:\n      1. Decrement the in-degree of `end_node`\n      2. If the in-degree of `end_node` reaches 0, push it into `next_queue`\n4. Assign `queue` to `next_queue`\n\n_Step 5:_ If `visited_count == N`, return `step`. Otherwise, return `-1`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/2RpuhMp4/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"2RpuhMp4\"></iframe>\n\n**Complexity Analysis**\n\nLet $$E$$ be the length of `relations`. $$N$$ is the number of courses, as explained in the problem description.\n\n- Time Complexity: $$\\mathcal{O}(N+E)$$. For building the graph, we spend $$\\mathcal{O}(N)$$ to initialize the graph, and spend $$\\mathcal{O}(E)$$ to add egdes since we iterate `relations` once. For BFS, we spend $$\\mathcal{O}(N+E)$$ since we need to visit every node and edge once in BFS in the worst case.\n\n- Space Complexity: $$\\mathcal{O}(N+E)$$. For the graph, we spend $$\\mathcal{O}(N+E)$$ since we have $$\\mathcal{O}(N)$$ keys and $$\\mathcal{O}(E)$$ values. For BFS, we spend $$\\mathcal{O}(N)$$ since in the worst case, we need to add all nodes to the queue in the same time.\n\n<br/>\n\n---\n\n### Approach 2: Depth-First Search: Check for Cycles + Find Longest Path\n\n**Intuition**\n\nThere is an important insight:\n\n> The number of semesters needed is equal to the **length of the longest path** in the graph.\n\nFor example, the longest path in the graph below is `5`, so the number of semesters needed is `5`:\n\n![Figure 2.1](../Documents/1136/1136_2_1.drawio.svg)\n\nWhy? Treat the path as a sequence of prerequisites, and for each prerequisite, we need to spend one semester to advance to the next node.\n\nBut there is a problem: if the graph has a cycle, then the longest path would be infinite.\n\n![Figure 2.3](../Documents/1136/1136_2_2.drawio.svg)\n\nSo firstly, we need to check if the graph has a cycle. If it does, we can directly return `-1` since we can never finish all courses.\n\nNow we break the problem into two parts:\n\n1. Check if the graph has a cycle\n2. Calculate the length of the longest path\n\nEach of the two parts can be done with DFS. In _Approach 3_, we will show how to achieve those two-part simultaneously in one single DFS. However, in this approach, for a better understanding, we separate them into two separate DFS traverals.\n\n_Check If the Graph Has A Cycle_\n\nEach node has one of the three states: unvisited, visiting, and visited.\n\nBefore the DFS, we initialize all nodes in the graph to unvisited.\n\nWhen performing a DFS, we mark the current node as _visiting_ until we search all paths out of the node from the node. If we meet a node marked with processing, it must come from the upstream path and therefore, we've detected a cycle.\n\nIf DFS finishes, and all node are marked as visited, then the graph contains no cycle.\n\n_Calculate the Length of the Longest Path_\n\nThe DFS function should return the maximum out of the recursive calls for its child nodes, plus one (the node itself).\n\nIn order to prevent redundant calculations, we need to store the calculated results. This is an example of dynamic programming, as we're storing the result of subproblems.\n\n**Algorithm**\n\n_Step 1:_ Build a directed graph from `relations`.\n\n_Step 2:_ Implement a function `dfsCheckCycle` to check whether the graph has a cycle.\n\n_Step 3:_ Implement a function `dfsMaxPath` to calculate the length of the longest path in the graph.\n\n_Step 4:_ Call `dfsCheckCycle`, return `-1` if the graph has a cycle.\n\n_Step 5:_ Otherwise, call `dfsMaxPath`. Return the length of the longest path in the graph.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/2uzGbbhL/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"2uzGbbhL\"></iframe>\n\n**Complexity Analysis**\n\nLet $$E$$ be the length of `relations`.\n\n- Time Complexity: $$\\mathcal{O}(N+E)$$. For building the graph, we spend $$\\mathcal{O}(N)$$ to initialize the graph, and spend $$\\mathcal{O}(E)$$ to add egdes since we iterate `relations` once. For DFS, we spend $$\\mathcal{O}(N+E)$$ since we need to visit every node and edge once in DFS in the worst case.\n\n- Space Complexity: $$\\mathcal{O}(N+E)$$. For the graph, we spend $$\\mathcal{O}(N+E)$$ since we have $$\\mathcal{O}(N)$$ keys and $$\\mathcal{O}(E)$$ values. For DFS, we spend $$\\mathcal{O}(N)$$ since in the worst case, we need to add all nodes to the stack to recursively call DFS. Also, we run DFS twice.\n\n<br/>\n\n---\n\n### Approach 3: Depth-First Search: Combine\n\n**Intuition**\n\n> This approach is an improvement of _Approach 2_. It is recommended to ensure that you fully understood _Approach 2_ before continuing onto this final approach.\n\nHere, we combine the two functions in _Approach 2_, `dfsCheckCycle` and `dfsMaxPath`, into one single function, `dfs`.\n\n> The new `dfs` should return `-1` if a cycle is detected, and return the longest length otherwise.\n\nJust simple modifications on `dfsCheckCycle` will do:\n\nRecall in `dfsCheckCycle`, each node has three states: unvisited, visiting, and visited.\n\nWe can change the **visited** state to the **longest length** starting from the current node, and let the dfs return the longest length starting from the current node.\n\nThe pseudo-code is as below:\n\n```python\nset states of all nodes to unvisited\n\ndef dfs(node):\n    if the state of node is visiting:\n        # detects cycles\n        return -1\n    else if the state of node is visited:\n        return the state of node # the longest length\n\n    set the state of node to visiting\n\n    max_length = 1\n    for child_node in child_nodes:\n        child_answer = dfs(child_node)\n        # if detects cycles in child_node\n        if child_answer == -1:\n            return -1\n        else:\n            max_length = max(max_length, child_answer + 1)\n\n    set the state of node to max_length\n    return max_length\n```\n\n**Algorithm**\n\n_Step 1:_ Build a directed graph from `relations`.\n\n_Step 2:_ Implement a function `dfs` to check whether the graph has a cycle and calculate the length of the longest path in the graph.\n\n_Step 3:_ Call `dfs`; return `-1` if the graph has a cycle. Otherwise, return the length of the longest path in the graph.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/63pgbPVJ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"63pgbPVJ\"></iframe>\n\n**Complexity Analysis**\n\nLet $$E$$ be the length of `relations`.\n\n- Time Complexity: $$\\mathcal{O}(N+E)$$. For building the graph, we spend $$\\mathcal{O}(N)$$ to initialize the graph, and spend $$\\mathcal{O}(E)$$ to add egdes since we iterate `relations` once. For DFS, we spend $$\\mathcal{O}(N+E)$$ since we need to visit every node and edge once in DFS in the worst case.\n\n- Space Complexity: $$\\mathcal{O}(N+E)$$. For the graph, we spend $$\\mathcal{O}(N+E)$$ since we have $$\\mathcal{O}(N)$$ keys and $$\\mathcal{O}(E)$$ values. For DFS, we spend $$\\mathcal{O}(N)$$ since in the worst case, we need to add all nodes to the stack to recursively call DFS.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

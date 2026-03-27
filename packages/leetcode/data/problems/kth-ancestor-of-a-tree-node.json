@@ -1,0 +1,150 @@
+{
+  "questionId": "1296",
+  "questionFrontendId": "1483",
+  "title": "Kth Ancestor of a Tree Node",
+  "titleSlug": "kth-ancestor-of-a-tree-node",
+  "difficulty": "Hard",
+  "content": "<p>You are given a tree with <code>n</code> nodes numbered from <code>0</code> to <code>n - 1</code> in the form of a parent array <code>parent</code> where <code>parent[i]</code> is the parent of <code>i<sup>th</sup></code> node. The root of the tree is node <code>0</code>. Find the <code>k<sup>th</sup></code> ancestor of a given node.</p>\n\n<p>The <code>k<sup>th</sup></code> ancestor of a tree node is the <code>k<sup>th</sup></code> node in the path from that node to the root node.</p>\n\n<p>Implement the <code>TreeAncestor</code> class:</p>\n\n<ul>\n\t<li><code>TreeAncestor(int n, int[] parent)</code> Initializes the object with the number of nodes in the tree and the parent array.</li>\n\t<li><code>int getKthAncestor(int node, int k)</code> return the <code>k<sup>th</sup></code> ancestor of the given node <code>node</code>. If there is no such ancestor, return <code>-1</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/08/28/1528_ex1.png\" style=\"width: 396px; height: 262px;\" />\n<pre>\n<strong>Input</strong>\n[&quot;TreeAncestor&quot;, &quot;getKthAncestor&quot;, &quot;getKthAncestor&quot;, &quot;getKthAncestor&quot;]\n[[7, [-1, 0, 0, 1, 1, 2, 2]], [3, 1], [5, 2], [6, 3]]\n<strong>Output</strong>\n[null, 1, 0, -1]\n\n<strong>Explanation</strong>\nTreeAncestor treeAncestor = new TreeAncestor(7, [-1, 0, 0, 1, 1, 2, 2]);\ntreeAncestor.getKthAncestor(3, 1); // returns 1 which is the parent of 3\ntreeAncestor.getKthAncestor(5, 2); // returns 0 which is the grandparent of 5\ntreeAncestor.getKthAncestor(6, 3); // returns -1 because there is no such ancestor</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= k &lt;= n &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>parent.length == n</code></li>\n\t<li><code>parent[0] == -1</code></li>\n\t<li><code>0 &lt;= parent[i] &lt; n</code> for all <code>0 &lt; i &lt; n</code></li>\n\t<li><code>0 &lt;= node &lt; n</code></li>\n\t<li>There will be at most <code>5 * 10<sup>4</sup></code> queries.</li>\n</ul>\n",
+  "hints": [
+    "The queries must be answered efficiently to avoid time limit exceeded verdict.",
+    "Use sparse table (dynamic programming application) to travel the tree upwards in a fast way."
+  ],
+  "metaData": "{\n  \"classname\": \"TreeAncestor\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer\",\n        \"name\": \"n\"\n      },\n      {\n        \"name\": \"parent\",\n        \"type\": \"integer[]\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"node\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"k\"\n        }\n      ],\n      \"name\": \"getKthAncestor\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"51.6K\", \"totalSubmission\": \"138.2K\", \"totalAcceptedRaw\": 51598, \"totalSubmissionRaw\": 138166, \"acRate\": \"37.3%\"}",
+  "likes": 2079,
+  "dislikes": 124,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Edge Weight Equilibrium Queries in a Tree\", \"titleSlug\": \"minimum-edge-weight-equilibrium-queries-in-a-tree\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"TreeAncestor\",\"getKthAncestor\",\"getKthAncestor\",\"getKthAncestor\"]\n[[7,[-1,0,0,1,1,2,2]],[3,1],[5,2],[6,3]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class TreeAncestor {\npublic:\n    TreeAncestor(int n, vector<int>& parent) {\n        \n    }\n    \n    int getKthAncestor(int node, int k) {\n        \n    }\n};\n\n/**\n * Your TreeAncestor object will be instantiated and called as such:\n * TreeAncestor* obj = new TreeAncestor(n, parent);\n * int param_1 = obj->getKthAncestor(node,k);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class TreeAncestor {\n\n    public TreeAncestor(int n, int[] parent) {\n        \n    }\n    \n    public int getKthAncestor(int node, int k) {\n        \n    }\n}\n\n/**\n * Your TreeAncestor object will be instantiated and called as such:\n * TreeAncestor obj = new TreeAncestor(n, parent);\n * int param_1 = obj.getKthAncestor(node,k);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class TreeAncestor:\n\n    def __init__(self, n: int, parent: List[int]):\n        \n\n    def getKthAncestor(self, node: int, k: int) -> int:\n        \n\n\n# Your TreeAncestor object will be instantiated and called as such:\n# obj = TreeAncestor(n, parent)\n# param_1 = obj.getKthAncestor(node,k)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class TreeAncestor(object):\n\n    def __init__(self, n, parent):\n        \"\"\"\n        :type n: int\n        :type parent: List[int]\n        \"\"\"\n        \n\n    def getKthAncestor(self, node, k):\n        \"\"\"\n        :type node: int\n        :type k: int\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your TreeAncestor object will be instantiated and called as such:\n# obj = TreeAncestor(n, parent)\n# param_1 = obj.getKthAncestor(node,k)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[]} parent\n */\nvar TreeAncestor = function(n, parent) {\n    \n};\n\n/** \n * @param {number} node \n * @param {number} k\n * @return {number}\n */\nTreeAncestor.prototype.getKthAncestor = function(node, k) {\n    \n};\n\n/** \n * Your TreeAncestor object will be instantiated and called as such:\n * var obj = new TreeAncestor(n, parent)\n * var param_1 = obj.getKthAncestor(node,k)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class TreeAncestor {\n    constructor(n: number, parent: number[]) {\n        \n    }\n\n    getKthAncestor(node: number, k: number): number {\n        \n    }\n}\n\n/**\n * Your TreeAncestor object will be instantiated and called as such:\n * var obj = new TreeAncestor(n, parent)\n * var param_1 = obj.getKthAncestor(node,k)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class TreeAncestor {\n\n    public TreeAncestor(int n, int[] parent) {\n        \n    }\n    \n    public int GetKthAncestor(int node, int k) {\n        \n    }\n}\n\n/**\n * Your TreeAncestor object will be instantiated and called as such:\n * TreeAncestor obj = new TreeAncestor(n, parent);\n * int param_1 = obj.GetKthAncestor(node,k);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} TreeAncestor;\n\n\nTreeAncestor* treeAncestorCreate(int n, int* parent, int parentSize) {\n    \n}\n\nint treeAncestorGetKthAncestor(TreeAncestor* obj, int node, int k) {\n    \n}\n\nvoid treeAncestorFree(TreeAncestor* obj) {\n    \n}\n\n/**\n * Your TreeAncestor struct will be instantiated and called as such:\n * TreeAncestor* obj = treeAncestorCreate(n, parent, parentSize);\n * int param_1 = treeAncestorGetKthAncestor(obj, node, k);\n \n * treeAncestorFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type TreeAncestor struct {\n    \n}\n\n\nfunc Constructor(n int, parent []int) TreeAncestor {\n    \n}\n\n\nfunc (this *TreeAncestor) GetKthAncestor(node int, k int) int {\n    \n}\n\n\n/**\n * Your TreeAncestor object will be instantiated and called as such:\n * obj := Constructor(n, parent);\n * param_1 := obj.GetKthAncestor(node,k);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class TreeAncestor(n: Int, parent: IntArray) {\n\n    fun getKthAncestor(node: Int, k: Int): Int {\n        \n    }\n\n}\n\n/**\n * Your TreeAncestor object will be instantiated and called as such:\n * var obj = TreeAncestor(n, parent)\n * var param_1 = obj.getKthAncestor(node,k)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass TreeAncestor {\n\n    init(_ n: Int, _ parent: [Int]) {\n        \n    }\n    \n    func getKthAncestor(_ node: Int, _ k: Int) -> Int {\n        \n    }\n}\n\n/**\n * Your TreeAncestor object will be instantiated and called as such:\n * let obj = TreeAncestor(n, parent)\n * let ret_1: Int = obj.getKthAncestor(node, k)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct TreeAncestor {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl TreeAncestor {\n\n    fn new(n: i32, parent: Vec<i32>) -> Self {\n        \n    }\n    \n    fn get_kth_ancestor(&self, node: i32, k: i32) -> i32 {\n        \n    }\n}\n\n/**\n * Your TreeAncestor object will be instantiated and called as such:\n * let obj = TreeAncestor::new(n, parent);\n * let ret_1: i32 = obj.get_kth_ancestor(node, k);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class TreeAncestor\n\n=begin\n    :type n: Integer\n    :type parent: Integer[]\n=end\n    def initialize(n, parent)\n        \n    end\n\n\n=begin\n    :type node: Integer\n    :type k: Integer\n    :rtype: Integer\n=end\n    def get_kth_ancestor(node, k)\n        \n    end\n\n\nend\n\n# Your TreeAncestor object will be instantiated and called as such:\n# obj = TreeAncestor.new(n, parent)\n# param_1 = obj.get_kth_ancestor(node, k)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class TreeAncestor {\n    /**\n     * @param Integer $n\n     * @param Integer[] $parent\n     */\n    function __construct($n, $parent) {\n        \n    }\n  \n    /**\n     * @param Integer $node\n     * @param Integer $k\n     * @return Integer\n     */\n    function getKthAncestor($node, $k) {\n        \n    }\n}\n\n/**\n * Your TreeAncestor object will be instantiated and called as such:\n * $obj = TreeAncestor($n, $parent);\n * $ret_1 = $obj->getKthAncestor($node, $k);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class TreeAncestor {\n\n  TreeAncestor(int n, List<int> parent) {\n    \n  }\n  \n  int getKthAncestor(int node, int k) {\n    \n  }\n}\n\n/**\n * Your TreeAncestor object will be instantiated and called as such:\n * TreeAncestor obj = TreeAncestor(n, parent);\n * int param1 = obj.getKthAncestor(node,k);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class TreeAncestor(_n: Int, _parent: Array[Int]) {\n\n    def getKthAncestor(node: Int, k: Int): Int = {\n        \n    }\n\n}\n\n/**\n * Your TreeAncestor object will be instantiated and called as such:\n * val obj = new TreeAncestor(n, parent)\n * val param_1 = obj.getKthAncestor(node,k)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule TreeAncestor do\n  @spec init_(n :: integer, parent :: [integer]) :: any\n  def init_(n, parent) do\n    \n  end\n\n  @spec get_kth_ancestor(node :: integer, k :: integer) :: integer\n  def get_kth_ancestor(node, k) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# TreeAncestor.init_(n, parent)\n# param_1 = TreeAncestor.get_kth_ancestor(node, k)\n\n# TreeAncestor.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec tree_ancestor_init_(N :: integer(), Parent :: [integer()]) -> any().\ntree_ancestor_init_(N, Parent) ->\n  .\n\n-spec tree_ancestor_get_kth_ancestor(Node :: integer(), K :: integer()) -> integer().\ntree_ancestor_get_kth_ancestor(Node, K) ->\n  .\n\n\n%% Your functions will be called as such:\n%% tree_ancestor_init_(N, Parent),\n%% Param_1 = tree_ancestor_get_kth_ancestor(Node, K),\n\n%% tree_ancestor_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define tree-ancestor%\n  (class object%\n    (super-new)\n    \n    ; n : exact-integer?\n    ; parent : (listof exact-integer?)\n    (init-field\n      n\n      parent)\n    \n    ; get-kth-ancestor : exact-integer? exact-integer? -> exact-integer?\n    (define/public (get-kth-ancestor node k)\n      )))\n\n;; Your tree-ancestor% object will be instantiated and called as such:\n;; (define obj (new tree-ancestor% [n n] [parent parent]))\n;; (define param_1 (send obj get-kth-ancestor node k))"
+    }
+  ],
+  "solution": null
+}

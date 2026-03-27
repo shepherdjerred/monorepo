@@ -1,0 +1,129 @@
+{
+  "questionId": "951",
+  "questionFrontendId": "915",
+  "title": "Partition Array into Disjoint Intervals",
+  "titleSlug": "partition-array-into-disjoint-intervals",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code>, partition it into two (contiguous) subarrays <code>left</code> and <code>right</code> so that:</p>\n\n<ul>\n\t<li>Every element in <code>left</code> is less than or equal to every element in <code>right</code>.</li>\n\t<li><code>left</code> and <code>right</code> are non-empty.</li>\n\t<li><code>left</code> has the smallest possible size.</li>\n</ul>\n\n<p>Return <em>the length of </em><code>left</code><em> after such a partitioning</em>.</p>\n\n<p>Test cases are generated such that partitioning exists.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [5,0,3,8,6]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> left = [5,0,3], right = [8,6]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,1,1,0,6,12]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> left = [1,1,1,0], right = [6,12]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 10<sup>6</sup></code></li>\n\t<li>There is at least one valid answer for the given input.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"partitionDisjoint\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"97.6K\", \"totalSubmission\": \"197.6K\", \"totalAcceptedRaw\": 97623, \"totalSubmissionRaw\": 197585, \"acRate\": \"49.4%\"}",
+  "likes": 1769,
+  "dislikes": 83,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Sum of Beauty in the Array\", \"titleSlug\": \"sum-of-beauty-in-the-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Optimal Partition of String\", \"titleSlug\": \"optimal-partition-of-string\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Index of a Valid Split\", \"titleSlug\": \"minimum-index-of-a-valid-split\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Strength of K Disjoint Subarrays\", \"titleSlug\": \"maximum-strength-of-k-disjoint-subarrays\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[5,0,3,8,6]",
+    "[1,1,1,0,6,12]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int partitionDisjoint(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int partitionDisjoint(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def partitionDisjoint(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def partitionDisjoint(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar partitionDisjoint = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function partitionDisjoint(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int PartitionDisjoint(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int partitionDisjoint(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func partitionDisjoint(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun partitionDisjoint(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func partitionDisjoint(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn partition_disjoint(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef partition_disjoint(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function partitionDisjoint($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int partitionDisjoint(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def partitionDisjoint(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec partition_disjoint(nums :: [integer]) :: integer\n  def partition_disjoint(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec partition_disjoint(Nums :: [integer()]) -> integer().\npartition_disjoint(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (partition-disjoint nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "574",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach 1: Two Arrays\n\n**Intuition**\n\nInstead of checking whether `all(L <= R for L in left for R in right)`, for each index let's only check whether the **largest element to the left** of the current index (inclusive) is less than or equal to the **smallest element to the right** of the current index (`max(left) <= min(right)`).\n\n**Algorithm**\n\nLet's try to find `max(left)` for subarrays `left = nums[:1], left = nums[:2], left =  nums[:3], ...` etc.  Specifically, `max_left[i]` will be the maximum of subarray `nums[:i+1]`.  They are related to each other: `max(nums[:4]) = max(max(nums[:3]), nums[3])`, so `max_left[4] = max(max_left[3], nums[4])`.\n\nSimilarly, `min(right)` for every possible `right` can be found in linear time.\n\nNow that we can query `max(left)` and `min(right)` in constant time by checking `max_left[i]` and `min_right[i]`, we just need to iterate over `max_left` and `min_right` to find the first index where `max_left[i-1]` is less than or equal to `min_right[i]`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/5ThS78iL/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"5ThS78iL\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N)$$, where $$N$$ is the length of `nums`. We iterate over the input array three times and create two arrays with size $$N$$ each.\n\n* Space Complexity:  $$O(N)$$. We use two additional arrays of size $$N$$ each.\n    \n<br />\n    \n---\n    \n### Approach 2: One Array\n\n**Intuition**\n\nNotice, in the first approach, we iterated from `1` to `N` twice.  Once to create `max_left` and once to find which index to split the array at.  We can slightly optimize our approach by performing both of these steps in the same for loop.  Doing so will allow us to replace the `max_left` array with a single variable that tracks the maximum value seen so far (`curr_max`).\n\n> How can we do this? Try to code it up yourself before looking at the solution below.\n\n**Algorithm**\n\n1. Initialize a `min_right` array with the rightmost value equal to the rightmost value in nums.\n2. Iterate over nums in reverse order and at each iteration update the current index of `min_right` with the minimum value seen so far.\n3. Initialize `curr_max` as the leftmost value in nums.  \n4. Iterate over nums from left to right and at each iteration, update `curr_max` as the maximum value seen so far.  When `curr_max` is less than or equal to the minimum value to the right, then the current index is where `nums` should be split.\n\n**Implementation**\n    \n<iframe src=\"https://leetcode.com/playground/AVEiz5YB/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"AVEiz5YB\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N)$$, where $$N$$ is the length of `nums`. We iterate over the input array two times (instead of three times as in the previous approach) and create only one array with size $$N$$ (as opposed to two as before).\n\n* Space Complexity:  $$O(N)$$. We use one additional array of size $$N$$.\n    \n<br />\n    \n---\n    \n### Approach 3: No Arrays\n\n**Intuition**\n\nFor this approach, let's consider each number one at a time starting from the left. There are two possibilities for each number, it either **must** be part of the left array, or it **could** be part of the right array.  But how can we tell?\n\nSince the left subarray cannot be empty, we know that it must contain `nums[0]`.  At the start, `nums[0]` is the largest number that must be in the left subarray, let's call this `curr_max`. Since we are asked to split the array such that every number in the right subarray is greater than or equal to the largest number in the left subarray, we know that any number smaller than `curr_max` must belong to the left subarray.\n\nSo let's say `nums[i]` is less than `nums[0]`.  This means `nums[i]` must be in the left subarray, and therefore every number to the left of `nums[i]` must also belong to the left subarray.  Now, the largest number in `nums` between indices `0` and `i` will become the new `curr_max` and any number less than `curr_max` must be part of the left subarray.\n\nAs we iterate over `nums` we can keep track of the largest number seen so far that **must** be in the left subarray (`curr_max`) and the largest number seen so far that **could possibly** be in the left subarray (`possible_max`).  Whenever a number is less than `curr_max` then that number and all of the numbers to its left must belong to the left subarray, and `curr_max` becomes the largest number seen so far (`possible_max`).\n\nThis process can be repeated until we find the last number that **must** be part of the left subarray.\n\n**Algorithm**\n\nWith this approach, we can further improve our algorithm's space complexity by getting rid of both arrays. We can achieve this by using three variables to track the maximum value that **must** be in the left subarray, the maximum value that **could possibly** be in the left subarray, and the length of the left subarray:\n- `curr_max` for tracking the maximum value that **must** be in the left part of the given array;\n- `possible_max` for tracking absolute maximum value in the already traversed part of the given array while iterating over it, so that we can extend our `left` part when necessary and update `curr_max` with `possible_max` value;\n- `length` for storing the length of the left part (this will be our result).\n\nThe algorithm is as follows: \n\n1. At first, we set `curr_max` and `possible_max` both equal to `nums[0]` and `length` equal to 1 (since the left part of the given array cannot be empty, as stated in the problem description)\n2. As we iterate over the input array, beginning from the first index (counting from 0), two possibilities exist at each step:\n    * If `nums[i]` is less than `curr_max`, it means that, currently, **not every** element in `left` is less than or equal to every element in `right`, so our condition is violated. Therefore, we need to extend our `left` array, so that it includes all the values up to `nums[i]` (inclusive). We update `length` accordingly and set `curr_max` equal to `possible_max` because now we know `possible_max` must be part of the left subarray. We\tmust now compare every subsequent element starting from `nums[i + 1]` with the maximum value seen so far.\n    * Otherwise, if `nums[i]` is greater than or equal to `curr_max`, then it doesn't violate any of our conditions, and since we want the left part to be as small as possible, we do nothing except update the `possible_max` value with `nums[i]`, if the latter is greater than current `possible_max` value.\n3. After the array traversal is completed, we return `length`.\n    \n**Implementation**\n        \n<iframe src=\"https://leetcode.com/playground/Dyrbzuog/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"Dyrbzuog\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N)$$, where $$N$$ is the length of `nums`. We iterate over the input array exactly once and each iteration requires only constant time.\n\n* Space Complexity:  $$O(1)$$. We use only three variables, so the space usage here is constant.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

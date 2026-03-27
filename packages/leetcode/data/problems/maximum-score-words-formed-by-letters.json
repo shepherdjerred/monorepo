@@ -1,0 +1,160 @@
+{
+  "questionId": "1381",
+  "questionFrontendId": "1255",
+  "title": "Maximum Score Words Formed by Letters",
+  "titleSlug": "maximum-score-words-formed-by-letters",
+  "difficulty": "Hard",
+  "content": "<p>Given a list of <code>words</code>, list of&nbsp; single&nbsp;<code>letters</code> (might be repeating)&nbsp;and <code>score</code>&nbsp;of every character.</p>\n\n<p>Return the maximum score of <strong>any</strong> valid set of words formed by using the given letters (<code>words[i]</code> cannot be used two&nbsp;or more times).</p>\n\n<p>It is not necessary to use all characters in <code>letters</code> and each letter can only be used once. Score of letters&nbsp;<code>&#39;a&#39;</code>, <code>&#39;b&#39;</code>, <code>&#39;c&#39;</code>, ... ,<code>&#39;z&#39;</code> is given by&nbsp;<code>score[0]</code>, <code>score[1]</code>, ... , <code>score[25]</code> respectively.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;dog&quot;,&quot;cat&quot;,&quot;dad&quot;,&quot;good&quot;], letters = [&quot;a&quot;,&quot;a&quot;,&quot;c&quot;,&quot;d&quot;,&quot;d&quot;,&quot;d&quot;,&quot;g&quot;,&quot;o&quot;,&quot;o&quot;], score = [1,0,9,5,0,0,3,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0]\n<strong>Output:</strong> 23\n<strong>Explanation:</strong>\nScore  a=1, c=9, d=5, g=3, o=2\nGiven letters, we can form the words &quot;dad&quot; (5+1+5) and &quot;good&quot; (3+2+2+5) with a score of 23.\nWords &quot;dad&quot; and &quot;dog&quot; only get a score of 21.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;xxxz&quot;,&quot;ax&quot;,&quot;bx&quot;,&quot;cx&quot;], letters = [&quot;z&quot;,&quot;a&quot;,&quot;b&quot;,&quot;c&quot;,&quot;x&quot;,&quot;x&quot;,&quot;x&quot;], score = [4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,10]\n<strong>Output:</strong> 27\n<strong>Explanation:</strong>\nScore  a=4, b=4, c=4, x=5, z=10\nGiven letters, we can form the words &quot;ax&quot; (4+5), &quot;bx&quot; (4+5) and &quot;cx&quot; (4+5) with a score of 27.\nWord &quot;xxxz&quot; only get a score of 25.</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;leetcode&quot;], letters = [&quot;l&quot;,&quot;e&quot;,&quot;t&quot;,&quot;c&quot;,&quot;o&quot;,&quot;d&quot;], score = [0,0,1,1,1,0,0,0,0,0,0,1,0,0,1,0,0,0,0,1,0,0,0,0,0,0]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong>\nLetter &quot;e&quot; can only be used once.</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= words.length &lt;= 14</code></li>\n\t<li><code>1 &lt;= words[i].length &lt;= 15</code></li>\n\t<li><code>1 &lt;= letters.length &lt;= 100</code></li>\n\t<li><code>letters[i].length == 1</code></li>\n\t<li><code>score.length ==&nbsp;26</code></li>\n\t<li><code>0 &lt;= score[i] &lt;= 10</code></li>\n\t<li><code>words[i]</code>, <code>letters[i]</code>&nbsp;contains only lower case English letters.</li>\n</ul>\n",
+  "hints": [
+    "Note that words.length is small. This means you can iterate over every subset of words (2^N)."
+  ],
+  "metaData": "{\n  \"name\": \"maxScoreWords\",\n  \"params\": [\n    {\n      \"name\": \"words\",\n      \"type\": \"string[]\"\n    },\n    {\n      \"type\": \"character[]\",\n      \"name\": \"letters\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"score\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"135.3K\", \"totalSubmission\": \"165.9K\", \"totalAcceptedRaw\": 135286, \"totalSubmissionRaw\": 165898, \"acRate\": \"81.5%\"}",
+  "likes": 1853,
+  "dislikes": 119,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Good People Based on Statements\", \"titleSlug\": \"maximum-good-people-based-on-statements\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"dog\",\"cat\",\"dad\",\"good\"]\n[\"a\",\"a\",\"c\",\"d\",\"d\",\"d\",\"g\",\"o\",\"o\"]\n[1,0,9,5,0,0,3,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0]",
+    "[\"xxxz\",\"ax\",\"bx\",\"cx\"]\n[\"z\",\"a\",\"b\",\"c\",\"x\",\"x\",\"x\"]\n[4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,10]",
+    "[\"leetcode\"]\n[\"l\",\"e\",\"t\",\"c\",\"o\",\"d\"]\n[0,0,1,1,1,0,0,0,0,0,0,1,0,0,1,0,0,0,0,1,0,0,0,0,0,0]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    },
+    {
+      "name": "Bitmask",
+      "slug": "bitmask"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxScoreWords(vector<string>& words, vector<char>& letters, vector<int>& score) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxScoreWords(String[] words, char[] letters, int[] score) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxScoreWords(self, words: List[str], letters: List[str], score: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxScoreWords(self, words, letters, score):\n        \"\"\"\n        :type words: List[str]\n        :type letters: List[str]\n        :type score: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} words\n * @param {character[]} letters\n * @param {number[]} score\n * @return {number}\n */\nvar maxScoreWords = function(words, letters, score) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxScoreWords(words: string[], letters: string[], score: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxScoreWords(string[] words, char[] letters, int[] score) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxScoreWords(char** words, int wordsSize, char* letters, int lettersSize, int* score, int scoreSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxScoreWords(words []string, letters []byte, score []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxScoreWords(words: Array<String>, letters: CharArray, score: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxScoreWords(_ words: [String], _ letters: [Character], _ score: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_score_words(words: Vec<String>, letters: Vec<char>, score: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} words\n# @param {Character[]} letters\n# @param {Integer[]} score\n# @return {Integer}\ndef max_score_words(words, letters, score)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $words\n     * @param String[] $letters\n     * @param Integer[] $score\n     * @return Integer\n     */\n    function maxScoreWords($words, $letters, $score) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxScoreWords(List<String> words, List<String> letters, List<int> score) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxScoreWords(words: Array[String], letters: Array[Char], score: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_score_words(words :: [String.t], letters :: [char], score :: [integer]) :: integer\n  def max_score_words(words, letters, score) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_score_words(Words :: [unicode:unicode_binary()], Letters :: [char()], Score :: [integer()]) -> integer().\nmax_score_words(Words, Letters, Score) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-score-words words letters score)\n  (-> (listof string?) (listof char?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2316",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nGiven a list of `words`, we need to find the maximum subset score using the given set of `letters`. Each letter has a score tied to it, which is provided in `score`. Each entry in `words` can only be used once, although the same word can occur as multiple entries. Each character in `letters` can be used at most once.\n\nThis problem tests your ability to implement an algorithm that efficiently maintains a maximum score over all subsets of a set of words. The two main ways to do this are using an iterative loop and a recursive search method.\n\n---\n\n### Approach 1: Iterative Loop for Every Subset\n\n\n#### Intuition\n\nSince the size of the input is very small, a brute-force solution is feasible. We can check all subsets of `words` and return the largest score among subsets that can be constructed with the given `letters`.\n\nLet's create a frequency array `freq` that stores the frequency of each letter in `letters`, which is needed to track how many copies of each letter we can use. For every subset of words, let's also create a `subsetLetters` array that stores the frequency of each letter of every word in the subset. The `subsetLetters` array is used to track the current state of words and how many copies of each letter are needed to build the current subset. Specifically, this subset can be constructed if and only if `freq[c] <= subsetLetters[c]` for all letters `c`. If a subset is valid, its score is equal to the sum of `subsetLetters[c] * score[c]` for all `c`.\n\nNow that we have a strategy to check the validity and score of a subset, we need to generate and check the subsets. For this approach, we'll use a for loop that iterates through every integer `mask` whose binary representation corresponds to a subset of `words`. The $i^{\\texttt{th}}$ bit in `mask` equals `1` if this subset contains `words[i]`, and `0` otherwise.\n\nExample binary representations of subsets:\n\n\n![figA](../Figures/1255/1255_words_example_updated.png)\n\n#### Algorithm\n\n1. Generate a frequency array where `freq[c]` is the number of times letter `c` appears in `letters`.\n2. Initialize `maxScore` to store the largest score among valid subsets.\n3. Use a for loop that goes from $0$ (inclusive) to $2^W$ (exclusive) where $W$ is the length of `words` to iterate over every subset using masks. For each mask, word $i$ is in this subset if the $i^{\\texttt{th}}$ bit is set in the current mask.\n4. For each word in the current subset, increment `subsetLetters[c]` for each letter `c` in the word.\n5. Declare a helper function, `subsetScore,` that checks if the subset can be built out of the given letters and calculates the score:\n    - Initialize a variable `totalScore` to `0`.\n    - For each character in the alphabet, compute the score of this subset by adding `score[c]` for every occurrence of `c` in this subset, and add it to `totalScore`.  If `freq[c] < subsetLetters[c]` holds true for any letter `c`, then return $0$, as this subset is impossible to construct with the given letters.\n    - Return `totalScore`.\n6. If `maxScore` is less than the result of `subsetScore`, update `maxScore`.\n7. Return `maxScore` after all subsets are checked.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Rkobsw98/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Rkobsw98\"></iframe>\n\n#### Complexity Analysis\n\nLet $W$ be the length of `words`, $L$ be the maximum length of any word in `words`, and $A$ be the size of the alphabet (in this case, $A = 26$).\n\n* Time complexity: $O(2^W \\cdot (WL + A))$.\n\nFor each subset, we need to iterate through every string in this subset, which takes $WL$ time. Additionally, $A$ operations are needed to populate the `subsetLetters` array for each subset. \n\nWe have two choices for each word: it belongs in the subset, or it doesn't. This gives a total of $2^W$ possible subsets for $W$ words. Therefore, this yields a complexity of $O(2^W(WL + A))$.\n\n* Space complexity: $O(A)$.\n\nIn this implementation, only two arrays of length $A$ are created: the `freq` array, which stores the frequencies of characters in `letters`, and the `subsetLetters` array, which stores letter frequencies for the current subset.\n\n---\n\n### Approach 2: Backtracking\n\n\n#### Intuition\n\nSuppose the set of usable letters in a given input does not contain the letter \"d\", and the set of words is `[\"abcd\", \"acc\", \"abb\", \"bc\"]`. Note that any subset containing the word \"abcd\" is always invalid, because the word contains letter \"d\". The iterative approach will continue to check every subset that contains \"abcd\", which results in a considerable amount of unnecessary computation. What if we had a way to prune all subsets containing the word \"abcd\"? This is where a recursive solution comes into play.\n\nRather than iteratively checking every subset of words, we can use a recursive function to choose whether we include or exclude the current word in a candidate subset. If we pass the `subsetLetters` array as a parameter throughout every recursive call, after the addition of a word to a subset, we can check if there is a letter `c` where `subsetLetters[c]` exceeds `freq[c]` (see the `isValidWord` method). Once a recursive call terminates, we can roll back any changes made by the current recursive call to extensively search for all possibilities.\n\nThis approach is called backtracking, which is a search strategy that visits states and rolls back changes to return to a previous state. Doing so allows you to explore all branches from one state. For more details, see our [backtracking explore card](https://leetcode.com/explore/learn/card/recursion-ii/472/backtracking/).\n\nThe base case is when all words have been considered for the subset, which is handled by comparing `maxScore` with `totalScore` and updating `maxScore` if `totalScore` is larger. The recursive case considers two choices: adding the $i^{\\texttt{th}}$ word or not adding the $i^{\\texttt{th}}$ word. This generates the subsets that will eventually either reach the base case or get pruned because that subset is not valid.\n\n\nOne notable merit of this backtracking solution lies in the pruning of bad subsets. If there is a set of subsets that share the same words that break the limits imposed by the given letters, the recursive algorithm can choose not to continue the search down this branch. For example, if the first word cannot be constructed, this recursive algorithm would immediately cut out any subset containing the first word, whereas an iterative solution would still check every subset that contains the first word.\n\n#### Algorithm\n\n1. Generate a frequency array where `freq[c]` is the number of times letter `c` appears in `letters`.\n2. Initialize `maxScore` to store the largest score among valid subsets.\n3. Call a recursive subroutine `check` that passes `w` (the index of the current word), `words`, `score`, `subsetLetters`, and `totalScore` (the sum of word scores in the subset) as parameters. Steps 4-10 describe the `check` method.\n4. If `w` equals $-1$, all words have been considered, and we should update `maxScore` to `totalScore` if `maxScore` is less than `totalScore`.\n5. Otherwise, we need to consider two possible recursive calls: one that adds `words[w]` to the subset, and one that doesn't.\n6. To account for not adding a word, call `check(w - 1, words, score, subsetLetters, totalScore)`.\n7. To add `words[w]` to the subset, update `subsetLetters` and `totalScore` to include the word.\n8. If the addition of `words[w]` does not violate letter limits imposed by `freq`, make the recursive call `check(w - 1, words, score, subsetLetters, totalScore)`. To check for validity, we define the `isValidWord` method as follows:\n    - For each character in the alphabet, check if `freq[c] < subsetLetters[c]`. If there exists such `c`, return `false`.\n    - Return `true` if the subset can be built out of the given letters.\n9. Roll back the changes to `subsetLetters` and `totalScore` immediately after making this recursive call.\n10. Call `check(W - 1, words, score, subsetLetters, 0)`, where `subsetLetters` is initially all zeros.\n11. Return `maxScore` as the result.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/nZ2w8A7G/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"nZ2w8A7G\"></iframe>\n\n#### Complexity Analysis\n\nLet $W$ be the length of `words`, $L$ be the maximum length of any word in `words`, and $A$ be the size of the alphabet (in this case, $A = 26$).\n\n* Time complexity: $O(2^W \\cdot (L + A))$.\n\nThere are a total of $2^W$ subsets that could be checked, and the `check` function could be called for each one, or up to $2^W$ times. Inside the `check` function, we iterate through the current word's letters to determine if the subset it currently belongs in is valid, which takes $L$ time. Additionally, the `isValidWord` function takes $A$ time because we compare the count of each letter in the alphabet with the frequency. This yields a complexity of $O(2^W(L + A)$.\n\nWhile the worst-case runtime of backtracking matches the worst-case runtime of the iterative solution, in practice, the backtracking solution will prune many subset possibilities that break the limits imposed by the given letters and will run significantly faster than the iterative solution.\n\n* Space complexity: $O(A + W)$.\n\nIn this implementation, only two arrays of length $A$ are created: the `freq` array that stores the frequencies of characters in `letters`, and the `subsetLetters` array that stores letter frequencies for the current subset. Additionally, the `check` method is called with and without each element in `words`, which incurs $O(W)$ space on the recursive call stack.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

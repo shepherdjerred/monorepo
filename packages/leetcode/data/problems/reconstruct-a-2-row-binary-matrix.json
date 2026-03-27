@@ -1,0 +1,136 @@
+{
+  "questionId": "1379",
+  "questionFrontendId": "1253",
+  "title": "Reconstruct a 2-Row Binary Matrix",
+  "titleSlug": "reconstruct-a-2-row-binary-matrix",
+  "difficulty": "Medium",
+  "content": "<p>Given the following details of a matrix with <code>n</code> columns and <code>2</code> rows :</p>\n\n<ul>\n\t<li>The matrix is a binary matrix, which means each element in the matrix can be <code>0</code> or <code>1</code>.</li>\n\t<li>The sum of elements of the 0-th(upper) row is given as <code>upper</code>.</li>\n\t<li>The sum of elements of the 1-st(lower) row is given as <code>lower</code>.</li>\n\t<li>The sum of elements in the i-th column(0-indexed) is <code>colsum[i]</code>, where <code>colsum</code> is given as an integer array with length <code>n</code>.</li>\n</ul>\n\n<p>Your task is to reconstruct the matrix with <code>upper</code>, <code>lower</code> and <code>colsum</code>.</p>\n\n<p>Return it as a 2-D integer array.</p>\n\n<p>If there are more than one valid solution, any of them will be accepted.</p>\n\n<p>If no valid solution exists, return an empty 2-D array.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> upper = 2, lower = 1, colsum = [1,1,1]\n<strong>Output:</strong> [[1,1,0],[0,0,1]]\n<strong>Explanation: </strong>[[1,0,1],[0,1,0]], and [[0,1,1],[1,0,0]] are also correct answers.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> upper = 2, lower = 3, colsum = [2,2,1,1]\n<strong>Output:</strong> []\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> upper = 5, lower = 5, colsum = [2,1,2,0,1,0,1,2,0,1]\n<strong>Output:</strong> [[1,1,1,0,1,0,0,1,0,0],[1,0,1,0,0,0,1,1,0,1]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= colsum.length &lt;= 10^5</code></li>\n\t<li><code>0 &lt;= upper, lower &lt;= colsum.length</code></li>\n\t<li><code>0 &lt;= colsum[i] &lt;= 2</code></li>\n</ul>\n",
+  "hints": [
+    "You cannot do anything about colsum[i] = 2 case or colsum[i] = 0 case. Then you put colsum[i] = 1 case to the upper row until upper has reached. Then put the rest into lower row.",
+    "Fill 0 and 2 first, then fill 1 in the upper row or lower row in turn but be careful about exhausting permitted 1s in each row."
+  ],
+  "metaData": "{\n  \"name\": \"reconstructMatrix\",\n  \"params\": [\n    {\n      \"name\": \"upper\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"lower\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"colsum\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<list<integer>>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"34.2K\", \"totalSubmission\": \"69.9K\", \"totalAcceptedRaw\": 34171, \"totalSubmissionRaw\": 69936, \"acRate\": \"48.9%\"}",
+  "likes": 484,
+  "dislikes": 35,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Find Valid Matrix Given Row and Column Sums\", \"titleSlug\": \"find-valid-matrix-given-row-and-column-sums\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "2\n1\n[1,1,1]",
+    "2\n3\n[2,2,1,1]",
+    "5\n5\n[2,1,2,0,1,0,1,2,0,1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"grab\", \"name\": \"Grab\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> reconstructMatrix(int upper, int lower, vector<int>& colsum) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<List<Integer>> reconstructMatrix(int upper, int lower, int[] colsum) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def reconstructMatrix(self, upper: int, lower: int, colsum: List[int]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def reconstructMatrix(self, upper, lower, colsum):\n        \"\"\"\n        :type upper: int\n        :type lower: int\n        :type colsum: List[int]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} upper\n * @param {number} lower\n * @param {number[]} colsum\n * @return {number[][]}\n */\nvar reconstructMatrix = function(upper, lower, colsum) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function reconstructMatrix(upper: number, lower: number, colsum: number[]): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<IList<int>> ReconstructMatrix(int upper, int lower, int[] colsum) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** reconstructMatrix(int upper, int lower, int* colsum, int colsumSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func reconstructMatrix(upper int, lower int, colsum []int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun reconstructMatrix(upper: Int, lower: Int, colsum: IntArray): List<List<Int>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func reconstructMatrix(_ upper: Int, _ lower: Int, _ colsum: [Int]) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn reconstruct_matrix(upper: i32, lower: i32, colsum: Vec<i32>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} upper\n# @param {Integer} lower\n# @param {Integer[]} colsum\n# @return {Integer[][]}\ndef reconstruct_matrix(upper, lower, colsum)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $upper\n     * @param Integer $lower\n     * @param Integer[] $colsum\n     * @return Integer[][]\n     */\n    function reconstructMatrix($upper, $lower, $colsum) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> reconstructMatrix(int upper, int lower, List<int> colsum) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def reconstructMatrix(upper: Int, lower: Int, colsum: Array[Int]): List[List[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec reconstruct_matrix(upper :: integer, lower :: integer, colsum :: [integer]) :: [[integer]]\n  def reconstruct_matrix(upper, lower, colsum) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec reconstruct_matrix(Upper :: integer(), Lower :: integer(), Colsum :: [integer()]) -> [[integer()]].\nreconstruct_matrix(Upper, Lower, Colsum) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (reconstruct-matrix upper lower colsum)\n  (-> exact-integer? exact-integer? (listof exact-integer?) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": null
+}

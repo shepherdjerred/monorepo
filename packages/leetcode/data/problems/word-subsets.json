@@ -1,0 +1,138 @@
+{
+  "questionId": "952",
+  "questionFrontendId": "916",
+  "title": "Word Subsets",
+  "titleSlug": "word-subsets",
+  "difficulty": "Medium",
+  "content": "<p>You are given two string arrays <code>words1</code> and <code>words2</code>.</p>\n\n<p>A string <code>b</code> is a <strong>subset</strong> of string <code>a</code> if every letter in <code>b</code> occurs in <code>a</code> including multiplicity.</p>\n\n<ul>\n\t<li>For example, <code>&quot;wrr&quot;</code> is a subset of <code>&quot;warrior&quot;</code> but is not a subset of <code>&quot;world&quot;</code>.</li>\n</ul>\n\n<p>A string <code>a</code> from <code>words1</code> is <strong>universal</strong> if for every string <code>b</code> in <code>words2</code>, <code>b</code> is a subset of <code>a</code>.</p>\n\n<p>Return an array of all the <strong>universal</strong> strings in <code>words1</code>. You may return the answer in <strong>any order</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">words1 = [&quot;amazon&quot;,&quot;apple&quot;,&quot;facebook&quot;,&quot;google&quot;,&quot;leetcode&quot;], words2 = [&quot;e&quot;,&quot;o&quot;]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[&quot;facebook&quot;,&quot;google&quot;,&quot;leetcode&quot;]</span></p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">words1 = [&quot;amazon&quot;,&quot;apple&quot;,&quot;facebook&quot;,&quot;google&quot;,&quot;leetcode&quot;], words2 = [&quot;lc&quot;,&quot;eo&quot;]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[&quot;leetcode&quot;]</span></p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">words1 = [&quot;acaac&quot;,&quot;cccbb&quot;,&quot;aacbb&quot;,&quot;caacc&quot;,&quot;bcbbb&quot;], words2 = [&quot;c&quot;,&quot;cc&quot;,&quot;b&quot;]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[&quot;cccbb&quot;]</span></p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= words1.length, words2.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= words1[i].length, words2[i].length &lt;= 10</code></li>\n\t<li><code>words1[i]</code> and <code>words2[i]</code> consist only of lowercase English letters.</li>\n\t<li>All the strings of <code>words1</code> are <strong>unique</strong>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"wordSubsets\",\n  \"params\": [\n    {\n      \"name\": \"words1\",\n      \"type\": \"string[]\"\n    },\n    {\n      \"name\": \"words2\",\n      \"type\": \"string[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<string>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"265.3K\", \"totalSubmission\": \"474.5K\", \"totalAcceptedRaw\": 265267, \"totalSubmissionRaw\": 474498, \"acRate\": \"55.9%\"}",
+  "likes": 3536,
+  "dislikes": 317,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"amazon\",\"apple\",\"facebook\",\"google\",\"leetcode\"]\n[\"e\",\"o\"]",
+    "[\"amazon\",\"apple\",\"facebook\",\"google\",\"leetcode\"]\n[\"lc\",\"eo\"]",
+    "[\"acaac\",\"cccbb\",\"aacbb\",\"caacc\",\"bcbbb\"]\n[\"c\",\"cc\",\"b\"]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 7, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> wordSubsets(vector<string>& words1, vector<string>& words2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<String> wordSubsets(String[] words1, String[] words2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def wordSubsets(self, words1: List[str], words2: List[str]) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def wordSubsets(self, words1, words2):\n        \"\"\"\n        :type words1: List[str]\n        :type words2: List[str]\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} words1\n * @param {string[]} words2\n * @return {string[]}\n */\nvar wordSubsets = function(words1, words2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function wordSubsets(words1: string[], words2: string[]): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<string> WordSubsets(string[] words1, string[] words2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** wordSubsets(char** words1, int words1Size, char** words2, int words2Size, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func wordSubsets(words1 []string, words2 []string) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun wordSubsets(words1: Array<String>, words2: Array<String>): List<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func wordSubsets(_ words1: [String], _ words2: [String]) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn word_subsets(words1: Vec<String>, words2: Vec<String>) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} words1\n# @param {String[]} words2\n# @return {String[]}\ndef word_subsets(words1, words2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $words1\n     * @param String[] $words2\n     * @return String[]\n     */\n    function wordSubsets($words1, $words2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> wordSubsets(List<String> words1, List<String> words2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def wordSubsets(words1: Array[String], words2: Array[String]): List[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec word_subsets(words1 :: [String.t], words2 :: [String.t]) :: [String.t]\n  def word_subsets(words1, words2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec word_subsets(Words1 :: [unicode:unicode_binary()], Words2 :: [unicode:unicode_binary()]) -> [unicode:unicode_binary()].\nword_subsets(Words1, Words2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (word-subsets words1 words2)\n  (-> (listof string?) (listof string?) (listof string?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "571",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach: Reduce to Single Word in B\n\n#### Intuition  \n\nIf `b` is a subset of `a`, then say `a` is a superset of `b`.  Also, say $$N_{\\text{\"a\"}}(\\text{word})$$ is the count of the number of $$\\text{\"a\"}$$'s in the word.\n\nWhen we check whether a word `wordA` in `words1` is a superset of `wordB`, we are individually checking the counts of letters: that for each $$\\text{letter}$$, we have $$N_{\\text{letter}}(\\text{wordA}) \\geq N_{\\text{letter}}(\\text{wordB})$$.\n\nNow, if we check whether a word `wordA` is a superset of all words $$\\text{wordB}_i$$, we will check for each letter and each $$i$$, that $$N_{\\text{letter}}(\\text{wordA}) \\geq N_{\\text{letter}}(\\text{wordB}_i)$$.  This is the same as checking $$N_{\\text{letter}}(\\text{wordA}) \\geq \\max\\limits_i(N_{\\text{letter}}(\\text{wordB}_i))$$.\n\nFor example, when checking whether `\"warrior\"` is a superset of words `B = [\"wrr\", \"wa\", \"or\"]`,  we can combine these words in `B` to form a \"maximum\" word `\"arrow\"`, that has the maximum count of every letter in each word in `B`.\n\n#### Algorithm\n\n- Define a helper function `count(S)`:\n  - Create an integer array `ans` of size 26 to store the frequency of each character in string `S`.\n  - Iterate through each character `c` in `S`:\n    - Increment the corresponding index in `ans` based on `c - 'a'`.\n  - Return the `ans` array.\n\n- Initialize an integer array `bmax` of size 26 to store the maximum frequency of each character across all strings in `words2`.\n- Iterate through each string `b` in array `words2`:\n  - Compute the character frequencies of `b` using the `count` function, storing the result in `bCount`.\n  - For each character (index `i` from 0 to 25), update `bmax[i]` as the maximum of its current value and `bCount[i]`.\n\n- Initialize an empty list `ans` to store the result.\n\n- Iterate through each string `a` in array `words1`:\n  - Compute the character frequencies of `a` using the `count` function, storing the result in `aCount`.\n  - For each character (index `i` from 0 to 25):\n    - If `aCount[i]` is less than `bmax[i]`, skip to the next string in `A`.\n  - If all frequency conditions are satisfied, add `a` to the `ans` list.\n\n- Return the list `ans`, which contains all universal strings from `words1`.\n\n#### Implementation  \n\n<iframe src=\"https://leetcode.com/playground/o2ZKR388/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"o2ZKR388\"></iframe>\n\n#### Complexity Analysis\n\nLet $\\mathcal{A}$ and $\\mathcal{B}$ represent the total information in `words1` and `words2`, respectively.\n\n- Time Complexity: $O(\\mathcal{A} + \\mathcal{B})$\n\n    This accounts for processing all elements or data points in both inputs.\n\n- Space Complexity: $O(1)$ or $O(A\\text{.length})$\n\n    Without considering the output space, the space complexity is $O(1)$, as no additional data structures are used. Including the output space, the complexity is $O(A\\text{.length})$, since the output depends solely on `words1`.  \n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,136 @@
+{
+  "questionId": "1742",
+  "questionFrontendId": "1637",
+  "title": "Widest Vertical Area Between Two Points Containing No Points",
+  "titleSlug": "widest-vertical-area-between-two-points-containing-no-points",
+  "difficulty": "Easy",
+  "content": "<p>Given <code>n</code> <code>points</code> on a 2D plane where <code>points[i] = [x<sub>i</sub>, y<sub>i</sub>]</code>, Return<em>&nbsp;the <strong>widest vertical area</strong> between two points such that no points are inside the area.</em></p>\n\n<p>A <strong>vertical area</strong> is an area of fixed-width extending infinitely along the y-axis (i.e., infinite height). The <strong>widest vertical area</strong> is the one with the maximum width.</p>\n\n<p>Note that points <strong>on the edge</strong> of a vertical area <strong>are not</strong> considered included in the area.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/19/points3.png\" style=\"width: 276px; height: 371px;\" />​\n<pre>\n<strong>Input:</strong> points = [[8,7],[9,9],[7,4],[9,7]]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> Both the red and the blue area are optimal.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> points = [[3,1],[9,0],[1,0],[1,4],[5,3],[8,8]]\n<strong>Output:</strong> 3\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == points.length</code></li>\n\t<li><code>2 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>points[i].length == 2</code></li>\n\t<li><code>0 &lt;= x<sub>i</sub>, y<sub>i</sub>&nbsp;&lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Try sorting the points",
+    "Think whether the y-axis of a point is relevant"
+  ],
+  "metaData": "{\n  \"name\": \"maxWidthOfVerticalArea\",\n  \"params\": [\n    {\n      \"name\": \"points\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"200.4K\", \"totalSubmission\": \"230K\", \"totalAcceptedRaw\": 200358, \"totalSubmissionRaw\": 229982, \"acRate\": \"87.1%\"}",
+  "likes": 986,
+  "dislikes": 1789,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Gap\", \"titleSlug\": \"maximum-gap\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Consecutive Floors Without Special Floors\", \"titleSlug\": \"maximum-consecutive-floors-without-special-floors\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[8,7],[9,9],[7,4],[9,7]]",
+    "[[3,1],[9,0],[1,0],[1,4],[5,3],[8,8]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"general-motors\", \"name\": \"General Motors\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxWidthOfVerticalArea(vector<vector<int>>& points) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxWidthOfVerticalArea(int[][] points) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxWidthOfVerticalArea(self, points: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxWidthOfVerticalArea(self, points):\n        \"\"\"\n        :type points: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} points\n * @return {number}\n */\nvar maxWidthOfVerticalArea = function(points) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxWidthOfVerticalArea(points: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxWidthOfVerticalArea(int[][] points) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxWidthOfVerticalArea(int** points, int pointsSize, int* pointsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxWidthOfVerticalArea(points [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxWidthOfVerticalArea(points: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxWidthOfVerticalArea(_ points: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_width_of_vertical_area(points: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} points\n# @return {Integer}\ndef max_width_of_vertical_area(points)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $points\n     * @return Integer\n     */\n    function maxWidthOfVerticalArea($points) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxWidthOfVerticalArea(List<List<int>> points) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxWidthOfVerticalArea(points: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_width_of_vertical_area(points :: [[integer]]) :: integer\n  def max_width_of_vertical_area(points) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_width_of_vertical_area(Points :: [[integer()]]) -> integer().\nmax_width_of_vertical_area(Points) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-width-of-vertical-area points)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2202",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach: Sorting\n\n**Intuition**\n\nWe have $N$ points on a 2D plane. The problem is to find the widest vertical area between any two points without having any other point in between. Vertical area implies that the area can have an infinite length over the y-axis. This means that the y-coordinate doesn't affect the result and we shall focus on the distance along the x-axis.\n\nTherefore, we only need to find the width between every two adjacent points based on x-coordinates and the maximum width among these would be the answer. Note that there can be multiple points with the same x-coordinate but that won't affect the answer as the points on the edges can be included in the area.\n\nSince the points do not have a specific order, we will need to sort the points in ascending order of x-coordinates first. Then we need to find the difference in x-coordinates between every two neighboring points, and their maximum value is the result we want, as shown in the picture below.\n\n![fig](../Figures/1637/1637A.png)\n\n**Algorithm**\n\n1. Sort the array `points` in ascending order of x-coordinates.\n2. Initialize the variable `ans` to `0`, this will store the widest vertical area which is the answer to the problem.\n3. Iterate over `points` from index `1` and store the maximum of `points[i][0] - points[i - 1][0]` in `ans`.\n4. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/9tmFNPM8/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"9tmFNPM8\"></iframe>\n\n**Complexity Analysis**\n\nHere, $N$ is the number of points in the array `points`.\n\n* Time complexity: $O(N \\log N)$\n\n  Sorting the array will take $O(N \\log N)$ time. Then iterating over it to find the value for `ans` needs $O(N)$. Hence the total time complexity is equal to $O(N \\log N)$.\n\n* Space complexity: $O(\\log N)$\n\n  We don't need any extra space other than the variable `ans`. However, there will be some space required for sorting. The space complexity of the sorting algorithm is language-specific. For instance, in Java, the Arrays.sort() for primitives is implemented as a variant of the quicksort algorithm whose space complexity is $$O(\\log N)$$. In C++ sort() function provided by STL is a hybrid of Quick Sort, Heap Sort, and Insertion Sort and has a worst-case space complexity of $$O(\\log N)$$. Thus, using the inbuilt sort() function might add up to $$O(\\log N)$$ to space complexity.\n  <br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

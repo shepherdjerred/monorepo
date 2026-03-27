@@ -1,0 +1,140 @@
+{
+  "questionId": "1669",
+  "questionFrontendId": "1547",
+  "title": "Minimum Cost to Cut a Stick",
+  "titleSlug": "minimum-cost-to-cut-a-stick",
+  "difficulty": "Hard",
+  "content": "<p>Given a wooden stick of length <code>n</code> units. The stick is labelled from <code>0</code> to <code>n</code>. For example, a stick of length <strong>6</strong> is labelled as follows:</p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/07/21/statement.jpg\" style=\"width: 521px; height: 111px;\" />\n<p>Given an integer array <code>cuts</code> where <code>cuts[i]</code> denotes a position you should perform a cut at.</p>\n\n<p>You should perform the cuts in order, you can change the order of the cuts as you wish.</p>\n\n<p>The cost of one cut is the length of the stick to be cut, the total cost is the sum of costs of all cuts. When you cut a stick, it will be split into two smaller sticks (i.e. the sum of their lengths is the length of the stick before the cut). Please refer to the first example for a better explanation.</p>\n\n<p>Return <em>the minimum total cost</em> of the cuts.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/07/23/e1.jpg\" style=\"width: 350px; height: 284px;\" />\n<pre>\n<strong>Input:</strong> n = 7, cuts = [1,3,4,5]\n<strong>Output:</strong> 16\n<strong>Explanation:</strong> Using cuts order = [1, 3, 4, 5] as in the input leads to the following scenario:\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/07/21/e11.jpg\" style=\"width: 350px; height: 284px;\" />\nThe first cut is done to a rod of length 7 so the cost is 7. The second cut is done to a rod of length 6 (i.e. the second part of the first cut), the third is done to a rod of length 4 and the last cut is to a rod of length 3. The total cost is 7 + 6 + 4 + 3 = 20.\nRearranging the cuts to be [3, 5, 1, 4] for example will lead to a scenario with total cost = 16 (as shown in the example photo 7 + 4 + 3 + 2 = 16).</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 9, cuts = [5,6,1,4,2]\n<strong>Output:</strong> 22\n<strong>Explanation:</strong> If you try the given cuts ordering the cost will be 25.\nThere are much ordering with total cost &lt;= 25, for example, the order [4, 6, 5, 2, 1] has total cost = 22 which is the minimum possible.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 10<sup>6</sup></code></li>\n\t<li><code>1 &lt;= cuts.length &lt;= min(n - 1, 100)</code></li>\n\t<li><code>1 &lt;= cuts[i] &lt;= n - 1</code></li>\n\t<li>All the integers in <code>cuts</code> array are <strong>distinct</strong>.</li>\n</ul>\n",
+  "hints": [
+    "Build a dp array where dp[i][j] is the minimum cost to achieve all the cuts between i and j.",
+    "When you try to get the minimum cost between i and j, try all possible cuts k between them, dp[i][j] = min(dp[i][k] + dp[k][j]) + (j - i) for all possible cuts k between them."
+  ],
+  "metaData": "{\n  \"name\": \"minCost\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"cuts\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"223.5K\", \"totalSubmission\": \"355.3K\", \"totalAcceptedRaw\": 223470, \"totalSubmissionRaw\": 355339, \"acRate\": \"62.9%\"}",
+  "likes": 4826,
+  "dislikes": 160,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Number of Ways to Divide a Long Corridor\", \"titleSlug\": \"number-of-ways-to-divide-a-long-corridor\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Divide an Array Into Subarrays With Minimum Cost II\", \"titleSlug\": \"divide-an-array-into-subarrays-with-minimum-cost-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "7\n[1,3,4,5]",
+    "9\n[5,6,1,4,2]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"cyware\", \"name\": \"Cyware\"}, {\"timesEncountered\": 2, \"slug\": \"line\", \"name\": \"LINE\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minCost(int n, vector<int>& cuts) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minCost(int n, int[] cuts) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minCost(self, n: int, cuts: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minCost(self, n, cuts):\n        \"\"\"\n        :type n: int\n        :type cuts: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[]} cuts\n * @return {number}\n */\nvar minCost = function(n, cuts) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minCost(n: number, cuts: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinCost(int n, int[] cuts) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minCost(int n, int* cuts, int cutsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minCost(n int, cuts []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minCost(n: Int, cuts: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minCost(_ n: Int, _ cuts: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_cost(n: i32, cuts: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[]} cuts\n# @return {Integer}\ndef min_cost(n, cuts)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[] $cuts\n     * @return Integer\n     */\n    function minCost($n, $cuts) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minCost(int n, List<int> cuts) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minCost(n: Int, cuts: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_cost(n :: integer, cuts :: [integer]) :: integer\n  def min_cost(n, cuts) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_cost(N :: integer(), Cuts :: [integer()]) -> integer().\nmin_cost(N, Cuts) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-cost n cuts)\n  (-> exact-integer? (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1862",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\n\n> > If you are not familiar with Dynamic Programming (DP), you can refer to our [Dynamic Programming Explore Card](https://leetcode.com/explore/featured/card/dynamic-programming/)\n\n\nBased on observations, we can conclude that this problem exhibits optimal substructure and overlapping subproblems, which makes it an ideal candidate for dynamic programming. Every time we perform a cut, we get two new sticks. We can use dynamic programming to solve these smaller fragments optimally, then combine their costs to find the answer to the original problem.\n\n---\n\n### Approach 1: Top-down Dynamic Programming \n\n#### Intuition   \n\nWe can consider various plans for cutting the stick into pieces, but let us begin by examining the costs and outcomes of some potential **first cuts**.\n\nIf we select `cuts[p1]` as the first cutting position, it would result in a cost of `n` and split the stick into two pieces of length `cuts[p1]` and `n - cuts[p1]`, respectively.\n\n![img](../Figures/1547/1.png)\n\nChoosing another first cutting position, say `cuts[p2]` would also bring a cost of `n` and split the stick into two pieces of length `cuts[p2]` and `n - cuts[p2]`.\n\n![img](../Figures/1547/2.png)\n\n\n<br>\n\nWe define a function `cost(left, right)` that returns the minimum cost of all the cuts on the stick fragment with both ends at `cuts[left]` and `cuts[right]`. Since the two ends of the original stick `0` and `n` are not included in `cuts`, we create a new array `new_cuts` that includes these two ends and all `m` cutting positions in `cuts`. This allows us to represent every stick fragment using two indices from `new_cuts`.\n\n> The `new_cuts` array is defined as `new_cuts = [0, cuts[0], cuts[1], ..., cuts[m - 1], n]` (Suppose the length of `cuts` is `m`)\n> where `new_cuts[0] = 0` and `new_cuts[m + 1] = n`\n> Finally, we should sort `new_cuts` so that all the cutting positions are ordered.\n\n\nHence, the minimum cost of all the cuts required on the original stick can be denoted as `cost(0, m + 1)`. \n\n![img](../Figures/1547/3.png)\n\nAs a base case, we know `cost(left, left + 1) = 0, (left < m + 1)`, because we do not need to continue cutting fragments that contain no cutting positions (For example, `[new_cuts[0], new_cuts[1]]`).\n\n\n<br>\n\nNow let's move on to find `cost(0, m + 1)`. No matter where we cut, we will incur a cost equal to the length, which is `new_cuts[m + 1] - new_cuts[0]`. Let's see what happens when we choose cutting positions:\n\n- If we choose `new_cuts[1]` as the first cutting position, we end up with two stick fragments `[new_cuts[0], new_cuts[1]]` and `[new_cuts[1], new_cuts[m + 1]]`. This means our overall cost will be `cost(0, 1) + cost(1, m + 1) + new_cuts[m + 1] - new_cuts[0]` (the cost of cutting the two new sticks plus the cost of cutting the current stick as already established)\n\n\n- If we choose `new_cuts[2]` as the first cutting position, we end up with two stick fragments `[new_cuts[0], new_cuts[1]]` and `[new_cuts[1], new_cuts[m + 1]]`. This means our overall cost will be `cost(0, 2) + cost(2, m + 1) + new_cuts[m + 1] - new_cuts[0]` \n\n- ...\n\n![img](../Figures/1547/4.png)\n\n<br>\n\nThere is still more work to be done: take the first scenario above, we need to compute `cost(0, 1)` and `cost(1, m + 1)` as part of the dynamic programming process. Even though we know that `cost(0, 1) = 0`, we still need to determine the value of `cost(1, m + 1)`. To do this, we will once again try the first cut on each cutting position on the fragment `[new_cuts[1], new_cuts[m + 1]]`:\n\n\n![img](../Figures/1547/5.png)\n\n- If we choose `new_cuts[2]` as the first cutting position, we end up with a cost of `new_cuts[m + 1] - new_cuts[1]` and two stick fragments `[new_cuts[1], new_cuts[2]]` and `[new_cuts[2], new_cuts[m + 1]]`, thus the overall cost would be `cost(1, 2) + cost(2, m + 1) + new_cuts[m + 1] - new_cuts[1]`  \n\n\n- If we choose `new_cuts[3]` as the first cutting position, we end up with a cost of `new_cuts[m + 1] - new_cuts[1]` and two stick fragments `[new_cuts[1], new_cuts[3]]` and `[new_cuts[3], new_cuts[m + 1]]`, thus the overall cost would be `cost(1, 3) + cost(3, m + 1) + new_cuts[m + 1] - new_cuts[1]` \n\n- ...\n\n\n![img](../Figures/1547/6.png)\n\n\nAt every state of `cost`, we need to try all possible cuts and take the one with the lowest cost.\n\n\nOnce the cost function `cost` and memoization table `dp` are defined, the problem can be solved by invoking the cost function with the initial subproblem of cutting the stick. The cost function will recursively compute the minimum cost of cutting the stick between any two adjacent points in the cuts list.\n\nTo prevent repetitive computation and improve performance, we can create a dictionary or a 2D array `dp` and store the solution of each solved subproblem `cost(left, right)` in the memoization table. \n\n\n\n\n\n#### Algorithm\n\n1) Build an array `new_cuts` that contains the ends of the stick and all cutting positions sorted: `new_cuts = [0, cuts[0], cuts[1], ..., cuts[m - 1], n]`.\n\n\n2) Initialize a hash map or 2D array `dp` as memory.\n3) Define `cost(left, right)` as minimum cost of all the cuts on the stick fragment with both ends at `new_cuts[left]` and `new_cuts[right]`:\n    - If `right - left = 1`, return `0`.\n    - If we have computed the cost of `cost(left, right)` before, return the saved answer.\n    - Otherwise, set the default answer as `answer = infinity`.\n    - For each cutting position between `new_cuts[left]` and `new_cuts[right]`, update answer as `answer = min(answer, cost(left, mid) + cost(mid, right) + new_cuts[right] - new_cuts[left])`.\n    - Save `answer` in `dp` and return `answer`.\n\n4) Return `cost(0, new_cuts.length - 1)`.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/mKs249SF/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"mKs249SF\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$m$$ be the length of the input array `cuts`.\n\n* Time complexity: $$O(m^3)$$\n\nThe number of states in our DP is the number of possible combinations of `(left, right)`, which is $$O(m^2)$$ subproblems. For each subproblem `cost(left, right)`, we need to try all possible cutting positions between `new_cuts[left]` and `new_cuts[right]`, resulting in an additional factor of $$m$$. Therefore, the overall time complexity is $$O(m^3)$$.\n\n    \n\n* Space complexity: $$O(m^2)$$\n\n    - We need to store the solutions for all $$(m^2)$$ subproblems in memory.\n\n\n<br/>\n\n\n\n---\n\n### Approach 2: Bottom-up Dynamic Programming \n\n#### Intuition   \n\nThe problem can also be solved iteratively, starting from the minimum cost of cutting stick fragments that do not contain any cutting positions, then moving on to fragments with one cutting position, and finally obtaining the optimal cost of cutting the entire stick.\n\nTo accomplish this, we can use a two-dimensional array `dp` to store the minimum cost of cutting each stick fragment, where `dp[left][right]` represents the minimum cost of cutting the stick fragment `[new_cuts[left], new_cuts[right]]`. This is equivalent to what the call `cost(left, right)` returned in the previous approach.\n\n\n\nTo build up the table, we start with stick fragments that contain no cutting position, and gradually increasing the number of cutting positions. For each subproblem on the stick fragment `[new_cuts[left], new_cuts[right]]`, we try all possible cutting positions `mid` between the exclusive range of `(left, right)` and store the minimum cost in `dp[left][right]`.\n\n\nStarting with fragments that contains no cutting positions, the cost of cutting these fragments is 0 since there is no need to cut them anymore.\n\n![img](../Figures/1547/bu.png)\n\n\nNext, we move on to stick fragments that contain only one cutting position. For example, the two fragments colored in red and blue in the picture below. Since each of them only contains one cutting position, there is only one possible minimum cost for each:\n\n- `dp[0][2] = dp[0][1] + dp[1][2] + new_cuts[2] - new_cuts[0]`.\n\n- `dp[4][6] = dp[4][5] + dp[5][6] + new_cuts[6] - new_cuts[4]`.\n\n![img](../Figures/1547/bu1.png)\n\nWe move on to stick fragments that contain `2` cutting positions, for example, the fragment `[new_cuts[0], new_cuts[3]]`. Since this fragment contains two cutting positions `new_cuts[1]` and `new_cuts[2]`, the optimal cost `dp[0][3]` can be computed as the minimum cost among the following two possibilities:\n- `dp[0][3] = dp[0][1] + dp[1][3] + new_cuts[3] - new_cuts[0]`\nor\n- `dp[0][3] = dp[0][2] + dp[2][3] + new_cuts[3] - new_cuts[0]`\n\n![img](../Figures/1547/bu2.png)\n\nAfter computing the minimum cost for every subproblem, we can finally obtain the minimum cost of cutting the entire stick by returning the value stored in `dp[0][m + 1]`.\n\n<br>\n\n#### Algorithm\n\n1) Build a sorted array `new_cuts` that contains the two ends of the original stick and `m` cutting positions: `new_cuts = [0, cuts[0], cuts[1], ..., cuts[m - 1], n]`.\n2) Initialize an all-zeros 2D array of size `(m + 1) * (m + 1)`.\n\n3) Iterate over the number of cutting positions `diff` of stick fragments from `2` to `m + 1`. \n\n4) For each `diff`, we iterate over each stick with the left end's position as `new_cuts[left]`. The right ends' position of the stick is `new_cuts[right] = new_cuts[left + diff]`.\n\n5) Set the minimum cost `dp[left][right] = infinity`. We iterate over every cutting position in `(left, right)`. For each cutting position `mid`, we update `dp[left][right]` as `min(dp[left][right], dp[left][mid] + dp[mid][right] + new_cuts[right] - new_cuts[left])`.\n\n\n6) Return `dp[0][m + 1]` when the nested iteration is complete.\n\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/EmEbQrby/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"EmEbQrby\"></iframe>\n\n\n#### Complexity Analysis\n\n* Time complexity: $$O(m^3)$$\n\n    - The number of states in our DP is the number of possible combinations of `(left, right)`, which is $$O(m^2)$$. For each subproblem `dp[left][right]`, we need to try all possible cutting positions between `new_cuts[left]` and `new_cuts[right]`, which is `right - left - 1`, resulting in an additional factor of $$m$$. Therefore, the overall time complexity is $$O(m^3)$$.\n\n    \n\n* Space complexity: $$O(m^2)$$\n\n    - We create a table of size $$(m + 2)\\times (m + 2)$$ or a hash map that contains at most $$O(m \\times m)$$ values, which is the number of different kinds of stick fragments.\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

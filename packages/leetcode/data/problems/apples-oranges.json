@@ -1,0 +1,58 @@
+{
+  "questionId": "1578",
+  "questionFrontendId": "1445",
+  "title": "Apples & Oranges",
+  "titleSlug": "apples-oranges",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Sales</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| sale_date     | date    |\n| fruit         | enum    | \n| sold_num      | int     | \n+---------------+---------+\n(sale_date, fruit) is the primary key (combination of columns with unique values) of this table.\nThis table contains the sales of &quot;apples&quot; and &quot;oranges&quot; sold each day.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to report the difference between the number of <strong>apples</strong> and <strong>oranges</strong> sold each day.</p>\n\n<p>Return the result table <strong>ordered</strong> by <code>sale_date</code>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nSales table:\n+------------+------------+-------------+\n| sale_date  | fruit      | sold_num    |\n+------------+------------+-------------+\n| 2020-05-01 | apples     | 10          |\n| 2020-05-01 | oranges    | 8           |\n| 2020-05-02 | apples     | 15          |\n| 2020-05-02 | oranges    | 15          |\n| 2020-05-03 | apples     | 20          |\n| 2020-05-03 | oranges    | 0           |\n| 2020-05-04 | apples     | 15          |\n| 2020-05-04 | oranges    | 16          |\n+------------+------------+-------------+\n<strong>Output:</strong> \n+------------+--------------+\n| sale_date  | diff         |\n+------------+--------------+\n| 2020-05-01 | 2            |\n| 2020-05-02 | 0            |\n| 2020-05-03 | 20           |\n| 2020-05-04 | -1           |\n+------------+--------------+\n<strong>Explanation:</strong> \nDay 2020-05-01, 10 apples and 8 oranges were sold (Difference  10 - 8 = 2).\nDay 2020-05-02, 15 apples and 15 oranges were sold (Difference 15 - 15 = 0).\nDay 2020-05-03, 20 apples and 0 oranges were sold (Difference 20 - 0 = 20).\nDay 2020-05-04, 15 apples and 16 oranges were sold (Difference 15 - 16 = -1).\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Sales (sale_date date, fruit ENUM('apples', 'oranges'), sold_num int)\"], \"mssql\": [\"Create Table Sales (sale_date date, fruit varchar(10) NOT NULL CHECK (fruit IN ('apples', 'oranges')), sold_num int)\"], \"oraclesql\": [\"Create Table Sales (sale_date date, fruit varchar(10) NOT NULL CHECK (fruit IN ('apples', 'oranges')), sold_num int)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"apples_oranges\", \"pythondata\": [\"Sales = pd.DataFrame([], columns=['sale_date', 'fruit', 'sold_num']).astype({'sale_date':'datetime64[ns]', 'fruit':'object', 'sold_num':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Sales (sale_date date, fruit VARCHAR(30) CHECK (fruit IN ('apples', 'oranges')), sold_num int)\\n\"], \"database_schema\": {\"Sales\": {\"sale_date\": \"DATE\", \"fruit\": \"ENUM('apples', 'oranges')\", \"sold_num\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"65.8K\", \"totalSubmission\": \"76.5K\", \"totalAcceptedRaw\": 65850, \"totalSubmissionRaw\": 76545, \"acRate\": \"86.0%\"}",
+  "likes": 251,
+  "dislikes": 23,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Sales\":[\"sale_date\",\"fruit\",\"sold_num\"]},\"rows\":{\"Sales\":[[\"2020-05-01\",\"apples\",10],[\"2020-05-01\",\"oranges\",8],[\"2020-05-02\",\"apples\",15],[\"2020-05-02\",\"oranges\",15],[\"2020-05-03\",\"apples\",20],[\"2020-05-03\",\"oranges\",0],[\"2020-05-04\",\"apples\",15],[\"2020-05-04\",\"oranges\",16]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef apples_oranges(sales: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "1959",
+    "content": "## Solution\n\n--- \n\n### Overview\n\nTo do calculation within one column in a table, the most straightforward way is to select the same table twice by creating aliases or using self JOIN. \n\nSimilarly, we can turn the original table into two separate tables with the same column, and then do calculations using these two columns.\n\nSince this question has only two categories and the only calculation needed is to find the difference between two values, an easier way to solve this question is to get the sum of these two values. Before doing this, we need to keep one value positive as the original value and the other value negative (original value * -1), so the sum of these two values is the difference.\n\n---\n\n### Approach 1: Aliases or SELF JOIN\n\n#### Algorithm\n\n1. Select the columns needed for the final output: `sale_date` and `diff`, the difference between the two `sold_num` columns \n2. Use the same table twice by creating aliases or self join the original table\n3. Make sure the two tables have the same `sale_date` but different categories\n4. Group the result by each `sale_date` to get the unique difference by each `sale_date`, and order the final result by `sale_date`\n\n#### Implementation\n\n##### MySQL\n\n##### Creating aliases\n\n```sql\nSELECT \n    a.sale_date, a.sold_num-b.sold_num AS diff\nFROM\n    Sales a, Sales b\nWHERE \n    a.fruit IN ('apples') AND b.fruit IN ('oranges')\n    AND a.sale_date = b.sale_date\nGROUP BY 1\nORDER BY 1 \n```\n\n##### Using SELF JOIN \n\n```sql\nSELECT \n    a.sale_date, a.sold_num-b.sold_num AS diff\nFROM\n    Sales a\nJOIN\n    Sales b\nON \n    a.sale_date = b.sale_date\nAND \n    a.fruit IN ('apples') AND b.fruit IN ('oranges')\nGROUP BY 1\nORDER BY 1 \n```\n---\n\n### Approach 2: Create Two Separate Tables and Columns First\n\n#### Algorithm\n\n1. Select the columns needed for the final output: `sale_date` and `diff`, the difference between the two `sold_num` columns \n2. Create two tables separately by each category with subqueries or CTEs\n3. Join the two separate tables by `sale_date`\n4. Group the result by each `sale_date` to get the unique difference by each `sale_date`, and order the final result by `sale_date`\n\n#### Implementation\n\n##### MySQL\n\n```sql\nSELECT \n    a.sale_date, a.sold_num-b.sold_num AS diff\nFROM \n    (SELECT sale_date, sold_num FROM Sales WHERE fruit IN ('apples'))a\nJOIN\n    (SELECT sale_date, sold_num FROM Sales WHERE fruit IN ('oranges'))b\nON \n    a.sale_date = b.sale_date\nGROUP BY 1\nORDER BY 1\n```\n\n### Approach 3: Calculate With SUM(CASE WHEN)\n\n#### Algorithm\n\n1. `CASE WHEN` is used to filter the column `fruit` by categories\n2. To get the `SUM` for each `sale_date`, we keep the `sold_num` from one category as its original value and turn the `sold_num` from the other category to negative by multiplying `-1`\n3. Group the result by each `sale_date` to get the unique difference by each `sale_date`, and order the final result by `sale_date`\n\n#### Implementation\n\n##### MySQL\n\n```sql\nSELECT \n    sale_date,\n    SUM(CASE WHEN fruit IN ('apples') THEN sold_num \n             WHEN fruit IN ('oranges') THEN (sold_num)*-1 \n        END) AS diff\nFROM \n    Sales\nGROUP BY 1\nORDER BY 1\n```\n### Conclusion\n\nIn an interview (or with time constraints), the most straightforward way to do calculations within the same column is to create aliases or use self join, so the same column can be used more than once (approach 1). However, if the calculation is more complicated or more categories/filters are required, it might be easier to create separate tables first and apply the conditions before doing the final calculation (approach 2). \n\n----",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

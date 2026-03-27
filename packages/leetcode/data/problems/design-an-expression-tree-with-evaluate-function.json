@@ -1,0 +1,84 @@
+{
+  "questionId": "1768",
+  "questionFrontendId": "1628",
+  "title": "Design an Expression Tree With Evaluate Function",
+  "titleSlug": "design-an-expression-tree-with-evaluate-function",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>postfix</code> tokens of an arithmetic expression, build and return <em>the binary expression tree that represents this expression.</em></p>\n\n<p><b>Postfix</b> notation is a notation for writing arithmetic expressions in which the operands (numbers) appear before their operators. For example, the postfix tokens of the expression <code>4*(5-(7+2))</code> are represented in the array <code>postfix = [&quot;4&quot;,&quot;5&quot;,&quot;7&quot;,&quot;2&quot;,&quot;+&quot;,&quot;-&quot;,&quot;*&quot;]</code>.</p>\n\n<p>The class <code>Node</code> is an interface you should use to implement the binary expression tree. The returned tree will be tested using the <code>evaluate</code> function, which is supposed to evaluate the tree&#39;s value. You should not remove the <code>Node</code> class; however, you can modify it as you wish, and you can define other classes to implement it if needed.</p>\n\n<p>A <strong><a href=\"https://en.wikipedia.org/wiki/Binary_expression_tree\" target=\"_blank\">binary expression tree</a></strong> is a kind of binary tree used to represent arithmetic expressions. Each node of a binary expression tree has either zero or two children. Leaf nodes (nodes with 0 children) correspond to operands (numbers), and internal nodes (nodes with two children) correspond to the operators <code>&#39;+&#39;</code> (addition), <code>&#39;-&#39;</code> (subtraction), <code>&#39;*&#39;</code> (multiplication), and <code>&#39;/&#39;</code> (division).</p>\n\n<p>It&#39;s guaranteed that no subtree will yield a value that exceeds <code>10<sup>9</sup></code> in absolute value, and all the operations are valid (i.e., no division by zero).</p>\n\n<p><strong>Follow up:</strong> Could you design the expression tree such that it is more modular? For example, is your design able to support additional operators without making changes to your existing <code>evaluate</code> implementation?</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/10/15/untitled-diagram.png\" style=\"width: 242px; height: 241px;\" />\n<pre>\n<strong>Input:</strong> s = [&quot;3&quot;,&quot;4&quot;,&quot;+&quot;,&quot;2&quot;,&quot;*&quot;,&quot;7&quot;,&quot;/&quot;]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> this expression evaluates to the above binary tree with expression (<code>(3+4)*2)/7) = 14/7 = 2.</code>\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/10/15/untitled-diagram2.png\" style=\"width: 222px; height: 232px;\" />\n<pre>\n<strong>Input:</strong> s = [&quot;4&quot;,&quot;5&quot;,&quot;2&quot;,&quot;7&quot;,&quot;+&quot;,&quot;-&quot;,&quot;*&quot;]\n<strong>Output:</strong> -16\n<strong>Explanation:</strong> this expression evaluates to the above binary tree with expression 4*(5-<code>(2+7)) = 4*(-4) = -16.</code>\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt; 100</code></li>\n\t<li><code>s.length</code> is odd.</li>\n\t<li><code>s</code> consists of numbers and the characters <code>&#39;+&#39;</code>, <code>&#39;-&#39;</code>, <code>&#39;*&#39;</code>, and <code>&#39;/&#39;</code>.</li>\n\t<li>If <code>s[i]</code> is a number, its integer representation is no more than <code>10<sup>5</sup></code>.</li>\n\t<li>It is guaranteed that <code>s</code> is a valid expression.</li>\n\t<li>The absolute value of the result and intermediate values will not exceed <code>10<sup>9</sup></code>.</li>\n\t<li>It is guaranteed that no expression will include division by zero.</li>\n</ul>\n",
+  "hints": [
+    "Apply the concept of Polymorphism to get a good design",
+    "Implement the Node class using NumericNode and OperatorNode classes.",
+    "NumericNode only maintains the value and evaluate returns this value.",
+    "OperatorNode Maintains the left and right nodes representing the left and right operands, and the evaluate function applies the operator to them."
+  ],
+  "metaData": "{\n  \"name\": \"buildTree\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"manual\": true,\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"csharp\",\n    \"javascript\",\n    \"python3\"\n  ]\n}",
+  "stats": "{\"totalAccepted\": \"29.7K\", \"totalSubmission\": \"36K\", \"totalAcceptedRaw\": 29674, \"totalSubmissionRaw\": 35967, \"acRate\": \"82.5%\"}",
+  "likes": 547,
+  "dislikes": 74,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Minimum Flips in Binary Tree to Get Result\", \"titleSlug\": \"minimum-flips-in-binary-tree-to-get-result\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Evaluate Boolean Binary Tree\", \"titleSlug\": \"evaluate-boolean-binary-tree\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"3\",\"4\",\"+\",\"2\",\"*\",\"7\",\"/\"]",
+    "[\"4\",\"5\",\"2\",\"7\",\"+\",\"-\",\"*\"]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * This is the interface for the expression tree Node.\n * You should not remove it, and you can define some classes to implement it.\n */\n\nclass Node {\npublic:\n    virtual ~Node () {};\n    virtual int evaluate() const = 0;\nprotected:\n    // define your fields here\n};\n\n\n/**\n * This is the TreeBuilder class.\n * You can treat it as the driver code that takes the postinfix input \n * and returns the expression tree representing it as a Node.\n */\n\nclass TreeBuilder {\npublic:\n    Node* buildTree(vector<string>& postfix) {\n        \n    }\n};\n\n\n/**\n * Your TreeBuilder object will be instantiated and called as such:\n * TreeBuilder* obj = new TreeBuilder();\n * Node* expTree = obj->buildTree(postfix);\n * int ans = expTree->evaluate();\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * This is the interface for the expression tree Node.\n * You should not remove it, and you can define some classes to implement it.\n */\n\nabstract class Node {\n    public abstract int evaluate();\n    // define your fields here\n};\n\n\n/**\n * This is the TreeBuilder class.\n * You can treat it as the driver code that takes the postinfix input \n * and returns the expression tree representing it as a Node.\n */\n\nclass TreeBuilder {\n    Node buildTree(String[] postfix) {\n        \n    }\n};\n\n\n/**\n * Your TreeBuilder object will be instantiated and called as such:\n * TreeBuilder obj = new TreeBuilder();\n * Node expTree = obj.buildTree(postfix);\n * int ans = expTree.evaluate();\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "import abc \nfrom abc import ABC, abstractmethod \n\"\"\"\nThis is the interface for the expression tree Node.\nYou should not remove it, and you can define some classes to implement it.\n\"\"\"\n\nclass Node(ABC):\n    @abstractmethod\n    # define your fields here\n    def evaluate(self) -> int:\n        pass\n\n\n\"\"\"    \nThis is the TreeBuilder class.\nYou can treat it as the driver code that takes the postinfix input\nand returns the expression tree representing it as a Node.\n\"\"\"\n\nclass TreeBuilder(object):\n    def buildTree(self, postfix: List[str]) -> 'Node':\n        \n\t\t\n\"\"\"\nYour TreeBuilder object will be instantiated and called as such:\nobj = TreeBuilder();\nexpTree = obj.buildTree(postfix);\nans = expTree.evaluate();\n\"\"\"\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "import abc \nfrom abc import ABCMeta, abstractmethod \n\"\"\"\nThis is the interface for the expression tree Node.\nYou should not remove it, and you can define some classes to implement it.\n\"\"\"\n\nclass Node:\n    __metaclass__ = ABCMeta\n    # define your fields here\n    @abstractmethod\n    def evaluate(self):\n        pass\n\n\n\"\"\"    \nThis is the TreeBuilder class.\nYou can treat it as the driver code that takes the postinfix input\nand returns the expression tree representing it as a Node.\n\"\"\"\n\nclass TreeBuilder(object):\n    def buildTree(self, postfix):\n        \"\"\"\n        :type s: List[str]\n        :rtype: int\n        \"\"\"\n\n\"\"\"\nYour TreeBuilder object will be instantiated and called as such:\nobj = TreeBuilder();\nexpTree = obj.buildTree(postfix);\nans = expTree.evaluate();\n\"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * This is the interface for the expression tree Node.\n * You should not remove it, and you can define some classes to implement it.\n */\n\nvar Node = function () {\n  if (this.constructor === Node) {\n    throw new Error('Cannot instanciate abstract class');\n  }\n};\n\nNode.prototype.evaluate = function () {\n  throw new Error('Cannot call abstract method')\n};\n\n/**\n * This is the TreeBuilder class.\n * You can treat it as the driver code that takes the postinfix input \n * and returns the expression tree representing it as a Node.\n */\n\nclass TreeBuilder{\n\t/**\n     * @param {string[]} s\n     * @return {Node}\n     */\n\tbuildTree(postfix) {\n    \t\n\t}\n    \n}\n\n/**\n * Your TreeBuilder object will be instantiated and called as such:\n * var obj = new TreeBuilder();\n * var expTree = obj.buildTree(postfix);\n * var ans = expTree.evaluate();\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * This is the interface for the expression tree Node.\n * You should not remove it, and you can define some classes to implement it.\n */\n\npublic abstract class Node {\n    public abstract int evaluate();\n    // define your fields here\n};\n\n\n/**\n * This is the TreeBuilder class.\n * You can treat it as the driver code that takes the postinfix input \n * and returns the expression tree representing it as a Node.\n */\n\npublic class TreeBuilder {\n    public Node buildTree(string[] postfix) {\n        \n    }\n}\n\n\n/**\n * Your TreeBuilder object will be instantiated and called as such:\n * TreeBuilder obj = new TreeBuilder();\n * Node expTree = obj.buildTree(postfix);\n * int ans = expTree.evaluate();\n */"
+    }
+  ],
+  "solution": null
+}

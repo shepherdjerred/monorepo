@@ -1,0 +1,137 @@
+{
+  "questionId": "1213",
+  "questionFrontendId": "1259",
+  "title": "Handshakes That Don't Cross",
+  "titleSlug": "handshakes-that-dont-cross",
+  "difficulty": "Hard",
+  "content": "<p>You are given an <strong>even</strong> number of people <code>numPeople</code> that stand around a circle and each person shakes hands with someone else so that there are <code>numPeople / 2</code> handshakes total.</p>\n\n<p>Return <em>the number of ways these handshakes could occur such that none of the handshakes cross</em>.</p>\n\n<p>Since the answer could be very large, return it <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/07/11/5125_example_2.png\" style=\"width: 450px; height: 215px;\" />\n<pre>\n<strong>Input:</strong> numPeople = 4\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> There are two ways to do it, the first way is [(1,2),(3,4)] and the second one is [(2,3),(4,1)].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/07/11/5125_example_3.png\" style=\"width: 335px; height: 500px;\" />\n<pre>\n<strong>Input:</strong> numPeople = 6\n<strong>Output:</strong> 5\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= numPeople &lt;= 1000</code></li>\n\t<li><code>numPeople</code> is even.</li>\n</ul>\n",
+  "hints": [
+    "Use dynamic programming.",
+    "Let dp[n] be the number of ways that n people can handshake.",
+    "Then fix a person as a pivot and turn for every other person who will have a handshake, the answer is the sum of the products of the new two subproblems."
+  ],
+  "metaData": "{\n  \"name\": \"numberOfWays\",\n  \"params\": [\n    {\n      \"name\": \"numPeople\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"13.8K\", \"totalSubmission\": \"23K\", \"totalAcceptedRaw\": 13794, \"totalSubmissionRaw\": 23022, \"acRate\": \"59.9%\"}",
+  "likes": 253,
+  "dislikes": 17,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "4",
+    "6"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numberOfWays(int numPeople) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numberOfWays(int numPeople) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numberOfWays(self, numPeople: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numberOfWays(self, numPeople):\n        \"\"\"\n        :type numPeople: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} numPeople\n * @return {number}\n */\nvar numberOfWays = function(numPeople) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numberOfWays(numPeople: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumberOfWays(int numPeople) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numberOfWays(int numPeople) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numberOfWays(numPeople int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numberOfWays(numPeople: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numberOfWays(_ numPeople: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn number_of_ways(num_people: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} num_people\n# @return {Integer}\ndef number_of_ways(num_people)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $numPeople\n     * @return Integer\n     */\n    function numberOfWays($numPeople) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numberOfWays(int numPeople) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numberOfWays(numPeople: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec number_of_ways(num_people :: integer) :: integer\n  def number_of_ways(num_people) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec number_of_ways(NumPeople :: integer()) -> integer().\nnumber_of_ways(NumPeople) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (number-of-ways numPeople)\n  (-> exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1686",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Bottom-Up Dynamic Programming\n\n#### Intuition\n\nConsider a circle with $2 \\cdot i$ people.\n\n![A circle with 2i people](../Figures/1259/1259_circle.drawio.png)\n\nPerson `1` shakes hands with another person `k`. We denote their handshake with a line in the picture. There are people to the left (green) and right (blue).\n\nA \"left\" person cannot shake hands with a \"right\" one because their handshake would cross over the handshake between people `1` and `k`. Thus \"left\" people shake hands only with \"left\" ones, and \"right\" people only with \"right\" ones. For everybody to shake hands at the end, the number of people in both sections must be even.\n\nNotice that after the split, one can treat the left and right halves as smaller circles (they are smaller subproblems). We will solve the problem using dynamic programming. Let $\\text{dp}[i]$ be the answer to the problem with $2 \\cdot i$ people.\n\nThe base case is $\\text{dp}[0] = 1$, – when there are no people, there are no handshakes, which is the only way to shake hands. Now one needs to write down the recurrence relation for this DP.\n\nInitially, there are $2i$ people. We choose two people to shake hands, so there are $2i - 2$ remaining people. If there are $2j$ \"left\" people, the number of \"right\" people is $2i - 2 - 2j = 2 \\cdot (i - j - 1)$. In this case, there are $\\text{dp}[j]$ ways for the \"left\" people and $\\text{dp}[i - j - 1]$ for the \"right\" people to shake hands. By the [rule of product](https://en.wikipedia.org/wiki/Rule_of_product), the number of ways for all people to shake hands is $\\text{dp}[j] \\cdot \\text{dp}[i - j - 1]$.\n\nTo find $\\text{dp}[i]$, we should try all possible handshakes that split the people into \"left\" and \"right\", i.e. all possible values for $j$: $\\text{dp}[i] = \\sum_{j=0}^{i-1} \\text{dp}[j] \\cdot \\text{dp}[i - j - 1]$.\n\n#### Algorithm\n\n1. Initialize an array `dp` of length `numPeople / 2 + 1`. Remember that `dp[i]` is the answer to the problem if there are `2i` people. Set the base case `dp[0] = 1`.\n2. Iterate `i` from `1` to `numPeople / 2` inclusive.\n\t* Iterate `j` from `0` to `i - 1` inclusive.\n\t\t* Increase `dp[i]` by `dp[j] * dp[i - j - 1]`. Remember to perform operations modulo `10⁹ + 7`.\n3. Return `dp[numPeople / 2]`.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/77Vxq57R/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"77Vxq57R\"></iframe>\n\n\n#### Complexity Analysis\n\n* Time complexity: $O(\\text{numPeople}^2)$.\n\nWe calculate the DP in two nested loops. Both the outer and the inner loops do $O(\\text{numPeople})$ iterations, so the total complexity is $O(\\text{numPeople}^2)$.\n\n* Space complexity: $O(\\text{numPeople})$.\n\nWe store the array `dp`, which is of size $O(\\text{numPeople})$. \n\n---\n\n### Approach 2: Top-Down Dynamic Programming (Memoization)\n\n#### Intuition\n\nIn this approach, we will calculate the same DP, but the manner of organizing computations will differ. Here we will use a recursive function $\\text{calculateDP}(i)$ that returns the value of $\\text{dp}[i]$.\n\nThe base case of this function is the base case of DP: $\\text{calculateDP}(0) = \\text{dp}[0] = 1$.\n\nThe recurrence relation in terms of $\\text{calculateDP}$: $\\text{calculateDP}(i) = \\sum_{j=0}^{i-1} \\text{calculateDP}(j) \\cdot \\text{calculateDP}(i - j - 1)$.\n\nSince we do not want to calculate the value of $\\text{dp}[i]$ multiple times, but only once, thus we will store found values in the array $\\text{dp}$.\n\nWhen we call the function $\\text{calculateDP}$ for some $i$ for the first time, we calculate the value of $\\text{dp}[i]$ using the recurrence formula and write the result into the DP array. When we call $\\text{calculateDP}(i)$ after that, we return $\\text{dp}[i]$ from the array immediately.\n\nThe answer to the problem is $\\text{calculateDP}\\left(\\frac{\\text{numPeople}}{2}\\right) = \\text{dp}\\left[\\frac{\\text{numPeople}}{2}\\right]$.\n\nThere remains one small technical question: how to know whether we call $\\text{calculateDP}(i)$ for the first time and need to compute the result, or we call it later and can return $\\text{dp}[i]$ found earlier? One can handle this by initializing the $\\text{dp}$ array with the value of $-1$. Then $\\text{dp}[i] = -1$ will mean that we have not calculated $\\text{calculateDP}(i)$ yet. As soon as we find the result of $\\text{calculateDP}(i)$, we will write it into $\\text{dp}[i]$, and this value will not be $-1$ anymore.\n\n#### Algorithm\n\nThe recursive function $\\text{calculateDP}$ takes a parameter $i$.\n* If $\\text{dp}[i] \\ne -1$ (we found the result earlier), return $\\text{dp}[i]$.\n* Set $\\text{dp}[i]$ to $0$.\n* Iterate $j$ from $0$ to $i - 1$.\n\t* Add $\\text{calculateDP}(j) \\cdot \\text{calculateDP}(i - j - 1)$ to $\\text{dp}[i]$.\n* Return $\\text{dp}[i]$.\n\nIn the main function we have to declare the array $\\text{dp}$, initialize $\\text{dp}[0] = 1$ and $\\text{dp}[i] = -1$ for all $i > 0$. Then we return $\\text{calculateDP}\\left(\\frac{\\text{numPeople}}{2}\\right)$ as the answer.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/9a2cNtuR/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"9a2cNtuR\"></iframe>\n\n\n#### Complexity Analysis\n\n* Time complexity: $O(\\text{numPeople}^2)$.\n\nEven though we changed the order of DP computation, the time complexity remains the same. As in the first approach, there are $O(\\text{numPeople})$ states of DP, and for each, we compute the answer in $O(\\text{numPeople})$. Since we use memoization, we calculate each DP value only once.\n\n* Space complexity: $O(\\text{numPeople})$.\n\nIt is the same as in the previous approach.\n\n---\n\n### Approach 3: Catalan Numbers\n\n#### Intuition\n\n> This is a very mathematical approach. You are not expected to come up with this approach during an interview.\n\nFirst, we introduce the definition of a *balanced bracket sequence*.\n\n> * The empty string is a balanced bracket sequence.\n> * If a string $s$ is a balanced bracket sequence, then so is $(s)$.\n> * If $s$ and $t$ are balanced bracket sequences, then so is $st$.\n\nFor instance, `(())()`  is a balanced bracket sequence, but  `())(` is not.\n\nIn a balanced bracket sequence, any left parenthesis `(` has a corresponding right parenthesis `)` and any right one has a corresponding left one.\n\nOne may establish the following bijection between balanced bracket sequences and pairing people in the circle without crossings – when brackets at positions `i` and `j` correspond to each other, people `i` and `j` shake hands. Since a bracket sequence is balanced, the handshakes do not cross.\n\nLook at the following example where the handshakes between $i_1$ and $j_1$ and between $i_2$ and $j_2$ cross ($i_1 < i_2 < j_1 < j_2$).\n\n![Intersection](../Figures/1259/1259_intersection.drawio.png)\n\nWe flatten the circle in the picture into a straight line for a better understanding of the connection between handshakes in a circle and balanced bracket sequences.\n\n![Intersection on a straight line](../Figures/1259/1259_intersection_straight.drawio.png)\n\nThere does not exist a balanced sequence corresponding to this example. The bracket at position $i_1$ must correspond to the one at $j_1$. The same holds for $i_2$ and $j_2$. The pairs $(i_1, j_1)$ and $(i_2, j_2)$ must intersect, but it is impossible in a balanced sequence.\n\nLet $n$ denote `numPeople / 2` and $m = 10^9 + 7$.\n\nDue to the bijection, the number of ways for $2n$ people to shake hands without crossings is equal to the number of balanced bracket sequences containing $n$ pairs of parentheses, which equals $C_n$ – the $n$-th [Catalan number](https://en.wikipedia.org/wiki/Catalan_number).\n\nThe Catalan numbers have the recurrence relation: $C_0 = 1$ and $C_{i+1} = \\frac{2 (2i+1)}{i+2} C_i$ for $i \\ge 0$. We use this relation to calculate $C_n$.\n\nThe issue here is that we have a division by $i+2$, but we need to perform modular arithmetic with $10^9 + 7$ to prevent the answer from overflowing.\n\nLet's quickly talk about division with modulo.\n\n>Given an integer $m$ > 1, called a *modulus*, two integers $a$ and $b$ are said to be *congruent* modulo $m$, written $a \\equiv b \\pmod{m}$ if $a-b$ is divisible by $m$ (or equivalently if $a$ and $b$ have the same remainder when divided by $m$).\n\n>A [modular multiplicative inverse](https://en.wikipedia.org/wiki/Modular_multiplicative_inverse) of an integer $a$ is an integer $x$ such that $a \\cdot x$ is congruent to $1$ with respect to the modulus $m$. To write it formally: we want to find an integer $x$ so that $a \\cdot x \\equiv 1 \\pmod{m}$. We will denote $x$ with $a^{-1}$.\n\nInstead of dividing an element, we multiply by its reciprocal/inverse. One may rewrite the formula modulo $m$: \n\n$C_{i+1} \\equiv 2 (2i+1) (i+2)^{-1} C_i \\pmod{m}$.\n\nWe need to find the modular inverse for every $i + 2$ before going through the recurrence relation. We can precompute this in an array `inv`.\n\nGiven that $m > i$, according to [Euclidean division](https://en.wikipedia.org/wiki/Euclidean_division) $m = k \\cdot i + r$ where $k = \\lfloor \\frac{m}{i} \\rfloor$ and `r = m % i`.\n* $k \\cdot i + r \\equiv 0 \\pmod{m}$.\n* $r \\equiv -k \\cdot i \\pmod{m}$.\n* $r \\cdot i^{-1} \\equiv -k \\pmod{m}$.\n* $i^{-1} \\equiv -k \\cdot r^{-1} \\pmod{m}$.\n\nApplying the last expression, we can compute the modular inverse for every number in the range $[1, n+1]$ before calculating the Catalan numbers.\n\n#### Algorithm\n\n1. Compute the modular inverse for every number in the range $[1, n+1]$ using the formula described above and store the values in an array `inv`.\n2. Calculate the Catalan numbers using the relation described above: $C_0 = 1$, $C_{i+1} \\equiv 2 (2i+1) (i+2)^{-1} C_i \\pmod{m}$.\n3. Return $C_n$.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/2tFVBaFS/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"2tFVBaFS\"></iframe>\n\n\n#### Complexity Analysis\n\n* Time complexity: $O(\\text{numPeople})$.\n\nFirst, we calculate the inverse elements for numbers in the range $[1, n+1]$ in $O(n)$. Then we compute Catalan numbers in $O(n)$. Total complexity is $O(n) = O(\\text{numPeople})$.\n\n* Space complexity: $O(\\text{numPeople})$.\n\nWe use the array `inv` of size $O(n)$ for storing inverse elements.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

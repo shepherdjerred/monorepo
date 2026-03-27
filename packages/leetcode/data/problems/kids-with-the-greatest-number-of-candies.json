@@ -1,0 +1,132 @@
+{
+  "questionId": "1528",
+  "questionFrontendId": "1431",
+  "title": "Kids With the Greatest Number of Candies",
+  "titleSlug": "kids-with-the-greatest-number-of-candies",
+  "difficulty": "Easy",
+  "content": "<p>There are <code>n</code> kids with candies. You are given an integer array <code>candies</code>, where each <code>candies[i]</code> represents the number of candies the <code>i<sup>th</sup></code> kid has, and an integer <code>extraCandies</code>, denoting the number of extra candies that you have.</p>\n\n<p>Return <em>a boolean array </em><code>result</code><em> of length </em><code>n</code><em>, where </em><code>result[i]</code><em> is </em><code>true</code><em> if, after giving the </em><code>i<sup>th</sup></code><em> kid all the </em><code>extraCandies</code><em>, they will have the <strong>greatest</strong> number of candies among all the kids</em><em>, or </em><code>false</code><em> otherwise</em>.</p>\n\n<p>Note that <strong>multiple</strong> kids can have the <strong>greatest</strong> number of candies.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> candies = [2,3,5,1,3], extraCandies = 3\n<strong>Output:</strong> [true,true,true,false,true] \n<strong>Explanation:</strong> If you give all extraCandies to:\n- Kid 1, they will have 2 + 3 = 5 candies, which is the greatest among the kids.\n- Kid 2, they will have 3 + 3 = 6 candies, which is the greatest among the kids.\n- Kid 3, they will have 5 + 3 = 8 candies, which is the greatest among the kids.\n- Kid 4, they will have 1 + 3 = 4 candies, which is not the greatest among the kids.\n- Kid 5, they will have 3 + 3 = 6 candies, which is the greatest among the kids.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> candies = [4,2,1,1,2], extraCandies = 1\n<strong>Output:</strong> [true,false,false,false,false] \n<strong>Explanation:</strong> There is only 1 extra candy.\nKid 1 will always have the greatest number of candies, even if a different kid is given the extra candy.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> candies = [12,1,12], extraCandies = 10\n<strong>Output:</strong> [true,false,true]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == candies.length</code></li>\n\t<li><code>2 &lt;= n &lt;= 100</code></li>\n\t<li><code>1 &lt;= candies[i] &lt;= 100</code></li>\n\t<li><code>1 &lt;= extraCandies &lt;= 50</code></li>\n</ul>\n",
+  "hints": [
+    "For each kid check if candies[i] + extraCandies ≥ maximum in Candies[i]."
+  ],
+  "metaData": "{\n  \"name\": \"kidsWithCandies\",\n  \"params\": [\n    {\n      \"name\": \"candies\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"extraCandies\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<boolean>\"\n  },\n  \"manual\": false,\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"c\",\n    \"csharp\",\n    \"javascript\",\n    \"ruby\",\n    \"swift\",\n    \"golang\",\n    \"python3\",\n    \"scala\",\n    \"kotlin\",\n    \"rust\",\n    \"php\",\n    \"typescript\"\n  ]\n}",
+  "stats": "{\"totalAccepted\": \"1.5M\", \"totalSubmission\": \"1.7M\", \"totalAcceptedRaw\": 1486741, \"totalSubmissionRaw\": 1688752, \"acRate\": \"88.0%\"}",
+  "likes": 4961,
+  "dislikes": 635,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[2,3,5,1,3]\n3",
+    "[4,2,1,1,2]\n1",
+    "[12,1,12]\n10"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 24, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<bool> kidsWithCandies(vector<int>& candies, int extraCandies) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<Boolean> kidsWithCandies(int[] candies, int extraCandies) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def kidsWithCandies(self, candies: List[int], extraCandies: int) -> List[bool]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def kidsWithCandies(self, candies, extraCandies):\n        \"\"\"\n        :type candies: List[int]\n        :type extraCandies: int\n        :rtype: List[bool]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} candies\n * @param {number} extraCandies\n * @return {boolean[]}\n */\nvar kidsWithCandies = function(candies, extraCandies) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function kidsWithCandies(candies: number[], extraCandies: number): boolean[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<bool> KidsWithCandies(int[] candies, int extraCandies) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nbool* kidsWithCandies(int* candies, int candiesSize, int extraCandies, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func kidsWithCandies(candies []int, extraCandies int) []bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun kidsWithCandies(candies: IntArray, extraCandies: Int): List<Boolean> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func kidsWithCandies(_ candies: [Int], _ extraCandies: Int) -> [Bool] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn kids_with_candies(candies: Vec<i32>, extra_candies: i32) -> Vec<bool> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} candies\n# @param {Integer} extra_candies\n# @return {Boolean[]}\ndef kids_with_candies(candies, extra_candies)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $candies\n     * @param Integer $extraCandies\n     * @return Boolean[]\n     */\n    function kidsWithCandies($candies, $extraCandies) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<bool> kidsWithCandies(List<int> candies, int extraCandies) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def kidsWithCandies(candies: Array[Int], extraCandies: Int): List[Boolean] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec kids_with_candies(candies :: [integer], extra_candies :: integer) :: [boolean]\n  def kids_with_candies(candies, extra_candies) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec kids_with_candies(Candies :: [integer()], ExtraCandies :: integer()) -> [boolean()].\nkids_with_candies(Candies, ExtraCandies) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (kids-with-candies candies extraCandies)\n  (-> (listof exact-integer?) exact-integer? (listof boolean?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1795",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given an integer array `candies`, where each `candies[i]` represents the number of candies the $i^{th}$ kid has, and an integer `extraCandies`, denoting the number of extra candies that you have.\n\nOur task is to return a boolean array `result` of length `n`, where `result[i]` is true if, after giving the $i^{th}$ kid all the `extraCandies`, they will have the greatest number of candies among all the kids, or `false` otherwise.\n\n---\n\n### Approach: Ad Hoc\n\n#### Intuition\n\nWe precompute the greatest number of candies that any kid(s) has, let's call it `maxCandies`.\n\nFollowing the precomputation, we iterate over `candies`, checking whether the total candies that the current kid has exceeds `maxCandies` after giving `extraCandies` to the kid. For every kid, we perform `candies[i] + extraCandies >= maxCandies` and push it into a boolean list called `result`.\n\nIn the end, we return `result`.\n\nHere's a visual representation of how the approach works in the first example given in the problem description:\n\n![img](../Figures/1431/1431-1.png)\n\n#### Algorithm\n\n1. Create an integer variable called `maxCandies` to store the greatest number of candies in `candies`. We initialize it with `0`.\n2. We iterate over `candies` and for each kid who has `candy` candies, we perform `maxCandies = max(maxCandies, candy)` to get the greatest number of candies in `candies`.\n3. Create a boolean list `answer`.\n4. We iterate over `candies` once more, and for each kid who has `candy` candies, we add `candy + extraCandies >= maxCandies` to `answer`.\n5. Return `answer`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/chfccp6H/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"chfccp6H\"></iframe>\n\n#### Complexity Analysis\n\nHere, $n$ is the number of kids.\n\n* Time complexity: $O(n)$\n\n    - We iterate over the `candies` array to find out `maxCandies` which takes $O(n)$ time.\n    - We iterate over the `candies` array once more. We check for each kid whether they will have the most candies among all the children after receiving `extraCandies` and push the result in `result` which takes $O(1)$ time. It requires $O(n)$ time for $n$ kids.\n\n* Space complexity: $O(1)$\n\n    - Without counting the space of input and output, we are not using any space except for some integers like `maxCandies` and `candy`.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

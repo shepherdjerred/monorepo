@@ -1,0 +1,141 @@
+{
+  "questionId": "987",
+  "questionFrontendId": "950",
+  "title": "Reveal Cards In Increasing Order",
+  "titleSlug": "reveal-cards-in-increasing-order",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>deck</code>. There is a deck of cards where every card has a unique integer. The integer on the <code>i<sup>th</sup></code> card is <code>deck[i]</code>.</p>\n\n<p>You can order the deck in any order you want. Initially, all the cards start face down (unrevealed) in one deck.</p>\n\n<p>You will do the following steps repeatedly until all cards are revealed:</p>\n\n<ol>\n\t<li>Take the top card of the deck, reveal it, and take it out of the deck.</li>\n\t<li>If there are still cards in the deck then put the next top card of the deck at the bottom of the deck.</li>\n\t<li>If there are still unrevealed cards, go back to step 1. Otherwise, stop.</li>\n</ol>\n\n<p>Return <em>an ordering of the deck that would reveal the cards in increasing order</em>.</p>\n\n<p><strong>Note</strong> that the first entry in the answer is considered to be the top of the deck.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> deck = [17,13,11,2,3,5,7]\n<strong>Output:</strong> [2,13,3,11,5,17,7]\n<strong>Explanation:</strong> \nWe get the deck in the order [17,13,11,2,3,5,7] (this order does not matter), and reorder it.\nAfter reordering, the deck starts as [2,13,3,11,5,17,7], where 2 is the top of the deck.\nWe reveal 2, and move 13 to the bottom.  The deck is now [3,11,5,17,7,13].\nWe reveal 3, and move 11 to the bottom.  The deck is now [5,17,7,13,11].\nWe reveal 5, and move 17 to the bottom.  The deck is now [7,13,11,17].\nWe reveal 7, and move 13 to the bottom.  The deck is now [11,17,13].\nWe reveal 11, and move 17 to the bottom.  The deck is now [13,17].\nWe reveal 13, and move 17 to the bottom.  The deck is now [17].\nWe reveal 17.\nSince all the cards revealed are in increasing order, the answer is correct.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> deck = [1,1000]\n<strong>Output:</strong> [1,1000]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= deck.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= deck[i] &lt;= 10<sup>6</sup></code></li>\n\t<li>All the values of <code>deck</code> are <strong>unique</strong>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"deckRevealedIncreasing\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"deck\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer[]\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"234.7K\", \"totalSubmission\": \"281.1K\", \"totalAcceptedRaw\": 234746, \"totalSubmissionRaw\": 281065, \"acRate\": \"83.5%\"}",
+  "likes": 3699,
+  "dislikes": 713,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[17,13,11,2,3,5,7]",
+    "[1,1000]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Queue",
+      "slug": "queue"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> deckRevealedIncreasing(vector<int>& deck) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] deckRevealedIncreasing(int[] deck) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def deckRevealedIncreasing(self, deck: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def deckRevealedIncreasing(self, deck):\n        \"\"\"\n        :type deck: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} deck\n * @return {number[]}\n */\nvar deckRevealedIncreasing = function(deck) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function deckRevealedIncreasing(deck: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] DeckRevealedIncreasing(int[] deck) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* deckRevealedIncreasing(int* deck, int deckSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func deckRevealedIncreasing(deck []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun deckRevealedIncreasing(deck: IntArray): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func deckRevealedIncreasing(_ deck: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn deck_revealed_increasing(deck: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} deck\n# @return {Integer[]}\ndef deck_revealed_increasing(deck)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $deck\n     * @return Integer[]\n     */\n    function deckRevealedIncreasing($deck) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> deckRevealedIncreasing(List<int> deck) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def deckRevealedIncreasing(deck: Array[Int]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec deck_revealed_increasing(deck :: [integer]) :: [integer]\n  def deck_revealed_increasing(deck) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec deck_revealed_increasing(Deck :: [integer()]) -> [integer()].\ndeck_revealed_increasing(Deck) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (deck-revealed-increasing deck)\n  (-> (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2283",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nGiven an array, `deck`, of integers representing cards, we need to order the cards in the `deck` so that they are revealed in increasing order.\n\nCards are revealed using the following process:\n - The top card is revealed and removed.\n - The next card is moved to the bottom of the `deck`.\n - Repeat while there are more cards.\n\n**Key Observations:**\n- We need to sort the `deck` in a special order.\n- All values in the `deck` are unique.\n\n---\n\n### Approach 1: Two Pointers\n\n#### Intuition\n\nThe goal is to reveal the `deck` in increasing order. We start by sorting the `deck` in increasing order, so we can work backward to the special order. We create an array `result` to store the cards in the special order.\n\nWe can use two pointers, one for `deck` and one for `result`, to add cards from the `deck` to the `result`.\n\nOn the first pass through the `deck`, we reveal every other card. We can fill cards into every other index in `result` so that the cards will be revealed in increasing order.\n\n```\nInput:  1 2 3 4 5 6 7 8\n\nFirst Pass:\nResult: 1 _ 2 _ 3 _ 4 _\n```\n\nThe next pass through the `deck`, we reveal every other card remaining in the `deck`.\n\n```\nSecond Pass:\nResult: 1 5 2 _ 3 6 4 _\n\nOutput (Third Pass):\nResult: 1 5 2 7 3 6 4 8\n```\n\nOn each pass, we fill every other open spot with a card and skip the other spots.\n\nWe create `indexInDeck` to point to the next card in the `deck` and `indexInResult` to add cards to their proper place in `result`.\n\nWe use a while loop to add elements to their proper index in the result array until `indexInDeck` reaches the end of the `deck`. Since we want to fill every other open spot in `result`, we use a boolean variable `skip` to track whether we need to fill a card or skip a spot.\n\nSome positions in `result` may already be filled, so we check whether `result[indexInResult]` equals `0`. If so, the current spot is an empty spot.\n\nFor each empty spot, we either place a card at the correct index in `result` and increment `indexInDeck`, or we skip an empty spot in the result array. We flip the value of `skip` using the not operator with each iteration so it alternates. \n\n`indexInResult` is incremented by `1` on each iteration to progress to the next spot in `result`. Since we skip some indexes on each pass, this pointer will need to make multiple passes through `result` to add all the cards. `indexInResult` may grow larger than `N`, so we use mod `N` to map the pointer to an index in `result`.\n\nAfter filling the cards, we return `result`.\n\n> **Interview Tip: In-place Algorithms**\n>\n> This approach sorts the `deck` in-place. In-place algorithms overwrite the input to save space, but sometimes this can cause problems.\n>\n> Here are a couple of situations where an in-place algorithm might not be suitable:\n>\n> 1. The algorithm needs to run in a multi-threaded environment, without exclusive access to the array. Other threads might need to read the array too, and might not expect it to be modified.\n>\n> 2. Even if there is only a single thread, or the algorithm has exclusive access to the array while running, the array might need to be reused later or by another thread once the lock has been released.\n>\n> In an interview, you should always check whether the interviewer minds you overwriting the input. Be ready to explain the pros and cons of doing so if asked!\n\n#### Algorithm\n\n1. Initialize the following:\n    - Variable `N` to the length of the `deck`.\n    - Array `result` of size `N`.\n    - Boolean variable `skip` to `false` because we reveal the first card.\n    - Variable `indexInDeck` to `0`.\n    - Variable `indexInResult` to `0`.\n\n2. Sort the `deck`.\n\n3. Place cards in the correct indices of the result array.\n\n    - While `indexInDeck` is less than `N`:\n        - If the current index in the `result` array has not yet been filled (value is `0`):\n            - If not `skip`, an element needs to be added to `result`. Set `result[indexInResult]` to `deck[indexInDeck]` and increment `indexInDeck` because we have filled a card.\n            - Otherwise, the current position in `result` should be skipped.\n        - Flip the value of `skip` using `!skip`, which will change `true` to `false` and vice versa. \n        - Set `indexInResult` to `(indexInResult + 1) % N`.\n\n4. Return the `result`, which contains the cards in the special order.\n\nThe algorithm is visualized below:\n\n!?!../Documents/950/950_slideshow2.json:960,540!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Rw8iuMLx/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Rw8iuMLx\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the `deck`.\n\n* Time complexity: $O(n \\log n)$\n\n    Sorting the `deck` takes $O(n \\log n)$.\n\n    The loop to place cards at the correct index in `result` runs $O(n \\log n)$ times. Each pass through the `result` array takes $O(n)$, and with each pass, half as many indices still need to be filled.\n\n    Therefore, the overall time complexity is $O(n \\log n)$\n\n* Space complexity: $O(n)$ or $O(\\log n )$.\n\n    `result` is only used to store the result, so it is not counted in the space complexity.\n\n    Some extra space is used when we sort the `deck` in place. The space complexity of the sorting algorithms depends on the programming language.\n\n    - In Python, the `sort` method sorts a list using the Timesort algorithm which is a combination of Merge Sort and Insertion Sort and has $O(n)$ additional space.\n    - In C++, the sort() function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worse-case space complexity of $O(\\log n )$.\n    - In Java, Arrays.sort() is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O(\\log n )$ for sorting two arrays.\n\n---\n\n### Approach 2: Simulation with Queue\n\n#### Intuition\n\nThe above solution made multiple passes through `result` to add the cards in the special order. Let's devise a strategy for adding cards more efficiently. \n\nIn this solution, we also start by sorting the `deck` and creating a `result` array.\n\n**How do we know what order to put the cards in?**\n\nThe `result` array will not be revealed in order. Instead, the indexes of the result array will be revealed in a certain order.\n\n> Input: [17,13,11,2,3,5,7]\n> Output: [2,13,3,11,5,17,7]\n\nOrder of indexes revealed: 0, 2, 4, 6, 3, 1, 5\n\nWe can work backward from the sorted order since we can easily sort the `deck` in ascending order.\n\n> Sorted Order: [2,3,5,7,11,13,17]\n\nWe can simulate the revealing process using a queue of indices to find the order the indices will be revealed. We do this by removing the front card from the queue and then moving the next index in the queue to the back. A deque could alternatively be used to simulate this process, but we have chosen to use a queue since we only need to remove cards from the front and add cards to the back.\n\nFrom the sorted order, we can place each card at the correct index to get the desired output:\n\n```\nPut card 2 at index 0\nPut card 3 at index 2\nPut card 5 at index 4\nPut card 7 at index 6\nPut card 11 at index 3\nPut card 13 at index 1\nPut card 17 at index 5\n```\n\nWe can add cards to the `result` as we simulate the revealing process with the queue. Each time we remove an index from the queue to reveal a card, we add the next card from the `deck` to the `result` at that index.\n\n#### Algorithm\n\n1. Initialize `N` to the length of the `deck`.\n\n2. Create a queue to store the indices of the cards, and add the indices `0` to `N` to the queue.\n\n3. Sort the `deck`.\n\n4. Initialize an array `result` of size `N` to store the answer.\n\n5. Loop through the cards, placing each one in the correct spot in `result`:\n\n    - Set `result` at the front index in the queue to `deck[i]`.\n    - Take the next index in the queue and move it to the back of the queue.\n\n6. Return `result`.\n\nThe algorithm is visualized below:\n\n!?!../Documents/950/950_slideshow1.json:960,540!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/3txxSx5J/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"3txxSx5J\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the `deck`.\n\n* Time complexity: $O(n \\log n)$\n\n    Sorting the `deck` takes $O(n \\log n)$.\n\n    It takes $O(n)$ time to build the queue. Then, it takes $O(n)$ time to add the cards to the result array in the correct order. \n\n    The time used for sorting is the dominating term, so the overall time complexity is $O(n \\log n)$\n\n\n* Space complexity: $O(n)$\n\n    We use a queue of size $n$, so the space complexity is $O(n)$.\n\n    Some extra space is used when we sort the `deck` in place. The space complexity of the sorting algorithms depends on the programming language.\n\n    - In Python, the `sort` method sorts a list using the Timesort algorithm which is a combination of Merge Sort and Insertion Sort and has $O(n)$ additional space.\n    - In C++, the sort() function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worse-case space complexity of $O(\\log n )$.\n    - In Java, Arrays.sort() is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O(\\log n )$ for sorting two arrays.\n\n    As the dominating term is $O(n)$, the overall space complexity is $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

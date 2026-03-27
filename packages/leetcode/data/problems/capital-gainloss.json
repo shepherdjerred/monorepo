@@ -1,0 +1,58 @@
+{
+  "questionId": "1523",
+  "questionFrontendId": "1393",
+  "title": "Capital Gain/Loss",
+  "titleSlug": "capital-gainloss",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Stocks</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| stock_name    | varchar |\n| operation     | enum    |\n| operation_day | int     |\n| price         | int     |\n+---------------+---------+\n(stock_name, operation_day) is the primary key (combination of columns with unique values) for this table.\nThe operation column is an ENUM (category) of type (&#39;Sell&#39;, &#39;Buy&#39;)\nEach row of this table indicates that the stock which has stock_name had an operation on the day operation_day with the price.\nIt is guaranteed that each &#39;Sell&#39; operation for a stock has a corresponding &#39;Buy&#39; operation in a previous day. It is also guaranteed that each &#39;Buy&#39; operation for a stock has a corresponding &#39;Sell&#39; operation in an upcoming day.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to report the <strong>Capital gain/loss</strong> for each stock.</p>\n\n<p>The <strong>Capital gain/loss</strong> of a stock is the total gain or loss after buying and selling the stock one or many times.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nStocks table:\n+---------------+-----------+---------------+--------+\n| stock_name    | operation | operation_day | price  |\n+---------------+-----------+---------------+--------+\n| Leetcode      | Buy       | 1             | 1000   |\n| Corona Masks  | Buy       | 2             | 10     |\n| Leetcode      | Sell      | 5             | 9000   |\n| Handbags      | Buy       | 17            | 30000  |\n| Corona Masks  | Sell      | 3             | 1010   |\n| Corona Masks  | Buy       | 4             | 1000   |\n| Corona Masks  | Sell      | 5             | 500    |\n| Corona Masks  | Buy       | 6             | 1000   |\n| Handbags      | Sell      | 29            | 7000   |\n| Corona Masks  | Sell      | 10            | 10000  |\n+---------------+-----------+---------------+--------+\n<strong>Output:</strong> \n+---------------+-------------------+\n| stock_name    | capital_gain_loss |\n+---------------+-------------------+\n| Corona Masks  | 9500              |\n| Leetcode      | 8000              |\n| Handbags      | -23000            |\n+---------------+-------------------+\n<strong>Explanation:</strong> \nLeetcode stock was bought at day 1 for 1000$ and was sold at day 5 for 9000$. Capital gain = 9000 - 1000 = 8000$.\nHandbags stock was bought at day 17 for 30000$ and was sold at day 29 for 7000$. Capital loss = 7000 - 30000 = -23000$.\nCorona Masks stock was bought at day 1 for 10$ and was sold at day 3 for 1010$. It was bought again at day 4 for 1000$ and was sold at day 5 for 500$. At last, it was bought at day 6 for 1000$ and was sold at day 10 for 10000$. Capital gain/loss is the sum of capital gains/losses for each (&#39;Buy&#39; --&gt; &#39;Sell&#39;) operation = (1010 - 10) + (500 - 1000) + (10000 - 1000) = 1000 - 500 + 9000 = 9500$.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create Table If Not Exists Stocks (stock_name varchar(15), operation ENUM('Sell', 'Buy'), operation_day int, price int)\"], \"mssql\": [\"Create Table Stocks (stock_name varchar(15), operation VARCHAR(10) NOT NULL CHECK (operation IN ('Sell', 'Buy')), operation_day int, price int)\"], \"oraclesql\": [\"Create Table Stocks (stock_name varchar(15), operation VARCHAR(10) NOT NULL CHECK (operation IN ('Sell', 'Buy')), operation_day int, price int)\"], \"database\": true, \"name\": \"capital_gainloss\", \"pythondata\": [\"Stocks = pd.DataFrame([], columns=['stock_name', 'operation', 'operation_day', 'price']).astype({'stock_name':'object', 'operation':'object', 'operation_day':'Int64', 'price':'Int64'})\"], \"postgresql\": [\"Create Table If Not Exists Stocks (stock_name varchar(15), operation VARCHAR(30) CHECK (operation IN ('Sell', 'Buy')), operation_day int, price int)\\n\"], \"database_schema\": {\"Stocks\": {\"stock_name\": \"VARCHAR(15)\", \"operation\": \"ENUM('Sell', 'Buy')\", \"operation_day\": \"INT\", \"price\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"165.9K\", \"totalSubmission\": \"196.1K\", \"totalAcceptedRaw\": 165939, \"totalSubmissionRaw\": 196061, \"acRate\": \"84.6%\"}",
+  "likes": 927,
+  "dislikes": 51,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Stocks\":[\"stock_name\",\"operation\",\"operation_day\",\"price\"]},\"rows\":{\"Stocks\":[[\"Leetcode\",\"Buy\",1,1000],[\"Corona Masks\",\"Buy\",2,10],[\"Leetcode\",\"Sell\",5,9000],[\"Handbags\",\"Buy\",17,30000],[\"Corona Masks\",\"Sell\",3,1010],[\"Corona Masks\",\"Buy\",4,1000],[\"Corona Masks\",\"Sell\",5,500],[\"Corona Masks\",\"Buy\",6,1000],[\"Handbags\",\"Sell\",29,7000],[\"Corona Masks\",\"Sell\",10,10000]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"robinhood\", \"name\": \"Robinhood\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef capital_gainloss(stocks: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "2030",
+    "content": "<!-- Don't delete this -->\n[TOC]\n\n# Solution\n\n---\n\n## pandas\n\n### Approach: Group by and Aggregation\n\n#### Algorithm\n\nWe want to calculate the **capital_gain_loss** for each **stock_name** in the `stocks` dataframe. Let us start by looking at the original `stocks` DataFrame:\n\n| stock_name    | operation | operation_day | price  |\n|---------------|-----------|---------------|--------|\n| Leetcode      | Buy       | 1             | 1000   |\n| Corona Masks  | Buy       | 2             | 10     |\n| Leetcode      | Sell      | 5             | 9000   |\n| Handbags      | Buy       | 17            | 30000  |\n| Corona Masks  | Sell      | 3             | 1010   |\n| Corona Masks  | Buy       | 4             | 1000   |\n| Corona Masks  | Sell      | 5             | 500    |\n| Corona Masks  | Buy       | 6             | 1000   |\n| Handbags      | Sell      | 29            | 7000   |\n| Corona Masks  | Sell      | 10            | 10000  |\n\n<br>\n\nWhen we consider buying and selling a stock, we pay money out of our principal to obtain the stock, and when we sell a stock, we get the capital back. In the `stocks` DataFrame, we want to update the price to reflect the *payment* for buying a stock and the *capital earned* when selling a stock. \n\n\nTo do this, we can use a helper function that takes in **operation** and **price** as parameters. If the **operation** is 'Buy', it returns the opposite of **price** denoting our payment for a stock. If the **operation** is 'Sell', it returns a positive **price**, reflecting our capital earned for a stock. Let's illustrate this in Python:\n\n```python\n# Helper function to update prices in 'stocks' DataFrame.\ndef helper(operation, price):\n    if operation == \"Buy\":\n        return -int(price)\n    elif operation == \"Sell\":\n        return int(price)\n```\n\nWe can use the `.apply()` method by passing in the helper function as a lambda function with arguments **x['operation']** and **x['price']**. Note that we need to set **axis=1** for the `.apply()` method to apply the lambda function to each row, not each column. By doing so, the `.apply()` method will update the **price** column directly in the `stocks` DataFrame.\n\n```python\n# Update 'price' column given 'operation' is 'Buy' or 'Sell'\nStocks['price'] = Stocks.apply(lambda x: helper(x['operation'], x['price']), axis = 1)\n```\n\nHere is the updated `stocks` DataFrame after the `.apply()` method. Note that the values in the **price** column are changed according to the values in the **operation** column.\n\n| stock_name    | operation | operation_day | price  |\n|---------------|-----------|---------------|--------|\n| Leetcode      | Buy       | 1             | -1000  |\n| Corona Masks  | Buy       | 2             | -10    |\n| Leetcode      | Sell      | 5             | 9000   |\n| Handbags      | Buy       | 17            | -30000 |\n| Corona Masks  | Sell      | 3             | 1010   |\n| Corona Masks  | Buy       | 4             | -1000  |\n| Corona Masks  | Sell      | 5             | 500    |\n| Corona Masks  | Buy       | 6             | -1000  |\n| Handbags      | Sell      | 29            | 7000   |\n| Corona Masks  | Sell      | 10            | 10000  |\n\n<br>\n\nWith this updated **price** column, our next step is to aggregate the *gain/loss* for each stock. To do this, we will employ the `.groupby().sum()` method using **stock_name** as the grouping criterion and indexing the **price** column to perform aggregation. We also need to utilize the method `.reset_index()` with `name='{column name}'` to rename the summed column. In this scenario, we will use `name='capital_gain_loss'`.\n\n```python\n # Groupby 'stock_name' and sum over 'price' column\n # Rename summed column to 'capital_gain_loss'\n df = Stocks.groupby(by='stock_name')['price'].sum().reset_index(name='capital_gain_loss')\n```\n\nThis creates the resulting DataFrame `df`:\n\n| stock_name    | capital_gain_loss |\n|---------------|-------------------|\n| Corona Masks  | 9500              |\n| Leetcode      | 8000              |\n| Handbags      | -23000            |\n\n<br>\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/7hoyfkRZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"7hoyfkRZ\"></iframe>\n\n<br>\n\n## Database\n\n### Approach: Group by and Aggregation\n\n#### Algorithm\n\nIn SQL, we can utilize `GROUP BY` on column **stock_name** to aggregate unique stocks in our `stocks` Table. To aggregate the **capital_gain_loss**, we need to utilize the `SUM()` function on our **price** column, but before that, we need to find a way to determine the recorded value of **price** if our **operation** is a *Buy* or *Sell*. To achieve this, we can utilize a `CASE` expression inside our `SUM()` function that will go through some conditions and returns a value when the condition is met. In this problem, we will apply the following conditions: if the operation is *Buy*, the price will be counted as its opposite value; If the operation is Sell, the price will be counted as its positive value (remaining unchanged).\n\nWe also need to update this `SUM()` result to be a named column. In this case, we renamed it to **capital_gain_loss**.\n\n#### Implementation\n\n```sql\nSELECT \n    stock_name,\n    SUM(\n        CASE \n            WHEN operation = 'buy' THEN -price\n            WHEN operation = 'sell' THEN price\n        END\n    ) AS capital_gain_loss\nFROM Stocks\nGROUP BY stock_name\n```",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

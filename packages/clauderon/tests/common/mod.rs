@@ -163,7 +163,7 @@ macro_rules! skip_if_no_claude_config {
 /// Check if GitHub credentials are available
 #[must_use]
 pub fn github_credentials_available() -> bool {
-    std::env::var("GITHUB_TOKEN").is_ok()
+    std::env::var("GH_TOKEN").is_ok()
 }
 
 /// Check if Anthropic credentials are available
@@ -175,7 +175,7 @@ pub fn anthropic_credentials_available() -> bool {
 /// Check if PagerDuty credentials are available
 #[must_use]
 pub fn pagerduty_credentials_available() -> bool {
-    std::env::var("PAGERDUTY_TOKEN").is_ok() || std::env::var("PAGERDUTY_API_KEY").is_ok()
+    std::env::var("PAGERDUTY_TOKEN").is_ok()
 }
 
 /// Check if gh CLI is installed and authenticated

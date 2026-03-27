@@ -1,0 +1,140 @@
+{
+  "questionId": "1524",
+  "questionFrontendId": "1408",
+  "title": "String Matching in an Array",
+  "titleSlug": "string-matching-in-an-array",
+  "difficulty": "Easy",
+  "content": "<p>Given an array of string <code>words</code>, return all strings in<em> </em><code>words</code><em> </em>that are a <span data-keyword=\"substring-nonempty\">substring</span> of another word. You can return the answer in <strong>any order</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;mass&quot;,&quot;as&quot;,&quot;hero&quot;,&quot;superhero&quot;]\n<strong>Output:</strong> [&quot;as&quot;,&quot;hero&quot;]\n<strong>Explanation:</strong> &quot;as&quot; is substring of &quot;mass&quot; and &quot;hero&quot; is substring of &quot;superhero&quot;.\n[&quot;hero&quot;,&quot;as&quot;] is also a valid answer.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;leetcode&quot;,&quot;et&quot;,&quot;code&quot;]\n<strong>Output:</strong> [&quot;et&quot;,&quot;code&quot;]\n<strong>Explanation:</strong> &quot;et&quot;, &quot;code&quot; are substring of &quot;leetcode&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;blue&quot;,&quot;green&quot;,&quot;bu&quot;]\n<strong>Output:</strong> []\n<strong>Explanation:</strong> No string of words is substring of another string.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= words.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= words[i].length &lt;= 30</code></li>\n\t<li><code>words[i]</code> contains only lowercase English letters.</li>\n\t<li>All the strings of <code>words</code> are <strong>unique</strong>.</li>\n</ul>\n",
+  "hints": [
+    "Bruteforce to find if one string is substring of another or use KMP algorithm."
+  ],
+  "metaData": "{\n  \"name\": \"stringMatching\",\n  \"params\": [\n    {\n      \"name\": \"words\",\n      \"type\": \"string[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<string>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"292.3K\", \"totalSubmission\": \"418.9K\", \"totalAcceptedRaw\": 292292, \"totalSubmissionRaw\": 418937, \"acRate\": \"69.8%\"}",
+  "likes": 1501,
+  "dislikes": 131,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Substring XOR Queries\", \"titleSlug\": \"substring-xor-queries\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"mass\",\"as\",\"hero\",\"superhero\"]",
+    "[\"leetcode\",\"et\",\"code\"]",
+    "[\"blue\",\"green\",\"bu\"]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "String Matching",
+      "slug": "string-matching"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> stringMatching(vector<string>& words) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<String> stringMatching(String[] words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def stringMatching(self, words: List[str]) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def stringMatching(self, words):\n        \"\"\"\n        :type words: List[str]\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} words\n * @return {string[]}\n */\nvar stringMatching = function(words) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function stringMatching(words: string[]): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<string> StringMatching(string[] words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** stringMatching(char** words, int wordsSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func stringMatching(words []string) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun stringMatching(words: Array<String>): List<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func stringMatching(_ words: [String]) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn string_matching(words: Vec<String>) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} words\n# @return {String[]}\ndef string_matching(words)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $words\n     * @return String[]\n     */\n    function stringMatching($words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> stringMatching(List<String> words) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def stringMatching(words: Array[String]): List[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec string_matching(words :: [String.t]) :: [String.t]\n  def string_matching(words) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec string_matching(Words :: [unicode:unicode_binary()]) -> [unicode:unicode_binary()].\nstring_matching(Words) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (string-matching words)\n  (-> (listof string?) (listof string?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2640",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given an array of strings called `words`. The task is to find and return all the strings from `words` that appear as substrings within any other string in the same array. To put it simply, we are looking for any string in `words` that can be found within a different string in `words`.\n\nLet's consider an example, where `words = [\"this\", \"is\", \"the\", \"weather\", \"fish\"]`.\n\n-   `\"this\"` does not appear as a substring of any other string.\n-   `\"is\"` is a substring of `\"this\"` and `\"fish\"`.\n-   `\"the\"` is a substring of `\"weather\"`.\n-   `\"weather\"` is not a substring of any other word.\n-   `\"fish\"` is not a substring of any other string.\n\nTherefore, the answer to this example is the array: `[\"is\", \"the\"]`.\n\n---\n\n### Approach 1: Brute Force\n\n#### Intuition\n\nThe intuition for this approach is pretty straightforward: We examine all strings one by one and find if each of them appears as a substring within any other string in the list.\n\nA string `sub` is considered a substring of another string `main`, if there exists a starting index `startIndex` such that for every position `subIndex` from `0` to `sub.size() - 1`, the characters match: `main[startIndex + subIndex] == sub[subIndex]`. In simpler terms, `sub` must fit continuously within `main` without any gaps.  To check if `sub` is a substring of `main`, we iterate over all possible starting indices in `main` and verify if `sub` can fit starting from each of those indices.\n\nIn Python, things become more simple thanks to the built-in operation `sub in main`, which evaluates to `True` if `sub` is a substring of `main`.\n\n#### Algorithm\n\n-   Define a function `isSubstringOf(sub, main)` that returns `true` if the string `sub` is a substring of the string `main` and `false` otherwise. If the language you are using offers a built-in function for this operation, you can ignore this step.\n    -   Loop over all possible starting indices with `startIndex` from `0` to `main.size() - 1`:\n        -   Initialize a flag `subFits` to `true`.\n        -   Loop over all characters in `sub` with `subIndex` from `0` to `sub.size() - 1`:\n            -   If `startIndex + subIndex >= main.size()` or `main[startIndex + subIndex] != sub[subIndex]`, set `subFits` to `false` and break; we have reached the end of `main` or the characters don't match, so don't search further.\n        -   If `subFits`, a valid starting index is found; return `true`.\n    -   If the loop ends and `sub` does not fit for any `startIndex`, return `false`.\n-   In the main `stringMatching` function:\n    -   Initialize an empty array of strings, named `matchingWords`.\n        -   Iterate over the `words` with `currentWordIndex` from `0` to `words.size() - 1`:\n            -   For every other word in `words`, i.e., for `otherWordIndex` from `0` to `words.size() - 1`:\n            -   If `currentWordIndex == otherWordIndex`, continue; skip the same word.\n            -   If `isSubstringOf(words[currentWordIndex], words[otherWordIndex])`, push `words[currentWordIndex]` to the `matchingWords` and break.\n-   Return `matchingWords`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ejT2MmV4/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ejT2MmV4\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `words` array and $m$ be the length of the longest string in `words`.\n\n-   Time complexity: $O(m^2 \\times n^2)$\n\n    The `isSubstringOf` function iterates through all possible starting indices of the `main` string to check whether each index is a valid starting point for the `sub` string. This is done using a nested loop that examines each character in the `sub` string. Therefore, the `isSubstringOf` function has a time complexity of $O(m^2)$.\n\n    In the `stringMatching` function, we call `isSubstringOf` for every pair of strings within the `words` array. This results in $O(n^2)$ calls to `isSubstringOf`. Thus, the overall time complexity of the algorithm is $O(m^2 \\times n^2)$.\n\n    The Python implementation, which uses the optimized built-in operation for substring checks, has a time complexity of $O(m \\times n^2)$, as the built-in operation performs more efficiently than the naive approach.\n\n-   Space complexity: $O(1)$\n\n    We create a string array, `matchingWords`, to store the strings that are identified as substrings of other words. In the worst case, this array may need to store all the strings from the `words` array, meaning it could grow to a size of $O(m \\times n)$. Beyond this, the algorithm only uses a fixed number of variables (`subFits`, `currentWordIndex`), which contribute $O(1)$ auxiliary space. Therefore, the *auxiliary space complexity*—the extra space used during execution excluding input and output—is $O(1)$.\n---\n\n### Approach 2: KMP Algorithm\n\n#### Intuition\n\nThe inefficiency of the naive algorithm lies in how it handles mismatches. When a mismatch occurs, the algorithm shifts the starting index in the `main` string by one position and restarts the comparison from the first character of `sub`, even though parts of `sub` may have already matched. Let's take a look at a worst-case example for the brute-force algorithm:\n\n!?!../Documents/1408/1408_brute_force_fix.json:784,384!?!\n\nThe algorithm redundantly rechecks the prefix `\"aaa\"` for different starting positions in `main`. Instead of restarting the comparison every time, we can remember that the prefix `\"aaa\"` is already a match. For the next attempt, we shift `sub` and continue matching from where we left off.\n\nTo achieve this, we use the *LPS (Longest Prefix Suffix) table*. \nThe LPS table helps us skip unnecessary comparisons when a mismatch occurs. It stores, for each prefix of sub, the length of the longest proper prefix that is also a suffix.\n\n> Proper prefix: A prefix of a string that is not the entire string itself.\n\nFor example, for `sub = \"ababaca\"`, the LPS table is:\n\n![Longest Prefix Suffix Table](../Figures/1408/1408_lps_fix.png)\n\nWhen a mismatch occurs at position `subIndex` in `sub`, the LPS value at `subIndex - 1` tells us how far to shift `sub`. This avoids rechecking characters already matched, improving efficiency.\n\n!?!../Documents/1408/1408_kmp_fix.json:784,384!?!\n\n#### Algorithm\n\n##### `computeLPSArray(sub)` function\n\n-   Initialize `lps` as an array of size `sub.size()` filled with `0`.\n-   Initialize `currentIndex` as `1` and `len` as `0` to track the length of the current longest prefix.\n-   Loop over the string `sub`:\n    -   If the current character continues the prefix-suffix match, i.e., `sub[currentIndex] == sub[len]`, extend the longest prefix. \n        -   Increment `len` by `1`.\n        -   Set `lps[currentIndex] = len`, to store the length of the matching prefix up to the current character.\n        -   Increment `currentIndex` by `1`, to move on to the next character.\n    -   Otherwise:\n        -   If there's some prefix-suffix match already, try reducing it using the previously computed LPS values, i.e., `len > 0`.\n            -   Set `len = lps[len - 1]`.\n        -   Otherwise, no prefix-suffix match exists, so start from the next character.\n            -   Increment `currentIndex` by `1`.\n-   Return the `lps` array.\n\n##### `isSubstringOf(sub, main, lps)` function\n\n-   Initialize `mainIndex = 0` and `subIndex = 0` to iterate through `main` and `sub`.\n-   Loop while `mainIndex < main.size()`:\n    -  If `main[mainIndex] == sub[subIndex]`, characters match, so increment both `mainIndex` and `subIndex`:\n        -   If `subIndex == sub.size()`, return `true` (match found).\n    -  If there is a mismatch, use the lps values to jump to the next best match of the `sub` string:\n        -   If `subIndex > 0`, set `subIndex = lps[subIndex - 1]`.\n        -   Otherwise, increment `mainIndex` by `1`.\n-   If the loop completes and no match is found, return `false`.\n\n##### Main `wordsMatching(words)` function\n\n-   Initialize an empty array `matchingWords`.\n-   Iterate over `words` with `currentWordIndex` from `0` to `words.size() - 1`:\n    -   Compute the LPS array for the current word, `lps = computeLPSArray(words[currentWordIndex])`.\n    -   For every other word in words, i.e., for `otherWordIndex` from `0` to `words.size() - 1`:\n        -   If `currentWordIndex == otherWordIndex`, continue; skip comparing the same word.\n        -   If `isSubstringOf(words[currentWordIndex], words[otherWordIndex])`, add `words[currentWordIndex]` to `matchingWords` and break.\n-   Return `matchingWords`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/YRKX7hnF/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"YRKX7hnF\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `words` array and $m$ be the length of the longest string in `words`.\n\n-   Time complexity: $O(m \\times n^2)$\n\n    We compute the LPS array in a loop that iterates through the `sub` string. The loop runs from `1` to `sub.size() - 1` and processes a constant amount of work on each iteration (comparing characters and updating the LPS array), so it has a time complexity of $O(m)$.\n\n    Once the LPS array is computed, we use it in the main loop to compare each word in `words` with every other word. For each pair `(currentWordIndex, otherWordIndex)` where `currentWordIndex != otherWordIndex`, we check if `words[currentWordIndex]` is a substring of `words[otherWordIndex]` using the LPS-based KMP algorithm. Each comparison takes $O(m)$ time (due to LPS array lookup and comparison). There are $n^2$ such comparisons since we check all pairs of words.\n\n    Therefore, the total time complexity of the algorithm is $O(m \\times n^2)$.\n\n-   Space complexity: $O(m)$\n\n    Like in the previous approach, we create a string array, `matchingWords`, to store the strings that are identified as substrings of other words. In the worst case, this array may need to store all the strings from the `words` array, meaning it could grow to a size of $O(m \\times n)$. The LPS array of `sub` has a length equal to `sub.size()`, so it adds a factor of $m$ to the total space complexity, which is however dominated by the `matchingWords` array and remains $O(m \\times n)$. Once again, excluding the input and the output, we get the auxiliary space complexity of the algorithm, which is equal to $O(m)$.\n\n---\n\n### Approach 3: Suffix Trie\n\n#### Intuition\n\nIn this approach, we will use a Trie to store all suffixes of any word in `words` and then determine for each word if it appears as part of any suffix in the Trie. \n\n> A Trie is a tree-like data structure used to store substrings. If you are new to Tries, you might want to check out the [Trie Explore Card 🔗](https://leetcode.com/explore/learn/card/trie/). This resource provides an in-depth look at the trie data structure, explaining its key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\nEach node (`TrieNode`) represents a substring. A `TrieNode` has:\n\n-   A `frequency` that keeps track of how many times the substring, represented by the path from the root to that node, has appeared as a suffix.\n-   A map to store its child nodes, representing the next characters of the substring.\n\nAfter defining our `TrieNode` class, we go over every `word` in `words` and insert each suffix of it into the Trie. To insert a string `word` into the Trie, we start from the root (which represents an empty string `\"\"`) and check if a child node exists for the first character of the `word`. If yes, then we move to that child node, incrementing its frequency and we repeat the same for the second character of the `word`. Otherwise, we create a new `TrieNode` and add it to the children of the current node. We repeat this process, until we reach the end of the `word`, meaning that we have efficiently inserted it into the Trie. \n\nAfter inserting all suffixes of each word, the Trie essentially stores all possible substrings as paths from the root to a leaf node. The frequency count at each node reflects how many words in the array share that particular substring. \n\nNow, to determine whether a word appears as a substring within the `words` array, we iterate over all characters of the word, traversing the Trie. When we reach the end of the word, we check the frequency of the node we are currently at. If it is greater than 1, this means that the word is present as a substring of another word as well, not just itself, so we count it to the result.\n\n#### Algorithm\n\n##### `TrieNode` class.\n\nEach `TrieNode` has:\n-   A counter, `frequency`, to track the number of times the corresponding string occurs within `words`.\n-   A map of characters to `TrieNodes`, named `childNodes`.\n\n##### `insertWord(root, word)` function\n\n-   Initialize `currentNode` to `root`.\n-   For every character, `c` of `word`:\n    -   If `c` is a child node of `currentNode`:\n        -   Move `currentNode` to the child node corresponding to `c`.\n        -   Increment the frequency of `currentNode`.\n    -   Otherwise,\n        -   Create a new `TrieNode`, initialize its frequency to `1` and set it as the child of the `currentNode` for character `c`.\n        -   Move `currentNode` to new node.\n\n##### `isSubstring(root, word)` function\n\n-   Initialize `currentNode` to `root`.\n-   For every character, `c` of `word`:\n        -   Move `currentNode` to the child node corresponding to `c`.\n-   Check the frequency of the `currentNode`:\n    -   If it is greater than `1`, return `true`.\n    -   Otherwise, return `false`.\n\n##### Main `stringMatching` function:\n\n-   Initialize an empty array of strings, named `matchingWords`.\n-   Initialize the `root` of the Trie.\n-   For every `word` in `words`:\n    -   Loop with `startIndex` from `0` to `word.size() - 1`:\n        -   Insert the suffix `word[startIndex:]` to the Trie.\n-   For every `word` in `words`:\n    -   If `isSubstring(root, word)`, insert `word` into `matchingWords`. \n-   Return `matchingWords`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/YnLcbr3D/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"YnLcbr3D\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `words` array and $m$ be the length of the longest string in `words`.\n\n-   Time complexity: $O(m^2 \\times n)$\n\n    The `insertWord(root, word)` and the `isSubstring(word)` functions involve a loop over the characters of `word`, so they have a time complexity of $O(m)$. We insert every suffix of every string of `words` into the Trie, resulting in $O(n \\times m)$ insertions. Therefore, the overall time complexity is $O(m \\times n \\times m) = O(m^2 \\times n)$.\n\n-   Space complexity: $O(m^2 \\times n)$\n\n    In the worst case, all suffixes of all words are unique and must be stored separately in the Trie. Each word has $O(m)$ suffixes, each of which requires $O(m)$ `TrieNodes`. Therefore, the Trie can grow up to $O(m^2 \\times n)$ in size. The `matchingWords` array has a size of $O(m \\times n)$ and hence, it does not increase the total space complexity.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

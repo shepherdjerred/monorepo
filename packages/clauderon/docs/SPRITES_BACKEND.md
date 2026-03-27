@@ -192,7 +192,7 @@ Sprites use a fixed environment that cannot be customized:
 3. **Use personal access tokens in URLs:**
    ```bash
    # Configure git to use HTTPS with token inside the sprite
-   git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+   git config --global url."https://${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
    ```
 
 ### Shallow Clone Limitations

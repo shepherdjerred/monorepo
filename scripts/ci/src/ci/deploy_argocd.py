@@ -3,7 +3,7 @@
 Usage: uv run -m ci.deploy_argocd --app apps
 
 Required env vars:
-  ARGOCD_TOKEN - ArgoCD API bearer token
+  ARGOCD_AUTH_TOKEN - ArgoCD API bearer token
   BUILDKITE_BUILD_NUMBER, BUILDKITE_BRANCH
 """
 
@@ -27,9 +27,9 @@ def main() -> None:
         print("Not on main branch, skipping ArgoCD sync", flush=True)
         return
 
-    argocd_token = os.environ.get("ARGOCD_TOKEN", "")
+    argocd_token = os.environ.get("ARGOCD_AUTH_TOKEN", "")
     if not argocd_token:
-        print("ARGOCD_TOKEN not set, cannot sync", flush=True)
+        print("ARGOCD_AUTH_TOKEN not set, cannot sync", flush=True)
         sys.exit(1)
 
     print(f"Syncing ArgoCD app: {args.app}", flush=True)

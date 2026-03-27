@@ -1,0 +1,137 @@
+{
+  "questionId": "1006",
+  "questionFrontendId": "966",
+  "title": "Vowel Spellchecker",
+  "titleSlug": "vowel-spellchecker",
+  "difficulty": "Medium",
+  "content": "<p>Given a <code>wordlist</code>, we want to implement a spellchecker that converts a query word into a correct word.</p>\n\n<p>For a given <code>query</code> word, the spell checker handles two categories of spelling mistakes:</p>\n\n<ul>\n\t<li>Capitalization: If the query matches a word in the wordlist (<strong>case-insensitive</strong>), then the query word is returned with the same case as the case in the wordlist.\n\n\t<ul>\n\t\t<li>Example: <code>wordlist = [&quot;yellow&quot;]</code>, <code>query = &quot;YellOw&quot;</code>: <code>correct = &quot;yellow&quot;</code></li>\n\t\t<li>Example: <code>wordlist = [&quot;Yellow&quot;]</code>, <code>query = &quot;yellow&quot;</code>: <code>correct = &quot;Yellow&quot;</code></li>\n\t\t<li>Example: <code>wordlist = [&quot;yellow&quot;]</code>, <code>query = &quot;yellow&quot;</code>: <code>correct = &quot;yellow&quot;</code></li>\n\t</ul>\n\t</li>\n\t<li>Vowel Errors: If after replacing the vowels <code>(&#39;a&#39;, &#39;e&#39;, &#39;i&#39;, &#39;o&#39;, &#39;u&#39;)</code> of the query word with any vowel individually, it matches a word in the wordlist (<strong>case-insensitive</strong>), then the query word is returned with the same case as the match in the wordlist.\n\t<ul>\n\t\t<li>Example: <code>wordlist = [&quot;YellOw&quot;]</code>, <code>query = &quot;yollow&quot;</code>: <code>correct = &quot;YellOw&quot;</code></li>\n\t\t<li>Example: <code>wordlist = [&quot;YellOw&quot;]</code>, <code>query = &quot;yeellow&quot;</code>: <code>correct = &quot;&quot;</code> (no match)</li>\n\t\t<li>Example: <code>wordlist = [&quot;YellOw&quot;]</code>, <code>query = &quot;yllw&quot;</code>: <code>correct = &quot;&quot;</code> (no match)</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>In addition, the spell checker operates under the following precedence rules:</p>\n\n<ul>\n\t<li>When the query exactly matches a word in the wordlist (<strong>case-sensitive</strong>), you should return the same word back.</li>\n\t<li>When the query matches a word up to capitalization, you should return the first such match in the wordlist.</li>\n\t<li>When the query matches a word up to vowel errors, you should return the first such match in the wordlist.</li>\n\t<li>If the query has no matches in the wordlist, you should return the empty string.</li>\n</ul>\n\n<p>Given some <code>queries</code>, return a list of words <code>answer</code>, where <code>answer[i]</code> is the correct word for <code>query = queries[i]</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> wordlist = [\"KiTe\",\"kite\",\"hare\",\"Hare\"], queries = [\"kite\",\"Kite\",\"KiTe\",\"Hare\",\"HARE\",\"Hear\",\"hear\",\"keti\",\"keet\",\"keto\"]\n<strong>Output:</strong> [\"kite\",\"KiTe\",\"KiTe\",\"Hare\",\"hare\",\"\",\"\",\"KiTe\",\"\",\"KiTe\"]\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> wordlist = [\"yellow\"], queries = [\"YellOw\"]\n<strong>Output:</strong> [\"yellow\"]\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= wordlist.length, queries.length &lt;= 5000</code></li>\n\t<li><code>1 &lt;= wordlist[i].length, queries[i].length &lt;= 7</code></li>\n\t<li><code>wordlist[i]</code> and <code>queries[i]</code> consist only of only English letters.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"spellchecker\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"wordlist\",\r\n      \"type\": \"string[]\"\r\n    },\r\n    {\r\n      \"name\": \"queries\",\r\n      \"type\": \"string[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"string[]\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"140.4K\", \"totalSubmission\": \"228.7K\", \"totalAcceptedRaw\": 140449, \"totalSubmissionRaw\": 228686, \"acRate\": \"61.4%\"}",
+  "likes": 853,
+  "dislikes": 1003,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"KiTe\",\"kite\",\"hare\",\"Hare\"]\n[\"kite\",\"Kite\",\"KiTe\",\"Hare\",\"HARE\",\"Hear\",\"hear\",\"keti\",\"keet\",\"keto\"]",
+    "[\"yellow\"]\n[\"YellOw\"]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"grammarly\", \"name\": \"Grammarly\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"thumbtack\", \"name\": \"Thumbtack\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> spellchecker(vector<string>& wordlist, vector<string>& queries) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String[] spellchecker(String[] wordlist, String[] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def spellchecker(self, wordlist: List[str], queries: List[str]) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def spellchecker(self, wordlist, queries):\n        \"\"\"\n        :type wordlist: List[str]\n        :type queries: List[str]\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} wordlist\n * @param {string[]} queries\n * @return {string[]}\n */\nvar spellchecker = function(wordlist, queries) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function spellchecker(wordlist: string[], queries: string[]): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string[] Spellchecker(string[] wordlist, string[] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** spellchecker(char** wordlist, int wordlistSize, char** queries, int queriesSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func spellchecker(wordlist []string, queries []string) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun spellchecker(wordlist: Array<String>, queries: Array<String>): Array<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func spellchecker(_ wordlist: [String], _ queries: [String]) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn spellchecker(wordlist: Vec<String>, queries: Vec<String>) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} wordlist\n# @param {String[]} queries\n# @return {String[]}\ndef spellchecker(wordlist, queries)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $wordlist\n     * @param String[] $queries\n     * @return String[]\n     */\n    function spellchecker($wordlist, $queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> spellchecker(List<String> wordlist, List<String> queries) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def spellchecker(wordlist: Array[String], queries: Array[String]): Array[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec spellchecker(wordlist :: [String.t], queries :: [String.t]) :: [String.t]\n  def spellchecker(wordlist, queries) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec spellchecker(Wordlist :: [unicode:unicode_binary()], Queries :: [unicode:unicode_binary()]) -> [unicode:unicode_binary()].\nspellchecker(Wordlist, Queries) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (spellchecker wordlist queries)\n  (-> (listof string?) (listof string?) (listof string?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "653",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach 1: HashMap\n\n**Intuition and Algorithm**\n\nWe analyze the 3 cases that the algorithm needs to consider: when the query is an exact match, when the query is a match up to capitalization, and when the query is a match up to vowel errors.\n\nIn all 3 cases, we can use a hash table to query the answer.\n\n* For the first case (exact match), we hold a set of words to efficiently test whether our query is in the set.\n* For the second case (capitalization), we hold a hash table that converts the word from its lowercase version to the original word (with correct capitalization).\n* For the third case (vowel replacement), we hold a hash table that converts the word from its lowercase version with the vowels masked out, to the original word.\n\nThe rest of the algorithm is careful planning and reading the problem carefully.\n\n<iframe src=\"https://leetcode.com/playground/cFnotWCP/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"cFnotWCP\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(\\mathcal{C})$$, where $$\\mathcal{C}$$ is the total *content* of `wordlist` and `queries`.\n\n* Space Complexity:  $$O(\\mathcal{C})$$.\n<br />\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

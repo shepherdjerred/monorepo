@@ -255,7 +255,7 @@ export async function sync(
     "sh",
     "-c",
     `curl -X POST ${argocdServer}/api/v1/applications/${appName}/sync ` +
-      '-H "Authorization: Bearer $ARGOCD_TOKEN"',
+      '-H "Authorization: Bearer $ARGOCD_AUTH_TOKEN"',
   ]);
 }
 ```
@@ -275,7 +275,7 @@ jobs:
         run: |
           dagger call ci \
             --source . \
-            --argocd-token env:ARGOCD_TOKEN \
+            --argocd-token env:ARGOCD_AUTH_TOKEN \
             --ghcr-username ${{ github.actor }} \
             --ghcr-password env:GHCR_TOKEN \
             --chart-version ${{ github.run_number }} \
@@ -296,7 +296,7 @@ bun run build
 ```bash
 dagger call ci \
   --source . \
-  --argocd-token env:ARGOCD_TOKEN \
+  --argocd-token env:ARGOCD_AUTH_TOKEN \
   --ghcr-username myuser \
   --ghcr-password env:GHCR_TOKEN \
   --chart-version local-test \
@@ -309,7 +309,7 @@ dagger call ci \
 argocd app sync apps
 # Or via API
 curl -X POST https://argocd.tailnet-1a49.ts.net/api/v1/applications/apps/sync \
-  -H "Authorization: Bearer $ARGOCD_TOKEN"
+  -H "Authorization: Bearer $ARGOCD_AUTH_TOKEN"
 ```
 
 ### Check ArgoCD Status

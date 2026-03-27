@@ -1,0 +1,115 @@
+{
+  "questionId": "1449",
+  "questionFrontendId": "1324",
+  "title": "Print Words Vertically",
+  "titleSlug": "print-words-vertically",
+  "difficulty": "Medium",
+  "content": "<p>Given a string <code>s</code>.&nbsp;Return&nbsp;all the words vertically in the same order in which they appear in <code>s</code>.<br />\r\nWords are returned as a list of strings, complete with&nbsp;spaces when is necessary. (Trailing spaces are not allowed).<br />\r\nEach word would be put on only one column and that in one column there will be only one word.</p>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong class=\"example\">Example 1:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> s = &quot;HOW ARE YOU&quot;\r\n<strong>Output:</strong> [&quot;HAY&quot;,&quot;ORO&quot;,&quot;WEU&quot;]\r\n<strong>Explanation: </strong>Each word is printed vertically. \r\n &quot;HAY&quot;\r\n&nbsp;&quot;ORO&quot;\r\n&nbsp;&quot;WEU&quot;\r\n</pre>\r\n\r\n<p><strong class=\"example\">Example 2:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> s = &quot;TO BE OR NOT TO BE&quot;\r\n<strong>Output:</strong> [&quot;TBONTB&quot;,&quot;OEROOE&quot;,&quot;   T&quot;]\r\n<strong>Explanation: </strong>Trailing spaces is not allowed. \r\n&quot;TBONTB&quot;\r\n&quot;OEROOE&quot;\r\n&quot;   T&quot;\r\n</pre>\r\n\r\n<p><strong class=\"example\">Example 3:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> s = &quot;CONTEST IS COMING&quot;\r\n<strong>Output:</strong> [&quot;CIC&quot;,&quot;OSO&quot;,&quot;N M&quot;,&quot;T I&quot;,&quot;E N&quot;,&quot;S G&quot;,&quot;T&quot;]\r\n</pre>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong>Constraints:</strong></p>\r\n\r\n<ul>\r\n\t<li><code>1 &lt;= s.length &lt;= 200</code></li>\r\n\t<li><code>s</code>&nbsp;contains only upper case English letters.</li>\r\n\t<li>It&#39;s guaranteed that there is only one&nbsp;space between 2 words.</li>\r\n</ul>",
+  "hints": [
+    "Use the maximum length of words to determine the length of the returned answer. However, don't forget to remove trailing spaces."
+  ],
+  "metaData": "{\n  \"name\": \"printVertically\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<string>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"52.1K\", \"totalSubmission\": \"77.2K\", \"totalAcceptedRaw\": 52096, \"totalSubmissionRaw\": 77209, \"acRate\": \"67.5%\"}",
+  "likes": 825,
+  "dislikes": 121,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"HOW ARE YOU\"",
+    "\"TO BE OR NOT TO BE\"",
+    "\"CONTEST IS COMING\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"guidewire\", \"name\": \"Guidewire\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> printVertically(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<String> printVertically(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def printVertically(self, s: str) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def printVertically(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {string[]}\n */\nvar printVertically = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function printVertically(s: string): string[] {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<string> PrintVertically(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar ** printVertically(char * s, int* returnSize){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func printVertically(s string) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun printVertically(s: String): List<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func printVertically(_ s: String) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn print_vertically(s: String) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {String[]}\ndef print_vertically(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return String[]\n     */\n    function printVertically($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def printVertically(s: String): List[String] = {\n        \n    }\n}"
+    }
+  ],
+  "solution": null
+}

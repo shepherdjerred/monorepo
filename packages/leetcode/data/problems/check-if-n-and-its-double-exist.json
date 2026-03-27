@@ -1,0 +1,149 @@
+{
+  "questionId": "1468",
+  "questionFrontendId": "1346",
+  "title": "Check If N and Its Double Exist",
+  "titleSlug": "check-if-n-and-its-double-exist",
+  "difficulty": "Easy",
+  "content": "<p>Given an array <code>arr</code> of integers, check if there exist two indices <code>i</code> and <code>j</code> such that :</p>\n\n<ul>\n\t<li><code>i != j</code></li>\n\t<li><code>0 &lt;= i, j &lt; arr.length</code></li>\n\t<li><code>arr[i] == 2 * arr[j]</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [10,2,5,3]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> For i = 0 and j = 2, arr[i] == 10 == 2 * 5 == 2 * arr[j]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [3,1,7,11]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> There is no i and j that satisfy the conditions.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= arr.length &lt;= 500</code></li>\n\t<li><code>-10<sup>3</sup> &lt;= arr[i] &lt;= 10<sup>3</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Loop from i = 0 to arr.length, maintaining in a hashTable the array elements from [0, i - 1].",
+    "On each step of the loop check if we have seen the element <code>2 * arr[i]</code> so far.",
+    "Also check if we have seen <code>arr[i] / 2</code> in case <code>arr[i] % 2 == 0</code>."
+  ],
+  "metaData": "{\n  \"name\": \"checkIfExist\",\n  \"params\": [\n    {\n      \"name\": \"arr\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"625.3K\", \"totalSubmission\": \"1.5M\", \"totalAcceptedRaw\": 625306, \"totalSubmissionRaw\": 1499302, \"acRate\": \"41.7%\"}",
+  "likes": 2520,
+  "dislikes": 258,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Keep Multiplying Found Values by Two\", \"titleSlug\": \"keep-multiplying-found-values-by-two\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[10,2,5,3]",
+    "[3,1,7,11]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 9, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool checkIfExist(vector<int>& arr) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean checkIfExist(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def checkIfExist(self, arr: List[int]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def checkIfExist(self, arr):\n        \"\"\"\n        :type arr: List[int]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arr\n * @return {boolean}\n */\nvar checkIfExist = function(arr) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function checkIfExist(arr: number[]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool CheckIfExist(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool checkIfExist(int* arr, int arrSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func checkIfExist(arr []int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun checkIfExist(arr: IntArray): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func checkIfExist(_ arr: [Int]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn check_if_exist(arr: Vec<i32>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} arr\n# @return {Boolean}\ndef check_if_exist(arr)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $arr\n     * @return Boolean\n     */\n    function checkIfExist($arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool checkIfExist(List<int> arr) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def checkIfExist(arr: Array[Int]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec check_if_exist(arr :: [integer]) :: boolean\n  def check_if_exist(arr) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec check_if_exist(Arr :: [integer()]) -> boolean().\ncheck_if_exist(Arr) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (check-if-exist arr)\n  (-> (listof exact-integer?) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2597",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nThis problem is designed to help beginners get comfortable with basic array operations and the implementation of basic data structures. We are given an array and our goal is to find out if there are two different indices, represented by $i$ and $j$, where the value of one is twice the value of the other. \n\nHow to interpret the three conditions:\n- `i` and `j` must be different indices. This might seem like an obvious point unless you consider that $0 = 2 \\times 0$. Without this condition, we'd be able to count just one `0` in the array as satisfying the goal. With this condition, an array would need two `0`s to satisfy the conditions. \n- `0 <= i, j < arr.length` just means that the indices are within the bounds of the array. This condition doesn't mean much, it's essentially a requirement for any array-based algorithm. \n- `arr[i] == 2 * arr[j]` is how we know `i` needs to be double `j`. \n\n---\n\n### Approach 1: Brute Force\n\n#### Intuition\n\nOne simple approach is to calculate the double of each number and then check if that value is in the array. This brute force method directly explores all possible pairs for each element until the result is found. This approach works but is not the most efficient. \n\n#### Algorithm\n\n- Iterate through all pairs of indices `i` and `j` in the array `arr`.\n  - For each pair, check if:\n    - `i != j` (to ensure we aren't comparing the same element).\n    - `arr[i] == 2 * arr[j]` (one element is double the other).\n  - If both conditions are met, return `true` to indicate a valid pair is found.\n\n- If no valid pair is found after checking all pairs, return `false`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/4wc64szF/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"4wc64szF\"></iframe>\n\n#### Complexity Analysis\n\nLet `n` be the size of the input array `arr`.\n\n- Time complexity: $O(n^2)$\n\n    The algorithm consists of two nested loops. The outer loop iterates over each element in the array `arr`, and the inner loop also iterates over all elements of `arr`. For each pair of indices $i$ and $j$, the algorithm checks the condition $arr[i] == 2 \\times arr[j]$ and ensures $i \\neq j$.\n\n    Since both loops iterate `n` times, the time complexity of the nested loops is $O(n \\times n) = O(n^2)$.\n\n- Space complexity: $O(1)$\n\n    The algorithm does not use any additional data structures that grow with the size of the input. The space used by the algorithm is constant, as it only requires a few variables for the loop indices and condition checking. Therefore, the space complexity is $O(1)$.\n\n---\n\n### Approach 2: Set Lookup\n\n#### Intuition\n\nThe brute force method doesn’t keep track of what it’s seen, so it wastes effort by revisiting the same values each time it loops through the array. Let's break down a solution where we can \"store what we’ve seen\" to speed up lookups.\n\nA hash set works well here because it allows constant-time insertion and lookup. Instead of scanning the array multiple times, we use the set to check if $2 \\times arr[i]$ or $arr[i] / 2$ (when divisible) already exists. If neither condition is met, we add $arr[i]$ to the set and continue. \n\nThis way, we only iterate through the array once and eliminate the unnecessary comparisons we made in the brute force approach.\n \n#### Algorithm\n\n- Initialize an empty set named `seen` to store numbers encountered so far.\n\n- For each `num` in the array `arr`:\n  - Check if `2 * num` or `num / 2` exists in the `seen` set:\n    - If `2 * num` is found in the set, or if `num` is divisible by 2 and `num / 2` is found in the set, return `true` (a valid pair is found).\n  - Add the current number `num` to the `seen` set for future checks.\n\n- If no valid pair is found after checking all elements, return `false`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/XXqGNvZy/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"XXqGNvZy\"></iframe>\n\n#### Complexity Analysis\n\nLet `n` be the size of the input array `arr`.\n\n- Time complexity: $O(n)$\n\n    The algorithm iterates through the array `arr` once, processing each element individually. For each element, it performs two operations:\n    1. Checking if $2 \\times \\text{num}$ or $\\text{num} / 2$ is in the set, which takes $O(1)$ on average due to the constant-time lookup in the set.\n    2. Adding the current element to the set, which also takes $O(1)$ on average for each insertion.\n\n    Since both operations inside the loop take constant time, and the loop runs `n` times, the overall time complexity of the algorithm is $O(n)$.\n\n- Space complexity: $O(n)$\n\n    The primary space usage comes from the set, which stores up to `n` unique elements from the array `arr`. In the worst case, when all elements are unique, the set will contain `n` elements, resulting in a space complexity of $O(n)$.\n\n    No additional significant data structures are used, so the auxiliary space complexity is $O(1)$. Therefore, the total space complexity is $O(n)$.\n \n---\n\n### Approach 3: Sorting + Binary Search\n\n#### Intuition\n\nLet's make a simple observation: except when the values of $i$ and $j$ are both 0, $j$ will always be greater than $i$. Since the relationship between the two is directional, we can sort the array in ascending order and apply one of the most fundamental search algorithms: binary search. \n\nBinary search is a two-pointer technique for efficiently locating a value in an ordered collection. Unlike Approach One, which checks each element individually, binary search repeatedly divides the search range in half which significantly reduces the number of comparisons we need to make.\n\n> For a more comprehensive understanding of binary search, check out the [Binary Search Explore Card 🔗](https://leetcode.com/explore/learn/card/binary-search/). This resource offers an in-depth look at binary search, explaining its key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\nWe start by setting one pointer to the first possible element and the second pointer to the last. At each step, we compare the target value to the middle element of the current range. If the target is greater than the midpoint, we eliminate all elements before the midpoint by moving the first pointer to the position just right of it. If the target is smaller, we eliminate all elements after the midpoint by moving the second pointer to the position just left of it. This process continues until the target is found or the range is empty.\n\n!?!../Documents/1346/1346_approach3.json:805,545!?!\n\n</br>\n\n#### Algorithm\n\n- Sort the array `arr` in ascending order to enable efficient searching.\n  \n- For each element `arr[i]` in the array:\n  - Calculate the target value as `2 * arr[i]` (double the current number).\n  - Perform a custom binary search for the target in the array:\n    - In the `customBinarySearch` function:\n      - Set `left` to 0 and `right` to `arr.length - 1` to define the search range.\n      - While `left <= right`, calculate the midpoint `mid`.\n        - If `arr[mid] == target`, return the index `mid` (target found).\n        - If `arr[mid] < target`, move the `left` pointer to `mid + 1` to search the right half.\n        - If `arr[mid] > target`, move the `right` pointer to `mid - 1` to search the left half.\n      - If the target is not found, return `-1`.\n  \n  - If the target exists and its index is not the same as the current index `i`, return `true` (found a pair where one element is double the other).\n\n- If no valid pair is found after iterating through the array, return `false`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/nk58Tg9Z/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"nk58Tg9Z\"></iframe>\n\n#### Complexity Analysis\n\nLet `n` be the size of the input array `arr`.\n\n- Time complexity: $O(n \\log n)$\n\n   The sort function sorts the array in $O(n \\log n)$ time. Sorting is the most time-consuming operation here.\n\n   The for loop iterates through each element in the array, and for each element, it calls the `customBinarySearch` function. The binary search operation itself takes $O(\\log n)$ time, as it divides the search space in half at each step.  \n   \n   Therefore, the time complexity of the loop is $O(n)$ for iterating through the array, and for each iteration, the binary search takes $O(\\log n)$. Thus, the total time complexity for the loop is $O(n \\log n)$.\n\n   Combining both parts, the overall time complexity is $O(n \\log n)$.\n\n- Space complexity: $O(n)$ or $O(\\log n)$\n\n    The space taken by the sorting algorithm depends on the language of implementation:\n\n    In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n)$.\n    \n    In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worst-case space complexity of $O(\\log n)$.\n    \n    In Python, the `sort()` method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has a space complexity of $O(n)$.\n \n   The binary search uses constant space for variables like `left`, `right`, and `mid`. The loop also does not use any additional space other than a few variables. Therefore, the space used by the loop is $O(1)$.\n\n---\n\n### Approach 4: Frequency Hash Map\t\n\n#### Intuition\n\nInstead of using a hash set to find the pair like we did in Approach 2, we can use a frequency map. Some may understandably wonder why we don't use a frequency array instead of a map, which could be more memory-efficient and an excellent choice if the constraint were `>= 0`. However, since this problem allows negative numbers, a frequency map is the better choice. \n\nFirst, we will count the number of occurrences of each number and store their counts in their respective indices. Then, we will iterate again and check each element:\n\n1. If `num` is in the array, we check if `2 * num` also exists using the map.\n2. If `num = 0`, we ensure its count is at least 2 to satisfy `i ≠ j`.\n\n#### Algorithm\n\n- Initialize an empty hash map called `map` to store the count of occurrences of each number in the array.\n\n- For each number `num` in `arr`:\n  - Update the map with the count of `num` by incrementing the value associated with `num` in `map`.\n\n- After populating the map, check for the condition where a number has a double in the array:\n  - For each `num` in `arr`, if `num` is not zero and `map` contains `2 * num`, return `true` (found a number with its double).\n  - If `num` is zero and there are more than one zero in the array (i.e., `map.get(num) > 1`), return `true` (special case where 0 is double of 0).\n\n- If no such pair is found, return `false` (no number has its double in the array).\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/9e6gbmPT/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"9e6gbmPT\"></iframe>\n\n#### Complexity Analysis\n\nLet `n` be the size of the input array `arr`.\n\n- Time complexity: $O(n)$\n\n    The algorithm consists of two main loops. The first loop iterates through the array `arr` and inserts or updates each element in the hash map. The insertion operation in the hash map takes $O(1)$ on average, so the time complexity of this loop is $O(n)$.\n\n    The second loop also iterates through the array `arr` and performs constant-time operations for each element, including lookups in the hash map (which are $O(1)$ on average). Therefore, the time complexity of this loop is also $O(n)$.\n\n    As a result, the overall time complexity is $O(n) + O(n) = O(n)$.\n\n- Space complexity: $O(n)$\n\n    The space complexity is dominated by the hash map, which stores up to `n` unique elements from the array `arr`. Each key-value pair in the hash map consumes space, so in the worst case, the space required is proportional to the number of unique elements in `arr`, which is $O(n)$.\n\n    No additional data structures that depend on the size of the input are used, so the auxiliary space is $O(1)$. Therefore, the total space complexity is $O(n)$.\n\n---\n\n</br>\n\n#### Note on Hash Maps and Sets\n \nHash maps and hash sets are widely used data structures that provide efficient storage and retrieval of data. Their average-case time complexity for most operations, such as insertion, deletion, and lookup, is often $O(1)$. However, this efficiency depends on several factors, and there are edge cases where performance can degrade.\n\n##### Average-Case Complexity: $O(1)$\nHashing Process: The operation relies on a hash function, which maps keys to specific \"buckets\" in memory.\n- A well-designed hash function ensures uniform distribution of keys across buckets. The hash computation itself is expected to be a constant-time operation in most cases.\n- Once the hash is computed, the bucket corresponding to the hash is accessed directly, making the lookup process efficient.\n\n##### Worst-Case Complexity: $O(n)$\nHash Collisions: When multiple keys map to the same bucket due to the hash function returning the same hash code, a collision occurs. \n- In such cases, the hash map stores all colliding entries in a bucket, typically as a linked list.\n- To resolve collisions, the hash map iterates through the bucket, checking each entry with an equality comparison, leading to $O(n)$ time complexity if all keys hash to the same bucket.\n- This worst-case scenario is extremelly rare with a good hash function, but it is still a theoretical limitation to consider when designing or selecting algorithms.\n\n##### Improvements in Modern Implementations (e.g., Java HashMap in JDK 8)\nTree-Backed Buckets: In modern hash map implementations, buckets that become densely populated are converted into balanced binary trees.\n- This reduces the lookup time complexity in such cases from $O(n)$ to $O(\\log n)$. The tree structure leverages key ordering for efficient traversal.\n- If the key type's equality (`equals`) and ordering (`compareTo`) logic are inconsistent, this optimization sometimes leads to unpredictable behavior.\n\n##### Takeaway:\nIn most real-world scenarios, hash maps and sets offer excellent performance and are the default choice for many applications requiring fast lookups.\n\nHowever, be cautious of:\n  - Poor hash functions.\n  - Memory limitations.\n  - Keys with inconsistent equality and ordering logic in modern implementations.\n\nIn general, when analyzing time complexity and space complexity in editorials, videos or discussions on the internet, most assume that hash functions are well-designed. This assumption allows us to consider the complexity of hash table operations as $O(1)$, rather than $O(n)$ or $O(\\log n)$. This consistent behavior is reflected in almost all articles or videos you may encounter, where lookups are always described as constant time, never as $O(n)$ due to the underlying principles of hash functions.\n\nTo deepen your understanding of hash maps, sets, and their underlying principles, the following resources are highly recommended:\n1. [Hash Table Explore Card 🔗](https://leetcode.com/explore/learn/card/hash-table/): This card has some great explanations on how it is applied to different DSA problems and how to recognize this pattern.\n2. [Universal Hashing](https://en.wikipedia.org/wiki/Universal_hashing): This explains the principles behind creating hash functions that achieve the ideal $O(1)$ performance.\n3. [Hash Table](https://en.wikipedia.org/wiki/Hash_table): This covers collision handling techniques (like chaining and open addressing) and practical trade-offs in hash table design.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

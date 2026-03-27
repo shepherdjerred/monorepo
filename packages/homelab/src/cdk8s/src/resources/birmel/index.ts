@@ -76,7 +76,7 @@ export function createBirmelDeployment(chart: Chart) {
             "birmel-discord-token-secret",
             onePasswordItem.name,
           ),
-          key: "discord-api-token",
+          key: "DISCORD_TOKEN",
         }),
         DISCORD_CLIENT_ID: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
@@ -84,7 +84,7 @@ export function createBirmelDeployment(chart: Chart) {
             "birmel-discord-client-id-secret",
             onePasswordItem.name,
           ),
-          key: "discord-client-id",
+          key: "DISCORD_CLIENT_ID",
         }),
 
         // OpenAI configuration
@@ -94,7 +94,7 @@ export function createBirmelDeployment(chart: Chart) {
             "birmel-openai-api-key-secret",
             onePasswordItem.name,
           ),
-          key: "openai-api-key",
+          key: "OPENAI_API_KEY",
         }),
         OPENAI_MODEL: EnvValue.fromValue("gpt-5-mini"),
         OPENAI_CLASSIFIER_MODEL: EnvValue.fromValue("gpt-5-nano"),
@@ -106,7 +106,7 @@ export function createBirmelDeployment(chart: Chart) {
             "birmel-anthropic-api-key-secret",
             onePasswordItem.name,
           ),
-          key: "anthropic-api-key",
+          key: "ANTHROPIC_API_KEY",
         }),
 
         // Database paths
@@ -136,7 +136,7 @@ export function createBirmelDeployment(chart: Chart) {
             "birmel-sentry-dsn-secret",
             onePasswordItem.name,
           ),
-          key: "sentry-dsn",
+          key: "SENTRY_DSN",
         }),
         SENTRY_ENVIRONMENT: EnvValue.fromValue("production"),
         SENTRY_RELEASE: EnvValue.fromValue(
@@ -173,7 +173,7 @@ export function createBirmelDeployment(chart: Chart) {
             "birmel-editor-github-secret",
             onePasswordItem.name,
           ),
-          key: "editor-github-client-secret",
+          key: "EDITOR_GITHUB_CLIENT_SECRET",
         }),
         EDITOR_GITHUB_CALLBACK_URL: EnvValue.fromValue(
           "https://birmel-oauth.tailnet-1a49.ts.net/auth/github/callback",

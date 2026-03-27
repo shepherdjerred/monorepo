@@ -1,0 +1,138 @@
+{
+  "questionId": "918",
+  "questionFrontendId": "882",
+  "title": "Reachable Nodes In Subdivided Graph",
+  "titleSlug": "reachable-nodes-in-subdivided-graph",
+  "difficulty": "Hard",
+  "content": "<p>You are given an undirected graph (the <strong>&quot;original graph&quot;</strong>) with <code>n</code> nodes labeled from <code>0</code> to <code>n - 1</code>. You decide to <strong>subdivide</strong> each edge in the graph into a chain of nodes, with the number of new nodes varying between each edge.</p>\n\n<p>The graph is given as a 2D array of <code>edges</code> where <code>edges[i] = [u<sub>i</sub>, v<sub>i</sub>, cnt<sub>i</sub>]</code> indicates that there is an edge between nodes <code>u<sub>i</sub></code> and <code>v<sub>i</sub></code> in the original graph, and <code>cnt<sub>i</sub></code> is the total number of new nodes that you will <strong>subdivide</strong> the edge into. Note that <code>cnt<sub>i</sub> == 0</code> means you will not subdivide the edge.</p>\n\n<p>To <strong>subdivide</strong> the edge <code>[u<sub>i</sub>, v<sub>i</sub>]</code>, replace it with <code>(cnt<sub>i</sub> + 1)</code> new edges and <code>cnt<sub>i</sub></code> new nodes. The new nodes are <code>x<sub>1</sub></code>, <code>x<sub>2</sub></code>, ..., <code>x<sub>cnt<sub>i</sub></sub></code>, and the new edges are <code>[u<sub>i</sub>, x<sub>1</sub>]</code>, <code>[x<sub>1</sub>, x<sub>2</sub>]</code>, <code>[x<sub>2</sub>, x<sub>3</sub>]</code>, ..., <code>[x<sub>cnt<sub>i</sub>-1</sub>, x<sub>cnt<sub>i</sub></sub>]</code>, <code>[x<sub>cnt<sub>i</sub></sub>, v<sub>i</sub>]</code>.</p>\n\n<p>In this <strong>new graph</strong>, you want to know how many nodes are <strong>reachable</strong> from the node <code>0</code>, where a node is <strong>reachable</strong> if the distance is <code>maxMoves</code> or less.</p>\n\n<p>Given the original graph and <code>maxMoves</code>, return <em>the number of nodes that are <strong>reachable</strong> from node </em><code>0</code><em> in the new graph</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://s3-lc-upload.s3.amazonaws.com/uploads/2018/08/01/origfinal.png\" style=\"width: 600px; height: 247px;\" />\n<pre>\n<strong>Input:</strong> edges = [[0,1,10],[0,2,1],[1,2,2]], maxMoves = 6, n = 3\n<strong>Output:</strong> 13\n<strong>Explanation:</strong> The edge subdivisions are shown in the image above.\nThe nodes that are reachable are highlighted in yellow.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> edges = [[0,1,4],[1,2,6],[0,2,8],[1,3,1]], maxMoves = 10, n = 4\n<strong>Output:</strong> 23\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> edges = [[1,2,4],[1,4,5],[1,3,1],[2,3,4],[3,4,5]], maxMoves = 17, n = 5\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> Node 0 is disconnected from the rest of the graph, so only node 0 is reachable.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= edges.length &lt;= min(n * (n - 1) / 2, 10<sup>4</sup>)</code></li>\n\t<li><code>edges[i].length == 3</code></li>\n\t<li><code>0 &lt;= u<sub>i</sub> &lt; v<sub>i</sub> &lt; n</code></li>\n\t<li>There are <strong>no multiple edges</strong> in the graph.</li>\n\t<li><code>0 &lt;= cnt<sub>i</sub> &lt;= 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= maxMoves &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= n &lt;= 3000</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"reachableNodes\",\n  \"params\": [\n    {\n      \"name\": \"edges\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"name\": \"maxMoves\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"37.2K\", \"totalSubmission\": \"71.5K\", \"totalAcceptedRaw\": 37164, \"totalSubmissionRaw\": 71535, \"acRate\": \"52.0%\"}",
+  "likes": 900,
+  "dislikes": 230,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Find All People With Secret\", \"titleSlug\": \"find-all-people-with-secret\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Paths in Maze That Lead to Same Room\", \"titleSlug\": \"paths-in-maze-that-lead-to-same-room\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[0,1,10],[0,2,1],[1,2,2]]\n6\n3",
+    "[[0,1,4],[1,2,6],[0,2,8],[1,3,1]]\n10\n4",
+    "[[1,2,4],[1,4,5],[1,3,1],[2,3,4],[3,4,5]]\n17\n5"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 2, \"slug\": \"yugabyte\", \"name\": \"Yugabyte\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Shortest Path",
+      "slug": "shortest-path"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int reachableNodes(vector<vector<int>>& edges, int maxMoves, int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int reachableNodes(int[][] edges, int maxMoves, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def reachableNodes(self, edges: List[List[int]], maxMoves: int, n: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def reachableNodes(self, edges, maxMoves, n):\n        \"\"\"\n        :type edges: List[List[int]]\n        :type maxMoves: int\n        :type n: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} edges\n * @param {number} maxMoves\n * @param {number} n\n * @return {number}\n */\nvar reachableNodes = function(edges, maxMoves, n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function reachableNodes(edges: number[][], maxMoves: number, n: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int ReachableNodes(int[][] edges, int maxMoves, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int reachableNodes(int** edges, int edgesSize, int* edgesColSize, int maxMoves, int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func reachableNodes(edges [][]int, maxMoves int, n int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun reachableNodes(edges: Array<IntArray>, maxMoves: Int, n: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func reachableNodes(_ edges: [[Int]], _ maxMoves: Int, _ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn reachable_nodes(edges: Vec<Vec<i32>>, max_moves: i32, n: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} edges\n# @param {Integer} max_moves\n# @param {Integer} n\n# @return {Integer}\ndef reachable_nodes(edges, max_moves, n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $edges\n     * @param Integer $maxMoves\n     * @param Integer $n\n     * @return Integer\n     */\n    function reachableNodes($edges, $maxMoves, $n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int reachableNodes(List<List<int>> edges, int maxMoves, int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def reachableNodes(edges: Array[Array[Int]], maxMoves: Int, n: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec reachable_nodes(edges :: [[integer]], max_moves :: integer, n :: integer) :: integer\n  def reachable_nodes(edges, max_moves, n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec reachable_nodes(Edges :: [[integer()]], MaxMoves :: integer(), N :: integer()) -> integer().\nreachable_nodes(Edges, MaxMoves, N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (reachable-nodes edges maxMoves n)\n  (-> (listof (listof exact-integer?)) exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "524",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach 1: Dijkstra's\n\n**Intuition**\n\nTreating the original graph as a weighted, undirected graph, we can use Dijkstra's algorithm to find all reachable nodes in the original graph.  However, this won't be enough to solve examples where subdivided edges are only used partially.\n\nWhen we travel along an edge (in either direction), we can keep track of how much we use it.  At the end, we want to know every node we reached in the original graph, plus the sum of the utilization of each edge.\n\n**Algorithm**\n\nWe use *Dijkstra's algorithm* to find the shortest distance from our source to all targets.  This is a textbook algorithm, refer to [this link](https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm) for more details.\n\nAdditionally, for each (directed) edge `(node, nei)`, we'll keep track of how many \"new\" nodes (new from subdivision of the original edge) were `used`.  At the end, we'll sum up the utilization of each edge.\n\nPlease see the inline comments for more details.\n\n<iframe src=\"https://leetcode.com/playground/PktDsMD2/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"PktDsMD2\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(E \\log N)$$, where $$E$$ is the length of `edges`.\n\n* Space Complexity:  $$O(E)$$.\n<br />\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

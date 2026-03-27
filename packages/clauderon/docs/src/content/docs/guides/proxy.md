@@ -36,7 +36,7 @@ For HTTPS, clauderon generates a CA that signs certificates on-the-fly per domai
 
 | Credential      | Environment Variable      | Secret File             |
 | --------------- | ------------------------- | ----------------------- |
-| GitHub          | `GITHUB_TOKEN`            | `github_token`          |
+| GitHub          | `GH_TOKEN`                | `github_token`          |
 | Anthropic OAuth | `CLAUDE_CODE_OAUTH_TOKEN` | `anthropic_oauth_token` |
 | OpenAI/Codex    | `OPENAI_API_KEY`          | `openai_api_key`        |
 | PagerDuty       | `PAGERDUTY_TOKEN`         | `pagerduty_token`       |

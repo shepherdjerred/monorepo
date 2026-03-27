@@ -1,0 +1,148 @@
+{
+  "questionId": "1732",
+  "questionFrontendId": "1611",
+  "title": "Minimum One Bit Operations to Make Integers Zero",
+  "titleSlug": "minimum-one-bit-operations-to-make-integers-zero",
+  "difficulty": "Hard",
+  "content": "<p>Given an integer <code>n</code>, you must transform it into <code>0</code> using the following operations any number of times:</p>\n\n<ul>\n\t<li>Change the rightmost (<code>0<sup>th</sup></code>) bit in the binary representation of <code>n</code>.</li>\n\t<li>Change the <code>i<sup>th</sup></code> bit in the binary representation of <code>n</code> if the <code>(i-1)<sup>th</sup></code> bit is set to <code>1</code> and the <code>(i-2)<sup>th</sup></code> through <code>0<sup>th</sup></code> bits are set to <code>0</code>.</li>\n</ul>\n\n<p>Return <em>the minimum number of operations to transform </em><code>n</code><em> into </em><code>0</code><em>.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 3\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The binary representation of 3 is &quot;11&quot;.\n&quot;<u>1</u>1&quot; -&gt; &quot;<u>0</u>1&quot; with the 2<sup>nd</sup> operation since the 0<sup>th</sup> bit is 1.\n&quot;0<u>1</u>&quot; -&gt; &quot;0<u>0</u>&quot; with the 1<sup>st</sup> operation.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 6\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The binary representation of 6 is &quot;110&quot;.\n&quot;<u>1</u>10&quot; -&gt; &quot;<u>0</u>10&quot; with the 2<sup>nd</sup> operation since the 1<sup>st</sup> bit is 1 and 0<sup>th</sup> through 0<sup>th</sup> bits are 0.\n&quot;01<u>0</u>&quot; -&gt; &quot;01<u>1</u>&quot; with the 1<sup>st</sup> operation.\n&quot;0<u>1</u>1&quot; -&gt; &quot;0<u>0</u>1&quot; with the 2<sup>nd</sup> operation since the 0<sup>th</sup> bit is 1.\n&quot;00<u>1</u>&quot; -&gt; &quot;00<u>0</u>&quot; with the 1<sup>st</sup> operation.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= n &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "The fastest way to convert n to zero is to remove all set bits starting from the leftmost one. Try some simple examples to learn the rule of how many steps are needed to remove one set bit.",
+    "consider n=2^k case first, then solve for all n."
+  ],
+  "metaData": "{\n  \"name\": \"minimumOneBitOperations\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"120.7K\", \"totalSubmission\": \"153.8K\", \"totalAcceptedRaw\": 120690, \"totalSubmissionRaw\": 153823, \"acRate\": \"78.5%\"}",
+  "likes": 1209,
+  "dislikes": 1207,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Number of Operations to Make Array Continuous\", \"titleSlug\": \"minimum-number-of-operations-to-make-array-continuous\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Apply Bitwise Operations to Make Strings Equal\", \"titleSlug\": \"apply-bitwise-operations-to-make-strings-equal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "3",
+    "6"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"servicenow\", \"name\": \"ServiceNow\"}, {\"timesEncountered\": 2, \"slug\": \"expedia\", \"name\": \"Expedia\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Recursion",
+      "slug": "recursion"
+    },
+    {
+      "name": "Memoization",
+      "slug": "memoization"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minimumOneBitOperations(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minimumOneBitOperations(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumOneBitOperations(self, n: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumOneBitOperations(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {number}\n */\nvar minimumOneBitOperations = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumOneBitOperations(n: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinimumOneBitOperations(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minimumOneBitOperations(int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumOneBitOperations(n int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumOneBitOperations(n: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumOneBitOperations(_ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_one_bit_operations(n: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Integer}\ndef minimum_one_bit_operations(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Integer\n     */\n    function minimumOneBitOperations($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimumOneBitOperations(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumOneBitOperations(n: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_one_bit_operations(n :: integer) :: integer\n  def minimum_one_bit_operations(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_one_bit_operations(N :: integer()) -> integer().\nminimum_one_bit_operations(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-one-bit-operations n)\n  (-> exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2134",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Math and Recursion\n\n**Intuition**\n\n> This is a very difficult problem! In this article, we will assume that you are familiar with the basics of bit manipulation, recursion, and mathematical analysis.\n\nWe need to develop a strategy that allows us to set bits to 0. The first observation we can make is that other than the rightmost bit, a bit can only be changed with the second operation. Thus, if we want to change a given bit (other than the rightmost one) to 0, we **must** first convert the number into the appropriate form. For example, let's say we have `n = 19`, which is `10011` in binary. If we want to unset the leftmost (most significant) bit, we must convert the number into `11000` first, and then perform the second operation.\n\nLet's start by considering the simplest case. How many operations do we need to reduce `n` to `0` when `n` is a power of 2? We have $$n = 2^k$$, where $$k$$ is some non-negative integer. In binary, the number has one bit set to `1`, and the rest are `0`. Let's use $$n = 16 = 2^4$$ as an example. In binary, $$n$$ is $$10000$$, and we have $$k = 4$$.\n\nThere are 3 steps to reducing `n` to `0` when it is a power of 2:\n\n1. First, we need to set the bit at position `k - 1`. In our example with `n = 16`, we need to set the bit at position `3`, thus `n` becomes $$11000$$\n2. Next, we use the second operation to unset the most significant bit (at position `k`). Now, `n` becomes $$01000$$\n3. Finally, we need to reduce the remaining number to `0` by unsetting the bit at position `k - 1`\n\n![img](../Figures/1611/1.png)\n<br>\n\nNotice that after step 2, `n` is a new power of `2` and thus step 3 is the same problem (**how many operations do we need to reduce a power of 2 to `0`?**) with a smaller input. We have identified a recursive relationship.\n\n> Before we continue, we must talk about another **critical observation**.\n>\n> Both operations are **reversible**. Because each of the two operations flips only one bit, if we can transform `a` into `b` with a single operation `O1`, it means we can reverse the process by applying the same type of operation to `b` flipping the same bit, to get back to `a`.\n\n<details><summary><b>Click here to see a brief proof of the critical observation</b></summary>\n\nWithout loss of generality, let's assume that:\n\n- `a --- O1 ---> b`\n- `b --- O2 ---> c`\n- `c --- O3 ---> d`\n- ...\n- `y --- On ---> z`\n\nSo, if a sequence of operations `[O1, O2, ..., On]` is the minimum number of steps to transform `a` into `z`, then we can also use the reversed sequence `[On, ..., O2, O1]` to transform `z` into `a` and this sequence is also the minimum number of steps to accomplish this.\n\nTo prove the above statement, let's employ a proof by contradiction:\n\n- Given that `[O1, O2, ..., On]` is the minimum number of steps to transform `a` into `z`, let's assume that the sequence `[On, ..., O2, O1]` **is not** the minimum steps required to transform `z` into `a`.\n- Now, if this is the case, there must exist some other sequence, say `[Xm, ..., X2, X1]`, that requires fewer steps to transform `z` into `a`.\n- We can use the reversed sequence `[X1, X2, ..., Xm]` to transform `a` to `z`, and since it requires fewer steps than `[O1, O2, ..., On]`, this contradicts our initial assumption.\n- Therefore, our assumption that `[On, ..., O2, O1]` is not the minimum number of steps to transform `z` into `a` must be false.\n\n</details>\n\n<br>\n\n> To sum up, the minimum number of operations for converting `x` to `y` for arbitrary `x, y` is always the same as the minimum number of operations for converting `y` to `x`.\n>\n> We will make use of this observation heavily throughout the rest of the article.\n\nLet $$f(k)$$ equal the number of operations required to reduce $$2^k$$ to `0`. We will use this definition of $$f$$ throughout the article. What is the value of $$f(k)$$? It would be the sum of the 3 steps above. Let's analyze each step separately.\n\n1. When we start step 1, the $$k$$ bits to the right of the most significant bit are all `0`. After step 1, the $$k$$ bits to the right represent $$2^{k - 1}$$, because we set the bit at position $$k - 1$$. As you can see, step 1 is actually just converting `0` to $$2^{k - 1}$$. From the critical observation, we know that this will cost the same number of operations as converting $$2^{k - 1}$$ to `0`. Thus, step 1 costs $$f(k - 1)$$ operations\n\n![img](../Figures/1611/2.png)\n<br>\n\n2. Step 2 costs one operation\n\n![img](../Figures/1611/3.png)\n<br>\n\n3. The remaining number is $$2^{k - 1}$$. Reducing this to `0` will cost $$f(k - 1)$$ operations\n\n![img](../Figures/1611/4.png)\n<br>\n\nSumming these values, we have\n\n$$f(k) = f(k - 1) + 1 + f(k - 1)$$\n\n$$f(k) = 2 \\cdot f(k - 1) + 1$$\n\nThe base case of this recurrence is when $$k = 0$$. We have $$n = 2^0 = 1$$, which requires using the first operation once. Thus, $$f(0) = 1$$.\n\n<iframe src=\"https://leetcode.com/playground/VfpNR8DS/shared\" frameBorder=\"0\" width=\"100%\" height=\"174\" name=\"VfpNR8DS\"></iframe>\n\nCalculating $$f(k)$$ will cost $$O(k)$$, although we could improve it to $$O(1)$$ with memoization (but then we would need more space and general overhead). Is there a way we can calculate $$f(k)$$ more efficiently?\n\nWith some analysis, we can show that $$f(k) = 2^{k + 1} - 1$$. \n\nThe value of our base case is $$f(0) = 1$$, which can conveniently be written in the form $$2^k - 1$$ where $$k$$ is a non-negative integer, i.e. its value is a power of 2 minus one. When we plug this back into $$f$$, we get $$2 \\cdot (2^k - 1) + 1 = 2^{k + 1} - 1$$. Without loss of generality, we have another power of two minus one.\n\nAs you can see, plugging a power of two minus one into our recurrence simply gives us the next power of two minus one. Because our base case is a power of two minus one, all values of $$f$$ will be a power of two minus one, specifically $$f(k) = 2^{k + 1} - 1$$. This method is commonly known as mathematical induction.\n\nWe can easily verify this formula by looking at values of $$f$$.\n\n| k | breakdown | value of f(k) |\n|:---:|:---:|:--------:|\n|  0  | base case  | $$1 = 2^1 - 1$$ |\n|  1  | 2 * f(0) + 1  | $$3 = 2^2 - 1$$ |\n|  2  | 2 * f(1) + 1 = 2 * 3 + 1  | $$7 = 2^3 - 1$$ |\n|  3  | 2 * f(2) + 1 = 2 * 7 + 1  | $$15 = 2^4 - 1$$ |\n|  4  | 2 * f(3) + 1 = 2 * 15 + 1 | $$31 = 2^5 - 1$$ |\n|  5  | 2 * f(4) + 1 = 2 * 31 + 1  | $$63 = 2^6 - 1$$ |\n\n<br>\n\n---\n\nFinally, we have concluded that the number of operations to reduce a power of two $$2^k$$ is $$2^{k + 1} - 1$$. But this does not solve the problem, because `n` is not necessarily a power of two!\n\nHowever, we can split the problem into two parts. The first part will be to identify the most significant bit. Let's say this bit is at position `k`. Then we can consider this bit on its own, and we have a value of $$2^k$$. We know reducing this value will cost us $$2^{k + 1} - 1$$ operations.\n\nThe remaining part will be all the bits to the right. Let's call the value of this remaining part $$n'$$. We can get this value as $$n' = n \\oplus 2^k$$, where $$\\oplus$$ is the XOR operation.\n\nHow many operations do we need to reduce $$n'$$ to `0`? It's the original problem with a smaller input! We can simply recursively call the function with $$n'$$. The base case of this recursion is when $$n' = 0$$, we require $$0$$ operations.\n\n![img](../Figures/1611/5.png)\n<br>\n\nFor the sake of brevity, let's denote $$A(x)$$ as the number of operations to reduce an arbitrary $$x$$ to `0`. Thus, it would cost $$A(n')$$ to solve the subproblem.\n\nYou may be thinking: the answer is $$f(k) + A(n')$$. However, it's actually $$f(k) - A(n')$$. Why?\n\n---\n\n**Proof**\n\n> As a reminder:\n> \n> $$k$$ is the position of the most significant bit in $$n$$\n>\n> $$f(k)$$ is the number of operations required to reduce $$2^k$$ to $$0$$\n>\n> $$n'$$ is the value of $$n$$ with the most significant bit removed\n>\n> $$A(x)$$ is the number of operations required to reduce an arbitrary $$x$$ to $$0$$\n\n1. Let's say that we start with `0` and convert it to $$2^k$$. This requires $$f(k)$$ operations (remember the critical observation!)\n2. Next, we convert $$2^k$$ to $$n$$. By the critical observation, this is equivalent to converting $$n$$ to $$2^k$$, which is in turn equivalent to reducing $$n'$$ to `0`. This is because all the bits in $$2^k$$ are `0` except for the bit at position `k`, which by definition is not considered in $$n'$$. We know that this conversion costs $$A(n')$$ operations\n3. Finally, we reduce $$n$$ to `0`. Let's say this costs $$\\text{ans}$$ operations\n\nAt the beginning of step 1 we have `0` and at the end of step 1 we have $$2^k$$. At the beginning of step 2 we have $$2^k$$ and at the end of step 3 we have `0`. Thus, step 2 and step 3 reverses the operations done by step 1, and by the critical observation, step 1 requires the same number of operations as step 2 and 3.\n\nWe have $$f(k) = A(n') + \\text{ans}$$. We defined $$\\text{ans}$$ as the answer to the problem, and we can rearrange: $$\\text{ans} = f(k) - A(n')$$.\n\n![img](../Figures/1611/6.png)\n<br>\n\nYou may be thinking: we can also consider that it requires $$f(k) + A(n')$$ steps to convert `0` to `n`, then $$\\text{ans}$$ steps to convert `n` back to `0`. Why can't we write  $$\\text{ans} = f(k) + A(n')$$ instead?\n\nWe certainly could, and this \"pathing\" would be a perfectly valid way to use the operations to convert `0` to `n` or vice versa. However, the problem is asking for the minimum operations possible. As $$A(n') \\geq 0$$, $$f(k) - A(n') \\leq f(k) + A(n')$$ (see below for further explanation).\n\n---\n\n**Explanation**\n\nWhile the argument we have presented here is convincing, it is not very intuitive! It is tough to understand, but the key idea is that during the $$f(k)$$ steps where we reduce $$2^k$$, the original number $$n$$ is actually in the middle of the process! That is, if you were to actually perform the operations to reduce $$2^k$$ to $$0$$, you would actually have the value $$n$$ after some operations.\n\nRecall our function $$f$$ that determined the number of operations required to reduce a power of two. The first step in reducing a power of two was to set the bit at position $$k - 1$$, and it cost $$f(k - 1)$$ operations to do so.\n\nHowever, these $$f(k - 1)$$ operations were performed under the assumption that we start with all the bits being `0` (since $$f$$ was defined in the context of powers of two).\n\nWith $$n$$, we may start with some bits set. These bits being set represent progress toward these $$f(k - 1)$$ operations!\n\nFor example, let's say we want to reduce $$2^3$$ which is $$1000$$ in binary. Step 1 would be to convert the number to $$1100$$. This is equivalent to converting $$0000$$ to $$0100$$, which we know requires $$f(2)$$ operations.\n\nWhat if we have $$n = 10$$, which is $$1010$$ in binary? Converting this number to $$1100$$ is equivalent to converting $$0010$$ to $$0100$$. This will require less than $$f(2)$$ operations because we already have a bit set, which is progress! Basically, $$0010$$ is \"closer\" to $$0100$$ than $$0000$$ is to $$0100$$.\n\nBecause of the critical observation, the progress is equal to $$A(n')$$, since that is exactly the difference between the initial state of $$n$$ and the context in which $$f$$ was defined.\n\n> To summarize the logic, it is more expensive to reduce $$2^k$$ than it is to reduce $$n$$.\n>\n> The reason we use $$2^k$$ in our algorithm is that we needed to break `n` into a subproblem so that we could solve it with recursion, $$2^k$$ has only one set bit, and this simple structure facilitates our recursive relationships. As we found a formula for reducing $$2^k$$, it was convenient for us to break $$n$$ into two subproblems: reducing $$2^k$$ and reducing $$n'$$.\n>\n> If we were to actually carry out the operations to go from `0` to `n` optimally, we would not first convert `0` to $$2^k$$ then $$2^k$$ to $$n$$. Although this would be valid, it would require $$f(k) + A(n')$$ operations and be a suboptimal strategy. Instead, we would go straight from `0` to `n`, since `n` is \"on the way\" to $$2^k$$. If we were to keep going until $$2^k$$, it would cost us $$A(n')$$ operations (equivalent to reducing $$n'$$).\n>\n> That's why we subtract $$A(n')$$ from $$f(k)$$. Because it would take us $$f(k)$$ operations to get to $$2^k$$, but we don't go to $$2^k$$. We go to $$n$$, which is $$A(n')$$ operations closer.\n\n---\n\nThis **finally** leads us to our solution. First, we check for our base case. If `n == 0`, simply `return 0`. Otherwise, we identify `k`, the position of the most significant bit. This can be done using a while loop. Once we have `k`, we know the answer is $$f(k) - A(n')$$, where:\n\n- $$f(k) = 2^{k + 1} - 1$$\n- $$A(n') = \\text{minimumOneBitOperations}(n \\oplus \\text{curr})$$, where $$\\oplus$$ is the XOR operator and `curr` $$=2^k$$\n\n**Algorithm**\n\n1. If `n == 0`, return `0`.\n2. Initialize `k = 0`, `curr = 1`. Here, `curr` represents $$2^k$$.\n3. While `curr * 2 <= n`:\n    - Multiply `curr` by `2`.\n    - Increment `k`.\n4. Return $$2^{k + 1} - 1 - \\text{minimumOneBitOperations}(n \\oplus \\text{curr})$$.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/fwZHRQP6/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"fwZHRQP6\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(\\log^2{}n)$$\n\n    The worst case scenario is when $$n$$ can be written in the form $$2^k - 1$$. The while loop to find the most significant bit will iterate $$\\log{}n$$ times. Then, we call the function again with the most significant bit removed. The while loop will then iterate $$(\\log{}n) - 1$$ times. In the next function call, it will iterate $$(\\log{}n) - 2$$ times, and so on.\n\n    In total, there would be $$1 + 2 + 3 + ... + \\log{}n$$ iterations. This is the partial sum of [this series](https://en.wikipedia.org/wiki/1_%2B_2_%2B_3_%2B_4_%2B_%E2%8B%AF#Partial_sums) for $$\\log{}n$$, which is equal to $$\\frac{\\log{}n \\cdot ((\\log{}n) + 1)}{2} = O(\\log^2{}n)$$.\n\n    In addition, exponentiation has a logarithmic time complexity, which cannot be ignored in an analysis such as this.\n\n* Space complexity: $$O(\\log{}n)$$\n\n    The recursion call stack can have a max depth of $$O(\\log{}n)$$. \n    \n<br/>\n\n---\n\n### Approach 2: Iteration\n\n**Intuition**\n\nThe same idea from the first approach can be implemented iteratively, in the opposite direction. Instead of reducing $$n$$ to `0`, we will try to convert `0` to $$n$$, which, as we know, is equivalent and requires the same minimum number of steps.\n\nWe start by considering the least significant bit of `n` and iterate toward the most significant bit. Let's say the current bit we are focusing on is at position $$k$$.\n\nLet's say the least significant set bit is at position $$k_0$$. We know it represents $$2^{k_0}$$ by definition (as it is the least significant set bit, every other bit to the right must be 0). We also know that we require $$2^{k_0 + 1} - 1$$ operations to convert `0` to this power of two.\n\nConsider the next bit on the left is at position $$k_1$$. To convert `0` to $$2^{k_1}$$ would require $$2^{k_1 + 1} - 1$$ operations. However, this bit does not exactly represent $$2^{k_1}$$ in the full context of `n`, since we have the bit at position $$k_0$$.\n\nThankfully, we learned in the previous approach that the bit being set at position $$k_0$$ actually represents progress toward the conversion to $$2^{k_1}$$. In fact, everything to the right of the current $$k$$ is analogous to $$n'$$ from the previous approach. Thus, we can subtract $$A(n')$$ from $$2^{k_1 + 1} - 1$$ to get the number of operations required to convert `0` to `n` up to $$k_1$$.\n\nLet's continue: the next bit on the left is at position $$k_2$$. To convert `0` to $$2^{k_2}$$ would require $$2^{k_2 + 1} - 1$$ operations. Everything to the right (the bits at $$k_0$$ and $$k_1$$) represents $$n'$$ and gives us $$A(n')$$ progress toward creating `n` up to $$k_2$$.\n\nThe question is: what is the value of $$A(n')$$ at each step and how do we continuously update our answer as we iterate over the bits of `n`? We will use the following variables in our code:\n\n1. `k`, this represents the current bit's position\n2. `mask`, this represents $$2^k$$\n3. `ans`, this represents the answer to the problem when considering `n` only up to the $$k^{th}$$ bit\n\nWhen we are finished with the bit at $$k_i$$ and move to the bit at $$k_{i + 1}$$, `ans` now represents $$A(n')$$! Remember that $$A(n')$$ is the number of operations needed to solve the problem for $$n'$$, and $$n'$$ ignores the $$k^{th}$$ bit. When we move forward, `ans` is \"outdated\" and represents the answer for $$n'$$, which is exactly $$A(n')$$!\n\nFor any given $$k$$, if the $$k^{th}$$ bit is set, we can update `ans` as:\n\n$$2^{k + 1} - 1 - \\text{ans}$$\n\nWe can check if the $$k^{th}$$ bit is set by ANDing `n` with `mask`. After each iteration, we increment `k` and left shift `mask`.\n\n**Algorithm**\n\n1. Initialize `ans = 0`, `k = 0`, `mask = 1`.\n2. While `mask <= n`:\n    - If the bit from `mask` is set in `n`, that is, `n & mask != 0`, update `ans` as $$2^{k + 1} - 1 - \\text{ans}$$.\n    - Left shift `mask` once.\n    - Increment `k`.\n3. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/NThZvRkk/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"NThZvRkk\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(\\log n)$$\n\n    The loop runs once per bit of $n$, so it iterates $\\log n$ times.\n    \n    Every operation inside the loop is constant time when implemented with shifts, bitwise operations, and integer arithmetic in C++ and Java.\n    \n    In Python, using $1 << (k + 1)$ instead of $2 ** (k + 1)$ also keeps the complexity at $O(\\log n)$.\n\n* Space complexity: $$O(1)$$\n\n    This may be controversial. We aren't using any extra space other than a few integers. However, `mask` grows to a value linear with $$n$$. One could argue that such a value uses $$O(\\log{}n)$$ space, although `mask` never has more than one bit set.\n\n    We have written the space complexity as constant here as it is a standard convention to consider integers as using $$O(1)$$ space. However, there is nuance to consider when the nature of the problem focuses on bits.\n    \n<br/>\n\n---\n\n### Approach 3: Gray Code\n\n**Intuition**\n\n> Note: this approach is very advanced. You would not be expected to derive this approach in an interview. We have included it for the sake of completeness.\n\nA [Gray code](https://en.wikipedia.org/wiki/Gray_code), named after Frank Gray, is an ordering of binary numbers such that every successive number in the ordering differs by only one bit.\n\nYou may notice that the two operations given in the problem are capable only of changing exactly one bit at a time. Thus, any sequence of numbers generated by these operations **must** also be a Gray code!\n\nAlthough there can be many Gray codes, the standard encoding actually follows the exact same ordering as one that would be produced by the operations given in this problem.\n\nThus, this problem is actually equivalent to finding the index of $$n$$ in the standard Gray code sequence that starts from `0`, since reducing `n` to `0` is equivalent to converting `0` to `n`.\n\nThe [Wikipedia article](https://en.wikipedia.org/wiki/Gray_code#Converting_to_and_from_Gray_code) provides a very efficient algorithm to do this. As this approach (and certainly the derivation) is outside the scope of an interview, we will not discuss it in detail here. Interested users are encouraged to read through the Wikipedia article to learn more.\n\n**Algorithm**\n\n1. Initialize `ans = n`.\n2. XOR `ans` with `ans >> 16`.\n3. XOR `ans` with `ans >> 8`.\n4. XOR `ans` with `ans >> 4`.\n5. XOR `ans` with `ans >> 2`.\n6. XOR `ans` with `ans >> 1`.\n7. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/iB7gtbsV/shared\" frameBorder=\"0\" width=\"100%\" height=\"259\" name=\"iB7gtbsV\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(1)$$\n\n    $O(1)$ for fixed-width integers\n\n    The algorithm performs a constant number of bitwise shifts and XOR operations, so for 32-bit or 64-bit integers the running time is always constant.\n\n    For arbitrarily large integers, let the input have $B = \\log n$ bits.\n    Each shift or XOR costs $O(B)$ time, and the number of such operations required is $O(\\log B)$.\n    \n    Therefore, the total running time is: $O(B \\cdot \\log B) = O(\\log n \\cdot \\log(\\log n))$\n\n    The $\\log(\\log n)$ component grows extremely slowly, so for any real-world integer size this behaves like constant time.\n\n* Space complexity: $$O(1)$$\n\n    We aren't using any extra space. The previous approach's analysis does not apply here since we don't count the answer as part of the space complexity.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

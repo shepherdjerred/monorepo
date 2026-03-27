@@ -1,0 +1,136 @@
+{
+  "questionId": "1056",
+  "questionFrontendId": "1011",
+  "title": "Capacity To Ship Packages Within D Days",
+  "titleSlug": "capacity-to-ship-packages-within-d-days",
+  "difficulty": "Medium",
+  "content": "<p>A conveyor belt has packages that must be shipped from one port to another within <code>days</code> days.</p>\n\n<p>The <code>i<sup>th</sup></code> package on the conveyor belt has a weight of <code>weights[i]</code>. Each day, we load the ship with packages on the conveyor belt (in the order given by <code>weights</code>). We may not load more weight than the maximum weight capacity of the ship.</p>\n\n<p>Return the least weight capacity of the ship that will result in all the packages on the conveyor belt being shipped within <code>days</code> days.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> weights = [1,2,3,4,5,6,7,8,9,10], days = 5\n<strong>Output:</strong> 15\n<strong>Explanation:</strong> A ship capacity of 15 is the minimum to ship all the packages in 5 days like this:\n1st day: 1, 2, 3, 4, 5\n2nd day: 6, 7\n3rd day: 8\n4th day: 9\n5th day: 10\n\nNote that the cargo must be shipped in the order given, so using a ship of capacity 14 and splitting the packages into parts like (2, 3, 4, 5), (1, 6, 7), (8), (9), (10) is not allowed.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> weights = [3,2,2,4,1,4], days = 3\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> A ship capacity of 6 is the minimum to ship all the packages in 3 days like this:\n1st day: 3, 2\n2nd day: 2, 4\n3rd day: 1, 4\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> weights = [1,2,3,1,1], days = 4\n<strong>Output:</strong> 3\n<strong>Explanation:</strong>\n1st day: 1\n2nd day: 2\n3rd day: 3\n4th day: 1, 1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= days &lt;= weights.length &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= weights[i] &lt;= 500</code></li>\n</ul>\n",
+  "hints": [
+    "Binary search on the answer.  We need a function possible(capacity) which returns true if and only if we can do the task in D days."
+  ],
+  "metaData": "{\n  \"name\": \"shipWithinDays\",\n  \"params\": [\n    {\n      \"name\": \"weights\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"days\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"748.5K\", \"totalSubmission\": \"1M\", \"totalAcceptedRaw\": 748477, \"totalSubmissionRaw\": 1016068, \"acRate\": \"73.7%\"}",
+  "likes": 10972,
+  "dislikes": 287,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Split Array Largest Sum\", \"titleSlug\": \"split-array-largest-sum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Divide Chocolate\", \"titleSlug\": \"divide-chocolate\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Cutting Ribbons\", \"titleSlug\": \"cutting-ribbons\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimized Maximum of Products Distributed to Any Store\", \"titleSlug\": \"minimized-maximum-of-products-distributed-to-any-store\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Bags With Full Capacity of Rocks\", \"titleSlug\": \"maximum-bags-with-full-capacity-of-rocks\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Total Distance Traveled\", \"titleSlug\": \"minimum-total-distance-traveled\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,4,5,6,7,8,9,10]\n5",
+    "[3,2,2,4,1,4]\n3",
+    "[1,2,3,1,1]\n4"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"agoda\", \"name\": \"Agoda\"}], \"six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 5, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 4, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 3, \"slug\": \"dp-world\", \"name\": \"DP world\"}, {\"timesEncountered\": 2, \"slug\": \"zeta\", \"name\": \"Zeta\"}, {\"timesEncountered\": 2, \"slug\": \"chalo\", \"name\": \"chalo\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"cloudera\", \"name\": \"Cloudera\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int shipWithinDays(vector<int>& weights, int days) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int shipWithinDays(int[] weights, int days) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def shipWithinDays(self, weights: List[int], days: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def shipWithinDays(self, weights, days):\n        \"\"\"\n        :type weights: List[int]\n        :type days: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} weights\n * @param {number} days\n * @return {number}\n */\nvar shipWithinDays = function(weights, days) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function shipWithinDays(weights: number[], days: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int ShipWithinDays(int[] weights, int days) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int shipWithinDays(int* weights, int weightsSize, int days) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func shipWithinDays(weights []int, days int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun shipWithinDays(weights: IntArray, days: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func shipWithinDays(_ weights: [Int], _ days: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn ship_within_days(weights: Vec<i32>, days: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} weights\n# @param {Integer} days\n# @return {Integer}\ndef ship_within_days(weights, days)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $weights\n     * @param Integer $days\n     * @return Integer\n     */\n    function shipWithinDays($weights, $days) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int shipWithinDays(List<int> weights, int days) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def shipWithinDays(weights: Array[Int], days: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec ship_within_days(weights :: [integer], days :: integer) :: integer\n  def ship_within_days(weights, days) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec ship_within_days(Weights :: [integer()], Days :: integer()) -> integer().\nship_within_days(Weights, Days) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (ship-within-days weights days)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1647",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given some packages with weights given in `weights` which must be shipped from one port to another. We have a ship that has some capacity, and it can ship packages (in the order given by `weights`) having a total weight less than or equal to its capacity each day.\n\nOur task is to find the minimum capacity of the ship so that we can ship all the packages within `days` days.\n\n---\n\n### Approach: Binary Search\n\n#### Intuition\n\nAn intuitive approach would be to start with checking ship capacity equal to the largest weight in `weights`, say `w`. The ship's capacity cannot be smaller than `w`. We check if it is possible to ship all the packages within `days` days, using `w` as the capacity of the ship. If we are able to ship all the packages within the required days, we have `w` as our required answer.\n\nOtherwise, we increment the capacity and try with `w + 1`. If we are able to ship the packages within the required days now, `w + 1` is the answer. Otherwise, we try with the ship's capacity as `w + 2`.\n\nHow long can we go? In the worst case, we might need to choose the capacity of the ship equal to the sum of all the weights in `weights` and send them all in one day. So, our range starts from the largest weight and goes until the sum of the weights in `weights`.\n\nThis approach will provide the right answer to all the test cases but will indicate that the time limit has been exceeded. Because, in the worst case, we might need to check the ship's capacity from the largest weight to the sum of all elements in `weights`. The sum of all elements can reach `n * 500`, since `500` is the maximum weight we can have as per the problem constraints. So, we might need to check $O(n \\cdot 500)$ different values of ship capacity. For each capacity, we need to iterate over all the elements of `weights` to check whether we can ship the packages in the required number of days or not, this would require $O(n)$ time. As a result, the total time required would be $O(n \\cdot n \\cdot 500) = O(n^2 \\cdot 500)$ which would lead to TLE.\n\nLet's think of a faster way by making some observations.\n\nIf we cannot ship the packages in the required days with capacity `A`, we can never ship packages with a capacity less than `A`. Also, if we can ship the packages in the required days with capacity `B`, we can always ship them with a capacity greater than `B`. So, in such a case, the optimal capacity lies between `[A + 1, B]` (both inclusive).\n\nA scenario like this where our task is to search for an element `X` from a given range `(L, R)` where all values smaller than `X` do not satisfy a certain condition and all values greater than or equal to `X` satisfy it (or vice-versa), can be solved optimally with a binary search algorithm. In binary search, we repeatedly divide the solution space where the answer could be in half until the range contains just one element.\n\nHere's how a typical binary search works: \n\n![img](../Figures/1011/1011-1.png)\n\nFollowing the above discussion, we set the starting of the range to the largest weight in `weights`, say `maxWeight` and set the ending of the range to the sum of the elements of `weights`, say `totalWeight`. We define two variables, `l = maxWeight` and `r = totalWeight` to indicate the start and end of the range, respectively. Notice that the end of the range `r` is always a way to ship the elements within the required days.\n\nNext, we find the middle of the range, `mid = (l + r) / 2` and check if using `mid` capacity we can ship all the packages within `days` days. \n\n> The problem's constraints allow us to use the formula `mid = (l + r) / 2` without causing an overflow. Typically, in binary search, you should use the safe formula `mid = l + (r - l) / 2` to avoid overflow.\n\nIf we are able to ship the packages with `mid` capacity within the required days, we know the answer is at most `mid`, so we can look for a better answer by moving to the lower half - change `r = mid`.\n\nOtherwise, if we are not able to ship the packages with `mid` capacity, we cannot ship the packages with any capacity less than or equal to `mid`. So, we move to the upper half of the range by moving `l = mid + 1`.\n\nTo check whether we can ship all the packages with a given capacity, `c`, we create a method and define two variables in it, `daysNeeded = 1` and `currentLoad = 0` which store the total number of days needed to ship all the weights with `c` ship capacity and to keep track of how much weight has been placed in the ship on a day, respectively. We iterate over all the weights, and for each `weight`, we place the `weight` in the ship and increase its load to `currentLoad = currentLoad + weight`. We keep on placing the weights until `currentLoad > c`. If `currentLoad` exceeds capacity, we cannot keep adding weight and need an additional day. So, we increase the days needed to ship the packages by one, i.e., `daysNeeded = daysNeeded + 1` we also set `currentLoad = weight` as this is the current load for the next day. Finally, if `daysNeeded <= days`, we return `true`. Otherwise, we return `false`.\n\n\n#### Algorithm\n\n1. Initialize two integer variables, `totalLoad` and `maxLoad`. `totalLoad` stores the sum of all the elements of `weights` and `maxLoad` stores the largest element of `weights`.\n2. Create a method `feasible` which takes `weights, c, days` as the parameters and returns true if we can ship all the packages with `c` capacity.\n2. Perform a binary search over the range `maxLoad` to `totalLoad`.\n    - Create two variables, `l` and `r`, to represent the beginning and end of the range. Set `l = maxLoad` and `r = totalLoad`. We can always ship all the weights within `days` days with `r` capacity.\n3. Then, while `l < r`:\n    - Find the midpoint of the range `(l, r)` in the variable `mid = (l + r) / 2`.\n    - Call `feasible(weights, mid, days)` to see if we can ship all the weights in `days` days while using `mid` as the ship's capacity.\n    - If we can ship the packages with `mid` as the ship's capacity in less than or equal to `days` days, we move to the lower half of the range by setting `r = mid`.\n    - Otherwise, if we cannot ship the packages with `m` capacity in the required days, we move to the upper half of the range by setting `l = mid + 1`.\n4. Return `l` (or `r`) when `l = r`. \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/LsuMgiKM/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"LsuMgiKM\"></iframe>\n\n#### Complexity Analysis\n\nHere, $n$ is the length of `weights`.\n\n* Time complexity: $O(n \\cdot \\log(500 \\cdot n)) = O(n \\cdot \\log(n))$\n\n    - It takes O(n) time to iterate through `weights` to compute `maxLoad` and `totalLoad`.\n    - In the binary search algorithm, we divide our range by half every time. So for a range of length `R`, it performs $O(\\log(R))$ operations. In our case, the range is from `maxLoad` to `totalLoad`. As mentioned in the problem constraints, `maxLoad` can be `500`, so the total load can be `n * 500`. So, in the worst case, the size of the range would be `(n - 1) * 500` which would require $O(\\log(500n-500)) = O(\\log(n))$ operations using a binary search algorithm.\n    - To see if we can deliver the packages in the required number of days with a specific capacity, we iterate through the `weights` array to see if the current capacity allows us to carry the all the packages in `days` days, which needs $O(n)$ time.\n    - So it would take $O(n \\cdot \\log(n))$ time in total.\n\n* Space complexity: $O(1)$\n\n    - We are only defining a few integer variables.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -143,11 +143,11 @@ export function createPlausibleDeployment(
         // Security secrets from 1Password
         SECRET_KEY_BASE: EnvValue.fromSecretValue({
           secret: secretRef,
-          key: "secret_key_base",
+          key: "SECRET_KEY_BASE",
         }),
         TOTP_VAULT_KEY: EnvValue.fromSecretValue({
           secret: secretRef,
-          key: "totp_vault_key",
+          key: "TOTP_VAULT_KEY",
         }),
 
         // Disable registration after initial setup

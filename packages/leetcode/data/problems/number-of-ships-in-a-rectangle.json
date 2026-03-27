@@ -1,0 +1,121 @@
+{
+  "questionId": "1233",
+  "questionFrontendId": "1274",
+  "title": "Number of Ships in a Rectangle",
+  "titleSlug": "number-of-ships-in-a-rectangle",
+  "difficulty": "Hard",
+  "content": "<p><em>(This problem is an <strong>interactive problem</strong>.)</em></p>\n\n<p>Each ship is located at an integer point on the sea represented by a cartesian plane, and each integer point may contain at most 1 ship.</p>\n\n<p>You have a function <code>Sea.hasShips(topRight, bottomLeft)</code> which takes two points as arguments and returns <code>true</code> If there is at least one ship in the rectangle represented by the two points, including on the boundary.</p>\n\n<p>Given two points: the top right and bottom left corners of a rectangle, return the number of ships present in that rectangle. It is guaranteed that there are <strong>at most 10 ships</strong> in that rectangle.</p>\n\n<p>Submissions making <strong>more than 400 calls</strong> to <code>hasShips</code> will be judged <em>Wrong Answer</em>. Also, any solutions that attempt to circumvent the judge will result in disqualification.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example :</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/07/26/1445_example_1.PNG\" style=\"width: 496px; height: 500px;\" />\n<pre>\n<strong>Input:</strong> \nships = [[1,1],[2,2],[3,3],[5,5]], topRight = [4,4], bottomLeft = [0,0]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> From [0,0] to [4,4] we can count 3 ships within the range.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> ans = [[1,1],[2,2],[3,3]], topRight = [1000,1000], bottomLeft = [0,0]\n<strong>Output:</strong> 3\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>On the input <code>ships</code> is only given to initialize the map internally. You must solve this problem &quot;blindfolded&quot;. In other words, you must find the answer using the given <code>hasShips</code> API, without knowing the <code>ships</code> position.</li>\n\t<li><code>0 &lt;= bottomLeft[0] &lt;= topRight[0] &lt;= 1000</code></li>\n\t<li><code>0 &lt;= bottomLeft[1] &lt;= topRight[1] &lt;= 1000</code></li>\n\t<li><code>topRight != bottomLeft</code></li>\n</ul>\n",
+  "hints": [
+    "Use divide and conquer technique.",
+    "Divide the query rectangle into 4 rectangles.",
+    "Use recursion to continue with the rectangles that has ships only."
+  ],
+  "metaData": "{\n  \"name\": \"countShips\",\n  \"params\": [\n    {\n      \"name\": \"ans\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"name\": \"topRight\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"bottomLeft\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"manual\": true,\n  \"typescriptCustomType\" : \"class Sea {\\n    __ans: number[][];\\n    __guesses: number;\\n    constructor(ans: number[][]) {\\n        this.__ans = ans;\\n        this.__guesses = 400;\\n    }\\n\\n    hasShips(topRight: number[], bottomLeft: number[]): boolean {\\n        this.__guesses -= 1;\\n        var ret = false;\\n        for (let a of this.__ans) {\\n            var cur = a[0] >= bottomLeft[0] && a[0] <= topRight[0] && a[1] >= bottomLeft[1] && a[1] <= topRight[1];\\n            ret = ret || cur;\\n        }\\n        return ret;\\n    }\\n\\n    getGuesses(): number {\\n        return this.__guesses;\\n    }\\n};\\n\"\n}",
+  "stats": "{\"totalAccepted\": \"34.5K\", \"totalSubmission\": \"50.1K\", \"totalAcceptedRaw\": 34524, \"totalSubmissionRaw\": 50115, \"acRate\": \"68.9%\"}",
+  "likes": 536,
+  "dislikes": 70,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[1,1],[2,2],[3,3],[5,5]]\n[4,4]\n[0,0]",
+    "[[1,1],[2,2],[3,3]]\n[1000,1000]\n[0,0]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 8, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Divide and Conquer",
+      "slug": "divide-and-conquer"
+    },
+    {
+      "name": "Interactive",
+      "slug": "interactive"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * // This is Sea's API interface.\n * // You should not implement it, or speculate about its implementation\n * class Sea {\n *   public:\n *     bool hasShips(vector<int> topRight, vector<int> bottomLeft);\n * };\n */\n\nclass Solution {\npublic:\n    int countShips(Sea sea, vector<int> topRight, vector<int> bottomLeft) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * // This is Sea's API interface.\n * // You should not implement it, or speculate about its implementation\n * class Sea {\n *     public boolean hasShips(int[] topRight, int[] bottomLeft);\n * }\n */\n\nclass Solution {\n    public int countShips(Sea sea, int[] topRight, int[] bottomLeft) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# \"\"\"\n# This is Sea's API interface.\n# You should not implement it, or speculate about its implementation\n# \"\"\"\n#class Sea:\n#    def hasShips(self, topRight: 'Point', bottomLeft: 'Point') -> bool:\n#\n#class Point:\n#\tdef __init__(self, x: int, y: int):\n#\t\tself.x = x\n#\t\tself.y = y\n\nclass Solution:\n    def countShips(self, sea: 'Sea', topRight: 'Point', bottomLeft: 'Point') -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# \"\"\"\n# This is Sea's API interface.\n# You should not implement it, or speculate about its implementation\n# \"\"\"\n#class Sea(object):\n#    def hasShips(self, topRight, bottomLeft):\n#        \"\"\"\n#        :type topRight: Point\n#\t\t :type bottomLeft: Point\n#        :rtype bool\n#        \"\"\"\n#\n#class Point(object):\n#\tdef __init__(self, x, y):\n#\t\tself.x = x\n#\t\tself.y = y\n\nclass Solution(object):\n    def countShips(self, sea, topRight, bottomLeft):\n        \"\"\"\n        :type sea: Sea\n        :type topRight: Point\n        :type bottomLeft: Point\n        :rtype: integer\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * // This is Sea's API interface.\n * // You should not implement it, or speculate about its implementation\n * function Sea() {\n *     @param {integer[]} topRight\n *     @param {integer[]} bottomLeft\n *     @return {boolean}\n *     this.hasShips = function(topRight, bottomLeft) {\n *         ...\n *     };\n * };\n */\n\n/**\n * @param {Sea} sea\n * @param {integer[]} topRight\n * @param {integer[]} bottomLeft\n * @return {integer}\n */\nvar countShips = function(sea, topRight, bottomLeft) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * // This is the Sea's API interface.\n * // You should not implement it, or speculate about its implementation\n * class Sea {\n *      hasShips(topRight: number[], bottomLeft: number[]): boolean {}\n * }\n */\n\nfunction countShips(sea: Sea, topRight: number[], bottomLeft: number[]): number {\n\t\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * // This is Sea's API interface.\n * // You should not implement it, or speculate about its implementation\n * class Sea {\n *     public bool HasShips(int[] topRight, int[] bottomLeft);\n * }\n */\n\nclass Solution {\n    public int CountShips(Sea sea, int[] topRight, int[] bottomLeft) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * // The hasShips API is already defined for you.\n * // You should not implement it, or speculate about its implementation\n *     bool hasShips(int topRightX, int topRightY, int bottomLeftX, int bottomLeftY);\n */\n\nint countShips(int topRightX, int topRightY, int bottomLeftX, int bottomLeftY) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * // This is Sea's API interface.\n * // You should not implement it, or speculate about its implementation\n * type Sea struct {\n *     func hasShips(topRight, bottomLeft []int) bool {}\n * }\n */\n\nfunc countShips(sea Sea, topRight, bottomLeft []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * // This is Sea's API interface.\n * // You should not implement it, or speculate about its implementation\n * class Sea {\n *     fun hasShips(topRight: IntArray, bottomLeft: IntArray): Boolean{}\n * }\n */\n\nclass Solution {\n    fun countShips(sea: Sea, topRight: IntArray, bottomLeft: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * // This is Sea's API interface.\n * // You should not implement it, or speculate about its implementation\n * class Sea {\n *     public func hasShips(_ topRight: [Int], _ bottomLeft: [Int]) -> Bool {}\n * }\n */\n\nclass Solution {\n    func countShips(_ sea: Sea, _ topRight: [Int], _ bottomLeft: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "/**\n * // This is Sea's API interface.\n * // You should not implement it, or speculate about its implementation\n * struct Sea;\n * impl Sea {\n *    pub fn hasShips(topRight: Vec<i32>,bottomLeft: Vec<i32>)->bool{}\n * }\n */\n\nimpl Solution {\n    pub fn count_ships(sea: &Sea, topRight: Vec<i32>, bottomLeft: Vec<i32>) -> i32 {\n\n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# This is Sea's API interface.\n# You should not implement it, or speculate about its implementation\n# class Sea\n#     def hasShips(topRight, bottomLeft)\n#\t\t\n#     end\n# end\n\n# @param {Sea} sea\n# @param {List[int]} topRight\n# @param {List[int]} bottomLeft\n# @return {int}\ndef countShips(sea, topRight, bottomLeft)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * // This is Sea's API interface.\n * // You should not implement it, or speculate about its implementation\n * class Sea {\n *     function hasShips ($topRight, $bottomLeft) {}\n * }\n */\n\nclass Solution {\n    /**\n     * @param Sea $sea\n     * @param Integer[] $topRight\n     * @param Integer[] $bottomLeft\n     * @return Integer[]\n     */\n    function countShips ($sea, $topRight, $bottomLeft) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * // This is Sea's API interface.\n * // You should not implement it, or speculate about its implementation\n * class Sea {\n *     def hasShips(topRight: Array[Int], bottomLeft: Array[Int]): Boolean = {}\n * }\n */\n\nobject Solution {\n    def countShips(sea: Sea, topRight: Array[Int], bottomLeft: Array[Int]): Int = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "1298",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Overview\n\nThere is an open sea with ships at some random locations. We are given two coordinates representing the `bottomLeft` and `topRight` corners of a rectangle defining a portion of the `sea`. There can be up to 10 ships at different coordinates inside this area, and we can ask the game master if there are any ships in a given sub-region of the `sea`.\nA condition of the game is that we can ask this question at most 400 times; to win the game we must find the exact number of ships.\n\n![ships](../Figures/1274/Ships_Introduction.png)\n\nAt first, this problem looks like a blind game, but this makes the problem altogether more interesting.\n\nThere can be only one ship at any coordinate, so let's calculate the maximum number of possible points.\nAs per the problem statement, the maximum size of the Cartesian plane is (1,000 by 1,000) which means that the maximum number of possible points where a ship can be present is 1,000,000. We only have 400 chances to find a ship, so a brute force approach will not help here; we have to be smart!\n\nLet's look at a more efficient approach to solving this problem.\n\n---\n### Approach 1: Divide And Conquer\n\n**Intuition**\n\nBecause we are only allowed 400 guesses and there could be up to a million points in the `sea`, we know that checking every coordinate is not a feasible strategy. However, by starting from a larger zone and recursively checking smaller and smaller zones, we can eliminate any areas that do not contain a single ship and thus limit our search to the remaining area.\n\nIn this way, we can use an elimination technique to concentrate our search in the right direction. To apply this, we will have to first divide the rectangular Cartesian plane into a certain number of roughly equal parts.\n\nFor each sub-rectangle, we will make a separate call to the method `hasShip()`. If a sub-rectangle does not contain a ship, it can be eliminated from future searching.\n\nWe can perform a similar search process for the remaining sub-rectangles until the bottom-left and top-right coordinates converge to a single point (which is the location of a ship).\n\n> In this solution, we are dividing the problem into sub-problems until the sub-problem can be solved without diving it further. Such solutions can be implemented [recursively](https://leetcode.com/explore/learn/card/recursion-i/).\n\nNow, the important question is _what is the optimal number of sub-rectangles at each step?_\n\nLet's consider dividing the rectangle into roughly 4 equal parts.\nThus, we will make 4 calls to `hasShip()` to determine if ships are present in each sub-rectangle; any empty sub-rectangles can then be eliminated from the search space.\nThe following figure demonstrates this idea.\n\n![ships](../Figures/1274/Divide_And_Conquer_Technique.png)\n\n_Analysis_\n\nSince we will divide each rectangle into 4 sub-rectangles recursively, at each level of the recursion tree, we will have $$4^{level}$$ possible sub-rectangles.\n\n![ships](../Figures/1274/Recursion_Levels.png)\n\n_Calculate the number of levels:_\n\nFrom the problem statement, we know that the maximum size of the original rectangle is $$(1000 \\cdot 1000)$$.\n\nIf we recursively divide this rectangle into four equal sub-rectangles, at each level, the maximum number of levels is $$\\log_4 (1000000) \\approx 10$$   \nThus, the maximum number of levels for any given input will not be greater than 10.\n\n_Calculate the number of sub-rectangles:_\n\nSuppose that there is a ship at every coordinate point in the `sea`. In that case, every coordinate would be a leaf node of the recursion diagram shown above. We would need over a million calls to `hasShip()` to find the exact number of ships, but we are only allowed to make only $$400$$ calls. How do we solve this?\n\n> Hint: Read the problem statement one more time.\n\nLet's look at the problem statement carefully. It states that there can be at most 10 ships in the rectangle. This implies that, in the worst case, if each sub-rectangle contains at most one ship, there can be at most 10 non-empty sub-rectangles at any level.\nThus, the maximum number of sub-rectangles at each level of recursion is 40 (10 that contain a ship and 30 that are empty).\n\nFor each sub-rectangle that contains a ship, we will make $$4$$ recursive calls to `hasShip()`. Thus, even in the worst case scenario, the number of total calls to `hasShip()` will be less than the number of ships $$(10)$$ times $$4$$ times the maximum number of levels $$(\\log_4 (1000 \\cdot 1000) = 10)$$. That is, $$10 \\cdot 4 \\cdot 10 = 400$$.\n\n![ships](../Figures/1274/Ships_SubRectangles.png)\n\n\n**Algorithm**\n\n> This technique of dividing the problem into more sub-problems of the same or related type until these become simple enough to be solved directly is called _Divide and Conquer_.\n\n1. Check if the current rectangle given by `topRight` and `bottomLeft` coordinates, contains a ship. ​If so, divide the rectangle into 4​ sub-rectangles and recursively find the number of ships in each sub-rectangle.\n\n   Otherwise, terminate the search process. Thus, at each step, we eliminate all rectangles that do not contain a single ship.\n\n2. To divide the rectangle into 4 equal parts, we will first define the center coordinate of the X and Y axes as `midX` and `midY`; thus forming 4 sub-rectangles. The following figure illustrates the idea.\n\n![ships](../Figures/1274/Sub_Rectangle_Mid_Position.png)\n​\n![ships](../Figures/1274/Rectangle_Four_Division.png)\n\n\n3. For each of the sub-rectangles, recursively count the number of ships. The number of ships in a given rectangle will be the sum of the ships returned by the recursive call to each sub-rectangle.\n\n4. The recursive search process will terminate when either of the following conditions is met:\n\n    i. There are no ships in the rectangle.\n\n    ii. The rectangle cannot be divided further, i.e the rectangle represents a single point. This condition is true when the `topRight` co-ordinate is equal to the `bottomLeft` co-ordinate.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/5aXpgTPW/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"5aXpgTPW\"></iframe>\n\n**Complexity Analysis**\n\nLet $$M$$ be the range of possible x-coordinate values between `bottomLeft[0]` and `topRight[0]` and let $$N$$ be the range of possible y-coordinate values between `bottomLeft[1]` and `topRight[1]`. Thus, the maximum possible number of points in the rectangle is $$M \\cdot N$$. Finally, let $$S$$ be the maximum number of ships in the sea.\n\n* Time Complexity: $$O(S \\cdot (\\log_2 \\max(M, N) - \\log_4 S))$$\n\n  Each call to `countShips` requires only constant time so the time complexity will be $$O(1)$$ times the maximum possible number of calls to `countShips`.\n\n  The worst-case scenario is when there is the maximum number of possible ships $$(S = 10)$$ and they are spread out such that after $$S$$ recursive calls (the $$\\log_4 S$$ level of the recursion tree), there are $$S$$ regions that each contain $$1$$ ship and the remaining regions are empty.\n\n\n  Each region that contains $$1$$ ship, will result in $$4$$ recursive calls. $$3$$ will return $$0$$ because they do not contain a ship and $$1$$ call will result in $$4$$ more recursive calls because it does contain a ship. This process will repeat until we make a recursive call with the exact coordinates of the ship.\n\n  At the latest, we will pinpoint the ship at the maximum depth of the recursion tree which is $$\\log_2 \\max(M, N)$$ because at each recursive call we divide the search space by half for each of the $$2$$ dimensions.\n\n  Thus, once a region contains only $$1$$ ship, it may still take $$4 \\cdot (\\log_2 \\max(M, N) - \\log_4 S)$$ recursive calls before pinpointing the location of the ship (and returning $$1$$). And since there are $$S$$ ships, the total number of recursive calls after all regions contain at most $$1$$ ship is $$4 \\cdot S \\cdot (\\log_2 \\max(M, N) - \\log_4 S)$$.\n\n  Summing up, the time complexity is $$S + 4 \\cdot S \\cdot (\\log_2 \\max(M, N) - \\log_4 S)$$ which in the worst case (when $$S = 10$$ and $$M = N = 1000$$) equals $$342$$ recursive calls.\n\n* Space Complexity: $$O(\\log_2 \\max(M, N))$$.\n\n  Each call to `countShips` uses only constant space so our space complexity is directly related to the maximum height of the recursion call stack. Since we have 2 dimensions of magnitudes M and N respectively, and the search space for each dimension is reduced by half at each recursive call to `countShips`, the maximum height of the recursion call stack will be $$ \\log_2 \\max(M, N) $$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

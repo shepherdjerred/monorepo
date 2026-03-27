@@ -1,0 +1,139 @@
+{
+  "questionId": "1079",
+  "questionFrontendId": "1022",
+  "title": "Sum of Root To Leaf Binary Numbers",
+  "titleSlug": "sum-of-root-to-leaf-binary-numbers",
+  "difficulty": "Easy",
+  "content": "<p>You are given the <code>root</code> of a binary tree where each node has a value <code>0</code> or <code>1</code>. Each root-to-leaf path represents a binary number starting with the most significant bit.</p>\n\n<ul>\n\t<li>For example, if the path is <code>0 -&gt; 1 -&gt; 1 -&gt; 0 -&gt; 1</code>, then this could represent <code>01101</code> in binary, which is <code>13</code>.</li>\n</ul>\n\n<p>For all leaves in the tree, consider the numbers represented by the path from the root to that leaf. Return <em>the sum of these numbers</em>.</p>\n\n<p>The test cases are generated so that the answer fits in a <strong>32-bits</strong> integer.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/04/04/sum-of-root-to-leaf-binary-numbers.png\" style=\"width: 400px; height: 263px;\" />\n<pre>\n<strong>Input:</strong> root = [1,0,1,0,1,0,1]\n<strong>Output:</strong> 22\n<strong>Explanation: </strong>(100) + (101) + (110) + (111) = 4 + 5 + 6 + 7 = 22\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> root = [0]\n<strong>Output:</strong> 0\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[1, 1000]</code>.</li>\n\t<li><code>Node.val</code> is <code>0</code> or <code>1</code>.</li>\n</ul>\n",
+  "hints": [
+    "Find each path, then transform that path to an integer in base 10."
+  ],
+  "metaData": "{\r\n  \"name\": \"sumRootToLeaf\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"root\",\r\n      \"type\": \"TreeNode\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"358.5K\", \"totalSubmission\": \"467.9K\", \"totalAcceptedRaw\": 358493, \"totalSubmissionRaw\": 467868, \"acRate\": \"76.6%\"}",
+  "likes": 3787,
+  "dislikes": 212,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,0,1,0,1,0,1]",
+    "[0]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"lime\", \"name\": \"Lime\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    int sumRootToLeaf(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public int sumRootToLeaf(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def sumRootToLeaf(self, root: Optional[TreeNode]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def sumRootToLeaf(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {number}\n */\nvar sumRootToLeaf = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction sumRootToLeaf(root: TreeNode | null): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public int SumRootToLeaf(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nint sumRootToLeaf(struct TreeNode* root) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc sumRootToLeaf(root *TreeNode) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun sumRootToLeaf(root: TreeNode?): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func sumRootToLeaf(_ root: TreeNode?) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn sum_root_to_leaf(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {Integer}\ndef sum_root_to_leaf(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return Integer\n     */\n    function sumRootToLeaf($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  int sumRootToLeaf(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def sumRootToLeaf(root: TreeNode): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec sum_root_to_leaf(root :: TreeNode.t | nil) :: integer\n  def sum_root_to_leaf(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec sum_root_to_leaf(Root :: #tree_node{} | null) -> integer().\nsum_root_to_leaf(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (sum-root-to-leaf root)\n  (-> (or/c tree-node? #f) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "996",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\n**Prerequisites: Bitwise Trick**\n\nIf you work with decimal representation, the conversion of `1->2` into `12` is easy. You start from `curr_number = 1`, then shift one register to the left and add the next digit: `curr_number = 1 * 10 + 2 = 12`.\n\nIf you work with binaries `1 -> 1` -> `3`, it's the same. You start from `curr_number = 1`, then shift one register to the left and add the next digit: `curr_number = (1 << 1) | 1 = 3`.\n\n**Prerequisites: Tree Traversals**\n\nThere are three DFS ways to traverse the tree: preorder, postorder and inorder. Please check two minutes picture explanation, if you don't remember them quite well:\n[here is the Python version](https://leetcode.com/problems/binary-tree-inorder-traversal/discuss/283746/all-dfs-traversals-preorder-inorder-postorder-in-python-in-1-line) \nand \n[here is the Java version](https://leetcode.com/problems/binary-tree-inorder-traversal/discuss/328601/all-dfs-traversals-preorder-postorder-inorder-in-java-in-5-lines).\n\n**Optimal Strategy to Solve the Problem**\n\n> Root-to-left traversal is so-called _DFS preorder traversal_. To implement it, one has to follow a straightforward strategy Root->Left->Right. \n\nSince one has to visit all nodes, the best possible time complexity here is linear. Hence all interest here is to improve the space complexity. \n\n> There are 3 ways to implement preorder traversal: iterative, recursive and Morris. \n\nIterative and recursive approaches here do the job in one pass, but they both need up to $$\\mathcal{O}(H)$$ space to keep the stack, where $$H$$ is a tree height.\n\nMorris's traversal is a two-pass approach, but it's a constant-space one.\n\n![diff](../Figures/1022/preorder2.png)\n\n<br />\n<br />\n\n\n---\n### Approach 1: Iterative Preorder Traversal.\n\n**Intuition**\n\nHere we implement standard iterative preorder traversal with the stack:\n\n- Push root into the stack `stack`.\n\n- While the `stack` is not empty:\n\n    - Pop out a node from `stack` and update the current number.\n    \n    - If the node is a leaf, update the root-to-leaf sum.\n    \n    - Push right and left child nodes into `stack`.\n    \n- Return root-to-leaf sum.  \n\n!?!../Documents/1022_LIS.json:1000,344!?!\n\n**Implementation**\n\nNote, that \n[Javadocs recommends to use ArrayDeque, and not Stack as a stack implementation](https://docs.oracle.com/javase/8/docs/api/java/util/ArrayDeque.html).\n\n<iframe src=\"https://leetcode.com/playground/3Wa68VYh/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"3Wa68VYh\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$, where $$N$$ is a number of nodes, since one has to visit each node. \n    \n* Space complexity: up to $$\\mathcal{O}(H)$$ to keep the stack, where $$H$$ is a tree height.  \n<br />\n<br />\n\n\n---\n### Approach 2: Recursive Preorder Traversal.\n\nIterative approach 1 could be converted into a recursive one.\n\nRecursive preorder traversal is extremely simple: \nfollow Root->Left->Right direction, i.e. do all the business with the node (= update the current number and root-to-leaf sum), and then do the recursive calls for the left and right child nodes.\n\nP.S.\nHere is the difference between _preorder_ and the other DFS recursive traversals. In the following figure the nodes are enumerated in the order you visit them, please follow `1-2-3-4-5` to compare different DFS strategies implemented as recursion.\n\n![diff](../Figures/1022/ddfs2.png)\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/KByvchnh/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"KByvchnh\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$, where $$N$$ is the number of nodes since one has to visit each node. \n    \n* Space complexity: up to $$\\mathcal{O}(H)$$ to keep the recursion stack, where $$H$$ is a tree height.  \n<br />\n<br />\n\n\n---\n### Approach 3: Morris Preorder Traversal.\n\nWe discussed already iterative and recursive preorder traversals, which both have great time complexity though use up to $$\\mathcal{O}(H)$$ to keep the stack. We could trade in performance to save space.\n\nThe idea of Morris preorder traversal is simple: to use no space but to traverse the tree.\n\n> How that could be even possible? At each node one has to decide where to go: to the left or to the right, traverse the left subtree or traverse the right subtree. How one could know that the left subtree is already done if no additional memory is allowed?  \n\nThe idea of [Morris](https://www.sciencedirect.com/science/article/pii/0020019079900681) algorithm is to set the _temporary link_ between the node and its \n[predecessor](https://leetcode.com/articles/delete-node-in-a-bst/):\n`predecessor.right = root`.\nSo one starts from the node, computes its predecessor, and verifies if the link is present.\n\n- There is no link? Set it and go to the left subtree.\n\n- There is a link? Break it and go to the right subtree.  \n\nThere is one small issue to deal with what if there is no left child, i.e. there is no left subtree? Then go straight to the right subtree.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/DkDLLGMz/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"DkDLLGMz\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$, where $$N$$ is a number of nodes.\n    \n* Space complexity: $$\\mathcal{O}(1)$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

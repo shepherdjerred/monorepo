@@ -1,0 +1,125 @@
+{
+  "questionId": "1740",
+  "questionFrontendId": "1617",
+  "title": "Count Subtrees With Max Distance Between Cities",
+  "titleSlug": "count-subtrees-with-max-distance-between-cities",
+  "difficulty": "Hard",
+  "content": "<p>There are <code>n</code> cities numbered from <code>1</code> to <code>n</code>. You are given an array <code>edges</code> of size <code>n-1</code>, where <code>edges[i] = [u<sub>i</sub>, v<sub>i</sub>]</code> represents a bidirectional edge between cities <code>u<sub>i</sub></code> and <code>v<sub>i</sub></code>. There exists a unique path between each pair of cities. In other words, the cities form a <strong>tree</strong>.</p>\r\n\r\n<p>A <strong>subtree</strong> is a subset of cities where every city is reachable from every other city in the subset, where the path between each pair passes through only the cities from the subset. Two subtrees are different if there is a city in one subtree that is not present in the other.</p>\r\n\r\n<p>For each <code>d</code> from <code>1</code> to <code>n-1</code>, find the number of subtrees in which the <strong>maximum distance</strong> between any two cities in the subtree is equal to <code>d</code>.</p>\r\n\r\n<p>Return <em>an array of size</em> <code>n-1</code> <em>where the </em><code>d<sup>th</sup></code><em> </em><em>element <strong>(1-indexed)</strong> is the number of subtrees in which the <strong>maximum distance</strong> between any two cities is equal to </em><code>d</code>.</p>\r\n\r\n<p><strong>Notice</strong>&nbsp;that&nbsp;the <strong>distance</strong> between the two cities is the number of edges in the path between them.</p>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong class=\"example\">Example 1:</strong></p>\r\n\r\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/21/p1.png\" style=\"width: 161px; height: 181px;\" /></strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> n = 4, edges = [[1,2],[2,3],[2,4]]\r\n<strong>Output:</strong> [3,4,0]\r\n<strong>Explanation:\r\n</strong>The subtrees with subsets {1,2}, {2,3} and {2,4} have a max distance of 1.\r\nThe subtrees with subsets {1,2,3}, {1,2,4}, {2,3,4} and {1,2,3,4} have a max distance of 2.\r\nNo subtree has two nodes where the max distance between them is 3.\r\n</pre>\r\n\r\n<p><strong class=\"example\">Example 2:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> n = 2, edges = [[1,2]]\r\n<strong>Output:</strong> [1]\r\n</pre>\r\n\r\n<p><strong class=\"example\">Example 3:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> n = 3, edges = [[1,2],[2,3]]\r\n<strong>Output:</strong> [2,1]\r\n</pre>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong>Constraints:</strong></p>\r\n\r\n<ul>\r\n\t<li><code>2 &lt;= n &lt;= 15</code></li>\r\n\t<li><code>edges.length == n-1</code></li>\r\n\t<li><code>edges[i].length == 2</code></li>\r\n\t<li><code>1 &lt;= u<sub>i</sub>, v<sub>i</sub> &lt;= n</code></li>\r\n\t<li>All pairs <code>(u<sub>i</sub>, v<sub>i</sub>)</code> are distinct.</li>\r\n</ul>",
+  "hints": [
+    "Iterate through every possible subtree by doing a bitmask on which vertices to include. How can you determine if a subtree is valid (all vertices are connected)?",
+    "To determine connectivity, count the number of reachable vertices starting from any included vertex and only traveling on edges connecting 2 vertices in the subtree. The count should be the same as the number of 1s in the bitmask.",
+    "The diameter is basically the maximum distance between any two nodes. Root the tree at a vertex. The answer is the max of the heights of the two largest subtrees or the longest diameter in any of the subtrees."
+  ],
+  "metaData": "{\n  \"name\": \"countSubgraphsForEachDiameter\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"edges\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"14.8K\", \"totalSubmission\": \"22K\", \"totalAcceptedRaw\": 14838, \"totalSubmissionRaw\": 22018, \"acRate\": \"67.4%\"}",
+  "likes": 573,
+  "dislikes": 44,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Tree Diameter\", \"titleSlug\": \"tree-diameter\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "4\n[[1,2],[2,3],[2,4]]",
+    "2\n[[1,2]]",
+    "3\n[[1,2],[2,3]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    },
+    {
+      "name": "Bitmask",
+      "slug": "bitmask"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> countSubgraphsForEachDiameter(int n, vector<vector<int>>& edges) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] countSubgraphsForEachDiameter(int n, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countSubgraphsForEachDiameter(self, n: int, edges: List[List[int]]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countSubgraphsForEachDiameter(self, n, edges):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} edges\n * @return {number[]}\n */\nvar countSubgraphsForEachDiameter = function(n, edges) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countSubgraphsForEachDiameter(n: number, edges: number[][]): number[] {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] CountSubgraphsForEachDiameter(int n, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* countSubgraphsForEachDiameter(int n, int** edges, int edgesSize, int* edgesColSize, int* returnSize){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countSubgraphsForEachDiameter(n int, edges [][]int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countSubgraphsForEachDiameter(n: Int, edges: Array<IntArray>): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countSubgraphsForEachDiameter(_ n: Int, _ edges: [[Int]]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_subgraphs_for_each_diameter(n: i32, edges: Vec<Vec<i32>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} edges\n# @return {Integer[]}\ndef count_subgraphs_for_each_diameter(n, edges)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $edges\n     * @return Integer[]\n     */\n    function countSubgraphsForEachDiameter($n, $edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countSubgraphsForEachDiameter(n: Int, edges: Array[Array[Int]]): Array[Int] = {\n        \n    }\n}"
+    }
+  ],
+  "solution": null
+}

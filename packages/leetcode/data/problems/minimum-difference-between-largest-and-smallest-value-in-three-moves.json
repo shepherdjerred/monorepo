@@ -1,0 +1,140 @@
+{
+  "questionId": "1616",
+  "questionFrontendId": "1509",
+  "title": "Minimum Difference Between Largest and Smallest Value in Three Moves",
+  "titleSlug": "minimum-difference-between-largest-and-smallest-value-in-three-moves",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>nums</code>.</p>\n\n<p>In one move, you can choose one element of <code>nums</code> and change it to <strong>any value</strong>.</p>\n\n<p>Return <em>the minimum difference between the largest and smallest value of <code>nums</code> <strong>after performing at most three moves</strong></em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [5,3,2,4]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> We can make at most 3 moves.\nIn the first move, change 2 to 3. nums becomes [5,3,3,4].\nIn the second move, change 4 to 3. nums becomes [5,3,3,3].\nIn the third move, change 5 to 3. nums becomes [3,3,3,3].\nAfter performing 3 moves, the difference between the minimum and maximum is 3 - 3 = 0.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,5,0,10,14]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> We can make at most 3 moves.\nIn the first move, change 5 to 0. nums becomes [1,0,0,10,14].\nIn the second move, change 10 to 0. nums becomes [1,0,0,0,14].\nIn the third move, change 14 to 1. nums becomes [1,0,0,0,1].\nAfter performing 3 moves, the difference between the minimum and maximum is 1 - 0 = 1.\nIt can be shown that there is no way to make the difference 0 in 3 moves.</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [3,100,20]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> We can make at most 3 moves.\nIn the first move, change 100 to 7. nums becomes [3,7,20].\nIn the second move, change 20 to 7. nums becomes [3,7,7].\nIn the third move, change 3 to 7. nums becomes [7,7,7].\nAfter performing 3 moves, the difference between the minimum and maximum is 7 - 7 = 0.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-10<sup>9</sup> &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "The minimum difference possible is obtained by removing three elements between the three smallest and three largest values in the array."
+  ],
+  "metaData": "{\n  \"name\": \"minDifference\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"250.8K\", \"totalSubmission\": \"423.5K\", \"totalAcceptedRaw\": 250808, \"totalSubmissionRaw\": 423526, \"acRate\": \"59.2%\"}",
+  "likes": 2548,
+  "dislikes": 286,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimize the Maximum Difference of Pairs\", \"titleSlug\": \"minimize-the-maximum-difference-of-pairs\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[5,3,2,4]",
+    "[1,5,0,10,14]",
+    "[3,100,20]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 16, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 9, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minDifference(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minDifference(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minDifference(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minDifference(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar minDifference = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minDifference(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinDifference(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minDifference(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minDifference(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minDifference(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minDifference(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_difference(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef min_difference(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function minDifference($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minDifference(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minDifference(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_difference(nums :: [integer]) :: integer\n  def min_difference(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_difference(Nums :: [integer()]) -> integer().\nmin_difference(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-difference nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2359",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nAs you can see from the examples, we'll approach this problem by changing up to 3 values to an existing value in the array. Once changed, these values won't factor into the final calculation of the difference. This makes our changes the equivalent of deleting the values. \n\nNow, we need to determine which three elements to delete to minimize this difference.\n\nIt's important to understand that deleting elements that are not the largest or smallest won't reduce the overall difference and is a waste of moves. Let's sort our array to evaluate the values more effectively.\n\nFor example, in the array `nums = [1, 3, 6, 8, 10, 14]`, the difference between the largest and smallest values is `14 - 1 = 13`. Deleting `8` does not change the difference, wasting a move.\n\nWe should focus on removing elements at the ends of the sorted array since the largest and smallest values are there. By removing these elements, we can reduce the range and minimize the difference effectively.\n\n--- \n\n### Approach 1: Sort + Greedy Deletion\n\n#### Intuition\n\nOnce we sort the array, how do we know which three values to target? There are four possible optimal scenarios:\n\n* Removing the three largest elements.\n* Removing the two largest and one smallest elements.\n* Removing one largest and two smallest elements.\n* Removing the three smallest elements.\n\nWith this approach, our only way to identify the three most impactful values to delete is to evaluate each scenario and choose the result that leads to the least difference between the smallest and largest values.  \n\n!?!../Documents/1509/slideshow.json:960,540!?!\n\n> Edge Case: If the array's length is less than or equal to `4`, we can return `0`. Removing up to three elements from this array would leave at most one element, resulting in a difference of zero between the largest and smallest values.\n\n\nThe rigorous proof that the greedy choice is optimal is done using proof by contradiction. \n\nAssume that there exists a better strategy than removing three elements from either end of the sorted array to minimize the difference between the maximum and minimum elements. We will call this value difference from now on for simplicity. \n\nLet's first sort the array `nums` with size `n` such that, `nums[0] <= nums[1] <= ... <= nums[n - 1]`. \n\nSuppose that the optimal solution is removing the elements with indices `{i, j, k}`.\n\nLet's assume for the sake of argument that `3 <= i < n - 3`, meaning that index `i` is outside the range that the greedy choice suggests. \n\nThree cases have to be considered:\n\n1. `j, k < 3`: \n\nIn this case, the difference is `nums[n - 1] - nums[l]`, where `l <= 3` is the index of the smallest element in the modified array. \n\nNotice that such an index is guaranteed to exist because we know `i >= 3`, so exactly one of the three smallest elements in `nums` haven't been flagged for deletion. \n\nWe can decrease this difference by removing `l` instead of `i` because `nums[l] <= nums[3]`, and so `nums[n - 1] - nums[l] >= nums[n - 1] - nums[3]`. \n\n> Note: By removing `l`, the smallest element in `nums` will now be located at index `3`.\n\n2. `j < 3` and `k >= n - 3` (or vice versa):\n\nIn this case, the difference is `nums[m] - nums[l]`, where `l <= 3` is the index of the smallest element in the modified array and `m >= n - 3` is the index of the largest element in the modified array. \n\nAgain, these two indices are guaranteed to exist because at least one of the three smallest and one of the three largest values in `nums` haven't been flagged for deletion.\n\nIf we were to remove `m` instead of `i`, the new largest element in `nums` is guaranteed to be smaller than `nums[m]`. So we have effectively reduced the difference. \n\nThe argument for deleting `l` is similar to case 1. So we can reduce the difference in this case as well.\n\n3. `j, k >= n - 3`: \n\nIn this case, the difference is `nums[m] - nums[0]`, where `m >= n - 3` is the index of the largest element in the modified array. \n\nSimilarly, this index is guaranteed to exist because exactly one of the three largest elements in `nums` haven't been flagged for deletion. \n\nIf we were to remove `m` instead of `i`, the new largest element in `nums` is guaranteed to be smaller than `nums[m]`. So we have effectively reduced the difference here as well. \n\nIn all cases, we can find a solution that's at least as good by only removing elements from the ends. This contradicts our assumption that there's a better strategy involving removing elements not from the ends.\n\nTherefore, the optimal strategy must involve removing elements only from the ends of the sorted array `nums`.\n\n#### Algorithm\n\n1. Initialization:\n    - Determine the size of the array `nums` and store it in `numsSize`.\n    - If `numsSize` is less than or equal to 4, return 0.\n    - Sort the array `nums`.\n    - Initialize `minDiff` to a very large number to store the minimum difference.\n2. Iterate through the first four elements of the sorted array:\n    - For each index `left` from 0 to 3:\n        - Calculate the corresponding `right` index as `numsSize - 4 + left`.\n        - Compute the difference between the elements at indices `right` and `left` in the sorted array.\n        - Update `minDiff` with the minimum value between `minDiff` and the computed difference.\n3. Return `minDiff`, which stores the minimum difference between the largest and smallest values after removing up to three elements.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/VYtQ7gA4/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"VYtQ7gA4\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the array `nums`.\n\n- Time Complexity: $O(n \\cdot \\log n)$\n\n  Sorting the array `nums` takes $O(n \\log n)$ time. The for loop runs a fixed number of 4 iterations, taking $O(1)$ time. Thus, the overall time complexity is $O(n \\log n)$.\n\n- Space Complexity: $O(n)$ or $O( \\log n )$\n\n    When we sort the `nums` array, some extra space is used. The space complexity of the sorting algorithm depends on the programming language.\n\n    In Python, the `sort` method sorts a list using the Timsort algorithm, which combines Merge Sort and Insertion Sort and has $O(n)$ additional space. \n\n    In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm, with a space complexity of $O( \\log n)$ for sorting two arrays.\n\n    In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worse-case space complexity of $O( \\log n )$.\n\n---\n\n### Approach 2: Partial Sort + Greedy Deletion\n\n#### Intuition \n\nConsidering the four scenarios we discussed in the previous approach, we only care about the `4` smallest elements and the `4` largest elements of the array `nums`. Sorting the entire array is inefficient when we only need to concern ourselves with `8` total elements, so it will significantly improve our performance if we identify and sort only the relevant elements.\n\nModern programming languages have built-in functionalities to partially sort an array. After these operations, the array will have the four smallest elements at the start and the four largest elements at the end, both sorted in ascending order.\n\nIn C++, we can use `std::partial_sort` and `std::nth_element`.\n\n- `std::partial_sort` rearranges the elements in such a way that the smallest `k` elements are sorted at the beginning of the range.\n- `std::nth_element` rearranges the elements such that the element at the `n`-th position is the one that would be in that position in a fully sorted array, and all elements before it are less than or equal to it, and all elements after it are greater than or equal to it.\n\nFor Java and Python, we can utilize heaps to achieve similar results. A heap is a very powerful data structure that allows us to efficiently find the maximum or minimum value in a dynamic dataset.\n\nHere are some similar problems that use partial sorting and involve finding the `k`th smallest or largest elements:\n\n* [506. Relative Ranks](https://leetcode.com/problems/relative-ranks/description/)\n* [215. Kth Largest Element in an Array](https://leetcode.com/problems/kth-largest-element-in-an-array/description/)\n\nIf you have a LeetCode Premium subscription, you can learn more about heaps using this [heap explore card](https://leetcode.com/explore/learn/card/heap/).\n\nThe rest of the logic discussed in the last approach remains the same. \n\n#### Algorithm\n\n1. Initialization:\n    - Determine the size of the array `nums` and store it in `numsSize`.\n    - If `numsSize` is less than or equal to 4, return 0.\n    - Initialize `minDiff` to a very large number to store the minimum difference.\n\n2. Partially Sort and Find Elements:\n    - Partially sort the first four elements of `nums` to get the smallest four elements in the beginning.\n    - Find the 4th largest element using an appropriate method to partition the array around this element.\n    - Sort the last four elements of `nums` to get the largest four elements at the end.\n\n3. Compute Minimum Difference:\n    - Iterate through the first four elements of the array:\n        - For each index `left` from 0 to 3:\n            - Calculate the corresponding `right` index as `numsSize - 4 + left`.\n            - Compute the difference between the elements at indices `right` and `left`.\n            - Update `minDiff` with the minimum value between `minDiff` and the computed difference.\n\n4. Return Result:\n    - Return `minDiff`, which stores the minimum difference between the largest and smallest values after removing up to three elements.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/HQmCzYxz/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"HQmCzYxz\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the array `nums`.\n\n- Time Complexity: $O(n)$\n\n  - Java and Python: \n\n    - Finding the 4 smallest elements using a max heap takes $O(n)$ time because maintaining a fixed-size heap of 4 elements results in $O(n \\cdot \\log 4) = O(n)$.\n\n    - Sorting the 4 smallest elements takes $O(1)$ time because sorting a constant number of elements is constant time.\n\n    - Finding the 4 largest elements using a min heap also takes $O(n)$ time because maintaining a fixed-size heap of 4 elements results in $O(n \\cdot \\log 4) = O(n)$.\n\n    - Sorting the 4 largest elements takes $O(1)$ time.\n\n  - C++:\n\n    - The `partial_sort` function runs in $O(n \\cdot \\log 4) = O(n)$ time as it sorts only the first four elements and ensures the smallest four elements are in place.\n\n    - The `nth_element` function, which partitions the array around the 4th largest element, also runs in $O(n)$ time.\n\n    - The `sort` function, which sorts the last four elements, runs in $O(4 \\cdot \\log 4) = O(1)$ time because sorting a constant number of elements is constant time.\n    \n    The for loop that runs a fixed number of 4 iterations takes $O(1)$ time.\n\n    Therefore, the total time complexity is $O(n)$.\n\n- Space Complexity: $O(1)$\n\n  - Java and Python: The algorithm uses constant space to store the heaps and intermediate results, which do not grow with the input size. This includes space for the heaps (each with a maximum size of 4) and any additional variables.\n  \n  - C++: The algorithm uses constant space regardless of the input size, as it only requires a few variables for indexing and storing intermediate results.\n\n  Therefore, the total space complexity is $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

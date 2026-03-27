@@ -1,0 +1,138 @@
+{
+  "questionId": "1178",
+  "questionFrontendId": "1216",
+  "title": "Valid Palindrome III",
+  "titleSlug": "valid-palindrome-iii",
+  "difficulty": "Hard",
+  "content": "<p>Given a string <code>s</code> and an integer <code>k</code>, return <code>true</code> if <code>s</code> is a <code>k</code><strong>-palindrome</strong>.</p>\n\n<p>A string is <code>k</code><strong>-palindrome</strong> if it can be transformed into a palindrome by removing at most <code>k</code> characters from it.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abcdeca&quot;, k = 2\n<strong>Output:</strong> true\n<strong>Explanation:</strong> Remove &#39;b&#39; and &#39;e&#39; characters.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abbababa&quot;, k = 1\n<strong>Output:</strong> true\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 1000</code></li>\n\t<li><code>s</code> consists of only lowercase English letters.</li>\n\t<li><code>1 &lt;= k &lt;= s.length</code></li>\n</ul>\n",
+  "hints": [
+    "Can you reduce this problem to a classic problem?",
+    "The problem is equivalent to finding any palindromic subsequence of length at least N-K where N is the length of the string.",
+    "Try to find the longest palindromic subsequence.",
+    "Use DP to do that."
+  ],
+  "metaData": "{\r\n  \"name\": \"isValidPalindrome\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    },\r\n    {\r\n      \"name\": \"k\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"108.7K\", \"totalSubmission\": \"221.2K\", \"totalAcceptedRaw\": 108667, \"totalSubmissionRaw\": 221154, \"acRate\": \"49.1%\"}",
+  "likes": 843,
+  "dislikes": 15,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Valid Palindrome II\", \"titleSlug\": \"valid-palindrome-ii\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Valid Palindrome IV\", \"titleSlug\": \"valid-palindrome-iv\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"abcdeca\"\n2",
+    "\"abbababa\"\n1"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool isValidPalindrome(string s, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean isValidPalindrome(String s, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def isValidPalindrome(self, s: str, k: int) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def isValidPalindrome(self, s, k):\n        \"\"\"\n        :type s: str\n        :type k: int\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {number} k\n * @return {boolean}\n */\nvar isValidPalindrome = function(s, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function isValidPalindrome(s: string, k: number): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool IsValidPalindrome(string s, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool isValidPalindrome(char* s, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func isValidPalindrome(s string, k int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun isValidPalindrome(s: String, k: Int): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func isValidPalindrome(_ s: String, _ k: Int) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn is_valid_palindrome(s: String, k: i32) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {Integer} k\n# @return {Boolean}\ndef is_valid_palindrome(s, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param Integer $k\n     * @return Boolean\n     */\n    function isValidPalindrome($s, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool isValidPalindrome(String s, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def isValidPalindrome(s: String, k: Int): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec is_valid_palindrome(s :: String.t, k :: integer) :: boolean\n  def is_valid_palindrome(s, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec is_valid_palindrome(S :: unicode:unicode_binary(), K :: integer()) -> boolean().\nis_valid_palindrome(S, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (is-valid-palindrome s k)\n  (-> string? exact-integer? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1076",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Top-Down DP (2D)\n\n**Intuition**\n\nLet's try to find the minimum number of character that can be removed to make the string a palindrome. If we see that the minimum number is less than or equal to `k` we can conclude that it is indeed a K-Palindrome, else it is not.\n\n**Similar Problems:**\n\n* [72. Edit Distance](https://leetcode.com/problems/edit-distance/)\n* [516. Longest Palindromic Subsequence](https://leetcode.com/problems/longest-palindromic-subsequence/)\n\n\n**Algorithm**\n\nHow do we find the minimum characters to be removed to make it a palindrome?\nLet's imagine matching the characters of the string like a palindrome, from the beginning and the end with 2 pointers `i` and `j`.\nWe may encounter the following two scenarios:\n\n1. The character at `i` matches character at `j`.\n2. The characters don't match each other.\n\nFor case 1 we just increase the pointer `i` and decrease the pointer `j`, `i++` and `j--` respectively.\n\nIn the second case we have 2 options:\n\n* Remove character at `j` and see if the previous character matches character at `i`.\n\nOr\n\n* Remove character at `i` and see if the next character matches character at `j`.\n\nSince we are not actually removing the characters from the string but just calculating the number of characters to be removed,\nin case 1 we decrement the pointer `j` by 1 and `i` stays as it is, as we still need a character to match character at `i`\nand in case 2 we increment the pointer `i` by 1 and `j` stays as it is, as we still need a character to match character at `j`.\nIn both the cases we remove 1 character and thus it adds 1 to the cost.\n\nWe can then use these two different pairs of new `i` and `j` values (`i+1, j` and `i, j-1`) to again repeat the process and get the minimum result of them as our result for current pair `i, j`.\n\nWe can see that this is recursive and thus we can use recursion with caching to store the repeated values.\n\n<iframe src=\"https://leetcode.com/playground/g53T7mhA/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"g53T7mhA\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n^2)$$. Where `n` is the length of string `s`. This is due to the fact that we try to find result for all combinations of `i` and `j` where `i` and `j` range from `0` to `n`, to compute a combination we perform an $$O(1)$$ operation thus the final complexity is $$O(n^2)$$.\n\n* Space complexity : $$O(n^2)$$. Where `n` is the length of string `s`. This is due to caching all the results in `memo` table. The recursion stack depth can reach at max $$O(n)$$ depth. Thus the complexity is dominated by the space required for `memo`.\n\n\n<br />\n\n---\n\n### Approach 2: Bottom-Up DP (2D)\n\n**Algorithm**\n\nInstead of filing up our `memo` table from top to bottom, let's try filling it from bottom to top. All we need to do is fill all the combinations of `i` and `j` in the correct order so that we have all the results required for the next state (combination of `i`, `j`) before we move to the next state (combination of `i`, `j`).\n\n<iframe src=\"https://leetcode.com/playground/X7DsEDFm/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"X7DsEDFm\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n^2)$$. Where `n` is the length of string `s`. This is due to the fact that we try to find result for all combinations of `i` and `j` where `i` and `j` range from `0` to `n`, to compute a combination we perform an $$O(1)$$ operation thus the final complexity is $$O(n^2)$$.\n\n* Space complexity : $$O(n^2)$$. Where `n` is the length of string `s`. This is due to the `memo` table which is completely filled in this case.\n\n</br>\n\n---\n\n### Approach 3: Bottom-Up DP (1D)\n\n**Algorithm**\n\nOn looking closely to both the approaches mentioned above you'll notice that for any combination of `i` and `j`, you essentially only need the `i+1`'th row and `j-1`'th column. Thus we know we can reduce the space complexity to only $$O(n)$$ from $$O(n^2)$$.\n\nAn efficient way of doing so is using the previous contained value in the `memo` which represents result for the previous state before storing the result for current state. This is better than the approach of managing two arrays (previous and current) and copying them after every calculation.\n\n<iframe src=\"https://leetcode.com/playground/nDAfkUyt/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"nDAfkUyt\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n^2)$$. Where `n` is the length of string `s`. This is due to the fact that we try to find result for all combinations of `i` and `j` where `i` and `j` range from `0` to `n`, to compute a combination we perform an $$O(1)$$ operation thus the final complexity is $$O(n^2)$$.\n\n* Space complexity : $$O(n)$$. Where `n` is the length of string `s`. This is due to the `memo` table which stores result for only one row/`i` and all it's combination columns/`j`.\n\n</br>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

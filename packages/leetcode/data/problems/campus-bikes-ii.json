@@ -1,0 +1,148 @@
+{
+  "questionId": "1067",
+  "questionFrontendId": "1066",
+  "title": "Campus Bikes II",
+  "titleSlug": "campus-bikes-ii",
+  "difficulty": "Medium",
+  "content": "<p>On a campus represented as a 2D grid, there are <code>n</code> workers and <code>m</code> bikes, with <code>n &lt;= m</code>. Each worker and bike is a 2D coordinate on this grid.</p>\n\n<p>We assign one unique bike to each worker so that the sum of the <strong>Manhattan distances</strong> between each worker and their assigned bike is minimized.</p>\n\n<p>Return <code>the minimum possible sum of Manhattan distances between each worker and their assigned bike</code>.</p>\n\n<p>The <strong>Manhattan distance</strong> between two points <code>p1</code> and <code>p2</code> is <code>Manhattan(p1, p2) = |p1.x - p2.x| + |p1.y - p2.y|</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/03/06/1261_example_1_v2.png\" style=\"width: 376px; height: 366px;\" />\n<pre>\n<strong>Input:</strong> workers = [[0,0],[2,1]], bikes = [[1,2],[3,3]]\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> \nWe assign bike 0 to worker 0, bike 1 to worker 1. The Manhattan distance of both assignments is 3, so the output is 6.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/03/06/1261_example_2_v2.png\" style=\"width: 376px; height: 366px;\" />\n<pre>\n<strong>Input:</strong> workers = [[0,0],[1,1],[2,0]], bikes = [[1,0],[2,2],[2,1]]\n<strong>Output:</strong> 4\n<strong>Explanation: </strong>\nWe first assign bike 0 to worker 0, then assign bike 1 to worker 1 or worker 2, bike 2 to worker 2 or worker 1. Both assignments lead to sum of the Manhattan distances as 4.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> workers = [[0,0],[1,0],[2,0],[3,0],[4,0]], bikes = [[0,999],[1,999],[2,999],[3,999],[4,999]]\n<strong>Output:</strong> 4995\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == workers.length</code></li>\n\t<li><code>m == bikes.length</code></li>\n\t<li><code>1 &lt;= n &lt;= m &lt;= 10</code></li>\n\t<li><code>workers[i].length == 2</code></li>\n\t<li><code>bikes[i].length == 2</code></li>\n\t<li><code>0 &lt;= workers[i][0], workers[i][1], bikes[i][0], bikes[i][1] &lt; 1000</code></li>\n\t<li>All the workers and the bikes locations are <strong>unique</strong>.</li>\n</ul>\n",
+  "hints": [
+    "Model the problem with a dp(pos, mask) where pos represents the current bike to be assigned and mask the set of available workers."
+  ],
+  "metaData": "{\r\n  \"name\": \"assignBikes\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"workers\",\r\n      \"type\": \"integer[][]\"\r\n    },\r\n    {\r\n      \"name\": \"bikes\",\r\n      \"type\": \"integer[][]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"57.2K\", \"totalSubmission\": \"102.5K\", \"totalAcceptedRaw\": 57225, \"totalSubmissionRaw\": 102459, \"acRate\": \"55.9%\"}",
+  "likes": 965,
+  "dislikes": 90,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Campus Bikes\", \"titleSlug\": \"campus-bikes\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[0,0],[2,1]]\n[[1,2],[3,3]]",
+    "[[0,0],[1,1],[2,0]]\n[[1,0],[2,2],[2,1]]",
+    "[[0,0],[1,0],[2,0],[3,0],[4,0]]\n[[0,999],[1,999],[2,999],[3,999],[4,999]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Bitmask",
+      "slug": "bitmask"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int assignBikes(vector<vector<int>>& workers, vector<vector<int>>& bikes) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int assignBikes(int[][] workers, int[][] bikes) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def assignBikes(self, workers: List[List[int]], bikes: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def assignBikes(self, workers, bikes):\n        \"\"\"\n        :type workers: List[List[int]]\n        :type bikes: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} workers\n * @param {number[][]} bikes\n * @return {number}\n */\nvar assignBikes = function(workers, bikes) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function assignBikes(workers: number[][], bikes: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int AssignBikes(int[][] workers, int[][] bikes) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int assignBikes(int** workers, int workersSize, int* workersColSize, int** bikes, int bikesSize, int* bikesColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func assignBikes(workers [][]int, bikes [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun assignBikes(workers: Array<IntArray>, bikes: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func assignBikes(_ workers: [[Int]], _ bikes: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn assign_bikes(workers: Vec<Vec<i32>>, bikes: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} workers\n# @param {Integer[][]} bikes\n# @return {Integer}\ndef assign_bikes(workers, bikes)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $workers\n     * @param Integer[][] $bikes\n     * @return Integer\n     */\n    function assignBikes($workers, $bikes) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int assignBikes(List<List<int>> workers, List<List<int>> bikes) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def assignBikes(workers: Array[Array[Int]], bikes: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec assign_bikes(workers :: [[integer]], bikes :: [[integer]]) :: integer\n  def assign_bikes(workers, bikes) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec assign_bikes(Workers :: [[integer()]], Bikes :: [[integer()]]) -> integer().\nassign_bikes(Workers, Bikes) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (assign-bikes workers bikes)\n  (-> (listof (listof exact-integer?)) (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1199",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach 1: Greedy Backtracking \n\n**Intuition**\n\nWe have $$N$$ workers and $$M$$ bikes, each worker needs to be assigned a unique bike. Since our objective is to find the combination of workers and bikes that results in the minimum distance sum, intuitively, we can create every possible combination of workers paired with bikes. Then, among all of these combinations, the one that has the minimum distance sum will be our answer.\n\nLet's see how many combinations we can have. The first worker will have $$M$$ choices, the second worker will have $$M-1$$ choices, and so on up to the $$Nth$$ worker who will have $$M-N+1$$ bikes to choose from. The number of combinations we can have will be equal to $$M*(M-1)*(M-2)*............(M-N+1)$$. This expression is equivalent to $$(M! / (M - N)!)$$. When $$N$$ is equal to $$M$$, the above expression simplifies to $$M!$$\n\nWhen $$M$$ is constrained to be less than or equal to approximately $$12$$, solutions with a time complexity of $$O(M!)$$ are feasible. However, a time complexity of $$O(M!)$$ is generally not ideal.  Let's consider how we can optimize this approach to reduce the execution time.\n\nSuppose we've obtained one combination of workers and bikes with the total distance sum as `smallestDistanceSum` and we are still searching for other combinations with the hope of finding a better result. Now during this process, if after assigning bikes to some workers we have incurred a total distance sum of `currDistanceSum` and `currDistanceSum >= smallestDistanceSum` then we don't need to go further to assign bikes to the remaining workers because the total distance sum at the end will never be smaller than our smallest distance we have achieved so far which is `smallestDistanceSum`. Therefore we can greedily stop searching when our current solution cannot be better than the best solution we have found so far.\n\n**Algorithm**\n1. For every worker starting from the worker at index `0`, traverse over the bikes and assign the bike to the worker if it is available (`visited[bikeIndex] = false`). After assigning the bike mark it as unavailable (`visited[bikeIndex] = true`).\n2. Add the Manhattan distance of the above assignment to the total distance incurred so far represented by `currDistanceSum` and enter the recursive call for the next worker.\n3. When the recursive call is finished, make the bike as available again by setting `visited[bikeIndex]` to `false`.\n4. If we have assigned bikes to all the workers, compare the `currDistanceSum` with the `smallestDistanceSum` and update the `smallestDistanceSum` accordingly.\n5. Before assigning any bike to the worker, check if the `currDistanceSum` is already greater than or equal to `smallestDistanceSum`. If so, then skip the rest of the workers and return. This is because `currDistanceSum` can only increase, and thus we will not find a better result than `smallestDistanceSum` using the current combination of workers and bikes.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/Lwt6jkPA/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Lwt6jkPA\"></iframe>\n\n**Complexity Analysis**\n\nHere $$N$$ is the number of workers, and $$M$$ is the number of bikes.\n\n* Time complexity: $$O(M! / (M - N)!)$$\n\n    As discussed above, in the worst case, we will end up finding all the combinations of workers and bikes. Notice that this is equivalent to the number of permutations of $$N$$ bikes taken from $$M$$ total bikes. \n\n* Space complexity: $$O(N + M)$$\n \n  We have used an array `visited` to mark if the bike is available or not this will use $$O(M)$$ space. There will also be some stack space used while making recursive calls. The recursion stack space used is proportional to the maximum number of active function calls in the stack.  At most, this will be equal to the number of workers $$O(N)$$.\n\n<br/>\n\n---\n\n### Approach 2: Top-Down Dynamic Programming + BitMasking\n\n**Intuition**\n\nThe time complexity of the previous approach, $$O(M! / (M - N)!)$$, means it is only reasonable to use when the number of bikes ($$M$$) or the number of workers ($$N$$) is small.  Let's see if we can find a way to solve this problem more efficiently.  \nThere are two elements of this problem that serve as hints for another way to approach the problem:\n1. The problem requires us to **minimize** the distance sum by making sequential decisions (assigning bikes to workers).\n2. Each decision we make is affected by the previous decisions we made (which bikes are available depends on which bikes have already been assigned).\nThese are both characteristics of problems that can be solved using dynamic programming.  Thus, in this approach, we will leverage recursive dynamic programming.\n\n\nPreviously, we used the `visited` array to mark the availability of bikes.\nIn this approach, we will be using bits to represent the above. Since the maximum number of bikes is less than $$32$$, we can use bitmasking to represent which bikes have been taken with a single integer.\n\nThe availability of bikes is now represented by an integer `mask` having $$10$$ bits. The $$10$$ bits represent the states of $$10$$ bikes. A value of $$0$$ at the `ith` bit signifies that the bike at the `ith` index is available while a value of $$1$$ signifies that the bike has been assigned to a worker.\n\nSimilar to the previous approach, for every worker starting from the worker at index `0`, we will traverse over the bikes and assign it to the worker if it is available. Availability of `ith` bike can be checked by the `ith` bit in `mask`, the bike is available if the `ith` bit in `mask` is $$0$$. When we assign a bike to the worker we should mark it as unavailable for further workers and for that we need to change the `ith` bit to $$1$$. \n\nIn this approach we need to check/set/unset a particular bit in an integer. \nThe below slides show how bitwise AND (`&`) can be used to check if the `ith` bit is set, how bitwise OR (`|`) can be used to set the `ith` bit, and how bitwise XOR (`^`) can be used to unset the `ith` bit.\n\n!?!../Documents/1066_campus_bikes_II.json:650,720!?! <br>\n\n\n**Algorithm**\n1. For every worker starting from the worker at index `0`, traverse over the bits of `mask` and assign it to the worker if it is available (bit at `bikeIndex` in `mask` is `0` ). After assigning the bike mark it is unavailable (change the bit at `bikeIndex` in `mask` to `1`).\n2.  Add the Manhattan distance of the above assignment and add it to the distance that will be returned by the recursive function `minimumDistanceSum` for the next worker `workerIndex`.\n3. If we have assigned bikes to all the workers (`workerIndex >= workers.size()`) then we can return the distance as `0`.\n4. Use memoization to store the result corresponding to `mask`, because there will be repeated subproblems as shown below. This will help us to avoid recalculating subproblems.\n\n![fig](../Figures/1066/1066A.png)\n\nNote: Although we have two states in our recursive functions, `mask` and `workerIndex` still we don't need to memoize the result corresponding to both `workerIndex` and `mask` because `workerIndex` is equal to the number of set bits in `mask`. Hence both this information can be represented by `mask` itself.\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/FuifUFTg/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"FuifUFTg\"></iframe>\n\n\n**Complexity Analysis**\n\nHere $$N$$ is the number of workers, and $$M$$ is the number of bikes.\n\n* Time complexity: $$O(M \\cdot 2^M)$$\n\n    Time complexity is equal to the number of unique states in the `memo` table multiplied by the average time that the `minimumDistanceSum` function takes. The number of states is equal to unique values of `mask` that is $$2^M$$ and the `minimumDistanceSum` function takes $$O(M)$$ time. So the time complexity is $$O(M \\cdot 2^M)$$.\n\n* Space complexity: $$O(2^M)$$\n\n    We have used an array `memo` to store the results corresponding to `mask`. Also, there will be some stack space used during recursion. The recursion space will be equal to the maximum number of the active function calls in the stack that will be equal to the number of workers i.e., $$N$$. Hence the space complexity will be equal to $$O(2^M + N)$$.\n    \n\n<br/>\n\n---\n\n### Approach 3: Bottom-Up Dynamic Programming + BitMasking\n\n**Intuition**\n\nIn the previous approach, the recursive calls incurred stack space. We can avoid this by applying the same approach in an iterative manner which is generally faster than the top-down approach. As explained in the previous approach, `mask` represents the availability of bikes. The $$10$$ bits represent the states of $$10$$ bikes. A value of $$0$$ at the ith bit signifies that the bike at the `ith` index is available, while a value of $$1$$ signifies that the bike has been assigned to a worker.\n\nIt is given in the constraints that the number of bikes (`numOfBikes`) will always be greater than and equal to the number of workers (`numOfworkers`). We need to assign one bike to all the workers, so our final representation of `mask` will have `numOfWorkers` number of $$1$$'s denoting that the bikes at these indices have been assigned. Among all the possible representations of `mask` with `numOfWorkers` number of $$1$$'s, we need the one that has the minimum distance sum.\n\nWe will traverse over all the possible values of `mask`. For each value, we will use its distance sum to find the distance sum for other values of `mask` by changing the zeroes to ones.  Suppose the current value of `mask` is `1001011011` with $$6$$ ones, which signifies that $$6$$ workers have been assigned a bike. From the current value of the mask, we want to find the possible representations having  $$7$$ ones. In the current value `1001011011`, we can replace any `0` with `1` and add the additional distance of this assignment to the distance sum of the original `mask` value.\n\nIn the above process, the value of `mask` will be repeated hence we will memoize the result corresponding to `mask` to avoid recalculation.\n\n**Algorithm**\n\n1. Traverse over `mask` from $$0$$ to $$2^{10}$$. \n2. For every value of mask traverse over the `bikeIndex`. If the bike (at index `bikeIndex`) has not been assigned (bit at `bikeIndex` in `mask` is `0`) then change the bit at `bikeIndex` to `1`. The new value of `mask` is denoted by `newMask`.\n3. The worker to which the above bike is assigned is given by the number of bikes already assigned (equal to the number of `1`s in `mask`) denoted by `nextWorkerIndex`.\n4. The distance sum for `newMask` will be equal to the distance sum for `mask` (`memo[mask]`) plus the Manhattan distance between `nextWorkerIndex` and `bikeIndex`. Record the distance for `newMask` in `memo` for future reference.\n5. Base case will be when we have an equal or more number of ones in `mask` (`nextWorkerIndex`) than the number of workers (`numOfWorkers`). Note that for `mask` having more number of ones than the `numOfWorkers`, the value of `smallestDistanceSum` will not be affected because the value for such `mask` in `memo` is initially set to `INT_MAX`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/4UTcQRJe/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"4UTcQRJe\"></iframe>\n\n\n**Complexity Analysis**\n\nHere $$N$$ is the number of workers, and $$M$$ is the number of bikes.\n\n* Time complexity: $$O(M \\cdot 2^M)$$\n\n    We traverse over all of the values for `mask` from $$0$$ to $$2^M$$ and for each value, we traverse over the $$M$$ bikes and also count the number of ones in `mask`, which on average takes $$M / 2$$ iterations using Kernighan's Algorithm.  So the time complexity will be $$O(2^M \\cdot (M + M / 2))$$ which simplifies to $$O(M \\cdot 2^M)$$.\n* Space complexity: $$O(2^M)$$.\n    \n    We are only using space in `memo` with the size equal to $$2^M$$.\n\n<br/>\n\n---\n\n### Approach 4: Priority Queue (Similar to Dijkstra's Algorithm)\n\n**Intuition**\n\nIn the previous approach, we traversed over all of the values for `mask` from $$0$$ to $$2^M$$ and generated `newMask` each time. In this approach instead of traversing over `mask` in a sequential manner, we will traverse `mask` in increasing order of the total distance sum. This is because it is more likely to find the smallest distance sum from a `mask` that currently has a smaller sum of distance.\n\nTo find the next `mask` with the lowest distance sum, we will use a priority queue. With every `mask`, we will store the total Manhattan distance as a pair/vector ({distanceSum, mask}) in the priority queue. In order to avoid processing a repeated mask, we will use a HashSet/Map `visited` to store the processed `mask`. Since we are traversing the `mask` in increasing order of their distance sum, the first time when the `mask` consists of $$1$$'s equal to the number of workers `numOfWorkers` we will know that it's the smallest distance sum possible.\n\n**Algorithm**\n\n1. As an initial state push `{0, 0}` to the priority queue, signifying that the `mask` is $$0$$ and the sum of distance is $$0$$.\n2. Pop the top pair ({`currentDistanceSum`,  `currentMask`}) from the priority queue. We will discard this pair and continue to the next pair if the `currentMask` has been already visited.\n3. Traverse over bikes and if the bike at `bikeIndex` has not been assigned (the bit at `bikeIndex` in `currentMask` is $$0$$), then assign it to the worker `workerIndex`.\n4. Add the next state pair {`nextStateDistanceSum`, `nextStateMask`} to the priority queue.\n5. Return the `currentDistanceSum` if the `workerIndex` is equal to `numOfWorkers`.\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/LZgNcJSs/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"LZgNcJSs\"></iframe>\n\n\n**Complexity Analysis**\n\nHere $$N$$ is the number of workers, $$M$$ is the number of bikes and,\n\n$$P(M, N) = M! / (M - N)!$$ is the number of permutations for $$N$$ bikes taken from $$M$$ total bikes,\n\n$$C(M, N) = M! / ((M - N)! \\cdot N!)$$ is the number of ways to choose $$N$$ bikes from $$M$$ total bikes. \n\n\n* Time complexity: $$O(P(M, N) \\cdot \\log (P(M, N)) + (M \\cdot \\log (P(M, N)) \\cdot 2^M)$$\n\n    Priority queue might have more than $$1$$ copy of a `mask`. For instance `0011` will be inserted into the priority queue twice, the first occasion, `0001 -> 0011`, the second occasion `0010 -> 0011`.\n\n    The total number of the possible mask with size `M` and having `N` ones will be `C(M, N)`. For each such mask, the order in which `1`'s are added to `mask` will also matter, this can be done in `N!` ways. So in total, there can be $$C(M, N) \\cdot N! = P(M, N)$$ number of `mask` in the priority queue. All these `mask` will be iterated in the while loop and for each mask,  $$\\log (P(M, N))$$ number of operations will be required for removing the top pair from the priority queue.\n\n   Since we are tracking the `mask` that we have traversed using `visited` set, the inner for loop where we are traversing over the bikes will only be executed for only unique values of `mask` that is $$2^M$$. Also pushing into priority queue will cost $$\\log (P(M, N))$$ time.\n\n    Hence the total time complexity becomes $$O(P(M, N) \\cdot \\log (P(M, N)) + (M \\cdot \\log (P(M, N)) \\cdot 2^M)$$.\n\n* Space complexity: $$O(P(M, N) + 2^M)$$\n\n    The number of `mask` that can be stored in the priority queue is $$O(P(M, N))$$, and the number of `mask` that can be inserted into the set `visited` will be $$O(2^M)$$.\n    \n\n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

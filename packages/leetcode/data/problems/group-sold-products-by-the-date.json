@@ -1,0 +1,58 @@
+{
+  "questionId": "1625",
+  "questionFrontendId": "1484",
+  "title": "Group Sold Products By The Date",
+  "titleSlug": "group-sold-products-by-the-date",
+  "difficulty": "Easy",
+  "content": "<p>Table <code>Activities</code>:</p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| sell_date   | date    |\n| product     | varchar |\n+-------------+---------+\nThere is no primary key (column with unique values) for this table. It may contain duplicates.\nEach row of this table contains the product name and the date it was sold in a market.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to find for each date the number of different products sold and their names.</p>\n\n<p>The sold products names for each date should be sorted lexicographically.</p>\n\n<p>Return the result table ordered by <code>sell_date</code>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nActivities table:\n+------------+------------+\n| sell_date  | product     |\n+------------+------------+\n| 2020-05-30 | Headphone  |\n| 2020-06-01 | Pencil     |\n| 2020-06-02 | Mask       |\n| 2020-05-30 | Basketball |\n| 2020-06-01 | Bible      |\n| 2020-06-02 | Mask       |\n| 2020-05-30 | T-Shirt    |\n+------------+------------+\n<strong>Output:</strong> \n+------------+----------+------------------------------+\n| sell_date  | num_sold | products                     |\n+------------+----------+------------------------------+\n| 2020-05-30 | 3        | Basketball,Headphone,T-shirt |\n| 2020-06-01 | 2        | Bible,Pencil                 |\n| 2020-06-02 | 1        | Mask                         |\n+------------+----------+------------------------------+\n<strong>Explanation:</strong> \nFor 2020-05-30, Sold items were (Headphone, Basketball, T-shirt), we sort them lexicographically and separate them by a comma.\nFor 2020-06-01, Sold items were (Pencil, Bible), we sort them lexicographically and separate them by a comma.\nFor 2020-06-02, the Sold item is (Mask), we just return it.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Activities (sell_date date, product varchar(20))\"], \"mssql\": [\"Create table Activities (sell_date date, product varchar(20))\"], \"oraclesql\": [\"Create table Activities (sell_date date, product varchar(20))\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"categorize_products\", \"pythondata\": [\"Activities = pd.DataFrame([], columns=['sell_date', 'product']).astype({'sell_date':'datetime64[ns]', 'product':'object'})\"], \"manual\": false, \"postgresql\": [\"\\nCreate table If Not Exists Activities (sell_date date, product varchar(20))\"], \"database_schema\": {\"Activities\": {\"sell_date\": \"DATE\", \"product\": \"VARCHAR(20)\"}}}",
+  "stats": "{\"totalAccepted\": \"403K\", \"totalSubmission\": \"517.6K\", \"totalAcceptedRaw\": 403029, \"totalSubmissionRaw\": 517561, \"acRate\": \"77.9%\"}",
+  "likes": 1708,
+  "dislikes": 127,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Finding the Topic of Each Post\", \"titleSlug\": \"finding-the-topic-of-each-post\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Activities\":[\"sell_date\",\"product\"]},\"rows\":{\"Activities\":[[\"2020-05-30\",\"Headphone\"],[\"2020-06-01\",\"Pencil\"],[\"2020-06-02\",\"Mask\"],[\"2020-05-30\",\"Basketball\"],[\"2020-06-01\",\"Bible\"],[\"2020-06-02\",\"Mask\"],[\"2020-05-30\",\"T-Shirt\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef categorize_products(activities: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "2020",
+    "content": "<!-- Don't delete this -->\n[TOC]\n\n# Solution\n\n---\n\n## pandas\n\n### Approach: Grouping and aggregation of strings\n\n#### Algorithm\n\nThe question requires us to group and aggregate data based on dates. To achieve this, we first need to use the `groupby` function to group the DataFrame `activities` by date via `groups = activities.groupby('sell_date')`, this creates a new DataFrameGroupBy object.\n\nThen we perform aggregation operations on each group in this DataFrameGroupBy object using `agg()`, where we specify two aggregation tasks using named aggregations:\n\n- `num_sold=('product', 'nunique')`: this creates a new column `num_sold` in the output DataFrame represents the number of unique products sold on each sell date. The 'nunique' function counts the distinct elements in the `product` column within each group.\n\n- `products=('product', lambda x: ','.join(sorted(set(x))))`: this line is a bit complicated, we are asked to sort and join all unique names within each group. However, there is no defined function that can handle this task, but fortunately, we can replace it with a custom function `lambda x: ','.join(sorted(set(x)))`. Here `x` denotes the Series representing the column `product` in each group. We convert it into a set to remove duplicates, sort the unique product names, and then join them into a single string with commas.\n\n\n\n```python\ngroups = activities.groupby('sell_date')\n\nstats = groups.agg(\n    num_sold=('product', 'nunique'), \n    products=('product', lambda x: ','.join(sorted(set(x))))\n    ).reset_index()\n```\n\nThis creates the `stats` DataFrame as shown below, \n\n| sell_date  | num_sold | products                     |\n| ---------- | -------- | ---------------------------- |\n| 2020-05-30 | 3        | Basketball,Headphone,T-Shirt |\n| 2020-06-01 | 2        | Bible,Pencil                 |\n| 2020-06-02 | 1        | Mask                         |\n\n<br>\n\nNext, we need to sort the `stats` DataFrame based on the `sell_date` column in ascending order (earliest date first). The `inplace=True` parameter ensures that the sorting is applied directly to the DataFrame.\n\n\n```python\nstats.sort_values('sell_date', inplace=True)\n```\n\nWe will obtain the DataFrame `answer` as follows (In this example, the `stats` DataFrame remains unchanged before and after sorting. However, it does not necessarily apply to other cases.)\n\n| sell_date   | num_sold | products                      |\n|-------------|----------|-------------------------------|\n| 2020-05-30  | 3        | Basketball, Headphone, T-shirt |\n| 2020-06-01  | 2        | Bible, Pencil                 |\n| 2020-06-02  | 1        | Mask                          |\n\n\n<br>\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/6QWyFc2b/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"6QWyFc2b\"></iframe>\n\n<br>\n\n\n\n## Database\n\n### Approach: Grouping and aggregation of strings\n\n#### Algorithm\n\nWe group the data by the `sell_date` column, to get the `num_sold` column, we use `COUNT(DISTINCT product)` to count the number of unique products sold on each sell date. \n\nThe most challenging part is sorting and joining all unique names in each group to get the column `products`. We can use the function `GROUP_CONCAT` to combine multiple values from multiple rows into a single string. The following shows the syntax of the `GROUP_CONCAT()` function:\n\n```sql\nGROUP_CONCAT(\n    DISTINCT expression1\n    ORDER BY expression2\n    SEPARATOR sep\n);\n```\n\nThe keyword `DISTINCT` ensures that each name in the column `expression1` is included only once in the concatenated string. Note that we need to sort unique names in ascending order, which is the default order, so we can omit the parameter `expression2`. The keyword `SEPARATOR` specifies that the product names should be separated by `sep`. In sum, we use `GROUP_CONCAT` as follows.\n\n```sql\nGROUP_CONCAT(\n    DISTINCT product\n    SEPARATOR ','\n);\n```\n\nThis concatenates the distinct product names into a single string for each sell date. Lastly, we sort the final result in ascending order based on the `sell_date`. This ensures that the output table is organized from the earliest to the latest sell dates. The complete code is as follows:\n\n\n#### Implementation\n\n```sql\nSELECT \n    sell_date,\n    COUNT(DISTINCT(product)) AS num_sold, \n    GROUP_CONCAT(DISTINCT product ORDER BY product SEPARATOR ',') AS products\nFROM \n    Activities\nGROUP BY \n    sell_date\nORDER BY \n    sell_date ASC\n```",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

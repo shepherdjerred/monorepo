@@ -12,7 +12,7 @@ export function createOnePasswordApp(chart: Chart) {
       pollingInterval: 60,
       token: {
         name: "onepassword-token",
-        key: "token",
+        key: "TOKEN",
       },
     },
     connect: {

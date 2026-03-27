@@ -1,0 +1,137 @@
+{
+  "questionId": "1666",
+  "questionFrontendId": "1544",
+  "title": "Make The String Great",
+  "titleSlug": "make-the-string-great",
+  "difficulty": "Easy",
+  "content": "<p>Given a string <code>s</code> of lower and upper case English letters.</p>\n\n<p>A good string is a string which doesn&#39;t have <strong>two adjacent characters</strong> <code>s[i]</code> and <code>s[i + 1]</code> where:</p>\n\n<ul>\n\t<li><code>0 &lt;= i &lt;= s.length - 2</code></li>\n\t<li><code>s[i]</code> is a lower-case letter and <code>s[i + 1]</code> is the same letter but in upper-case or <strong>vice-versa</strong>.</li>\n</ul>\n\n<p>To make the string good, you can choose <strong>two adjacent</strong> characters that make the string bad and remove them. You can keep doing this until the string becomes good.</p>\n\n<p>Return <em>the string</em> after making it good. The answer is guaranteed to be unique under the given constraints.</p>\n\n<p><strong>Notice</strong> that an empty string is also good.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;leEeetcode&quot;\n<strong>Output:</strong> &quot;leetcode&quot;\n<strong>Explanation:</strong> In the first step, either you choose i = 1 or i = 2, both will result &quot;leEeetcode&quot; to be reduced to &quot;leetcode&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abBAcC&quot;\n<strong>Output:</strong> &quot;&quot;\n<strong>Explanation:</strong> We have many possible scenarios, and all lead to the same answer. For example:\n&quot;abBAcC&quot; --&gt; &quot;aAcC&quot; --&gt; &quot;cC&quot; --&gt; &quot;&quot;\n&quot;abBAcC&quot; --&gt; &quot;abBA&quot; --&gt; &quot;aA&quot; --&gt; &quot;&quot;\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;s&quot;\n<strong>Output:</strong> &quot;s&quot;\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 100</code></li>\n\t<li><code>s</code> contains only lower and upper case English letters.</li>\n</ul>\n",
+  "hints": [
+    "The order you choose 2 characters to remove doesn't matter.",
+    "Keep applying the mentioned step to s till the length of the string is not changed."
+  ],
+  "metaData": "{\n  \"name\": \"makeGood\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"404.9K\", \"totalSubmission\": \"591.4K\", \"totalAcceptedRaw\": 404932, \"totalSubmissionRaw\": 591360, \"acRate\": \"68.5%\"}",
+  "likes": 3227,
+  "dislikes": 187,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"leEeetcode\"",
+    "\"abBAcC\"",
+    "\"s\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"yahoo\", \"name\": \"Yahoo\"}, {\"timesEncountered\": 2, \"slug\": \"blackstone\", \"name\": \"BlackStone\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string makeGood(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String makeGood(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def makeGood(self, s: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def makeGood(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {string}\n */\nvar makeGood = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function makeGood(s: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string MakeGood(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* makeGood(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func makeGood(s string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun makeGood(s: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func makeGood(_ s: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn make_good(s: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {String}\ndef make_good(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return String\n     */\n    function makeGood($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String makeGood(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def makeGood(s: String): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec make_good(s :: String.t) :: String.t\n  def make_good(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec make_good(S :: unicode:unicode_binary()) -> unicode:unicode_binary().\nmake_good(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (make-good s)\n  (-> string? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1566",
+    "content": "[TOC]\r\n\r\n## Solution\r\n\r\n--- \r\n\r\n### Overview\r\n\r\nIn this problem, we are given a string `s` containing some lower and upper case letters of the alphabet. \r\n\r\nThere may be two adjacent characters in the string that represent the same letter, but one of them is a lowercase letter and the other is an uppercase letter (i.e. `qQ`, `Yy`). For convenience, we refer to such two adjacent letters as **pair**.\r\n\r\nIf there is no such a pair in the string, then we can call the string a **good** string.\r\n\r\nTake a look at some examples where strings with green checkmarks are good strings, while the other strings\r\nare **not good**, since we can find some pairs from them (pairs are colored in red).\r\n\r\n![img](../Figures/1544/1544-ex.png)\r\n\r\nAs long as we find a pair, we can remove it from the string. Therefore, we will finally have a good string (note that an empty string is also a good string).\r\n\r\nHere our task is to find the final good string. \r\n\r\n---\r\n\r\n### Approach 1: Iteration.\r\n\r\n#### Intuition   \r\n\r\nSince the answer is guaranteed to be **unique**, we don't need to worry about the order of deletion, we just keep deleting pairs until no more pairs can be found.\r\n\r\n!?!../Documents/1544/s1.json:601,301!?!\r\n\r\nOne thing to note is that to judge if two adjacent characters make a pair? We do easily tell that patterns like `aA`, `Bb`, `cC` are pairs, but how to implement the code? We can use the their **ASCII values** as reference, each character has a unique ASCII value:\r\n- `a = 97`, `A = 65`\r\n- `b = 98`, `B = 66`\r\n- `c = 99`, `C = 67`\r\n    ...\r\n- `z = 122`, `Z = 90`\r\n\r\nThus we can tell that two characters make a pair, when and only when their ASCII values differ by $$32$$ (Since the sentence only contains letters of alphabet, we do not need to consider about other speical characters). Keep This is a very common trick, keep it in mind!\r\n\r\n<br>\r\n\r\n#### Algorithm\r\n\r\n1) If the size of string `s` is smaller than 2, return `s` directly.\r\n2) Iterate over all adjacent characters in `s`.\r\n    - If we find a pair, remove it from `s`, and start over from step 2.\r\n    - Otherwise, we don't need to iterate. Move to step 3.\r\n3) Return `s` as the final good string.\r\n\r\n#### Implementation\r\n\r\n<iframe src=\"https://leetcode.com/playground/HVd95rF7/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"HVd95rF7\"></iframe>\r\n\r\n\r\n#### Complexity Analysis\r\n\r\nLet $$n$$ be the length of the input string `s`.\r\n\r\n* Time complexity: $$O(n^2)$$\r\n\r\n    - Each iteration for `s` takes $$O(n)$$ time.\r\n    - In the worst-case scenario, we can remove one pair in each iteration, there might be $$O(n)$$ pairs.\r\n    - In summary, the time complexity is $$O(n^2)$$.\r\n    \r\n\r\n* Space complexity: $$O(n)$$\r\n\r\n    - After we remove a pair, we concatenate the rest strings into a new string and start iterating again. Making copies of the rest of `s` requires $$O(n)$$ space. \r\n    - Therefore, the space complexity is $$O(n)$$.\r\n\r\n<br/>\r\n\r\n\r\n\r\n---\r\n\r\n### Approach 2: Recursion\r\n\r\n#### Intuition   \r\n\r\nWe will implement the same algorithm in approach 1 using recursive method. \r\n\r\nThe trick is that each time a recursive function calls itself, it reduces the given problem into subproblems. The recursion call continues until it reaches a point where the subproblem can be solved without further recursion. \r\n\r\nIn this problem, once we find a pair that should be deleted, we are actually reducing `s` into a new string `s'` which is 2 characters smaller. Then the function calls itself for this smaller subproblem. When we can't find a pair for `s`, we have reached the base case where the problem can be solved by just returning `s` without further recursion!\r\n\r\nHere is a brief example of the recursion approach. \r\n\r\n![img](../Figures/1544/1544-rec.png)\r\n\r\n<br>\r\n\r\n#### Algorithm\r\n\r\nIterate over the input string `s` and check if a pair exists.\r\n    - If we find one pair, remove it from `s`, and start over this step with the remaining string. \r\n    - Otherwise, return `s`.\r\n\r\n#### Implementation\r\n\r\n<iframe src=\"https://leetcode.com/playground/Twz3tHdJ/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"Twz3tHdJ\"></iframe>\r\n\r\n\r\n#### Complexity Analysis\r\n\r\nLet $$n$$ be the length of the input string `s`.\r\n\r\n* Time complexity: $$O(n^2)$$\r\n\r\n    - Similarly, it takes $$O(n)$$ time to iterate through `s` to find a pair to be removed.\r\n    - In the worst-case scenario, there might be $$O(n)$$ pairs.\r\n    - To sum up, the time complexity is $$O(n)$$.\r\n    \r\n\r\n* Space complexity: $$O(n^2)$$\r\n\r\n    - Recall the picture at the begining of this approach, the space complexity is proportional to the maximum depth of the recursion tree. We have up to $$n/2$$ pairs, which equals a recursion tree of depth $$O(n)$$.\r\n    - Each function call takes $$O(n)$$ space.\r\n    - Therefore, the overall space complexity is $$O(n^2)$$. \r\n\r\n<br/>\r\n\r\n\r\n\r\n---\r\n\r\n### Approach 3: Stack\r\n\r\n#### Intuition   \r\n\r\nIn the previous approaches, we have to make multiple iterations in some cases. Can we solve the problem using just one iteration? The answer is Yes!\r\n\r\nLet's suppose that we find a pair in step `i` in the iteration, it means that the characters`s[i]` and `s[i - 1]` make a pair. We should ignore the `s[i]` and remove `s[i - 1]` from the end of the good string. Otherwise, we should add `s[i]` to the end of the good string.\r\n\r\nLooks familiar? If we store all the previously visited characters in a stack, then the operations on the stack equal the operations on the end of the previous good string! Hence, let's try using a stack to store all the characters we encounter but haven't been removed. \r\n\r\nTake the slides below as an example:\r\n\r\n!?!../Documents/1544/s2.json:601,301!?!\r\n\r\n<br>\r\n\r\n#### Algorithm\r\n\r\n1) Initialize an empty stack `stack`.\r\n2) For each character `currChar` in `s`:\r\n    - If `currChar` pairs with the last character in `stack`, remove the character at the top of `stack`.\r\n    - Otherwise, add `currChar` to `stack`.\r\n3) Once we have finished iterating, return the string concatenated by all the remaining characters in `stack`.\r\n\r\n#### Implementation\r\n\r\n<iframe src=\"https://leetcode.com/playground/DxpXGozS/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"DxpXGozS\"></iframe>\r\n\r\n\r\n#### Complexity Analysis\r\n\r\nLet $$n$$ be the length of the input string `s`.\r\n\r\n* Time complexity: $$O(n)$$\r\n\r\n    - We only need one iteration over `s`.\r\n    - At each step, we either remove the last character from `stack`, or add a character to `stack`, both of which take constant time.\r\n    - Therefore, the overall time complexity is $$O(n)$$.\r\n    \r\n\r\n* Space complexity: $$O(n)$$\r\n\r\n    - We use a stack to store all the characters we encounter. Since we only pop characters when finding a pair, in worst-case scenario, we may have $$O(n)$$ characters stored in stack. Thus the space complexity is $$O(n)$$.\r\n\r\n\r\n<br/>\r\n\r\n\r\n\r\n\r\n---\r\n\r\n### Approach 4: Two pointers, in-place modify\r\n\r\n#### Intuition   \r\n\r\nIn the previous approach, we use a stack to record the remaining characters. In the worst-case scenario, the stack contains up to $$n$$ characters, which takes $$O(n)$$ space. \r\n\r\nWe can use a similar idea on the string `s` itself to further improve the space complexity!\r\n\r\n> What is the core of this method?\r\nOverwriting characters.\r\n\r\nHere is an example of 'deleting' a character at index `i` and modifying the string in-place. Instead of directly removing the character from the string, we overwrite it with the character at index `j`. After that, it's like we swapped two positions: we move the character to be kept forward, and the position representing the deleted character backward. \r\n\r\n![img](../Figures/1544/1544_inp_2.png)\r\n\r\n> The red character not necessarily stands for the deleted character `B`, why? \r\n\r\nThis is because we only need to keep track of the exact characters that should be retained. However, for the deleted character, we just need to record the position where it should be, which is the index marked in red.\r\n \r\nAgain, we are not literally deleting them, but simply overwriting them with the characters that follow. Therefore, taken as a whole, it looks like we are gradually 'pushing' the position they occupy towards the end of the string.\r\n\r\nTake the following slides as an example:\r\n\r\n!?!../Documents/1544/s3.json:601,301!?!\r\n\r\nThe places for deleted characters, colored in red, gradually move to the end of `s`. Hence, when the iteration ends, the first half of the string is the good string we want! \r\n\r\nNote that string is **mutable** in C++, thus they can be changed after the initialization. However, string is **immutable** in Python and Java, thus a slide operation on string will create a new copy which takes $$O(n)$$ space. Hence, this algorithm is applicable to C++.\r\n\r\n\r\n<br>\r\n\r\n#### Algorithm\r\n\r\n1) Initialize two pointers `end = 0`, `cur = 0`.\r\n2) Iterate over `s` using `cur`. For each character `s[cur]`.\r\n    - If `s[cur]` makes a pair with the `s[end]`, remove `s[end]` from the good string by decrement `end` by 1.\r\n    - Otherwise, we add `s[cur]` to the end of the good string by overwritting `s[end]` by `s[cur]` and incrementing `end` by 1.\r\n3) Once we have finished iterating, return the first half of the string `s[:end]` as the good string.\r\n\r\n#### Implementation\r\n\r\n<iframe src=\"https://leetcode.com/playground/dxsQ3qvg/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"dxsQ3qvg\"></iframe>\r\n\r\n> Note: Java and Python are **not** applicable to this solution, since their strings are **immutable**, as we mention before.\r\n\r\n#### Complexity Analysis\r\n\r\nLet $$n$$ be the length of the input string `s`.\r\n\r\n* Time complexity: $$O(n)$$\r\n\r\n    - We only need one iteration over `s`.\r\n    - In each step, we update the position of the two pointers and overwrite a character at most once, both of which take constant time.\r\n    - To sum up, the overall time complexity is $$O(n)$$.\r\n    \r\n\r\n* Space complexity: $$O(1)$$\r\n\r\n    - We modify the input string `s` in place, thus the overall space complexity is $$O(1)$$.\r\n\r\n\r\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

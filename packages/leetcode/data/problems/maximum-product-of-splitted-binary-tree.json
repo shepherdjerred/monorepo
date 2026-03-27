@@ -1,0 +1,139 @@
+{
+  "questionId": "1465",
+  "questionFrontendId": "1339",
+  "title": "Maximum Product of Splitted Binary Tree",
+  "titleSlug": "maximum-product-of-splitted-binary-tree",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>root</code> of a binary tree, split the binary tree into two subtrees by removing one edge such that the product of the sums of the subtrees is maximized.</p>\n\n<p>Return <em>the maximum product of the sums of the two subtrees</em>. Since the answer may be too large, return it <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p><strong>Note</strong> that you need to maximize the answer before taking the mod and not after taking it.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/01/21/sample_1_1699.png\" style=\"width: 500px; height: 167px;\" />\n<pre>\n<strong>Input:</strong> root = [1,2,3,4,5,6]\n<strong>Output:</strong> 110\n<strong>Explanation:</strong> Remove the red edge and get 2 binary trees with sum 11 and 10. Their product is 110 (11*10)\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/01/21/sample_2_1699.png\" style=\"width: 500px; height: 211px;\" />\n<pre>\n<strong>Input:</strong> root = [1,null,2,3,4,null,null,5,6]\n<strong>Output:</strong> 90\n<strong>Explanation:</strong> Remove the red edge and get 2 binary trees with sum 15 and 6.Their product is 90 (15*6)\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[2, 5 * 10<sup>4</sup>]</code>.</li>\n\t<li><code>1 &lt;= Node.val &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [
+    "If we know the sum of a subtree, the answer is max( (total_sum - subtree_sum) * subtree_sum) in each node."
+  ],
+  "metaData": "{\n  \"name\": \"maxProduct\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"TreeNode\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"257K\", \"totalSubmission\": \"461.8K\", \"totalAcceptedRaw\": 257021, \"totalSubmissionRaw\": 461771, \"acRate\": \"55.7%\"}",
+  "likes": 3580,
+  "dislikes": 122,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count Nodes With the Highest Score\", \"titleSlug\": \"count-nodes-with-the-highest-score\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,4,5,6]",
+    "[1,null,2,3,4,null,null,5,6]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}]}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    int maxProduct(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public int maxProduct(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def maxProduct(self, root: Optional[TreeNode]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def maxProduct(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {number}\n */\nvar maxProduct = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction maxProduct(root: TreeNode | null): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public int MaxProduct(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nint maxProduct(struct TreeNode* root) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc maxProduct(root *TreeNode) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun maxProduct(root: TreeNode?): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func maxProduct(_ root: TreeNode?) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn max_product(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {Integer}\ndef max_product(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return Integer\n     */\n    function maxProduct($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  int maxProduct(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def maxProduct(root: TreeNode): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec max_product(root :: TreeNode.t | nil) :: integer\n  def max_product(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec max_product(Root :: #tree_node{} | null) -> integer().\nmax_product(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (max-product root)\n  (-> (or/c tree-node? #f) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "869",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: One-Pass DFS\n\n**Intuition**\n\nTo get started, we're just going to pretend that integers can be infinitely large.\n\nWe'll use the following tree example.\n\n![The tree example.](../Figures/1339/tree.png)\n\nThere are `n - 1` edges in a tree with `n` nodes, and so for this question there are `n - 1` different possible ways of splitting the tree into a pair of subtrees. Here are 4 out of the 10 possible ways.\n\n![4 possible ways of splitting the original tree.](../Figures/1339/4_trees_fixed.png)\n\nOf these 4 possible ways, the best is the third one, which has a product of `651`.\n\nTo make it easier to discuss the solution, we'll name each of the subtrees in a pair.\n\n1. One of the new subtrees is rooted at the node below the removed edge. We'll call it `Subtree 1`.\n2. The other is rooted at the root node of the original tree, and is missing the subtree below the removed edge. We'll call it `Subtree 2`.\n\n![Diagram of Subtree 1 and Subtree 2.](../Figures/1339/subtree_pair.png)\n\nRemember that we're required to find the pair of subtrees that have the maximum product. This is done by calculating the sum of each subtree and then multiplying them together. The sum of a subtree is the sum of all the nodes in it.\n\nCalculating the sum of `Subtree 1` can be done using the following recursive tree algorithm. The root of `Subtree 1` is passed into the function.\n\n```python\ndef tree_sum(subroot):\n    if subroot is None:\n        return 0\n    left_sum = tree_sum(subroot.left)\n    right_sum = tree_sum(subroot.right)\n    return subroot.val + left_sum + right_sum\n\nprint(tree_sum(sub_tree_1_root))\n```\n\nThis algorithm calculates the sum of a subtree by calculating the sum of its left subtree, sum of its right subtree, and then adding these to the root value. The sum of the left and right subtrees is done in the same way by the recursion.\n\n![Diagram illustrating how sums are calculated.](../Figures/1339/sum_recursive.png)\n\nIf you're confused by this recursive summing algorithm, it might help you to [read this article](https://leetcode.com/explore/learn/card/data-structure-tree/17/solve-problems-recursively/534/) on solving tree problems with recursive (top down) algorithms.\n\nWe still need a way to calculate the sum of `Subtree 2`. Recall that `Subtree 2` is the tree we get by removing `Subtree 1`. The only way we could directly use the above summing algorithm to calculate the sum of `Subtree 2` is to actually *remove* the edge above `Subtree 1` first. Otherwise, `Subtree 1` would be automatically traversed too.\n\nA simpler way is to recognise that `Sum(Subtree 2) = Sum(Entire Tree) - Sum(Sub Tree 1)`.\n\n![Diagram showing the relationship between subtree sums.](../Figures/1339/sum_rearranging.png)\n\nAnother benefit of this approach is that we only need to calculate `Sum(Entire Tree)` once. Then, for each `Sum(Subtree 1)` we calculate, we can immediately calculate `Sum(Subtree 2)` as an $$O(1)$$ operation.\n\nRecall how the summing algorithm above worked. The recursive function is called once for every node in the tree (i.e. subtree rooted at that node), and returns the sum of that subtree.\n\n![Diagram of the recursive calls of part of the tree.](../Figures/1339/sum_full_recursion.png)\n\nTherefore we can simply gather up all the possible `Subtree 1` sums with a list as follows:\n\n```python\nsubtree_1_sums = [] # All Subtree 1 sums will go here.\n\ndef tree_sum(subroot):\n    if subroot is None:\n        return 0\n    left_sum = tree_sum(subroot.left)\n    right_sum = tree_sum(subroot.right)\n    subtree_sum = left_sum + right_sum + subroot.val\n    subtree_1_sums.append(subtree_sum) # Add this subtree sum to the list.\n    return subtree_sum\n\ntotal_sum = tree_sum(root) # Call with the root of the entire tree.\nprint(subtree_1_sums) # This is all the subree sums.\n```\n\nNow that we have a list of the sums for all possible `Subtree 1`'s, we can calculate what the corresponding `Subtree 2` would be for each of them, and then calculate the product, keeping track of the best seen so far.\n\n```python\n# Call the function.\nsubtree_1_sums = [] # Populate by function call.\ntotal_sum = tree_sum(root)\n\nbest_product = 0\n# Find the best product.\nfor subtree_1_sum in subtree_1_sums:\n    subtree_2_sum = total_sum - subtree_1_sum\n    product = subtree_1_sum * subtree_2_sum\n    best_product = max(best_product, product)\n\nprint(best_product)\n```\n\nThe question also says we need to take the answer modulo `10 ^ 9 + 7`. Expanded out, this number is `1,000,000,007`. So when we return the product, we'll do:\n\n```python\nbest_product % 1000000007\n```\n\nOnly take the *final product* modulo `10 ^ 9 + 7`. Otherwise, you might not be correctly comparing the products.\n\n---\n\nUp until now, we've assumed that integers can be of an infinite size. This is a safe assumption for Python, but not for Java. For Java (and other languages that use a 32-bit integer by default), we'll need to think carefully about where integer overflows could occur.\n\nThe problem statement states that there can be up to `50000` nodes, each with a value of up to `10000`. Therefore, the maximum possible subtree sum would be `50,000 * 10,000 = 500,000,000`. This is well below the size of a 32-bit integer (`2,147,483,647`). Therefore, it is impossible for an integer overflow to occur during the summing phase with these constraints.\n\nHowever, multiplying the subtrees could be a problem. For example, if we had subtrees of `100,000,000` and `400,000,000`, then we'd get a total product of `400,000,000,000,000,000` which is definitely larger than a 32-bit integer, and therefore and overflow would occur!\n\nThe easiest solution is to instead use 64-bit integers. In Java, this is the `long` primitive type. The largest possible product would be `250,000,000 * 250,000,000 = 62,500,000,000,000,000‬`, which is below the maximum a 64-bit integer can hold.\n\nIn Approach #3, we discuss other ways of solving the problem *if you only had access to 32-bit integers*.\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/Ut2ovwRU/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"Ut2ovwRU\"></iframe>\n\n**Complexity Analysis**\n\n$$n$$ is the number of nodes in the tree.\n\n- Time Complexity : $$O(n)$$.\n\n    The recursive function visits each of the $$n$$ nodes in the tree exactly once, performing an $$O(1)$$ recursive operation on each. This gives a total of $$O(n)$$\n\n    There are $$n - 1$$ numbers in the list. Each of these is processed with an $$O(1)$$ operation, giving a total of $$O(n)$$ time for this phase too.\n\n    In total, we have $$O(n)$$.\n\n\n- Space Complexity $$O(n)$$.\n\n    There are two places that extra space is used.\n\n    Firstly, the recursion is putting frames on the stack. The maximum number of frames at any one time is the maximum depth of the tree. For a balanced tree, this is around $$O(\\log \\, n)$$, and in the worst case (a long skinny tree) it is $$O(n)$$.\n\n    Secondly, the list takes up space. It contains $$n - 1$$ numbers at the end, so it too is $$O(n)$$.\n\n    In both the average case and worst case, we have a total of $$O(n)$$ space used by this approach.\n\n\nSomething you might have realised is that the subtree pair that leads to the largest product is the pair with the smallest difference between them. Interestingly, this fact doesn't help us much with optimizing the algorithm. This is because subtree sums are *not* obtained in sorted order, and so any attempt to sort them (and thus find the nearest to middle directly) will cost at least $$O(n \\, \\log \\, n)$$ to do. With the overall algorithm, even with the linear search, only being $$O(n)$$, this is strictly worse. The only situation this insight becomes useful is if you *have* to solve the problem using only 32-bit integers. The reason for this is discussed in Approach #3.\n\n</br>\n\n---\n\n### Approach 2: Two-Pass DFS\n\n**Intuition**\n\nInstead of putting the `Subtree 1` sums into a separate list, we can do 2 separate tree summing traversals.\n\n1. Calculate the sum of the entire tree.\n2. Check the product we'd get for each subtree.\n\nCalculating the total sum is done in the same way as before.\n\nFinding the maximum product is similar, except requires a variable outside of the function to keep track of the maximum product seen so far.\n\n```python\ndef maximum_product(subroot, total):\n    best = 0\n    def recursive_helper(subroot):\n        nonlocal best\n        if subroot is None: return 0\n        left_sum = recursive_helper(subroot.left)\n        right_sum = recursive_helper(subroot.right)\n        total_sum = left_sum + right_sum + subroot.val\n        product = total_sum * (tree_total_sum - total_sum)\n        best = max(best, product)\n        return total_sum\n    recursive_helper(subroot)\n    return best\n```\n\n**Algorithm**\n\nIt is possible to combine the 2 recursive functions into a single one that is called twice, however the side effects of the functions (changing of class variables) hurt code readability and can be confusing. For this reason, the code below uses 2 separate functions.\n\n<iframe src=\"https://leetcode.com/playground/Nf4ReJAs/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Nf4ReJAs\"></iframe>\n\n\n**Complexity Analysis**\n\n$$n$$ is the number of nodes in the tree.\n\n- Time Complexity : $$O(n)$$.\n\n    Each recursive function visits each of the $$n$$ nodes in the tree exactly once, performing an $$O(1)$$ recursive operation on each. This gives a total of $$O(n)$$.\n\n- Space Complexity $$O(n)$$.\n\n    The recursion is putting frames on the stack. The maximum number of frames at any one time is the maximum depth of the tree. For a balanced tree, this is around $$O(\\log \\, n)$$, and in the worst case (a long skinny tree) it is $$O(n)$$.\n\n    Because we use worst case for complexity analysis, we say this algorithm uses $$O(n)$$ space. However, it's worth noting that as long as the tree is fairly balanced, the space usage will be a lot nearer to $$O(\\log \\, n)$$.\n\n</br>\n\n---\n\n### Approach 3: Advanced Strategies for Dealing with 32-Bit Integers\n\n**Intuition**\n\n*This is an advanced bonus section that discusses ways of solving the problem using only 32-bit integers. It's not essential for an interview, although could be useful depending on your choice of programming language. Some of the ideas might also help with potential follow up questions. This section assumes prior experience with introductory modular arithmetic.*\n\nWe'll additionally assume that the 32-bit integer we're working with is *signed*, so has a **maximum** value of `2,147,483,647`.\n\nWhat if your chosen programming language only supported 32-bit integers, and you had no access to a Big Integer library? Could we still solve this problem? What are the problems we'd need to address?\n\nThe solutions above relied on being able to multiply 2 numbers of up to 30 (signed) bits each without overflow. Because the number of bits in the product add, we would expect the product to require ~60 bits to represent. Using a 64-bit integer was therefore enough. Additionally, with a modulus of `1,000,000,007`, the *final* product, after taken to the modulus, will always fit within a *32-bit* integer.\n\nHowever, we're now assuming that we only have 32-bit integers. When working with 32-bit integers, we must *always* keep the total below `2,147,483,647`, even during intermediate calculations. Therefore, we'll need a way of doing the math within this restriction. One way to do the multiplication safely is to write an algorithm using the same underlying idea as [modular exponentiation](https://en.wikipedia.org/wiki/Modular_exponentiation).\n\n```java\nprivate int modularMultiplication(int a, int b, int m) {\n    int product = 0;\n    int currentSum = a;\n    while (b > 0) {\n        int bit = b % 2;\n        b >>= 1;\n        if (bit == 1) {\n            product += currentSum;\n            product %= m;\n        }\n        currentSum <<= 1;\n        currentSum %= m;\n    }\n    return product;\n}   \n```\n\nThere is one possible pitfall with this though. We are supposed to return the calculation for the *largest* product, determined **before** the modulus is taken.\n\nFor example, consider the following 2 products:\n\n1. `34,000 * 30,000 = 1,020,000,000` becomes `1,020,000,000 % 1,000,000,007 = 19,999,993`.\n2. `30,000 * 30,000 = 900,000,000` doesn't change because `900,000,000 % 1,000,000,007 = 900,000,000`.\n\nSo if we were to compare them *before* taking the modulus, product 1 would be larger, which is correct. But if we compared them after, then product 2 is larger, which is incorrect.\n\nTherefore, we need a way to determine which product will be the biggest, without actually calculating them. Then once we know which is biggest, we can use our method for calculating a product modulo `1,000,000,007` without going over `2,147,483,647`.\n\nThe trick is to realise that `Sum(Subtree 1) + Sum(Subtree 2)` is constant, but `Sum(Subtree 1) * Sum(Subtree 2)` increases as `Sum(Subtree 1) - Sum(Subtree 2)` gets nearer to 0, i.e. as the sum of the subtrees is more balanced. A good way of visualising this is to imagine you have `X` meters of fence and need to make a *rectangular* enclosure for some sheep. You want to maximise the area. It turns out that the optimal solution is to make a square. The nearer to a square the enclosure is, the nearer to the optimal area it will be. For example, where `H + W = 11`, the best (integer) solution is `5 x 6 = 30`.\n\n![Different ways of building a fence.](../Figures/1339/area_fences.png)\n\nA simple way to do this in code is to loop over the list of all the sums and find the `(sum, total - sum)` pair that has the minimal difference. This approach ensures we do *not* need to use floating point numbers.\n\n**Algorithm**\n\nWe'll use Approach #1 as a basis for the code, as it's simpler and easier to understand. The same ideas can be used in Approach #2 though.\n\n<iframe src=\"https://leetcode.com/playground/fweASRE4/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"fweASRE4\"></iframe>\n\n**Complexity Analysis**\n\n$$n$$ is the number of nodes in the tree.\n\n- Time Complexity : $$O(n)$$.\n\n    Same as above approaches.\n\n- Space Complexity : $$O(n)$$.\n\n    Same as above approaches.\n\n\nThe `modularMultiplication` function has a time complexity of $$O(\\log \\, b)$$ because the loop removes one bit from $$b$$ each iteration, until there are none left. This *doesn't* bring up the total time complexity to $$O(n \\, \\log \\, b)$$ though, because $$b$$ has a fixed upper limit of 32, and is therefore treated as a constant.\n\n</br>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

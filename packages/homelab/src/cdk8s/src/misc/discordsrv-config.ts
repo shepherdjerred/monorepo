@@ -7,10 +7,10 @@
  * - Environment variable substitution via itzg/minecraft-server
  *
  * Required 1Password fields:
- * - discord-bot-token: The Discord bot token
- * - discord-channel-id: The main chat channel ID
- * - discord-console-channel-id: (optional) Console channel ID
- * - discord-invite-link: (optional) Server invite link
+ * - DISCORD_BOT_TOKEN: The Discord bot token
+ * - DISCORD_CHANNEL_ID: The main chat channel ID
+ * - DISCORD_CONSOLE_CHANNEL_ID: (optional) Console channel ID
+ * - DISCORD_INVITE_LINK: (optional) Server invite link
  */
 
 export const DISCORDSRV_PLUGIN_URL =
@@ -67,10 +67,10 @@ export function getDiscordSrvExtraVolumes(name: string): object[] {
  * The itzg/minecraft-server container requires CFG_ prefix for variable substitution.
  *
  * 1Password field names -> Environment variables:
- * - discord-bot-token -> DISCORDSRV_TOKEN (native DiscordSRV support)
- * - discord-channel-id -> CFG_DISCORD_CHANNEL_ID
- * - discord-console-channel-id -> CFG_DISCORD_CONSOLE_CHANNEL_ID
- * - discord-invite-link -> CFG_DISCORD_INVITE_LINK
+ * - DISCORD_BOT_TOKEN -> DISCORDSRV_TOKEN (native DiscordSRV support)
+ * - DISCORD_CHANNEL_ID -> CFG_DISCORD_CHANNEL_ID
+ * - DISCORD_CONSOLE_CHANNEL_ID -> CFG_DISCORD_CONSOLE_CHANNEL_ID
+ * - DISCORD_INVITE_LINK -> CFG_DISCORD_INVITE_LINK
  */
 export function getDiscordSrvExtraEnv(
   secretName: string,
@@ -83,7 +83,7 @@ export function getDiscordSrvExtraEnv(
       valueFrom: {
         secretKeyRef: {
           name: secretName,
-          key: "discord-bot-token",
+          key: "DISCORD_BOT_TOKEN",
         },
       },
     },
@@ -91,7 +91,7 @@ export function getDiscordSrvExtraEnv(
       valueFrom: {
         secretKeyRef: {
           name: secretName,
-          key: "discord-channel-id",
+          key: "DISCORD_CHANNEL_ID",
         },
       },
     },
@@ -99,7 +99,7 @@ export function getDiscordSrvExtraEnv(
       valueFrom: {
         secretKeyRef: {
           name: secretName,
-          key: "discord-console-channel-id",
+          key: "DISCORD_CONSOLE_CHANNEL_ID",
           optional: true,
         },
       },
@@ -108,7 +108,7 @@ export function getDiscordSrvExtraEnv(
       valueFrom: {
         secretKeyRef: {
           name: secretName,
-          key: "discord-invite-link",
+          key: "DISCORD_INVITE_LINK",
           optional: true,
         },
       },

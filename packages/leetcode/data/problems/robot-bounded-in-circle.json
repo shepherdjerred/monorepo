@@ -1,0 +1,141 @@
+{
+  "questionId": "1119",
+  "questionFrontendId": "1041",
+  "title": "Robot Bounded In Circle",
+  "titleSlug": "robot-bounded-in-circle",
+  "difficulty": "Medium",
+  "content": "<p>On an infinite plane, a robot initially stands at <code>(0, 0)</code> and faces north. Note that:</p>\n\n<ul>\n\t<li>The <strong>north direction</strong> is the positive direction of the y-axis.</li>\n\t<li>The <strong>south direction</strong> is the negative direction of the y-axis.</li>\n\t<li>The <strong>east direction</strong> is the positive direction of the x-axis.</li>\n\t<li>The <strong>west direction</strong> is the negative direction of the x-axis.</li>\n</ul>\n\n<p>The robot can receive one of three instructions:</p>\n\n<ul>\n\t<li><code>&quot;G&quot;</code>: go straight 1 unit.</li>\n\t<li><code>&quot;L&quot;</code>: turn 90 degrees to the left (i.e., anti-clockwise direction).</li>\n\t<li><code>&quot;R&quot;</code>: turn 90 degrees to the right (i.e., clockwise direction).</li>\n</ul>\n\n<p>The robot performs the <code>instructions</code> given in order, and repeats them forever.</p>\n\n<p>Return <code>true</code> if and only if there exists a circle in the plane such that the robot never leaves the circle.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> instructions = &quot;GGLLGG&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> The robot is initially at (0, 0) facing the north direction.\n&quot;G&quot;: move one step. Position: (0, 1). Direction: North.\n&quot;G&quot;: move one step. Position: (0, 2). Direction: North.\n&quot;L&quot;: turn 90 degrees anti-clockwise. Position: (0, 2). Direction: West.\n&quot;L&quot;: turn 90 degrees anti-clockwise. Position: (0, 2). Direction: South.\n&quot;G&quot;: move one step. Position: (0, 1). Direction: South.\n&quot;G&quot;: move one step. Position: (0, 0). Direction: South.\nRepeating the instructions, the robot goes into the cycle: (0, 0) --&gt; (0, 1) --&gt; (0, 2) --&gt; (0, 1) --&gt; (0, 0).\nBased on that, we return true.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> instructions = &quot;GG&quot;\n<strong>Output:</strong> false\n<strong>Explanation:</strong> The robot is initially at (0, 0) facing the north direction.\n&quot;G&quot;: move one step. Position: (0, 1). Direction: North.\n&quot;G&quot;: move one step. Position: (0, 2). Direction: North.\nRepeating the instructions, keeps advancing in the north direction and does not go into cycles.\nBased on that, we return false.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> instructions = &quot;GL&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> The robot is initially at (0, 0) facing the north direction.\n&quot;G&quot;: move one step. Position: (0, 1). Direction: North.\n&quot;L&quot;: turn 90 degrees anti-clockwise. Position: (0, 1). Direction: West.\n&quot;G&quot;: move one step. Position: (-1, 1). Direction: West.\n&quot;L&quot;: turn 90 degrees anti-clockwise. Position: (-1, 1). Direction: South.\n&quot;G&quot;: move one step. Position: (-1, 0). Direction: South.\n&quot;L&quot;: turn 90 degrees anti-clockwise. Position: (-1, 0). Direction: East.\n&quot;G&quot;: move one step. Position: (0, 0). Direction: East.\n&quot;L&quot;: turn 90 degrees anti-clockwise. Position: (0, 0). Direction: North.\nRepeating the instructions, the robot goes into the cycle: (0, 0) --&gt; (0, 1) --&gt; (-1, 1) --&gt; (-1, 0) --&gt; (0, 0).\nBased on that, we return true.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= instructions.length &lt;= 100</code></li>\n\t<li><code>instructions[i]</code> is <code>&#39;G&#39;</code>, <code>&#39;L&#39;</code> or, <code>&#39;R&#39;</code>.</li>\n</ul>\n",
+  "hints": [
+    "Calculate the final vector of how the robot travels after executing all instructions once - it consists of a change in position plus a change in direction.",
+    "The robot stays in the circle if and only if (looking at the final vector) it changes direction (ie. doesn't stay pointing north), or it moves 0."
+  ],
+  "metaData": "{\n  \"name\": \"isRobotBounded\",\n  \"params\": [\n    {\n      \"name\": \"instructions\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}\n",
+  "stats": "{\"totalAccepted\": \"272.2K\", \"totalSubmission\": \"482K\", \"totalAcceptedRaw\": 272222, \"totalSubmissionRaw\": 481996, \"acRate\": \"56.5%\"}",
+  "likes": 3863,
+  "dislikes": 718,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"GGLLGG\"",
+    "\"GG\"",
+    "\"GL\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"more_than_six_months\": [{\"timesEncountered\": 24, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"airbnb\", \"name\": \"Airbnb\"}, {\"timesEncountered\": 2, \"slug\": \"zscaler\", \"name\": \"ZScaler\"}, {\"timesEncountered\": 2, \"slug\": \"blue-origin\", \"name\": \"Blue Origin\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool isRobotBounded(string instructions) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean isRobotBounded(String instructions) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def isRobotBounded(self, instructions: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def isRobotBounded(self, instructions):\n        \"\"\"\n        :type instructions: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} instructions\n * @return {boolean}\n */\nvar isRobotBounded = function(instructions) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function isRobotBounded(instructions: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool IsRobotBounded(string instructions) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool isRobotBounded(char* instructions) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func isRobotBounded(instructions string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun isRobotBounded(instructions: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func isRobotBounded(_ instructions: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn is_robot_bounded(instructions: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} instructions\n# @return {Boolean}\ndef is_robot_bounded(instructions)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $instructions\n     * @return Boolean\n     */\n    function isRobotBounded($instructions) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool isRobotBounded(String instructions) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def isRobotBounded(instructions: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec is_robot_bounded(instructions :: String.t) :: boolean\n  def is_robot_bounded(instructions) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec is_robot_bounded(Instructions :: unicode:unicode_binary()) -> boolean().\nis_robot_bounded(Instructions) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (is-robot-bounded instructions)\n  (-> string? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "984",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nThe robot's [trajectory attractor](https://en.wikipedia.org/wiki/Attractor) is a set of trajectories toward which a system tends to evolve. The question may sound a bit theoretical - is this attractor limited or not? In other words, if there exists a circle in the plane such that the robot never leaves the circle.\n\nDiverging Trajectory            |  Limit Cycle Trajectory\n:------------------------------:|:------------------------------:\n![bla](../Figures/1041/pic1.png)|  ![bla](../Figures/1041/pic2.png)\n\n*Figure 1. Diverging Trajectory vs Limit Cycle Trajectory.*\n\n\nWhy is it interesting to know? There are a bunch of practical problems related to topology, network planning, and password brute-forcing. For all these problems, the first thing to understand is do we work within a limited space or the behavior of our system could drastically diverge at some point? \n\nDiverging Trajectory            |  Limit Cycle Trajectory\n:------------------------------:|:------------------------------:\n![bla](../Figures/1041/pic3.png)|  ![bla](../Figures/1041/pic4.png)\n\n*Figure 2. Diverging Trajectory vs Limit Cycle Trajectory.*\n\n\n**Draw some trajectories**\n\n[Here is a Jupiter notebook used to draw all figures in this article](https://github.com/leetcode/solution_assets/blob/master/solution_assets/1041_robot_bounded_in_circle/robot_trajectory.ipynb).\nDo not hesitate to play with it in local or on the online platforms. Drawing different trajectories might help to notice some patterns. \n\n<br />\n<br />\n\n\n---\n### Approach 1: One Pass\n\n**Intuition**\n\nThis solution is based on two facts about the limit cycle trajectory.\n\n- After at most 4 cycles, the limit cycle trajectory returns to the initial point `x = 0, y  = 0`. That is related to the fact that 4 directions (north, east, south, west) define the repeated cycles' plane symmetry [[proof]](#appendix-mathematical-proof). \n\nEx. 1: Trajectory 1             |  Ex. 2: Trajectory 2\n:------------------------------:|:------------------------------:\n![bla](../Figures/1041/pic5.png)|  ![bla](../Figures/1041/pic6.png)\n\n*Figure 3. After 4 cycles the limit cycle trajectory returns to the initial point `x = 0, y  = 0`.*\n\n\n- We do not need to run 4 cycles to identify the limit cycle trajectory. One cycle is enough. There could be two situations here.\n\n    - First, if the robot returns to the initial point after one cycle, that's the limit cycle trajectory. \n\n    - Second, if the robot doesn't face north at the end of the first cycle, that's the limit cycle trajectory. Once again, that's the consequence of the plane symmetry for the repeated cycles [[proof]](#appendix-mathematical-proof).\n    \nEx. 1: Trajectory 1             |  Ex. 2: Trajectory 2\n:------------------------------:|:------------------------------:\n![bla](../Figures/1041/pic7.png)|  ![bla](../Figures/1041/pic8.png)\n\n*Figure 4. If at the end of one cycle, the robot doesn't face north, that's the limit cycle trajectory.*\n\n\n**Algorithm**\n\n- Let's use numbers from 0 to 3 to mark the directions: `north = 0`, `east = 1`, `south = 2`, `west = 3`. In the array `directions` we could store corresponding coordinates changes, _i.e._ `directions[0]` is to go north, `directions[1]` is to go east, `directions[2]` is to go south, and `directions[3]` is to go west.\n\n- The initial robot position is in the center `x = y = 0`, facing north `idx = 0`.\n\n- Now everything is ready to iterate over the instructions.\n\n    - If the current instruction is `R`, _i.e._ to turn on the right, the next direction is `idx = (idx + 1) % 4`. Modulo here is needed to deal with the situation - facing west, `idx = 3`, turn to the right to face north, `idx = 0`.  \n\n    - If the current instruction is `L`, _i.e._ to turn on the left, the next direction could written in a symmetric way `idx = (idx - 1) % 4`. That means we have to deal with negative indices. A more simple way is to notice that 1 turn to the left = 3 turns to the right: `idx = (idx + 3) % 4`.\n    \n    - If the current instruction is to move, we simply update the coordinates: `x += directions[idx][0]`, `y += directions[idx][1]`.\n    \n- After one cycle we have everything to decide. \nIt's a limit cycle trajectory if the robot is back to the center: `x = y = 0` or if the robot doesn't face north: `idx != 0`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/ncTXcW7Z/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"ncTXcW7Z\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$, where $$N$$ is a number of instructions\nto parse. \n \n* Space complexity: $$\\mathcal{O}(1)$$ because the array `directions` contains \nonly 4 elements.\n\n<br />\n<br />\n\n\n---\n### Appendix: Mathematical Proof\n\nLet's provide a strict mathematical proof.  \n\n**If the robot doesn't face north at the end of the first cycle, then that's the limit cycle trajectory.**\n\n> First, let's check which direction the robot faces after 4 cycles.\n\nLet's use numbers from 0 to 3 to mark the directions: `north = 0`, `east = 1`, `south = 2`, `west = 3`. After one cycle the robot is facing direction `k != 0`. \n\nAfter 4 cycles, the robot faces direction `(k * 4) % 4 = 0`, i.e. _after 4 cycles, the robot is always facing north_.\n\n> Second, let's find the robot coordinates after 4 cycles.\n\nThe robot's initial coordinates are `x = y = 0`. After one cycle, the new coordinates are $$x_1 = x + \\Delta x$$, $$y_1 = y + \\Delta y$$, where both $$\\Delta x$$ and $$\\Delta y$$ could be positive or negative.\n\nLet's consider four situations.\n\n- After one cycle, the robot faces north.\n\nThen here is what we have after 4 cycles:\n\n$$x_4 = x + \\Delta x + \\Delta x + \\Delta x + \\Delta x = x + 4 \\Delta x$$\n\n$$y_4 = y + \\Delta y + \\Delta y + \\Delta y + \\Delta y = y + 4 \\Delta y$$\n\n- After one cycle, the robot faces east.\n\nThen here is what we have after 4 cycles:\n\n$$x_4 = x + \\Delta x + \\Delta y - \\Delta x - \\Delta y = x$$\n\n$$y_4 = y + \\Delta y - \\Delta x - \\Delta y + \\Delta x = y$$\n\n- After one cycle, the robot faces south.\n\nThen here is what we have after 4 cycles:\n\n$$x_4 = x + \\Delta x - \\Delta x + \\Delta x - \\Delta x = x$$\n\n$$y_4 = y + \\Delta y - \\Delta y + \\Delta y - \\Delta y = y$$\n\n- After one cycle, the robot faces west.\n\nThen here is what we have after 4 cycles:\n\n$$x_4 = x + \\Delta x - \\Delta y - \\Delta x + \\Delta y = x$$\n\n$$y_4 = y + \\Delta y + \\Delta x - \\Delta y - \\Delta x = y$$\n\n> Hence, if the robot doesn't face north at the end of the first cycle, then after 4 cycles, the robot is back to the initial coordinates and faces north.\n\nThe following statement is a straight consequence. \n\n**After at most 4 cycles, the limit cycle trajectory returns to the initial point.**",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

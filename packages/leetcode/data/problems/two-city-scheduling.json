@@ -1,0 +1,138 @@
+{
+  "questionId": "1095",
+  "questionFrontendId": "1029",
+  "title": "Two City Scheduling",
+  "titleSlug": "two-city-scheduling",
+  "difficulty": "Medium",
+  "content": "<p>A company is planning to interview <code>2n</code> people. Given the array <code>costs</code> where <code>costs[i] = [aCost<sub>i</sub>, bCost<sub>i</sub>]</code>,&nbsp;the cost of flying the <code>i<sup>th</sup></code> person to city <code>a</code> is <code>aCost<sub>i</sub></code>, and the cost of flying the <code>i<sup>th</sup></code> person to city <code>b</code> is <code>bCost<sub>i</sub></code>.</p>\n\n<p>Return <em>the minimum cost to fly every person to a city</em> such that exactly <code>n</code> people arrive in each city.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> costs = [[10,20],[30,200],[400,50],[30,20]]\n<strong>Output:</strong> 110\n<strong>Explanation: </strong>\nThe first person goes to city A for a cost of 10.\nThe second person goes to city A for a cost of 30.\nThe third person goes to city B for a cost of 50.\nThe fourth person goes to city B for a cost of 20.\n\nThe total minimum cost is 10 + 30 + 50 + 20 = 110 to have half the people interviewing in each city.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> costs = [[259,770],[448,54],[926,667],[184,139],[840,118],[577,469]]\n<strong>Output:</strong> 1859\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> costs = [[515,563],[451,713],[537,709],[343,819],[855,779],[457,60],[650,359],[631,42]]\n<strong>Output:</strong> 3086\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 * n == costs.length</code></li>\n\t<li><code>2 &lt;= costs.length &lt;= 100</code></li>\n\t<li><code>costs.length</code> is even.</li>\n\t<li><code>1 &lt;= aCost<sub>i</sub>, bCost<sub>i</sub> &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"twoCitySchedCost\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"costs\",\r\n      \"type\": \"integer[][]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"285.7K\", \"totalSubmission\": \"417.4K\", \"totalAcceptedRaw\": 285663, \"totalSubmissionRaw\": 417415, \"acRate\": \"68.4%\"}",
+  "likes": 4880,
+  "dislikes": 367,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Rearrange Array to Maximize Prefix Score\", \"titleSlug\": \"rearrange-array-to-maximize-prefix-score\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[10,20],[30,200],[400,50],[30,20]]",
+    "[[259,770],[448,54],[926,667],[184,139],[840,118],[577,469]]",
+    "[[515,563],[451,713],[537,709],[343,819],[855,779],[457,60],[650,359],[631,42]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"swiggy\", \"name\": \"Swiggy\"}, {\"timesEncountered\": 2, \"slug\": \"syfe\", \"name\": \"Syfe\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int twoCitySchedCost(vector<vector<int>>& costs) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int twoCitySchedCost(int[][] costs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def twoCitySchedCost(self, costs: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def twoCitySchedCost(self, costs):\n        \"\"\"\n        :type costs: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} costs\n * @return {number}\n */\nvar twoCitySchedCost = function(costs) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function twoCitySchedCost(costs: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int TwoCitySchedCost(int[][] costs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int twoCitySchedCost(int** costs, int costsSize, int* costsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func twoCitySchedCost(costs [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun twoCitySchedCost(costs: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func twoCitySchedCost(_ costs: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn two_city_sched_cost(costs: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} costs\n# @return {Integer}\ndef two_city_sched_cost(costs)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $costs\n     * @return Integer\n     */\n    function twoCitySchedCost($costs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int twoCitySchedCost(List<List<int>> costs) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def twoCitySchedCost(costs: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec two_city_sched_cost(costs :: [[integer]]) :: integer\n  def two_city_sched_cost(costs) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec two_city_sched_cost(Costs :: [[integer()]]) -> integer().\ntwo_city_sched_cost(Costs) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (two-city-sched-cost costs)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "726",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Greedy.\n\n**Greedy algorithms**\n\nGreedy problems usually look like \"Find the minimum number of _something_ to do _something_\" or \"Find the maximum number of _something_ to fit in _some conditions_\", and typically propose an unsorted input.\n\n> The idea of the greedy algorithm is to pick the _locally_\noptimal move at each step, that will lead to the _globally_ optimal solution.\n\nThe standard solution has $$\\mathcal{O}(N \\log N)$$ time complexity and consists of two parts:\n\n- Figure out how to sort the input data ($$\\mathcal{O}(N \\log N)$$ time).\nThat could be done directly by sorting or indirectly by heap usage. \nTypically sort is better than heap usage because of gain in space.\n\n- Parse the sorted input to have a solution ($$\\mathcal{O}(N)$$ time). \n\nPlease notice that in the case of well-sorted input, one doesn't need the first \npart and the greedy solution could have $$\\mathcal{O}(N)$$ time complexity,\n[here is an example](https://leetcode.com/articles/gas-station/).\n\n> How to prove that your greedy algorithm provides a globally optimal solution?\n\nUsually, you could use the [proof by contradiction](https://en.wikipedia.org/wiki/Proof_by_contradiction). \n\n**Intuition**\n\nLet's figure out how to sort the input here.\nThe input should be sorted by a parameter that indicates a money\nlost for the company. \n\nThe company would pay anyway: `price_A` to send a person to the city\nA, or `price_B` to send a person to the city B.\nBy sending the person to city A, the company would lose `price_A - price_B`,\nwhich could be negative or positive. \n\n![bla](../Figures/1029/users.png)\n\nTo optimize the total costs, let's sort the persons by `price_A - price_B`\nand then send the first `n` persons to the city A, \nand the others to city B, because this way the \ncompany costs are minimal.    \n\n\n**Algorithm**\n\nNow the algorithm is straightforward :\n\n- Sort the persons in ascending order by `price_A - price_B` \nparameter, which indicates the company's additional costs.\n\n- To minimize the costs, send `n` persons with the smallest `price_A - price_B`\nto the city A, and the others to the city B.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/3xqV2wdw/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"3xqV2wdw\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be half of the length of the input array `costs`.\n\n* Time complexity : $$O(N \\log N)$$ because of sorting of\ninput data.\n \n* Space complexity : $$O(\\log N)$$\n\n  Some extra space is used when we sort `costs` in place. The space complexity of the sorting algorithm depends on which sorting algorithm is used; the default algorithm varies from one language to another.\n    - In Python, the `sort` method sorts a list using the Timsort algorithm, which is a combination of Merge Sort and Insertion Sort and uses $$O(n)$$ additional space.\n    - In C++, the sort() function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with worst-case space complexity of $$O(\\log n)$$.\n    - In Java, Arrays.sort() is implemented using a variant of the Quick Sort algorithm which has a space complexity of $$O(\\log n)$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

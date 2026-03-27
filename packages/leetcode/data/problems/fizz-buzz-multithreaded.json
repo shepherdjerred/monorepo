@@ -1,0 +1,59 @@
+{
+  "questionId": "1316",
+  "questionFrontendId": "1195",
+  "title": "Fizz Buzz Multithreaded",
+  "titleSlug": "fizz-buzz-multithreaded",
+  "difficulty": "Medium",
+  "content": "<p>You have the four functions:</p>\n\n<ul>\n\t<li><code>printFizz</code> that prints the word <code>&quot;fizz&quot;</code> to the console,</li>\n\t<li><code>printBuzz</code> that prints the word <code>&quot;buzz&quot;</code> to the console,</li>\n\t<li><code>printFizzBuzz</code> that prints the word <code>&quot;fizzbuzz&quot;</code> to the console, and</li>\n\t<li><code>printNumber</code> that prints a given integer to the console.</li>\n</ul>\n\n<p>You are given an instance of the class <code>FizzBuzz</code> that has four functions: <code>fizz</code>, <code>buzz</code>, <code>fizzbuzz</code> and <code>number</code>. The same instance of <code>FizzBuzz</code> will be passed to four different threads:</p>\n\n<ul>\n\t<li><strong>Thread A:</strong> calls <code>fizz()</code> that should output the word <code>&quot;fizz&quot;</code>.</li>\n\t<li><strong>Thread B:</strong> calls <code>buzz()</code> that should output the word <code>&quot;buzz&quot;</code>.</li>\n\t<li><strong>Thread C:</strong> calls <code>fizzbuzz()</code> that should output the word <code>&quot;fizzbuzz&quot;</code>.</li>\n\t<li><strong>Thread D:</strong> calls <code>number()</code> that should only output the integers.</li>\n</ul>\n\n<p>Modify the given class to output the series <code>[1, 2, &quot;fizz&quot;, 4, &quot;buzz&quot;, ...]</code> where the <code>i<sup>th</sup></code> token (<strong>1-indexed</strong>) of the series is:</p>\n\n<ul>\n\t<li><code>&quot;fizzbuzz&quot;</code> if <code>i</code> is divisible by <code>3</code> and <code>5</code>,</li>\n\t<li><code>&quot;fizz&quot;</code> if <code>i</code> is divisible by <code>3</code> and not <code>5</code>,</li>\n\t<li><code>&quot;buzz&quot;</code> if <code>i</code> is divisible by <code>5</code> and not <code>3</code>, or</li>\n\t<li><code>i</code> if <code>i</code> is not divisible by <code>3</code> or <code>5</code>.</li>\n</ul>\n\n<p>Implement the <code>FizzBuzz</code> class:</p>\n\n<ul>\n\t<li><code>FizzBuzz(int n)</code> Initializes the object with the number <code>n</code> that represents the length of the sequence that should be printed.</li>\n\t<li><code>void fizz(printFizz)</code> Calls <code>printFizz</code> to output <code>&quot;fizz&quot;</code>.</li>\n\t<li><code>void buzz(printBuzz)</code> Calls <code>printBuzz</code> to output <code>&quot;buzz&quot;</code>.</li>\n\t<li><code>void fizzbuzz(printFizzBuzz)</code> Calls <code>printFizzBuzz</code> to output <code>&quot;fizzbuzz&quot;</code>.</li>\n\t<li><code>void number(printNumber)</code> Calls <code>printnumber</code> to output the numbers.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> n = 15\n<strong>Output:</strong> [1,2,\"fizz\",4,\"buzz\",\"fizz\",7,8,\"fizz\",\"buzz\",11,\"fizz\",13,14,\"fizzbuzz\"]\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> n = 5\n<strong>Output:</strong> [1,2,\"fizz\",4,\"buzz\"]\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 50</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"foobar\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"manual\": true,\n  \"languages\": [\n    \"java\",\n    \"cpp\",\n    \"python3\",\n    \"python\",\n    \"csharp\",\n    \"c\"\n  ]\n}",
+  "stats": "{\"totalAccepted\": \"75.8K\", \"totalSubmission\": \"101.4K\", \"totalAcceptedRaw\": 75791, \"totalSubmissionRaw\": 101441, \"acRate\": \"74.7%\"}",
+  "likes": 676,
+  "dislikes": 443,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Fizz Buzz\", \"titleSlug\": \"fizz-buzz\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Print Zero Even Odd\", \"titleSlug\": \"print-zero-even-odd\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "15",
+    "5"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"gartner\", \"name\": \"Gartner\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Concurrency",
+      "slug": "concurrency"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class FizzBuzz {\nprivate:\n    int n;\n\npublic:\n    FizzBuzz(int n) {\n        this->n = n;\n    }\n\n    // printFizz() outputs \"fizz\".\n    void fizz(function<void()> printFizz) {\n        \n    }\n\n    // printBuzz() outputs \"buzz\".\n    void buzz(function<void()> printBuzz) {\n        \n    }\n\n    // printFizzBuzz() outputs \"fizzbuzz\".\n\tvoid fizzbuzz(function<void()> printFizzBuzz) {\n        \n    }\n\n    // printNumber(x) outputs \"x\", where x is an integer.\n    void number(function<void(int)> printNumber) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class FizzBuzz {\n    private int n;\n\n    public FizzBuzz(int n) {\n        this.n = n;\n    }\n\n    // printFizz.run() outputs \"fizz\".\n    public void fizz(Runnable printFizz) throws InterruptedException {\n        \n    }\n\n    // printBuzz.run() outputs \"buzz\".\n    public void buzz(Runnable printBuzz) throws InterruptedException {\n        \n    }\n\n    // printFizzBuzz.run() outputs \"fizzbuzz\".\n    public void fizzbuzz(Runnable printFizzBuzz) throws InterruptedException {\n        \n    }\n\n    // printNumber.accept(x) outputs \"x\", where x is an integer.\n    public void number(IntConsumer printNumber) throws InterruptedException {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class FizzBuzz:\n    def __init__(self, n: int):\n        self.n = n\n\n    # printFizz() outputs \"fizz\"\n    def fizz(self, printFizz: 'Callable[[], None]') -> None:\n    \t\n\n    # printBuzz() outputs \"buzz\"\n    def buzz(self, printBuzz: 'Callable[[], None]') -> None:\n    \t\n\n    # printFizzBuzz() outputs \"fizzbuzz\"\n    def fizzbuzz(self, printFizzBuzz: 'Callable[[], None]') -> None:\n        \n\n    # printNumber(x) outputs \"x\", where x is an integer.\n    def number(self, printNumber: 'Callable[[int], None]') -> None:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class FizzBuzz(object):\n    def __init__(self, n):\n        self.n = n\n\n    # printFizz() outputs \"fizz\"\n    def fizz(self, printFizz):\n        \"\"\"\n        :type printFizz: method\n        :rtype: void\n        \"\"\"\n    \t\n\n    # printBuzz() outputs \"buzz\"\n    def buzz(self, printBuzz):\n        \"\"\"\n        :type printBuzz: method\n        :rtype: void\n        \"\"\"\n    \t\n\n    # printFizzBuzz() outputs \"fizzbuzz\"\n    def fizzbuzz(self, printFizzBuzz):\n        \"\"\"\n        :type printFizzBuzz: method\n        :rtype: void\n        \"\"\"\n        \n\n    # printNumber(x) outputs \"x\", where x is an integer.\n    def number(self, printNumber):\n        \"\"\"\n        :type printNumber: method\n        :rtype: void\n        \"\"\"\n        "
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class FizzBuzz {\n    private int n;\n\n    public FizzBuzz(int n) {\n        this.n = n;\n    }\n\n    // printFizz() outputs \"fizz\".\n    public void Fizz(Action printFizz) {\n        \n    }\n\n    // printBuzzz() outputs \"buzz\".\n    public void Buzz(Action printBuzz) {\n        \n    }\n\n    // printFizzBuzz() outputs \"fizzbuzz\".\n    public void Fizzbuzz(Action printFizzBuzz) {\n        \n    }\n\n    // printNumber(x) outputs \"x\", where x is an integer.\n    public void Number(Action<int> printNumber) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "typedef struct {\n    int n;\n} FizzBuzz;\n\nFizzBuzz* fizzBuzzCreate(int n) {\n    FizzBuzz* obj = (FizzBuzz*) malloc(sizeof(FizzBuzz));\n    obj->n = n;\n    return obj;\n}\n\n// Don't change the following declarations\nvoid printNumber(int a);\nvoid printFizz();\nvoid printBuzz();\nvoid printFizzBuzz();\n\n// printFizz() outputs \"fizz\".\nvoid fizz(FizzBuzz* obj) {\n    \n}\n\n// printBuzz() outputs \"buzz\".\nvoid buzz(FizzBuzz* obj) {\n    \n}\n\n// printFizzBuzz() outputs \"fizzbuzz\".\nvoid fizzbuzz(FizzBuzz* obj) {\n    \n}\n\n// You may call global function `void printNumber(int x)`\n// to output \"x\", where x is an integer.\nvoid number(FizzBuzz* obj) {\n    \n}\n\nvoid fizzBuzzFree(FizzBuzz* obj) {\n    \n}"
+    }
+  ],
+  "solution": null
+}

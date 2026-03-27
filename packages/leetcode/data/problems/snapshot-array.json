@@ -1,0 +1,142 @@
+{
+  "questionId": "1249",
+  "questionFrontendId": "1146",
+  "title": "Snapshot Array",
+  "titleSlug": "snapshot-array",
+  "difficulty": "Medium",
+  "content": "<p>Implement a SnapshotArray that supports the following interface:</p>\n\n<ul>\n\t<li><code>SnapshotArray(int length)</code> initializes an array-like data structure with the given length. <strong>Initially, each element equals 0</strong>.</li>\n\t<li><code>void set(index, val)</code> sets the element at the given <code>index</code> to be equal to <code>val</code>.</li>\n\t<li><code>int snap()</code> takes a snapshot of the array and returns the <code>snap_id</code>: the total number of times we called <code>snap()</code> minus <code>1</code>.</li>\n\t<li><code>int get(index, snap_id)</code> returns the value at the given <code>index</code>, at the time we took the snapshot with the given <code>snap_id</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> [&quot;SnapshotArray&quot;,&quot;set&quot;,&quot;snap&quot;,&quot;set&quot;,&quot;get&quot;]\n[[3],[0,5],[],[0,6],[0,0]]\n<strong>Output:</strong> [null,null,0,null,5]\n<strong>Explanation: </strong>\nSnapshotArray snapshotArr = new SnapshotArray(3); // set the length to be 3\nsnapshotArr.set(0,5);  // Set array[0] = 5\nsnapshotArr.snap();  // Take a snapshot, return snap_id = 0\nsnapshotArr.set(0,6);\nsnapshotArr.get(0,0);  // Get the value of array[0] with snap_id = 0, return 5</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= length &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= index &lt; length</code></li>\n\t<li><code>0 &lt;= val &lt;= 10<sup>9</sup></code></li>\n\t<li><code>0 &lt;= snap_id &lt; </code>(the total number of times we call <code>snap()</code>)</li>\n\t<li>At most <code>5 * 10<sup>4</sup></code> calls will be made to <code>set</code>, <code>snap</code>, and <code>get</code>.</li>\n</ul>\n",
+  "hints": [
+    "Use a list of lists, adding both the element and the snap_id to each index."
+  ],
+  "metaData": "{\n  \"classname\": \"SnapshotArray\",\n  \"maxbytesperline\": 400000,\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer\",\n        \"name\": \"length\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"index\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"val\"\n        }\n      ],\n      \"name\": \"set\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [],\n      \"name\": \"snap\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"index\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"snap_id\"\n        }\n      ],\n      \"name\": \"get\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"params\": [\n    {\n      \"name\": \"inputs\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"inputs\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"systemdesign\": true,\n  \"manual\": false\n}",
+  "stats": "{\"totalAccepted\": \"276.4K\", \"totalSubmission\": \"753.2K\", \"totalAcceptedRaw\": 276353, \"totalSubmissionRaw\": 753235, \"acRate\": \"36.7%\"}",
+  "likes": 3920,
+  "dislikes": 540,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"SnapshotArray\",\"set\",\"snap\",\"set\",\"get\"]\n[[3],[0,5],[],[0,6],[0,0]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 6, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"mongodb\", \"name\": \"MongoDB\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"deepmind\", \"name\": \"DeepMind\"}, {\"timesEncountered\": 2, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 2, \"slug\": \"verkada\", \"name\": \"Verkada\"}], \"more_than_six_months\": [{\"timesEncountered\": 22, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 13, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 10, \"slug\": \"databricks\", \"name\": \"Databricks\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"rubrik\", \"name\": \"Rubrik\"}, {\"timesEncountered\": 3, \"slug\": \"coupang\", \"name\": \"Coupang\"}, {\"timesEncountered\": 3, \"slug\": \"stackadapt\", \"name\": \"StackAdapt\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class SnapshotArray {\npublic:\n    SnapshotArray(int length) {\n        \n    }\n    \n    void set(int index, int val) {\n        \n    }\n    \n    int snap() {\n        \n    }\n    \n    int get(int index, int snap_id) {\n        \n    }\n};\n\n/**\n * Your SnapshotArray object will be instantiated and called as such:\n * SnapshotArray* obj = new SnapshotArray(length);\n * obj->set(index,val);\n * int param_2 = obj->snap();\n * int param_3 = obj->get(index,snap_id);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class SnapshotArray {\n\n    public SnapshotArray(int length) {\n        \n    }\n    \n    public void set(int index, int val) {\n        \n    }\n    \n    public int snap() {\n        \n    }\n    \n    public int get(int index, int snap_id) {\n        \n    }\n}\n\n/**\n * Your SnapshotArray object will be instantiated and called as such:\n * SnapshotArray obj = new SnapshotArray(length);\n * obj.set(index,val);\n * int param_2 = obj.snap();\n * int param_3 = obj.get(index,snap_id);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class SnapshotArray:\n\n    def __init__(self, length: int):\n        \n\n    def set(self, index: int, val: int) -> None:\n        \n\n    def snap(self) -> int:\n        \n\n    def get(self, index: int, snap_id: int) -> int:\n        \n\n\n# Your SnapshotArray object will be instantiated and called as such:\n# obj = SnapshotArray(length)\n# obj.set(index,val)\n# param_2 = obj.snap()\n# param_3 = obj.get(index,snap_id)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class SnapshotArray(object):\n\n    def __init__(self, length):\n        \"\"\"\n        :type length: int\n        \"\"\"\n        \n\n    def set(self, index, val):\n        \"\"\"\n        :type index: int\n        :type val: int\n        :rtype: None\n        \"\"\"\n        \n\n    def snap(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n    def get(self, index, snap_id):\n        \"\"\"\n        :type index: int\n        :type snap_id: int\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your SnapshotArray object will be instantiated and called as such:\n# obj = SnapshotArray(length)\n# obj.set(index,val)\n# param_2 = obj.snap()\n# param_3 = obj.get(index,snap_id)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} length\n */\nvar SnapshotArray = function(length) {\n    \n};\n\n/** \n * @param {number} index \n * @param {number} val\n * @return {void}\n */\nSnapshotArray.prototype.set = function(index, val) {\n    \n};\n\n/**\n * @return {number}\n */\nSnapshotArray.prototype.snap = function() {\n    \n};\n\n/** \n * @param {number} index \n * @param {number} snap_id\n * @return {number}\n */\nSnapshotArray.prototype.get = function(index, snap_id) {\n    \n};\n\n/** \n * Your SnapshotArray object will be instantiated and called as such:\n * var obj = new SnapshotArray(length)\n * obj.set(index,val)\n * var param_2 = obj.snap()\n * var param_3 = obj.get(index,snap_id)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class SnapshotArray {\n    constructor(length: number) {\n        \n    }\n\n    set(index: number, val: number): void {\n        \n    }\n\n    snap(): number {\n        \n    }\n\n    get(index: number, snap_id: number): number {\n        \n    }\n}\n\n/**\n * Your SnapshotArray object will be instantiated and called as such:\n * var obj = new SnapshotArray(length)\n * obj.set(index,val)\n * var param_2 = obj.snap()\n * var param_3 = obj.get(index,snap_id)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class SnapshotArray {\n\n    public SnapshotArray(int length) {\n        \n    }\n    \n    public void Set(int index, int val) {\n        \n    }\n    \n    public int Snap() {\n        \n    }\n    \n    public int Get(int index, int snap_id) {\n        \n    }\n}\n\n/**\n * Your SnapshotArray object will be instantiated and called as such:\n * SnapshotArray obj = new SnapshotArray(length);\n * obj.Set(index,val);\n * int param_2 = obj.Snap();\n * int param_3 = obj.Get(index,snap_id);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} SnapshotArray;\n\n\nSnapshotArray* snapshotArrayCreate(int length) {\n    \n}\n\nvoid snapshotArraySet(SnapshotArray* obj, int index, int val) {\n    \n}\n\nint snapshotArraySnap(SnapshotArray* obj) {\n    \n}\n\nint snapshotArrayGet(SnapshotArray* obj, int index, int snap_id) {\n    \n}\n\nvoid snapshotArrayFree(SnapshotArray* obj) {\n    \n}\n\n/**\n * Your SnapshotArray struct will be instantiated and called as such:\n * SnapshotArray* obj = snapshotArrayCreate(length);\n * snapshotArraySet(obj, index, val);\n \n * int param_2 = snapshotArraySnap(obj);\n \n * int param_3 = snapshotArrayGet(obj, index, snap_id);\n \n * snapshotArrayFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type SnapshotArray struct {\n    \n}\n\n\nfunc Constructor(length int) SnapshotArray {\n    \n}\n\n\nfunc (this *SnapshotArray) Set(index int, val int)  {\n    \n}\n\n\nfunc (this *SnapshotArray) Snap() int {\n    \n}\n\n\nfunc (this *SnapshotArray) Get(index int, snap_id int) int {\n    \n}\n\n\n/**\n * Your SnapshotArray object will be instantiated and called as such:\n * obj := Constructor(length);\n * obj.Set(index,val);\n * param_2 := obj.Snap();\n * param_3 := obj.Get(index,snap_id);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class SnapshotArray(length: Int) {\n\n    fun set(index: Int, `val`: Int) {\n        \n    }\n\n    fun snap(): Int {\n        \n    }\n\n    fun get(index: Int, snap_id: Int): Int {\n        \n    }\n\n}\n\n/**\n * Your SnapshotArray object will be instantiated and called as such:\n * var obj = SnapshotArray(length)\n * obj.set(index,`val`)\n * var param_2 = obj.snap()\n * var param_3 = obj.get(index,snap_id)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass SnapshotArray {\n\n    init(_ length: Int) {\n        \n    }\n    \n    func set(_ index: Int, _ val: Int) {\n        \n    }\n    \n    func snap() -> Int {\n        \n    }\n    \n    func get(_ index: Int, _ snap_id: Int) -> Int {\n        \n    }\n}\n\n/**\n * Your SnapshotArray object will be instantiated and called as such:\n * let obj = SnapshotArray(length)\n * obj.set(index, val)\n * let ret_2: Int = obj.snap()\n * let ret_3: Int = obj.get(index, snap_id)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct SnapshotArray {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl SnapshotArray {\n\n    fn new(length: i32) -> Self {\n        \n    }\n    \n    fn set(&self, index: i32, val: i32) {\n        \n    }\n    \n    fn snap(&self) -> i32 {\n        \n    }\n    \n    fn get(&self, index: i32, snap_id: i32) -> i32 {\n        \n    }\n}\n\n/**\n * Your SnapshotArray object will be instantiated and called as such:\n * let obj = SnapshotArray::new(length);\n * obj.set(index, val);\n * let ret_2: i32 = obj.snap();\n * let ret_3: i32 = obj.get(index, snap_id);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class SnapshotArray\n\n=begin\n    :type length: Integer\n=end\n    def initialize(length)\n        \n    end\n\n\n=begin\n    :type index: Integer\n    :type val: Integer\n    :rtype: Void\n=end\n    def set(index, val)\n        \n    end\n\n\n=begin\n    :rtype: Integer\n=end\n    def snap()\n        \n    end\n\n\n=begin\n    :type index: Integer\n    :type snap_id: Integer\n    :rtype: Integer\n=end\n    def get(index, snap_id)\n        \n    end\n\n\nend\n\n# Your SnapshotArray object will be instantiated and called as such:\n# obj = SnapshotArray.new(length)\n# obj.set(index, val)\n# param_2 = obj.snap()\n# param_3 = obj.get(index, snap_id)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class SnapshotArray {\n    /**\n     * @param Integer $length\n     */\n    function __construct($length) {\n        \n    }\n  \n    /**\n     * @param Integer $index\n     * @param Integer $val\n     * @return NULL\n     */\n    function set($index, $val) {\n        \n    }\n  \n    /**\n     * @return Integer\n     */\n    function snap() {\n        \n    }\n  \n    /**\n     * @param Integer $index\n     * @param Integer $snap_id\n     * @return Integer\n     */\n    function get($index, $snap_id) {\n        \n    }\n}\n\n/**\n * Your SnapshotArray object will be instantiated and called as such:\n * $obj = SnapshotArray($length);\n * $obj->set($index, $val);\n * $ret_2 = $obj->snap();\n * $ret_3 = $obj->get($index, $snap_id);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class SnapshotArray {\n\n  SnapshotArray(int length) {\n    \n  }\n  \n  void set(int index, int val) {\n    \n  }\n  \n  int snap() {\n    \n  }\n  \n  int get(int index, int snap_id) {\n    \n  }\n}\n\n/**\n * Your SnapshotArray object will be instantiated and called as such:\n * SnapshotArray obj = SnapshotArray(length);\n * obj.set(index,val);\n * int param2 = obj.snap();\n * int param3 = obj.get(index,snap_id);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class SnapshotArray(_length: Int) {\n\n    def set(index: Int, `val`: Int): Unit = {\n        \n    }\n\n    def snap(): Int = {\n        \n    }\n\n    def get(index: Int, snap_id: Int): Int = {\n        \n    }\n\n}\n\n/**\n * Your SnapshotArray object will be instantiated and called as such:\n * val obj = new SnapshotArray(length)\n * obj.set(index,`val`)\n * val param_2 = obj.snap()\n * val param_3 = obj.get(index,snap_id)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule SnapshotArray do\n  @spec init_(length :: integer) :: any\n  def init_(length) do\n    \n  end\n\n  @spec set(index :: integer, val :: integer) :: any\n  def set(index, val) do\n    \n  end\n\n  @spec snap() :: integer\n  def snap() do\n    \n  end\n\n  @spec get(index :: integer, snap_id :: integer) :: integer\n  def get(index, snap_id) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# SnapshotArray.init_(length)\n# SnapshotArray.set(index, val)\n# param_2 = SnapshotArray.snap()\n# param_3 = SnapshotArray.get(index, snap_id)\n\n# SnapshotArray.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec snapshot_array_init_(Length :: integer()) -> any().\nsnapshot_array_init_(Length) ->\n  .\n\n-spec snapshot_array_set(Index :: integer(), Val :: integer()) -> any().\nsnapshot_array_set(Index, Val) ->\n  .\n\n-spec snapshot_array_snap() -> integer().\nsnapshot_array_snap() ->\n  .\n\n-spec snapshot_array_get(Index :: integer(), Snap_id :: integer()) -> integer().\nsnapshot_array_get(Index, Snap_id) ->\n  .\n\n\n%% Your functions will be called as such:\n%% snapshot_array_init_(Length),\n%% snapshot_array_set(Index, Val),\n%% Param_2 = snapshot_array_snap(),\n%% Param_3 = snapshot_array_get(Index, Snap_id),\n\n%% snapshot_array_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define snapshot-array%\n  (class object%\n    (super-new)\n    \n    ; length : exact-integer?\n    (init-field\n      length)\n    \n    ; set : exact-integer? exact-integer? -> void?\n    (define/public (set index val)\n      )\n    ; snap : -> exact-integer?\n    (define/public (snap)\n      )\n    ; get : exact-integer? exact-integer? -> exact-integer?\n    (define/public (get index snap_id)\n      )))\n\n;; Your snapshot-array% object will be instantiated and called as such:\n;; (define obj (new snapshot-array% [length length]))\n;; (send obj set index val)\n;; (define param_2 (send obj snap))\n;; (define param_3 (send obj get index snap_id))"
+    }
+  ],
+  "solution": {
+    "id": "1886",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nThe most straightforward approach to this problem is to keep track of every snapshot taken by saving the values of all the elements in the array at that moment. We can then retrieve the values at any given snapshot by indexing into the snapshot list and fetching the element's value. \n\nAs shown in the picture below, we save a copy of the entire array `nums` every time we take a snapshot as `snap_0`, `snap_1`, and so on. Then `get(index=0, snap_id=2)` returns the first element of `snap_2`.\n\n![img](../Figures/1146/1.png)\n\nWhile this approach is conceptually simple, it would be inefficient for large arrays or if snapshots are taken frequently. Suppose the maximum number of calls to each function is $$O(n)$$, it saves $$O(n)$$ arrays of size $$\\text{length}$$, resulting in high memory usage and time complexity.\n\n---\n\n### Approach: Binary Search\n\n#### Intuition   \n\nOne alternative is to focus on the historical record of each element, and record the value of the modified element when `set` is called. This approach will reduce the memory required to store the history of the array's elements and improve query times for specific snapshots since we save an element `nums[i]` only when it is modified by `set`.\n\n\n![img](../Figures/1146/2.png)\n\nTo implement this approach, we can create a list of records for each index `i`. A record contains the snapshot id and the value of the element in that snapshot, in the format of `(snap_id, nums[i])`. We can then store the list of records of each element in a dictionary `history_records`, where the key is `i`. Take a look at how we update the historical record of `nums[0]` in `history_records[0]`.\n\n\n![img](../Figures/1146/5.png)\n\n<br>\n\nWe have collected every record of `nums[0]` in `history_records[0]`.\n\n\n![img](../Figures/1146/3.png)\n\nTo retrieve the value of `nums[0]` with the given snapshot id `snap_id = 2`, we need to find the insertion position of `snap_id` in the list of records for `nums[0]`. It should be noted that `snap_id` may not be present in the record list. Therefore, we can use binary search to find the record with the highest snapshot ID that is less than or equal to the given `snap_id`.\n\n\n> Note that `snap_id = 2` is not included in the historical record of `nums[0]`, as `set` was not called on this element when the snapshot ID was 2. Therefore, the value of `nums[0]` remains the same as it was when the snapshot ID was 1.\n\n\n![img](../Figures/1146/4.png)\n\nOnce we have the index of the target ID `snap_index`, we can retrieve the corresponding value from the record at the position `snap_index`, which is `history_records[0][snap_index][1]`.\n\n\n<br>\n\n#### Algorithm\n\n1) For each element `nums[i]` in the array, create an empty list to store its historical values, in the format of `[snap_id, value]`. Initialize each list by adding the first record `[0, 0]`.\n\n2) Implement the `set(index, val)` method: add the historical record `[snap_id, value]` to the record list `history_records[index]`.\n\n\n3) Implement the `snap` method: return `snap_id` and increment it by 1.\n\n4) Implement the `get(index, snap_id)` method to retrieve the value of `nums[index]` in the array with snapshot id as `snap_id`:\n    - Use binary search to find the rightmost insertion index of snapshot ID in the given version `snap_index` (so the target index is `snap_index - 1`).\n    - Return `history_records[index][snap_index - 1][1]`.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/dcNokMR2/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"dcNokMR2\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the maximum number of calls and `k = length`.\n\n* Time complexity: $$O(n \\log n + k)$$\n\n    - We initialize `historyRecords` with size `k`.\n    - In the worst-case scenario, the number of calls to `get`, `set`, and `snap` are all $$O(n)$$. \n    - For each call to `get(index, snap_id)`, we will perform a binary search over the list of records of `nums[index]`. Since a list contains at most $$O(n)$$ records, a binary search takes $$O(\\log n)$$ time on average. Thus it requires $$O(n \\log n)$$ time.\n    - Each call to `snap` takes $$O(1)$$ time.\n    - Each call to `set(index, snap_id)` appends a pair to the historical record of `nums[index]`, which takes $$O(1)$$ time, or $$O(\\log n)$$ in Java as we are using TreeMap. \n\n* Space complexity: $$O(n + k)$$\n    - We initialize `historyRecords` with size `k`.\n    - We add one pair `(snap_id, val)` for each call to `set`, thus there are at most $$n$$ pairs saved in `history_record`.\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

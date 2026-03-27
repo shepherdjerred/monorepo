@@ -200,7 +200,7 @@ export function createPlexDeployment(
         PLEX_SERVER: EnvValue.fromValue("http://localhost:32400"),
         PLEX_TOKEN: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(chart, "plex-token", plexSecrets.name),
-          key: "password",
+          key: "PASSWORD",
         }),
         PLEX_LOG_LEVEL: EnvValue.fromValue("info"),
       },

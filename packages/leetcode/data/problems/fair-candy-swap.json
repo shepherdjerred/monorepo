@@ -1,0 +1,142 @@
+{
+  "questionId": "924",
+  "questionFrontendId": "888",
+  "title": "Fair Candy Swap",
+  "titleSlug": "fair-candy-swap",
+  "difficulty": "Easy",
+  "content": "<p>Alice and Bob have a different total number of candies. You are given two integer arrays <code>aliceSizes</code> and <code>bobSizes</code> where <code>aliceSizes[i]</code> is the number of candies of the <code>i<sup>th</sup></code> box of candy that Alice has and <code>bobSizes[j]</code> is the number of candies of the <code>j<sup>th</sup></code> box of candy that Bob has.</p>\n\n<p>Since they are friends, they would like to exchange one candy box each so that after the exchange, they both have the same total amount of candy. The total amount of candy a person has is the sum of the number of candies in each box they have.</p>\n\n<p>Return a<em>n integer array </em><code>answer</code><em> where </em><code>answer[0]</code><em> is the number of candies in the box that Alice must exchange, and </em><code>answer[1]</code><em> is the number of candies in the box that Bob must exchange</em>. If there are multiple answers, you may <strong>return any</strong> one of them. It is guaranteed that at least one answer exists.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> aliceSizes = [1,1], bobSizes = [2,2]\n<strong>Output:</strong> [1,2]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> aliceSizes = [1,2], bobSizes = [2,3]\n<strong>Output:</strong> [1,2]\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> aliceSizes = [2], bobSizes = [1,3]\n<strong>Output:</strong> [2,3]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= aliceSizes.length, bobSizes.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= aliceSizes[i], bobSizes[j] &lt;= 10<sup>5</sup></code></li>\n\t<li>Alice and Bob have a different total number of candies.</li>\n\t<li>There will be at least one valid answer for the given input.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"fairCandySwap\",\n  \"params\": [\n    {\n      \"name\": \"aliceSizes\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"bobSizes\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"169.2K\", \"totalSubmission\": \"261.4K\", \"totalAcceptedRaw\": 169215, \"totalSubmissionRaw\": 261442, \"acRate\": \"64.7%\"}",
+  "likes": 2271,
+  "dislikes": 422,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,1]\n[2,2]",
+    "[1,2]\n[2,3]",
+    "[2]\n[1,3]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"swiggy\", \"name\": \"Swiggy\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> fairCandySwap(vector<int>& aliceSizes, vector<int>& bobSizes) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] fairCandySwap(int[] aliceSizes, int[] bobSizes) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def fairCandySwap(self, aliceSizes: List[int], bobSizes: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def fairCandySwap(self, aliceSizes, bobSizes):\n        \"\"\"\n        :type aliceSizes: List[int]\n        :type bobSizes: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} aliceSizes\n * @param {number[]} bobSizes\n * @return {number[]}\n */\nvar fairCandySwap = function(aliceSizes, bobSizes) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function fairCandySwap(aliceSizes: number[], bobSizes: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] FairCandySwap(int[] aliceSizes, int[] bobSizes) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* fairCandySwap(int* aliceSizes, int aliceSizesSize, int* bobSizes, int bobSizesSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func fairCandySwap(aliceSizes []int, bobSizes []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun fairCandySwap(aliceSizes: IntArray, bobSizes: IntArray): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func fairCandySwap(_ aliceSizes: [Int], _ bobSizes: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn fair_candy_swap(alice_sizes: Vec<i32>, bob_sizes: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} alice_sizes\n# @param {Integer[]} bob_sizes\n# @return {Integer[]}\ndef fair_candy_swap(alice_sizes, bob_sizes)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $aliceSizes\n     * @param Integer[] $bobSizes\n     * @return Integer[]\n     */\n    function fairCandySwap($aliceSizes, $bobSizes) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> fairCandySwap(List<int> aliceSizes, List<int> bobSizes) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def fairCandySwap(aliceSizes: Array[Int], bobSizes: Array[Int]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec fair_candy_swap(alice_sizes :: [integer], bob_sizes :: [integer]) :: [integer]\n  def fair_candy_swap(alice_sizes, bob_sizes) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec fair_candy_swap(AliceSizes :: [integer()], BobSizes :: [integer()]) -> [integer()].\nfair_candy_swap(AliceSizes, BobSizes) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (fair-candy-swap aliceSizes bobSizes)\n  (-> (listof exact-integer?) (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "532",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach 1: Solve the Equation\n\n**Intuition**\n\nIf Alice swaps candy `x`, she expects some specific quantity of candy `y` back.\n\n**Algorithm**\n\nSay Alice and Bob have total candy $$S_A, S_B$$ respectively.\n\nIf Alice gives candy $$x$$, and receives candy $$y$$, then Bob receives candy $$x$$ and gives candy $$y$$.  Then, we must have\n\n$$\nS_A - x + y = S_B - y + x\n$$\n\nfor a fair candy swap.  This implies\n\n$$\ny = x + \\frac{S_B - S_A}{2}\n$$\n\nOur strategy is simple.  For every candy $$x$$ that Alice has, if Bob has candy $$y = x + \\frac{S_B - S_A}{2}$$, we return $$[x, y]$$.  We use a `Set` structure to check whether Bob has the desired candy $$y$$ in constant time.\n\n<iframe src=\"https://leetcode.com/playground/NhBgEN4r/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"NhBgEN4r\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(A\\text{.length} + B\\text{.length})$$.\n\n* Space Complexity:  $$O(B\\text{.length})$$, the space used by `setB`.  (We can improve this to $$\\min(A\\text{.length}, B\\text{.length})$$ by using an if statement.)\n<br />\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

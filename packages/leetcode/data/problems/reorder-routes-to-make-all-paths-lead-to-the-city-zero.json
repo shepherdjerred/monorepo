@@ -1,0 +1,140 @@
+{
+  "questionId": "1576",
+  "questionFrontendId": "1466",
+  "title": "Reorder Routes to Make All Paths Lead to the City Zero",
+  "titleSlug": "reorder-routes-to-make-all-paths-lead-to-the-city-zero",
+  "difficulty": "Medium",
+  "content": "<p>There are <code>n</code> cities numbered from <code>0</code> to <code>n - 1</code> and <code>n - 1</code> roads such that there is only one way to travel between two different cities (this network form a tree). Last year, The ministry of transport decided to orient the roads in one direction because they are too narrow.</p>\n\n<p>Roads are represented by <code>connections</code> where <code>connections[i] = [a<sub>i</sub>, b<sub>i</sub>]</code> represents a road from city <code>a<sub>i</sub></code> to city <code>b<sub>i</sub></code>.</p>\n\n<p>This year, there will be a big event in the capital (city <code>0</code>), and many people want to travel to this city.</p>\n\n<p>Your task consists of reorienting some roads such that each city can visit the city <code>0</code>. Return the <strong>minimum</strong> number of edges changed.</p>\n\n<p>It&#39;s <strong>guaranteed</strong> that each city can reach city <code>0</code> after reorder.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/05/13/sample_1_1819.png\" style=\"width: 311px; height: 189px;\" />\n<pre>\n<strong>Input:</strong> n = 6, connections = [[0,1],[1,3],[2,3],[4,0],[4,5]]\n<strong>Output:</strong> 3\n<strong>Explanation: </strong>Change the direction of edges show in red such that each node can reach the node 0 (capital).\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/05/13/sample_2_1819.png\" style=\"width: 509px; height: 79px;\" />\n<pre>\n<strong>Input:</strong> n = 5, connections = [[1,0],[1,2],[3,2],[3,4]]\n<strong>Output:</strong> 2\n<strong>Explanation: </strong>Change the direction of edges show in red such that each node can reach the node 0 (capital).\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 3, connections = [[1,0],[2,0]]\n<strong>Output:</strong> 0\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>connections.length == n - 1</code></li>\n\t<li><code>connections[i].length == 2</code></li>\n\t<li><code>0 &lt;= a<sub>i</sub>, b<sub>i</sub> &lt;= n - 1</code></li>\n\t<li><code>a<sub>i</sub> != b<sub>i</sub></code></li>\n</ul>\n",
+  "hints": [
+    "Treat the graph as undirected. Start a dfs from the root, if you come across an edge in the forward direction, you need to reverse the edge."
+  ],
+  "metaData": "{\n  \"name\": \"minReorder\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"connections\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"315.1K\", \"totalSubmission\": \"479.6K\", \"totalAcceptedRaw\": 315095, \"totalSubmissionRaw\": 479630, \"acRate\": \"65.7%\"}",
+  "likes": 4644,
+  "dislikes": 149,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Edge Reversals So Every Node Is Reachable\", \"titleSlug\": \"minimum-edge-reversals-so-every-node-is-reachable\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "6\n[[0,1],[1,3],[2,3],[4,0],[4,5]]",
+    "5\n[[1,0],[1,2],[3,2],[3,4]]",
+    "3\n[[1,0],[2,0]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 32, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 12, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minReorder(int n, vector<vector<int>>& connections) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minReorder(int n, int[][] connections) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minReorder(self, n: int, connections: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minReorder(self, n, connections):\n        \"\"\"\n        :type n: int\n        :type connections: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} connections\n * @return {number}\n */\nvar minReorder = function(n, connections) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minReorder(n: number, connections: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinReorder(int n, int[][] connections) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minReorder(int n, int** connections, int connectionsSize, int* connectionsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minReorder(n int, connections [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minReorder(n: Int, connections: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minReorder(_ n: Int, _ connections: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_reorder(n: i32, connections: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} connections\n# @return {Integer}\ndef min_reorder(n, connections)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $connections\n     * @return Integer\n     */\n    function minReorder($n, $connections) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minReorder(int n, List<List<int>> connections) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minReorder(n: Int, connections: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_reorder(n :: integer, connections :: [[integer]]) :: integer\n  def min_reorder(n, connections) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_reorder(N :: integer(), Connections :: [[integer()]]) -> integer().\nmin_reorder(N, Connections) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-reorder n connections)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1704",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a tree with `n` nodes where each node is a city numbered from `0` to `n - 1`. The edges are referred to as roads between the cities.\n\nThe tree given in the problem has directed edges provided by `connections`.\n\nWe need to return the number of edges that need to be flipped so that from every node, you can somehow reach node `0`, i.e., there is a path from every node to node `0`.\n\nBefore moving on to the solution, consider some of the graph terminologies that will be used later:\n\n![img](../Figures/1466/1466-1.png)\n\n1. **Child**: A node that is one edge further away from a given node in a rooted tree. In the above image, nodes `3, 4` are children of `1`, which is called the parent. (When we consider `0` as the root)\n2. **Descendants**: Descendants of a node are children, children of children, and so on. In the above image, nodes `3, 4, 6, 7, 9` are all descendants of `1`.\n3. **Subtree**: A subtree of a node `T` is a tree `S` consisting of a node `T` and all of its descendants in `T`. The subtree corresponding to the root node is the entire tree.\n\n---\n\n### Approach 1: Depth First Search\n\n#### Intuition\n\nBecause we need to bring everyone to node `0`, we can model the graph as a tree rooted at node `0` (the problem statement hints at this by stating that the network forms a tree structure). We can imagine that in order to move from any node to the root, all edges must be directed from a child to its parent. If there is an edge from a parent node to its child node, no node in the subtree of the child can reach the root node. This edge must be flipped.\n\nLet's take a visual example to understand this.\n\n![img](../Figures/1466/1466-2.png)\n\n**So, our task is to count the number of edges in a tree rooted at node '0' that are directed from the parent node to a child node.**\n\nWe must traverse the entire tree to determine the number of such edges that are directed from the parent to the child node. To traverse the tree, we can use a graph traversal algorithm such as depth-first search (DFS).\n\nIn DFS, we use a recursive function to explore nodes as far as possible along each branch. Upon reaching the end of a branch, we backtrack to the previous node and continue exploring the next branches.\n\nOnce we encounter an unvisited node, we will take one of its neighbor nodes (if exists) as the next node on this branch. Recursively call the function to take the next node as the 'starting node' and solve the subproblem.\n\nIf you are new to Depth First Search, please see our [Leetcode Explore Card](https://leetcode.com/explore/featured/card/graph/619/depth-first-search-in-graph/3882/) for more information on it!\n\nThe caveat is that our edges are directed. To count the number of edges that are directed from a parent to its child node, we must traverse the entire tree. If there is an edge from a child to its parent node, we will be unable to reach the child from the parent.\n\nTo traverse the entire tree, we must find a way to get from node `0` to all of the nodes in any case. This is possible if the edges are treated as undirected. We add an opposite edge from node `b` to node `a` for every given edge in `connections` from node `a` to node `b`. Let us refer to the edge we added as an \"artificial\" edge and the edge present in `connections` as an \"original\" edge.\n\nIf we use an \"artificial\" edge to move from the parent node to the child node, we know that the original edge is directed from the child node to the parent node. We don't need to flip the \"original\" edge.\n\nIf we use an \"original\" edge to move from the parent node to the child node, it means we need to flip this edge. Whenever we encounter such an edge, we will increment our answer variable by `1`.\n\nWe can distinguish between an \"original\" and an \"artificial\" edge in many different ways (assigning booleans, specific numbers, etc.). In this article, we will associate an extra value with each edge - `1` for \"original\" edges and `0` for \"artificial\" edges.\n\nWe also set an answer variable `count = 0` to count the number of edges that must be flipped. Now we start a DFS from node `0` and work our way down the tree (from parent to child). If we come across an \"original\" edge during the traversal, that is, an edge labeled with a `1`, we increase the `count` by one. We don't modify `count` if we come across an \"artificial\" edge. We can combine these two operations and perform `count += sign` where `sign` is either `0` or `1` indicating an \"artificial\" or \"original\" edge.\n\nWe have our answer in `count` at the end of the traversal.\n\n#### Algorithm\n\n1. Create an integer variable `count` to count the number of edges that must be flipped. We initialize it with `0`.\n2. Create an adjacency list `adj` that contains a list of pairs of integers such that `adj[node]` contains all the neighbors of `node` in the form of `(neighbor, sign)` where `neighbor` is the neighboring node of `node` and `sign` denotes the direction of the edge i.e., whether its an \"original\" or \"artificial\" edge.\n3. Start a DFS traversal.\n    - We use a function `dfs` to perform the traversal. For each call, pass `node, parent, adj` as the parameters. We start with node `0` and parent as `-1`.\n    - Iterate over all the neighbors of the `node` (nodes that share an edge) using `adj[node]`. For every `neighbor, sign` in `adj[node]`, check if `neighbor` is equal to `parent`. If `neighbor` is equal to `parent`, we will not visit it again.\n    - If `neighbor` is not equal to `parent`, we perform `count += sign` and recursively call the `dfs` with `node = neighbor` and `parent = node`. At the end of the `dfs` traversal, we have the total edges that are required to be flipped in `count`.\n4. Return `count`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ELVVivHQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ELVVivHQ\"></iframe>\n\n#### Complexity Analysis\n\nHere $n$ is the number of nodes.\n\n* Time complexity: $O(n)$.\n    - We need $O(n)$ time to initialize the adjacency list.\n    - The `dfs` function visits each node once, which takes $O(n)$ time in total. Because we have undirected edges, each edge can only be iterated twice (by nodes at the end), resulting in $O(e)$ operations total while visiting all nodes, where $e$ is the number of edges. Because the given graph is a tree, there are $n - 1$ undirected edges, so $O(n + e) = O(n)$.\n\n* Space complexity: $O(n)$.\n    - Building the adjacency list takes $O(n)$ space.\n    - The recursion call stack used by `dfs` can have no more than $n$ elements in the worst-case scenario. It would take up $O(n)$ space in that case. \n\n---\n\n### Approach 2: Breadth First Search\n\n#### Intuition\n\nAnother method is to use a breadth-first search (BFS) because we only need to find the number of edges that are directed from the parent node to the child node in a rooted tree. This approach is identical to the first one, we are just using BFS instead of DFS to perform the traversal.\n\nBFS is an algorithm for traversing or searching a graph. It traverses in a level-wise manner, i.e., all the nodes at the present level (say `l`) are explored before moving on to the nodes at the next level (`l + 1`), where a level's number is the distance from a starting node. BFS is implemented with a queue.\n\nIf you are not familiar with BFS traversal, we suggest you read our [Leetcode Explore Card](https://leetcode.com/explore/featured/card/graph/620/breadth-first-search-in-graph/).\n\n#### Algorithm\n\n1. Create an integer variable `count` to count the number of edges that are to be flipped. We initialize it with `0`.\n2. Create an adjacency list `adj` that contains a list of pairs of integers such that `adj[node]` contains all the neighbors of `node` in the form of `(neighbor, sign)` where `neighbor` is the neighboring node of `node` and `sign` denotes the direction of the edge i.e., whether its an \"original\" or \"artificial\" edge.\n3. Start a BFS traversal.\n    - We use a function `bfs` to perform the traversal. Pass `node, n, adj` as the parameters. We start with node `0`.\n    - Create a `visit` array of length `n` to keep track of nodes that have been visited.\n    - We initialize a queue `q` of integers and push `0` into it. We also mark `0` as visited.\n    - While the queue is not empty, we dequeue the first element `node` from the queue and iterate over all its neighbors using `adj[node]`. For each `neighbor, sign` in `adj[node]`, we check if `neighbor` has been visited already. If `neighbor` has not yet been visited, we mark it visited, perform `count += sign`, and push `neighbor` into the queue.\n4. Return `count`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/SLiFjRGY/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"SLiFjRGY\"></iframe>\n\n#### Complexity Analysis\n\nHere $n$ is the number of nodes.\n\n* Time complexity: $O(n)$.\n    - We need $O(n)$ time to initialize the adjacency list and $O(n)$ to initialize the `visit` array.\n    - Each queue operation in the BFS algorithm takes $O(1)$ time, and a single node can only be pushed once, leading to $O(n)$ operations for $n$ nodes. We iterate over all the neighbors of each node that is popped out of the queue, so for an undirected edge, a given edge could be iterated at most twice (by nodes at both ends), resulting in $O(e)$ operations total for all the nodes. As mentioned in the previous approach, $O(e) = O(n)$ since the graph is a tree.\n\n* Space complexity: $O(n)$.\n    - Building the adjacency list takes $O(n)$ space.\n    - The `visit` array takes $O(n)$ space as well. \n    - The BFS queue takes $O(n)$ space in the worst-case because each node is added once.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,137 @@
+{
+  "questionId": "965",
+  "questionFrontendId": "929",
+  "title": "Unique Email Addresses",
+  "titleSlug": "unique-email-addresses",
+  "difficulty": "Easy",
+  "content": "<p>Every <strong>valid email</strong> consists of a <strong>local name</strong> and a <strong>domain name</strong>, separated by the <code>&#39;@&#39;</code> sign. Besides lowercase letters, the email may contain one or more <code>&#39;.&#39;</code> or <code>&#39;+&#39;</code>.</p>\n\n<ul>\n\t<li>For example, in <code>&quot;alice@leetcode.com&quot;</code>, <code>&quot;alice&quot;</code> is the <strong>local name</strong>, and <code>&quot;leetcode.com&quot;</code> is the <strong>domain name</strong>.</li>\n</ul>\n\n<p>If you add periods <code>&#39;.&#39;</code> between some characters in the <strong>local name</strong> part of an email address, mail sent there will be forwarded to the same address without dots in the local name. Note that this rule <strong>does not apply</strong> to <strong>domain names</strong>.</p>\n\n<ul>\n\t<li>For example, <code>&quot;alice.z@leetcode.com&quot;</code> and <code>&quot;alicez@leetcode.com&quot;</code> forward to the same email address.</li>\n</ul>\n\n<p>If you add a plus <code>&#39;+&#39;</code> in the <strong>local name</strong>, everything after the first plus sign <strong>will be ignored</strong>. This allows certain emails to be filtered. Note that this rule <strong>does not apply</strong> to <strong>domain names</strong>.</p>\n\n<ul>\n\t<li>For example, <code>&quot;m.y+name@email.com&quot;</code> will be forwarded to <code>&quot;my@email.com&quot;</code>.</li>\n</ul>\n\n<p>It is possible to use both of these rules at the same time.</p>\n\n<p>Given an array of strings <code>emails</code> where we send one email to each <code>emails[i]</code>, return <em>the number of different addresses that actually receive mails</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> emails = [&quot;test.email+alex@leetcode.com&quot;,&quot;test.e.mail+bob.cathy@leetcode.com&quot;,&quot;testemail+david@lee.tcode.com&quot;]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> &quot;testemail@leetcode.com&quot; and &quot;testemail@lee.tcode.com&quot; actually receive mails.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> emails = [&quot;a@leetcode.com&quot;,&quot;b@leetcode.com&quot;,&quot;c@leetcode.com&quot;]\n<strong>Output:</strong> 3\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= emails.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= emails[i].length &lt;= 100</code></li>\n\t<li><code>emails[i]</code> consist of lowercase English letters, <code>&#39;+&#39;</code>, <code>&#39;.&#39;</code> and <code>&#39;@&#39;</code>.</li>\n\t<li>Each <code>emails[i]</code> contains exactly one <code>&#39;@&#39;</code> character.</li>\n\t<li>All local and domain names are non-empty.</li>\n\t<li>Local names do not start with a <code>&#39;+&#39;</code> character.</li>\n\t<li>Domain names end with the <code>&quot;.com&quot;</code> suffix.</li>\n\t<li>Domain names must contain at least one character before <code>&quot;.com&quot;</code> suffix.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"numUniqueEmails\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"emails\",\r\n      \"type\": \"string[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"576.1K\", \"totalSubmission\": \"849.5K\", \"totalAcceptedRaw\": 576061, \"totalSubmissionRaw\": 849461, \"acRate\": \"67.8%\"}",
+  "likes": 2810,
+  "dislikes": 362,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"test.email+alex@leetcode.com\",\"test.e.mail+bob.cathy@leetcode.com\",\"testemail+david@lee.tcode.com\"]",
+    "[\"a@leetcode.com\",\"b@leetcode.com\",\"c@leetcode.com\"]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"intuit\", \"name\": \"Intuit\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"wix\", \"name\": \"Wix\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numUniqueEmails(vector<string>& emails) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numUniqueEmails(String[] emails) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numUniqueEmails(self, emails: List[str]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numUniqueEmails(self, emails):\n        \"\"\"\n        :type emails: List[str]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} emails\n * @return {number}\n */\nvar numUniqueEmails = function(emails) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numUniqueEmails(emails: string[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumUniqueEmails(string[] emails) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numUniqueEmails(char** emails, int emailsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numUniqueEmails(emails []string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numUniqueEmails(emails: Array<String>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numUniqueEmails(_ emails: [String]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn num_unique_emails(emails: Vec<String>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} emails\n# @return {Integer}\ndef num_unique_emails(emails)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $emails\n     * @return Integer\n     */\n    function numUniqueEmails($emails) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numUniqueEmails(List<String> emails) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numUniqueEmails(emails: Array[String]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec num_unique_emails(emails :: [String.t]) :: integer\n  def num_unique_emails(emails) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec num_unique_emails(Emails :: [unicode:unicode_binary()]) -> integer().\nnum_unique_emails(Emails) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (num-unique-emails emails)\n  (-> (listof string?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1161",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe need to clean the emails given to us. The most intuitive solution will be to iterate over the emails and clean them one by one.  \nHere, cleaning the email means removing unnecessary characters, per the rules given to us. Once an email has been cleaned, it can be pushed into a hash set. The size of this hash set will then equal the count of unique emails.\n\n<br />\n\n**Rules to clean email:**\n\n-   If there are periods `'.'` in _local name_ ignore them.\n-   If there is a plus `'+'` in _local name_ skip all local name characters till `'@'`.\n-   There is only one `'@'` symbol and the substring after it is our _domain name_; we will keep the _domain name_ as it is.\n\n---\n\n### Approach 1: Linear Iteration\n\n**Intuition**\n\nWe can iterate over an email from left to right, and add characters to local name until a `'+'` occurs, then we can skip all characters until `'@'` occurs, then we can again start appending the characters till the end of the email string to form the domain name.\n \nNotice that per the rules, we do not need to read any characters between the first `'+'` and `'@'`.  While checking each character from left to right, after finding the first `'+'` in the local name we can directly find the domain name by switching to a reverse iteration as there is only one `'@'` and we will skip all characters in between `'+'` and `'@'`.\n\n> This reduces the number of characters iterated, but the overall order time complexity remains the same.\n\n> For example, consider `email = ab.c+abcdefghijklmnopqrstuvwxyz@leetcode.com`.  \n> Performing a linear scan from left to right, we will traverse all the characters in the given email.  \n> Using the method proposed above, we can skip the characters from index `5` to index `30`, thus saving time.\n> However, keep in mind that because we read the domain name from right to left, we must also reverse the domain name before appending it to the local name.  Thus, this improvement will be less effective when the domain name is long compared to the number of characters skipped.\n\n**Algorithm**\n\n1. For each email present in the `emails` array:\n    - Iterate over the characters in the email and append each character to the local name if it is not `'.'`.\n    - If the character is `'+'`, do not append the character and break out of the loop.\n2. Find the domain name using reverse traversal in the given email and append it to the string formed till now.\n    - After cleaning the email insert it into the hash set.\n3. Return the size of the hash set.\n\n!?!../Documents/929/929_unique_email_addresses.json:960,540!?!\n\n<br />\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/7CVThSBg/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"7CVThSBg\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the number of the emails and $$M$$ be the average length of an email.\n\n-   Time Complexity: $$O(N \\cdot M)$$  \n    In the worst case, we iterate over all the characters of each of the emails given.  \n    If we have `N` emails and each email has `M` characters in it.\n    Then complexity is of order `(Number of emails) * (Number of characters in average email) = N*M`.\n\n-   Space Complexity: $$O(N \\cdot M)$$  \n    In the worst case, when all emails are unique, we will store every email address given to us in the hash set.\n\n<br/>\n\n---\n\n### Approach 2: Using String Split Method\n\n**Intuition**\n\nA more elegant way of cleaning emails is to leverage built-in functions such as `split` and `replace`.\n\n-   The string `split()` method breaks a given string around matches of the given regular expression.\n-   The string `replace()` method returns a new string after replacing all occurrences of some substring or character (in this case `'.'`) with a new substring or character (in this case `''`).\n\n**Algorithm**\n\n1. For each email present in the `emails` array:\n    - Split the string into two parts separated by`'@'`, local name, and domain name.\n    - Split the local name into parts separated by `'+'`. Since we do not need the part after `'+'`, let the first part be the local name.\n    - Remove all `'.'` from the local name and append the domain name to it.\n    - After cleaning the email, insert it into the hash set.\n2. Return the size of the hash set.\n\n<br />\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/mBmUWSJ7/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"mBmUWSJ7\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the number of the emails and $$M$$ be the average length of an email.\n\n-   Time Complexity: $$O(N \\cdot M)$$  \n    The split method must iterate over all of the characters in each email and the replace method must iterate over all of the characters in each local name.  As such, they both require linear time and are $$O(M)$$ operations.\n    Since there are `N` emails and the average email has `M` characters in it, the complexity is of order `(Number of emails) * (Number of characters in an email) = N*M`.\n\n-   Space Complexity: $$O(N \\cdot M)$$  \n    In the worst case, when all emails are unique, we will store every email address given to us in the hash set.\n\n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

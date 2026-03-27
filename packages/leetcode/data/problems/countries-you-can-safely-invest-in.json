@@ -1,0 +1,53 @@
+{
+  "questionId": "1641",
+  "questionFrontendId": "1501",
+  "title": "Countries You Can Safely Invest In",
+  "titleSlug": "countries-you-can-safely-invest-in",
+  "difficulty": "Medium",
+  "content": "<p>Table <code>Person</code>:</p>\n\n<pre>\n+----------------+---------+\n| Column Name    | Type    |\n+----------------+---------+\n| id             | int     |\n| name           | varchar |\n| phone_number   | varchar |\n+----------------+---------+\nid is the column of unique values for this table.\nEach row of this table contains the name of a person and their phone number.\nPhone number will be in the form &#39;xxx-yyyyyyy&#39; where xxx is the country code (3 characters) and yyyyyyy is the phone number (7 characters) where x and y are digits. Both can contain leading zeros.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table <code>Country</code>:</p>\n\n<pre>\n+----------------+---------+\n| Column Name    | Type    |\n+----------------+---------+\n| name           | varchar |\n| country_code   | varchar |\n+----------------+---------+\ncountry_code is the column of unique values for this table.\nEach row of this table contains the country name and its code. country_code will be in the form &#39;xxx&#39; where x is digits.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table <code>Calls</code>:</p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| caller_id   | int  |\n| callee_id   | int  |\n| duration    | int  |\n+-------------+------+\nThis table may contain duplicate rows.\nEach row of this table contains the caller id, callee id and the duration of the call in minutes. caller_id != callee_id\n</pre>\n\n<p>&nbsp;</p>\n\n<p>A telecommunications company wants to invest in new countries. The company intends to invest in the countries where the average call duration of the calls in this country is strictly greater than the global average call duration.</p>\n\n<p>Write a solution to find the countries where this company can invest.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nPerson table:\n+----+----------+--------------+\n| id | name     | phone_number |\n+----+----------+--------------+\n| 3  | Jonathan | 051-1234567  |\n| 12 | Elvis    | 051-7654321  |\n| 1  | Moncef   | 212-1234567  |\n| 2  | Maroua   | 212-6523651  |\n| 7  | Meir     | 972-1234567  |\n| 9  | Rachel   | 972-0011100  |\n+----+----------+--------------+\nCountry table:\n+----------+--------------+\n| name     | country_code |\n+----------+--------------+\n| Peru     | 051          |\n| Israel   | 972          |\n| Morocco  | 212          |\n| Germany  | 049          |\n| Ethiopia | 251          |\n+----------+--------------+\nCalls table:\n+-----------+-----------+----------+\n| caller_id | callee_id | duration |\n+-----------+-----------+----------+\n| 1         | 9         | 33       |\n| 2         | 9         | 4        |\n| 1         | 2         | 59       |\n| 3         | 12        | 102      |\n| 3         | 12        | 330      |\n| 12        | 3         | 5        |\n| 7         | 9         | 13       |\n| 7         | 1         | 3        |\n| 9         | 7         | 1        |\n| 1         | 7         | 7        |\n+-----------+-----------+----------+\n<strong>Output:</strong> \n+----------+\n| country  |\n+----------+\n| Peru     |\n+----------+\n<strong>Explanation:</strong> \nThe average call duration for Peru is (102 + 102 + 330 + 330 + 5 + 5) / 6 = 145.666667\nThe average call duration for Israel is (33 + 4 + 13 + 13 + 3 + 1 + 1 + 7) / 8 = 9.37500\nThe average call duration for Morocco is (33 + 4 + 59 + 59 + 3 + 7) / 6 = 27.5000 \nGlobal call duration average = (2 * (33 + 4 + 59 + 102 + 330 + 5 + 13 + 3 + 1 + 7)) / 20 = 55.70000\nSince Peru is the only country where the average call duration is greater than the global average, it is the only recommended country.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Person (id int, name varchar(15), phone_number varchar(11))\", \"Create table If Not Exists Country (name varchar(15), country_code varchar(3))\", \"Create table If Not Exists Calls (caller_id int, callee_id int, duration int)\"], \"mssql\": [\"Create table Person (id int, name varchar(15), phone_number varchar(11))\", \"Create table Country (name varchar(15), country_code varchar(3))\", \"Create table Calls (caller_id int, callee_id int, duration int)\"], \"oraclesql\": [\"Create table Person (id int, name varchar(15), phone_number varchar(11))\", \"Create table Country (name varchar(15), country_code varchar(3))\", \"Create table Calls (caller_id int, callee_id int, duration int)\"], \"database\": true, \"name\": \"find_safe_countries\", \"pythondata\": [\"Person = pd.DataFrame([], columns=['id', 'name', 'phone_number']).astype({'id':'Int64', 'name':'object', 'phone_number':'object'})\", \"Country = pd.DataFrame([], columns=['name', 'country_code']).astype({'name':'object', 'country_code':'object'})\", \"Calls = pd.DataFrame([], columns=['caller_id', 'callee_id', 'duration']).astype({'caller_id':'Int64', 'callee_id':'Int64', 'duration':'Int64'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Person (id int, name varchar(15), phone_number varchar(11))\\n\", \"Create table If Not Exists Country (name varchar(15), country_code varchar(3))\", \"Create table If Not Exists Calls (caller_id int, callee_id int, duration int)\"], \"database_schema\": {\"Person\": {\"id\": \"INT\", \"name\": \"VARCHAR(15)\", \"phone_number\": \"VARCHAR(11)\"}, \"Country\": {\"name\": \"VARCHAR(15)\", \"country_code\": \"VARCHAR(3)\"}, \"Calls\": {\"caller_id\": \"INT\", \"callee_id\": \"INT\", \"duration\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"49.5K\", \"totalSubmission\": \"97.6K\", \"totalAcceptedRaw\": 49507, \"totalSubmissionRaw\": 97619, \"acRate\": \"50.7%\"}",
+  "likes": 312,
+  "dislikes": 149,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Average Salary: Departments VS Company\", \"titleSlug\": \"average-salary-departments-vs-company\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Person\":[\"id\",\"name\",\"phone_number\"],\"Country\":[\"name\",\"country_code\"],\"Calls\":[\"caller_id\",\"callee_id\",\"duration\"]},\"rows\":{\"Person\":[[3,\"Jonathan\",\"051-1234567\"],[12,\"Elvis\",\"051-7654321\"],[1,\"Moncef\",\"212-1234567\"],[2,\"Maroua\",\"212-6523651\"],[7,\"Meir\",\"972-1234567\"],[9,\"Rachel\",\"972-0011100\"]],\"Country\":[[\"Peru\",\"051\"],[\"Israel\",\"972\"],[\"Morocco\",\"212\"],[\"Germany\",\"049\"],[\"Ethiopia\",\"251\"]],\"Calls\":[[1,9,33],[2,9,4],[1,2,59],[3,12,102],[3,12,330],[12,3,5],[7,9,13],[7,1,3],[9,7,1],[1,7,7]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_safe_countries(person: pd.DataFrame, country: pd.DataFrame, calls: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,152 @@
+{
+  "questionId": "1122",
+  "questionFrontendId": "1044",
+  "title": "Longest Duplicate Substring",
+  "titleSlug": "longest-duplicate-substring",
+  "difficulty": "Hard",
+  "content": "<p>Given a string <code>s</code>, consider all <em>duplicated substrings</em>: (contiguous) substrings of s that occur 2 or more times.&nbsp;The occurrences&nbsp;may overlap.</p>\n\n<p>Return <strong>any</strong> duplicated&nbsp;substring that has the longest possible length.&nbsp;If <code>s</code> does not have a duplicated substring, the answer is <code>&quot;&quot;</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> s = \"banana\"\n<strong>Output:</strong> \"ana\"\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> s = \"abcd\"\n<strong>Output:</strong> \"\"\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= s.length &lt;= 3 * 10<sup>4</sup></code></li>\n\t<li><code>s</code> consists of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Binary search for the length of the answer.  (If there's an answer of length 10, then there are answers of length 9, 8, 7, ...)",
+    "To check whether an answer of length K exists, we can use Rabin-Karp 's algorithm."
+  ],
+  "metaData": "{\n  \"name\": \"longestDupSubstring\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"84.2K\", \"totalSubmission\": \"270.9K\", \"totalAcceptedRaw\": 84204, \"totalSubmissionRaw\": 270895, \"acRate\": \"31.1%\"}",
+  "likes": 2347,
+  "dislikes": 397,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"banana\"",
+    "\"abcd\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"coupang\", \"name\": \"Coupang\"}, {\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Rolling Hash",
+      "slug": "rolling-hash"
+    },
+    {
+      "name": "Suffix Array",
+      "slug": "suffix-array"
+    },
+    {
+      "name": "Hash Function",
+      "slug": "hash-function"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string longestDupSubstring(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String longestDupSubstring(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def longestDupSubstring(self, s: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def longestDupSubstring(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {string}\n */\nvar longestDupSubstring = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function longestDupSubstring(s: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string LongestDupSubstring(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* longestDupSubstring(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func longestDupSubstring(s string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun longestDupSubstring(s: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func longestDupSubstring(_ s: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn longest_dup_substring(s: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {String}\ndef longest_dup_substring(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return String\n     */\n    function longestDupSubstring($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String longestDupSubstring(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def longestDupSubstring(s: String): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec longest_dup_substring(s :: String.t) :: String.t\n  def longest_dup_substring(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec longest_dup_substring(S :: unicode:unicode_binary()) -> unicode:unicode_binary().\nlongest_dup_substring(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (longest-dup-substring s)\n  (-> string? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "742",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach 1: Binary Search + Rabin-Karp\n\n**String Searching Algorithms**\n\nThe problem is a follow-up of [Longest Repeating Substring](https://leetcode.com/problems/longest-repeating-substring/), and is typically used to check if you're comfortable with [string searching algortihms](https://en.wikipedia.org/wiki/String-searching_algorithm#Single-pattern_algorithms).\n\nBest algorithms have a linear execution time on average. The most popular ones are [Aho-Corasick](https://en.wikipedia.org/wiki/Aho%E2%80%93Corasick_algorithm),\n[KMP](https://en.wikipedia.org/wiki/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm) and [Rabin-Karp](https://en.wikipedia.org/wiki/Rabin%E2%80%93Karp_algorithm): Aho-Corasick is used by [fgrep](https://en.wikipedia.org/wiki/Grep#Variations), KMP is used for [chinese string searching](https://www.aclweb.org/anthology/C96-2200), and Rabin-Karp is used for plagiarism detection and in bioinformatics to look for similarities in two or more proteins.\n\nThe first two are optimized for a single pattern search, and Rabin-Karp for a multiple pattern search, that is exactly the case here.\n\n**Split into two subtasks**\n\nHere we have a \"two in one\" problem:\n\n1. Perform a search by a substring length in the interval from 1 to N.\n\n2. Check if there is a duplicate substring of a given length L.\n\n**Subtask one: Binary search**\n\nA naive solution would be to check all possible string lengths one by one starting from N - 1: if there is a duplicate substring of length N - 1, then of length N - 2, etc. Note that if there is a duplicate substring of length k, it means that there is a duplicate substring of length k - 1. Hence one could use a binary search by string length here, and have the first problem solved in $$O(\\log N)$$ time.\n\n![fig](../Figures/1044/binary.png)\n\n**Subtask two: Rabin-Karp**\n\nSubtask two, to check if there is a duplicate substring of a given length, is a multiple pattern search. Let's use the Rabin-Karp algorithm to solve it in a linear time. \n\nThe idea is very simple: \n\n- Move a sliding window of length L along the string of length N.\n \n- Check if the string in the sliding window\nis in the hash set of already-seen strings. \n\n    - If yes, the duplicate substring is right here.\n    \n    - If not, save the string in the sliding window in the hash set.\n    \n!?!../Documents/1044_LIS.json:1000,411!?!\n\nThe linear time implementation of this idea is a bit\ntricky because of two technical problems:\n\n1. [How to implement a string slice in a constant time?](https://stackoverflow.com/questions/35180377/time-complexity-of-string-slice) \n\n2. Hashset memory consumption could be huge for very long strings. \nOne could keep the string hash instead of the string itself but hash generation costs $$O(L)$$ for the string of length L, and the complexity of the algorithm would be $$O((N - L)L)$$, N - L for the slice and L for the hash generation. Therefore, we should think about how to generate a hash in a constant time.\n\nLet's now address these problems.\n\n**String slice in a constant time**\n\nThat's a very language-dependent problem. For the moment for Java and Python there is no straightforward solution, and to move the sliding window in a constant time one has to convert the string to another data structure. \n\nPython is already providing [memoryview](https://docs.python.org/3/library/stdtypes.html#memoryview), which is known to be surprisingly slow, and there is a lot of discussion about [strview](https://mail.python.org/pipermail/python-ideas/2011-December/012993.html).\n\nThe simplest solution both for Java and Python is to convert string to an integer array of ASCII values.\n\n**Rolling hash: hash generation in a constant time**\n\nTo generate a hash of an array of length L, one needs $$O(L)$$ time.\n\n> How to have the constant time of hash generation? Use the advantage of slice: only one integer in, and only one - out. \n\nThat's the idea of [rolling hash](https://en.wikipedia.org/wiki/Rolling_hash). Here we'll implement the simplest one, polynomial rolling hash. Beware that's polynomial rolling hash is NOT the [Rabin fingerprint](https://en.wikipedia.org/wiki/Rolling_hash#Rabin_fingerprint).\n\nSince one deals here with lowercase English letters, all values in the integer array are between 0 and 25:\n\n`arr[i] = (int)S.charAt(i) - (int)'a'`\n\nSo one could consider string `abcd` -> `[0, 1, 2, 3]` as a number in a [numeral system](https://en.wikipedia.org/wiki/Numeral_system) with the base 26. Hence `abcd` -> `[0, 1, 2, 3]` could be hashed as \n\n$$\nh_0 = 0 \\times 26^3 + 1 \\times 26^2 + 2 \\times 26^1 + 3 \\times 26^0\n$$\n\nLet's write the same formula in a generalized way, where $$c_i$$ is an integer array element and $$a = 26$$ is a system base.\n\n$$\nh_0 = c_0 a^{L - 1} + c_1 a^{L - 2} + ... + c_i a^{L - 1 - i} + ... + c_{L - 1} a^1 + c_L a^0\n$$\n\n$$\nh_0 = \\sum_{i = 0}^{L - 1}{c_i a^{L - 1 - i}}\n$$\n\nNow let's consider the slice `abcd` -> `bcde`. For int arrays that means `[0, 1, 2, 3]` -> `[1, 2, 3, 4]`, to remove the number 0 and to add the number 4.\n\n$$\nh_1 = (h_0 - 0 \\times 26^3) \\times 26 + 4 \\times 26^0\n$$\n\nLet's look at what changed piece by piece. First, we subtracted $$0 \\times 26^3$$ from $$h_0$$; this removed the contribution of the first element in the array from the hash. Then we multiplied the remaining hash value by $$26$$, which increased the power of the base value for each of the elements remaining in the array (i.e., $$2 \\times 26^1) \\times 26 = 2 \\times 26^2$$).  Finally, we add the contribution of the new element (`e`) to the hash. This results in:\n\n$$\nh_1 = 1 \\times 26^3 + 2 \\times 26^2 + 3 \\times 26^1 + 4 \\times 26^0\n$$\n\nThus after applying a constant amount of operations to the hash for `abcd`, we have obtained the hash for the next substring, `bcde`.\n\nIn general form:\n\n$$\nh_1 = (h_0 a - c_0 a^L) + c_{L + 1}\n$$\n\nNow hash regeneration is perfect and fits in a constant time. There is one more issue to address: the possible overflow problem. \n\n**How to avoid overflow:**\n\n$$a^L$$ could be a large number and hence the idea is to set limits to avoid the overflow. To set limits means to limit a hash by a modulus and instead of using the hash itself, we will use `h % modulus`.\n\nWe should select a modulus that is large enough for our purpose, but how large is that? [You can read more about the topic here.](https://en.wikipedia.org/wiki/Linear_congruential_generator#Parameters_in_common_use)\n\nWe must use caution when using a rolling hash to assess the equality of two substrings. The modulus can be thought of as the number of bins that we will use to store the starting index of seen substrings. So there is a higher probability of having two different substrings being stored in the same bin (`h % modulus`) when the modulus is small. \n\nWhen two **different** strings have the same hash value, we call this a collision. In an ideal setting, where every test case is known, this issue could be resolved by adjusting the modulus to avoid collisions. However, in a real-world setting, whenever two substrings have the same hash, we must verify that the substrings are truly equal. This leads to a Rabin-Karp time complexity of $$O(L(N - L))$$ in the worst case when many substring hashes collide. \n\nFortunately, we can reduce the probability of collisions by selecting a good value for our modulus.\n\nGenerally speaking, a good modulus will have two traits:\n1. The modulus is not too big and not too small. That is to say, it is large, which helps reduce the probability of collisions, but it is still small enough to fit in a 32-bit integer.\n2. It is prime. This helps increase the uniformity of our hash values after taking `h % modulus`, which in turn decreases the probability of collisions occurring. If you would like to know more about why this is, you can read about it [here](https://stackoverflow.com/questions/1145217/why-should-hash-functions-use-a-prime-number-modulus).\n\nHere, we will use our favorite modulus, $$10^9 + 7$$, which satisfies both of these conditions.\n\nOne last note, there is another overflow issue here that is purely Java-related. While in Python, the hash regeneration goes perfectly fine, in Java, the same thing is better to rewrite to avoid long overflow. Check [here](https://leetcode.com/problems/longest-duplicate-substring/discuss/292982/Java-version-with-comment) the nice explanation by @[hqt](https://leetcode.com/hqt/).\n\n<iframe src=\"https://leetcode.com/playground/FonxNynL/shared\" frameBorder=\"0\" width=\"100%\" height=\"89\" name=\"FonxNynL\"></iframe>\n\n**Binary search algorithm**\n\n- Use binary search by a substring length to check lengths from 1 to N\n`left = 1, right = N`. While left != right:\n\n    - L = left + (right - left) / 2\n    \n    - If search(L) != -1 (i.e. there is a duplicate substring), left = L + 1\n    \n    - Otherwise (no duplicate substring), right = L. \n    \n- Return a duplicate string of length `left - 1`, or an empty string if \nthere is no such a string.\n\n**Rabin-Karp algorithm**\n    \n- Compute the hash of the substring consisting of the first `L` characters of string `S`. \n\n- We will initialize the hash map of already seen substrings with this hash value as a key and a list containing the starting index of the substring (`0`) as the value.  \n\n  The reason we store the first index of the substring is so that if we see this hash value again, we can compare the current substring to each substring that has the same hash value to see if the two strings actually match or if this is a hash collision.  \n  \n  Every time we compare two strings will cost $$O(L)$$ time. If we designed a very poor hash function or picked a very weak modulus value (like 1), we could potentially spend $$O(L \\cdot (N - L)^2)$$ time comparing each substring of length `L` to all previous substrings of length `L` on each call to `search`. \n\n  Fortunately, the hash function we are using guarantees that there will not be any collisions between hash values that are less than `MOD` (before taking the modulus). Furthermore, selecting a large, prime modulus helps create a more uniform distribution of the hash values that are greater than `MOD`. So the probability of two hash values colliding is very small, and on average, we expect the number of collisions to be negligible. Therefore, we can expect the `search` function to take $$O(N)$$ time on average.\n        \n- Iterate over the start position of each substring in `S` from $$1$$ to $$N - L$$. Note we already initialized our hashmap with the substring starting at index zero.\n        \n    - Compute the rolling hash based on the previous hash value.\n    \n    - If the hash is in t\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/VwSebXYU/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"VwSebXYU\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the length of input `S`.\n\n* Time complexity: $$O(N \\log N)$$. \n\n  Performing a binary search requires $$O(\\log N)$$ iterations. At each iteration, we spend on average $$O(N)$$ time for the Rabin-Karp algorithm. Note that the worst-case scenario for the Rabin-Karp algorithm is when every substring of length $$L$$ has the same hash value and there are no duplicate substrings of length $$L$$. This would require $$O(L \\cdot (N - L) / 2)$$ time to compare each of the $$O(N - L)$$ substrings to all previous substrings resulting in $$O(L \\cdot (N - L)^{2})$$.\n  \n  However, because of the problem constraints, there can be at most $$30,000$$ substrings and because we have $$10^9 + 7$$ bins, the probability of a collision occurring between two different substrings is small. It is quite possible that there will be some collisions, but the probability of there being many collisions (on the order of $$N - L$$ collisions) is extraordinarily small. So the average time complexity of the Rabin-Karp algorithm will be $$O(N - L)$$ which simplifies to $$O(N)$$.\n  \n* Space complexity: $$O(N)$$ \n\n  We use a hashmap `seen` to store the starting index and hash value for each substring. This will contain at most $$N$$ key-value pairs.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

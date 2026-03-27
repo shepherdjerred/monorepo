@@ -1,0 +1,58 @@
+{
+  "questionId": "1734",
+  "questionFrontendId": "1587",
+  "title": "Bank Account Summary II",
+  "titleSlug": "bank-account-summary-ii",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Users</code></p>\n\n<pre>\n+--------------+---------+\n| Column Name  | Type    |\n+--------------+---------+\n| account      | int     |\n| name         | varchar |\n+--------------+---------+\naccount is the primary key (column with unique values) for this table.\nEach row of this table contains the account number of each user in the bank.\nThere will be no two users having the same name in the table.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Transactions</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| trans_id      | int     |\n| account       | int     |\n| amount        | int     |\n| transacted_on | date    |\n+---------------+---------+\ntrans_id is the primary key (column with unique values) for this table.\nEach row of this table contains all changes made to all accounts.\namount is positive if the user received money and negative if they transferred money.\nAll accounts start with a balance of 0.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to report the name and balance of users with a balance higher than <code>10000</code>. The balance of an account is equal to the sum of the amounts of all transactions involving that account.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nUsers table:\n+------------+--------------+\n| account    | name         |\n+------------+--------------+\n| 900001     | Alice        |\n| 900002     | Bob          |\n| 900003     | Charlie      |\n+------------+--------------+\nTransactions table:\n+------------+------------+------------+---------------+\n| trans_id   | account    | amount     | transacted_on |\n+------------+------------+------------+---------------+\n| 1          | 900001     | 7000       |  2020-08-01   |\n| 2          | 900001     | 7000       |  2020-09-01   |\n| 3          | 900001     | -3000      |  2020-09-02   |\n| 4          | 900002     | 1000       |  2020-09-12   |\n| 5          | 900003     | 6000       |  2020-08-07   |\n| 6          | 900003     | 6000       |  2020-09-07   |\n| 7          | 900003     | -4000      |  2020-09-11   |\n+------------+------------+------------+---------------+\n<strong>Output:</strong> \n+------------+------------+\n| name       | balance    |\n+------------+------------+\n| Alice      | 11000      |\n+------------+------------+\n<strong>Explanation:</strong> \nAlice&#39;s balance is (7000 + 7000 - 3000) = 11000.\nBob&#39;s balance is 1000.\nCharlie&#39;s balance is (6000 + 6000 - 4000) = 8000.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Users (account int, name varchar(20))\", \"Create table If Not Exists Transactions (trans_id int, account int, amount int, transacted_on date)\"], \"mssql\": [\"Create table Users (account int, name varchar(20))\", \"Create table Transactions (trans_id int, account int, amount int, transacted_on date)\"], \"oraclesql\": [\"Create table Users (account int, name varchar(20))\", \"Create table Transactions (trans_id int, account int, amount int, transacted_on date)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"account_summary\", \"pythondata\": [\"Users = pd.DataFrame([], columns=['account', 'name']).astype({'account':'Int64', 'name':'object'})\", \"Transactions = pd.DataFrame([], columns=['trans_id', 'account', 'amount', 'transacted_on']).astype({'trans_id':'Int64', 'account':'Int64', 'amount':'Int64', 'transacted_on':'datetime64[ns]'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Users (account int, name varchar(20))\\n\", \"Create table If Not Exists Transactions (trans_id int, account int, amount int, transacted_on date)\"], \"database_schema\": {\"Users\": {\"account\": \"INT\", \"name\": \"VARCHAR(20)\"}, \"Transactions\": {\"trans_id\": \"INT\", \"account\": \"INT\", \"amount\": \"INT\", \"transacted_on\": \"DATE\"}}}",
+  "stats": "{\"totalAccepted\": \"167.1K\", \"totalSubmission\": \"201.5K\", \"totalAcceptedRaw\": 167109, \"totalSubmissionRaw\": 201457, \"acRate\": \"83.0%\"}",
+  "likes": 548,
+  "dislikes": 6,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Users\": [\"account\", \"name\"], \"Transactions\": [\"trans_id\", \"account\", \"amount\", \"transacted_on\"]}, \"rows\": {\"Users\": [[900001, \"Alice\"], [900002, \"Bob\"], [900003, \"Charlie\"]], \"Transactions\": [[1, 900001, 7000, \"2020-08-01\"], [2, 900001, 7000, \"2020-09-01\"], [3, 900001, -3000, \"2020-09-02\"], [4, 900002, 1000, \"2020-09-12\"], [5, 900003, 6000, \"2020-08-07\"], [6, 900003, 6000, \"2020-09-07\"], [7, 900003, -4000, \"2020-09-11\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef account_summary(users: pd.DataFrame, transactions: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "2000",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nSince each user has only one name but multiple transactions (`amount`), it's easier to calculate the balance for each `account` to identify the qualified accounts (with a balance higher than 10000), and then join the other table to get the user name. \n\n---\n\n### Approach 1: First Calculate Then JOIN\n\n#### Algorithm\n\n1. Use `SUM()` to get the total balance for each account\n2. Use `HAVING` to filter the aggregated results (total balance for each account) and return only the qualified accounts\n3. Join the User table to get the user name for these accounts\n\n##### MySQL\n\nStep 1 and 2\n\n```sql\nSELECT \n    account, SUM(amount) as balance\nFROM \n    Transactions\nGROUP BY 1\nHAVING \n    balance>10000\n```\nStep 3 - Join the subquery created in the previous steps to the other table\n\n```sql\nSELECT \n    DISTINCT a.name, b.balance\nFROM \n    Users a\nJOIN (\n    SELECT \n        account, SUM(amount) as balance\n    FROM \n        Transactions\n    GROUP BY 1\n    HAVING balance>10000) b\nON \n    a.account = b.account \n```\n\n---\n\n### Approach 2: Use JOIN and Calculate At Same Time\n\n#### Algorithm\n\n1. Select the two columns needed for the final output: `name` of the user, and the `balance` (SUM of the column `amount`)\n2. `JOIN` the two tables\n3. `GROUP` the results by each account, so the query will return only one result for each user\n4. Use `HAVING` to filter the aggregated results and return only the qualified accounts\n\n##### MySQL\n```sql\nSELECT \n    u.name, SUM(t.amount) AS balance\nFROM \n    Users u\nJOIN \n    Transactions t\nON \n    u.account = t.account\nGROUP BY u.account\nHAVING \n    balance > 10000\n```\n\n-----",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

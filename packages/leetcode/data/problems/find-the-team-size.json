@@ -1,0 +1,53 @@
+{
+  "questionId": "1438",
+  "questionFrontendId": "1303",
+  "title": "Find the Team Size",
+  "titleSlug": "find-the-team-size",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Employee</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| employee_id   | int     |\n| team_id       | int     |\n+---------------+---------+\nemployee_id is the primary key (column with unique values) for this table.\nEach row of this table contains the ID of each employee and their respective team.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to find the team size of each of the employees.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nEmployee Table:\n+-------------+------------+\n| employee_id | team_id    |\n+-------------+------------+\n|     1       |     8      |\n|     2       |     8      |\n|     3       |     8      |\n|     4       |     7      |\n|     5       |     9      |\n|     6       |     9      |\n+-------------+------------+\n<strong>Output:</strong> \n+-------------+------------+\n| employee_id | team_size  |\n+-------------+------------+\n|     1       |     3      |\n|     2       |     3      |\n|     3       |     3      |\n|     4       |     1      |\n|     5       |     2      |\n|     6       |     2      |\n+-------------+------------+\n<strong>Explanation:</strong> \nEmployees with Id 1,2,3 are part of a team with team_id = 8.\nEmployee with Id 4 is part of a team with team_id = 7.\nEmployees with Id 5,6 are part of a team with team_id = 9.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Employee (employee_id int, team_id int)\"], \"mssql\": [\"Create table Employee (employee_id int, team_id int)\"], \"oraclesql\": [\"Create table Employee (employee_id int, team_id int)\"], \"database\": true, \"name\": \"team_size\", \"pythondata\": [\"Employee = pd.DataFrame([], columns=['employee_id', 'team_id']).astype({'employee_id':'Int64', 'team_id':'Int64'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Employee (employee_id int, team_id int)\"], \"database_schema\": {\"Employee\": {\"employee_id\": \"INT\", \"team_id\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"81.4K\", \"totalSubmission\": \"90.9K\", \"totalAcceptedRaw\": 81365, \"totalSubmissionRaw\": 90885, \"acRate\": \"89.5%\"}",
+  "likes": 344,
+  "dislikes": 16,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Employee\":[\"employee_id\",\"team_id\"]},\"rows\":{\"Employee\":[[1,8],[2,8],[3,8],[4,7],[5,9],[6,9]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef team_size(employee: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

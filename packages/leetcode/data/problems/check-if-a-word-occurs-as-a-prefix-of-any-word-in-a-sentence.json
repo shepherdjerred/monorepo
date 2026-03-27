@@ -1,0 +1,142 @@
+{
+  "questionId": "1566",
+  "questionFrontendId": "1455",
+  "title": "Check If a Word Occurs As a Prefix of Any Word in a Sentence",
+  "titleSlug": "check-if-a-word-occurs-as-a-prefix-of-any-word-in-a-sentence",
+  "difficulty": "Easy",
+  "content": "<p>Given a <code>sentence</code> that consists of some words separated by a <strong>single space</strong>, and a <code>searchWord</code>, check if <code>searchWord</code> is a prefix of any word in <code>sentence</code>.</p>\n\n<p>Return <em>the index of the word in </em><code>sentence</code><em> (<strong>1-indexed</strong>) where </em><code>searchWord</code><em> is a prefix of this word</em>. If <code>searchWord</code> is a prefix of more than one word, return the index of the first word <strong>(minimum index)</strong>. If there is no such word return <code>-1</code>.</p>\n\n<p>A <strong>prefix</strong> of a string <code>s</code> is any leading contiguous substring of <code>s</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> sentence = &quot;i love eating burger&quot;, searchWord = &quot;burg&quot;\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> &quot;burg&quot; is prefix of &quot;burger&quot; which is the 4th word in the sentence.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> sentence = &quot;this problem is an easy problem&quot;, searchWord = &quot;pro&quot;\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> &quot;pro&quot; is prefix of &quot;problem&quot; which is the 2nd and the 6th word in the sentence, but we return 2 as it&#39;s the minimal index.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> sentence = &quot;i am tired&quot;, searchWord = &quot;you&quot;\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> &quot;you&quot; is not a prefix of any word in the sentence.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= sentence.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= searchWord.length &lt;= 10</code></li>\n\t<li><code>sentence</code> consists of lowercase English letters and spaces.</li>\n\t<li><code>searchWord</code> consists of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "First extract the words of the sentence.",
+    "Check for each word if searchWord occurs at index 0, if so return the index of this word (1-indexed)",
+    "If searchWord doesn't exist as a prefix of any word return the default value (-1)."
+  ],
+  "metaData": "{\n  \"name\": \"isPrefixOfWord\",\n  \"params\": [\n    {\n      \"name\": \"sentence\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"searchWord\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"237.3K\", \"totalSubmission\": \"345K\", \"totalAcceptedRaw\": 237254, \"totalSubmissionRaw\": 345016, \"acRate\": \"68.8%\"}",
+  "likes": 1330,
+  "dislikes": 59,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Counting Words With a Given Prefix\", \"titleSlug\": \"counting-words-with-a-given-prefix\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Count Prefixes of a Given String\", \"titleSlug\": \"count-prefixes-of-a-given-string\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"i love eating burger\"\n\"burg\"",
+    "\"this problem is an easy problem\"\n\"pro\"",
+    "\"i am tired\"\n\"you\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"yelp\", \"name\": \"Yelp\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "String Matching",
+      "slug": "string-matching"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int isPrefixOfWord(string sentence, string searchWord) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int isPrefixOfWord(String sentence, String searchWord) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def isPrefixOfWord(self, sentence: str, searchWord: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def isPrefixOfWord(self, sentence, searchWord):\n        \"\"\"\n        :type sentence: str\n        :type searchWord: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} sentence\n * @param {string} searchWord\n * @return {number}\n */\nvar isPrefixOfWord = function(sentence, searchWord) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function isPrefixOfWord(sentence: string, searchWord: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int IsPrefixOfWord(string sentence, string searchWord) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int isPrefixOfWord(char* sentence, char* searchWord) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func isPrefixOfWord(sentence string, searchWord string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun isPrefixOfWord(sentence: String, searchWord: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func isPrefixOfWord(_ sentence: String, _ searchWord: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn is_prefix_of_word(sentence: String, search_word: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} sentence\n# @param {String} search_word\n# @return {Integer}\ndef is_prefix_of_word(sentence, search_word)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $sentence\n     * @param String $searchWord\n     * @return Integer\n     */\n    function isPrefixOfWord($sentence, $searchWord) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int isPrefixOfWord(String sentence, String searchWord) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def isPrefixOfWord(sentence: String, searchWord: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec is_prefix_of_word(sentence :: String.t, search_word :: String.t) :: integer\n  def is_prefix_of_word(sentence, search_word) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec is_prefix_of_word(Sentence :: unicode:unicode_binary(), SearchWord :: unicode:unicode_binary()) -> integer().\nis_prefix_of_word(Sentence, SearchWord) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (is-prefix-of-word sentence searchWord)\n  (-> string? string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2598",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe need to determine if a given search word is a prefix of any word in a sentence. If it is, we return the 1-based index of the first matching word. If no match is found, we return -1.\n\nLet’s first define what a prefix is: it’s the starting portion of a word. For example, in the word `\"burger\"`, the string `\"burg\"` is a prefix. Given a sentence like `\"I love eating burger\"` and a search word `\"burg\"`, we need to identify whether any word in the sentence begins with `\"burg\"`. In this example, the word `\"burger\"` starts with `\"burg\"`, and it is the fourth word in the sentence, so the correct output would be `4`.\n\n---\n\n### Approach 1: Brute Force\n\n#### Intuition\n\nThe simplest way to check if `searchWord` is a prefix of any word in the sentence is by directly comparing each word with `searchWord`.\n\nWe can start by splitting the sentence into individual words. Since words in the sentence are separated by single spaces, we can use space as the delimiter to split the sentence into a list of words. While we might generally need to handle extra spaces or leading/trailing spaces carefully, the problem guarantees that words are separated by single spaces, so these edge cases are not a concern here.\n\nNext, we iterate through the list of words, comparing each word's prefix with `searchWord`. We use a nested loop to compare characters of the word and `searchWord` up to the length of `searchWord`. If all characters match, we return the 1-based index of the word. If no word matches, we return `-1`.\n\n#### Algorithm\n\n- Initialize an empty `wordsList` to store the words in the sentence.\n- Initialize an empty `currentWord` to build words as we traverse the sentence.\n\n- For each `character` in `sentence`:\n  - If the `character` is not a space, append it to `currentWord`.\n  - If the `character` is a space and `currentWord` is not empty:\n    - Add `currentWord` to `wordsList`.\n    - Reset `currentWord` to an empty string.\n\n- After processing the sentence, if `currentWord` is not empty, add it to `wordsList` (handles the last word).\n\n- For each word in `wordsList` (indexed by `wordIndex`):\n  - If the length of the current word is greater than or equal to the length of `searchWord`:\n    - Compare each character in `searchWord` with the corresponding character in the current word.\n    - If all characters match:\n      - Return `wordIndex + 1` (1-based index of the matching word).\n\n- If no word matches `searchWord` as a prefix, return `-1`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/EHZG3vUK/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"EHZG3vUK\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the input string `sentence`, $m$ be the size of the input string `searchWord`, $k$ be the average length of words in `sentence`, and $w$ be the total number of words in `sentence` such that $w \\cdot k = n$.\n\n- Time complexity: $O(n + w \\cdot m)$ \n\n    The first part of the algorithm involves iterating over the `sentence` to split it into words, which requires traversing all $n$ characters. Each character is processed exactly once to either build a word or identify word boundaries (spaces). This step has a time complexity of $O(n)$.  \n\n    The second part involves checking whether each word in the `wordsList` starts with the `searchWord`. For each of the $w$ words, we compare up to $m$ characters with `searchWord`. In the worst case, all $w$ words are of length $m$ or more, making this step $O(w \\cdot m)$. Adding both parts together, the total time complexity becomes $O(n + w \\cdot m)$.  \n\n- Space complexity: $O(n)$ \n\n    The `wordsList` vector stores all the words from `sentence`, and the total memory required to hold these words is proportional to the size of the input string $n$. Additionally, the `currentWord` string temporarily holds one word at a time during the processing, requiring $O(k)$ space, but this is reused and does not add extra memory. Other variables, such as the loop counters and boolean flags, require constant space $O(1)$. Hence, the overall space complexity is $O(n)$.\n\n---\n\n### Approach 2: Two Pointer\n\n#### Intuition\n\nInstead of splitting the sentence into words first, we can directly iterate through the sentence while keeping track of the current word's position. This way, we can avoid storing all words in memory and instead process the sentence in a single pass. We skip over spaces to find the start of each word and then check if the word starts with the `searchWord`.\n\nTo do this, we use a two-pointer approach: the first pointer keeps track of where we are in the sentence, and the second pointer tracks how far we’ve matched the `searchWord`. If a match is found, we immediately return the current word's position. If no match is found by the end of the sentence, we return `-1`.\n\nThis is particularly efficient for large sentences, as it avoids the overhead of storing and managing a list of words.\n\n</br>\n\n!?!../Documents/1455/1455_two_pointer.json:770,445!?!\n\n> For a more comprehensive understanding of the two-pointer technique, explore the [Two Pointer Explore Card 🔗](https://leetcode.com/explore/learn/card/array-and-string/205/array-two-pointer-technique/). This resource provides an in-depth look at the two-pointer approach, explaining its key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n#### Algorithm\n\n- Initialize `currentWordPosition` to 1 to keep track of the current word's position in the sentence.\n- Initialize `currentIndex` to 0 to traverse the sentence character by character.\n- Store the length of the sentence in `sentenceLength`.\n\n- While `currentIndex` is less than `sentenceLength`:\n  - Skip leading spaces:\n    - While the current character is a space, increment `currentIndex` and also increment `currentWordPosition` to move to the next word.\n  \n  - Check if the current word starts with `searchWord`:\n    - Initialize `matchCount` to 0 to track how many characters match `searchWord`.\n    - While characters match between `sentence` and `searchWord`:\n      - Increment `currentIndex` and `matchCount`.\n    - If `matchCount` equals the length of `searchWord`, return `currentWordPosition` since a match is found.\n\n  - Skip the rest of the current word:\n    - While the current character is not a space, increment `currentIndex` to move to the end of the word.\n\n- If no word in the sentence matches `searchWord` as a prefix, return `-1`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/PEcbcEFY/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"PEcbcEFY\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the input string `sentence`, and $m$ be the size of the input string `searchWord`. \n\n- Time complexity: $O(n + w \\cdot m)$ \n\n    The algorithm processes the input string `sentence` in a single pass. During this traversal, it skips spaces to identify the start of each word, checks for a prefix match between `searchWord` and the current word, and moves to the end of the word if there is no match. This traversal covers all $n$ characters in `sentence`.  \n\n    Additionally, for each word in `sentence`, the algorithm compares up to $m$ characters with `searchWord` to check for a prefix match. In the worst case, this adds an $O(m)$ cost for the comparison. Since each word is processed exactly once, the prefix-checking step is effectively absorbed into the overall traversal of $n$, making the total time complexity $O(n + m)$.  \n\n- Space complexity: $O(1)$ \n\n    The algorithm uses a constant amount of extra space. Variables like `currentWordPosition`, `currentIndex`, and `matchCount` are simple integers, and there are no auxiliary data structures (e.g., arrays) used to store intermediate results. Thus, the space complexity is $O(1)$.\n\n---\n\n### Approach 3: Using Built-In Function\n\n#### Intuition\n\nNow that we have explored the approaches where we handle strings manually, let's leverage built-in string libraries for more efficient and cleaner solutions. This will simplify our code and make it easier to understand and maintain.\n\n##### For C++ Users\n\nIn C++, the `istringstream` class from the `<sstream>` library processes strings efficiently. It treats a string as a stream and extracts words using the `>>` operator. This avoids manual string splitting and space handling. The complexity of extracting words is $O(n)$, where `n` is the string length. To check if a word starts with a prefix, the `compare` function is used, which operates in $O(k)$, where `k` is the prefix length.\n\n##### For Java Users\n\nIn Java, the `split` method from the `String` class divides a sentence into words in $O(n)$ time. The `startsWith` method, operating in $O(k)$, then checks if each word begins with the given prefix. This combination of `split` and `startsWith` ensures clean, efficient code without manual handling of spaces.\n\n##### For Python3 Users\n\nIn Python3, the `split` method separates a sentence into words by whitespace in $O(n)$ time, while the `startswith` method checks prefixes in $O(k)$. Then proceed with the implementation.\n\n#### Algorithm\n\n- Initialize a string stream `sentenceStream` from the input `sentence` to tokenize the sentence.\n- Initialize `currentWord` to store each word from the sentence as we process it.\n- Initialize `wordPosition` to 1 to keep track of the position of the current word in the sentence.\n\n- While there are words left in the sentence (i.e., `sentenceStream >> currentWord`):\n  - Check if the current word's length is greater than or equal to `searchWord`'s length and if the current word starts with `searchWord`:\n    - If true, return the current `wordPosition` (this is the first word that starts with `searchWord`).\n  - Otherwise, increment `wordPosition` to check the next word.\n\n- If no word matches, return `-1` to indicate that no word in the sentence starts with `searchWord`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/LWE8FPtk/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"LWE8FPtk\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the input string `sentence`, $m$ be the size of the input string `searchWord`, $k$ be the average length of words in `sentence`, and $w$ be the total number of words in `sentence` such that $w \\cdot k = n$.\n\n- Time complexity: $O(n + w \\cdot m)$\n\n    The algorithm first splits the `sentence` into individual words using built-in functions. This process involves iterating through all $n$ characters of the string once, resulting in a time complexity of $O(n)$.\n\n    Next, for each word extracted from the sentence, the algorithm compares the first $m$ characters of the word with the `searchWord`. This comparison is done using a built-in function that checks the prefix of length $m$, which takes $O(m)$ time per word. Since there are $w$ words in the `sentence`, this part of the algorithm takes $O(w \\cdot m)$ time.\n\n    Combining both parts, the total time complexity of the algorithm is $O(n + w \\cdot m)$.\n\n- Space complexity: $O(n)$\n\n    The algorithm uses built-in functions that process the input `sentence` directly, requiring $O(n)$ space to store the `sentence` string. The `currentWord` variable temporarily holds one word at a time, requiring $O(k)$ space, but this space is reused across iterations. Additionally, the algorithm uses constant space $O(1)$ for variables like `wordPosition`. Therefore, the overall space complexity is $O(n)$.\n\n---\n\n### Approach 4: Using Trie\n\n#### Intuition\n\nInstead of processing the entire sentence multiple times, we can use a data structure called a `Trie` (prefix tree). A `Trie` organizes words so that characters in common prefixes are shared, forming a tree-like structure. This makes it much faster and more efficient to search for prefixes, as both building the `Trie` and searching for a prefix can be done in linear time relative to the length of the `searchWord`.\n\nTo implement this, we start by creating an empty `Trie`, which is made up of nodes where each node represents a character. As we add each word from the sentence to the `Trie`, we also store the word’s position in the sentence. This is done by keeping a list of positions at each node that corresponds to a character in the word. Later, when we search for a prefix, we can quickly find all the words that match it using this stored information.\n \nFor each word in the sentence, we go through the `Trie` one character at a time. If a character is not already in the Trie, we create a new node for it. As we move through the `Trie`, we update the list at each node to keep track of which words pass through that character. By the end, the `Trie` will store all the words in the sentence, organized by their common prefixes.\n\nOnce the `Trie` is built, we can search for the `searchWord` by going through the `Trie` one character at a time. If we find all the characters of the `searchWord`, it means some words in the sentence start with that prefix. The list of word positions at the final node of the `searchWord` tells us which words match. If we can’t find the node for the `searchWord`, it means no word in the sentence starts with it.  \n\nIf we find matching words, we return the smallest position from the list of word positions. This tells us the first word in the sentence that starts with the `searchWord`. If no matches are found, we return `-1`.\n\n#### Algorithm\n\n- Initialize the `Trie` data structure with the root node.\n\n- Add each word in the sentence to the Trie:\n  - Split the sentence into words using an `istringstream`.\n  - For each word, call `addToTrie(word, currentWordPosition)` to insert the word into the Trie, associating the word's position in the sentence with it.\n  - Increment `currentWordPosition` for each word.\n\n- Once all words are added to the Trie, check if the `searchWord` is a prefix of any word in the sentence:\n  - Call `checkPrefix(searchWord)` to find the positions of words starting with the `searchWord` prefix.\n  - If no words match the prefix, return `-1`.\n  - Otherwise, return the smallest position (first occurrence) where the prefix is found in the list of positions.\n\n- `addToTrie` function:\n  - Start from the root node.\n  - For each character `c` in the word:\n    - If `c` is not found in the current node's children, create a new TrieNode for `c`.\n    - Move to the child node corresponding to `c`.\n    - Add the `currentWordPosition` to the node’s `currentWordPosition` list.\n\n- `checkPrefix` function:\n  - Start from the root node.\n  - For each character `c` in the word:\n    - If `c` is not found in the current node's children, return an empty list (no matching prefix).\n    - Move to the child node corresponding to `c`.\n  - Return the list of word positions stored in the node corresponding to the last character of the prefix.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/76kWke3Z/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"76kWke3Z\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the input string `sentence`, $m$ be the size of the input string `searchWord`, $k$ be the average length of words in `sentence`, and $w$ be the total number of words in `sentence` such that $w \\cdot k = n$.\n\n- Time complexity: $O(n + m) \\approx O(n)$\n\n    The algorithm involves splitting the `sentence` into words, which takes $O(n)$ time. Building the Trie structure involves inserting each word into the Trie, which takes $O(n)$ time in total (since each character is processed once). Checking the prefix of `searchWord` in the Trie takes $O(m)$ time, as it involves traversing the Trie for each character in `searchWord`. Thus, the overall time complexity is $O(n + m)$.\n\n- Space complexity: $O(n)$\n\n    The space complexity is dominated by the Trie structure, which stores all the words from the `sentence`. In the worst case, the Trie will store all characters of all words, resulting in $O(n)$ space. Additionally, the `words` list created by splitting the `sentence` also consumes $O(n)$ space. Therefore, the total space complexity is $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

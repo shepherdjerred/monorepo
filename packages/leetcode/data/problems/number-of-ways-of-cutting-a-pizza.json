@@ -1,0 +1,151 @@
+{
+  "questionId": "1555",
+  "questionFrontendId": "1444",
+  "title": "Number of Ways of Cutting a Pizza",
+  "titleSlug": "number-of-ways-of-cutting-a-pizza",
+  "difficulty": "Hard",
+  "content": "<p>Given a rectangular pizza represented as a <code>rows x cols</code>&nbsp;matrix containing the following characters: <code>&#39;A&#39;</code> (an apple) and <code>&#39;.&#39;</code> (empty cell) and given the integer <code>k</code>. You have to cut the pizza into <code>k</code> pieces using <code>k-1</code> cuts.&nbsp;</p>\n\n<p>For each cut you choose the direction: vertical or horizontal, then you choose a cut position at the cell boundary and cut the pizza into two pieces. If you cut the pizza vertically, give the left part of the pizza to a person. If you cut the pizza horizontally, give the upper part of the pizza to a person. Give the last piece of pizza to the last person.</p>\n\n<p><em>Return the number of ways of cutting the pizza such that each piece contains <strong>at least</strong> one apple.&nbsp;</em>Since the answer can be a huge number, return this modulo 10^9 + 7.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/04/23/ways_to_cut_apple_1.png\" style=\"width: 500px; height: 378px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> pizza = [&quot;A..&quot;,&quot;AAA&quot;,&quot;...&quot;], k = 3\n<strong>Output:</strong> 3 \n<strong>Explanation:</strong> The figure above shows the three ways to cut the pizza. Note that pieces must contain at least one apple.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> pizza = [&quot;A..&quot;,&quot;AA.&quot;,&quot;...&quot;], k = 3\n<strong>Output:</strong> 1\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> pizza = [&quot;A..&quot;,&quot;A..&quot;,&quot;...&quot;], k = 1\n<strong>Output:</strong> 1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= rows, cols &lt;= 50</code></li>\n\t<li><code>rows ==&nbsp;pizza.length</code></li>\n\t<li><code>cols ==&nbsp;pizza[i].length</code></li>\n\t<li><code>1 &lt;= k &lt;= 10</code></li>\n\t<li><code>pizza</code> consists of characters <code>&#39;A&#39;</code>&nbsp;and <code>&#39;.&#39;</code> only.</li>\n</ul>\n",
+  "hints": [
+    "Note that after each cut the remaining piece of pizza always has the lower right coordinate at (rows-1,cols-1).",
+    "Use dynamic programming approach with states (row1, col1, c) which computes the number of ways of cutting the pizza using \"c\" cuts where the current piece of pizza has upper left coordinate at (row1,col1) and lower right coordinate at (rows-1,cols-1).",
+    "For the transitions try all vertical and horizontal cuts such that the piece of pizza you have to give a person must contain at least one apple. The base case is when c=k-1.",
+    "Additionally use a 2D dynamic programming to respond in O(1) if a piece of pizza contains at least one apple."
+  ],
+  "metaData": "{\n  \"name\": \"ways\",\n  \"params\": [\n    {\n      \"name\": \"pizza\",\n      \"type\": \"string[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"76.2K\", \"totalSubmission\": \"123.6K\", \"totalAcceptedRaw\": 76169, \"totalSubmissionRaw\": 123648, \"acRate\": \"61.6%\"}",
+  "likes": 1909,
+  "dislikes": 97,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Selling Pieces of Wood\", \"titleSlug\": \"selling-pieces-of-wood\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"A..\",\"AAA\",\"...\"]\n3",
+    "[\"A..\",\"AA.\",\"...\"]\n3",
+    "[\"A..\",\"A..\",\"...\"]\n1"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Memoization",
+      "slug": "memoization"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int ways(vector<string>& pizza, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int ways(String[] pizza, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def ways(self, pizza: List[str], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def ways(self, pizza, k):\n        \"\"\"\n        :type pizza: List[str]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} pizza\n * @param {number} k\n * @return {number}\n */\nvar ways = function(pizza, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function ways(pizza: string[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int Ways(string[] pizza, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int ways(char** pizza, int pizzaSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func ways(pizza []string, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun ways(pizza: Array<String>, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func ways(_ pizza: [String], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn ways(pizza: Vec<String>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} pizza\n# @param {Integer} k\n# @return {Integer}\ndef ways(pizza, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $pizza\n     * @param Integer $k\n     * @return Integer\n     */\n    function ways($pizza, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int ways(List<String> pizza, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def ways(pizza: Array[String], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec ways(pizza :: [String.t], k :: integer) :: integer\n  def ways(pizza, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec ways(Pizza :: [unicode:unicode_binary()], K :: integer()) -> integer().\nways(Pizza, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (ways pizza k)\n  (-> (listof string?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1703",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach 1: Dynamic Programming\n\n#### Intuition\n\n>We highly recommend you solve the problem [304. Range Sum Query 2D - Immutable](https://leetcode.com/problems/range-sum-query-2d-immutable/) before trying this problem.\n\nWhen one cuts a rectangular part of pizza either vertically or horizontally, the remaining part is also a rectangle but a smaller one. Since we give a person the left or the upper part of the pizza, we always keep the bottom right part of the pizza.\n\nBecause we have a smaller rectangle (pizza) after each cut, each cut creates a new subproblem. We will solve the problem using dynamic programming.\n\nWhat will be the state of dynamic programming? Or in other words, how can we describe the current state of the pizza?\n\nFirst, we need to know how many cuts are left to make. We will denote this number as `remain`.\n\nSecond, we need to know what part of the pizza remains on the table. Let `row` denote its topmost row, and `col` denote its leftmost column. The remaining part is `pizza[row..rows-1][col..cols-1]`, where `rows` and `cols` denote the number of rows and columns in the original pizza respectively.\n\nThe state of the DP is the triplet `(remain, row, col)`.\n\nLet `dp[remain][row][col]` be the number of ways to cut the rectangular part `pizza[row..rows-1][col..cols-1]` with `remain` cuts modulo $10^9+7$.\n\nThe base case of the DP is `remain = 0` when one does not need to make any more cuts. If `pizza[row..rows-1][col..cols-1]` contains at least one apple, then `dp[0][row][col] = 1` – there is one way to make no cuts and give the piece to the last person. Otherwise, `pizza[row..rows-1][col..cols-1]` contains no apples, and there are no ways to give the piece to the person, thus `dp[0][row][col] = 0`.\n\nNow we need to write down the transitions of the DP.\n\n![cuts](../Figures/1444/cuts.drawio.png)\n\nWhen one cuts the rectangle `pizza[row..rows-1][col..cols-1]` horizontally, one first chooses the row `next_row` (`row < next_row < rows`) where to cut. The upper part after the cut will be `pizza[row..next_row-1][col..cols-1]` and the bottom one – `pizza[next_row..rows-1][col..cols-1]`. Since we give the upper part to a person, the number of apples on `pizza[row..next_row-1][col..cols-1]` must be greater than zero.\n\nWe can consider the vertical cut with the same logic: one first chooses the column `next_col` (`col < next_col < cols`) and cuts the pizza into two parts `pizza[row..rows-1][cols..next_col-1]` and `pizza[row..rows-1][next_col..cols-1]`. There must be at least one apple on `pizza[row..rows-1][col..next_col-1]`.\n\nLet's say we want to calculate `dp[remain][row][col]` with `remain > 0`.\n\nWe have to try all possible options for the first cut: the horizontal one at row `next_row` or the vertical one at column `next_col`. We iterate over all `next_row` such that `row < next_row < rows`. If `pizza[row..next_row-1][col..cols-1]` contains at least one apple, we can make the first cut into pieces `pizza[row..next_row-1][col..cols-1]` and `pizza[next_row..rows-1][col..cols-1]` and give the upper part to a person.\n\nAfter this cut, we have to make `remain - 1` cuts on the bottom part `pizza[next_row..rows-1][col..cols-1]`. Cutting the part `pizza[next_row..rows-1][col..cols-1]` with `remain - 1` cuts is a subproblem. It means, there is a transition from `dp[remain-1][next_row][col]` to `dp[remain][row][col]`.\n\nSimilarly, for all `next_col` such that `col < next_col < cols`, if we have at least one apple on `pizza[row..rows-1][col..next_col-1] > 0`, there is a transition from `dp[remain-1][row][next_col]` to `dp[remain][row][col]`.\n\nHaving all transitions, one can conclude that the value `dp[remain][row][col]` equals the sum of `dp[remain-1][next_row][col]` and `dp[remain-1][row][next_col]` for all valid values of `next_row` and `next_col`.\n\nWe almost have the solution, but we haven't talked about how to quickly verify if a rectangle has an apple.\n\nLet `apples[row][col]` denote the number of apples on `pizza[row..rows-1][col..cols-1]` (so `apples[0][0]` will be the number of apples on the original pizza).\n\nThe matrix `apples` is the cumulative region sum matrix. One can calculate this matrix using the reccurrence relation `apples[row][col] = (pizza[row][col] == 'A') + apples[row + 1][col] + apples[row][col + 1] - apples[row + 1][col + 1]`. Refer to Approach 4 of the [solution](https://leetcode.com/problems/range-sum-query-2d-immutable/solutions/127813/) of the problem [304. Range Sum Query 2D - Immutable](https://leetcode.com/problems/range-sum-query-2d-immutable/) for details.\n\nHaving the matrix `apples` one can find the number of apples on `pizza[row..next_row-1][col..cols-1]` as `apples[row][col] - apples[next_row][col]` and on `pizza[row..rows-1][col..next_col-1]` as `apples[row][col] - apples[row][next_col]`. For each cut, if the piece we are giving away has at least one apple, we can consider the cut.\n\n#### Algorithm\n\n1. Declare the matrices `apples[rows+1][cols+1]` and `dp[k][rows][cols]`.\n2. First, calculate `apples`. Iterate `row` from `rows-1` to `0`.\n\t* Iterate `col` from `cols-1` to `0`.\n\t\t* Calculate `apples[row][col]` as `(pizza[row][col] == 'A') + apples[row + 1][col] + apples[row][col + 1] - apples[row + 1][col + 1]`.\n\t\t* If `apples[row][col] > 0`, set `dp[0][row][col] = 1`, otherwise set `dp[0][row][col] = 0` (the base case of the DP).\n3. Iterate `remain` from `1` to `k - 1`.\n\t* Iterate `row` from `0` to `rows-1`.\n\t\t* Iterate `col` from `0` to `cols-1`.\n\t\t\t* We will now calculate `dp[remain][row][col]` by considering all cuts.\n\t\t\t* Consider all horizontal cuts. Iterate `next_row` from `row+1` to `rows-1`.\n\t\t\t\t* If the top piece has an apple, i.e. `apples[row][col] - apples[next_row][col] > 0`, add `dp[remain-1][next_row][col]` to `dp[remain][row][col]`.\n\t\t\t* Consider all vertical cuts. Iterate `next_col` from `col+1` to `cols-1`.\n\t\t\t\t* If the left piece has an apple, i.e. `apples[row][col] - apples[row][next_col] > 0`, add `dp[remain-1][row][next_col]` to `dp[remain][row][col]`.\n4. Return `dp[k-1][0][0]`. This represents the original pizza with `k - 1` cuts, which is what the original problem is asking for.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/3pUntD6b/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"3pUntD6b\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $n$ denote the number of rows in `pizza` and $m$ denote the number of columns in `pizza`.\n\n* Time complexity: $O(k \\cdot n \\cdot m \\cdot (n + m))$.\n\n\tThere are $O(k \\cdot n \\cdot m)$ states `[remain][row][col]`. $k$ for `remain`, $n$ for `row` and $m$ for `col`. For each state, we iterate over `next_row` in $O(n)$ and over `next_col` in $O(m)$.\n\n* Space complexity: $O(n \\cdot m \\cdot k)$.\n\n\tWe store the matrix `dp[k][rows][cols]`.\n\n---\n\n### Approach 2: Dynamic Programming with Optimized Space Complexity\n\n#### Intuition\n\nNote that we calculate `dp[remain]` using only the values of `dp[remain-1]`.\n\nIt allows us not to store all `k` \"layers\" in memory at once, but only two at a time to save space. We will keep two layers `dp[remain-1]` and `dp[remain]` in two matrices `f` (`f[row][col] = dp[remain-1][row][col]`) and `g` (`g[row][col] = dp[remain][row][col]`).\n\n#### Algorithm\n\n1. Declare the matrices `apples[rows+1][cols+1]` and `f[rows][cols]`.\n2. First, calculate `apples`. Iterate `row` from `rows-1` to `0`.\n\t* Iterate `col` from `cols-1` to `0`.\n\t\t* Calculate `apples[row][col]` as `(pizza[row][col] == 'A') + apples[row + 1][col] + apples[row][col + 1] - apples[row + 1][col + 1]`.\n\t\t* If `apples[row][col] > 0`, set `f[row][col] = 1`, otherwise set `f[row][col] = 0` (the base case of the DP).\n3. Iterate `remain` from `1` to `k - 1`.\n\t* Declare the matrix `g[rows][cols]` and initialize it with zeros. (Here `f[row][col] = dp[remain-1][row][col]` and `g[row][col] = dp[remain][row][col]`).\n\t* Iterate `row` from `0` to `rows-1`.\n\t\t* Iterate `col` from `0` to `cols-1`.\n\t\t\t* Consider all horizontal cuts. Iterate `next_row` from `row+1` to `rows-1`.\n\t\t\t\t* If the top piece has an apple, i.e. `apples[row][col] - apples[next_row][col] > 0`, add `f[next_row][col]` to `g[row][col]`.\n\t\t\t* Consider all vertical cuts. Iterate `next_col` from `col+1` to `cols-1`.\n\t\t\t\t* If the left piece has an apple, i.e. `apples[row][col] - apples[row][next_col] > 0`, add `f[row][next_col]` to `g[row][col]`.\n\t* Copy the matrix `g` to `f`.\n4. Return `f[0][0]`.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/iYp32Vj3/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"iYp32Vj3\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $n$ denote the number of rows in `pizza` and $m$ denote the number of columns in `pizza`.\n\n* Time complexity: $O(k \\cdot n \\cdot m \\cdot (n + m))$.\n\n\tThere are $O(k \\cdot n \\cdot m)$ states `[remain][row][col]`. $k$ for `remain`, $n$ for `row` and $m$ for `col`. For each state, we iterate over `next_row` in $O(n)$ and over `next_col` in $O(m)$.\n\n* Space complexity: $O(n \\cdot m)$.\n\n\tWe store the matrices `apples[rows+1][cols+1]`, `f[rows][cols]` and `g[rows][cols]`.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

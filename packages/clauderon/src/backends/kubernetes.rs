@@ -930,11 +930,6 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
                             value: Some("clauderon-proxy".to_owned()),
                             ..Default::default()
                         },
-                        EnvVar {
-                            name: "GITHUB_TOKEN".to_owned(),
-                            value: Some("clauderon-proxy".to_owned()),
-                            ..Default::default()
-                        },
                     ]);
 
                     match options.agent {

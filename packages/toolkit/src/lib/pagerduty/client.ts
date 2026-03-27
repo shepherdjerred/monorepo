@@ -9,9 +9,9 @@ export type PagerDutyClientResult<T> = {
 const PAGERDUTY_BASE_URL = "https://api.pagerduty.com";
 
 function getApiKey(): string {
-  const apiKey = Bun.env["PAGERDUTY_API_KEY"];
+  const apiKey = Bun.env["PAGERDUTY_TOKEN"];
   if (apiKey == null || apiKey.length === 0) {
-    throw new Error("PAGERDUTY_API_KEY environment variable is not set");
+    throw new Error("PAGERDUTY_TOKEN environment variable is not set");
   }
   return apiKey;
 }

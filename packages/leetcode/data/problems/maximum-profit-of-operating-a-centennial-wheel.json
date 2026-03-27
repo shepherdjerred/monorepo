@@ -1,0 +1,132 @@
+{
+  "questionId": "1721",
+  "questionFrontendId": "1599",
+  "title": "Maximum Profit of Operating a Centennial Wheel",
+  "titleSlug": "maximum-profit-of-operating-a-centennial-wheel",
+  "difficulty": "Medium",
+  "content": "<p>You are the operator of a Centennial Wheel that has <strong>four gondolas</strong>, and each gondola has room for <strong>up</strong> <strong>to</strong> <strong>four people</strong>. You have the ability to rotate the gondolas <strong>counterclockwise</strong>, which costs you <code>runningCost</code> dollars.</p>\n\n<p>You are given an array <code>customers</code> of length <code>n</code> where <code>customers[i]</code> is the number of new customers arriving just before the <code>i<sup>th</sup></code> rotation (0-indexed). This means you <strong>must rotate the wheel </strong><code>i</code><strong> times before the </strong><code>customers[i]</code><strong> customers arrive</strong>. <strong>You cannot make customers wait if there is room in the gondola</strong>. Each customer pays <code>boardingCost</code> dollars when they board on the gondola closest to the ground and will exit once that gondola reaches the ground again.</p>\n\n<p>You can stop the wheel at any time, including <strong>before</strong> <strong>serving</strong> <strong>all</strong> <strong>customers</strong>. If you decide to stop serving customers, <strong>all subsequent rotations are free</strong> in order to get all the customers down safely. Note that if there are currently more than four customers waiting at the wheel, only four will board the gondola, and the rest will wait <strong>for the next rotation</strong>.</p>\n\n<p>Return<em> the minimum number of rotations you need to perform to maximize your profit.</em> If there is <strong>no scenario</strong> where the profit is positive, return <code>-1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/09/wheeldiagram12.png\" style=\"width: 700px; height: 225px;\" />\n<pre>\n<strong>Input:</strong> customers = [8,3], boardingCost = 5, runningCost = 6\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The numbers written on the gondolas are the number of people currently there.\n1. 8 customers arrive, 4 board and 4 wait for the next gondola, the wheel rotates. Current profit is 4 * $5 - 1 * $6 = $14.\n2. 3 customers arrive, the 4 waiting board the wheel and the other 3 wait, the wheel rotates. Current profit is 8 * $5 - 2 * $6 = $28.\n3. The final 3 customers board the gondola, the wheel rotates. Current profit is 11 * $5 - 3 * $6 = $37.\nThe highest profit was $37 after rotating the wheel 3 times.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> customers = [10,9,6], boardingCost = 6, runningCost = 4\n<strong>Output:</strong> 7\n<strong>Explanation:</strong>\n1. 10 customers arrive, 4 board and 6 wait for the next gondola, the wheel rotates. Current profit is 4 * $6 - 1 * $4 = $20.\n2. 9 customers arrive, 4 board and 11 wait (2 originally waiting, 9 newly waiting), the wheel rotates. Current profit is 8 * $6 - 2 * $4 = $40.\n3. The final 6 customers arrive, 4 board and 13 wait, the wheel rotates. Current profit is 12 * $6 - 3 * $4 = $60.\n4. 4 board and 9 wait, the wheel rotates. Current profit is 16 * $6 - 4 * $4 = $80.\n5. 4 board and 5 wait, the wheel rotates. Current profit is 20 * $6 - 5 * $4 = $100.\n6. 4 board and 1 waits, the wheel rotates. Current profit is 24 * $6 - 6 * $4 = $120.\n7. 1 boards, the wheel rotates. Current profit is 25 * $6 - 7 * $4 = $122.\nThe highest profit was $122 after rotating the wheel 7 times.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> customers = [3,4,0,5,1], boardingCost = 1, runningCost = 92\n<strong>Output:</strong> -1\n<strong>Explanation:</strong>\n1. 3 customers arrive, 3 board and 0 wait, the wheel rotates. Current profit is 3 * $1 - 1 * $92 = -$89.\n2. 4 customers arrive, 4 board and 0 wait, the wheel rotates. Current profit is 7 * $1 - 2 * $92 = -$177.\n3. 0 customers arrive, 0 board and 0 wait, the wheel rotates. Current profit is 7 * $1 - 3 * $92 = -$269.\n4. 5 customers arrive, 4 board and 1 waits, the wheel rotates. Current profit is 11 * $1 - 4 * $92 = -$357.\n5. 1 customer arrives, 2 board and 0 wait, the wheel rotates. Current profit is 13 * $1 - 5 * $92 = -$447.\nThe profit was never positive, so return -1.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == customers.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= customers[i] &lt;= 50</code></li>\n\t<li><code>1 &lt;= boardingCost, runningCost &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "Think simulation",
+    "Note that the number of turns will never be more than 50 / 4 * n"
+  ],
+  "metaData": "{\n  \"name\": \"minOperationsMaxProfit\",\n  \"params\": [\n    {\n      \"name\": \"customers\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"boardingCost\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"runningCost\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"15.2K\", \"totalSubmission\": \"34.1K\", \"totalAcceptedRaw\": 15170, \"totalSubmissionRaw\": 34059, \"acRate\": \"44.5%\"}",
+  "likes": 111,
+  "dislikes": 254,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[8,3]\n5\n6",
+    "[10,9,6]\n6\n4",
+    "[3,4,0,5,1]\n1\n92"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minOperationsMaxProfit(vector<int>& customers, int boardingCost, int runningCost) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minOperationsMaxProfit(int[] customers, int boardingCost, int runningCost) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minOperationsMaxProfit(self, customers: List[int], boardingCost: int, runningCost: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minOperationsMaxProfit(self, customers, boardingCost, runningCost):\n        \"\"\"\n        :type customers: List[int]\n        :type boardingCost: int\n        :type runningCost: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} customers\n * @param {number} boardingCost\n * @param {number} runningCost\n * @return {number}\n */\nvar minOperationsMaxProfit = function(customers, boardingCost, runningCost) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minOperationsMaxProfit(customers: number[], boardingCost: number, runningCost: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinOperationsMaxProfit(int[] customers, int boardingCost, int runningCost) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minOperationsMaxProfit(int* customers, int customersSize, int boardingCost, int runningCost) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minOperationsMaxProfit(customers []int, boardingCost int, runningCost int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minOperationsMaxProfit(customers: IntArray, boardingCost: Int, runningCost: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minOperationsMaxProfit(_ customers: [Int], _ boardingCost: Int, _ runningCost: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_operations_max_profit(customers: Vec<i32>, boarding_cost: i32, running_cost: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} customers\n# @param {Integer} boarding_cost\n# @param {Integer} running_cost\n# @return {Integer}\ndef min_operations_max_profit(customers, boarding_cost, running_cost)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $customers\n     * @param Integer $boardingCost\n     * @param Integer $runningCost\n     * @return Integer\n     */\n    function minOperationsMaxProfit($customers, $boardingCost, $runningCost) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minOperationsMaxProfit(List<int> customers, int boardingCost, int runningCost) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minOperationsMaxProfit(customers: Array[Int], boardingCost: Int, runningCost: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_operations_max_profit(customers :: [integer], boarding_cost :: integer, running_cost :: integer) :: integer\n  def min_operations_max_profit(customers, boarding_cost, running_cost) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_operations_max_profit(Customers :: [integer()], BoardingCost :: integer(), RunningCost :: integer()) -> integer().\nmin_operations_max_profit(Customers, BoardingCost, RunningCost) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-operations-max-profit customers boardingCost runningCost)\n  (-> (listof exact-integer?) exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

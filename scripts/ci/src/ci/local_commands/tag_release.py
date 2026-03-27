@@ -23,12 +23,12 @@ def run(args: argparse.Namespace, config: ReleaseConfig) -> None:
     dry_run: bool = args.dry_run
     tag: str = args.tag
 
-    token = os.environ.get("GH_TOKEN", "") or os.environ.get("GITHUB_TOKEN", "")
+    token = os.environ.get("GH_TOKEN", "")
     if not token and not dry_run:
         result = subprocess.run(["gh", "auth", "token"], capture_output=True, text=True, check=False)
         token = result.stdout.strip() if result.returncode == 0 else ""
     if not token and not dry_run:
-        print("Error: GH_TOKEN or GITHUB_TOKEN required", file=sys.stderr)
+        print("Error: GH_TOKEN required", file=sys.stderr)
         sys.exit(1)
 
     print(f"Creating tag {tag}...", flush=True)

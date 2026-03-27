@@ -1,0 +1,136 @@
+{
+  "questionId": "969",
+  "questionFrontendId": "933",
+  "title": "Number of Recent Calls",
+  "titleSlug": "number-of-recent-calls",
+  "difficulty": "Easy",
+  "content": "<p>You have a <code>RecentCounter</code> class which counts the number of recent requests within a certain time frame.</p>\n\n<p>Implement the <code>RecentCounter</code> class:</p>\n\n<ul>\n\t<li><code>RecentCounter()</code> Initializes the counter with zero recent requests.</li>\n\t<li><code>int ping(int t)</code> Adds a new request at time <code>t</code>, where <code>t</code> represents some time in milliseconds, and returns the number of requests that has happened in the past <code>3000</code> milliseconds (including the new request). Specifically, return the number of requests that have happened in the inclusive range <code>[t - 3000, t]</code>.</li>\n</ul>\n\n<p>It is <strong>guaranteed</strong> that every call to <code>ping</code> uses a strictly larger value of <code>t</code> than the previous call.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;RecentCounter&quot;, &quot;ping&quot;, &quot;ping&quot;, &quot;ping&quot;, &quot;ping&quot;]\n[[], [1], [100], [3001], [3002]]\n<strong>Output</strong>\n[null, 1, 2, 3, 3]\n\n<strong>Explanation</strong>\nRecentCounter recentCounter = new RecentCounter();\nrecentCounter.ping(1);     // requests = [<u>1</u>], range is [-2999,1], return 1\nrecentCounter.ping(100);   // requests = [<u>1</u>, <u>100</u>], range is [-2900,100], return 2\nrecentCounter.ping(3001);  // requests = [<u>1</u>, <u>100</u>, <u>3001</u>], range is [1,3001], return 3\nrecentCounter.ping(3002);  // requests = [1, <u>100</u>, <u>3001</u>, <u>3002</u>], range is [2,3002], return 3\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= t &lt;= 10<sup>9</sup></code></li>\n\t<li>Each test case will call <code>ping</code> with <strong>strictly increasing</strong> values of <code>t</code>.</li>\n\t<li>At most <code>10<sup>4</sup></code> calls will be made to <code>ping</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n    \"classname\": \"RecentCounter\",\r\n    \"maxbytesperline\": 200000,\r\n    \"constructor\": {\r\n        \"params\": [\r\n        ]\r\n    },\r\n    \"methods\": [\r\n        {\r\n            \"name\" : \"ping\",\r\n            \"params\": [\r\n                {\r\n                    \"name\": \"t\",\r\n                    \"type\": \"integer\"\r\n                }\r\n            ],\r\n            \"return\": {\r\n                \"type\": \"integer\"\r\n            }\r\n        }\r\n    ],\r\n    \"systemdesign\": true,\r\n    \"params\": [\r\n        {\r\n            \"name\": \"inputs\",\r\n            \"type\": \"integer[]\"\r\n        },\r\n        {\r\n            \"name\": \"inputs\",\r\n            \"type\": \"integer[]\"\r\n        }\r\n    ],\r\n    \"return\": {\r\n        \"type\": \"list<String>\",\r\n        \"dealloc\": true\r\n    }\r\n}",
+  "stats": "{\"totalAccepted\": \"513.3K\", \"totalSubmission\": \"655.8K\", \"totalAcceptedRaw\": 513324, \"totalSubmissionRaw\": 655750, \"acRate\": \"78.3%\"}",
+  "likes": 845,
+  "dislikes": 1200,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"RecentCounter\",\"ping\",\"ping\",\"ping\",\"ping\"]\n[[],[1],[100],[3001],[3002]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"roblox\", \"name\": \"Roblox\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"databricks\", \"name\": \"Databricks\"}, {\"timesEncountered\": 4, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 2, \"slug\": \"affirm\", \"name\": \"Affirm\"}]}",
+  "topicTags": [
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Queue",
+      "slug": "queue"
+    },
+    {
+      "name": "Data Stream",
+      "slug": "data-stream"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class RecentCounter {\npublic:\n    RecentCounter() {\n        \n    }\n    \n    int ping(int t) {\n        \n    }\n};\n\n/**\n * Your RecentCounter object will be instantiated and called as such:\n * RecentCounter* obj = new RecentCounter();\n * int param_1 = obj->ping(t);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class RecentCounter {\n\n    public RecentCounter() {\n        \n    }\n    \n    public int ping(int t) {\n        \n    }\n}\n\n/**\n * Your RecentCounter object will be instantiated and called as such:\n * RecentCounter obj = new RecentCounter();\n * int param_1 = obj.ping(t);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class RecentCounter:\n\n    def __init__(self):\n        \n\n    def ping(self, t: int) -> int:\n        \n\n\n# Your RecentCounter object will be instantiated and called as such:\n# obj = RecentCounter()\n# param_1 = obj.ping(t)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class RecentCounter(object):\n\n    def __init__(self):\n        \n\n    def ping(self, t):\n        \"\"\"\n        :type t: int\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your RecentCounter object will be instantiated and called as such:\n# obj = RecentCounter()\n# param_1 = obj.ping(t)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar RecentCounter = function() {\n    \n};\n\n/** \n * @param {number} t\n * @return {number}\n */\nRecentCounter.prototype.ping = function(t) {\n    \n};\n\n/** \n * Your RecentCounter object will be instantiated and called as such:\n * var obj = new RecentCounter()\n * var param_1 = obj.ping(t)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class RecentCounter {\n    constructor() {\n        \n    }\n\n    ping(t: number): number {\n        \n    }\n}\n\n/**\n * Your RecentCounter object will be instantiated and called as such:\n * var obj = new RecentCounter()\n * var param_1 = obj.ping(t)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class RecentCounter {\n\n    public RecentCounter() {\n        \n    }\n    \n    public int Ping(int t) {\n        \n    }\n}\n\n/**\n * Your RecentCounter object will be instantiated and called as such:\n * RecentCounter obj = new RecentCounter();\n * int param_1 = obj.Ping(t);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} RecentCounter;\n\n\nRecentCounter* recentCounterCreate() {\n    \n}\n\nint recentCounterPing(RecentCounter* obj, int t) {\n    \n}\n\nvoid recentCounterFree(RecentCounter* obj) {\n    \n}\n\n/**\n * Your RecentCounter struct will be instantiated and called as such:\n * RecentCounter* obj = recentCounterCreate();\n * int param_1 = recentCounterPing(obj, t);\n \n * recentCounterFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type RecentCounter struct {\n    \n}\n\n\nfunc Constructor() RecentCounter {\n    \n}\n\n\nfunc (this *RecentCounter) Ping(t int) int {\n    \n}\n\n\n/**\n * Your RecentCounter object will be instantiated and called as such:\n * obj := Constructor();\n * param_1 := obj.Ping(t);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class RecentCounter() {\n\n    fun ping(t: Int): Int {\n        \n    }\n\n}\n\n/**\n * Your RecentCounter object will be instantiated and called as such:\n * var obj = RecentCounter()\n * var param_1 = obj.ping(t)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass RecentCounter {\n\n    init() {\n        \n    }\n    \n    func ping(_ t: Int) -> Int {\n        \n    }\n}\n\n/**\n * Your RecentCounter object will be instantiated and called as such:\n * let obj = RecentCounter()\n * let ret_1: Int = obj.ping(t)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct RecentCounter {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl RecentCounter {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn ping(&self, t: i32) -> i32 {\n        \n    }\n}\n\n/**\n * Your RecentCounter object will be instantiated and called as such:\n * let obj = RecentCounter::new();\n * let ret_1: i32 = obj.ping(t);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class RecentCounter\n    def initialize()\n        \n    end\n\n\n=begin\n    :type t: Integer\n    :rtype: Integer\n=end\n    def ping(t)\n        \n    end\n\n\nend\n\n# Your RecentCounter object will be instantiated and called as such:\n# obj = RecentCounter.new()\n# param_1 = obj.ping(t)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class RecentCounter {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param Integer $t\n     * @return Integer\n     */\n    function ping($t) {\n        \n    }\n}\n\n/**\n * Your RecentCounter object will be instantiated and called as such:\n * $obj = RecentCounter();\n * $ret_1 = $obj->ping($t);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class RecentCounter {\n\n  RecentCounter() {\n    \n  }\n  \n  int ping(int t) {\n    \n  }\n}\n\n/**\n * Your RecentCounter object will be instantiated and called as such:\n * RecentCounter obj = RecentCounter();\n * int param1 = obj.ping(t);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class RecentCounter() {\n\n    def ping(t: Int): Int = {\n        \n    }\n\n}\n\n/**\n * Your RecentCounter object will be instantiated and called as such:\n * val obj = new RecentCounter()\n * val param_1 = obj.ping(t)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule RecentCounter do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec ping(t :: integer) :: integer\n  def ping(t) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# RecentCounter.init_()\n# param_1 = RecentCounter.ping(t)\n\n# RecentCounter.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec recent_counter_init_() -> any().\nrecent_counter_init_() ->\n  .\n\n-spec recent_counter_ping(T :: integer()) -> integer().\nrecent_counter_ping(T) ->\n  .\n\n\n%% Your functions will be called as such:\n%% recent_counter_init_(),\n%% Param_1 = recent_counter_ping(T),\n\n%% recent_counter_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define recent-counter%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; ping : exact-integer? -> exact-integer?\n    (define/public (ping t)\n      )))\n\n;; Your recent-counter% object will be instantiated and called as such:\n;; (define obj (new recent-counter%))\n;; (define param_1 (send obj ping t))"
+    }
+  ],
+  "solution": {
+    "id": "1014",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Overview\n\nThis problem is practical, which can test one's basic knowledge about the data structure and algorithm.\n\nFirst of all, let us clarify the problem a bit.\nWe are given a sequence of ping calls, _i.e._ $$[t_1, t_2, t_3, ... t_n]$$, ordered by the chronological order of their arrival time.\n\n>Given the current ping call $$t_i$$, we are asked to count the number of previous calls that fall in the range of $$[t_i - 3000, \\space t_i]$$.\n\nVoila. This is how we can reformulate the problem with the basic data structure such as Array.\nNote, the sequence of calls is ever-increasing, and we are given the call **one at a time**.\n\nBy the way, we also have a dedicated Explore card called [Array 101](https://leetcode.com/explore/learn/card/fun-with-arrays/) where one can review the characteristics and operations about Array.\nIn addition, one will also discover many interesting problems that can be solved with Array.\n\n\n---\n### Approach 1: Iteration over Sliding Window\n\n**Intuition**\n\nNow that we've clarified the nature of the problem, it shall not be difficult to come up with a solution.\nIn fact, the solution is as simple as iterating through an array or a list.\n\n>The idea is that we can use a container such as **array** or **list** to keep track of all the incoming ping calls. At each occasion of `ping(t)` call, first we append the call to the container, and then starting from the current call, we **iterate backwards** to count the calls that fall into the time range of `[t-3000, t]`.\n\nBefore rushing to the implementation, let us dwell on the problem a bit more, since there are still plenty of things we could optimize.\n\nOne observation is that the sequence is ever-growing, so as our container.\n\nOn the other hand, once the ping calls become **_outdated_**, _i.e._ out of the scope of `[t-3000, t]`, we do not need to keep them any longer in the container, since they will not contribute to the solution later.\n\n>As a result, one optimization that we could do is that rather than keeping all the **_historical_** ping calls in the container, we could **_remove_** the _outdated_ calls _on the go_, which can avoid the overflow of the container and reduce the memory consumption to the least.\n\nIn summary, our container will function like a **_sliding window_** over the ever-growing sequence of ping calls. \n\n![sliding window](../Figures/933/933_sliding_window.png)\n\nBased on the above description, the **list** data structure seems to be more fit as the container for our tasks, than the **array**.\nBecause the list is more adapted for the following two operations:\n\n- **Appending**: we will append each incoming call to the tail of the sliding window. \n\n- **Popping**:  we need to pop out all the _outdated_ calls from the head of the sliding window. \n\n**Algorithm**\n\nTo implement the sliding window, we could use the `LinkedList` in Java or `deque` in Python.\n\nThen the `ping(t)` function can be implemented in two steps:\n\n- Step 1): we append the current ping call to the tail of the sliding window.\n\n- Step 2): starting from the head of the sliding window, we remove the _outdated_ calls, until we come across a still valid ping call.\n\nAs a result, the remaining calls in the sliding window are the ones that fall into the range of `[t - 3000, t]`.\n\n\n<iframe src=\"https://leetcode.com/playground/WTMo8XQR/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"WTMo8XQR\"></iframe>\n\n\n\n**Complexity Analysis**\n\nFirst of all, let us estimate the upper-bound on the size of our sliding window.\nHere we quote an important condition from the problem description: _\"It is guaranteed that every call to ping uses a strictly larger value of t than before.\"_\nBased on the above condition, the maximal number of elements in our sliding window would be $$3000$$, which is also the maximal time difference between the head and the tail elements. \n\n\n- Time Complexity: $$\\mathcal{O}(1)$$\n\n    - The main time complexity of our `ping()` function lies in the loop, which in the worst case would run 3000 iterations to pop out all outdated elements, and in the best case a single iteration.\n\n    - Therefore, for a single invocation of `ping()` function, its time complexity is $$\\mathcal{O}(3000) = \\mathcal{O}(1)$$.\n\n    - If we assume that there is a ping call at each timestamp, then the cost of `ping()` is further amortized, where at each invocation, we would only need to pop out a single element, once the sliding window reaches its upper bound.\n\n\n- Space Complexity: $$\\mathcal{O}(1)$$\n\n    - As we estimated before, the maximal size of our sliding window is 3000, which is a constant.\n\n\n---\n### Discussion \n\nSince the elements in our sliding window are _strictly_ ordered, due to the condition of the problem, one might argue that it might be more efficient to use **_[binary search](https://leetcode.com/explore/learn/card/binary-search/)_** to locate the most recent outdated calls and then starting from that point *truncate* all the previous calls.\n\nIn terms of search, _binary search_ is seemingly more efficient than our _linear search_.\nWhen the elements are held in the array data structure, it is true that binary search is more efficient.\n\nHowever, it is not the case for the linked list, since there is no way to locate an element in the middle of a linked list instantly, which is a critical condition for binary search algorithm. \n\nAs a result, in order to apply _binary search_, we might have to opt for the **Array** data structure.\nOn the other hand, once we use the array as the container, we might have to keep all the historical elements, which in the long run is not space-efficient neither time-efficient later.\nOr we have to find a way to efficiently remove the elements from array without frequently reallocating memory.\n\nTo conclude, it is doable to have a _**binary search**_ solution.\nYet, it would complicate the design, and at the end the final solution is not necessarily more efficient than the above simple LinkedList-based sliding window.\n\nFinally, if one is interested in such a problem, there is another rather similar problem called [logger rate limiter](https://leetcode.com/problems/logger-rate-limiter/).\n\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

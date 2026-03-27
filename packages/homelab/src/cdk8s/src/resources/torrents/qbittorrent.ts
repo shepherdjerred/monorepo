@@ -82,7 +82,7 @@ export function createQBitTorrentDeployment(
         VPN_TYPE: EnvValue.fromValue("wireguard"),
         WIREGUARD_PRIVATE_KEY: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(chart, "airvpn-private-key", item.name),
-          key: "private-key",
+          key: "PRIVATE_KEY",
         }),
         WIREGUARD_PRESHARED_KEY: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
@@ -90,7 +90,7 @@ export function createQBitTorrentDeployment(
             "airvpn-preshared-key",
             item.name,
           ),
-          key: "preshared-key",
+          key: "PRESHARED_KEY",
         }),
         WIREGUARD_ADDRESSES: EnvValue.fromValue(
           "10.154.174.240/32,fd7d:76ee:e68f:a993:af57:e79c:b39d:9dde/128",
@@ -157,7 +157,7 @@ export function createQBitTorrentDeployment(
             "qbittorrent-password",
             qBitTorrentItem.name,
           ),
-          key: "password",
+          key: "PASSWORD",
         }),
         EXPORTER_PORT: EnvValue.fromValue("17871"),
         EXPORTER_LOG_LEVEL: EnvValue.fromValue("INFO"),

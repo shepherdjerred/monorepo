@@ -1,0 +1,53 @@
+{
+  "questionId": "1357",
+  "questionFrontendId": "1225",
+  "title": "Report Contiguous Dates",
+  "titleSlug": "report-contiguous-dates",
+  "difficulty": "Hard",
+  "content": "<p>Table: <code>Failed</code></p>\n\n<pre>\n+--------------+---------+\n| Column Name  | Type    |\n+--------------+---------+\n| fail_date    | date    |\n+--------------+---------+\nfail_date is the primary key (column with unique values) for this table.\nThis table contains the days of failed tasks.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Succeeded</code></p>\n\n<pre>\n+--------------+---------+\n| Column Name  | Type    |\n+--------------+---------+\n| success_date | date    |\n+--------------+---------+\nsuccess_date is the primary key (column with unique values) for this table.\nThis table contains the days of succeeded tasks.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>A system is running one task <strong>every day</strong>. Every task is independent of the previous tasks. The tasks can fail or succeed.</p>\n\n<p>Write a solution&nbsp;to report the&nbsp;<code>period_state</code> for each continuous interval of days in the period from <code>2019-01-01</code> to <code>2019-12-31</code>.</p>\n\n<p><code>period_state</code> is <em>&#39;</em><code>failed&#39;</code><em> </em>if tasks in this interval failed or <code>&#39;succeeded&#39;</code> if tasks in this interval succeeded. Interval of days are retrieved as <code>start_date</code> and <code>end_date.</code></p>\n\n<p>Return the result table ordered by <code>start_date</code>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nFailed table:\n+-------------------+\n| fail_date         |\n+-------------------+\n| 2018-12-28        |\n| 2018-12-29        |\n| 2019-01-04        |\n| 2019-01-05        |\n+-------------------+\nSucceeded table:\n+-------------------+\n| success_date      |\n+-------------------+\n| 2018-12-30        |\n| 2018-12-31        |\n| 2019-01-01        |\n| 2019-01-02        |\n| 2019-01-03        |\n| 2019-01-06        |\n+-------------------+\n<strong>Output:</strong> \n+--------------+--------------+--------------+\n| period_state | start_date   | end_date     |\n+--------------+--------------+--------------+\n| succeeded    | 2019-01-01   | 2019-01-03   |\n| failed       | 2019-01-04   | 2019-01-05   |\n| succeeded    | 2019-01-06   | 2019-01-06   |\n+--------------+--------------+--------------+\n<strong>Explanation:</strong> \nThe report ignored the system state in 2018 as we care about the system in the period 2019-01-01 to 2019-12-31.\nFrom 2019-01-01 to 2019-01-03 all tasks succeeded and the system state was &quot;succeeded&quot;.\nFrom 2019-01-04 to 2019-01-05 all tasks failed and the system state was &quot;failed&quot;.\nFrom 2019-01-06 to 2019-01-06 all tasks succeeded and the system state was &quot;succeeded&quot;.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Failed (fail_date date)\", \"Create table If Not Exists Succeeded (success_date date)\"], \"mssql\": [\"Create table Failed (fail_date date)\", \"Create table Succeeded (success_date date)\\n\"], \"oraclesql\": [\"Create table Failed (fail_date date)\", \"Create table Succeeded (success_date date)\\n\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"report_contiguous_dates\", \"pythondata\": [\"Failed = pd.DataFrame([], columns=['fail_date']).astype({'fail_date':'datetime64[ns]'})\", \"Succeeded = pd.DataFrame([], columns=['success_date']).astype({'success_date':'datetime64[ns]'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Failed (fail_date date)\\n\", \"Create table If Not Exists Succeeded (success_date date)\"], \"database_schema\": {\"Failed\": {\"fail_date\": \"DATE\"}, \"Succeeded\": {\"success_date\": \"DATE\"}}}",
+  "stats": "{\"totalAccepted\": \"32.8K\", \"totalSubmission\": \"57.6K\", \"totalAcceptedRaw\": 32816, \"totalSubmissionRaw\": 57554, \"acRate\": \"57.0%\"}",
+  "likes": 350,
+  "dislikes": 22,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Find the Start and End Number of Continuous Ranges\", \"titleSlug\": \"find-the-start-and-end-number-of-continuous-ranges\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Missing IDs\", \"titleSlug\": \"find-the-missing-ids\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Customers With Strictly Increasing Purchases\", \"titleSlug\": \"customers-with-strictly-increasing-purchases\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Failed\":[\"fail_date\"],\"Succeeded\":[\"success_date\"]},\"rows\":{\"Failed\":[[\"2018-12-28\"],[\"2018-12-29\"],[\"2019-01-04\"],[\"2019-01-05\"]],\"Succeeded\":[[\"2018-12-30\"],[\"2018-12-31\"],[\"2019-01-01\"],[\"2019-01-02\"],[\"2019-01-03\"],[\"2019-01-06\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef report_contiguous_dates(failed: pd.DataFrame, succeeded: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

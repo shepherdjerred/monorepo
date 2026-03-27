@@ -1,0 +1,131 @@
+{
+  "questionId": "1548",
+  "questionFrontendId": "1437",
+  "title": "Check If All 1's Are at Least Length K Places Away",
+  "titleSlug": "check-if-all-1s-are-at-least-length-k-places-away",
+  "difficulty": "Easy",
+  "content": "<p>Given an binary array <code>nums</code> and an integer <code>k</code>, return <code>true</code><em> if all </em><code>1</code><em>&#39;s are at least </em><code>k</code><em> places away from each other, otherwise return </em><code>false</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/04/15/sample_1_1791.png\" style=\"width: 428px; height: 181px;\" />\n<pre>\n<strong>Input:</strong> nums = [1,0,0,0,1,0,0,1], k = 2\n<strong>Output:</strong> true\n<strong>Explanation:</strong> Each of the 1s are at least 2 places away from each other.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/04/15/sample_2_1791.png\" style=\"width: 320px; height: 173px;\" />\n<pre>\n<strong>Input:</strong> nums = [1,0,0,1,0,1], k = 2\n<strong>Output:</strong> false\n<strong>Explanation:</strong> The second 1 and third 1 are only one apart from each other.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= k &lt;= nums.length</code></li>\n\t<li><code>nums[i]</code> is <code>0</code> or <code>1</code></li>\n</ul>\n",
+  "hints": [
+    "Each time you find a number 1, check whether or not it is K or more places away from the next one. If it's not, return false."
+  ],
+  "metaData": "{\n  \"name\": \"kLengthApart\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"213.1K\", \"totalSubmission\": \"331.6K\", \"totalAcceptedRaw\": 213124, \"totalSubmissionRaw\": 331586, \"acRate\": \"64.3%\"}",
+  "likes": 960,
+  "dislikes": 243,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Task Scheduler II\", \"titleSlug\": \"task-scheduler-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,0,0,0,1,0,0,1]\n2",
+    "[1,0,0,1,0,1]\n2"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool kLengthApart(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean kLengthApart(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def kLengthApart(self, nums: List[int], k: int) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def kLengthApart(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {boolean}\n */\nvar kLengthApart = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function kLengthApart(nums: number[], k: number): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool KLengthApart(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool kLengthApart(int* nums, int numsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func kLengthApart(nums []int, k int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun kLengthApart(nums: IntArray, k: Int): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func kLengthApart(_ nums: [Int], _ k: Int) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn k_length_apart(nums: Vec<i32>, k: i32) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Boolean}\ndef k_length_apart(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Boolean\n     */\n    function kLengthApart($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool kLengthApart(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def kLengthApart(nums: Array[Int], k: Int): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec k_length_apart(nums :: [integer], k :: integer) :: boolean\n  def k_length_apart(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec k_length_apart(Nums :: [integer()], K :: integer()) -> boolean().\nk_length_apart(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (k-length-apart nums k)\n  (-> (listof exact-integer?) exact-integer? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1084",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: One Pass + Count\n\nLet's first implement a pretty straightforward one-pass idea: to iterate over the array and count the number of zeros in between the \n\"neighbor\" `1`s. Each two neighbors `1`s should have at least $$k$$ zeros in-between. If it's not the case, return false.\n\n![simple](../Figures/1437/one_pass2.png) \n*Fig 1. One pass: count the number of zeros in-between the \"neighbour\" `1`s.*\n\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/MAJo6UcM/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"MAJo6UcM\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$ to parse an array of $$N$$ elements.\n    \n* Space complexity: $$\\mathcal{O}(1)$$ since we don't allocate any additional data structures here. \n<br />\n<br />\n\n\n---\n### Approach 2: Bit Manipulation\n\nThis approach would be more suitable for the Facebook variation of this problem when the input is not a binary array but an integer.\n\nIn this situation, the problem could be solved with the bitwise trick to remove trailing zeros in the binary representation:\n\n<iframe src=\"https://leetcode.com/playground/UWXKH6v3/shared\" frameBorder=\"0\" width=\"100%\" height=\"123\" name=\"UWXKH6v3\"></iframe>\n\n![simple](../Figures/1437/bitwise.png) \n*Fig 2. Approach 2: use bit manipulations to work with the binary \nrepresentation of the integer.*\n\n\n**Algorithm**\n\n- Convert a binary array into integer `x`. Note that this conversion always works fine in Python where there is no limit on the value of integers. In Java, the usage of this approach is limited by the integer capacity.\n\n- Consider the base cases: return true if `x == 0` or `k == 0`.\n\n- Remove trailing zeros in the binary representation of `x`. That ensures that the last bit of `x` is 1-bit.\n\n- While `x` is greater than `1`:\n\n    - Remove trailing 1-bit with the right shift: `x >>= 1`.\n    \n    - Remove trailing zeros one by one, and count them using counter `count`. The number of zeros in-between 1-bits should be greater or equal to `k`. Hence, return false if `count < k`.\n    \n- We're here because all 1-bits are separated by more than `k` zeros. Return true.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/iRGuvXeZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"iRGuvXeZ\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$ to parse an array of $$N$$ elements.\n    \n* Space complexity: $$\\mathcal{O}(1)$$ since we don't allocate any additional data structures here.\n<br />\n<br />\n\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

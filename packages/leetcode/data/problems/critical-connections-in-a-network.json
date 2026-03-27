@@ -1,0 +1,139 @@
+{
+  "questionId": "1300",
+  "questionFrontendId": "1192",
+  "title": "Critical Connections in a Network",
+  "titleSlug": "critical-connections-in-a-network",
+  "difficulty": "Hard",
+  "content": "<p>There are <code>n</code> servers numbered from <code>0</code> to <code>n - 1</code> connected by undirected server-to-server <code>connections</code> forming a network where <code>connections[i] = [a<sub>i</sub>, b<sub>i</sub>]</code> represents a connection between servers <code>a<sub>i</sub></code> and <code>b<sub>i</sub></code>. Any server can reach other servers directly or indirectly through the network.</p>\n\n<p>A <em>critical connection</em> is a connection that, if removed, will make some servers unable to reach some other server.</p>\n\n<p>Return all critical connections in the network in any order.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/09/03/1537_ex1_2.png\" style=\"width: 198px; height: 248px;\" />\n<pre>\n<strong>Input:</strong> n = 4, connections = [[0,1],[1,2],[2,0],[1,3]]\n<strong>Output:</strong> [[1,3]]\n<strong>Explanation:</strong> [[3,1]] is also accepted.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 2, connections = [[0,1]]\n<strong>Output:</strong> [[0,1]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>n - 1 &lt;= connections.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= a<sub>i</sub>, b<sub>i</sub> &lt;= n - 1</code></li>\n\t<li><code>a<sub>i</sub> != b<sub>i</sub></code></li>\n\t<li>There are no repeated connections.</li>\n</ul>\n",
+  "hints": [
+    "Use Tarjan's algorithm."
+  ],
+  "metaData": "{\n  \"name\": \"criticalConnections\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"list<list<integer>>\",\n      \"name\": \"connections\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<list<integer>>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"317.7K\", \"totalSubmission\": \"534.7K\", \"totalAcceptedRaw\": 317689, \"totalSubmissionRaw\": 534687, \"acRate\": \"59.4%\"}",
+  "likes": 6693,
+  "dislikes": 194,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "4\n[[0,1],[1,2],[2,0],[1,3]]",
+    "2\n[[0,1]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"servicenow\", \"name\": \"ServiceNow\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 2, \"slug\": \"akuna-capital\", \"name\": \"Akuna Capital\"}, {\"timesEncountered\": 2, \"slug\": \"kla-tencor\", \"name\": \"KLA Tencor\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Biconnected Component",
+      "slug": "biconnected-component"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> criticalConnections(int n, vector<vector<int>>& connections) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<List<Integer>> criticalConnections(int n, List<List<Integer>> connections) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def criticalConnections(self, n: int, connections: List[List[int]]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def criticalConnections(self, n, connections):\n        \"\"\"\n        :type n: int\n        :type connections: List[List[int]]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} connections\n * @return {number[][]}\n */\nvar criticalConnections = function(n, connections) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function criticalConnections(n: number, connections: number[][]): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<IList<int>> CriticalConnections(int n, IList<IList<int>> connections) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** criticalConnections(int n, int** connections, int connectionsSize, int* connectionsColSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func criticalConnections(n int, connections [][]int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun criticalConnections(n: Int, connections: List<List<Int>>): List<List<Int>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func criticalConnections(_ n: Int, _ connections: [[Int]]) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn critical_connections(n: i32, connections: Vec<Vec<i32>>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} connections\n# @return {Integer[][]}\ndef critical_connections(n, connections)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $connections\n     * @return Integer[][]\n     */\n    function criticalConnections($n, $connections) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> criticalConnections(int n, List<List<int>> connections) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def criticalConnections(n: Int, connections: List[List[Int]]): List[List[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec critical_connections(n :: integer, connections :: [[integer]]) :: [[integer]]\n  def critical_connections(n, connections) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec critical_connections(N :: integer(), Connections :: [[integer()]]) -> [[integer()]].\ncritical_connections(N, Connections) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (critical-connections n connections)\n  (-> exact-integer? (listof (listof exact-integer?)) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1112",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nLet's try and rephrase the problem a bit to see what it means in terms of the given graph. We are given an undirected graph and are asked to find the number of *bridges* in the graph. A bridge is essentially an edge whose removal would make the graph disconnected. Let's look at a couple of example graphs where the bridges are marked.\n\n![Graph and bridges](../Figures/1192/img1.png)\n\n\n*Figure 1. A graph with the highlighted bridges.*\n\n\nThe node `D` in the example above is known as a `cut`. In graph theory, a cut is a partition of the vertices of a graph into two disjoint subsets. Any cut determines a cut-set, the set of edges that have one endpoint in each subset of the partition. In this problem, we are not concerned with finding the `cuts` in a graph: we are instead tasked with the related problems of finding all of the bridges in the graph.\n\nAs a quick aside, there's a standard algorithm out there that does precisely this i.e. find the bridges in an undirected graph. This algorithm is known as the `Tarjan's algorithm`, and is a standard way of finding the ***articulation points and bridges*** in a graph. [Here](https://en.wikipedia.org/wiki/Bridge_%28graph_theory%29#Tarjan.27s_Bridge-finding_algorithm) is some Wikipedia pseudo-code for the algorithm if you're interested to learn more about it.\n\nWe won't be explaining or discussing this approach in our solution because we feel that there are a lot of other sources out there for explaining standard algorithms much better and probably in much more detail. Also, such standard algorithms usually have multiple applications. For example, we use the standard traversal algorithms for solving so many graph problems, don't we? Thus, in the interest of avoiding making the article feel like a textbook, or implying that you need to have memorized Tarjan's algorithm to be able to solve this problem, and also for providing a fresh take on this problem, we will be skipping Tarjan's algorithm altogether here, and instead focussing on how we could apply existing knowledge of DFS to deriving a solution. Being able to solve graph problems using existing DFS knowledge is an essential skill to learn - you don't want to have to learn every graph algorithm anybody has ever come up with, do you?\n\nLet's get back to the figure that depicts the bridges in the graph. There's an interesting property to be noted there (which is also used by Tarjan's algorithm) and which will end up forming the key component of our algorithm as well. Let us look at the edges belonging to a cycle and see if they could possibly be a critical connection or not.\n\n![Graph and edges in a cycle](../Figures/1192/img2.png)\n\n\n*Figure 2. A graph showing why none of the edges in a cycle can be critical connections.*\n\n\nFrom the above figure, we can draw the following conclusion about critical connections in general:\n\n>An edge is a critical connection, if and only if it is not in a cycle.\n\nEdges that are not a part of the cycle end up being a single route from getting from one part of the graph to the other. Why, you ask? Well if there were multiple ways, then our edge would be a part of the cycle considering this is an undirected graph. Thus, edges not belonging to any cycle end up being a critical connection for the graph.\n\nThus, the problem simply boils down to finding all the cycles in the graph and discarding all the edges belonging to such cycles. If we do that, we will only be left with edges that are critical connections in the graph.\n\n</br>\n\n---\n\n### Approach: Depth First Search for Cycle Detection\n\n**Intuition**\n\n> **How does this fit in?** This problem is not simply about finding ***a*** cycle in an undirected graph. DFS can be easily used to detect the presence of a cycle in the graph. Given that this is an undirected graph, we can simply achieve that by keeping a visited dictionary/array of nodes and simply check for already visited nodes during the depth-first traversal. If we find a node that is already visited, that implies the presence of a cycle. The algorithm is a bit more involved for directed graphs though due to the presence of different kinds of edges. \n\nThat being said, we would need to see what variations we can make to the standard depth-first traversal to catch ***all*** cycles in the graph and then remove the corresponding edges along the way. For this, we will look at the concept of a `rank` of a node. This is very similar to the concept of `discovery times` in Tarjan's algorithm for those who are familiar with that algorithm. Since this is a graph with no designated concept of a `root` node like in the case of trees, we can consider any node to be the root node of our graph. Essentially, we need some node to start the traversal from, and that node becomes the root node for all intents and purposes in our algorithm.\n\nThe rank of the root node is always `0`. If a node has not yet been visited, we'll keep the rank as `null/None` (you can use any sentinel value here except for -1 - you'll see why in the implementation.)\n\nSo how does this rank help us in detecting cycles in the graph? Well, it works exactly like keeping a set of visited nodes would work. At each step of our traversal, we maintain the rank of the nodes we've come across until now on the current path. If at any point, we come across a neighbor that has a rank lower than the current node's rank, we know that the neighbor must have already been visited. In other words, if we started along a path with rank `0` from the root node and are currently at a node with rank `m` and now we discover a node that already has a rank assigned to it and that value is `0 <= n < m`, then it implies the presence of a cycle.\n\n![The use of rank in finding out a cycle](../Figures/1192/img3.png)\n\n\n*Figure 3. The use of rank in finding nodes in a cycle.*\n\n\n**Importance of the rank**\n\nWe can detect a cycle simply by checking if a rank has already been assigned to some neighbor or not (except for the parent of course, which we can handle separately). So when we detect a cycle, we can discard the current edge since that edge cannot be a critical connection. In our example graph above, we can discard edge `E-B`. However, how do we discard edges `B-D` and `D-E`? The mere presence of a cycle in a subgraph doesn't guarantee that an ancestral edge/node will also be a part of the cycle. \n\n> What we need is the minimum rank that a cycle includes. We need our traversal function to return this information so that the previous callers can use it to identify if an edge has to be discarded or not.\n\nLet's see how this information might be helpful with the help of our previous graph.\n\n![Importance of rank](../Figures/1192/img4.png)\n\n\n*Figure 4. Showcasing the importance of rank.*\n\n\nWe know that only the current level knows of the presence of a cycle. To make the upper levels (of recursion) make aware of this cycle, and also to help them discard necessary edges, we return the minimum rank that our traversal finds. During a step of recursion from node `u` to its neighbor `v`, if DFS returns something smaller than or equal to `rank of u`, then `u` knows its neighbor `v` is a part of a cycle spanning back to `u` or some other node higher up in the recursion tree i.e. an ancestor node. Thus, we can safely discard edge `u-v` because it is part of a cycle.\n\n**Algorithm**\n\n1. Let's define a function called `dfs` that takes in the `node` and the `discoveryRank` to be assigned to this node.\n2. The first step is to build the graph itself. For that, we will be using an `adjacency list` structure.\n3. Since our algorithm involves discarding edges, we need some efficient data structure that will allow us to do this operation in $$O(1)$$ time. We'll convert the list of edges into a dictionary for that.\n4. For our algorithm, we'll name our graph as `graph` and our connections dictionary as `connDict`. The `graph` here is a dictionary of lists (i.e. it's an adjacency list).\n5. Additionally, we need an array to keep track of the `rank` of our nodes. That's also something we define in the main function `criticalConnections` along with all the things explained above.\n6. Inside our function `dfs`:\n   1. We check if the `node` already has a `rank` assigned; if so, we return that value.\n   2. Else, we assign the rank of this node i.e. `rank[node]` to the `discoveryRank`.\n   3. We iterate over all the neighbors of the `node` and for each of them, we make a recursive call and we obtain the `recursiveRank` as the return value and do two things using this value.\n      1. If this `recursiveRank` is *less than* the current `discoveryRank`, that implies this edge is a part of a cycle and can be discarded.\n      2. Second, we record the minimum rank till now from amongst all the neighbors. Let's name this `minRank`. This is the value we return at the end of the function.\n\n        *Note that we don't make a recursive call to the parent node. We detect parent nodes by checking if the rank of the neighboring node is `discoveryRank - 1`*\n        \n7. Return the `minRank`.\n8. We call the `dfs` function using the node `0` and rank `0` and once our search function completes, we convert the remaining edges from `connDict` to a list and return that as the result.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/MYQg2ya8/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"MYQg2ya8\"></iframe>\n\n* Time Complexity: $$O(V + E)$$ where $$V$$ represents the number of vertices and $$E$$ represents the number of edges in the graph. We process each node exactly once thanks to the `rank` dictionary also acting as a \"visited\" safeguard at the top of the `dfs` function. Since the problem statement mentions that the graph is connected, that means $$E >= V$$ and hence, the overall time complexity would be dominated by the number of edges i.e. $$O(E)$$.\n\n* Space Complexity: $$O(E)$$. The overall space complexity is a sum of the space occupied by the `connDict` dictionary, `rank` dictionary, and `graph` data structure. $$E + V + (V + E)$$ = $$O(E)$$.\n\n<br/>\n\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

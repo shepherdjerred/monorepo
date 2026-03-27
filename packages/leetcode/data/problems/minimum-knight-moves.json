@@ -1,0 +1,133 @@
+{
+  "questionId": "1142",
+  "questionFrontendId": "1197",
+  "title": "Minimum Knight Moves",
+  "titleSlug": "minimum-knight-moves",
+  "difficulty": "Medium",
+  "content": "<p>In an <strong>infinite</strong> chess board with coordinates from <code>-infinity</code> to <code>+infinity</code>, you have a <strong>knight</strong> at square <code>[0, 0]</code>.</p>\n\n<p>A knight has 8 possible moves it can make, as illustrated below. Each move is two squares in a cardinal direction, then one square in an orthogonal direction.</p>\n<img src=\"https://assets.leetcode.com/uploads/2018/10/12/knight.png\" style=\"height: 250px; width: 250px;\" />\n<p>Return <em>the minimum number of steps needed to move the knight to the square</em> <code>[x, y]</code>. It is guaranteed the answer exists.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> x = 2, y = 1\n<strong>Output:</strong> 1\n<strong>Explanation: </strong>[0, 0] &rarr; [2, 1]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> x = 5, y = 5\n<strong>Output:</strong> 4\n<strong>Explanation: </strong>[0, 0] &rarr; [2, 1] &rarr; [4, 2] &rarr; [3, 4] &rarr; [5, 5]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>-300 &lt;= x, y &lt;= 300</code></li>\n\t<li><code>0 &lt;= |x| + |y| &lt;= 300</code></li>\n</ul>\n",
+  "hints": [
+    "You can simulate the movements since the limits are low.",
+    "Is there a search algorithm applicable to this problem?",
+    "Since we want the minimum number of moves, we can use Breadth First Search."
+  ],
+  "metaData": "{\n  \"name\": \"minKnightMoves\",\n  \"params\": [\n    {\n      \"name\": \"x\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"y\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"190.2K\", \"totalSubmission\": \"454.7K\", \"totalAcceptedRaw\": 190176, \"totalSubmissionRaw\": 454674, \"acRate\": \"41.8%\"}",
+  "likes": 1563,
+  "dislikes": 411,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Check Knight Tour Configuration\", \"titleSlug\": \"check-knight-tour-configuration\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "2\n1",
+    "5\n5"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 3, \"slug\": \"waymo\", \"name\": \"Waymo\"}, {\"timesEncountered\": 2, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 2, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 2, \"slug\": \"verily\", \"name\": \"Verily\"}]}",
+  "topicTags": [
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minKnightMoves(int x, int y) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minKnightMoves(int x, int y) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minKnightMoves(self, x: int, y: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minKnightMoves(self, x, y):\n        \"\"\"\n        :type x: int\n        :type y: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} x\n * @param {number} y\n * @return {number}\n */\nvar minKnightMoves = function(x, y) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minKnightMoves(x: number, y: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinKnightMoves(int x, int y) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minKnightMoves(int x, int y) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minKnightMoves(x int, y int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minKnightMoves(x: Int, y: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minKnightMoves(_ x: Int, _ y: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_knight_moves(x: i32, y: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} x\n# @param {Integer} y\n# @return {Integer}\ndef min_knight_moves(x, y)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $x\n     * @param Integer $y\n     * @return Integer\n     */\n    function minKnightMoves($x, $y) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minKnightMoves(int x, int y) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minKnightMoves(x: Int, y: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_knight_moves(x :: integer, y :: integer) :: integer\n  def min_knight_moves(x, y) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_knight_moves(X :: integer(), Y :: integer()) -> integer().\nmin_knight_moves(X, Y) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-knight-moves x y)\n  (-> exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1132",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach 1: BFS (Breadth-First Search)\n\n**Intuition**\n\nWe are asked to find the **_minimum_** steps required to travel from one point to another point on a grid.\nOne of the most intuitive ideas that one might come up with during an interview is _**brute force enumeration**_, _i.e._ we explore all possible paths between the two points and return the minimum number of moves.\n\nIt is indeed a valid solution. However, it will be beneficial to give the idea a second thought, before jumping into the implementation.\nThe question resembles a classical graph search problem, which is to find the _shortest_ path between two nodes in a graph.\nAs one might recall, the solution to the graph search problem is called [Dijkstra's algorithm](https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm).\n\n>One of the key ideas within the Dijkstra's algorithm is the strategy of **BFS** (Breadth-First Search), as opposed to DFS (Depth-First Search). With BFS we make sure that before exploring further towards the destination, all the immediate neighborhoods are properly explored.\n\nThe key to solving this problem is based on the BFS strategy.\nThe idea is that starting from the origin, we explore the neighborhood following the order that is determined by the distance to the origin, _i.e._ we first explore all the points within a single step from the origin, then we explore all the points that can be reached with two steps, so on and so forth.\n\nDuring the exploration process, as soon as we reach the _**target**_ point, we then can call the current path the _shortest_ path, since our exploration follows the order of distance.\n\n>One can imagine the whole process as if we send a sound wave to determine the distance to an unknown object.\nThe sound wave propagates in all directions with the same speed, while its scope grows as a **_circle_**.\nOnce the circle reaches the target object, the **_radius_** is the shortest distance between the origin and the target object.\n\n![BFS](../Figures/1197/1197_bfs.png)\n\n\n**Algorithm**\n\nAs a reminder, BFS is a pattern for a collection of algorithms, rather than a specific algorithm.\nAdditionally, given a specific BFS algorithm, there are several sub-patterns in terms of how the algorithm is implemented.\n\n>Despite the differences, all BFS algorithms share the usage of two important data structures: **_queue_** and **_set_** (or _map_).\nA queue is used to maintain the order in which places are visited, while a set/map is used to mark which places have already been visited.\n\nFor reference, we provide a pattern to implement BFS algorithms in our [Queue and BFS Explore Card](https://leetcode.com/explore/learn/card/queue-stack/231/practical-application-queue/).\nFollowing the strategy of BFS, here we provide a sample algorithm to solve the problem with the following steps:\n\n- First, we create a `queue` data structure to store the places to be visited during the next step and a set data structure named `visited` to keep track of all the places that we have visited so far.\n\n- The process of BFS consists of a loop that spins around the `queue`. The loop ends either when we reach the target or when the queue is empty.\n\n- Within the main loop, we use a nested loop to iterate over the current elements in the `queue`. All of the elements are of the same distance from the starting point.\n\n- Within the nested loop, we prepare the elements that will be visited during the next step.\n\n<iframe src=\"https://leetcode.com/playground/fgKQ5DWm/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"fgKQ5DWm\"></iframe>\n\n\nNote: In Java, the `HashSet` is not the most efficient data structure.  For this reason, using the `HashSet` data structure to keep track of the visited cells in the Java implementation will result in the **TLE** (Time Limit Exceeded) exception.\n\nTo avoid the TLE exception, we use a bitmap (_i.e._ a two-dimentional array of boolean values) instead of a `HashSet`.\nThe range of the array is set according to the constraint of the input (_i.e._ $$|x| + |y| <= 300$$).\n\n\n**Complexity Analysis**\n\nGiven the coordinate of the target as $$(x, y)$$, the number of cells covered by the circle that is centered at point $$(0, 0)$$ and reaches the target point is roughly $$\\big(\\max(|x|, |y|)\\big) ^ 2$$.\n\n- Time Complexity: $$O\\bigg(\\big(\\max(|x|, |y|)\\big) ^ 2\\bigg)$$\n\n    - Due to the nature of BFS, before reaching the target, we will have covered all the neighborhoods that are closer to the start point. The aggregate of these neighborhoods forms a circle, and the area can be approximated by the area of a square with an edge length of $$\\max(2|x|, 2|y|)$$. The number of cells within this square would be $$\\big(\\max(2|x|, 2|y|)\\big) ^ 2$$.\n\n    - Hence, the overall time complexity of the algorithm is $$O\\bigg(\\big(\\max(2|x|, 2|y|)\\big) ^ 2 \\bigg) = O\\bigg(\\big(\\max(|x|, |y|)\\big) ^ 2 \\bigg)$$.\n\n\n- Space Complexity: $$O\\bigg(\\big(\\max(|x|, |y|)\\big) ^ 2\\bigg)$$\n\n    - We employed two data structures in the algorithm, _i.e._ queue and set.\n\n    - At any given moment, the queue contains elements that are situated in at most two different layers (or levels). In our case, the maximum number of elements at one layer would be $$4 \\cdot \\max(|x|, |y|)$$, _i.e._ the perimeter of the exploration square. As a result, the space complexity for the queue is $$O\\big( \\max(|x|, |y|) \\big)$$.\n\n    - As for the set, it will contain every elements that we visited, which is $$\\big(\\max(|x|, |y|)\\big) ^ 2$$ as we estimated in the time complexity analysis. As a result, the space complexity for the set is $$O\\bigg(\\big(\\max(|x|, |y|)\\big) ^ 2\\bigg)$$.\n\n    - To sum up, the overall space complexity of the algorithm is $$O\\bigg(\\big(\\max(|x|, |y|)\\big) ^ 2\\bigg)$$, which is dominated by the space used by the set.\n\n\n<br/>\n\n---\n\n### Approach 2: Bidirectional BFS\n\n**Intuition**\n\nBased on the above idea of BFS, one optimization that we can apply is to perform _**bidirectional**_ exploration instead of unidirectional exploration.\n\nThe reason why the bidirectional BFS is an optimized solution is illustrated in the following graph:\n\n![bidirectional BFS](../Figures/1197/1197_bi_bfs_illustration.png)\n\n>Intuitively, as we can see from the above graph, the area of the orange circles that we explore with _bidirectional_ BFS is much smaller than the area of the red circle that we would explore with unidirectional BFS (twice as small, to be exact).\n\nThis can be proved mathematically. Suppose that the distance between the start and target points is $$d$$, the exploration scope covered by the unidirectional BFS will be a circle whose area is $$\\pi \\cdot d^2$$.\nOn the other hand, with the bidirectional BFS, the exploration scope will be two smaller circles whose total area is $$2 \\cdot \\pi (\\frac{d}{2})^2 = \\pi \\cdot \\frac{d^2}{2}$$, _i.e._ half of the area covered by the unidirectional BFS.\n\n\n**Algorithm**\n\nTo implement the bidirectional BFS algorithm, we will double the usage of the data structures in the unidirectional BFS.\nAdditionally, we need to make the following adaptations:\n\n- Instead of using the set data structure to keep track of the visited places, we use the **_map_** data structure, which contains not only the information of visited places but also the distance between each place and the starting point.\n\n- Instead of only storing the coordinates of the next places to be visited in the queue, we also store the distance between each place and the starting point.  This way we don't need an extra variable to keep track of distance.\n\nWith the two adaptations listed above, we can make the implementation more concise and clear. Here are some sample implementations.\n\n\n<iframe src=\"https://leetcode.com/playground/YaHpmKWf/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"YaHpmKWf\"></iframe>\n\nNote: in theory, the above implementation of bidirectional BFS should be faster than the unidirectional BFS.\nHowever, in reality, this is **not** the case for the Java implementation, due to heavy usage of sophisticated data structures, which are inefficient compared to simple arrays.\n\nIn addition to the bidirectional exploration optimization, there is also a technique called **pruning** that has been mentioned in [some posts](https://leetcode.com/problems/minimum-knight-moves/discuss/947138/Python-3-or-BFS-DFS-Math-or-Explanation).\n\nPruning means to remove the unwanted parts, and that is exactly what this technique does.\nIt focuses only on the *directions* that might eventually lead to the discovery of the target while ignoring other directions thereby reducing our total search space.\n\nIndeed, it can improve our performance. However, it can be tricky to ensure the correctness of the algorithm. If we accidentally prune a valid branch, we might fail to obtain the correct answer in the end.\nUnder the circumstance of passing an interview in a short time frame, one must weigh the risks associated with prunning against the potential gain.\n\n**Complexity Analysis**\n\nAlthough the bidirectional BFS cuts the exploration scope in half, compared to the unidirectional BFS, the overall time and space complexities remain the same.\nWe will break it down in detail in this section.\n\nFirst of all, given the target's coordinate, $$(x, y)$$, then the area that is covered by the two exploratory circles of the bidirectional BFS will be $${\\max(|x|, |y|) ^ 2}/{2}$$.\n\n- Time Complexity: $$O\\bigg(\\big(\\max(|x|, |y|)\\big) ^ 2\\bigg)$$\n\n    - Reducing the scope of exploration by half does speed up the algorithm. However, it does not change the time complexity of the algorithm which remains $$O\\bigg(\\big(\\max(|x|, |y|)\\big) ^ 2\\bigg)$$.\n\n\n- Space Complexity: $$O\\bigg(\\big(\\max(|x|, |y|)\\big) ^ 2\\bigg)$$\n\n    - In exchange for reducing the search scope, we double the usage of data structures compared to the unidirectional BFS.\n    Similarly to the time complexity, multiplying the required space by two does not change the overall space complexity of the algorithm which remains $$O\\bigg(\\big(\\max(|x|, |y|)\\big) ^ 2\\bigg)$$.\n\n\n<br/>\n\n---\n\n### Approach 3: DFS (Depth-First Search) with Memoization\n\n**Intuition**\n\n>As opposed to BFS, **_DFS (Depth-First Search)_** is a pattern of an exploration algorithm, which prioritizes the **_depth_** over **_breadth_** during the exploration process.\n\nIt is not surprising that problems that can be solved with BFS can also be solved with DFS.\nHowever, in most scenarios one method is more efficient than the other.\nIndeed, this is also the case for this problem.\n\n**Symmetry of Solutions**\n\nBefore explaining how we can apply the DFS algorithm to this problem, we should address the **_symmetry_** of the answers, which we haven't touched on so far.\n\n>We claim that the target $$(x, y)$$, its _horizontally_, _vertically_, and _diagonally_ symmetric points (_i.e._ $$(x, -y), (-x, y), (-x, -y)$$) share the same answer as the target point.\n\nDue to the symmetry of the board (_i.e._ from `-infinity` to `+infinity`) and the symmetry of the allowed movements, we can rest assured that the above claim is correct, without rigid mathematical proof.\n\nBased on the above insight, we can focus on the **_first quadrant_** of the coordinate plane where both $$x$$ and $$y$$ are positive.\nAny target that is outside of the first quadrant, can be shifted to its _symmetric_ point in the first quadrant by taking the absolute value of each coordinate, _i.e._ $$(|x|, |y|)$$.\n\n>At the beginning of the DFS as well as during the process of DFS, we will always shift the exploration to the _first quadrant_.\n\n**Reduced Directions**\n\nNow that we have contained the exploration within the first quadrant, we can further focus on which directions we employ.\nFor a target that is situated in the first quadrant, though technically we could move in **8** different directions, there are only two directions (_i.e._ left-down and down-left) that will move us closer to the origin.\n\n>Indeed, before we reach the **_immediate neighborhood_** of the origin, we only need to explore the two left-down directions (with offsets of $$(-1, -2)$$ and $$(-2, -1)$$), since the rest of the directions will deviate further away from the origin.\n\nThe __immediate neighborhood__ of the origin, refers to the points of where the sum of coordinates is less than or equal to 2, _i.e._ $$x + y <= 2$$.\nIn order to reach an immediate neighbor point from the origin, we need to do a bit of **_zigzag_**.\nIn the following graph, we show examples of how to reach some of the immediate neighbors via zigzag steps.\n\n![DFS base cases](../Figures/1197/1197_dfs_base_cases.png)\n\nAs it turns out, any immediate neighbors with ($$x + y == 2$$), takes exactly **2** steps to reach when starting from the origin.\nOne can *exhaustively* verify the above insight.\n\n\n**Algorithm**\n\nWith the above insights in mind, we can begin to work on our DFS algorithm.\n\n>Rather than starting from the origin, we start from the **_target_** and walk *__backwards__* to reach the origin.\nAlso, instead of exploring all 8 directions, we only need to explore the two left-down directions as we discussed before.\n\nAssume that the function `dfs(x, y)` returns the minimum steps required to reach the target point `(x, y)`, the idea of DFS can be expressed in the following formula:\n\n$$\n    \\text{dfs}(x, y) = \\min\\big(\\text{dfs}(|x-2|, |y-1|), \\text{dfs}(|x-1|, |y-2|)\\big) + 1\n$$\n\nThe formula can be interpreted as such: at each step of the backward exploration process, by only exploring the left-down directions we can obtain the shortest path.\n\nAs one might notice, the above function is a recursive function.\nAnd it is critical to define the **_base cases_** to make the definition sound.\nThere are in general two base cases:\n\n- case 1): `x=0, y=0`, when we reach the origin, no further steps are required to reach our goal, _i.e._ `dfs(x, y) = 0`.\n\n- case 2): `x + y = 2`, when we are at a _immediate neighbor_ as we discussed before, it takes two more steps to reach our goal, _i.e._ `dfs(x, y) = 2`.\n\n**Note:** one might argue that there is another base case to cover, which is `x + y = 1`, _e.g._ `x=1, y=0`.\nThis is not our base case though, because by taking one more step further, it will be reduced down to our base case 2), _i.e._ `|x-1| + |y-2| = 2`.\n\nGiven the above definitions, one can intuitively implement them with a recursive function.\nAdditionally, it is important to apply the **_memoization_** technique to prevent duplicate calculations from occurring during the recursive process.\n\nThe above form of recursion with memoization is also known as **Top-Down Dynamic Programming**, where we work out the solutions from top to down (base cases), and we _reuse_ the intermediate results (with _memoization_) to speed up the calculation.\n\n_It is also feasible to start from the origin and move towards the target.\nAccordingly, we should adapt the conditions in the base cases._\n\n<iframe src=\"https://leetcode.com/playground/J9TbutJF/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"J9TbutJF\"></iframe>\n\n\n**Complexity Analysis**\n\nLet $$(x, y)$$ be the coordinate of the target.\n\n- Time Complexity: $$O(|x \\cdot y|)$$\n\n    - The execution of our recursive algorithm will unfold as a _binary tree_ where each node represents an invocation of the recursive function.\n    And the time complexity of the algorithm is proportional to the total number of invocations, _i.e._ total number of nodes in the binary tree.\n\n\n    - The total number of nodes grows exponentially in the binary tree.\n    However, there will be some overlap in terms of the invocations, _i.e._ `dfs(x,y)` might be invoked multiple times with the same input.\n    Thanks to the *memoization* technique, we avoid redundant calculations, _i.e._ the return value of `dfs(x,y)` is stored for reuse later, which greatly improves the performance.\n\n    - In the algorithm, we restrict the exploration to the **first quadrant** of the board. Therefore, in the worst case, we will explore all of the cells between the origin and the target in the first quadrant.\n    In total, there are $$|x \\cdot y|$$ cells in a rectangle that spans from the origin to the target. As a result, the overall time complexity of the algorithm is $$O(|x \\cdot y|)$$.\n\n\n- Space Complexity: $$O(|x \\cdot y|)$$\n\n    - First of all, due to the presence of recursion in the algorithm, it will incur additional memory consumption in the function call stack.\n    The consumption is proportional to the level of the execution tree, _i.e._ $$\\max(|x|, |y|)$$.\n\n    - Secondly, due to the application of memoization technique, we will keep all the intermediate results in the memory for reuse.\n    As we have seen in the above time complexity analysis, the maximum number of intermediate results will be $$O(|x \\cdot y|)$$.\n\n    - To sum up, the overall space complexity of the algorithm is $$O(|x \\cdot y|)$$, which is dominated by the memoization part.\n\n\n<br/>\n\n---\n\n### Follow-up\n\nFor math lovers, as it turns out, we can derive a mathematical formula based on the DFS solution, which can solve the problem in $$O(1)$$ time complexity.\n\nFore more details, check out the post by [poorvank](https://leetcode.com/problems/minimum-knight-moves/discuss/387036/O(1)-formula) in the discussion forum.\n\nThe solution is definitely brilliant. However, it goes without saying that it is unlikely that one would be expected to come up with such a solution during an interview.\nIt could be equally difficult to defend and explain the solution to the interviewer.\n\n\n<br/>\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,135 @@
+{
+  "questionId": "1366",
+  "questionFrontendId": "1429",
+  "title": "First Unique Number",
+  "titleSlug": "first-unique-number",
+  "difficulty": "Medium",
+  "content": "<p>You have a queue of integers, you need to retrieve the first unique integer in the queue.</p>\n\n<p>Implement the <code>FirstUnique</code>&nbsp;class:</p>\n\n<ul>\n\t<li><code>FirstUnique(int[] nums)</code> Initializes the object with the numbers in the queue.</li>\n\t<li><code>int showFirstUnique()</code>&nbsp;returns the value of <strong>the&nbsp;first unique</strong> integer of the queue, and returns <strong>-1</strong> if there is no such integer.</li>\n\t<li><code>void add(int value)</code>&nbsp;insert value&nbsp;to&nbsp;the queue.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<b>Input: </b>\n[&quot;FirstUnique&quot;,&quot;showFirstUnique&quot;,&quot;add&quot;,&quot;showFirstUnique&quot;,&quot;add&quot;,&quot;showFirstUnique&quot;,&quot;add&quot;,&quot;showFirstUnique&quot;]\n[[[2,3,5]],[],[5],[],[2],[],[3],[]]\n<b>Output: </b>\n[null,2,null,2,null,3,null,-1]\n<b>Explanation: </b>\nFirstUnique firstUnique = new FirstUnique([2,3,5]);\nfirstUnique.showFirstUnique(); // return 2\nfirstUnique.add(5);            // the queue is now [2,3,5,5]\nfirstUnique.showFirstUnique(); // return 2\nfirstUnique.add(2);&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // the queue is now [2,3,5,5,2]\nfirstUnique.showFirstUnique(); // return 3\nfirstUnique.add(3);&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // the queue is now [2,3,5,5,2,3]\nfirstUnique.showFirstUnique(); // return -1\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<b>Input: </b>\n[&quot;FirstUnique&quot;,&quot;showFirstUnique&quot;,&quot;add&quot;,&quot;add&quot;,&quot;add&quot;,&quot;add&quot;,&quot;add&quot;,&quot;showFirstUnique&quot;]\n[[[7,7,7,7,7,7]],[],[7],[3],[3],[7],[17],[]]\n<b>Output: </b>\n[null,-1,null,null,null,null,null,17]\n<b>Explanation: </b>\nFirstUnique firstUnique = new FirstUnique([7,7,7,7,7,7]);\nfirstUnique.showFirstUnique(); // return -1\nfirstUnique.add(7);            // the queue is now [7,7,7,7,7,7,7]\nfirstUnique.add(3);&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // the queue is now [7,7,7,7,7,7,7,3]\nfirstUnique.add(3);&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // the queue is now [7,7,7,7,7,7,7,3,3]\nfirstUnique.add(7);&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // the queue is now [7,7,7,7,7,7,7,3,3,7]\nfirstUnique.add(17);&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;// the queue is now [7,7,7,7,7,7,7,3,3,7,17]\nfirstUnique.showFirstUnique(); // return 17\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<b>Input: </b>\n[&quot;FirstUnique&quot;,&quot;showFirstUnique&quot;,&quot;add&quot;,&quot;showFirstUnique&quot;]\n[[[809]],[],[809],[]]\n<b>Output: </b>\n[null,809,null,-1]\n<b>Explanation: </b>\nFirstUnique firstUnique = new FirstUnique([809]);\nfirstUnique.showFirstUnique(); // return 809\nfirstUnique.add(809);          // the queue is now [809,809]\nfirstUnique.showFirstUnique(); // return -1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10^5</code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10^8</code></li>\n\t<li><code>1 &lt;= value &lt;= 10^8</code></li>\n\t<li>At most <code>50000</code>&nbsp;calls will be made to <code>showFirstUnique</code>&nbsp;and <code>add</code>.</li>\n</ul>\n",
+  "hints": [
+    "Use doubly Linked list with hashmap of pointers to linked list nodes. add unique number to the linked list. When add is called check if the added number is unique then it have to be added to the linked list and if it is repeated remove it from the linked list if exists. When showFirstUnique is called retrieve the head of the linked list.",
+    "Use queue and check that first element of the queue is always unique.",
+    "Use set or heap to make running time of each function O(logn)."
+  ],
+  "metaData": "{\n  \"classname\": \"FirstUnique\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"name\": \"nums\",\n        \"type\": \"integer[]\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [],\n      \"name\": \"showFirstUnique\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"value\"\n        }\n      ],\n      \"name\": \"add\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true,\n  \"manual\": false\n}",
+  "stats": "{\"totalAccepted\": \"111.7K\", \"totalSubmission\": \"195.3K\", \"totalAcceptedRaw\": 111731, \"totalSubmissionRaw\": 195274, \"acRate\": \"57.2%\"}",
+  "likes": 606,
+  "dislikes": 35,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"FirstUnique\",\"showFirstUnique\",\"add\",\"showFirstUnique\",\"add\",\"showFirstUnique\",\"add\",\"showFirstUnique\"]\n[[[2,3,5]],[],[5],[],[2],[],[3],[]]",
+    "[\"FirstUnique\",\"showFirstUnique\",\"add\",\"add\",\"add\",\"add\",\"add\",\"showFirstUnique\"]\n[[[7,7,7,7,7,7]],[],[7],[3],[3],[7],[17],[]]",
+    "[\"FirstUnique\",\"showFirstUnique\",\"add\",\"showFirstUnique\"]\n[[[809]],[],[809],[]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"tomtom\", \"name\": \"TomTom\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Queue",
+      "slug": "queue"
+    },
+    {
+      "name": "Data Stream",
+      "slug": "data-stream"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class FirstUnique {\npublic:\n    FirstUnique(vector<int>& nums) {\n        \n    }\n    \n    int showFirstUnique() {\n        \n    }\n    \n    void add(int value) {\n        \n    }\n};\n\n/**\n * Your FirstUnique object will be instantiated and called as such:\n * FirstUnique* obj = new FirstUnique(nums);\n * int param_1 = obj->showFirstUnique();\n * obj->add(value);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class FirstUnique {\n\n    public FirstUnique(int[] nums) {\n        \n    }\n    \n    public int showFirstUnique() {\n        \n    }\n    \n    public void add(int value) {\n        \n    }\n}\n\n/**\n * Your FirstUnique object will be instantiated and called as such:\n * FirstUnique obj = new FirstUnique(nums);\n * int param_1 = obj.showFirstUnique();\n * obj.add(value);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class FirstUnique:\n\n    def __init__(self, nums: List[int]):\n        \n\n    def showFirstUnique(self) -> int:\n        \n\n    def add(self, value: int) -> None:\n        \n\n\n# Your FirstUnique object will be instantiated and called as such:\n# obj = FirstUnique(nums)\n# param_1 = obj.showFirstUnique()\n# obj.add(value)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class FirstUnique(object):\n\n    def __init__(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        \"\"\"\n        \n\n    def showFirstUnique(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n    def add(self, value):\n        \"\"\"\n        :type value: int\n        :rtype: None\n        \"\"\"\n        \n\n\n# Your FirstUnique object will be instantiated and called as such:\n# obj = FirstUnique(nums)\n# param_1 = obj.showFirstUnique()\n# obj.add(value)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n */\nvar FirstUnique = function(nums) {\n    \n};\n\n/**\n * @return {number}\n */\nFirstUnique.prototype.showFirstUnique = function() {\n    \n};\n\n/** \n * @param {number} value\n * @return {void}\n */\nFirstUnique.prototype.add = function(value) {\n    \n};\n\n/** \n * Your FirstUnique object will be instantiated and called as such:\n * var obj = new FirstUnique(nums)\n * var param_1 = obj.showFirstUnique()\n * obj.add(value)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class FirstUnique {\n    constructor(nums: number[]) {\n\n    }\n\n    showFirstUnique(): number {\n\n    }\n\n    add(value: number): void {\n\n    }\n}\n\n/**\n * Your FirstUnique object will be instantiated and called as such:\n * var obj = new FirstUnique(nums)\n * var param_1 = obj.showFirstUnique()\n * obj.add(value)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class FirstUnique {\n\n    public FirstUnique(int[] nums) {\n        \n    }\n    \n    public int ShowFirstUnique() {\n        \n    }\n    \n    public void Add(int value) {\n        \n    }\n}\n\n/**\n * Your FirstUnique object will be instantiated and called as such:\n * FirstUnique obj = new FirstUnique(nums);\n * int param_1 = obj.ShowFirstUnique();\n * obj.Add(value);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} FirstUnique;\n\n\nFirstUnique* firstUniqueCreate(int* nums, int numsSize) {\n    \n}\n\nint firstUniqueShowFirstUnique(FirstUnique* obj) {\n  \n}\n\nvoid firstUniqueAdd(FirstUnique* obj, int value) {\n  \n}\n\nvoid firstUniqueFree(FirstUnique* obj) {\n    \n}\n\n/**\n * Your FirstUnique struct will be instantiated and called as such:\n * FirstUnique* obj = firstUniqueCreate(nums, numsSize);\n * int param_1 = firstUniqueShowFirstUnique(obj);\n \n * firstUniqueAdd(obj, value);\n \n * firstUniqueFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type FirstUnique struct {\n    \n}\n\n\nfunc Constructor(nums []int) FirstUnique {\n    \n}\n\n\nfunc (this *FirstUnique) ShowFirstUnique() int {\n    \n}\n\n\nfunc (this *FirstUnique) Add(value int)  {\n    \n}\n\n\n/**\n * Your FirstUnique object will be instantiated and called as such:\n * obj := Constructor(nums);\n * param_1 := obj.ShowFirstUnique();\n * obj.Add(value);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class FirstUnique(nums: IntArray) {\n\n    fun showFirstUnique(): Int {\n        \n    }\n\n    fun add(value: Int) {\n        \n    }\n\n}\n\n/**\n * Your FirstUnique object will be instantiated and called as such:\n * var obj = FirstUnique(nums)\n * var param_1 = obj.showFirstUnique()\n * obj.add(value)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass FirstUnique {\n\n    init(_ nums: [Int]) {\n        \n    }\n    \n    func showFirstUnique() -> Int {\n        \n    }\n    \n    func add(_ value: Int) {\n        \n    }\n}\n\n/**\n * Your FirstUnique object will be instantiated and called as such:\n * let obj = FirstUnique(nums)\n * let ret_1: Int = obj.showFirstUnique()\n * obj.add(value)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct FirstUnique {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl FirstUnique {\n\n    fn new(nums: Vec<i32>) -> Self {\n        \n    }\n    \n    fn show_first_unique(&self) -> i32 {\n        \n    }\n    \n    fn add(&self, value: i32) {\n        \n    }\n}\n\n/**\n * Your FirstUnique object will be instantiated and called as such:\n * let obj = FirstUnique::new(nums);\n * let ret_1: i32 = obj.show_first_unique();\n * obj.add(value);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class FirstUnique\n\n=begin\n    :type nums: Integer[]\n=end\n    def initialize(nums)\n        \n    end\n\n\n=begin\n    :rtype: Integer\n=end\n    def show_first_unique()\n        \n    end\n\n\n=begin\n    :type value: Integer\n    :rtype: Void\n=end\n    def add(value)\n        \n    end\n\n\nend\n\n# Your FirstUnique object will be instantiated and called as such:\n# obj = FirstUnique.new(nums)\n# param_1 = obj.show_first_unique()\n# obj.add(value)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class FirstUnique {\n    /**\n     * @param Integer[] $nums\n     */\n    function __construct($nums) {\n        \n    }\n  \n    /**\n     * @return Integer\n     */\n    function showFirstUnique() {\n        \n    }\n  \n    /**\n     * @param Integer $value\n     * @return NULL\n     */\n    function add($value) {\n        \n    }\n}\n\n/**\n * Your FirstUnique object will be instantiated and called as such:\n * $obj = FirstUnique($nums);\n * $ret_1 = $obj->showFirstUnique();\n * $obj->add($value);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class FirstUnique(_nums: Array[Int]) {\n\n    def showFirstUnique(): Int = {\n        \n    }\n\n    def add(value: Int) {\n        \n    }\n\n}\n\n/**\n * Your FirstUnique object will be instantiated and called as such:\n * var obj = new FirstUnique(nums)\n * var param_1 = obj.showFirstUnique()\n * obj.add(value)\n */"
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define first-unique%\n  (class object%\n    (super-new)\n\n    ; nums : (listof exact-integer?)\n    (init-field\n      nums)\n    \n    ; show-first-unique : -> exact-integer?\n    (define/public (show-first-unique)\n\n      )\n    ; add : exact-integer? -> void?\n    (define/public (add value)\n\n      )))\n\n;; Your first-unique% object will be instantiated and called as such:\n;; (define obj (new first-unique% [nums nums]))\n;; (define param_1 (send obj show-first-unique))\n;; (send obj add value)"
+    }
+  ],
+  "solution": {
+    "id": "943",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Brute Force\n\n**Intuition**\n\nThe simplest solution for this problem is to create a queue as normal, and then search through it to find the first unique number.\n\nWe do this by looping through the items in the queue (starting from the oldest). For each item, we loop through the queue again, counting how many times it appears. If it only appears once, we stop and return it. If there are no items that appear only once, then we return `-1`.\n\n**Algorithm**\n\nWe don't need to implement counting ourselves; we can use `Collections.frequency(...)` in Java, and `.count(...)` in Python.\n\n<iframe src=\"https://leetcode.com/playground/CE4rLE5q/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"CE4rLE5q\"></iframe>\n\n\n**Complexity Analysis**\n\nLet $$K$$ be the length of the initial array passed into the constructor.\nLet $$N$$ be the total number of items added onto the queue so far (including those from the constructor).\n\n- Time complexity :\n\n    - **constructor**: $$O(K)$$.\n\n        We create a new copy of the passed in numbers; this has a cost of $$O(K)$$ time to create.\n\n    - **add()**: $$O(1)$$.\n\n        We perform a single append to a queue; this has a cost of $$O(1)$$.\n\n    - **showFirstUnique()**: $$O(N^2)$$. \n        \n        Counting how many times a given item appears in the queue has a cost of $$O(N)$$. This is true even for the library functions we're using.\n        \n        In the worst case, we search through the entire queue without finding a unique number. At a cost of $$O(N)$$ each time, this gives us a cost of $$O(N^2)$$.\n\n- Space complexity : $$O(N)$$.\n\n    The memory used is simply the total number of items currently in the queue.\n\n<br/>\n\n---\n\n### Approach 2: Queue and HashMap of Unique-Status\n\n**Intuition**\n\nWhen given a *data-structure-design* question like this one, a good strategy is to start simple and identify where the inefficiencies are.\n\nIn Approach 1, we performed numerous count operations; each call to `showFirstUnique()` performed, in the worst case, $$N$$ count operations. At a cost of $$O(N)$$ per count, this was expensive! These count-ups are also repetitive, and so should be our focus for optimization.\n\nWhen deciding whether or not to return a particular number, all we need to know is whether or not that number is *unique*. In other words, we only want to know whether it has occurred \"once\", or \"more than once\". Seeing as numbers *cannot be removed* from the `FirstUnique` data structure, we know that once a particular number is added for the second time, that number will *never again be unique*.\n\nSo, instead of counting how many times a number occurred in the queue, we could instead keep a `HashMap` of numbers to booleans, where for each number that has been added, we're storing the answer to the question *is this number unique?*. We'll call it `isUnique`. Then, when `FirstUnique.add(number)` is called, one of three cases will apply:\n\n1. This particular number has never been seen before now. Add it to `isUnique` with a value of `true`. Also, add it to the queue.\n\n2. This particular number has already been seen by `isUnique`, with a value of `true`. This means that the number was previously unique (and is currently in the queue), but with this new addition, it no longer is. Update its value to `false`. Do not add it to the queue.\n\n3. This particular number has already been seen by `isUnique`, with a value of `false`. This means that it has already been seen twice before. We don't need to do anything, and shouldn't add it to the queue.\n\nThen, instead of needing to perform \"count\" operations, the `showFirstUnique()` can simply look in `isUnique` for the information it needs.\n\nHere is an animation showing how this works so far. \n\n!?!../Documents/10010_linear_search_with_isunique_animation.json:960,540!?!\n\nThis is a good start. However, you might have noticed another inefficiency while watching the animation: the `7` at the front needs to be stepped passed on every call to `showFirstUnique()`. As soon as the second `7` was added, though, this `7` was no longer unique, and so would never be the answer to a call to `showFirstUnique()` again (remember, this queue has no deletion operation). Therefore, there is no reason to leave it in the queue—we should remove it so that we don't keep looking at it.\n\nBut, where should we actually do these removals from the queue? In `showFirstUnique()`, or in `add()`?\n\n- If we do a removal in the `add()` method, we'll need to do an $$O(N)$$ search of the queue to find the number, and then *potentially* another to remove it from the queue, (if you're chosen programming language even supports deletions from the middle of a queue!).\n\n- If we do the removal in the `showFirstUnique()` method, we might sometimes need to do lots of removals before we find a unique number to return. However, it will be faster *across all calls to the data structure*, because we didn't need to do a search to find the non-unique number like we would have with `add()`. We'll talk more about this in the time complexity section.\n\nSo, our best option is to do the removals in the `showFirstUnique()` method. \n\nWe should leave the number's value as `false` in `isUnique`, though. Like we said above, a number can never \"become\" unique again.\n\nHere is an animation showing the full algorithm.\n\n!?!../Documents/10010_linear_search_with_removal_animation.json:960,540!?!\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/W5C8kYWA/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"W5C8kYWA\"></iframe>\n\n**Complexity Analysis**\n\nLet $$K$$ be the length of the initial array passed into the constructor.\n\nLet $$N$$ be the total number of items added onto the queue so far (including those from the constructor).\n\n- Time complexity :\n\n    - **constructor**: $$O(K)$$.\n\n        For each of the $$K$$ numbers passed into the constructor, we're making a call to `add()`. As we will determine below, each call to `add()` has a cost of $$O(1)$$. Therefore, for the $$K$$ numbers added in the constructor, we get a total cost of $$K \\cdot O(1) = O(K)$$.\n\n    - **add()**: $$O(1)$$.\n\n        We check the status of the number in a `HashMap`, which is an $$O(1)$$ operation. We also optionally modify its status in the `HashMap`, which, again, is an $$O(1)$$ operation.\n\n        Depending on the status of the number, we add it to the queue, which is again, an $$O(1)$$ operation.\n\n        Therefore, we get an $$O(1)$$ time complexity for the `add()` method.\n\n    - **showFirstUnique()**: $$O(1)$$ (amortized). \n        \n        For this implementation, the `showFirstUnique()` method needs to iterate down the queue until it finds a unique number. For each unique number it encounters along the way, it removes it. Removing an item from a queue has a cost of $$O(1)$$. The total number of these removals we need to carry out is proportional to the number of calls to `add()`, because each `add()` corresponds to *at most* one removal that will ultimately have to happen. Then when we find a unique number, it is an $$O(1)$$ operation to return it.\n\n        Because the number of $$O(1)$$ removals is proportional to the number of calls to `add()`, we say that the time complexity *amortizes* across all calls to `add()` and `showFirstUnique()`, giving an overall time complexity of $$O(1)$$ (amortized).\n        \n        If you're not familiar with amortized time complexity, [check out the Wikipedia page](https://en.wikipedia.org/wiki/Amortized_analysis).\n\n- Space complexity : $$O(N)$$.\n\n    Each number is stored up to once in the queue, and up to once in the HashMap. Therefore, we get an overall space complexity of $$O(N)$$.\n\n<br/>\n\n---\n\n### Approach 3: LinkedHashSet for Queue, and HashMap of Unique-Statuses\n\n**Intuition**\n\nWhile an amortized time of $$O(1)$$ will always be better than a non-amortized time of a higher complexity class, say, $$O(N)$$, non-amortized $$O(1)$$ would be even better. The downside of amortized time complexities is that while the *average* time per method call is \"good\", some calls might be really slow. Imagine if every one-millionth Google search took `1,000,000 ms`, and all the others took `1 ms`. The amortized time would be `2 ms`, which, in theory, sounds great! *However*, the one-in-a-million person waiting *16 minutes* for their search results won't be very happy with Google! (There would probably be less bad press if every search operation just took `5 ms`...).\n\nIs there a way we could remove the amortization from the data structure we designed in Approach 2?\n\nFor this to happen, we'd need to have each \"removal\" happen *with* its corresponding `add()`; not during some arbitrary `showFirstUnique()` call in the future. This is the only way we could avoid having lots of \"waiting\" removal operations. How does this work, though? Didn't we already decide it was too difficult?\n\n- The trouble with doing the removal in the `add()` method was that it leads to a worst-case $$O(N)$$ search of the queue, and potentially a worst-case $$O(N)$$ removal from the middle of a queue—if it's even possible (Java doesn't allow removals from the middle of a queue). \n\n- Making the actual *remove* an $$O(1)$$ operation isn't too difficult; we simply need to use a `LinkedList`-based rather than `Array`-based queue implementation. \n\n- Searching a `LinkedList` for a value is still $$O(N)$$, though. The only data structures that supports search in $$O(1)$$ time are hash-sets and hash-maps. But these don't maintain the input order; aren't we just going around in circles now?\n\nThere is another, not so well known, data structure we can use here: [LinkedHashSet](https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/util/LinkedHashSet.html). Note that in Python, we can use an [OrderedDict](https://docs.python.org/3.8/library/collections.html#collections.OrderedDict) to achieve the same functionality. If you have never heard of it, have a look at its specs before reading any further. Can you see how it solves our problem?\n\nA `LinkedHashSet` is a `HashSet`-`LinkedList` hybrid. Like a `HashSet`, items can be found, updated, added, and removed in $$O(1)$$ time. In addition, it puts *links* between the entries to keep track of the order they were added. Whenever an item is removed from the `LinkedHashSet`, the links are updated to point to the previous and next, just like they are in an ordinary LinkedList. \n\nIn essence, a `LinkedHashSet` is a type of *queue* that supports $$O(1)$$ removals from the middle! This is exactly what we need to solve the problem. We can now do the removal in the `add()` method, and know that it is $$O(1)$$.\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/ehGXWnfC/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ehGXWnfC\"></iframe>\n\n**Complexity Analysis**\n\nLet $$K$$ be the length of the initial array passed into the constructor.\n\nLet $$N$$ be the total number of items added onto the queue so far (including those from the constructor).\n\n- Time complexity :\n\n    - **constructor**: $$O(K)$$.\n\n        For each of the $$K$$ numbers passed into the constructor, we're making a call to `add()`. As we will determine below, each call to `add()` has a cost of $$O(1)$$. Therefore, for the $$K$$ numbers added in the constructor, we get a total cost of $$K \\cdot O(1) = O(K)$$.\n\n    - **add()**: $$O(1)$$.\n\n        Like before, we're performing a series of $$O(1)$$ operations when `add()` is called. Additionally, we're also removing the number from the queue if it had been unique, but now no longer is. Seeing as the queue is implemented as a `LinkedHashSet`, the cost of this removal is $$O(1)$$.\n\n        Therefore, we get an $$O(1)$$ time complexity for `add()`.\n\n    - **showFirstUnique()**: $$O(1)$$. \n        \n        This time around, the implementation for `showFirstUnique()` is straightforward. It simply checks whether or not the queue contains any items, and if it does, it returns the first one (without removing it). This has a cost of $$O(1)$$.\n\n- Space complexity : $$O(N)$$.\n\n    Each number is stored up to once in the `LinkedHashSet`, and up to once in the `HashMap`. Therefore, we get an overall space complexity of $$O(N)$$.\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

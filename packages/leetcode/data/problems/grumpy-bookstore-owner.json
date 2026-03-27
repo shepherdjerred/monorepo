@@ -1,0 +1,135 @@
+{
+  "questionId": "1138",
+  "questionFrontendId": "1052",
+  "title": "Grumpy Bookstore Owner",
+  "titleSlug": "grumpy-bookstore-owner",
+  "difficulty": "Medium",
+  "content": "<p>There is a bookstore owner that has a store open for <code>n</code> minutes. You are given an integer array <code>customers</code> of length <code>n</code> where <code>customers[i]</code> is the number of the customers that enter the store at the start of the <code>i<sup>th</sup></code> minute and all those customers leave after the end of that minute.</p>\n\n<p>During certain minutes, the bookstore owner is grumpy. You are given a binary array grumpy where <code>grumpy[i]</code> is <code>1</code> if the bookstore owner is grumpy during the <code>i<sup>th</sup></code> minute, and is <code>0</code> otherwise.</p>\n\n<p>When the bookstore owner is grumpy, the customers entering during that minute are not <strong>satisfied</strong>. Otherwise, they are satisfied.</p>\n\n<p>The bookstore owner knows a secret technique to remain <strong>not grumpy</strong> for <code>minutes</code> consecutive minutes, but this technique can only be used <strong>once</strong>.</p>\n\n<p>Return the <strong>maximum</strong> number of customers that can be <em>satisfied</em> throughout the day.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">customers = [1,0,1,2,1,1,7,5], grumpy = [0,1,0,1,0,1,0,1], minutes = 3</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">16</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The bookstore owner keeps themselves not grumpy for the last 3 minutes.</p>\n\n<p>The maximum number of customers that can be satisfied = 1 + 1 + 1 + 1 + 7 + 5 = 16.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">customers = [1], grumpy = [0], minutes = 1</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1</span></p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == customers.length == grumpy.length</code></li>\n\t<li><code>1 &lt;= minutes &lt;= n &lt;= 2 * 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= customers[i] &lt;= 1000</code></li>\n\t<li><code>grumpy[i]</code> is either <code>0</code> or <code>1</code>.</li>\n</ul>\n",
+  "hints": [
+    "Say the store owner uses their power in minute 1 to X and we have some answer A.  If they instead use their power from minute 2 to X+1, we only have to use data from minutes 1, 2, X and X+1 to update our answer A."
+  ],
+  "metaData": "{\n  \"name\": \"maxSatisfied\",\n  \"params\": [\n    {\n      \"name\": \"customers\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"grumpy\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"minutes\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"236.1K\", \"totalSubmission\": \"368.9K\", \"totalAcceptedRaw\": 236054, \"totalSubmissionRaw\": 368922, \"acRate\": \"64.0%\"}",
+  "likes": 2708,
+  "dislikes": 265,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,0,1,2,1,1,7,5]\n[0,1,0,1,0,1,0,1]\n3",
+    "[1]\n[0]\n1"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"nutanix\", \"name\": \"Nutanix\"}, {\"timesEncountered\": 2, \"slug\": \"capital-one\", \"name\": \"Capital One\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxSatisfied(vector<int>& customers, vector<int>& grumpy, int minutes) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxSatisfied(int[] customers, int[] grumpy, int minutes) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxSatisfied(self, customers: List[int], grumpy: List[int], minutes: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxSatisfied(self, customers, grumpy, minutes):\n        \"\"\"\n        :type customers: List[int]\n        :type grumpy: List[int]\n        :type minutes: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} customers\n * @param {number[]} grumpy\n * @param {number} minutes\n * @return {number}\n */\nvar maxSatisfied = function(customers, grumpy, minutes) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxSatisfied(customers: number[], grumpy: number[], minutes: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxSatisfied(int[] customers, int[] grumpy, int minutes) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxSatisfied(int* customers, int customersSize, int* grumpy, int grumpySize, int minutes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxSatisfied(customers []int, grumpy []int, minutes int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxSatisfied(customers: IntArray, grumpy: IntArray, minutes: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxSatisfied(_ customers: [Int], _ grumpy: [Int], _ minutes: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_satisfied(customers: Vec<i32>, grumpy: Vec<i32>, minutes: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} customers\n# @param {Integer[]} grumpy\n# @param {Integer} minutes\n# @return {Integer}\ndef max_satisfied(customers, grumpy, minutes)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $customers\n     * @param Integer[] $grumpy\n     * @param Integer $minutes\n     * @return Integer\n     */\n    function maxSatisfied($customers, $grumpy, $minutes) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxSatisfied(List<int> customers, List<int> grumpy, int minutes) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxSatisfied(customers: Array[Int], grumpy: Array[Int], minutes: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_satisfied(customers :: [integer], grumpy :: [integer], minutes :: integer) :: integer\n  def max_satisfied(customers, grumpy, minutes) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_satisfied(Customers :: [integer()], Grumpy :: [integer()], Minutes :: integer()) -> integer().\nmax_satisfied(Customers, Grumpy, Minutes) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-satisfied customers grumpy minutes)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2344",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nThis problem is basically about a store owner who gets a little grumpy sometimes. Don't we all? We are in charge of helping as many customers as possible have a satisfying shopping experience.\n\nGood news: we have all of the information needed in advance to plan the best possible schedule. The customers are scheduled to come at specific times, so we know exactly how many will be in the store at any given time. We also know all of the times of day that the bookstore owner is likely to be grumpy.\n\nMore good news: we also have **one** length of time we can prevent the manager from being grumpy during the day....maybe this is the length of time that he's drinking his coffee. Or, maybe we can think of it as when we can schedule an assistant to help with the customers. \n\nEither way, we want to schedule this window during the time period that would save the largest number of customers from his grumpiness. \n\nFor example: Let's say we have a scenario where the bookstore owner has two grumpy minutes scheduled and we can cancel only of them. During one grumpy minute, the store has 7 customers, while during the other, it has 2. To maximize customer satisfaction, we want to counteract the grumpiness during the minute with 7 customers.\n\nNow, how to do that?\n    \n---\n\n### Approach 1: Sliding Window\n\n#### Intuition\n\nThe key to solving this problem is to identify the optimal window of `minutes` during which the owner can convert grumpy minutes into non-grumpy minutes. This will maximize number of customers who will be satisfied.\n\nHow do we find this optimal window of `minutes`? One approach is to apply the window over the entire `customers` array and note the position at which the maximum number of customers could be converted from unsatisfied to satisfied. This technique is popularly called the fixed-size Sliding Window method, in which a window of fixed length moves across the array, and the impact of the window is noted at each step. This is an efficient method that maintains a window of elements and updates it incrementally as it slides, typically operating in linear time, $O(n)$.\n\nThe initial window will span from index `0` to index `minutes - 1` in the `customers` array. This window will slide across the array until its right end reaches the last index. At each iteration, we will add the newly included customers who would have been unsatisfied due to the owner's grumpiness. Simultaneously, we will remove the customers who are no longer within the window's range. The maximum number of unsatisfied customers across all windows represents the maximum impact of the secret technique.\n\nThe algorithm is visualized in the slideshow below. The green elements in the `customers` array specify unsatisfied customers and the red elements in `grumpy` are the grumpy minutes in the window.\n\n!?!../Documents/1052/slideshow.json:1294,602!?! \n\nFinally, we can determine the maximum number of satisfied customers throughout the day by summing the customers who were initially satisfied and those who became satisfied due to the secret technique.\n\n#### Algorithm\n\n- Initialize variables:\n  - `n` as the length of `customers` array.\n  - `unrealizedCustomers` to store the number of unsatisfied customer for each window\n- Calculate `unrealizedCustomers` for the initial window.\n- Initialize `maxUnrealizedCustomers` with the initial window.\n- Move the window over the `customers` array.\n  - Add the current minute's customers if the owner is grumpy.\n  - Remove the customers who entered `minutes` ago and are now out of the window's range.\n  - Update `maxUnrealizedCustomers` to be the maximum value between the current `maxUnrealizedCustomers` and `unrealizedCustomers`.\n- Initialize a variable `totalCustomers` to `maxUnrealizedCustomers`.\n- Add all satisfied customers during the non-grumpy minutes.\n- Return `totalCustomers`, which holds the total number of satisfied customers. \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/YAWkW2wP/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"YAWkW2wP\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the `customers` array.\n\n- Time complexity: $O(n)$\n\n    The algorithm loops over the entire length of `customers` twice, which takes $2 \\cdot O(n)$ time. This can be simplified to a time complexity of $O(n)$.\n\n- Space complexity: $O(1)$\n\n    The algorithm does not use any additional data structures, so the space complexity remains $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

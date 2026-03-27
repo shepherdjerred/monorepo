@@ -104,7 +104,7 @@ export function createTasknotesDeployment(chart: Chart) {
             "tasknotes-auth-token-secret",
             onePasswordItem.name,
           ),
-          key: "auth-token",
+          key: "AUTH_TOKEN",
         }),
       },
     }),
@@ -145,7 +145,7 @@ export function createTasknotesDeployment(chart: Chart) {
             "tasknotes-obsidian-token-secret",
             onePasswordItem.name,
           ),
-          key: "obsidian-token",
+          key: "OBSIDIAN_TOKEN",
         }),
         OBSIDIAN_VAULT_PASSWORD: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
@@ -153,7 +153,7 @@ export function createTasknotesDeployment(chart: Chart) {
             "tasknotes-obsidian-vault-password-secret",
             onePasswordItem.name,
           ),
-          key: "obsidian-vault-password",
+          key: "OBSIDIAN_VAULT_PASSWORD",
         }),
         OBSIDIAN_VAULT_NAME: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
@@ -161,7 +161,7 @@ export function createTasknotesDeployment(chart: Chart) {
             "tasknotes-obsidian-vault-name-secret",
             onePasswordItem.name,
           ),
-          key: "obsidian-vault-name",
+          key: "OBSIDIAN_VAULT_NAME",
         }),
       },
     }),

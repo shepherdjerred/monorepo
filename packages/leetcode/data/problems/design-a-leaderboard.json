@@ -1,0 +1,140 @@
+{
+  "questionId": "1176",
+  "questionFrontendId": "1244",
+  "title": "Design A Leaderboard",
+  "titleSlug": "design-a-leaderboard",
+  "difficulty": "Medium",
+  "content": "<p>Design a Leaderboard class, which has 3 functions:</p>\n\n<ol>\n\t<li><code>addScore(playerId, score)</code>: Update the leaderboard by adding <code>score</code> to the given player&#39;s score. If there is no player with such id in the leaderboard, add him to the leaderboard with the given <code>score</code>.</li>\n\t<li><code>top(K)</code>: Return the score sum of the top <code>K</code> players.</li>\n\t<li><code>reset(playerId)</code>: Reset the score of the player with the given id&nbsp;to 0 (in other words erase it from the leaderboard). It is guaranteed that the player was added to the leaderboard before calling this function.</li>\n</ol>\n\n<p>Initially, the leaderboard is empty.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<b>Input: </b>\n[&quot;Leaderboard&quot;,&quot;addScore&quot;,&quot;addScore&quot;,&quot;addScore&quot;,&quot;addScore&quot;,&quot;addScore&quot;,&quot;top&quot;,&quot;reset&quot;,&quot;reset&quot;,&quot;addScore&quot;,&quot;top&quot;]\n[[],[1,73],[2,56],[3,39],[4,51],[5,4],[1],[1],[2],[2,51],[3]]\n<b>Output: </b>\n[null,null,null,null,null,null,73,null,null,null,141]\n\n<b>Explanation: </b>\nLeaderboard leaderboard = new Leaderboard ();\nleaderboard.addScore(1,73);   // leaderboard = [[1,73]];\nleaderboard.addScore(2,56);   // leaderboard = [[1,73],[2,56]];\nleaderboard.addScore(3,39);   // leaderboard = [[1,73],[2,56],[3,39]];\nleaderboard.addScore(4,51);   // leaderboard = [[1,73],[2,56],[3,39],[4,51]];\nleaderboard.addScore(5,4);    // leaderboard = [[1,73],[2,56],[3,39],[4,51],[5,4]];\nleaderboard.top(1);           // returns 73;\nleaderboard.reset(1);         // leaderboard = [[2,56],[3,39],[4,51],[5,4]];\nleaderboard.reset(2);         // leaderboard = [[3,39],[4,51],[5,4]];\nleaderboard.addScore(2,51);   // leaderboard = [[2,51],[3,39],[4,51],[5,4]];\nleaderboard.top(3);           // returns 141 = 51 + 51 + 39;\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= playerId, K &lt;= 10000</code></li>\n\t<li>It&#39;s guaranteed that <code>K</code> is less than or equal to the current number of players.</li>\n\t<li><code>1 &lt;= score&nbsp;&lt;= 100</code></li>\n\t<li>There will be at most <code>1000</code>&nbsp;function calls.</li>\n</ul>\n",
+  "hints": [
+    "What data structure can we use to keep the players' data?",
+    "Keep a map (dictionary) of player scores.",
+    "For each top(K) function call, find the maximum K scores and add them."
+  ],
+  "metaData": "{\r\n    \"classname\": \"Leaderboard\",\r\n    \"maxbytesperline\": 200000,\r\n    \"constructor\": {\r\n        \"params\": []\r\n    },\r\n    \"methods\": [\r\n        {\r\n            \"name\" : \"addScore\",\r\n            \"params\": [\r\n                {\r\n                    \"type\": \"integer\",\r\n                    \"name\": \"playerId\"\r\n                },\r\n                {\r\n                    \"type\": \"integer\",\r\n                    \"name\": \"score\"\r\n                }\r\n            ],\r\n            \"return\": {\r\n                \"type\": \"void\"\r\n            }\r\n        },\r\n        {\r\n            \"name\" : \"top\",\r\n            \"params\": [\r\n                {\r\n                    \"type\": \"integer\",\r\n                    \"name\": \"K\"\r\n                }\r\n            ],\r\n            \"return\": {\r\n                \"type\": \"integer\"\r\n            }\r\n        },\r\n        {\r\n            \"name\" : \"reset\",\r\n            \"params\": [\r\n                {\r\n                    \"type\": \"integer\",\r\n                    \"name\": \"playerId\"\r\n                }\r\n            ],\r\n            \"return\": {\r\n                \"type\": \"void\"\r\n            }\r\n        }\r\n    ],\r\n    \"systemdesign\": true,\r\n    \"params\": [\r\n        {\r\n            \"name\": \"inputs\",\r\n            \"type\": \"integer[]\"\r\n        },\r\n        {\r\n            \"name\": \"inputs\",\r\n            \"type\": \"integer[]\"\r\n        }\r\n    ],\r\n    \"return\": {\r\n        \"type\": \"list<String>\",\r\n        \"dealloc\": true\r\n    }\r\n}",
+  "stats": "{\"totalAccepted\": \"97.3K\", \"totalSubmission\": \"142.8K\", \"totalAcceptedRaw\": 97294, \"totalSubmissionRaw\": 142850, \"acRate\": \"68.1%\"}",
+  "likes": 820,
+  "dislikes": 98,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"Leaderboard\",\"addScore\",\"addScore\",\"addScore\",\"addScore\",\"addScore\",\"top\",\"reset\",\"reset\",\"addScore\",\"top\"]\n[[],[1,73],[2,56],[3,39],[4,51],[5,4],[1],[1],[2],[2,51],[3]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 5, \"slug\": \"pinterest\", \"name\": \"Pinterest\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"citadel\", \"name\": \"Citadel\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 2, \"slug\": \"wayfair\", \"name\": \"Wayfair\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Leaderboard {\npublic:\n    Leaderboard() {\n        \n    }\n    \n    void addScore(int playerId, int score) {\n        \n    }\n    \n    int top(int K) {\n        \n    }\n    \n    void reset(int playerId) {\n        \n    }\n};\n\n/**\n * Your Leaderboard object will be instantiated and called as such:\n * Leaderboard* obj = new Leaderboard();\n * obj->addScore(playerId,score);\n * int param_2 = obj->top(K);\n * obj->reset(playerId);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Leaderboard {\n\n    public Leaderboard() {\n        \n    }\n    \n    public void addScore(int playerId, int score) {\n        \n    }\n    \n    public int top(int K) {\n        \n    }\n    \n    public void reset(int playerId) {\n        \n    }\n}\n\n/**\n * Your Leaderboard object will be instantiated and called as such:\n * Leaderboard obj = new Leaderboard();\n * obj.addScore(playerId,score);\n * int param_2 = obj.top(K);\n * obj.reset(playerId);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Leaderboard:\n\n    def __init__(self):\n        \n\n    def addScore(self, playerId: int, score: int) -> None:\n        \n\n    def top(self, K: int) -> int:\n        \n\n    def reset(self, playerId: int) -> None:\n        \n\n\n# Your Leaderboard object will be instantiated and called as such:\n# obj = Leaderboard()\n# obj.addScore(playerId,score)\n# param_2 = obj.top(K)\n# obj.reset(playerId)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Leaderboard(object):\n\n    def __init__(self):\n        \n\n    def addScore(self, playerId, score):\n        \"\"\"\n        :type playerId: int\n        :type score: int\n        :rtype: None\n        \"\"\"\n        \n\n    def top(self, K):\n        \"\"\"\n        :type K: int\n        :rtype: int\n        \"\"\"\n        \n\n    def reset(self, playerId):\n        \"\"\"\n        :type playerId: int\n        :rtype: None\n        \"\"\"\n        \n\n\n# Your Leaderboard object will be instantiated and called as such:\n# obj = Leaderboard()\n# obj.addScore(playerId,score)\n# param_2 = obj.top(K)\n# obj.reset(playerId)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar Leaderboard = function() {\n    \n};\n\n/** \n * @param {number} playerId \n * @param {number} score\n * @return {void}\n */\nLeaderboard.prototype.addScore = function(playerId, score) {\n    \n};\n\n/** \n * @param {number} K\n * @return {number}\n */\nLeaderboard.prototype.top = function(K) {\n    \n};\n\n/** \n * @param {number} playerId\n * @return {void}\n */\nLeaderboard.prototype.reset = function(playerId) {\n    \n};\n\n/** \n * Your Leaderboard object will be instantiated and called as such:\n * var obj = new Leaderboard()\n * obj.addScore(playerId,score)\n * var param_2 = obj.top(K)\n * obj.reset(playerId)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class Leaderboard {\n    constructor() {\n        \n    }\n\n    addScore(playerId: number, score: number): void {\n        \n    }\n\n    top(K: number): number {\n        \n    }\n\n    reset(playerId: number): void {\n        \n    }\n}\n\n/**\n * Your Leaderboard object will be instantiated and called as such:\n * var obj = new Leaderboard()\n * obj.addScore(playerId,score)\n * var param_2 = obj.top(K)\n * obj.reset(playerId)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Leaderboard {\n\n    public Leaderboard() {\n        \n    }\n    \n    public void AddScore(int playerId, int score) {\n        \n    }\n    \n    public int Top(int K) {\n        \n    }\n    \n    public void Reset(int playerId) {\n        \n    }\n}\n\n/**\n * Your Leaderboard object will be instantiated and called as such:\n * Leaderboard obj = new Leaderboard();\n * obj.AddScore(playerId,score);\n * int param_2 = obj.Top(K);\n * obj.Reset(playerId);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} Leaderboard;\n\n\nLeaderboard* leaderboardCreate() {\n    \n}\n\nvoid leaderboardAddScore(Leaderboard* obj, int playerId, int score) {\n    \n}\n\nint leaderboardTop(Leaderboard* obj, int K) {\n    \n}\n\nvoid leaderboardReset(Leaderboard* obj, int playerId) {\n    \n}\n\nvoid leaderboardFree(Leaderboard* obj) {\n    \n}\n\n/**\n * Your Leaderboard struct will be instantiated and called as such:\n * Leaderboard* obj = leaderboardCreate();\n * leaderboardAddScore(obj, playerId, score);\n \n * int param_2 = leaderboardTop(obj, K);\n \n * leaderboardReset(obj, playerId);\n \n * leaderboardFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type Leaderboard struct {\n    \n}\n\n\nfunc Constructor() Leaderboard {\n    \n}\n\n\nfunc (this *Leaderboard) AddScore(playerId int, score int)  {\n    \n}\n\n\nfunc (this *Leaderboard) Top(K int) int {\n    \n}\n\n\nfunc (this *Leaderboard) Reset(playerId int)  {\n    \n}\n\n\n/**\n * Your Leaderboard object will be instantiated and called as such:\n * obj := Constructor();\n * obj.AddScore(playerId,score);\n * param_2 := obj.Top(K);\n * obj.Reset(playerId);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Leaderboard() {\n\n    fun addScore(playerId: Int, score: Int) {\n        \n    }\n\n    fun top(K: Int): Int {\n        \n    }\n\n    fun reset(playerId: Int) {\n        \n    }\n\n}\n\n/**\n * Your Leaderboard object will be instantiated and called as such:\n * var obj = Leaderboard()\n * obj.addScore(playerId,score)\n * var param_2 = obj.top(K)\n * obj.reset(playerId)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass Leaderboard {\n\n    init() {\n        \n    }\n    \n    func addScore(_ playerId: Int, _ score: Int) {\n        \n    }\n    \n    func top(_ K: Int) -> Int {\n        \n    }\n    \n    func reset(_ playerId: Int) {\n        \n    }\n}\n\n/**\n * Your Leaderboard object will be instantiated and called as such:\n * let obj = Leaderboard()\n * obj.addScore(playerId, score)\n * let ret_2: Int = obj.top(K)\n * obj.reset(playerId)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct Leaderboard {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl Leaderboard {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn add_score(&self, player_id: i32, score: i32) {\n        \n    }\n    \n    fn top(&self, k: i32) -> i32 {\n        \n    }\n    \n    fn reset(&self, player_id: i32) {\n        \n    }\n}\n\n/**\n * Your Leaderboard object will be instantiated and called as such:\n * let obj = Leaderboard::new();\n * obj.add_score(playerId, score);\n * let ret_2: i32 = obj.top(K);\n * obj.reset(playerId);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class Leaderboard\n    def initialize()\n        \n    end\n\n\n=begin\n    :type player_id: Integer\n    :type score: Integer\n    :rtype: Void\n=end\n    def add_score(player_id, score)\n        \n    end\n\n\n=begin\n    :type k: Integer\n    :rtype: Integer\n=end\n    def top(k)\n        \n    end\n\n\n=begin\n    :type player_id: Integer\n    :rtype: Void\n=end\n    def reset(player_id)\n        \n    end\n\n\nend\n\n# Your Leaderboard object will be instantiated and called as such:\n# obj = Leaderboard.new()\n# obj.add_score(player_id, score)\n# param_2 = obj.top(k)\n# obj.reset(player_id)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Leaderboard {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param Integer $playerId\n     * @param Integer $score\n     * @return NULL\n     */\n    function addScore($playerId, $score) {\n        \n    }\n  \n    /**\n     * @param Integer $K\n     * @return Integer\n     */\n    function top($K) {\n        \n    }\n  \n    /**\n     * @param Integer $playerId\n     * @return NULL\n     */\n    function reset($playerId) {\n        \n    }\n}\n\n/**\n * Your Leaderboard object will be instantiated and called as such:\n * $obj = Leaderboard();\n * $obj->addScore($playerId, $score);\n * $ret_2 = $obj->top($K);\n * $obj->reset($playerId);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Leaderboard {\n\n  Leaderboard() {\n    \n  }\n  \n  void addScore(int playerId, int score) {\n    \n  }\n  \n  int top(int K) {\n    \n  }\n  \n  void reset(int playerId) {\n    \n  }\n}\n\n/**\n * Your Leaderboard object will be instantiated and called as such:\n * Leaderboard obj = Leaderboard();\n * obj.addScore(playerId,score);\n * int param2 = obj.top(K);\n * obj.reset(playerId);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class Leaderboard() {\n\n    def addScore(playerId: Int, score: Int): Unit = {\n        \n    }\n\n    def top(K: Int): Int = {\n        \n    }\n\n    def reset(playerId: Int): Unit = {\n        \n    }\n\n}\n\n/**\n * Your Leaderboard object will be instantiated and called as such:\n * val obj = new Leaderboard()\n * obj.addScore(playerId,score)\n * val param_2 = obj.top(K)\n * obj.reset(playerId)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Leaderboard do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec add_score(player_id :: integer, score :: integer) :: any\n  def add_score(player_id, score) do\n    \n  end\n\n  @spec top(k :: integer) :: integer\n  def top(k) do\n    \n  end\n\n  @spec reset(player_id :: integer) :: any\n  def reset(player_id) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# Leaderboard.init_()\n# Leaderboard.add_score(player_id, score)\n# param_2 = Leaderboard.top(k)\n# Leaderboard.reset(player_id)\n\n# Leaderboard.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec leaderboard_init_() -> any().\nleaderboard_init_() ->\n  .\n\n-spec leaderboard_add_score(PlayerId :: integer(), Score :: integer()) -> any().\nleaderboard_add_score(PlayerId, Score) ->\n  .\n\n-spec leaderboard_top(K :: integer()) -> integer().\nleaderboard_top(K) ->\n  .\n\n-spec leaderboard_reset(PlayerId :: integer()) -> any().\nleaderboard_reset(PlayerId) ->\n  .\n\n\n%% Your functions will be called as such:\n%% leaderboard_init_(),\n%% leaderboard_add_score(PlayerId, Score),\n%% Param_2 = leaderboard_top(K),\n%% leaderboard_reset(PlayerId),\n\n%% leaderboard_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define leaderboard%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; add-score : exact-integer? exact-integer? -> void?\n    (define/public (add-score player-id score)\n      )\n    ; top : exact-integer? -> exact-integer?\n    (define/public (top k)\n      )\n    ; reset : exact-integer? -> void?\n    (define/public (reset player-id)\n      )))\n\n;; Your leaderboard% object will be instantiated and called as such:\n;; (define obj (new leaderboard%))\n;; (send obj add-score player-id score)\n;; (define param_2 (send obj top k))\n;; (send obj reset player-id)"
+    }
+  ],
+  "solution": {
+    "id": "1072",
+    "content": "[TOC]\n\n---\n\n### Overview\n\nThere are a lot of implementations for this particular problem out there. The problem statement is pretty straightforward on the surface:\n\n1. We need to maintain a list of `playerId` to `score` mappings.\n2. Whenever required, obtain the top `K` scores, add them up, and return them.\n3. Finally, reset the score for a particular player.\n\nWe will start with the most basic, brute-force implementations for this problem and then move on to slightly complex implementations. To understand, what these complicated implementations will be using, we need to see the basic requirement of this problem.\n\n> We have a dynamically updating list of values and we need to be able to extract the top-k elements from that list.\n\nWhenever we have such a problem statement which requires us to obtain the `top-K` values from a list which is dynamically updating, relying on a **priority-queue** seems like a good bet. A `heap` is one of the best data structures for handling such a requirement. So, we will be looking at a solution that makes use of the heap data structure.\n\nAdditionally, we will be looking at a `binary search tree` based solution. Although the heap is a great data structure for finding the `top-K` elements from a list without having to actually sort the list, it is not great at `find-and-update` kind of operations. General rule of thumb with the `heap` data structure is to use `lazy-updates` rather than having to traverse and update the entries themselves. We won't get a deterministic performance if we resort to lazy score updates here because we don't know the number of `update` operations and hence, the size of the heap can continue to grow if we have millions of score updates and no `top-K` function calls (or proportionally lower).\n\n<br />\n<br />\n\n\n---\n### Approach 1: Brute Force\n\nThe brute-force approach is pretty straightforward in the sense that we will maintain a dictionary of `playerId` as the key and the `score` as the dictionary. Then, for each `top` operation, we will simply obtain all the values from the dictionary, sort them, and the obtain the top `K` elements. \n\n**Algorithm**\n\n1. Initialize a dictionary `scores` that will use the `playerId` as the key and `score` as the value.\n2. *addScore* ~\n    - Simply update the dictionary with the new score for the player.\n    - If the player doesn't exist, initialize the score to `score`\n3. *top* ~\n    - Obtain a list of all the values from the dictionary.\n    - Sort the list in `reverse` order.\n    - Sum up the first `K` values from the sorted list.\n4. *reset* ~\n    - Delete the entry containing the `playerId`\n    - Note that we can also set the value (score) to `0`. The only disadvantage of this is that we will be sorting even `reset` players in the `top` function. This doesn't matter much for smaller test cases though.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/emHBgB5e/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"emHBgB5e\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:\n    - $$O(1)$$ for `addScore`.\n    - $$O(1)$$ for `reset`.\n    - $$O(N  \\text{log}N)$$ for `top` where $$N$$ represents the total number of players since we sort all of the player scores and then take the top `K` from the sorted list.\n\n* Space Complexity:\n    - $$O(N)$$ used by the `scores` dictionary and also by the new list formed using the dictionary values in the `top` function.\n<br />\n<br />\n\n\n---\n### Approach 2: Heap for top-K\n\nThis is a slight modification to the previous approach in that instead of sorting the list of the `values`, we will be making use of a `min-heap` to find the `top-K` values. This is a slightly modified version of the previous implementation. \n\n**Algorithm**\n\n1. Initialize a dictionary `scores` that will use the `playerId` as the key and `score` as the value.\n2. *addScore* ~\n    - Simply update the dictionary with the new score for the player.\n    - If the player doesn't exist, initialize the score to `score`\n3. *top* ~\n    - Initialize a new min-heap, `scoreHeap`.\n    - Iterate over the first `K` values in the dictionary and add them to the heap.\n    - Then, for the rest of the $$N-K$$ values, we will simply do the following. We will add the new value to the heap, and pop the smallest value from the heap. In doing this, we maintain the size of the heap to `K` and also remove the smaller of the two values.\n    - We do this for all of the $$N-K$$ values and then, simply add up all the values remaining in the heap since those would be the largest `K` values left.\n4. *reset* ~\n    - Delete the entry containing the `playerId`\n    - Note that we can also set the value (score) to `0`. The only disadvantage of this is that we will be sorting even `reset` players in the `top` function. This doesn't matter much for smaller test cases though.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/BvZ92eoC/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"BvZ92eoC\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:\n    - $$O(1)$$ for `addScore`.\n    - $$O(1)$$ for `reset`.\n    - $$O(K) + O(N \\text{log}K)$$ = $$O(N \\text{log}K)$$. It takes $$O(K)$$ to construct the initial heap and then for the rest of the $$N-K$$ elements, we perform the `extractMin` and `add` operations on the heap each of which take $$(\\text{log}K)$$ time.\n\n* Space Complexity:\n    - $$O(N + K)$$ where $$O(N)$$ is used by the `scores` dictionary and $$O(K)$$ is used by the heap.\n<br />\n<br />\n\n\n---\n### Approach 3: Using a TreeMap / SortedMap \n\nThis approach is inspired by this [discussion thread](https://leetcode.com/problems/design-a-leaderboard/discuss/418833/Java-TreeMap-%2B-Map-Solution). Here we will try to improve on the overall time complexity of the `top` function at the expense of the time complexity of the `addScore` function. As discussed before, a heap doesn't have any properties that aid in search. At the end of the day, it is simply list of elements with certain properties associating them. However, these properties do not enhance the searchability of the data structure as a whole. We can definitely do enhancements where we maintain references to nodes in the heap, in a dictionary and then use those references for making updates. However, we will be looking at the TreeMap data structure (java) which uses the balanced-binary-search tree instead. \n\nThe great advantage we get with a balanced BST is that the search/add/remove operations are all bounded by a logarithmic complexity in terms of the number of elements in the tree. This is achievable due to the structure of the tree and the relationship between the subtrees and a root.\n\n**Algorithm**\n\n1. Initialize a dictionary `scores` that will use the `playerId` as the key and `score` as the value.\n2. Initialize a TreeMap (java) or a SortedMap (python) called `sortedScoreMap`. The way this would be structured is that the key would be a score and the value would be the number of players that have this score. Imagine this being represented as a balanced BST with the keys being used for arranging the tree. We need the `top` function to use the *scores* and so, we use them as the key.\n2. *addScore* ~\n    - Note the old score for the player. Let it be called `oldScore`.\n    - Update the value of `oldScore` in `sortedScoreMap` TreeMap. If the value has reached `0`, remove the score entry.\n    - Simply update the dictionary with the new score for the player.\n    - Add the updated value to the `sortedScoreMap` as well by incrementing the value by 1 i.e. one more player has this score.\n    - If the player doesn't exist, initialize the score to `score`.\n3. *top* ~\n    - Iterate over all the keys in the `sortedScoreMap`. Note that since the data structure is a BST, an inorder traversal of the keys would return them in the sorted order. We don't need to sort them again. Hence, we will simply iterate over the keys and pick the first `K`. Also, we have arranged the tree with each score mapped to how many players have that score. So there are no duplicates in the tree.\n    - Pick the first `K` entries i.e. first `K` values. \n        - For each key, multiply `(key * value)` and add it to the total sum.\n        - Also, reduce the counter counting down to `K` by `value`.\n4. *reset* ~\n    - Note the old score for the player. Let it be called `oldScore`.\n    - Update the value of `oldScore` in `sortedScoreMap` TreeMap. If the value has reached `0`, remove the score entry.\n    - Delete the entry containing the `playerId`.\n\n**Implementation**\n\nNote that we are using `SortedDict` in Python. This is an external, apache licensed package that is supported by the Leetcode platform. You can read more about it [here](http://www.grantjenks.com/docs/sortedcontainers/implementation.html). We don't have a way to construct a reverse SortedDict in Python and hence, we negate the scores before adding them to the dict (TreeMap like data structure) so that the normal in-order traversal would give us the scores in the reverse order i.e. descending order.\n\n<iframe src=\"https://leetcode.com/playground/f5Jxh4QQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"f5Jxh4QQ\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:\n    - $$O(\\text{log}N)$$ for `addScore`. This is because each addition to the BST takes a logarithmic time for search. The addition itself once the location of the parent is known, takes constant time. \n    - $$O(\\text{log}N)$$ for `reset` since we need to search for the score in the BST and then update/remove it. Note that this complexity is in the case when every player always maintains a unique score.\n    - It takes $$O(K)$$ for our `top` function since we simply iterate over the keys of the TreeMap and stop once we're done considering `K` scores. Note that if the data structure doesn't provide a natural iterator, then we can simply get a list of all the key-value pairs and they will naturally be sorted due to the nature of this data structure. In that case, the complexity would be $$O(N)$$ since we would be forming a new list.\n\n* Space Complexity:\n    - $$O(N)$$ used by the `scores` dictionary. Also, if you obtain all the key-value pairs in a new list in the `top` function, then an additional $$O(N)$$ would be used.\n<br />\n<br />\n\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

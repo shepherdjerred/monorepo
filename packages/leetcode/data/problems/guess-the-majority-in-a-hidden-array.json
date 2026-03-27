@@ -1,0 +1,120 @@
+{
+  "questionId": "1681",
+  "questionFrontendId": "1538",
+  "title": "Guess the Majority in a Hidden Array",
+  "titleSlug": "guess-the-majority-in-a-hidden-array",
+  "difficulty": "Medium",
+  "content": "<p>We have an integer array <code>nums</code>, where all the integers in <code>nums</code> are <strong>0</strong> or <strong>1</strong>. You will not be given direct access to the array, instead, you will have an <strong>API</strong> <code>ArrayReader</code> which have the following functions:</p>\n\n<ul>\n\t<li><code>int query(int a, int b, int c, int d)</code>: where <code>0 &lt;= a &lt; b &lt; c &lt; d &lt; ArrayReader.length()</code>. The function returns the distribution of the value of the 4 elements and returns:\n\n\t<ul>\n\t\t<li><strong>4 </strong>: if the values of the 4 elements are the same (0 or 1).</li>\n\t\t<li><strong>2</strong> : if three elements have a value equal to 0 and one element has value equal to 1 or vice versa.</li>\n\t\t<li><strong>0 </strong>: if two element have a value equal to 0 and two elements have a value equal to 1.</li>\n\t</ul>\n\t</li>\n\t<li><code>int length()</code>: Returns the size of the array.</li>\n</ul>\n\n<p>You are allowed to call <code>query()</code> <b>2 * n times</b> at most where n is equal to <code>ArrayReader.length()</code>.</p>\n\n<p>Return <strong>any</strong> index of the most frequent value in <code>nums</code>, in case of tie, return -1.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [0,0,1,0,1,1,1,1]\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> The following calls to the API\nreader.length() // returns 8 because there are 8 elements in the hidden array.\nreader.query(0,1,2,3) // returns 2 this is a query that compares the elements nums[0], nums[1], nums[2], nums[3]\n// Three elements have a value equal to 0 and one element has value equal to 1 or viceversa.\nreader.query(4,5,6,7) // returns 4 because nums[4], nums[5], nums[6], nums[7] have the same value.\nwe can infer that the most frequent value is found in the last 4 elements.\nIndex 2, 4, 6, 7 is also a correct answer.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [0,0,1,1,0]\n<strong>Output:</strong> 0\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,0,1,0,1,0,1,0]\n<strong>Output:</strong> -1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>5 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 1</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> What is the minimum number of calls needed to find the majority element?</p>\n",
+  "hints": [
+    "If you find that 2 indexes in the array (id1, id2) have the same value (nums [id1] == nums [id2]), you could infer the values of (x, y) based on the results of query (id1, id2, x, y)."
+  ],
+  "metaData": "{\n  \"name\": \"guessMajority\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"manual\": true,\n  \"typescriptCustomType\" : \"class ArrayReader {\\n    __secret: number[];\\n    __N: number;\\n    __guesses: number;\\n    __mxGuesses: number;\\n\\n    constructor(secret: number[]) {\\n        this.__secret = secret\\n        this.__N = secret.length\\n        this.__guesses = 0;\\n        this.__mxGuesses = 2 * this.__N;\\n    };\\n\\n    query(a: number, b: number, c: number, d: number): number {\\n        var assert = require('assert');\\n        assert(0 <= a && a < this.__N);\\n        assert(0 <= b && b < this.__N);\\n        assert(0 <= c && c < this.__N);\\n        assert(0 <= d && d < this.__N);\\n        assert(a < b && b < c && c < d);\\n        this.__guesses += 1;\\n        var arr = [ this.__secret[a], this.__secret[b], this.__secret[c], this.__secret[d] ];\\n        arr.sort((a,b)=>a-b); \\n        if(arr[0] == arr[3]) return 4;\\n        if(arr[0] == arr[1] && arr[2]== arr[3]) return 0;\\n        return 2;\\n    };\\n\\n    _okGuesses(): boolean {\\n        return this.__guesses <= this.__mxGuesses;\\n    };\\n        \\n    length(): number {\\n        return this.__N;\\n    };\\n}\\n\"\n}",
+  "stats": "{\"totalAccepted\": \"5.2K\", \"totalSubmission\": \"7.5K\", \"totalAcceptedRaw\": 5169, \"totalSubmissionRaw\": 7507, \"acRate\": \"68.9%\"}",
+  "likes": 147,
+  "dislikes": 122,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[0,0,1,0,1,1,1,1]",
+    "[0,0,1,1,0]",
+    "[1,0,1,0,1,0,1,0]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Interactive",
+      "slug": "interactive"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * // This is the ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * class ArrayReader {\n *   public:\n *     // Compares 4 different elements in the array\n *     // return 4 if the values of the 4 elements are the same (0 or 1).\n *     // return 2 if three elements have a value equal to 0 and one element has value equal to 1 or vice versa.\n *     // return 0 : if two element have a value equal to 0 and two elements have a value equal to 1.\n *     int query(int a, int b, int c, int d);\n *\n *     // Returns the length of the array\n *     int length();\n * };\n */\n\nclass Solution {\npublic:\n    int guessMajority(ArrayReader &reader) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * // This is the ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * interface ArrayReader {\n *   public:\n *     // Compares 4 different elements in the array\n *     // return 4 if the values of the 4 elements are the same (0 or 1).\n *     // return 2 if three elements have a value equal to 0 and one element has value equal to 1 or vice versa.\n *     // return 0 : if two element have a value equal to 0 and two elements have a value equal to 1.\n *     public int query(int a, int b, int c, int d);\n *\n *     // Returns the length of the array\n *     public int length();\n * };\n */\n\nclass Solution {\n    public int guessMajority(ArrayReader reader) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# \"\"\"\n# This is the ArrayReader's API interface.\n# You should not implement it, or speculate about its implementation\n# \"\"\"\n#class ArrayReader(object):\n#\t # Compares 4 different elements in the array\n#\t # return 4 if the values of the 4 elements are the same (0 or 1).\n#\t # return 2 if three elements have a value equal to 0 and one element has value equal to 1 or vice versa.\n#\t # return 0 : if two element have a value equal to 0 and two elements have a value equal to 1.\n#    def query(self, a: int, b: int, c: int, d: int) -> int:\n#\n#\t # Returns the length of the array\n#    def length(self) -> int:\n#\n\nclass Solution:\n    def guessMajority(self, reader: 'ArrayReader') -> int:"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# \"\"\"\n# This is the ArrayReader's API interface.\n# You should not implement it, or speculate about its implementation\n# \"\"\"\n#class ArrayReader(object):\n#\t # Compares 4 different elements in the array\n#\t # return 4 if the values of the 4 elements are the same (0 or 1).\n#\t # return 2 if three elements have a value equal to 0 and one element has value equal to 1 or vice versa.\n#\t # return 0 : if two element have a value equal to 0 and two elements have a value equal to 1.\n#    def query(self, a, b, c, d):\n#        \"\"\"\n#        :type a, b, c, d: int\n#        :rtype int\n#        \"\"\"\n#\n#\t # Returns the length of the array\n#    def length(self):\n#        \"\"\"\n#        :rtype int\n#     \n\nclass Solution(object):\n    def guessMajority(self, reader):\n        \"\"\"\n        :type reader: ArrayReader\n        :rtype: integer\n        \"\"\""
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * // This is the ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * function ArrayReader() {\n *     // Compares 4 different elements in the array\n *     // return 4 if the values of the 4 elements are the same (0 or 1).\n *     // return 2 if three elements have a value equal to 0 and one element has value equal to 1 or vice versa.\n *     // return 0 : if two element have a value equal to 0 and two elements have a value equal to 1.\n *     @param {number} a, b, c, d\n *     @return {number}\n *     this.query = function(a, b, c, d) {\n *         ...\n *     }; \n *\n *     // Returns the length of the array\n *     @return {number}\n *     this.length = function() {\n *         ...\n *     };\n * };\n */\n\n/**\n * @param {ArrayReader} reader\n * @return {number}\n */\nvar guessMajority = function(reader) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * // This is the ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * class ArrayReader {\n *     // Compares 4 different elements in the array\n *     // return 4 if the values of the 4 elements are the same (0 or 1).\n *     // return 2 if three elements have a value equal to 0 and one element has value equal to 1 or vice versa.\n *     // return 0 : if two element have a value equal to 0 and two elements have a value equal to 1.\n *     query(a: number, b: number, c: number, d: number): number { };\n *\n *     // Returns the length of the array\n *     length(): number { };\n * };\n */\n\nfunction guessMajority(reader: ArrayReader): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * // This is the ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * class ArrayReader {\n *   public:\n *     // Compares 4 different elements in the array\n *     // return 4 if the values of the 4 elements are the same (0 or 1).\n *     // return 2 if three elements have a value equal to 0 and one element has value equal to 1 or vice versa.\n *     // return 0 : if two element have a value equal to 0 and two elements have a value equal to 1.\n *     public int Query(int a, int b, int c, int d) {}\n *\n *     // Returns the length of the array\n *     public int Length() {}\n * };\n */\n\nclass Solution {\n    public int GuessMajority(ArrayReader reader) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * *********************************************************************\n * // This is the ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * *********************************************************************\n *\n * // Compares 4 different elements in the array\n * // return 4 if the values of the 4 elements are the same (0 or 1).\n * // return 2 if three elements have a value equal to 0 and one element has value equal to 1 or vice versa.\n * // return 0 : if two element have a value equal to 0 and two elements have a value equal to 1.\n * int query(ArrayReader *, int a, int b, int c, int d);\n *\n * // Returns the length of the array\n * int length(ArrayReader *);\n */\n\nint guessMajority(ArrayReader* reader) {\n\t\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * // This is the ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * type ArrayReader struct {\n * }\n * // Compares 4 different elements in the array\n * // return 4 if the values of the 4 elements are the same (0 or 1).\n * // return 2 if three elements have a value equal to 0 and one element has value equal to 1 or vice versa.\n * // return 0 : if two element have a value equal to 0 and two elements have a value equal to 1.\n * func (this *ArrayReader) query(a, b, c, d int) int {}\n * \n * // Returns the length of the array\n * func (this *ArrayReader) length() int {}\n */\n\nfunc guessMajority(reader *ArrayReader) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * // This is ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * interface ArrayReader {\n *     // Compares 4 different elements in the array\n *     // return 4 if the values of the 4 elements are the same (0 or 1).\n *     // return 2 if three elements have a value equal to 0 and one element has value equal to 1 or vice versa.\n *     // return 0 : if two element have a value equal to 0 and two elements have a value equal to 1.\n *     fun query(a: Int, b: Int, c: Int, d: Int): Int {}\n *\n *     // Returns the length of the array\n *     fun length(): Int {}\n * }\n */\n\nclass Solution {\n    fun guessMajority(reader: ArrayReader): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * // This is ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * interface ArrayReader {\n *     // Compares 4 different elements in the array\n *     // return 4 if the values of the 4 elements are the same (0 or 1).\n *     // return 2 if three elements have a value equal to 0 and one element has value equal to 1 or vice versa.\n *     // return 0 : if two element have a value equal to 0 and two elements have a value equal to 1.\n *     public func query(_ a: Int, _ b: Int, _ c: Int, _ d: Int) -> Int {}\n *\n *     // Returns the length of the array\n *     public func length() -> Int {}\n * }\n */\n\nclass Solution {\n    func guessMajority(_ reader: ArrayReader) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "/**\n * // This is the ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * struct ArrayReader;\n * impl ArrayReader {\n *     // Compares 4 different elements in the array\n *     // return 4 if the values of the 4 elements are the same (0 or 1).\n *     // return 2 if three elements have a value equal to 0 and one element has value equal to 1 or vice versa.\n *     // return 0 : if two element have a value equal to 0 and two elements have a value equal to 1.\n *     pub fn query(a: i32, b: i32, c: i32, d: i32) -> i32 {}\n *\n *     // Returns the length of the array\n *     pub fn length() -> i32 {}\n * };\n */\n\nimpl Solution {\n    pub fn get_majority(reader: &ArrayReader) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# This is ArrayReader's API interface.\n# You should not implement it, or speculate about its implementation\n# class ArrayReader\n#\t # Compares 4 different elements in the array\n#\t # return 4 if the values of the 4 elements are the same (0 or 1).\n#\t # return 2 if three elements have a value equal to 0 and one element has value equal to 1 or vice versa.\n#\t # return 0 : if two element have a value equal to 0 and two elements have a value equal to 1.\n#    def query(a, b, c, d):\n#       \n#    end\n#\n#\t # Returns the length of the array\n#    def length()\n#\t\t\n#\t end\n# end\n\n# @param {ArrayReader} reader\n# @return {int}\ndef guess_majority(reader)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * // This is ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * interface ArrayReader {\n *     // Compares 4 different elements in the array\n *     // return 4 if the values of the 4 elements are the same (0 or 1).\n *     // return 2 if three elements have a value equal to 0 and one element has value equal to 1 or vice versa.\n *     // return 0 : if two element have a value equal to 0 and two elements have a value equal to 1.\n *     function query($a, $b, $c, $d) {}\n *\n *     // Returns the length of the array\n *     function length() {}\n * }\n */\n\nclass Solution {\n    /**\n     * @param ArrayReader $reader\n     * @return Integer\n     */\n    function guessMajority($reader) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * // This is ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * interface ArrayReader {\n *     // Compares 4 different elements in the array\n *     // return 4 if the values of the 4 elements are the same (0 or 1).\n *     // return 2 if three elements have a value equal to 0 and one element has value equal to 1 or vice versa.\n *     // return 0 : if two element have a value equal to 0 and two elements have a value equal to 1.\n *     def query(a: Int, b: Int, c: Int, d: Int): Int {}\n *\n *     // Returns the length of the array\n *     def length(): Int {}\n * }\n */\n\nobject Solution {\n    def guessMajority(reader: ArrayReader): Int = {\n        \n\t}\n}"
+    }
+  ],
+  "solution": {
+    "id": "1678",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### An Approach with $n$ Queries\n\n#### Intuition\n\nA problem such as this one where your program has to communicate with the judge is called *interactive*.\n\nWe are not allowed to get a particular element from the array, we can only use a `query` function. An investigation of the properties of this function is needed.\n\nConsider an example with the hidden array `nums = [0,0,1,0,1,1,0]` and see how the `query` function behaves for different quadruplets of indices.\n\n* `query(0, 1, 2, 3) = 2` because there are three elements `nums[0] = nums[1] = nums[3] = 0` and one element `nums[2] = 1`.\n* `query(0, 1, 2, 4) = 0` because there are two elements `nums[0] = nums[1] = 0` and two elements `nums[2] = nums[4] = 1`.\n* `query(0, 1, 2, 5) = 0` because `nums[0] = nums[1] = 0` and `nums[2] = nums[5] = 1`.\n* `query(0, 1, 3, 4) = 2` because `nums[0] = nums[1] = nums[3] = 0` and `nums[4] = 1`.\n* `query(0, 1, 3, 6) = 4`. Here we have all four elements equal: `nums[0] = nums[1] = nums[3] = nums[6] = 0`.\n\nNow let's analyze the obtained values.\n\nFirst, compare `query(0, 1, 2, 3)` and `query(0, 1, 2, 4)`. The quadruplets `(0, 1, 2, 3)` and `(0, 1, 2, 4)` have three common indices `0`, `1` and `2`, and one index that differs: `3` in the first quadruplet and `4` in the second one. `nums[3]` differs from `nums[4]` and so do the return values of the `query` function for these quadruplets.\n\nComparison of `query(0, 1, 3, 4)` and `query(0, 1, 3, 6)` is similar. `nums[4] = 1` is not equal to `nums[6] = 0` and `query(0, 1, 3, 4)` is not equal to `query(0, 1, 3, 6)`.\n\nThen compare `query(0, 1, 2, 4)` and `query(0, 1, 2, 5)`. Again, the quadruplets have only one differing index: `4` and `5`. This time `nums[4] = nums[5] = 1` and `query(0, 1, 2, 4) = query(0, 1, 2, 5)`.\n\nOne may generalize these observations and formulate the following statement: `query(a, b, c, i) = query(a, b, c, j)` if and only if `nums[i] = nums[j]` (for the purpose of this article the inequalities `a < b < c`, `c < i`, `c < j` are not required). Investigate some more quadruplets by yourself to understand this.\n\nIt is possible to compare two elements of the array using the above statement. When we want to know whether `nums[i]` and `nums[j]` are equal, we first choose `a`, `b`, `c` such that all five indices (`a`, `b`, `c`, `i`, `j`) are distinct and compare `query(a, b, c, i)` with `query(a, b, c, j)`. As in the previous paragraph, for explanation purposes, we do not mind the inequalities for the indices, but in the code you will have to pass the parameters to the `query` function in increasing order.\n\nIf we compare all elements of the array with `nums[0]`, we can find how many elements are equal to `nums[0]`, let's call it `cntEqual`. We can also find how many elements are different from `nums[0]`, let's call it `cntDiffer`. This will allow us to find the most frequent element and solve the problem.\n\n* If `cntEqual > cntDiffer`, `nums[0]` is the most frequent element.\n* If `cntDiffer > cntEqual`, we need to return the index of any element that differs from `nums[0]`. We can keep track of an index `indexDiffer` for this case.\n* If `cntEqual = cntDiffer`, 0s and 1s occur the same number of times, and we return `-1`.\n\nWe will use the following comparisons:\n\n* Compare `nums[i]` with `nums[0]` where `i > 3` by comparing `query(1, 2, 3, i)` with `query(0, 1, 2, 3)`.\n* Compare `nums[1]` with `nums[0]` by comparing `query(1, 2, 3, 4)` with `query(0, 2, 3, 4)`.\n* Compare `nums[2]` with `nums[0]` by comparing `query(1, 2, 3, 4)` with `query(0, 1, 3, 4)`.\n* Compare `nums[3]` with `nums[0]` by comparing `query(1, 2, 3, 4)` with `query(0, 1, 2, 4)`.\n\nLet's count how many queries we use in this algorithm.\n\n* One query for `(0, 1, 2, 3)`.\n* $n-4$ queries for `(1, 2, 3, i)` where `i > 3`.\n* One query for `(0, 2, 3, 4)`.\n* One query for `(0, 1, 3, 4)`.\n* One query for `(0, 1, 2, 4)`.\n\nWe use $n$ queries in total.\n\n#### Algorithm\n\n1. Get `n` by calling the `length` function.\n2. Declare and initialize variables `cntEqual = 1`, `cntDiffer = 0`, `indexDiffer = -1`.\n3. Call `query(0, 1, 2, 3)` and keep the result in the variable `query0123`.\n4. Call `query(1, 2, 3, 4)` and keep the result in the variable `query1234`.\n5. If `query1234` is equal to `query0123` (`nums[4] = nums[0]`), increment `cntEqual`, otherwise (`nums[1] != nums[0]`) increment `cntDiffer` and update `indexDiffer = 4`. \n6. Iterate `i` from `5` to `n-1`.\n\t* If the return value of `query(1, 2, 3, i)` is equal to `query0123` (`nums[i] = nums[0]`), increment `cntEqual`, otherwise (`nums[i] != nums[0]`) increment `cntDiffer` and update `indexDiffer = i`.\n7. If `query(0, 2, 3, 4)` is equal to `query1234` (`nums[1] = nums[0]`), increment `cntEqual`, otherwise (`nums[1] != nums[0]`) increment `cntDiffer` and update `indexDiffer = 1`.\n8. If `query(0, 1, 3, 4)` is equal to `query1234` (`nums[2] = nums[0]`), increment `cntEqual`, otherwise (`nums[2] != nums[0]`) increment `cntDiffer` and update `indexDiffer = 2`.\n9. If `query(0, 1, 2, 4)` is equal to `query1234` (`nums[3] = nums[0]`), increment `cntEqual`, otherwise (`nums[3] != nums[0]`) increment `cntDiffer` and update `indexDiffer = 3`.\n10. If `cntEqual > cntDiffer`, return `0`.\n11. If `cntDiffer > cntEqual`, return `indexDiffer`.\n12. Return `-1`.\n\n#### Implementation\n\n> In the implementation, we will use a helper function `f(equal, i)`. When we call this function with `equal = true`, we will increment `cntEqual`. When we call this function with `equal = false`, we will increment `cntDiffer`, and set `indexDiffer = i`.\n\n\n<iframe src=\"https://leetcode.com/playground/WACn7beJ/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"WACn7beJ\"></iframe>\n\n\n#### Complexity Analysis\n\n* Time complexity: $O(n)$.\n\nWe make $n$ calls of the `query` function and use its return values to compare $n-1$ elements with `nums[0]`. We can assume that each call to `query` runs in $O(1)$.\n\n* Space complexity: $O(1)$.\n\nWe store only a few $O(1)$ integer variables.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

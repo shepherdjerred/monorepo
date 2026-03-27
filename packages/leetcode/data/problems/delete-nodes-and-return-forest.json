@@ -1,0 +1,130 @@
+{
+  "questionId": "1207",
+  "questionFrontendId": "1110",
+  "title": "Delete Nodes And Return Forest",
+  "titleSlug": "delete-nodes-and-return-forest",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>root</code> of a binary tree, each node in the tree has a distinct value.</p>\n\n<p>After deleting all nodes with a value in <code>to_delete</code>, we are left with a forest (a disjoint union of trees).</p>\n\n<p>Return the roots of the trees in the remaining forest. You may return the result in any order.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/07/01/screen-shot-2019-07-01-at-53836-pm.png\" style=\"width: 237px; height: 150px;\" />\n<pre>\n<strong>Input:</strong> root = [1,2,3,4,5,6,7], to_delete = [3,5]\n<strong>Output:</strong> [[1,2,null,4],[6],[7]]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> root = [1,2,4,null,3], to_delete = [3]\n<strong>Output:</strong> [[1,2,4]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the given tree is at most <code>1000</code>.</li>\n\t<li>Each node has a distinct value between <code>1</code> and <code>1000</code>.</li>\n\t<li><code>to_delete.length &lt;= 1000</code></li>\n\t<li><code>to_delete</code> contains distinct values between <code>1</code> and <code>1000</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"delNodes\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"TreeNode\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"to_delete\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<TreeNode>\"\n  },\n  \"manual\": true\n}",
+  "stats": "{\"totalAccepted\": \"391.9K\", \"totalSubmission\": \"540.8K\", \"totalAcceptedRaw\": 391924, \"totalSubmissionRaw\": 540753, \"acRate\": \"72.5%\"}",
+  "likes": 4800,
+  "dislikes": 145,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count Nodes With the Highest Score\", \"titleSlug\": \"count-nodes-with-the-highest-score\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,4,5,6,7]\n[3,5]",
+    "[1,2,4,null,3]\n[3]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"pinterest\", \"name\": \"Pinterest\"}], \"more_than_six_months\": [{\"timesEncountered\": 37, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 13, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    vector<TreeNode*> delNodes(TreeNode* root, vector<int>& to_delete) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public List<TreeNode> delNodes(TreeNode root, int[] to_delete) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def delNodes(self, root: Optional[TreeNode], to_delete: List[int]) -> List[TreeNode]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def delNodes(self, root, to_delete):\n        \"\"\"\n        :type root: TreeNode\n        :type to_delete: List[int]\n        :rtype: List[TreeNode]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @param {number[]} to_delete\n * @return {TreeNode[]}\n */\nvar delNodes = function(root, to_delete) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction delNodes(root: TreeNode | null, to_delete: number[]): Array<TreeNode | null> {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public IList<TreeNode> DelNodes(TreeNode root, int[] to_delete) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\n\n\n/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nstruct TreeNode** delNodes(struct TreeNode* root, int* to_delete, int to_deleteSize, int* returnSize){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc delNodes(root *TreeNode, to_delete []int) []*TreeNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun delNodes(root: TreeNode?, to_delete: IntArray): List<TreeNode?> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func delNodes(_ root: TreeNode?, _ to_delete: [Int]) -> [TreeNode?] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn del_nodes(root: Option<Rc<RefCell<TreeNode>>>, to_delete: Vec<i32>) -> Vec<Option<Rc<RefCell<TreeNode>>>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @param {Integer[]} to_delete\n# @return {TreeNode[]}\ndef del_nodes(root, to_delete)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @param Integer[] $to_delete\n     * @return TreeNode[]\n     */\n    function delNodes($root, $to_delete) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def delNodes(root: TreeNode, to_delete: Array[Int]): List[TreeNode] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (del-nodes root to_delete)\n  (-> (or/c tree-node? #f) (listof exact-integer?) (listof (or/c tree-node? #f)))\n\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2374",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a binary tree `root` where each node has a unique value, and an array `to_delete` containing values of nodes to delete. The goal is to delete all nodes with values in `to_delete` and return all the remaining root nodes.  \n\n> Note: As a reminder, a root node is a node that does not have a parent. \n\nHandling the children first prevents premature removal of nodes and ensures that all nodes are correctly added to the forest. This principle is crucial to solving the problem effectively.  \n\n!?!../Documents/1110/slideshow.json:960,540!?!\n\nTo optimize lookup time for deletions, `to_delete` is converted into a set. Using a set allows constant time $O(1)$ checks to determine if a node should be deleted, which is more efficient compared to linear time array lookups.\n\n---\n\n### Approach 1: Recursion (Postorder Traversal)\n\n#### Intuition\n\nWe mentioned the need to process each node's children before the node itself. One traversal method that aligns with this requirement is postorder traversal. In postorder traversal, we visit the left child, then the right child, and finally the parent node. This sequence ensures that by the time we reach a node, its entire subtree has already been processed, allowing us to safely delete the node if necessary.\n\nIn contrast, preorder and inorder traversals do not meet this requirement. In preorder traversal, we visit the parent node before its children, risking deletion of a node before its children are handled, potentially losing subtrees. In inorder traversal, we first visit the left child, then the parent node, and finally the right child, partially processing the subtree before addressing the parent node, which can lead to incomplete handling of nodes and subtree loss.\n\nTo solve this problem, we recursively traverse each node's left and right children before processing the node itself. If the current node needs deletion, we check its children. If they are not null, we add them to the forest as new roots. Finally, we delete the current node by returning null to its parent.\n\nSpecial handling is required for the root node. After processing the entire tree, if the root is not null and hasn't been deleted, it should be added to the forest as well.\n\n#### Algorithm\n\n1. Initialization:\n    - Convert the `to_delete` array to a set for efficient lookups and store it as `toDeleteSet`.\n    - Create an empty list `forest` to store the roots of the resulting forest.\n\n2. Recursive Traversal: Perform a postorder traversal to ensure that we process all descendant nodes before the current node (`node`):\n    - Recursively call `processNode` for the left child of `node` and update the left child with the return value.\n    - Similarly, recursively call `processNode` for the right child of `node` and update the right child with the return value.\n\n3. Node Evaluation:\n    - Check if the current `node` needs to be deleted by checking if its value exists in the `toDeleteSet`. If the node needs to be deleted:\n        - If `node` has a left child that is not `null`, add the left child to the `forest`.\n        - If `node` has a right child that is not `null`, add the right child to the `forest`.\n        - Delete the current `node` and return `null` to effectively remove the node by not reconnecting it to its parent.\n    - If the node is not to be deleted, return the `node` itself.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/JJn3hfWR/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"JJn3hfWR\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ denote the number of nodes in the binary tree `root`.\n\n- Time Complexity: $O(n)$\n\n    Recursive traversal of each node in the binary tree takes $O(n)$ time.\n    \n    Initializing and converting the `to_delete` list into a set takes $O(m)$ time, where $m$ is the number of elements in `to_delete`. Since $m \\leq n$, this operation is bounded by $O(n)$.\n    \n    The `processNode` function recursively visits each node exactly once. Operations such as checking if the node's value is in `toDeleteSet`, adding the node's children to `forest` if it's to be deleted, and deleting the node are constant time operations, $O(1)$.\n    \n    Therefore, the overall time complexity is $O(n)$.\n\n- Space Complexity: $O(n)$ \n\n    Each recursive call to `processNode` allocates a stack frame. In the worst-case scenario of an unbalanced tree, the maximum number of stack frames could be $n$, leading to $O(n)$ space complexity due to the call stack.\n    \n    The `toDeleteSet` uses $O(m)$ space, where $m$ is the number of elements in `to_delete`. Since $m \\leq n$, the space complexity is $O(n)$.\n    \n    The `forest` list could potentially store up to $n$ nodes if each deleted node becomes a separate tree, resulting in $O(n)$ space.\n    \n    Apart from these data structures, the algorithm uses a constant amount of space for local variables, contributing $O(1)$ additional space complexity.\n\n  Thus, the overall space complexity is $O(n)$.\n\n--- \n\n### Approach 2: BFS Forest Formation\n\n#### Intuition\n\nIn the previous approach, we recursively traversed the nodes of the binary tree `root` using the postorder traversal algorithm. An alternative is applying an iterative approach, using a queue for breadth-first search (BFS). This allows us to process each node level by level. Starting with the root node in the queue, we handle each node and its children iteratively, disconnecting nodes marked for deletion and adding any remaining nodes to the forest.\n\nBFS explores all nodes at the current depth before progressing to nodes at deeper levels. We use a queue for BFS to manage traversal order, ensuring nodes are visited level by level.\n\nStarting BFS with the root node, we systematically process the tree from the top down. As each node is processed, we assess if it needs deletion. If so, we disconnect it from its parent and potentially treat its children as new roots for the forest by enqueuing them.\n\nWe have to make sure we are not losing any nodes in the subtree while disconnecting a node, by pushing its children to the queue before deleting that node. This way, the children can be handled as potential new roots for the forest.\n\nIf a node's children need to be deleted, we disconnect them as well. Finally, after processing all nodes, we check the root node separately. If the root was not deleted, we will add it to the forest as well.\n\n#### Algorithm\n\n1. Check if the root is null. If so, return an empty list.\n2. Create an unordered set `toDeleteSet` from the `to_delete` list for efficient lookup.\n3. Initialize an empty list `forest` to store the roots of the resulting trees.\n4. Create a queue `nodesQueue` and push the root node into it.\n5. While the queue is not empty:\n   a. Dequeue the front node as `currentNode`.\n   b. If `currentNode` has a left child:\n      - Push the left child to the queue.\n      - If the left child's value is in `toDeleteSet`, set `currentNode->left` to null.\n   c. If `currentNode` has a right child:\n      - Push the right child to the queue.\n      - If the right child's value is in `toDeleteSet`, set `currentNode->right` to null.\n   d. If `currentNode`'s value is in `toDeleteSet`:\n      - If `currentNode` has a non-null left child, add it to `forest`.\n      - If `currentNode` has a non-null right child, add it to `forest`.\n6. After processing all nodes, check if the root's value is not in `toDeleteSet`:\n   - If true, add the root to `forest`.\n7. Return the `forest` list containing the roots of the resulting trees.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/X3L8prPo/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"X3L8prPo\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the binary tree `root`.\n\n- Time Complexity: $O(n)$\n\n    We visit each node of the binary tree exactly once using a BFS traversal, which takes $O(n)$ time.\n\n    The set initialization, converting the `to_delete` list to a set, takes $O(m)$ time, where $m$ is the number of elements in `to_delete`. Since $m \\leq n$, this operation is bounded by $O(n)$.\n\n    During the BFS traversal, operations such as checking if a node's value is in the `toDeleteSet`, adding the node's children to the `forest` if the node is to be deleted, and disconnecting child nodes are performed in constant time, $O(1)$.\n\n    Thus, the overall time complexity is $O(n)$.\n\n- Space Complexity: $O(n)$\n\n    The space complexity of the queue used for BFS is $O(n)$ in the worst case, where all nodes are stored in the queue simultaneously.\n\n    The `toDeleteSet` uses $O(m)$ space, where $m$ is the number of elements in `to_delete`. Since $m \\leq n$, this is bounded by $O(n)$.\n\n    The `forest` list could store up to $n$ nodes in the worst case where each node becomes a separate tree, resulting in $O(n)$ space.\n\n    Beyond the queue, the `toDeleteSet`, and the `forest` list, the algorithm uses a constant amount of auxiliary space for local variables, adding an extra space complexity of $O(1)$.\n\n    Thus, the overall space complexity is $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

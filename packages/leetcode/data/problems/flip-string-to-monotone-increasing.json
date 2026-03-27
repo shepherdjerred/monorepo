@@ -1,0 +1,134 @@
+{
+  "questionId": "962",
+  "questionFrontendId": "926",
+  "title": "Flip String to Monotone Increasing",
+  "titleSlug": "flip-string-to-monotone-increasing",
+  "difficulty": "Medium",
+  "content": "<p>A binary string is monotone increasing if it consists of some number of <code>0</code>&#39;s (possibly none), followed by some number of <code>1</code>&#39;s (also possibly none).</p>\n\n<p>You are given a binary string <code>s</code>. You can flip <code>s[i]</code> changing it from <code>0</code> to <code>1</code> or from <code>1</code> to <code>0</code>.</p>\n\n<p>Return <em>the minimum number of flips to make </em><code>s</code><em> monotone increasing</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;00110&quot;\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> We flip the last digit to get 00111.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;010110&quot;\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> We flip to get 011111, or alternatively 000111.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;00011000&quot;\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> We flip to get 00000000.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s[i]</code> is either <code>&#39;0&#39;</code> or <code>&#39;1&#39;</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"minFlipsMonoIncr\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"216.4K\", \"totalSubmission\": \"349.8K\", \"totalAcceptedRaw\": 216396, \"totalSubmissionRaw\": 349762, \"acRate\": \"61.9%\"}",
+  "likes": 4587,
+  "dislikes": 185,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Cost to Make All Characters Equal\", \"titleSlug\": \"minimum-cost-to-make-all-characters-equal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"00110\"",
+    "\"010110\"",
+    "\"00011000\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 15, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"expedia\", \"name\": \"Expedia\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minFlipsMonoIncr(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minFlipsMonoIncr(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minFlipsMonoIncr(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minFlipsMonoIncr(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar minFlipsMonoIncr = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minFlipsMonoIncr(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinFlipsMonoIncr(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minFlipsMonoIncr(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minFlipsMonoIncr(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minFlipsMonoIncr(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minFlipsMonoIncr(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_flips_mono_incr(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef min_flips_mono_incr(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function minFlipsMonoIncr($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minFlipsMonoIncr(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minFlipsMonoIncr(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_flips_mono_incr(s :: String.t) :: integer\n  def min_flips_mono_incr(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_flips_mono_incr(S :: unicode:unicode_binary()) -> integer().\nmin_flips_mono_incr(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-flips-mono-incr s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1641",
+    "content": "[TOC]\n\n### Approach 1: Dynamic Windows\n\n#### Intuition\n\nThe result monotone increasing string can be considered as 2 consecutive non-overlapping substrings, namely, the prefix only contains character '0' and the suffix only contains character '1'. Let's consider the 2 substrings as 2 windows on the original string. Initially, the left window is empty and the right window contains the whole string. At each step, the left window's size increases by one and the right window's size decreases by 1. We want to change all the characters in the left window into '0' and all the characters in the right window into '1'.\n\n#### Algorithm\n\nWe enumerate each left-right window configuration, the number of flips to make the string monotone increasing is the sum of the number of '1's in the left window and the number of '0's in the right window. Save the smallest value.\n\n<center>\n<img src=\"../Figures/926/926_Flip_String_to_Monotone_Increasing.png\" width=\"500\"/>\n</center>\n<br>\n\nFor example, in the above configuration, the number of flips to make the string monotone increasing is 4 (flip the 4 '1's in the left/green window) + 3 (flip the 3 '0's in the right/red window) = 7.\n\nLet `left1` be the number of '1's in the current left window and `right0` be the number of '0's in the current right window. When the left window increases and the right window shrinks by 1 character, it means we move a character `c` from right to left:\n\nIf `c` = '0', `left1` will be unchanged and `right0` will be decreased by 1, so the sum of them will be decreased by `1`.\n\nIf `c` = '1', `left1` will be increased by 1 and `right0` will be unchanged so the sum of them will be increased by `1`.\n\nWe only need to know the result of `left1 + right0`, so we don't need to maintain the 2 counters separately. We can use a variable `m` where `m = left1 + right0` implicitly.\n\nThe algorithm works as follows:\n\n* Scan the input string `s` to count the number of '0's in total, let it be `m`. This is the number of flips needed when the left window is empty and the right window is the whole string.\n* Set `ans` = `m`.\n* Scan the input string 's' again, \n   * for each character '0', decrease `m` by 1 and replace `ans` with `m` if `m` is smaller.\n   * for each character '1', increase `m` by 1.\n* Return `ans`.\n\n\n#### Implementation\n<iframe src=\"https://leetcode.com/playground/L4Ec8Mg7/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"L4Ec8Mg7\"></iframe>\n\n#### Complexity Analysis\n\nHere, $N$ is the length of the input string.\n\n* Time Complexity:  $O(N)$, since the algorithm does 2 linear scans.\n\n* Space Complexity:  $O(1)$, since the algorithm doesn't use extra space other than some integer variables.\n\n\n### Approach 2: Dynamic Programming\n\n#### Intuition\n\nIf a string is monotone increasing, any of its prefixes are also monotone increasing. To make a prefix of length `i` monotone increasing, we can make the prefix of length (i - 1) monotone increasing and consider whether to flip the last character. This implies the optimization of the sub-problems which is a characteristic of Dynamic Programming.\n\nLet `dp[i]` represent the minimum number of flips to make the prefix of `s` of length `i` (substring of indices `[0, i)`) monotone increasing.\n\nThe base case is `dp[0] = 0`, since an empty string is always monotone increasing.\nConsider `dp[i]` for `i > 0`,\n\nIf `s[i - 1] = '1'`, then we have `dp[i] = dp[i - 1]`, since we can always append a character '1' to the end of a monotone increasing string and it's still monotone increasing.\n\nIf `s[i - 1] = '0'`, let's consider whether we flip it or not.\n* If we don't flip it, we have to flip all the '1's in `s` before it. \n* If we flip it, then we can treat it as the above case where `s[i - 1] = '1'` with one more flip.\n\nIn summary,\n\nLet number `num` be the number of character `1`s in `s`' prefix of length `i`:\n\n- `dp[i] = dp[i - 1]` if `s[i - 1] = '1'`\n- `dp[i] = min(num, dp[i - 1] + 1)` otherwise.\n\nThe final answer should be `dp[s.length()]`\n\nSince `dp[i]` only depends on `dp[i - 1]`, we can use a simple int variable instead of an array to reduce the space complexity.\n\n\n#### Algorithm\nLet `ans` be the final answer and `num` be the number of character `1`s in the current prefix of `s`.\n\n* Initialize `ans` and `num` to 0.\n* For each character `c` in the input string `s`:\n    * If c is `0`,  set `ans` to the minimal value of `num` and `ans + 1`. \n    * otherwise c is `1`, increase `num` by `1`.\n* Return `ans`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/eq9KNCxw/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"eq9KNCxw\"></iframe>\n\n#### Complexity Analysis\n\nHere, $N$ is the length of the input string.\n\n* Time Complexity:  $O(N)$, since the algorithm does one linear scan.\n\n* Space Complexity:  $O(1)$, since the algorithm doesn't use extra space other than some integer variables.\n\n\n----",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

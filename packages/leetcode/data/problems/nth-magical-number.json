@@ -1,0 +1,133 @@
+{
+  "questionId": "910",
+  "questionFrontendId": "878",
+  "title": "Nth Magical Number",
+  "titleSlug": "nth-magical-number",
+  "difficulty": "Hard",
+  "content": "<p>A positive integer is <em>magical</em> if it is divisible by either <code>a</code> or <code>b</code>.</p>\n\n<p>Given the three integers <code>n</code>, <code>a</code>, and <code>b</code>, return the <code>n<sup>th</sup></code> magical number. Since the answer may be very large, <strong>return it modulo </strong><code>10<sup>9</sup> + 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 1, a = 2, b = 3\n<strong>Output:</strong> 2\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 4, a = 2, b = 3\n<strong>Output:</strong> 6\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>9</sup></code></li>\n\t<li><code>2 &lt;= a, b &lt;= 4 * 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"nthMagicalNumber\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"a\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"b\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"50.3K\", \"totalSubmission\": \"137.8K\", \"totalAcceptedRaw\": 50341, \"totalSubmissionRaw\": 137779, \"acRate\": \"36.5%\"}",
+  "likes": 1338,
+  "dislikes": 171,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "1\n2\n3",
+    "4\n2\n3"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}]}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int nthMagicalNumber(int n, int a, int b) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int nthMagicalNumber(int n, int a, int b) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def nthMagicalNumber(self, n: int, a: int, b: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def nthMagicalNumber(self, n, a, b):\n        \"\"\"\n        :type n: int\n        :type a: int\n        :type b: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number} a\n * @param {number} b\n * @return {number}\n */\nvar nthMagicalNumber = function(n, a, b) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function nthMagicalNumber(n: number, a: number, b: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NthMagicalNumber(int n, int a, int b) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int nthMagicalNumber(int n, int a, int b) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func nthMagicalNumber(n int, a int, b int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun nthMagicalNumber(n: Int, a: Int, b: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func nthMagicalNumber(_ n: Int, _ a: Int, _ b: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn nth_magical_number(n: i32, a: i32, b: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer} a\n# @param {Integer} b\n# @return {Integer}\ndef nth_magical_number(n, a, b)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer $a\n     * @param Integer $b\n     * @return Integer\n     */\n    function nthMagicalNumber($n, $a, $b) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int nthMagicalNumber(int n, int a, int b) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def nthMagicalNumber(n: Int, a: Int, b: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec nth_magical_number(n :: integer, a :: integer, b :: integer) :: integer\n  def nth_magical_number(n, a, b) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec nth_magical_number(N :: integer(), A :: integer(), B :: integer()) -> integer().\nnth_magical_number(N, A, B) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (nth-magical-number n a b)\n  (-> exact-integer? exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "522",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach 1: Mathematical\n\n**Intuition and Algorithm**\n\nLet's try to count to the $$N$$-th magical number mathematically.\n\nFirst, the pattern of magical numbers repeats.  Let $$L$$ be the least common multiple of $$A$$ and $$B$$.  If $$X \\leq L$$ is magical, then $$X + L$$ is magical, because (for example) $$A \\| X$$ and $$A \\| L$$ implies $$A \\| (X + L)$$, and similarly if $$B$$ were the divisor.\n\nThere are $$M = \\frac{L}{A} + \\frac{L}{B} - 1$$ magical numbers less than or equal to $$L$$: $$\\frac{L}{A}$$ of them are divisible by $$A$$, $$\\frac{L}{B}$$ of them are divisible by $$B$$, and $$1$$ of them is divisible by both.  So instead of counting one at a time, we can count by $$M$$ at a time.\n\nNow, suppose $$N = M*q + r$$ (with $$r < M$$).  The first $$L*q$$ numbers contain $$M*q$$ magical numbers, and within the next numbers $$(L*q + 1, L*q + 2, \\cdots)$$ we want to find $$r$$ more magical ones.\n\nFor this task, we can use brute force.  The next magical number (less $$L*q$$) will either be $$A$$ or $$B$$.  If for example it is $$A$$, then the next number will either be $$2*A$$ or $$B$$, and so on.\n\nIf the $$r$$-th such magical number is $$Y$$, then the final answer is $$L*q + Y$$.  Care must also be taken in the case that $$r$$ is $$0$$.\n\n<iframe src=\"https://leetcode.com/playground/fQiDrmd6/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"fQiDrmd6\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(A+B)$$, assuming a model where integer math operations are $$O(1)$$.  The calculation of `q * L` is $$O(1)$$.  The calculation of the $$r$$-th magical number after $$q*M$$ is $$O(M)$$ which is $$O(A+B)$$.\n\n* Space Complexity:  $$O(1)$$.\n<br />\n<br />\n\n\n---\n### Approach 2: Binary Search\n\n**Intuition**\n\nThe number of magical numbers less than or equal to $$x$$ is a monotone increasing function in $$x$$, so we can binary search for the answer.\n\n**Algorithm**\n\nSay $$L = \\text{lcm}(A, B)$$, the *least common multiple* of $$A$$ and $$B$$; and let $$f(x)$$ be the number of magical numbers less than or equal to $$x$$.  A well known result says that $$L = \\frac{A * B}{\\text{gcd}(A, B)}$$, and that we can calculate the function $$\\gcd$$.  For more information on least common multiples and greatest common divisors, please visit [Wikipedia - Lowest Common Multiple](https://en.wikipedia.org/wiki/Least_common_multiple).\n\nThen $$f(x) = \\lfloor \\frac{x}{A} \\rfloor + \\lfloor \\frac{x}{B} \\rfloor - \\lfloor \\frac{x}{L} \\rfloor$$.  Why?  There are $$\\lfloor \\frac{x}{A} \\rfloor$$ numbers $$A,  2A,  3A,  \\cdots$$ that are divisible by $$A$$, there are $$\\lfloor \\frac{x}{B} \\rfloor$$ numbers divisible by $$B$$, and we need to subtract the $$\\lfloor \\frac{x}{L} \\rfloor$$ numbers divisible by $$A$$ and $$B$$ that we double counted.\n\nFinally, the answer must be between $$0$$ and $$N * \\min(A, B)$$.  \nWithout loss of generality, suppose $$A \\geq B$$, so that it remains to show\n\n$$\n\\lfloor \\frac{N * \\min(A, B)}{A} \\rfloor + \\lfloor \\frac{N * \\min(A, B)}{B} \\rfloor - \\lfloor \\frac{N * \\min(A, B)}{\\text{lcm}(A, B)} \\rfloor \\geq N\n$$\n\n$$\n\\Leftrightarrow \\lfloor \\frac{N*A}{A} \\rfloor + \\lfloor \\frac{N*A}{B} \\rfloor - \\lfloor \\frac{N*A*\\gcd(A, B)}{A*B} \\rfloor \\geq N\n$$\n\n$$\n\\Leftrightarrow \\lfloor \\frac{N*A}{B} \\rfloor \\geq \\lfloor \\frac{N*\\gcd(A, B)}{B} \\rfloor\n$$\n\n$$\n\\Leftrightarrow A \\geq \\gcd(A, B)\n$$\n\nas desired.\n\nAfterwards, the binary search on $$f$$ is straightforward.  For more information on binary search, please visit [[LeetCode Explore - Binary Search]](https://leetcode.com/explore/learn/card/binary-search/).\n\n<iframe src=\"https://leetcode.com/playground/LDujXtuh/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"LDujXtuh\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(\\log (N * \\min(A, B)))$$.\n\n* Space Complexity:  $$O(1)$$.\n<br />\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

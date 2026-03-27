@@ -1,0 +1,140 @@
+{
+  "questionId": "1617",
+  "questionFrontendId": "1510",
+  "title": "Stone Game IV",
+  "titleSlug": "stone-game-iv",
+  "difficulty": "Hard",
+  "content": "<p>Alice and Bob take turns playing a game, with Alice starting first.</p>\n\n<p>Initially, there are <code>n</code> stones in a pile. On each player&#39;s turn, that player makes a <em>move</em> consisting of removing <strong>any</strong> non-zero <strong>square number</strong> of stones in the pile.</p>\n\n<p>Also, if a player cannot make a move, he/she loses the game.</p>\n\n<p>Given a positive integer <code>n</code>, return <code>true</code> if and only if Alice wins the game otherwise return <code>false</code>, assuming both players play optimally.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 1\n<strong>Output:</strong> true\n<strong>Explanation: </strong>Alice can remove 1 stone winning the game because Bob doesn&#39;t have any moves.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 2\n<strong>Output:</strong> false\n<strong>Explanation: </strong>Alice can only remove 1 stone, after that Bob removes the last one winning the game (2 -&gt; 1 -&gt; 0).\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 4\n<strong>Output:</strong> true\n<strong>Explanation:</strong> n is already a perfect square, Alice can win with one move, removing 4 stones (4 -&gt; 0).\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Use dynamic programming to keep track of winning and losing states. Given some number of stones, Alice can win if she can force Bob onto a losing state."
+  ],
+  "metaData": "{\n  \"name\": \"winnerSquareGame\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"83K\", \"totalSubmission\": \"139.3K\", \"totalAcceptedRaw\": 83002, \"totalSubmissionRaw\": 139331, \"acRate\": \"59.6%\"}",
+  "likes": 1640,
+  "dislikes": 76,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Stone Game V\", \"titleSlug\": \"stone-game-v\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Stone Game VI\", \"titleSlug\": \"stone-game-vi\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Stone Game VII\", \"titleSlug\": \"stone-game-vii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Stone Game VIII\", \"titleSlug\": \"stone-game-viii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Stone Game IX\", \"titleSlug\": \"stone-game-ix\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Stone Removal Game\", \"titleSlug\": \"stone-removal-game\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "1",
+    "2",
+    "4"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Game Theory",
+      "slug": "game-theory"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool winnerSquareGame(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean winnerSquareGame(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def winnerSquareGame(self, n: int) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def winnerSquareGame(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {boolean}\n */\nvar winnerSquareGame = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function winnerSquareGame(n: number): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool WinnerSquareGame(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool winnerSquareGame(int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func winnerSquareGame(n int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun winnerSquareGame(n: Int): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func winnerSquareGame(_ n: Int) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn winner_square_game(n: i32) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Boolean}\ndef winner_square_game(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Boolean\n     */\n    function winnerSquareGame($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool winnerSquareGame(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def winnerSquareGame(n: Int): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec winner_square_game(n :: integer) :: boolean\n  def winner_square_game(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec winner_square_game(N :: integer()) -> boolean().\nwinner_square_game(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (winner-square-game n)\n  (-> exact-integer? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1001",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nYou probably can guess from the problem title, this is the fourth problem in the series of [Stone Game](https://leetcode.com/problems/stone-game/) problems. Those problems are similar, but have considerable differences, making their solutions quite different. It's highly recommended to finish them all.\n\nHere, two approaches are introduced: DFS with memoization and DP approach.\n\n---\n\n### Approach 1: DFS with memoization\n\n**Intuition**\n\nFirst, let's analyze the problem.\n\nAccording to [Zermelo's_theorem](https://en.wikipedia.org/wiki/Zermelo%27s_theorem_(game_theory)), given `n` stones, either Alice has a must-win strategy, or Bob has one. Therefore, for Alice, the current state is either \"must-win\" or \"must-lose\". But how to determine which one it is?\n\n> For convenience, in the following context, \"the current player\" refers to the player now removing the stones, and \"state `i`\" refers to when there is `i` stones remaining.\n>\n> Now the problem asks whether the current player will win in state `n`.\n\nIf we can go to a known state where Bob must lose, then we know Alice must win in the current state. All Alice has to do is to move the corresponding number of stones to go to that state. Therefore we need to find out which state Bob must lose.\n\nNote that after going to the next state, Bob becomes the player removing the stones, which is the position of Alice in the current state. Therefore, to find out whether Bob will lose in the next state, we just need to check whether our function gives `False` for remaining stones.\n\n**Algorithm**\n\nLet function `dfs(remain)` represents whether the current player must win with `remain` stones remaining.\n\nTo find out the result of `dfs(n)`, we need to iterate `k` from 0 to check whether there exits `dfs(remain - k*k)==False`. To prevent redundant calculate, use a map to store the result of `dfs` function.\n\nDon't forget the base case `dfs(0)==False` and `dfs(1)==True`.\n\n> Note: After reading the Algorithm part, it is recommended to try to write the code on your own before reading the solution code.\n\n<iframe src=\"https://leetcode.com/playground/AKxNPs48/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"AKxNPs48\"></iframe>\n\nThere some tricks that we used in the code above.\n\nIn the Python code, we use `@lru_cache` instead of a map to store the result of dfs. It's a useful grammar sugar in Python.\n\nIn the Java code, we don't have things like `@lru_cache` in Python, so here we use a simple HashMap. However, we can still use some tricks, if you want -- using an array instead of a map: we can use `0` to mark the unvisited nodes, use `1` to mark the `true` results, and use `2` to mark the `false` results. Also, we can just use an array of bytes, which uses less memory than an array of ints.\n\nNote that the speed would be a little faster if you iterate `i` from `sqrt_root` to `0` due to the data characteristics.\n\n**Complexity Analysis**\n\nAssume $$N$$ is the length of `arr`.\n\n* Time complexity: $$\\mathcal{O}(N\\sqrt{N})$$ since we spend $$\\mathcal{O}(\\sqrt{N})$$ at most for each dfs call, and there are $$\\mathcal{O}({N})$$ dfs calls in total.\n \n* Space complexity: $$\\mathcal{O}(N)$$ since we need spaces of $$\\mathcal{O}(N)$$ to store the result of dfs.\n\n---\n\n### Approach 2: DP\n\n**Intuition**\n\nDFS with memoization is very similar to dp. We can also use dp to solve this problem.\n\nWe can just use a single `dp[i]` array to store whether the player now removing stones wins with `i` stones remaining.\n\n**Algorithm**\n\nLet `dp[i]` represents the result of the game with `i` stones. `dp[i]==True` means the current player must win, and `dp[i]==False` means the current player must lose, when both players play optimally.\n\nThe next step is to find out how to calculate `dp[i]`.\n\nWe can iterate all possible movements, and check if we can move to a `False` state. If we can, then we found a must-win strategy, otherwise, we must lose since the opponent has a must-win strategy in this case.\n\nMore clearly, we can iterate `k` from 0 and check if there exists `dp[i - k*k]==False`. Of course, `i - k*k >= 0`.\n\nFinally, we only need to return `dp[n]`.\n\n> Note: After reading the Algorithm part, it is recommended to try to write the code on your own before reading the solution code.\n\n<iframe src=\"https://leetcode.com/playground/hA5KXukX/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"hA5KXukX\"></iframe>\n\nAlso, we can employ DP in a slightly different way.\n\n**Intuition**\n\nLet's think in the backtrack way. If we have a state `i` that we know the current player must lose, what can we infer?\n\n-- Any other states that can go to `i` must be `True`. \n\nLet's say in another state `j` the current player in `j` can go to `i` by removing stones. In this case, the state `j` is `True` since the current player must win.\n\nHow to find all the state `j`? Well, we can iterate over the square numbers and add them to `i`.\n\n**Algorithm**\n\nStill, let `dp[i]` represent the result of the game of `i` stones. `dp[i]==True` means the first player (Alice) must win, and `dp[i]==False` means the second player (Bob) must win when both players play optimally.\n\nWhen we get to a `False` state, we mark all accessible states as `True`. When we get to a `True` state, just continue (Why? Well... because it's useless).\n\nFinally, we only need to return `dp[n]`.\n\n> Note: After reading the Algorithm part, it is recommended to try to write the code on your own before reading the solution code.\n\n<iframe src=\"https://leetcode.com/playground/nSecykAJ/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"nSecykAJ\"></iframe>\n\n**Complexity Analysis**\n\nAssume $$N$$ is the length of `arr`.\n\n* Time complexity: $$\\mathcal{O}(N\\sqrt{N})$$ since we iterate over the `dp` array and spend $$\\mathcal{O}(\\sqrt{N})$$ at most on each element.\n \n* Space complexity: $$\\mathcal{O}(N)$$ since we need a `dp` array.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

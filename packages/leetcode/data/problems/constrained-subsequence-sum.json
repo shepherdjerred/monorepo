@@ -1,0 +1,155 @@
+{
+  "questionId": "1286",
+  "questionFrontendId": "1425",
+  "title": "Constrained Subsequence Sum",
+  "titleSlug": "constrained-subsequence-sum",
+  "difficulty": "Hard",
+  "content": "<p>Given an integer array <code>nums</code> and an integer <code>k</code>, return the maximum sum of a <strong>non-empty</strong> subsequence of that array such that for every two <strong>consecutive</strong> integers in the subsequence, <code>nums[i]</code> and <code>nums[j]</code>, where <code>i &lt; j</code>, the condition <code>j - i &lt;= k</code> is satisfied.</p>\n\n<p>A <em>subsequence</em> of an array is obtained by deleting some number of elements (can be zero) from the array, leaving the remaining elements in their original order.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [10,2,-10,5,20], k = 2\n<strong>Output:</strong> 37\n<b>Explanation:</b> The subsequence is [10, 2, 5, 20].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [-1,-2,-3], k = 1\n<strong>Output:</strong> -1\n<b>Explanation:</b> The subsequence must be non-empty, so we choose the largest number.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [10,-2,-10,-5,20], k = 2\n<strong>Output:</strong> 23\n<b>Explanation:</b> The subsequence is [10, -2, -5, 20].\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= k &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-10<sup>4</sup> &lt;= nums[i] &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Use dynamic programming.",
+    "Let dp[i] be the solution for the prefix of the array that ends at index i, if the element at index i is in the subsequence.",
+    "dp[i] = nums[i] + max(0, dp[i-k], dp[i-k+1], ..., dp[i-1])",
+    "Use a heap with the sliding window technique to optimize the dp."
+  ],
+  "metaData": "{\n  \"name\": \"constrainedSubsetSum\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"91.5K\", \"totalSubmission\": \"162.3K\", \"totalAcceptedRaw\": 91543, \"totalSubmissionRaw\": 162310, \"acRate\": \"56.4%\"}",
+  "likes": 2247,
+  "dislikes": 109,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Element-Sum of a Complete Subset of Indices\", \"titleSlug\": \"maximum-element-sum-of-a-complete-subset-of-indices\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[10,2,-10,5,20]\n2",
+    "[-1,-2,-3]\n1",
+    "[10,-2,-10,-5,20]\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"akuna-capital\", \"name\": \"Akuna Capital\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Queue",
+      "slug": "queue"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Monotonic Queue",
+      "slug": "monotonic-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int constrainedSubsetSum(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int constrainedSubsetSum(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def constrainedSubsetSum(self, nums: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def constrainedSubsetSum(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number}\n */\nvar constrainedSubsetSum = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function constrainedSubsetSum(nums: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int ConstrainedSubsetSum(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int constrainedSubsetSum(int* nums, int numsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func constrainedSubsetSum(nums []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun constrainedSubsetSum(nums: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func constrainedSubsetSum(_ nums: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn constrained_subset_sum(nums: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Integer}\ndef constrained_subset_sum(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Integer\n     */\n    function constrainedSubsetSum($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int constrainedSubsetSum(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def constrainedSubsetSum(nums: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec constrained_subset_sum(nums :: [integer], k :: integer) :: integer\n  def constrained_subset_sum(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec constrained_subset_sum(Nums :: [integer()], K :: integer()) -> integer().\nconstrained_subset_sum(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (constrained-subset-sum nums k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2074",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Heap/Priority Queue\n\n**Intuition**\n\nBefore we start developing a strategy, we must carefully understand what the problem is asking for.\n\nWe need to maximize the sum of a subsequence. We can take as many integers as we want, but the primary constraint is that we **cannot** have a gap of `k` or more in our subsequence.\n\nYou may immediately notice that in an array of positive integers, we should always take the entire array. The tricky part comes in when we have negative integers. Of course, we would prefer to avoid negative integers since they will decrease our sum. However, it may be worth taking a negative integer as a sort of \"bridge\". Take a look at the following example:\n\n![example](../Figures/1425/1.png)\n<br>\n\nIn this example, we have a group of negative numbers separating a `16` and a group of positive numbers that sum to `16`. We would like to take all the positive numbers while avoiding the negative numbers, but we aren't allowed to as that would result in a gap of three numbers. As `k = 2`, the biggest gap we can have is one number. The optimal solution here is to take the `-5`.\n\n![example](../Figures/1425/2.png)\n<br>\n\nAs you can see, the `-5` acts as a bridge for the positive numbers. The question now is, how do we know when it is worth it to take negative numbers? In this case, taking the `-5` allowed us to take the first element of `16`. This results in a net gain of `11`. Anytime we have a positive net gain, we should consider taking this element because it can contribute to a positive sum and potentially increase the sum of subsequent subsequences.\n\nWe will iterate over the input from left to right. At each index `i`, we will consider the maximum possible sum of a subsequence that **includes and ends at nums[i]**. Let's call this value `curr`. How do we calculate `curr` for a given index `i`? We want the maximum possible sum of a subsequence that ends within the last `k` indices. We will then add `nums[i]` to this sum.\n\nWe could solve this using dynamic programming - let `dp[i]` represent the maximum possible sum of a subsequence that includes and ends at `nums[i]`. We can calculate `dp[i]` by taking the maximum `dp[j]` for all `j` in the range `[i - k, i - 1]` (the last `k` indices), then adding `nums[i]` to it.\n\nHowever, we would be iterating up to `k` times to calculate each state. As `k` can be large, this approach is too slow. We need a faster way to find the maximum `dp[j]` for all indices `j` in the range `[i - k, i - 1]`.\n\nBecause we are only concerned with the maximum sum, we could use a max heap. The max heap would store `dp[j]` for all `j` in the last `k` indices. We can easily calculate `curr` by simply checking the top of this heap.\n\nWe need to make sure we don't use elements of the heap that are more than `k` away from the current index. Before we calculate `curr`, we pop from the top of the heap if it is outside our range. This means each entry in the heap will also need its associated index, so we can tell when an element is out of range.\n\nNote that if the top of the heap is negative, it is better to not take it. This is a process very similar to Kadane's Algorithm, which solves the [Maximum Subarray](https://leetcode.com/problems/maximum-subarray/) problem. When the top of the heap is negative, it indicates that selecting this subsequence would result in a sum less than 0. Every element in the array to the left of the current index should be abandoned - any \"bridge\" would not be worth taking. It's better to discard these subsequences altogether and reset the sum to 0.\n\n**Algorithm**\n\n1. Initialize a max `heap` with `(nums[0], 0)`. Also initialize the answer `ans = nums[0]`.\n2. Iterate `i` over the indices of `nums`, starting from `i = 1`:\n    - While `i` minus the index (second element) at the top of `heap` is greater than `k`, pop from `heap`.\n    - Set `curr` to the value (first element) at the top of `heap`, plus `nums[i]`. Note that if the value at the top of `heap` is negative, we should take `0` instead.\n    - Update `ans` with `curr` if it is larger.\n    - Push `(curr, i)` to `heap`.\n3. Return `ans`.\n\n**Implementation**\n\n> Implementation note: Python's heapq module only implements min heaps, so we will make the values in the heap negative to simulate a max heap.\n\n<iframe src=\"https://leetcode.com/playground/9qW62sUG/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"9qW62sUG\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `nums`,\n\n* Time complexity: $$O(n \\cdot \\log{}n)$$\n\n    We iterate over each index of `nums` once. At each iteration, we have a while loop and some heap operations. The while loop runs in $$O(1)$$ amortized - because an element can only be popped from the heap once, the while loop cannot run more than $$O(n)$$ times in total across all iterations.\n\n    The heap operations depend on the size of the heap. In an array of only positive integers, we will never pop from the heap. Thus, the size of the heap will grow to $$O(n)$$ and the heap operations will cost $$O(\\log{}n)$$.\n\n* Space complexity: $$O(n)$$\n\n    As mentioned above, `heap` could grow to a size of $$n$$.\n    \n<br/>\n\n---\n\n### Approach 2: TreeMap-Like Data Structure\n\n**Intuition**\n\nAs we saw in the previous approach, the crux of the dynamic programming idea was finding the maximum value of `dp` in the last `k` indices. We accomplished this in $$O(\\log{}n)$$ time with a heap, but we could achieve $$O(\\log{}k)$$ with a tree map data structure (like a red-black tree). Because `k <= n`, this is a slight improvement in terms of big O.\n\nLet's actually use the `dp` array that we spoke of in the previous approach this time. We will have a data structure `window` that holds all values of `dp` in the last `k` indices. We can easily calculate `dp[i]` as `nums[i]` plus the maximum value in `window`. Then, we can add `dp[i]` to `window`.\n\nTo maintain `window`, once we reach index `k`, we need to start removing `dp[i - k]` from `window` at each iteration.\n\nIn Java, we will use `TreeMap`. Each key will be a value in `dp` which we will map to its frequency. To remove `dp[i - k]` from the window, we will decrement its frequency, and if its frequency becomes `0`, we will delete the key.\n\nIn C++, we will use `std::map`, which functions similarly to Java's `TreeMap`.\n\nIn Python, we will use [sortedcontainers.SortedList](https://grantjenks.com/docs/sortedcontainers/sortedlist.html), which is more like a list than a map, but still provides us with the efficient operations we require.\n\nFor all implementations, we will initialize `window` with a key of `0` to make the code cleaner, otherwise we would need to handle the first index differently (check if `window` is empty before accessing the maximum key).\n\nThe answer to the problem will be the max value in `dp` in the end.\n\n**Algorithm**\n\n1. Initialize `window` with `0: 0`.\n2. Initialize an array `dp` with the same length as `nums`.\n3. Iterate `i` over the indices of `nums`:\n    - Set `dp[i]` to `nums[i]` plus the maximum key in `window`.\n    - Increment the frequency of `dp[i]` in `window`.\n    - If `i >= k`:\n        - Decrement the frequency of `dp[i - k]` in `window`. If the frequency becomes `0`, delete it from `window`.\n4. Return the max value in `dp`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/nkFKadNu/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"nkFKadNu\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `nums`,\n\n* Time complexity: $$O(n \\cdot \\log{}k)$$\n\n    We iterate over each index of `nums` once. At each iteration, we have some operations with `window`. The cost of these operations is a function of the size of `window`. As `window` will never exceed a size of `k`, these operations cost $$O(\\log{}k)$$.\n\n* Space complexity: $$O(n)$$\n\n    `window` will not exceed a size of `k`, but `dp` requires $$O(n)$$ space.\n    \n<br/>\n\n---\n\n### Approach 3: Monotonic Deque\n\n**Intuition**\n\n> This approach is very similar to the solution to [Sliding Window Maximum](https://leetcode.com/problems/sliding-window-maximum/). We recommend you try this problem as well if you haven't already.\n\nIs it possible to find the maximum value of `dp` in the last `k` indices in $$O(1)$$? Yes, by using a monotonic queue!\n\nA monotonic data structure is one where the elements are always sorted. If we have a monotonic **decreasing** data structure, then the elements are always sorted descending. Thus, if we can maintain a monotonic data structure that holds values of `dp` for the last `k` indices, then the first element in this data structure will be the value we are interested in.\n\nTo maintain this data structure, we need to make sure that whenever we push a new element, it will be the smallest value. Before we push an element `dp[i]`, we check the last element. If it is less than `dp[i]`, we must pop it, otherwise, the monotonic property would be broken. Since there may be multiple elements less than `dp[i]`, we need to use a while loop to \"clean\" the data structure before pushing `dp[i]`.\n\nOnly once there are no elements in the data structure less than `dp[i]` will we push `dp[i]`. Additionally, we will only push positive values of `dp[i]` to `queue`.\n\nThe reason we want to remove elements that are less than `dp[i]` is because `dp[i]` comes after those elements. Thus, those elements will be out of range before `dp[i]`, and because `dp[i]` is greater than them, there is no chance those elements will ever be the maximum value in the last `k` indices anymore.\n\nBefore we check the max value, we must make sure it is not out of range. If it is, we will remove this invalid max value. As you can see, we need to remove elements from both the front and the back. Thus, we will use a deque (double-ended queue) as our data structure.\n\nTo detect if the max value is out of range, we must store the indices in the queue. \n\n- To check if the max value is out of range, we check if `i - queue.front() > k`.\n- To obtain the max value of the queue, we check `dp[queue.front()]`\n- To obtain the value at the end of the queue, we check `dp[queue.back()]`\n\n> Note that we could also store pairs `(dp[i], i)` on the queue.\n\n**Algorithm**\n\n1. Initialize a deque `queue`. Also initialize an array `dp` with the same length as `nums`.\n2. Iterate `i` over the indices of `nums`:\n    - If `i` minus the front of `queue` is greater than `k`, remove from the front of `queue`.\n    - Set `dp[i]` to `dp[queue.front()] + nums[i]`. If `queue` is empty, use `0` instead of `dp[queue.front()]`.\n    - While `dp[queue.back()]` is less than `dp[i]`, pop from the back of `queue`.\n    - If `dp[i] > 0`, push `i` to the back of `queue`.\n3. Return the max element in `dp`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/AW26ctQ7/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"AW26ctQ7\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `nums`,\n\n* Time complexity: $$O(n)$$\n\n    We iterate over each index once. At each iteration, we have a while loop. This while loop runs in $$O(1)$$ amortized. Each element in `nums` can only be pushed and popped from `queue` at most once. Thus, this while loop will not run more than $$n$$ times across all $$n$$ iterations. Everything else in each iteration runs in $$O(1)$$. Thus, each iteration costs $$O(1)$$ amortized.\n\n* Space complexity: $$O(n)$$\n\n    `dp` requires $$O(n)$$ space.\n    Since we always remove out-of-range elements from `queue`, so it contains at most $$k$$ elements and requires $$O(k)$$ space.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

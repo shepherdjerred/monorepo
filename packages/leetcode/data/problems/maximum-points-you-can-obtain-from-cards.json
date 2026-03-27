@@ -1,0 +1,141 @@
+{
+  "questionId": "1538",
+  "questionFrontendId": "1423",
+  "title": "Maximum Points You Can Obtain from Cards",
+  "titleSlug": "maximum-points-you-can-obtain-from-cards",
+  "difficulty": "Medium",
+  "content": "<p>There are several cards <strong>arranged in a row</strong>, and each card has an associated number of points. The points are given in the integer array <code>cardPoints</code>.</p>\n\n<p>In one step, you can take one card from the beginning or from the end of the row. You have to take exactly <code>k</code> cards.</p>\n\n<p>Your score is the sum of the points of the cards you have taken.</p>\n\n<p>Given the integer array <code>cardPoints</code> and the integer <code>k</code>, return the <em>maximum score</em> you can obtain.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> cardPoints = [1,2,3,4,5,6,1], k = 3\n<strong>Output:</strong> 12\n<strong>Explanation:</strong> After the first step, your score will always be 1. However, choosing the rightmost card first will maximize your total score. The optimal strategy is to take the three cards on the right, giving a final score of 1 + 6 + 5 = 12.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> cardPoints = [2,2,2], k = 2\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> Regardless of which two cards you take, your score will always be 4.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> cardPoints = [9,7,7,9,7,7,9], k = 7\n<strong>Output:</strong> 55\n<strong>Explanation:</strong> You have to take all the cards. Your score is the sum of points of all cards.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= cardPoints.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= cardPoints[i] &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= cardPoints.length</code></li>\n</ul>\n",
+  "hints": [
+    "Let the sum of all points be total_pts. You need to remove a sub-array from cardPoints with length n - k.",
+    "Keep a window of size n - k over the array. The answer is max(answer, total_pts - sumOfCurrentWindow)"
+  ],
+  "metaData": "{\n  \"name\": \"maxScore\",\n  \"params\": [\n    {\n      \"name\": \"cardPoints\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"508.3K\", \"totalSubmission\": \"885.1K\", \"totalAcceptedRaw\": 508291, \"totalSubmissionRaw\": 885066, \"acRate\": \"57.4%\"}",
+  "likes": 7084,
+  "dislikes": 321,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Score from Performing Multiplication Operations\", \"titleSlug\": \"maximum-score-from-performing-multiplication-operations\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Removing Minimum and Maximum From Array\", \"titleSlug\": \"removing-minimum-and-maximum-from-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Recolors to Get K Consecutive Black Blocks\", \"titleSlug\": \"minimum-recolors-to-get-k-consecutive-black-blocks\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Maximum Spending After Buying Items\", \"titleSlug\": \"maximum-spending-after-buying-items\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,4,5,6,1]\n3",
+    "[2,2,2]\n2",
+    "[9,7,7,9,7,7,9]\n7"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 2, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 2, \"slug\": \"factwise\", \"name\": \"FactWise\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxScore(vector<int>& cardPoints, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxScore(int[] cardPoints, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxScore(self, cardPoints: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxScore(self, cardPoints, k):\n        \"\"\"\n        :type cardPoints: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} cardPoints\n * @param {number} k\n * @return {number}\n */\nvar maxScore = function(cardPoints, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxScore(cardPoints: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxScore(int[] cardPoints, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxScore(int* cardPoints, int cardPointsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxScore(cardPoints []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxScore(cardPoints: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxScore(_ cardPoints: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_score(card_points: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} card_points\n# @param {Integer} k\n# @return {Integer}\ndef max_score(card_points, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $cardPoints\n     * @param Integer $k\n     * @return Integer\n     */\n    function maxScore($cardPoints, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxScore(List<int> cardPoints, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxScore(cardPoints: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_score(card_points :: [integer], k :: integer) :: integer\n  def max_score(card_points, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_score(CardPoints :: [integer()], K :: integer()) -> integer().\nmax_score(CardPoints, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-score cardPoints k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1135",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nThe brute force solution is to find all valid combinations of cards and then select the combination that gives us the maximum sum. To accomplish this, we can use a recursive approach. At each point, we choose a card either from the beginning or from the end of the array. Our base condition is when `k` cards are selected or when no cards are left to be selected.\nThis solution results in TLE because it checks an exponential number of combinations (many of the same combinations would be checked more than once). \nWe can optimize this solution by using a **dynamic programming** approach.\n\nA key observation in this problem is that *we need to select k cards from the beginning or end of the array*. Thus no matter how many cards we choose from the beginning, in the end, we need to select two subarrays: one from the beginning, and one from the end, and their total lengths must be `k` (the only exception is when `k = cardPoints.length`, in that case, we'll select all cards). Thus after selecting the two arrays we will be left with a single subarray of length `cardPoints.length - k`. There are three ways we can select the cards:\n\n1. Select all cards from the beginning.\n2. Select all cards from the end.\n3. Select some cards from the beginning and the rest from the end.\n\nIn all the above three cases we will be left with a subarray (in the end, in the beginning, or somewhere in the middle) after our selection. This can be better understood in the following illustration where we are selecting 3 cards from an array of 8 cards.\n\n![fig](../Figures/1423/1423_Maximum_Points_You_Can_Obtain_from_Cards_Overview_Image.png)\n\n\n*Figure 1. An example demonstrating some of the positions of the subarrays possible from selecting `k = 3` cards from the array.*\n\n\nIn addition to the dynamic programming approach, we can also take a **sliding window** approach. A sliding window is a standard programming pattern used in many problems, including those related to finding the sum or the product of a subarray. In case you are not familiar with sliding windows, you can go through this article written by one of our LeetCode users: [Sliding Window Problems for Beginners](https://leetcode.com/discuss/study-guide/657507/Sliding-Window-for-Beginners-Problems-or-Template-or-Sample-Solutions).\nIn this article, we'll start by looking at the dynamic programming approach and discuss how to optimize its space complexity. After that, we will finish with the sliding window approach.\n\n</br>\n\n---\n\n### Approach 1: Dynamic Programming\n\n**Intuition**\n\nAs we determined above, the `k` cards that we choose will form two contiguous subarrays: one at the start, and one at the end of the input array. If we choose `i` cards from the start (where `i <= k`) then we must choose `k - i` cards from the end. There are `k` _different_ lengths the first array could be. \n\nSince these `k` arrays are _overlapping_, we can calculate the **prefix sum** for each of the first `k` values, and then for each of the last `k` values (working from the end of the array, and going inwards). We will store these values in two arrays of size `k`.\n\nWe can then use these to efficiently check each possible way of selecting `i` cards from the start and `k - i` cards from the end.\n\n!?!../Documents/1423_Maximum_Points_You_Can_Obtain_from_Cards.json:960,540!?!\n\n<br/>\n\n**Algorithm**\n\n1. Initialize two arrays of size `k + 1`, namely `frontSetOfCards` and `rearSetOfCards` to store the score (prefix sums) obtained by selecting the first `i` cards and the last `i` cards in the array.\n\n2. We calculate the prefix sum (sum of `0 <= i <= k` cards) for the first `k` cards `frontSetOfCards[i + 1] = frontSetOfCards[i] + cardPoints[i]` and the last `k` cards `rearSetOfCards[i + 1] = cardPoints[n - i - 1] + rearSetOfCards[i]`.\n\n3. Initialize `maxScore` to 0.\n\n4. Iterate from `i = 0 -> k`. At each iteration, we determine the possible score by selecting `i` cards from the beginning of the array and `k - i` cards from the end (`currentScore`). If this score is greater than the `maxScore` then we update it.\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/jWdkiT6K/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"jWdkiT6K\"></iframe>\n\n\n**Complexity Analysis**\n\nLet $$k$$ be the number of cards we need to select.\n\n* Time complexity: $$O(k)$$. Here we are using two `for` loops of length `k` to calculate the maximum possible score. This gives us $$O(2 \\cdot k)$$, which in Big O notation is equal to $$O(k)$$.\n\n* Space complexity: $$O(k)$$. Here we are using two arrays to store the total score obtained by selecting $$i(0 <= i < k)$$ cards from the beginning and $$i$$ cards from the end. This gives us $$O(2 \\cdot k)$$, which is equal to $$O(k)$$.\n    \n\n<br/>\n\n---\n\n### Approach 2: Dynamic Programming - Space Optimized\n\n**Intuition**\n\nIn approach 1 we used two extra storage spaces (two arrays of size `k`) to store the total score that can be obtained by taking `i` cards from the respective end of the array. \n\nInstead of pre-computing the arrays, we can calculate the total score while iterating over the array and store the total score in two variables (in place of the two arrays).\n\n**Algorithm**\n\n1. Initialize two variables, namely `frontScore` and `rearScore` to store the score obtained by selecting the first `i` cards and the last `k - i` cards in the array.\n\n2. `frontScore` is initialized to the sum of the first `k` cards in the array, and `rearScore` is initialized to `0`.\n\n3. Initialize `maxScore` to  `frontScore`.\n\n4. Iterate backwards from `i = k - 1 -> 0`. At each iteration, we calculate the score by selecting `i` cards from the beginning of the array and `k - i` cards from the end (`currentScore`). If this score is greater than `maxScore`, we update it.\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/56CunHLD/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"56CunHLD\"></iframe>\n\n\n**Complexity Analysis**\n\nLet $$k$$ be the number of cards we need to select.\n\n* Time complexity: $$O(k)$$. We are using two `for` loops of length `k` for calculation purposes. This gives us $$O(2 \\cdot k)$$, which in Big O notation is equal to $$O(k)$$.\n\n* Space complexity: $$O(1)$$. No extra space is used since all the calculations are done impromptu.\n    \n\n<br/>\n\n---\n\n### Approach 3: Sliding Window\n\n**Intuition**\n\n In this problem, we must draw exactly `k` cards from the array in such a way that the score (sum of the cards) is maximized. After drawing `k` cards from the array `cardPoints.length - k` cards will remain in the array.\n\nAnother way that we could view the problem is that our objective is to choose cards from the beginning or end of the array in such a way that the sum of the *remaining* cards is *minimized*. \n\n We can use a sliding window to find the subarray of size `cardPoints.length - k` that has the minimal sum. Subtracting this value from the total sum of all the cards will give us our answer. This is because no matter where the minimum subarray is located (in the beginning, the middle, or the end) the remaining cards must be selected under the given rule: *in one step, you can take one card from the beginning or the end of the array*.  \n\n\n**Algorithm**\n\n1. Find the sum of all cards in the array and store it in a variable `totalScore`.\n\n2. If `k` is equal to `cardPoints.length`, then `return totalScore`.\n\n3. Initialize `requiredSubarrayLength` to `cardPoints.length - k`.\n\n4. Initialize two variables: `presentSubarrayScore` and `startingIndex` to `0`. This `startingIndex` marks the starting point of the subarray presently under consideration. Thus it keeps track of the length of the present subarray. \n\n5. Initialize a variable `minSubarrayScore` to `totalScore`. When the algorithm completes, this variable will hold the smallest possible subarray score in the input array.\n\n6. Iterate over the array.\n    * At each iteration add the current card to `presentSubarrayScore`.\n\n7. If the size of the subarray under consideration `presentSubarrayLength` is equal to the `requiredSubarrayLength`:\n    * Compare the score of the subarray `presentSubarrayScore` with the `minSubarrayScore` and modify the `minSubarrayScore` so that it stores the minimum possible subarray sum. \n    * Subtract the current card from the `presentSubarrayScore`.\n    * Increment the `startingIndex`.\n\n8. Subtract the `minSubarrayScore` from the `totalScore` to get the maximum total score that can be obtained by picking `k` cards from the beginning or the end of the array. Return this value.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/oSjd84Qu/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"oSjd84Qu\"></iframe>\n\n**Complexity Analysis**\n\nLet $$n$$ be the number of cards we need to select.\n\n* Time complexity: $$O(n)$$. In the problem, we are iterating over the array of cards twice. So the time complexity will be $$O(2 \\cdot n)$$ = $$O(n)$$.\n\n* Space complexity: $$O(1)$$ since no extra space is required.\n\n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

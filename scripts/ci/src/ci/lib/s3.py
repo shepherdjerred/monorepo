@@ -32,8 +32,8 @@ def sync(
     s3_path = f"s3://{bucket}/{prefix}" if prefix else f"s3://{bucket}/"
     env = {
         **os.environ,
-        "AWS_ACCESS_KEY_ID": os.environ.get("S3_ACCESS_KEY_ID", ""),
-        "AWS_SECRET_ACCESS_KEY": os.environ.get("S3_SECRET_ACCESS_KEY", ""),
+        "AWS_ACCESS_KEY_ID": os.environ.get("SEAWEEDFS_ACCESS_KEY_ID", ""),
+        "AWS_SECRET_ACCESS_KEY": os.environ.get("SEAWEEDFS_SECRET_ACCESS_KEY", ""),
         "AWS_DEFAULT_REGION": os.environ.get("AWS_DEFAULT_REGION", "us-east-1"),
     }
     cmd = [

@@ -150,11 +150,11 @@ export class S3StaticSites extends Construct {
         envVariables: {
           AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({
             secret: credentialsSecret,
-            key: "access_key",
+            key: "SEAWEEDFS_ACCESS_KEY_ID",
           }),
           AWS_SECRET_ACCESS_KEY: EnvValue.fromSecretValue({
             secret: credentialsSecret,
-            key: "secret_key",
+            key: "SEAWEEDFS_SECRET_ACCESS_KEY",
           }),
         },
         securityContext: {

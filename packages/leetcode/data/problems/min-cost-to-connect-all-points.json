@@ -1,0 +1,144 @@
+{
+  "questionId": "1706",
+  "questionFrontendId": "1584",
+  "title": "Min Cost to Connect All Points",
+  "titleSlug": "min-cost-to-connect-all-points",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array <code>points</code> representing integer coordinates of some points on a 2D-plane, where <code>points[i] = [x<sub>i</sub>, y<sub>i</sub>]</code>.</p>\n\n<p>The cost of connecting two points <code>[x<sub>i</sub>, y<sub>i</sub>]</code> and <code>[x<sub>j</sub>, y<sub>j</sub>]</code> is the <strong>manhattan distance</strong> between them: <code>|x<sub>i</sub> - x<sub>j</sub>| + |y<sub>i</sub> - y<sub>j</sub>|</code>, where <code>|val|</code> denotes the absolute value of <code>val</code>.</p>\n\n<p>Return <em>the minimum cost to make all points connected.</em> All points are connected if there is <strong>exactly one</strong> simple path between any two points.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/08/26/d.png\" style=\"width: 214px; height: 268px;\" />\n<pre>\n<strong>Input:</strong> points = [[0,0],[2,2],[3,10],[5,2],[7,0]]\n<strong>Output:</strong> 20\n<strong>Explanation:</strong> \n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/08/26/c.png\" style=\"width: 214px; height: 268px;\" />\nWe can connect the points as shown above to get the minimum cost of 20.\nNotice that there is a unique path between every pair of points.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> points = [[3,12],[-2,5],[-4,1]]\n<strong>Output:</strong> 18\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= points.length &lt;= 1000</code></li>\n\t<li><code>-10<sup>6</sup> &lt;= x<sub>i</sub>, y<sub>i</sub> &lt;= 10<sup>6</sup></code></li>\n\t<li>All pairs <code>(x<sub>i</sub>, y<sub>i</sub>)</code> are distinct.</li>\n</ul>\n",
+  "hints": [
+    "Connect each pair of points with a weighted edge, the weight being the manhattan distance between those points.",
+    "The problem is now the cost of minimum spanning tree in graph with above edges."
+  ],
+  "metaData": "{\n  \"name\": \"minCostConnectPoints\",\n  \"params\": [\n    {\n      \"name\": \"points\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"459.1K\", \"totalSubmission\": \"650.8K\", \"totalAcceptedRaw\": 459100, \"totalSubmissionRaw\": 650808, \"acRate\": \"70.5%\"}",
+  "likes": 5622,
+  "dislikes": 146,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Number of Lines to Cover Points\", \"titleSlug\": \"minimum-number-of-lines-to-cover-points\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[0,0],[2,2],[3,10],[5,2],[7,0]]",
+    "[[3,12],[-2,5],[-4,1]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 5, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 2, \"slug\": \"nutanix\", \"name\": \"Nutanix\"}, {\"timesEncountered\": 2, \"slug\": \"paypay\", \"name\": \"PayPay\"}, {\"timesEncountered\": 2, \"slug\": \"directi\", \"name\": \"Directi\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Minimum Spanning Tree",
+      "slug": "minimum-spanning-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minCostConnectPoints(vector<vector<int>>& points) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minCostConnectPoints(int[][] points) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minCostConnectPoints(self, points: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minCostConnectPoints(self, points):\n        \"\"\"\n        :type points: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} points\n * @return {number}\n */\nvar minCostConnectPoints = function(points) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minCostConnectPoints(points: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinCostConnectPoints(int[][] points) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minCostConnectPoints(int** points, int pointsSize, int* pointsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minCostConnectPoints(points [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minCostConnectPoints(points: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minCostConnectPoints(_ points: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_cost_connect_points(points: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} points\n# @return {Integer}\ndef min_cost_connect_points(points)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $points\n     * @return Integer\n     */\n    function minCostConnectPoints($points) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minCostConnectPoints(List<List<int>> points) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minCostConnectPoints(points: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_cost_connect_points(points :: [[integer]]) :: integer\n  def min_cost_connect_points(points) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_cost_connect_points(Points :: [[integer()]]) -> integer().\nmin_cost_connect_points(Points) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-cost-connect-points points)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1314",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nAfter reading the problem description, we can say we need to connect some points (the connection between any two points will be an edge whose weight is the Manhattan distance between those points) such that all points become connected and the sum of the weights of the chosen edges is minimized.\n\nWe can say this problem is a variant of graph problems. More precisely, it is a [Minimum Spanning Tree (MST)](https://leetcode.com/explore/featured/card/graph/621/algorithms-to-construct-minimum-spanning-tree/3884/) problem, where we are given **nodes** (points) and **weighted edges** (distance between two points) and we have to form an MST using them.\n\n<br />\n\n**How do we know that this is an MST problem?**    \n\n> Given a connected, weighted, and undirected graph, a minimum spanning tree is a subset of edges that connect all vertices while the total weights of these edges are minimum among all possible subsets.\n    \nWe can draw some similarities between the above definition and the problem here. We can consider our input as a complete graph (each point has an edge to every other point), and in this complete graph, we have to connect each point with minimum cost (sum of edge weights). Thus, we can rephrase the problem as \"Find the Minimum Spanning Tree for the given set of points.\" \n\n![graph to mst](../Figures/1584/Slide1.PNG)\n\nConcerning the MST problem, there exist several classic algorithms. In particular, we will demonstrate two of them, namely [Kruskal's algorithm](https://leetcode.com/explore/featured/card/graph/621/algorithms-to-construct-minimum-spanning-tree/3856/) and [Prim's algorithm](https://leetcode.com/explore/featured/card/graph/621/algorithms-to-construct-minimum-spanning-tree/3859/), which are the most popular ones and feasible to implement during an interview.\n\n> **Note:** If you are not familiar with either of the above algorithms, we highly recommend you to visit the [Graph Explore Card](https://leetcode.com/explore/featured/card/graph/621/algorithms-to-construct-minimum-spanning-tree/3884/) and watch the video explanations to gain a general understanding of these algorithms as these are standard graph algorithms which are used frequently in MST problems. <br /> \n> We will focus on their implementation in the given problem rather than going into detail that how these algorithms work.\n\n</br>\n\n---\n\n### Approach 1: Kruskal's Algorithm\n\n**Intuition**\n\n[Kruskal's algorithm](https://leetcode.com/explore/featured/card/graph/621/algorithms-to-construct-minimum-spanning-tree/3856/) is a greedy algorithm for building a minimum spanning tree in a *weighted* and *undirected* graph.        \n\n> The algorithm operates by identifying the **lowest-weighted** edge that is not part of the MST. Then, if the nodes that belong to the edge are not connected, the edge is added to the MST. This process is repeated until **all nodes** are connected. Since we do not add an edge when its nodes are already connected, **no cycles** are formed.\n\n![kruskal](../Figures/1584/kruskal.gif) \n\n<br />\n\nFirst, we sort all the edges in increasing order of weight to prioritize adding the lowest-weighted edges first. We will continue to include edges in our MST until all nodes are connected, but **how can we determine if including an edge will form a cycle or not?**\n\nFor this purpose, we can use a disjoint set data structure also called a union-find data structure.             \nIf this data structure is new to you, we encourage you to visit the [disjoint set explore card](https://leetcode.com/explore/featured/card/graph/618/disjoint-set/3881/). The explore card will help you gain a basic understanding of the data structure and practice using it before proceeding.\n\nThe union-find data structure has two primary functions:\n- $$find(a)$$: Function which returns the ID of the group in which node $$a$$ belongs.\n- $$union(a, b)$$: Function to merge the groups of node $$a$$ and $$b$$. If they already belong to the same group, we don't do anything and return $$false$$ to signify the edge between $$a$$ and $$b$$ was not added. Otherwise, we return $$true$$.            \n\nWhile there are several ways to implement union-find, in this approach, we will implement union-find by rank with path compression.  \n\nSo, after sorting all the edges in increasing order, we will try to connect the end nodes of each edge one by one.               \nFirst, we need to check if these two nodes are already connected. To do so, we can use the $$find$$ function. If they are already connected by some other path, then adding this edge will form a cycle; thus, we will omit this edge from the MST. If the nodes are not connected, we can use the $$union$$ function to connect them. We will perform the $$find$$ check inside the $$union$$ function to keep our code clean.         \n\n\n![union](../Figures/1584/Slide2.PNG)    \n\n\nWe can make a small optimization here. Instead of iterating over the whole array, when we connect $$(n-1)$$ edges, we can skip the remaining edges because the MST is complete. The MST becomes complete as soon as it contains $$(n-1)$$ edges because a tree with $$n$$ nodes will always have $$(n-1)$$ edges.\n\nWe will be given coordinate points in our input array, so we will name each point something unique such that working with them is easy. In the union-find data structure, representing each node with an integer will simplify our implementation, so we will represent each point as its index in the input array. \n\n\n**Algorithm**\n\n1. Create a class $$UnionFind$$:\n    - $$ group, \\space rank $$ - Arrays to store the group (also known as root) and rank of each node.\n    - $$find(a)$$ - Function to find the group of node $$a$$ using path compression.\n    - $$union(a, b)$$ - Function to merge groups of nodes $$a$$ and $$b$$ by rank.\n\n2. Initialize some variables:\n    - $$n$$ - Number of nodes in the graph.\n    - $$mstCost$$ - Cost to build the MST.\n    - $$edgesUsed$$ - Number of edges included in the MST.\n    - $$uf$$ - UnionFind object of size $$n$$ to connect $$n$$ nodes.\n    - $$allEdges$$ - Array to store all the edges of our graph.\n\n3. Iterate over all coordinate points, and for each coordinate point, create an edge to all other coordinate points. Store the edges in the $$allEdges$$ array. Each element of $$allEdges$$ contains three values: **edge weight, node1, node2**.\n\n4. Sort the elements in $$allEdges$$ in increasing order of their edge weights.\n\n5. Iterate over each edge in $$allEdges$$ until $$edgesUsed$$ becomes equal to $$n-1$$. For each edge:\n    - Try joining both the nodes of the current edge. \n    - If the nodes are already connected, we discard the current edge because including this edge would create a cycle. Otherwise, we add the weight of the current edge to the $$mstCost$$ variable and increment $$edgesUsed$$ by $$1$$.\n\n6. Return the total cost of MST, $$mstCost$$.\n\n!?!../Documents/1584/slideshow1.json:960,540!?! \n\n<br />\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/SrXxUCof/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"SrXxUCof\"></iframe>\n\n\n**Complexity Analysis**\n\nIf $$N$$ is the number of points in the input array.\n\n\n* Time complexity: $$O(N^2 \\cdot \\log(N))$$.\n\n  - First, we store $$N \\cdot (N-1) / 2 \\approx N^2$$ edges of our complete graph in the $$allEdges$$ array which will take $$O(N^2)$$ time, and sorting this array will take $$O(N^2 \\cdot \\log(N^2))$$ time.\n\n  - Then, we iterate over the $$allEdges$$ array, and for each element, we perform a union-find operation. The amortized time complexity for union-find by rank and path compression is $$O(\\alpha(N))$$, where $$\\alpha(N)$$ is [Inverse Ackermann Function](https://en.wikipedia.org/wiki/Ackermann_function#:~:text=Inverse%5Bedit%5D,is%20primitive%20recursive.), which is nearly constant, even for large values of $$N$$.\n\n  - Thus, the overall time complexity is $$O(N^2 + N^2 \\cdot \\log(N^2) + N^2 \\cdot \\alpha(N)) \\approx O(N^2 \\cdot \\log(N^2)) \\approx O(N^2 \\cdot \\log(N))$$.\n\n\n* Space complexity: $$O(N^2)$$.\n    \n  - We use an array $$allEdges$$ to store all $$N \\cdot (N-1) / 2 \\approx N^2$$ edges of our graph.\n  - UnionFind object $$uf$$ uses two arrays each of size $$N$$ to store the group id and rank of all the nodes. \n  - Thus, the overall space complexity is $$O(N^2 + N) \\approx O(N^2)$$.\n\n<br/>\n\n---\n\n### Approach 2: Prim's Algorithm\n\n**Intuition**\n\n[Prim's algorithm](https://leetcode.com/explore/featured/card/graph/621/algorithms-to-construct-minimum-spanning-tree/3859/) is also a greedy algorithm for building a minimum spanning tree in a *weighted* and *undirected* graph.        \n\n> In this algorithm, we include an arbitrary node in the MST and keep on adding the **lowest-weighted** edges of the nodes present in the MST until all nodes are included in the MST and **no cycles** are formed.           \n\n![prims](../Figures/1584/prims.gif) \n\n<br />\n\nJust like the previous approach, we will use the input array indices to represent the nodes.       \n\nIn this algorithm, we can pick any node to start with. Then we will choose the **lowest-weighted edge** that connects a node present in the MST to a node not present in the MST. We could keep all of the edges in an array and then sort them. But then, for each new node that we add to the MST, we would have to add the new node's edges to the array and sort the array again. This would be a costly operation when done repeatedly.\n\nA more efficient way to track which edges are available and which of these edges has the lowest weight is to use a [min-heap data structure](https://leetcode.com/explore/featured/card/heap/). A **min-heap** is a tree-like data structure that always stores the minimum valued element (edge weight here) at the root and where insertion and removal of elements (edges) take logarithmic time.\n\nNow, we know how to greedily pick the lowest-weighted edge, but **how can we check if including an edge will form a cycle in the MST?**      \nConsider the example below. We can say, for the node $$0$$ of the MST there exists an edge that is greedily best to choose and it connects to node $$4$$. If node $$4$$ is already present in the MST it means there already exists a path from node $$0$$ to $$4$$ and hence adding this edge would form a loop.\n\n![include edge](../Figures/1584/Slide2.PNG)    \n\nThus, we can use one boolean array to record which nodes are already present in the MST. If both of an edge's nodes are already present in the MST, we will discard the edge. Otherwise, we will include this edge and mark the newly added node as present in the MST.\n\nSince an MST can only have $$n - 1$$ edges, we can use it as an early exit condition to stop iterating over heap elements.\n\n\n**Algorithm**\n\n1. Initialize some variables:\n    - $$n$$ - Number of nodes of the graph.\n    - $$mstCost$$ - Cost to build the MST.\n    - $$edgesUsed$$ - Number of edges included in the MST.\n    - $$inMST$$ - Array to track if a node was already included in MST or not.\n    - $$heap$$ - A min-heap to pick minimum weight edge, each element of heap is a pair of $$(edge \\space weight, \\space node)$$.\n\n2. Initially, we start with node $$0$$ and the cost to include this node will be $$0$$, thus we push all adjacent edges of node $$0$$ in $$heap$$ with their respective $$weights$$ using a for-loop. However, to make the code implementation cleaner, we will simply initialize the $$heap$$ with the pair $$(0, \\space 0)$$, which represents a temporary edge to node $$0$$ with a weight of $$0$$. \n\n3. We pop elements from the $$heap$$ and attempt to add them to the tree until $$edgesUsed$$ becomes equal to $$n$$. We initially added one temporary edge, thus we stop when $$n$$ edges are added in the MST.\n    - We get the minimum weighted edge and the node from the top of $$heap$$ and pop it.\n    - If this node is already present in our MST $$ ( inMST[node] == true ) $$ we discard this edge. \n    - Otherwise, we include this node in our MST, increment $$edgesUsed$$ by $$1$$, add the edge's weight to the $$mstCost$$, and push the edges of this node into the $$heap$$.\n\n4. We return the total cost of MST, $$mstCost$$.\n\n!?!../Documents/1584/slideshow2.json:960,540!?! \n\n<br />\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/ZaovuKZE/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ZaovuKZE\"></iframe>\n\n\n**Complexity Analysis**\n\nIf $$N$$ is the number of points in the input array.\n\n\n* Time complexity: $$O(N^2 \\cdot \\log(N))$$.\n\n  - In the worst-case, we push/pop $$N \\cdot (N-1) / 2 \\approx N^2$$ edges of our graph in the heap. Each push/pop operation takes $$O(\\log(N^2)) \\approx \\log(N)$$ time.\n  - Thus, the overall time complexity is $$ O(N^2 \\cdot \\log(N)) $$.\n\n\n* Space complexity: $$O(N^2)$$.\n    \n  - In the worst-case, we push $$N \\cdot (N-1) / 2 \\approx N^2$$ edges into the heap.\n  - We use an array $$inMST$$ of size $$N$$ to mark which nodes are included in MST.\n  - Thus, the overall space complexity is $$O(N^2 + N) \\approx O(N^2)$$.\n    \n\n<br/>\n\n---\n\n### Approach 3: Prim's Algorithm (Optimized)\n\n**Intuition**\n\nAlthough the min-heap method is often used to implement Prim's algorithm (as it's fairly easy to understand), due to its use of a heap to store the edges, its time complexity is suboptimal.\nThus, we will present a more efficient way of implementing Prim's algorithm, which eliminates the use of min-heap to find the next lowest-weighted edge.\n \nIn this approach, we use one $$minDist$$ array, where $$minDist[i]$$ stores the weight of the smallest weighted edge to reach the $$i^{th}$$ node from any node in the current tree. \nWe will iterate over the $$minDist$$ array and greedily pick the node that is not in the MST and has the smallest edge weight. We will add this node to the MST, and for all of its neighbors, we will try to update the value in $$minDist$$.  \nWe will repeat this process until all nodes are part of the MST.\n\nInitially, we can start with any node, say node $$0$$. Thus we mark$$minDist[0] = 0$$, and for the remaining nodes, the min distance to reach them is $$\\infty$$.         \nJust like in the previous approach, we assume a $$0$$ weighted temporary edge is used to reach the first node.\n\nThus in this method, we will use this new way of selecting the min weight edges (instead of using a heap). Just like the previous method, we will use the $$inMST$$ array to determine if adding the current edge will result in a cycle, and we can stop as soon as $$n$$ edges are included in MST (including our imaginary zero-weight edge to node 0).\n\n**Algorithm**\n\n1. Initialize some variables:\n    - $$n$$ - Number of nodes of the graph.\n    - $$mstCost$$ - Cost to build the MST.\n    - $$edgesUsed$$ - Number of edges included in the MST.\n    - $$inMST$$ - Array to track which nodes are already part of the MST.\n    - $$minDist$$ - Array to track the minimum edge weight to reach the $$i^{th}$$ node from any node that is already in the tree.\n\n2. Initially, we start with node $$0$$, and the cost to reach this node will be $$0$$. To signify this, we set $$minDist[0]$$ equal to $$0$$.\n\n3. We will try adding nodes to our MST until $$edgesUsed$$ becomes equal to $$n$$.\n    - We pick the node which uses the lowest weight edge and is not present in the MST.\n    - We increment $$edgesUsed$$ by $$1$$, mark this node as included in the MST, and add the edge weight used to reach this node to the $$mstCost$$.\n    - Try updating the minimum distance to all adjacent nodes in $$minDist$$. \n\n4. We return the total cost of the MST, $$mstCost$$.\n\n!?!../Documents/1584/slideshow3.json:960,540!?! \n\n<br />\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/Y38jZ9gQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Y38jZ9gQ\"></iframe>\n\n\n**Complexity Analysis**\n\nIf $$N$$ is the number of points in the input array.\n\n* Time complexity: $$O(N^2)$$.\n\n  - We pick all $$N$$ nodes one by one to include in the MST. Picking each node takes $$O(N)$$ time and after picking a node, we iterate over all of its adjacent nodes, which also takes $$O(N)$$ time.\n  - Thus, the overall time complexity is $$ O(N \\cdot (N + N)) = O(N^2) $$.\n\n\n* Space complexity: $$O(N)$$.\n    \n  - We use two arrays each of size $$N$$, $$inMST$$ and $$minDist$$.\n  - Thus, the overall space complexity is $$O(N + N) = O(N)$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

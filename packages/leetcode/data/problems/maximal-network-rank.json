@@ -1,0 +1,134 @@
+{
+  "questionId": "1738",
+  "questionFrontendId": "1615",
+  "title": "Maximal Network Rank",
+  "titleSlug": "maximal-network-rank",
+  "difficulty": "Medium",
+  "content": "<p>There is an infrastructure of <code>n</code> cities with some number of <code>roads</code> connecting these cities. Each <code>roads[i] = [a<sub>i</sub>, b<sub>i</sub>]</code> indicates that there is a bidirectional road between cities <code>a<sub>i</sub></code> and <code>b<sub>i</sub></code>.</p>\n\n<p>The <strong>network rank</strong><em> </em>of <strong>two different cities</strong> is defined as the total number of&nbsp;<strong>directly</strong> connected roads to <strong>either</strong> city. If a road is directly connected to both cities, it is only counted <strong>once</strong>.</p>\n\n<p>The <strong>maximal network rank </strong>of the infrastructure is the <strong>maximum network rank</strong> of all pairs of different cities.</p>\n\n<p>Given the integer <code>n</code> and the array <code>roads</code>, return <em>the <strong>maximal network rank</strong> of the entire infrastructure</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/21/ex1.png\" style=\"width: 292px; height: 172px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> n = 4, roads = [[0,1],[0,3],[1,2],[1,3]]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The network rank of cities 0 and 1 is 4 as there are 4 roads that are connected to either 0 or 1. The road between 0 and 1 is only counted once.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/21/ex2.png\" style=\"width: 292px; height: 172px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> n = 5, roads = [[0,1],[0,3],[1,2],[1,3],[2,3],[2,4]]\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> There are 5 roads that are connected to cities 1 or 2.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 8, roads = [[0,1],[1,2],[2,3],[2,4],[5,6],[5,7]]\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> The network rank of 2 and 5 is 5. Notice that all the cities do not have to be connected.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 100</code></li>\n\t<li><code>0 &lt;= roads.length &lt;= n * (n - 1) / 2</code></li>\n\t<li><code>roads[i].length == 2</code></li>\n\t<li><code>0 &lt;= a<sub>i</sub>, b<sub>i</sub>&nbsp;&lt;= n-1</code></li>\n\t<li><code>a<sub>i</sub>&nbsp;!=&nbsp;b<sub>i</sub></code></li>\n\t<li>Each&nbsp;pair of cities has <strong>at most one</strong> road connecting them.</li>\n</ul>\n",
+  "hints": [
+    "Try every pair of different cities and calculate its network rank.",
+    "The network rank of two vertices is <i>almost</i> the sum of their degrees.",
+    "How can you efficiently check if there is a road connecting two different cities?"
+  ],
+  "metaData": "{\n  \"name\": \"maximalNetworkRank\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"roads\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"169.4K\", \"totalSubmission\": \"256.9K\", \"totalAcceptedRaw\": 169379, \"totalSubmissionRaw\": 256916, \"acRate\": \"65.9%\"}",
+  "likes": 2450,
+  "dislikes": 393,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "4\n[[0,1],[0,3],[1,2],[1,3]]",
+    "5\n[[0,1],[0,3],[1,2],[1,3],[2,3],[2,4]]",
+    "8\n[[0,1],[1,2],[2,3],[2,4],[5,6],[5,7]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximalNetworkRank(int n, vector<vector<int>>& roads) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximalNetworkRank(int n, int[][] roads) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximalNetworkRank(self, n: int, roads: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximalNetworkRank(self, n, roads):\n        \"\"\"\n        :type n: int\n        :type roads: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} roads\n * @return {number}\n */\nvar maximalNetworkRank = function(n, roads) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximalNetworkRank(n: number, roads: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaximalNetworkRank(int n, int[][] roads) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maximalNetworkRank(int n, int** roads, int roadsSize, int* roadsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximalNetworkRank(n int, roads [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximalNetworkRank(n: Int, roads: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximalNetworkRank(_ n: Int, _ roads: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximal_network_rank(n: i32, roads: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} roads\n# @return {Integer}\ndef maximal_network_rank(n, roads)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $roads\n     * @return Integer\n     */\n    function maximalNetworkRank($n, $roads) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximalNetworkRank(int n, List<List<int>> roads) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximalNetworkRank(n: Int, roads: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximal_network_rank(n :: integer, roads :: [[integer]]) :: integer\n  def maximal_network_rank(n, roads) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximal_network_rank(N :: integer(), Roads :: [[integer()]]) -> integer().\nmaximal_network_rank(N, Roads) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximal-network-rank n roads)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1983",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nTo solve this problem, we can transform it into a graph problem, where cities are represented as nodes and roads as bidirectional edges connecting the nodes. \n\nThe objective is to find the **maximum rank of the given network/graph**, which is the maximum of all network ranks of all pairs of different nodes.    \nThe network rank of a pair of nodes is defined as the total number of directly connected edges to either node and if an edge is directly connected to both nodes, it is only counted once.\n\n---\n\n### Approach: Finding the in-degree of nodes\n\n#### Intuition  \n\nTo maximize the network rank, we can iterate over each possible pair of nodes in the graph and calculate their network rank. For each pair, we find the total number of directly connected edges to either node. If an edge connects both nodes, it is counted only once. We store the maximum network rank obtained from all pairs as the answer.\n\n**How do we find the network rank of a pair of nodes?**    \nThe network rank of a pair of nodes is the sum of the in-degree (number of edges connected to a node) of each node minus the number of common edges between them. \n\n**How do we find the number of common edges between any two nodes?**  \nIn this problem, it's given that \"each pair of cities has at most one road connecting them\", thus if these two nodes are directly connected then the common edges between them will be `1`, otherwise `0`.\n\n![img1](../Figures/1615/Slide1.PNG)\n\nHere are two ways to implement this approach:\n1. We can keep an integer array or a hash map to map a `node` with the count of its edges, i.e. store the in-degree of each node `i` at `indegree[i]`.  \nAnd another boolean matrix in which `isConnected[node1][node2]` represents if `node1` and `node2` are connected or not.\n\n2. We can keep an array or hash map, which maps the `node` with the hash set of nodes it is connected to. Here, the size of the hash set will give the in-degree of the respective node and we can find if `node2` exists in the hash set of `node1` to check if they are directly connected or not.\n\n![img1](../Figures/1615/Slide2.PNG)\n\nThe worst-case time and space complexity will remain the same in both implementations. Here, we will show you the implementation of the latter one.\n\n\n#### Algorithm\n\n1. Initialize variables:\n    - `maxRank`, a variable to store the maximum network rank found so far.\n    - `adj`, a hash map of the hash set to store the nodes in the hash set connected to respective nodes.\n2. Using two nested for-loops iterate on each possible node pair `(node1, node2)`, and calculate its network rank as discussed earlier.    \n    - Thus `currentRank` will be `indegree of node1 + indegree of node2 - (1 if node1 is connected to node2)`\n    - If `currentRank` is greater than `maxRank`, then update `maxRank`.\n3. Return `maxRank`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/d4LXkzDf/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"d4LXkzDf\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $E$ is the number of edges and $V$ is the number of nodes in our graph respectively\n\n* Time complexity: $$O(E + V^2)$$  \n    - We iterate on each edge and store both its nodes in the hashmap which will take O(1) time. Thus, for $E$ edges, it will take us $O(E)$ time.\n    - Then we iterate on all possible pairs of the nodes and calculate the network rank which will take $O(1)$ time. Thus, for $V (V - 1) / 2$ pairs, it will take $O(V^2)$ time.\n    - Thus, overall we take $O(E + V^2)$ time.\n* Space complexity: $$O(E)$$\n    - We use a hashmap that stores all the edge's nodes in it which will take $O(E)$ space in a fully connected graph.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,150 @@
+{
+  "questionId": "1613",
+  "questionFrontendId": "1489",
+  "title": "Find Critical and Pseudo-Critical Edges in Minimum Spanning Tree",
+  "titleSlug": "find-critical-and-pseudo-critical-edges-in-minimum-spanning-tree",
+  "difficulty": "Hard",
+  "content": "<p>Given a weighted undirected connected graph with <code>n</code>&nbsp;vertices numbered from <code>0</code> to <code>n - 1</code>,&nbsp;and an array <code>edges</code>&nbsp;where <code>edges[i] = [a<sub>i</sub>, b<sub>i</sub>, weight<sub>i</sub>]</code> represents a bidirectional and weighted edge between nodes&nbsp;<code>a<sub>i</sub></code>&nbsp;and <code>b<sub>i</sub></code>. A minimum spanning tree (MST) is a subset of the graph&#39;s edges that connects all vertices without cycles&nbsp;and with the minimum possible total edge weight.</p>\n\n<p>Find <em>all the critical and pseudo-critical edges in the given graph&#39;s minimum spanning tree (MST)</em>. An MST edge whose deletion from the graph would cause the MST weight to increase is called a&nbsp;<em>critical edge</em>. On&nbsp;the other hand, a pseudo-critical edge is that which can appear in some MSTs but not all.</p>\n\n<p>Note that you can return the indices of the edges in any order.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/06/04/ex1.png\" style=\"width: 259px; height: 262px;\" /></p>\n\n<pre>\n<strong>Input:</strong> n = 5, edges = [[0,1,1],[1,2,1],[2,3,2],[0,3,2],[0,4,3],[3,4,3],[1,4,6]]\n<strong>Output:</strong> [[0,1],[2,3,4,5]]\n<strong>Explanation:</strong> The figure above describes the graph.\nThe following figure shows all the possible MSTs:\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/06/04/msts.png\" style=\"width: 540px; height: 553px;\" />\nNotice that the two edges 0 and 1 appear in all MSTs, therefore they are critical edges, so we return them in the first list of the output.\nThe edges 2, 3, 4, and 5 are only part of some MSTs, therefore they are considered pseudo-critical edges. We add them to the second list of the output.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/06/04/ex2.png\" style=\"width: 247px; height: 253px;\" /></p>\n\n<pre>\n<strong>Input:</strong> n = 4, edges = [[0,1,1],[1,2,1],[2,3,1],[0,3,1]]\n<strong>Output:</strong> [[],[0,1,2,3]]\n<strong>Explanation:</strong> We can observe that since all 4 edges have equal weight, choosing any 3 edges from the given 4 will yield an MST. Therefore all 4 edges are pseudo-critical.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 100</code></li>\n\t<li><code>1 &lt;= edges.length &lt;= min(200, n * (n - 1) / 2)</code></li>\n\t<li><code>edges[i].length == 3</code></li>\n\t<li><code>0 &lt;= a<sub>i</sub> &lt; b<sub>i</sub> &lt; n</code></li>\n\t<li><code>1 &lt;= weight<sub>i</sub>&nbsp;&lt;= 1000</code></li>\n\t<li>All pairs <code>(a<sub>i</sub>, b<sub>i</sub>)</code> are <strong>distinct</strong>.</li>\n</ul>\n",
+  "hints": [
+    "Use the Kruskal algorithm to find the minimum spanning tree by sorting the edges and picking edges from ones with smaller weights.",
+    "Use a disjoint set to avoid adding redundant edges that result in a cycle.",
+    "To find if one edge is critical, delete that edge and re-run the MST algorithm and see if the weight of the new MST increases.",
+    "To find if one edge is non-critical (in any MST), include that edge to the accepted edge list and continue the MST algorithm, then see if the resulting MST has the same weight of the initial MST of the entire graph."
+  ],
+  "metaData": "{\n  \"name\": \"findCriticalAndPseudoCriticalEdges\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"edges\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<list<integer>>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"72.4K\", \"totalSubmission\": \"109.1K\", \"totalAcceptedRaw\": 72427, \"totalSubmissionRaw\": 109102, \"acRate\": \"66.4%\"}",
+  "likes": 2004,
+  "dislikes": 171,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "5\n[[0,1,1],[1,2,1],[2,3,2],[0,3,2],[0,4,3],[3,4,3],[1,4,6]]",
+    "4\n[[0,1,1],[1,2,1],[2,3,1],[0,3,1]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Minimum Spanning Tree",
+      "slug": "minimum-spanning-tree"
+    },
+    {
+      "name": "Strongly Connected Component",
+      "slug": "strongly-connected-component"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> findCriticalAndPseudoCriticalEdges(int n, vector<vector<int>>& edges) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<List<Integer>> findCriticalAndPseudoCriticalEdges(int n, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findCriticalAndPseudoCriticalEdges(self, n: int, edges: List[List[int]]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findCriticalAndPseudoCriticalEdges(self, n, edges):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} edges\n * @return {number[][]}\n */\nvar findCriticalAndPseudoCriticalEdges = function(n, edges) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findCriticalAndPseudoCriticalEdges(n: number, edges: number[][]): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<IList<int>> FindCriticalAndPseudoCriticalEdges(int n, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** findCriticalAndPseudoCriticalEdges(int n, int** edges, int edgesSize, int* edgesColSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findCriticalAndPseudoCriticalEdges(n int, edges [][]int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findCriticalAndPseudoCriticalEdges(n: Int, edges: Array<IntArray>): List<List<Int>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findCriticalAndPseudoCriticalEdges(_ n: Int, _ edges: [[Int]]) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_critical_and_pseudo_critical_edges(n: i32, edges: Vec<Vec<i32>>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} edges\n# @return {Integer[][]}\ndef find_critical_and_pseudo_critical_edges(n, edges)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $edges\n     * @return Integer[][]\n     */\n    function findCriticalAndPseudoCriticalEdges($n, $edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> findCriticalAndPseudoCriticalEdges(int n, List<List<int>> edges) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findCriticalAndPseudoCriticalEdges(n: Int, edges: Array[Array[Int]]): List[List[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_critical_and_pseudo_critical_edges(n :: integer, edges :: [[integer]]) :: [[integer]]\n  def find_critical_and_pseudo_critical_edges(n, edges) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_critical_and_pseudo_critical_edges(N :: integer(), Edges :: [[integer()]]) -> [[integer()]].\nfind_critical_and_pseudo_critical_edges(N, Edges) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-critical-and-pseudo-critical-edges n edges)\n  (-> exact-integer? (listof (listof exact-integer?)) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1971",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Kruskal's Algorithm\n\nBefore attempting this problem, please first solve [Connecting Cities With Minimum Cost](https://leetcode.com/problems/connecting-cities-with-minimum-cost/) and [Min Cost to Connect All Points](https://leetcode.com/problems/min-cost-to-connect-all-points/). In this article, we will use Kruskal's algorithm. If you solved these problems, we assume you are familiar with this algorithm.\n\n#### Intuition\n\nA graph has exactly one minimum spanning tree (MST) weight, but there could be multiple MSTs with this weight.\n\nA *critical* edge is an edge that, if removed from the graph, would increase the MST weight. It means that the edge appears in every MST.\n\nOn the other hand, a *pseudo-critical* edge is an edge that can appear in some MSTs but not all. It means that the edge isn't necessary to maintain the MST weight, but we can include it without increasing the MST weight.\n\nFirstly, we need to sort all the edges in increasing order of their weights. It is important because we want to consider the smaller edges first when we're trying to build the MST. We can do this using any standard sorting algorithm.\n\nNext, we need to implement [Kruskal's algorithm](https://en.wikipedia.org/wiki/Kruskal%27s_algorithm) to find the MST weight. Kruskal's algorithm is a simple but powerful method for finding an MST in a graph. It works by repeatedly selecting the smallest edge that doesn't form a cycle with the edges already in the MST. To implement this algorithm, we also need to use a [union-find data structure](https://en.wikipedia.org/wiki/Disjoint-set_data_structure) which is a data structure that keeps track of a partition of a set into disjoint subsets.\n\nOnce we've got the weight of the MST, we now need to identify the critical and pseudo-critical edges.\n\nFor each edge, to identify if it's critical, we remove it from the graph and re-calculate the MST weight (again using Kruskal's algorithm). If the MST weight increases or it's impossible to connect all nodes without this edge (i.e., the graph is not connected), this edge is critical. An important hint toward this approach is that the constraints state $n \\le 100$, which means performing Kruskal's many times is a feasible strategy.\n\nTo check if an edge is a pseudo-critical edge, we first check that it's not critical. Then, we run Kruskal's while forcing the edge to be part of the tree. If the final weight remains the same as the MST weight, then this edge is part of at least one MST and thus is a pseudo-critical edge.\n\nWe repeat these steps for every edge in the sorted edge list.\n\n#### Algorithm\n\n1. **Preprocessing.** Create a new version of the edges array that includes the original index of each edge. Sort this new array based on the edge weights.\n2. **Calculate standard MST weight.** Initialize a union-find data structure, iterate over the sorted edges, and add them to the union-find. Whenever two nodes are united, add the corresponding weight to the total MST weight.\n3. **Iterate over each edge.** For each edge in the sorted array, perform two operations – ignoring and forcing the edge.\n\t* **Ignoring the edge.** Calculate the MST weight without this edge. Initialize a new union-find and iterate over the sorted edges (excluding the current one), adding them to the union-find. If the resulting MST is disconnected or the total weight is larger than the standard MST weight, this edge is critical.\n\t* **Forcing the edge.** Calculate the MST weight with this edge included. Initialize a new union-find, add the current edge to it, and then iterate over the remaining edges (excluding the current one), adding them to the union-find. If the total weight of the resulting MST is the same as the standard MST weight, this edge is pseudo-critical. Note that this step is only performed if the edge is not a critical one.\n4. **Record results.** Store the indices of the critical and pseudo-critical edges in two separate lists. Return these lists as the final output.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/fSWqh7uE/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"fSWqh7uE\"></iframe>\n\n\n#### Complexity Analysis\n\n* Time complexity of this algorithm is $O(m^2 \\cdot \\alpha(n))$, where $m$ is the number of edges, $n$ is the number of nodes and $\\alpha$ is the inverse Ackermann function.\n\n\t* **Sorting the edges.** The first operation in this algorithm is sorting the edges. We perform this operation once in $O(m \\log m)$ time.\n\t* **Constructing the MST by ignoring/forcing an edge.** For each edge in our sorted list, we construct two MSTs – one where we force include the edge in the MST and one where we ignore it. To do this, we use the Union-Find data structure, performing union operations to connect the nodes in the graph. The time complexity of these union operations with union by rank and path compression optimization is nearly a constant time operation, represented as $O(\\alpha(n))$, where $\\alpha$ is the inverse Ackermann function. You do not have to know what exactly this function is. It suffices to know that this function grows extremely slowly, so much so that for any conceivable practical input, it does not exceed $5$. Hence for each edge, it would take $O(m \\cdot \\alpha(n))$ time to construct the MST.\n\t* **Iterating through all edges.** The previous step is repeated for each edge in the graph, meaning we perform it $m$ times. This results in a total time complexity of $O(m^2 \\cdot \\alpha(n))$ for constructing all the MSTs.\n\t\nAdding these all together, we find that the total time complexity of this algorithm is $O(m \\log m + m^2 \\cdot \\alpha(n))$, which simplifies to $O(m^2 \\cdot \\alpha(n))$.\n\n* Space complexity is $O(m)$.\n\n\t* **Storing the edges.** We need to store all the edges and their information in our program, which requires $O(m)$ space.\n\t* **Union-Find data structure.** The Union-Find data structure uses an array to keep track of the parent of each node and another array to keep track of the size of each tree in the forest. It requires $O(n)$ space, where $n$ is the number of nodes in the graph.\n\t\nWhen we add these components together, we find that the total space complexity of this algorithm is $O(m + n)$. Since the graph is connected, thus $m \\ge n - 1$ and $O(m + n) = O(m)$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

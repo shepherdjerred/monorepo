@@ -1,0 +1,135 @@
+{
+  "questionId": "1704",
+  "questionFrontendId": "1582",
+  "title": "Special Positions in a Binary Matrix",
+  "titleSlug": "special-positions-in-a-binary-matrix",
+  "difficulty": "Easy",
+  "content": "<p>Given an <code>m x n</code> binary matrix <code>mat</code>, return <em>the number of special positions in </em><code>mat</code><em>.</em></p>\n\n<p>A position <code>(i, j)</code> is called <strong>special</strong> if <code>mat[i][j] == 1</code> and all other elements in row <code>i</code> and column <code>j</code> are <code>0</code> (rows and columns are <strong>0-indexed</strong>).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/12/23/special1.jpg\" style=\"width: 244px; height: 245px;\" />\n<pre>\n<strong>Input:</strong> mat = [[1,0,0],[0,0,1],[1,0,0]]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> (1, 2) is a special position because mat[1][2] == 1 and all other elements in row 1 and column 2 are 0.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/12/24/special-grid.jpg\" style=\"width: 244px; height: 245px;\" />\n<pre>\n<strong>Input:</strong> mat = [[1,0,0],[0,1,0],[0,0,1]]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> (0, 0), (1, 1) and (2, 2) are special positions.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == mat.length</code></li>\n\t<li><code>n == mat[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 100</code></li>\n\t<li><code>mat[i][j]</code> is either <code>0</code> or <code>1</code>.</li>\n</ul>\n",
+  "hints": [
+    "Keep track of 1s in each row and in each column. Then while iterating over matrix, if the current position is 1 and current row as well as current column contains exactly one occurrence of 1."
+  ],
+  "metaData": "{\n  \"name\": \"numSpecial\",\n  \"params\": [\n    {\n      \"name\": \"mat\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"282.9K\", \"totalSubmission\": \"389.5K\", \"totalAcceptedRaw\": 282868, \"totalSubmissionRaw\": 389516, \"acRate\": \"72.6%\"}",
+  "likes": 1795,
+  "dislikes": 80,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Difference Between Ones and Zeros in Row and Column\", \"titleSlug\": \"difference-between-ones-and-zeros-in-row-and-column\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,0,0],[0,0,1],[1,0,0]]",
+    "[[1,0,0],[0,1,0],[0,0,1]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"etsy\", \"name\": \"Etsy\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numSpecial(vector<vector<int>>& mat) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numSpecial(int[][] mat) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numSpecial(self, mat: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numSpecial(self, mat):\n        \"\"\"\n        :type mat: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} mat\n * @return {number}\n */\nvar numSpecial = function(mat) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numSpecial(mat: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumSpecial(int[][] mat) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numSpecial(int** mat, int matSize, int* matColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numSpecial(mat [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numSpecial(mat: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numSpecial(_ mat: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn num_special(mat: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} mat\n# @return {Integer}\ndef num_special(mat)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $mat\n     * @return Integer\n     */\n    function numSpecial($mat) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numSpecial(List<List<int>> mat) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numSpecial(mat: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec num_special(mat :: [[integer]]) :: integer\n  def num_special(mat) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec num_special(Mat :: [[integer()]]) -> integer().\nnum_special(Mat) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (num-special mat)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2187",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Brute Force\n\n**Intuition**\n\nFor our first approach, we will apply a brute force search for each square in `mat`.\n\nWe iterate over every square `(row, col)` in `mat`. For each `(row, col)`, we first check if `mat[row][col] = 1`. If it is, then it could possibly be a special position. Next, we check if there are any squares with the same `row` or same `col` that have a value of `1`. If there are, then the current square `(row, col)` is not special, otherwise, `(row, col)` is special.\n\nTo perform this check, we initialize a boolean flag `good = true` indicating that the current square is special. We then iterate over each row in the `mat` using another variable `r`. For each value of `r` other than `row`, we check if `mat[r][col] = 1`. If it is, it means that there is another cell with value 1 in the same column, so the current square is not special, and we set `good = false`.\n\nThen, we do the same for the columns with a variable `c`. For each value of `c` other than `col`, we check if `mat[row][c] = 1`. If it is, we set `good = false`.\n\n![example](../Figures/1582/1.png)\n<br>\n\nAfter checking the rows and columns, if `good` is still `true`, then the current square is special. We can increment our answer.\n\n**Algorithm**\n\n1. Set the answer `ans = 0`, and the size of the matrix `m = mat.length, n = mat[0].length`.\n2. Iterate `row` from `0` until `m`:\n    - Iterate `col` from `0` until `n`:\n        - If `mat[row][col] = 0`, `continue` to the next iteration.\n        - Set `good = true`.\n        - Iterate `r` from `0` until `m`:\n            - If `r != row` and `mat[r][col] = 1`, set `good = false` and `break` from the loop.\n        - Iterate `c` from `0` until `n`:\n            - If `c != col` and `mat[row][c] = 1`, set `good = false` and `break` from the loop.\n        - If `good = true`, increment `ans`.\n3. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/8vxa2Xsx/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"8vxa2Xsx\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$m$$ as the number of rows in `mat` and $$n$$ as the number of columns in `mat`,\n\n* Time complexity: $$O(m \\cdot n \\cdot (m + n))$$\n\n    There are $$m \\cdot n$$ squares. For each square, in the worst case, we perform iterations over $$m$$ squares of the same column and $$n$$ squares of the same row. Thus, the time complexity is $$O(m \\cdot n \\cdot (m + n))$$.\n\n* Space complexity: $$O(1)$$\n\n    We aren't using any extra space other than a few integers.\n    \n<br/>\n\n---\n\n### Approach 2: Precompute the Number of Ones in each Row and Column\n\n**Intuition**\n\nIn the previous approach, for each square `(row, col)`, we iterated over every other square that shared a `row` or `col` to determine if the current square was special, but you might have noticed that this involved a lot of repetitive traversals. Is there a more efficient way for us to determine if a square is special? \n\nFor a given `(row, col)`, we are trying to answer: \"is there another square in this `row` or this `col` with a value of `1`?\".\n\nWe can pre-process two arrays `rowCount` and `colCount` that tell us how many squares each row or column have with a value of `1`. For example, `rowCount[3]` would tell us how many squares in the row with index `3` have a value of `1`. Similarly, `colCount[7]` would tell us how many squares in the column with index `7` have a value of `1`.\n\n![approach_2](../Figures/1582/2_fix.png)\n<br>\n\nOnce we have these arrays, we iterate over every square `(row, col)` and first check if `mat[row][col] = 1`. If it is, we now check if there are any other squares that share a row or column with a value of `1`. Because `(row, col)` itself has a value of `1`, it is special if `rowCount[row] = 1` and `colCount[col] = 1`.\n\nIf these values are both `1`, then it means `(row, col)` is the **only** square with either coordinate that has a value of `1`, and thus it is special.\n\n**Algorithm**\n\n1. Initialize the size of the matrix `m = mat.length, n = mat[0].length`.\n2. Initialize two integer arrays `rowCount` of length `m` and `colCount` of length `n`.\n3. Iterate `row` from `0` until `m`:\n    - Iterate `col` from `0` until `n`:\n        - If `mat[row][col] = 1`, increment `rowCount[row]` and `colCount[col]`.\n4. Initialize the answer `ans = 0`.\n5. Iterate `row` from `0` until `m`:\n    - Iterate `col` from `0` until `n`:\n        - If `mat[row][col] = 1`:\n            - If `rowCount[row] = 1` and `colCount[col] = 1`, increment `ans`.\n6. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/dcPfqstZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"dcPfqstZ\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$m$$ as the number of rows in `mat` and $$n$$ as the number of columns in `mat`,\n\n* Time complexity: $$O(m \\cdot n)$$\n\n    To calculate `rowCount` and `colCount`, we iterate over each square once, which costs $$O(m \\cdot n)$$.\n\n    Next, we iterate over each square again to determine if it is special. Each iteration costs $$O(1)$$, so in total we spend $$O(m \\cdot n)$$ here.\n\n* Space complexity: $$O(m + n)$$\n\n    `rowCount` has a size of $$m$$ and `colCount` has a size of $$n$$.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

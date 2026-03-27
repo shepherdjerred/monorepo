@@ -1,0 +1,67 @@
+{
+  "questionId": "1368",
+  "questionFrontendId": "1242",
+  "title": "Web Crawler Multithreaded",
+  "titleSlug": "web-crawler-multithreaded",
+  "difficulty": "Medium",
+  "content": "<p>Given a URL <code>startUrl</code> and an interface <code>HtmlParser</code>, implement <strong>a Multi-threaded web crawler</strong> to crawl all links that are under the <strong>same hostname</strong> as <code>startUrl</code>.</p>\n\n<p>Return all URLs obtained by your web crawler in <strong>any</strong> order.</p>\n\n<p>Your crawler should:</p>\n\n<ul>\n\t<li>Start from the page: <code>startUrl</code></li>\n\t<li>Call <code>HtmlParser.getUrls(url)</code> to get all URLs from a webpage of a given URL.</li>\n\t<li>Do not crawl the same link twice.</li>\n\t<li>Explore only the links that are under the <strong>same hostname</strong> as <code>startUrl</code>.</li>\n</ul>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/08/13/urlhostname.png\" style=\"width: 500px; height: 136px;\" />\n<p>As shown in the example URL above, the hostname is <code>example.org</code>. For simplicity&#39;s sake, you may assume all URLs use <strong>HTTP protocol</strong> without any <strong>port</strong> specified. For example, the URLs <code>http://leetcode.com/problems</code> and <code>http://leetcode.com/contest</code> are under the same hostname, while URLs <code>http://example.org/test</code> and <code>http://example.com/abc</code> are not under the same hostname.</p>\n\n<p>The <code>HtmlParser</code> interface is defined as such:</p>\n\n<pre>\ninterface HtmlParser {\n  // Return a list of all urls from a webpage of given <em>url</em>.\n  // This is a blocking call, that means it will do HTTP request and return when this request is finished.\n  public List&lt;String&gt; getUrls(String url);\n}\n</pre>\n\n<p>Note that <code>getUrls(String url)</code> simulates performing an HTTP request. You can treat it as a blocking function call that waits for an HTTP request to finish. It is guaranteed that <code>getUrls(String url)</code> will return the URLs within <strong>15ms. </strong> Single-threaded solutions will exceed the time limit so, can your multi-threaded web crawler do better?</p>\n\n<p>Below are two examples explaining the functionality of the problem. For custom testing purposes, you&#39;ll have three variables <code>urls</code>, <code>edges</code> and <code>startUrl</code>. Notice that you will only have access to <code>startUrl</code> in your code, while <code>urls</code> and <code>edges</code> are not directly accessible to you in code.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/10/23/sample_2_1497.png\" style=\"width: 610px; height: 300px;\" /></p>\n\n<pre>\n<strong>Input:\n</strong>urls = [\n&nbsp; &quot;http://news.yahoo.com&quot;,\n&nbsp; &quot;http://news.yahoo.com/news&quot;,\n&nbsp; &quot;http://news.yahoo.com/news/topics/&quot;,\n&nbsp; &quot;http://news.google.com&quot;,\n&nbsp; &quot;http://news.yahoo.com/us&quot;\n]\nedges = [[2,0],[2,1],[3,2],[3,1],[0,4]]\nstartUrl = &quot;http://news.yahoo.com/news/topics/&quot;\n<strong>Output:</strong> [\n&nbsp; &quot;http://news.yahoo.com&quot;,\n&nbsp; &quot;http://news.yahoo.com/news&quot;,\n&nbsp; &quot;http://news.yahoo.com/news/topics/&quot;,\n&nbsp; &quot;http://news.yahoo.com/us&quot;\n]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/10/23/sample_3_1497.png\" style=\"width: 540px; height: 270px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> \nurls = [\n&nbsp; &quot;http://news.yahoo.com&quot;,\n&nbsp; &quot;http://news.yahoo.com/news&quot;,\n&nbsp; &quot;http://news.yahoo.com/news/topics/&quot;,\n&nbsp; &quot;http://news.google.com&quot;\n]\nedges = [[0,2],[2,1],[3,2],[3,1],[3,0]]\nstartUrl = &quot;http://news.google.com&quot;\n<strong>Output:</strong> [&quot;http://news.google.com&quot;]\n<strong>Explanation: </strong>The startUrl links to all other pages that do not share the same hostname.</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= urls.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= urls[i].length &lt;= 300</code></li>\n\t<li><code>startUrl</code>&nbsp;is one of the <code>urls</code>.</li>\n\t<li>Hostname label must be from <code>1</code> to <code>63</code> characters long, including the dots, may contain only the ASCII letters from <code>&#39;a&#39;</code> to&nbsp;<code>&#39;z&#39;</code>, digits from <code>&#39;0&#39;</code> to <code>&#39;9&#39;</code> and the&nbsp;hyphen-minus&nbsp;character (<code>&#39;-&#39;</code>).</li>\n\t<li>The hostname may not start or end with&nbsp;the hyphen-minus character (&#39;-&#39;).&nbsp;</li>\n\t<li>See:&nbsp;&nbsp;<a href=\"https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames\" target=\"_blank\">https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames</a></li>\n\t<li>You may assume there&#39;re&nbsp;no duplicates in the URL library.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong></p>\n\n<ol>\n\t<li>Assume we have 10,000 nodes and 1 billion URLs to crawl. We will deploy the same software onto each node. The software can know about all the nodes. We have to minimize communication between machines and make sure each node does equal amount of work. How would your web crawler design change?</li>\n\t<li>What if one node fails or does not work?</li>\n\t<li>How do you know when the crawler is done?</li>\n</ol>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"foobar\",\n  \"params\": [\n    {\n      \"name\": \"urls\",\n      \"type\": \"string[]\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"edges\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"startUrl\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"csharp\",\n    \"python3\",\n    \"golang\"\n  ],\n  \"manual\": true\n}",
+  "stats": "{\"totalAccepted\": \"101.7K\", \"totalSubmission\": \"198.9K\", \"totalAcceptedRaw\": 101659, \"totalSubmissionRaw\": 198935, \"acRate\": \"51.1%\"}",
+  "likes": 593,
+  "dislikes": 102,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Web Crawler\", \"titleSlug\": \"web-crawler\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"http://news.yahoo.com\",\"http://news.yahoo.com/news\",\"http://news.yahoo.com/news/topics/\",\"http://news.google.com\",\"http://news.yahoo.com/us\"]\n[[2,0],[2,1],[3,2],[3,1],[0,4]]\n\"http://news.yahoo.com/news/topics/\"",
+    "[\"http://news.yahoo.com\",\"http://news.yahoo.com/news\",\"http://news.yahoo.com/news/topics/\",\"http://news.google.com\"]\n[[0,2],[2,1],[3,2],[3,1],[3,0]]\n\"http://news.google.com\""
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 2, \"slug\": \"rubrik\", \"name\": \"Rubrik\"}], \"more_than_six_months\": [{\"timesEncountered\": 20, \"slug\": \"anthropic\", \"name\": \"Anthropic\"}, {\"timesEncountered\": 4, \"slug\": \"mongodb\", \"name\": \"MongoDB\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"dropbox\", \"name\": \"Dropbox\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"openai\", \"name\": \"OpenAI\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Concurrency",
+      "slug": "concurrency"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * // This is the HtmlParser's API interface.\n * // You should not implement it, or speculate about its implementation\n * class HtmlParser {\n *   public:\n *     vector<string> getUrls(string url);\n * };\n */\nclass Solution {\npublic:\n    vector<string> crawl(string startUrl, HtmlParser htmlParser) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * // This is the HtmlParser's API interface.\n * // You should not implement it, or speculate about its implementation\n * interface HtmlParser {\n *     public List<String> getUrls(String url) {}\n * }\n */\nclass Solution {\n    public List<String> crawl(String startUrl, HtmlParser htmlParser) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# \"\"\"\n# This is HtmlParser's API interface.\n# You should not implement it, or speculate about its implementation\n# \"\"\"\n#class HtmlParser(object):\n#    def getUrls(self, url):\n#        \"\"\"\n#        :type url: str\n#        :rtype List[str]\n#        \"\"\"\n\nclass Solution:\n    def crawl(self, startUrl: str, htmlParser: 'HtmlParser') -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# \"\"\"\n# This is HtmlParser's API interface.\n# You should not implement it, or speculate about its implementation\n# \"\"\"\n#class HtmlParser(object):\n#    def getUrls(self, url):\n#        \"\"\"\n#        :type url: str\n#        :rtype List[str]\n#        \"\"\"\n\nclass Solution(object):\n    def crawl(self, startUrl, htmlParser):\n        \"\"\"\n        :type startUrl: str\n        :type htmlParser: HtmlParser\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * // This is the HtmlParser's API interface.\n * // You should not implement it, or speculate about its implementation\n * class HtmlParser {\n *     public List<String> GetUrls(String url) {}\n * }\n */\nclass Solution {\n    public IList<string> Crawl(string startUrl, HtmlParser htmlParser) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "import (\n    \"math/rand\"\n    \"time\"\n)\n\n\n/*\n This is HtmlParser's API interface.\n You should not implement it, or speculate about its implementation\n    type HtmlParser struct {\n        maps  map[string]int\n        imaps map[int]string\n        a     map[int][]int\n    }\n*/\nfunc crawl(startUrl string, htmlParser *HtmlParser) []string {\n    \n}"
+    }
+  ],
+  "solution": null
+}

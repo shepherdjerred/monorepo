@@ -1,0 +1,145 @@
+{
+  "questionId": "1034",
+  "questionFrontendId": "992",
+  "title": "Subarrays with K Different Integers",
+  "titleSlug": "subarrays-with-k-different-integers",
+  "difficulty": "Hard",
+  "content": "<p>Given an integer array <code>nums</code> and an integer <code>k</code>, return <em>the number of <strong>good subarrays</strong> of </em><code>nums</code>.</p>\n\n<p>A <strong>good array</strong> is an array where the number of different integers in that array is exactly <code>k</code>.</p>\n\n<ul>\n\t<li>For example, <code>[1,2,3,1,2]</code> has <code>3</code> different integers: <code>1</code>, <code>2</code>, and <code>3</code>.</li>\n</ul>\n\n<p>A <strong>subarray</strong> is a <strong>contiguous</strong> part of an array.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,1,2,3], k = 2\n<strong>Output:</strong> 7\n<strong>Explanation:</strong> Subarrays formed with exactly 2 different integers: [1,2], [2,1], [1,2], [2,3], [1,2,1], [2,1,2], [1,2,1,2]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,1,3,4], k = 3\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> Subarrays formed with exactly 3 different integers: [1,2,1,3], [2,1,3], [1,3,4].\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 2 * 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= nums[i], k &lt;= nums.length</code></li>\n</ul>\n",
+  "hints": [
+    "Try generating all possible subarrays and check for the number of unique integers. Increment the count accordingly.",
+    "How about using a map to store the count of integers?",
+    "Think about the Sliding Window and 2-pointer approach."
+  ],
+  "metaData": "{\n  \"name\": \"subarraysWithKDistinct\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"388.1K\", \"totalSubmission\": \"572.2K\", \"totalAcceptedRaw\": 388057, \"totalSubmissionRaw\": 572172, \"acRate\": \"67.8%\"}",
+  "likes": 6945,
+  "dislikes": 121,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Longest Substring Without Repeating Characters\", \"titleSlug\": \"longest-substring-without-repeating-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Substring with At Most Two Distinct Characters\", \"titleSlug\": \"longest-substring-with-at-most-two-distinct-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Substring with At Most K Distinct Characters\", \"titleSlug\": \"longest-substring-with-at-most-k-distinct-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Vowel Substrings of a String\", \"titleSlug\": \"count-vowel-substrings-of-a-string\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Number of Unique Flavors After Sharing K Candies\", \"titleSlug\": \"number-of-unique-flavors-after-sharing-k-candies\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"K Divisible Elements Subarrays\", \"titleSlug\": \"k-divisible-elements-subarrays\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Complete Subarrays in an Array\", \"titleSlug\": \"count-complete-subarrays-in-an-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,1,2,3]\n2",
+    "[1,2,1,3,4]\n3"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"hashedin\", \"name\": \"HashedIn\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 5, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 5, \"slug\": \"roblox\", \"name\": \"Roblox\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"capital-one\", \"name\": \"Capital One\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"morgan-stanley\", \"name\": \"Morgan Stanley\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"servicenow\", \"name\": \"ServiceNow\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int subarraysWithKDistinct(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int subarraysWithKDistinct(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def subarraysWithKDistinct(self, nums: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def subarraysWithKDistinct(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number}\n */\nvar subarraysWithKDistinct = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function subarraysWithKDistinct(nums: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int SubarraysWithKDistinct(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int subarraysWithKDistinct(int* nums, int numsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func subarraysWithKDistinct(nums []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun subarraysWithKDistinct(nums: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func subarraysWithKDistinct(_ nums: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn subarrays_with_k_distinct(nums: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Integer}\ndef subarrays_with_k_distinct(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Integer\n     */\n    function subarraysWithKDistinct($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int subarraysWithKDistinct(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def subarraysWithKDistinct(nums: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec subarrays_with_k_distinct(nums :: [integer], k :: integer) :: integer\n  def subarrays_with_k_distinct(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec subarrays_with_k_distinct(Nums :: [integer()], K :: integer()) -> integer().\nsubarrays_with_k_distinct(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (subarrays-with-k-distinct nums k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2276",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given an array of integers `nums` and an integer `k`. The task is to count the number of contiguous subarrays that contain exactly `k` distinct integers.\n\n**Key Observations:**\n1. A \"good subarray\" is defined as a contiguous subarray that contains exactly `k` distinct elements.\n2. There can be duplicate elements present in the `nums` array.\n\n---\n\n### Approach 1: Sliding Window\n\n#### Intuition\n\nThe brute force method involves finding all the subarrays and then selecting those subarrays that have exactly `k` distinct integers. However, this approach becomes costly in terms of time complexity, reaching $O(n^2)$.\n\nFor a more efficient approach, let's use the sliding window pattern. This pattern can be applied when the problem entails achieving a goal using subarrays, and individual elements cannot be independently selected.\n\nThe concept behind the sliding window pattern is to maintain a window that continuously expands from the right by adding elements until the condition is met. Once the condition is satisfied, we adjust the window by shrinking it from the left until the condition is met again.\n\nFor each valid window, we can calculate the total number of subarrays it can form using the formula `right - left + 1`. This represents the number of subarrays ending at the current element (`right`) and starting anywhere from the current left boundary (`left`) to the right pointer (`right`) (inclusive).\n\nOnce the window contains more than `k` distinct elements, we start shrinking it from the left side. We remove the element at the leftmost position and update the set of distinct elements. This process continues until the window size becomes valid again for the condition.\n\nAnother crucial realization is that the subarrays exceeding the `k` distinct integers are irrelevant to our objective. We focus on subarrays whose distinct integers are either equal to `k` or less than `k`.\n\nThe calculation `right - left + 1`, counts the subarrays with at most `k` distinct integers.\n\nAfter calculating the total count of subarrays with distinct integers less than or equal to `k` using `slidingWindowAtMost(nums, k)`, we need to isolate the subarrays that strictly meet the target `k`.\n\nThis can be achieved by subtracting the total count of subarrays with distinct integers less than `k` (`slidingWindowAtMost(nums, k - 1)`) from the total count obtained earlier. By subtracting the latter from the former, we essentially remove the subarrays that don't reach `k` and are left with only the subarrays that have exactly `k` distinct integers.\n\nConsider `nums = [1, 2, 1, 2, 3]` and `k = 2`.\n\n`slidingWindowAtMost(nums, 2)` will count all subarrays (12) with at most 2 distinct elements (including those with exactly 2 and 1).\n`slidingWindowAtMost(nums, 1)` will count all subarrays (5) with at most 1 distinct element.\n\nThe difference, `slidingWindowAtMost(nums, 2) - slidingWindowAtMost(nums, 1)`, removes subarrays with 1 distinct element, leaving only those with exactly 2, which is our answer (7).\n\nRefer to the visual slideshow demonstrating the sliding window on `slidingWindowAtMost(nums, k)`.\n\n!?!../Documents/992_re/atmostk.json:1010,570!?!\n\nNow, refer to the visual slideshow demonstrating the sliding window on `slidingWindowAtMost(nums, k - 1)`.\n\n!?!../Documents/992_re/atmostk_1.json:1010,510!?!\n\nRefer to the below Venn diagram for a better understanding of how subtracting `slidingWindowAtMost(nums, k - 1)` from `slidingWindowAtMost(nums, k)` gives exactly `k` distinct elements.\n\n![img](../Figures/992_re/atmost_venn_diagram.png)\n\n#### Algorithm\n\nThe `slidingWindowAtMost` function is responsible for counting the subarrays with at most `distinctK` distinct elements. \n\n- Initialize an empty `freqMap` to store the frequency of elements in the current window.\n- Initialize `left` and `totalCount` to 0.\n- Iterate through the `nums` array using the `right` pointer:\n   - Increment the frequency of `nums[right]` in the `freqMap`.\n   - While the size of `freqMap` (the number of distinct elements) is greater than `distinctK`:\n      - Decrement the frequency of `nums[left]` in the `freqMap`.\n      - If the frequency of `nums[left]` becomes 0, remove it from the `freqMap`.\n      - Increment `left` to shrink the window.\n   - Add `right - left + 1` to `totalCount`. This counts the number of subarrays ending at `right` with at most `distinctK` distinct elements.\n- Return `totalCount`.\n\nThe `subarraysWithKDistinct` function calls the `slidingWindowAtMost` function twice, once with `k` and once with `k - 1`, and subtracts the result of the latter from the result of the former to get the exact `k` distinct elements.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/MkLvTfUd/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"MkLvTfUd\"></iframe>\n\n#### Complexity Analysis\n\nLet `n` be the length of the `nums` array.\n\n- Time complexity: $O(n)$\n\n    The time complexity is $O(n)$ because the `slidingWindowAtMost` function iterates through the array once using the sliding window technique, and each element is processed at most twice (once when it enters the window and once when it exits the window). Inside the loop, the operations of updating the frequency map and shrinking the window take $O(1)$ time on average, assuming the underlying hash table implementation has constant-time operations. Therefore, the overall time complexity is linear with respect to the size of the input array. \n\n- Space complexity: $O(n)$\n\n    The space complexity is $O(n)$ due to the use of the `freqMap` to store the frequency of elements in the current window. In the worst case, when all elements in the array are distinct, the `freqMap` will store all the elements, resulting in a space complexity of $O(n)$.\n\n    It's important to note that the space complexity is also affected by the underlying implementation of the hash table used for the `freqMap`. Some implementations may have additional overhead, leading to a slightly higher space complexity. \n\n---\n\n### Approach 2: Sliding Window in One Pass\n\n#### Intuition\n\nWhen we create a subarray with an element, we can add `k - 1` additional distinct elements to the subarray without invalidating it.\n\nIf we subtract `1` from `k` when we encounter a new element, when `k` becomes zero, it means we have exactly `k` distinct elements in the current window. At this point, we need to count the number of valid subarrays we can form with these `k` distinct elements within the window.\n\nHowever, if `k` becomes negative, it indicates that there are more than `k` distinct elements in the current window. We need to adjust the window from the left side by moving the left pointer and reducing the frequency of `nums[left]` until the number of distinct elements is valid again (equal to `k`).\n\nIf there are duplicates of `nums[left]` within the current window, we need to keep shrinking the window from the left side until the frequency of `nums[left]` is zero. This is crucial because we need to maintain the correct count of distinct elements within the window.\n\nNow if `k` has become 0 and if the frequency of `nums[left]` is greater than 1, it means there are duplicates of the current left. For each duplicate, we increment `currCount`, which represents the number of subarrays that can be formed by including these duplicates along with the distinct elements in the current window.\n\nOnce we find the smallest subarray with exactly `k` distinct elements, we can add `currCount + 1` to `totalCount`. The 1 is added to include the current subarray formed by the `k` distinct elements within the window.\n\nBy continuously adjusting the window and counting subarrays when we have exactly `k` distinct elements, we can find the total count of valid subarrays with at most `k` distinct elements in just a single pass.\n\nRefer to the visual slideshow demonstrating the sliding window in one pass.\n\n!?!../Documents/992_re/onepass_re.json:1015,700!?!\n\n#### Algorithm\n\n- Initialize an array `distinctCount` of size `nums.size() + 1` to store the count of distinct values encountered.\n- Initialize `totalCount` to 0, which will store the total count of subarrays with `k` distinct elements.\n- Initialize `left` and `right` pointers to 0, representing the sliding window.\n- Initialize `currCount` to 0, which will store the count of subarrays with the current distinct elements.\n\n- Start the sliding window approach by iterating through the `nums` array using the `right` pointer:\n   - Increment the count of the element at `nums[right]` in the `distinctCount` array.\n   - If the count changes from 0 to 1, it means a new distinct element is encountered, so decrement `k`.\n   - If `k` becomes negative, it means there are more than `k` distinct elements in the current window:\n      - Move the `left` pointer until the count of distinct elements becomes valid again by decrementing the count of `nums[left]` in the `distinctCount` array and incrementing `k`.\n      - Reset `currCount` to 0.\n   - If `k` becomes 0, it means there are exactly `k` distinct elements in the current window:\n      - While there are duplicate elements (count > 1) in the window, move the `left` pointer, decrement the count of `nums[left]` in the `distinctCount` array, and increment `currCount`.\n      - Add `currCount + 1` to `totalCount`.\n   - Increment `right` to move the sliding window.\n\n- After the loop, return `totalCount`, which holds the total count of subarrays with `k` distinct elements.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/nA6bcnFy/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"nA6bcnFy\"></iframe>\n\n#### Complexity Analysis\n\nLet `n` be the length of the `nums` array.\n\n* Time complexity: $O(n)$\n\n    The time complexity is $O(n)$ because the algorithm iterates through the array once using the sliding window technique, and each element is processed at most twice (once when it enters the window and once when it exits the window), resulting in linear time complexity.\n\n* Space complexity: $O(n)$\n\n    The space complexity is also $O(n)$ because the algorithm uses a mapping array to store the count of distinct elements encountered in the current window. In the worst case, this array can grow to the size of the input array; hence, the space complexity is linear with respect to the size of the input.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

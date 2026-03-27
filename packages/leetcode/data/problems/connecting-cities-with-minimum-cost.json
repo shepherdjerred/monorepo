@@ -1,0 +1,148 @@
+{
+  "questionId": "1100",
+  "questionFrontendId": "1135",
+  "title": "Connecting Cities With Minimum Cost",
+  "titleSlug": "connecting-cities-with-minimum-cost",
+  "difficulty": "Medium",
+  "content": "<p>There are <code>n</code> cities labeled from <code>1</code> to <code>n</code>. You are given the integer <code>n</code> and an array <code>connections</code> where <code>connections[i] = [x<sub>i</sub>, y<sub>i</sub>, cost<sub>i</sub>]</code> indicates that the cost of connecting city <code>x<sub>i</sub></code> and city <code>y<sub>i</sub></code> (bidirectional connection) is <code>cost<sub>i</sub></code>.</p>\n\n<p>Return <em>the minimum <strong>cost</strong> to connect all the </em><code>n</code><em> cities such that there is at least one path between each pair of cities</em>. If it is impossible to connect all the <code>n</code> cities, return <code>-1</code>,</p>\n\n<p>The <strong>cost</strong> is the sum of the connections&#39; costs used.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/04/20/1314_ex2.png\" style=\"width: 161px; height: 141px;\" />\n<pre>\n<strong>Input:</strong> n = 3, connections = [[1,2,5],[1,3,6],[2,3,1]]\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> Choosing any 2 edges will connect all cities so we choose the minimum 2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/04/20/1314_ex1.png\" style=\"width: 136px; height: 91px;\" />\n<pre>\n<strong>Input:</strong> n = 4, connections = [[1,2,3],[3,4,4]]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> There is no way to connect all cities even if all edges are used.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= connections.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>connections[i].length == 3</code></li>\n\t<li><code>1 &lt;= x<sub>i</sub>, y<sub>i</sub> &lt;= n</code></li>\n\t<li><code>x<sub>i</sub> != y<sub>i</sub></code></li>\n\t<li><code>0 &lt;= cost<sub>i</sub> &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "What if we model the cities as a graph?",
+    "Build a graph of cities and find the minimum spanning tree.",
+    "You can use a variation of the Kruskal's algorithm for that.",
+    "Sort the edges by their cost and use a union-find data structure.",
+    "How to check all cities are connected?",
+    "At the beginning we have n connected components, each time we connect two components the number of connected components is reduced by one. At the end we should end with only a single component otherwise return -1."
+  ],
+  "metaData": "{\n  \"name\": \"minimumCost\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"connections\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"91.2K\", \"totalSubmission\": \"143.7K\", \"totalAcceptedRaw\": 91235, \"totalSubmissionRaw\": 143737, \"acRate\": \"63.5%\"}",
+  "likes": 1174,
+  "dislikes": 60,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Minimum Cost to Reach City With Discounts\", \"titleSlug\": \"minimum-cost-to-reach-city-with-discounts\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "3\n[[1,2,5],[1,3,6],[2,3,1]]",
+    "4\n[[1,2,3],[3,4,4]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Minimum Spanning Tree",
+      "slug": "minimum-spanning-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minimumCost(int n, vector<vector<int>>& connections) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minimumCost(int n, int[][] connections) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumCost(self, n: int, connections: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumCost(self, n, connections):\n        \"\"\"\n        :type n: int\n        :type connections: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} connections\n * @return {number}\n */\nvar minimumCost = function(n, connections) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumCost(n: number, connections: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinimumCost(int n, int[][] connections) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minimumCost(int n, int** connections, int connectionsSize, int* connectionsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumCost(n int, connections [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumCost(n: Int, connections: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumCost(_ n: Int, _ connections: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_cost(n: i32, connections: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} connections\n# @return {Integer}\ndef minimum_cost(n, connections)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $connections\n     * @return Integer\n     */\n    function minimumCost($n, $connections) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimumCost(int n, List<List<int>> connections) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumCost(n: Int, connections: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_cost(n :: integer, connections :: [[integer]]) :: integer\n  def minimum_cost(n, connections) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_cost(N :: integer(), Connections :: [[integer()]]) -> integer().\nminimum_cost(N, Connections) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-cost n connections)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1091",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Minimum Spanning Tree (Using Kruskal's algorithm)\n\n**Intuition**\n\nIf we model the cities and connections as a graph, each connection is an edge (undirected) and each city is a node of the graph. We need to find a subset of edges which connects all the nodes of the graph with the minimum possible total weight. This is by definition the Minimum Spanning Tree or [MST](https://en.wikipedia.org/wiki/Minimum_spanning_tree) of a graph.\n\n**Algorithm**\n\nThere are a [variety of algorithms](https://en.wikipedia.org/wiki/Minimum_spanning_tree#Algorithms) that we can use to obtain the MST of a graph. We will use Kruskal's algorithm here, which is implemented using the [Disjoint set](https://en.wikipedia.org/wiki/Disjoint-set_data_structure) Union-Find data structure.\n\nIn order to obtain the MST using Kruskal's algorithm, we first sort all the connections (edges) present in the graph based on their weights (in increasing order) and will iterate over them one by one. The objective here is to greedily pick edges that will help us to connect more nodes in the graph. Each time we find a new edge which *does not* result in a cycle with the edges selected so far, we add that edge in the final MST. We keep doing this till we have obtained the MST which connects all the nodes in the graph (i.e. connects all the cities using the connections).\n\nDisjoint-set union find can be implemented in a couple of ways. A plain union find is shown below which keeps the track of the parent of each node (initially parent of `i` is set to itself, i.e. `i`) and performs the union and find using a helper method `getRoot`.\n\n<iframe src=\"https://leetcode.com/playground/ZaY6J4zF/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ZaY6J4zF\"></iframe>\n\nThe above implementation can be made faster by incorporating **Path compression**. Here, while obtaining the root, we compress the path by assigning the grandparent of the node as the parent (thereby skipping connections and moving nodes closer to the root). We modify the `Find` method to implement path compression.\n\n<iframe src=\"https://leetcode.com/playground/ULvhJfSL/shared\" frameBorder=\"0\" width=\"100%\" height=\"208\" name=\"ULvhJfSL\"></iframe>\n\nThis can be made even faster using a technique known as **Weighted Union**. In this technique, in addition to the parent nodes, we also keep the weights of each of the nodes. Every time we take union, the root node with more weight (i.e. having more elements in the corresponding set) is used as the parent node of the other node. We initialize the weight corresponding to each node as 1 initially, as each element belongs to it's own set in the beginning. Below is the implementation of this idea (we modify `Union` method).\n\n<iframe src=\"https://leetcode.com/playground/W79aeaps/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"W79aeaps\"></iframe>\n\nIf we combine both **Path compression** and **Weighted Union**, it takes $$\\log^{\\ast} N$$ for the union and find operations in case of Disjoint-set union [link](https://en.wikipedia.org/wiki/Disjoint-set_data_structure#Proof_of_O(log*(n))_time_complexity_of_Union-Find).\nHere $$\\log^{\\ast} N$$ is an extremely slow-growing inverse Ackermann function a.k.a [Iterated logarithm](https://en.wikipedia.org/wiki/Iterated_logarithm) and practically does not exceed 5. Hence it can be treated as a constant for implementation purposes.\n\nWe can combine all the concepts we have seen above in order to implement Kruskal's algorithm for obtaining MST of a graph. Below is the implementation of this.\n\n<iframe src=\"https://leetcode.com/playground/HjfRjVQL/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"HjfRjVQL\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: Assuming $$N$$ to be the total number of nodes (cities) and $$M$$ to be the total number of edges (connections). Sorting all the $$M$$ connections will take $$O(M \\cdot \\log M)$$. Performing union find each time will take $$\\log^{\\ast} N$$ (Iterated logarithm). Hence for M edges, it's $$O(M \\cdot \\log^{\\ast} N)$$ which is practically $$O(M)$$ as the value of iterated logarithm, $$\\log^{\\ast} N$$ never exceeds 5.\n\n* Space complexity: O(N), space required by `parents` and `weights`.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

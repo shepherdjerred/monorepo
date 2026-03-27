@@ -1,0 +1,154 @@
+{
+  "questionId": "892",
+  "questionFrontendId": "862",
+  "title": "Shortest Subarray with Sum at Least K",
+  "titleSlug": "shortest-subarray-with-sum-at-least-k",
+  "difficulty": "Hard",
+  "content": "<p>Given an integer array <code>nums</code> and an integer <code>k</code>, return <em>the length of the shortest non-empty <strong>subarray</strong> of </em><code>nums</code><em> with a sum of at least </em><code>k</code>. If there is no such <strong>subarray</strong>, return <code>-1</code>.</p>\n\n<p>A <strong>subarray</strong> is a <strong>contiguous</strong> part of an array.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> nums = [1], k = 1\n<strong>Output:</strong> 1\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> nums = [1,2], k = 4\n<strong>Output:</strong> -1\n</pre><p><strong class=\"example\">Example 3:</strong></p>\n<pre><strong>Input:</strong> nums = [2,-1,2], k = 3\n<strong>Output:</strong> 3\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-10<sup>5</sup> &lt;= nums[i] &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"shortestSubarray\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"209.1K\", \"totalSubmission\": \"640.1K\", \"totalAcceptedRaw\": 209134, \"totalSubmissionRaw\": 640143, \"acRate\": \"32.7%\"}",
+  "likes": 5181,
+  "dislikes": 145,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Shortest Subarray With OR at Least K II\", \"titleSlug\": \"shortest-subarray-with-or-at-least-k-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Shortest Subarray With OR at Least K I\", \"titleSlug\": \"shortest-subarray-with-or-at-least-k-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1]\n1",
+    "[1,2]\n4",
+    "[2,-1,2]\n3"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Queue",
+      "slug": "queue"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    },
+    {
+      "name": "Monotonic Queue",
+      "slug": "monotonic-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int shortestSubarray(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int shortestSubarray(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def shortestSubarray(self, nums: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def shortestSubarray(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number}\n */\nvar shortestSubarray = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function shortestSubarray(nums: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int ShortestSubarray(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int shortestSubarray(int* nums, int numsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func shortestSubarray(nums []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun shortestSubarray(nums: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func shortestSubarray(_ nums: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn shortest_subarray(nums: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Integer}\ndef shortest_subarray(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Integer\n     */\n    function shortestSubarray($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int shortestSubarray(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def shortestSubarray(nums: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec shortest_subarray(nums :: [integer], k :: integer) :: integer\n  def shortest_subarray(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec shortest_subarray(Nums :: [integer()], K :: integer()) -> integer().\nshortest_subarray(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (shortest-subarray nums k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2562",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given an array `nums` that contains both positive and negative values, along with an integer `k`. Our goal is to find the shortest non-empty subarray whose sum is greater than or equal to `k`.\n\nThis problem is very similar to [209. Minimum Size Subarray Sum](https://leetcode.com/problems/minimum-size-subarray-sum/description/) with one key difference: we have negative values here. We strongly suggest solving the original problem first, as our solution will build upon that approach.\n\nThe original problem was solved using a variable-length sliding window, but that approach will no longer work here. Let's take an example to understand why:\n\nConsider `nums = [2, -1, 1, 3]` and `k = 4`.\n\nLet's walk through a naive variable-size sliding window approach step by step:\n\n1. Start with window `[2]`: sum = 2 (not $\\geq$ 4)\n2. Expand to `[2, -1]`: sum = 1 (not $\\geq$ 4)\n3. Expand to `[2, -1, 1]`: sum = 2 (not $\\geq$ 4)\n4. Expand to `[2, -1, 1, 3]`: sum = 5 ($\\geq$ 4)\n\nNow, we try to minimize the window size by shrinking the window from the left.\n\n1. Remove the first element. Window: `[-1, 1, 3]`: sum = 3 (not $\\geq$ 4)\n\nThe sliding window now stops because it assumes reducing the window further would only decrease the sum value. However, if it shrinks once more:\n\n2. Remove the second element. Window: `[1, 3]`: sum = 4 ($\\geq$ 4)\n\nWe find that our condition is satisfied again, and we find our required answer.\n\nThe negative value -1 breaks the monotonic sum property that a standard sliding window relies on, making a simple variable-length sliding window approach unreliable.\n    \n---\n\n### Approach 1: Priority Queue\n\n#### Intuition\n\nThe brute force approach would be to loop over all subarrays in `nums` and check if their sums exceed `k`. The smallest one among them is our answer. However, this approach is too slow for our constraints. \n\nLet's identify the redundancies in the above approach. One major issue is that we keep recalculating the same subarray sums multiple times. We can solve this by creating a prefix sum array, which lets us quickly find the sum of any subarray. Using this array, we can look at each element and find an earlier prefix sum that, when subtracted from our current sum, gives us a value of at least k.\n\nHowever, searching for the best prefix sum for each index is still too slow. What we really need is a way to quickly find the \"best\" prefix sum – one with the lowest value that's also closest to our current position.\n\nThis is where a heap (also called a priority queue) becomes useful. We can store pairs of [prefix sum, ending index] in the heap, arranged so that the lowest sum is always at the top. This helps us quickly find the best previous sum to use.\n\nLet's loop over the `nums` array now, keeping track of the running sum in a variable called `cumulativeSum`. We'll also keep track of our result in the variable `shortestSubarrayLength`. If the `cumulativeSum` meets our constraints, we consider it as a potential result. Otherwise, we'll loop over the top elements of the heap while the difference between `cumulativeSum` and the sum of the top element is $\\geq k$. For each such element, we check if it is the minimum length subarray we've found till now. After checking an element in the heap, it can be discarded since all further sums in the loop will result in longer subarrays (and can never be the answer). Once we've exhausted all valid previous prefix sums, we can add the current sum and the index to the heap.\n\nAfter the loop completes, we can return `cumulativeSum` as the required shortest subarray with a sum of at least `k`.\n\nThe algorithm is visualized in the slideshow below:\n\n!?!../Documents/862/slideshow.json:1202,962!?!\n\n#### Algorithm\n\n- Initialize a variable: \n  - `n` to store the length of the input array.\n  - `shortestSubarrayLength` to store the minimum length of a valid subarray, setting it to the maximum possible integer value.\n  - `cumulativeSum` to 0, which will maintain the running sum of elements.\n- Initialize a min-heap `prefixSumHeap` to store pairs of cumulative sum and their corresponding indices, with pairs ordered by cumulative sum.\n- Iterate through each index `i` from 0 to `n-1`:\n  - Add the current element to `cumulativeSum`.\n  - If `cumulativeSum` is greater than or equal to `k`: \n    - Update `shortestSubarrayLength` with the minimum of itself and `i + 1`.\n  - While the heap is not empty and the difference between the current `cumulativeSum` and heap's minimum cumulative sum is greater than or equal to `k`:\n    - Remove the minimum element from the heap and update `shortestSubarrayLength` with the minimum of itself and (current index - removed element's index)\n  - Add current `cumulativeSum` and index as a pair to the heap.\n- Return -1 if `shortestSubarrayLength` remains unchanged at maximum integer value, otherwise return `shortestSubarrayLength`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/VkJRKMc9/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"VkJRKMc9\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the `nums` array. \n\n- Time complexity: $O(n \\cdot \\log n)$\n\n    For each element in `nums`, we may perform heap operations (push and poll) which take $O(\\log n)$ time. In the worst case, at each index, we might need to poll multiple elements from the heap, but each element can only be pushed and popped once throughout the entire process. So, the total number of heap operations across all iterations is bounded by $O(n)$, each taking $O(\\log n)$ time.\n\n    Thus, the overall time complexity of the algorithm is $O(n \\cdot \\log n)$.\n\n- Space complexity: $O(n)$\n\n    The algorithm uses additional space for the min-heap (`prefixSumHeap`) which, in the worst case, might need to store all prefix sums and their indices. As each element in the input array corresponds to at most one entry in the heap, the space required is linear with respect to the input size. \n    \n    Thus, the space complexity is $O(n)$.  \n\n---\n\n### Approach 2: Monotonic Stack + Binary Search\n\n#### Intuition\n\nWe can also implement this idea of using the \"best\" prefix sum efficiently using a binary search approach. Instead of a priority queue, let's maintain a stack-like data structure to hold the prefix sums for each index as we iterate over `nums`. Each element of the stack will hold a pair [prefix sum, index] where we'll maintain the prefix sum monotonically increasing. The monotonically increasing property works because at each step, all prefix sums which are valid candidates to be used to find the shortest sub-array, have to be less than the current running sum.\n\nTo make this work, we start by updating the running total for each number in the array. Then, to keep our structure ordered, we remove any entries from the top that are greater than or equal to the current sum. This approach ensures that both the prefix sums and their indices stay in strict increasing order. Once we have this ordering, we can use binary search to efficiently find the rightmost entry where the sum is at least `current_sum - k`. The difference between our current position and the index we find gives us the length of a valid sub-array. By keeping track of the shortest length we find, we’ll get our answer.\n\n> Note: It's a bit unusual to perform searches within a stack, as we typically only access the top element in a true stack. So while our data structure isn't a classic stack, it behaves similarly to a monotonic stack in this case.\n\n#### Algorithm\n\n- Initialize: \n  - a variable `n` to store the length of the input array.\n  - a list `cumulativeSumStack` to store pairs of cumulative sums and their corresponding indices, adding an initial pair (0, -1) to handle subarrays starting from index 0.\n  - a variable `runningCumulativeSum` to 0 to maintain the running sum of elements.\n  - a variable `shortestSubarrayLength` to store the minimum length of a valid subarray, setting it to the maximum possible integer value.\n- Iterate through each index `i` from 0 to `n-1`:\n  - Add the current element to `runningCumulativeSum`\n  - While the stack is not empty and the current `runningCumulativeSum` is less than or equal to the last element's cumulative sum:\n    - Remove the last element from the stack.\n  - Add current `runningCumulativeSum` and index as a pair to the stack.\n  - Find the largest index where the cumulative sum is less than or equal to (`runningCumulativeSum - k`) using binary search\n  - If a valid index is found, update `shortestSubarrayLength` with the minimum of itself and (current index - found index's value)\n- Return -1 if `shortestSubarrayLength` remains unchanged at maximum integer value, otherwise return `shortestSubarrayLength`.\n\n- The binary search helper function:\n  - Initialize a left pointer to 0 and a right pointer to the last index.\n  - While the left pointer is less than or equal to the right pointer:\n    - Calculate the middle index.\n    - If the middle element's cumulative sum is less than or equal to the target:\n      - Move the left pointer to `mid` + 1.\n    - Else:\n      - Move the right pointer to `mid` - 1.\n  - Return the right pointer as the found index.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/fExu3Azx/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"fExu3Azx\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the `nums` array. \n\n* Time complexity: $O(n \\cdot \\log n)$\n\n    The algorithm processes each element once in the main loop, which takes $O(n)$ time. For each element, we perform two main operations: maintaining the monotonic property of the stack and binary search. While stack maintenance operations (adding and removing elements) take amortized $O(1)$ time per element since each element can be added and removed at most once, the binary search operation takes $O(\\log n)$ time for each element as we search through a list that can grow up to size $n$. \n    \n    Thus, the overall time complexity becomes $O(n) + O(n \\cdot \\log n) = O(n \\cdot \\log n)$. \n\n* Space complexity: $O(n)$\n\n    The algorithm uses additional space primarily for the `cumulativeSumStack` list, which stores pairs of cumulative sums and their indices. In the worst case, this list could store all indices if the input array is strictly increasing, leading to $O(n)$ space usage. \n\n    Thus, the space complexity of the algorithm is $O(n)$.\n\n---\n\n### Approach 3: Deque\n\n#### Intuition\n\nIf we take a look at our previous approaches, we notice a recurring challenge: we need to find both the smallest sum and the largest index before our current position. This brings us to the question—can we use a data structure that helps us track both of these elements at the same time? \n\nThe answer lies in using a deque, or double-ended queue. A deque allows us to add or remove items from either end, which is perfect for our needs. In this case, our deque will hold the indices of the prefix sums that might serve as the starting point for our target subarray. We also make sure that these sums form a monotonically increasing sequence. This monotonicity is important because if we encounter an earlier prefix sum that is greater than or equal to a later one, that later index will always give us a shorter subarray with an equal or greater sum for any future ending position.\n\nAs we iterate through each position, we start by checking if we can find valid subarrays using the indices stored in our deque. We do this by calculating the difference between the current prefix sum and the prefix sum at the front of the deque. If this difference meets or exceeds our target sum, we’ve found a valid subarray. At this point, we update our `shortestSubarrayLength` and remove that starting index from the deque, since it won't help us find a shorter subarray with any future ending positions.\n\nNext, we need to maintain the monotonicity of our deque. We remove indices from the back of the deque if their prefix sums are greater than or equal to our current prefix sum. This step is crucial because any removed positions would only yield longer subarrays with the same or smaller sums, making them unnecessary for our purposes.\n\nFinally, we add our current index to the back of the deque because it could potentially be the starting point of a valid subarray in the future.\n\nBy the time we finish iterating through the array, the variable `shortestSubarrayLength` will contain the length of the shortest subarray that meets our criteria.\n\n#### Algorithm\n\n- Initialize:\n  - a variable `n` to store the length of the input array.\n  - an array `prefixSums` of size `n+1` to store cumulative sums, where `prefixSums[i]` will represent the sum of elements from index 0 to `i-1`.\n- Calculate prefix sums by iterating from 1 to `n`:\n   - Set `prefixSums[i]` as the sum of `prefixSums[i-1]` and `nums[i-1]`\n- Initialize:\n  - a deque `candidateIndices` to store indices that could form valid subarrays.\n  - a variable `shortestSubarrayLength` to store the minimum length of a valid subarray, setting it to the maximum possible integer value.\n- Iterate through each index `i` from 0 to `n`:\n  - While the deque is not empty and the difference between `prefixSums[i]` and `prefixSums[first element of deque]` is greater than or equal to `targetSum`:\n    - Update `shortestSubarrayLength` with the minimum of itself and (i - first element of deque).\n    - Remove the first element from the deque.\n  - While deque is not empty and `prefixSums[i]` is less than or equal to `prefixSums[last element of deque]`:\n    - Remove the last element from the deque.\n  - Add current index `i` to the end of the deque.\n- Return -1 if `shortestSubarrayLength` remains unchanged at maximum integer value, otherwise return `shortestSubarrayLength`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/AnYT95ak/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"AnYT95ak\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the `nums` array. \n\n* Time complexity: $O(n)$\n\n    The algorithm first calculates prefix sums in $O(n)$ time. Then, it processes each index exactly once in the main loop. Within this loop, each index can be added to the deque once and removed at most once from either end of the deque. Since deque operations take $O(1)$ time, the amortized time complexity for all deque operations is $O(n)$. \n    \n    Thus, the overall time complexity is $O(n)$. \n\n* Space complexity: $O(n)$\n\n    The algorithm uses additional space for two main data structures. First, the prefix sums array requires $O(n+1)$ space to store cumulative sums. Second, the deque of candidate indices, in the worst case, might need to store $O(n)$ indices. \n\n    Thus, the space complexity of the algorithm is $O(n+1) + O(n) = O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

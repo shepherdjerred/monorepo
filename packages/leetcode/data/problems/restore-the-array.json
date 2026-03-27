@@ -1,0 +1,137 @@
+{
+  "questionId": "1517",
+  "questionFrontendId": "1416",
+  "title": "Restore The Array",
+  "titleSlug": "restore-the-array",
+  "difficulty": "Hard",
+  "content": "<p>A program was supposed to print an array of integers. The program forgot to print whitespaces and the array is printed as a string of digits <code>s</code> and all we know is that all integers in the array were in the range <code>[1, k]</code> and there are no leading zeros in the array.</p>\n\n<p>Given the string <code>s</code> and the integer <code>k</code>, return <em>the number of the possible arrays that can be printed as </em><code>s</code><em> using the mentioned program</em>. Since the answer may be very large, return it <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;1000&quot;, k = 10000\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The only possible array is [1000]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;1000&quot;, k = 10\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> There cannot be an array that was printed this way and has all integer &gt;= 1 and &lt;= 10.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;1317&quot;, k = 2000\n<strong>Output:</strong> 8\n<strong>Explanation:</strong> Possible arrays are [1317],[131,7],[13,17],[1,317],[13,1,7],[1,31,7],[1,3,17],[1,3,1,7]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s</code> consists of only digits and does not contain leading zeros.</li>\n\t<li><code>1 &lt;= k &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Use dynamic programming. Build an array dp where dp[i] is the number of ways you can divide the string starting from index i to the end.",
+    "Keep in mind that the answer is modulo 10^9 + 7 and take the mod for each operation."
+  ],
+  "metaData": "{\n  \"name\": \"numberOfArrays\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"67.7K\", \"totalSubmission\": \"144.7K\", \"totalAcceptedRaw\": 67683, \"totalSubmissionRaw\": 144676, \"acRate\": \"46.8%\"}",
+  "likes": 1669,
+  "dislikes": 53,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Number of Ways to Separate Numbers\", \"titleSlug\": \"number-of-ways-to-separate-numbers\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Number of Beautiful Partitions\", \"titleSlug\": \"number-of-beautiful-partitions\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"1000\"\n10000",
+    "\"1000\"\n10",
+    "\"1317\"\n2000"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numberOfArrays(string s, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numberOfArrays(String s, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numberOfArrays(self, s: str, k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numberOfArrays(self, s, k):\n        \"\"\"\n        :type s: str\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {number} k\n * @return {number}\n */\nvar numberOfArrays = function(s, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numberOfArrays(s: string, k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumberOfArrays(string s, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numberOfArrays(char* s, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numberOfArrays(s string, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numberOfArrays(s: String, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numberOfArrays(_ s: String, _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn number_of_arrays(s: String, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {Integer} k\n# @return {Integer}\ndef number_of_arrays(s, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param Integer $k\n     * @return Integer\n     */\n    function numberOfArrays($s, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numberOfArrays(String s, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numberOfArrays(s: String, k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec number_of_arrays(s :: String.t, k :: integer) :: integer\n  def number_of_arrays(s, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec number_of_arrays(S :: unicode:unicode_binary(), K :: integer()) -> integer().\nnumber_of_arrays(S, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (number-of-arrays s k)\n  (-> string? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1813",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nFor example, we have `s = 19930613` and `k = 1000`. Some of the valid arrays are colored in green because they can be printed as `s`. However, the red arrays are invalid since they either contain leading zeros or are invalid integers.\n\n![img](../Figures/1416/1.png)\n\n\n\n---\n\n### Approach 1: Dynamic Programming (Top Down)\n\n\n#### Intuition   \n\nIn order to find all arrays that can be printed as the entire string `s`, we can start with finding all possible first integers, as shown in the picture below, we find 3 possible first integers, `1`, `19`, and `199`. For each case, we can continue moving on to the remaining substring and solve the subproblems and so on. The tree-like structure of this problem implies that we can use the depth-first-search method to solve it.\n\n\nSuppose the size of the input string is `m`, let `dfs(x)` be the number of arrays for the suffix substring `s[x ~ m - 1]`. \n\n![img](../Figures/1416/td.png)\n\n\n\nWrite the process in the picture above:\n- If we let `1` be the first number, then we shall look for `dfs(1)`, the number of arrays that can be printed as `s[1 ~ m - 1]`.\n\n- If we let `19` be the first number, then we shall look for `dfs(2)`, the number of arrays that can be printed as `s[2 ~ m - 1]`.\n\n- If we let `199` be the first number, then we shall look for `dfs(3)`, the number of arrays that can be printed as `s[3 ~ m - 1]`.\n\n\nIn conclusion, the above observation can be rewritten as `dfs(0) = dfs(1) + dfs(2) + dfs(3)`. We can move on to `dfs(1)` and solve this subproblem, then move on to `dfs(2)`, and so on, we will handle all subproblems before getting `dfs(0)`.\n\nHowever, there might be repeated computation, we can use an auxiliary array `dp` as memory to avoid double counting. We update `dp[x] = dfs(x)` immediately after getting the value of `dfs(x)`, so we don't need to recalculate `dfs(start)` later.\n\n![img](../Figures/1416/5.png)\n\nThe recursion stops when we reach base cases below, we can just return the corresponding value:\n\n- If the digit `s[start]` equals `0`, it means we can't find any valid array since leading zeros are not allowed. Return `0`.\n\n\n\n- If the index `start` equals `m` (the length of `s`), it means we are looking for the number of arrays that can be printed as an empty string. Only the empty array works, so we return `1`.\n\n\n\n<br>\n\n#### Algorithm\n\n1) Create an array `dp` of size `m + 1`, to store the value of `dfs(x)`.\n\n2) To get the value of `dfs(start)`, if a non-zero `dp[start]` exists, it means we have already got its value, return `dp[start]`. Otherwise:\n    - If `s[start] == 0`, return `0`.\n    - If `start = m`, return `1`.\n    - Initialize `count = 0`, the number of valid arrays.\n    - Then we look for every possible ending index `end` by iterating over indexes from `start`. If `s[start ~ end]` represents a valid integer, we continue looking for the subproblem `dfs(end + 1)` and update `count` as `count += dfs(end + 1)`.\n    - Update `dp[start]` as `dfs(start)`.\n\n3) Return `dfs(0)`. \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/gbHu7Nzg/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"gbHu7Nzg\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$m$$ be the length of the input string `s`.\n\n\n* Time complexity: $$O(m \\cdot \\log k)$$\n\n\n    - We create `dp` of length `m + 1` for memory, it takes $$O(m)$$ steps to update them.\n    - At each step `s[start]`, we look for all possible ending index `end`. In the worst-case scenario, we will iterate over $$\\log k$$ indexes before `currNumber` is larger than `k`, because each iteration increases `currNumber` by a magnitude.\n\n    - To sum up, the overall time complexity is $$O(m \\cdot \\log k)$$. \n\n    \n\n* Space complexity: $$O(m)$$\n\n    - We create an array `dp` of length `m + 1`.\n\n<br/>\n\n\n\n---\n\n### Approach 2: Dynamic Programming (Bottom Up)\n\n\n#### Intuition   \n\nWe can also solve this problem iteratively. That is, to solve the subproblem first, then move on to larger problems.\n\nSimilarly, we let `dp[i]` be the number of arrays for the prefix substring `s[0 ~ i]`, we will iterate over every index before getting `dp[m - 1]`. Suppose we have found `dp[start - 1]`. Then we move on to the index `start` and iterate for the ending index `end` and check if the integer made of `s[start ~ end]` is valid. If `s[start ~ end]` represents a valid integer, it means every valid array that can be printed as `s[0 ~ start - 1]` can also be printed as `s[0 ~ end]` by appending the integer `s[start ~ end]`, so we increment `dp[end]` by `dp[start - 1]`.\n\n\nAs shown in the picture below, imagine that we have found `dp[2]`. \n\n- `s[3 ~ 3] = 3` is a valid number, it means every array that can be printed as `s[0 ~ 2]` can also be printed as `s[0 ~ 3]` by appending `3`. \n- `s[3 ~ 4] = 30` is a valid number, it means every array that can be printed as `s[0 ~ 2]` can also be printed as `s[0 ~ 4]` by appending `30`.\n- `s[3 ~ 5] = 306` is a valid number, it means every array that can be printed as `s[0 ~ 2]` can also be printed as `s[0 ~ 5]` by appending `306`.\n\n![img](../Figures/1416/3.png)\n\nWe create an array `dp` as memory where `dp[i]` stores the number of arrays that can be printed as the prefix string `s[0 ~ i-1]`. Initialize `dp[0] = 1` as there is one array (empty array) that can be printed as an empty string. \n\n\nBack to the example above, suppose we have updated `dp[3]`. \n- `s[3 ~ 3] = 3` is a valid number, so we update `dp[4] += dp[3]`. \n- `s[3 ~ 4] = 30` is a valid number, so we update `dp[5] += dp[3]`. \n- `s[3 ~ 5] = 306` is a valid number, so we update `dp[6] += dp[3]`. \n\nOnce we finish the iteration, `dp[m]` is the number of arrays that can be printed as the entire string `s`.\n\n<br>\n\n#### Algorithm\n\n1) Let `m` be the size of input string `s`. We create an array `dp` of size `m + 1`. Set `dp[0] = 1`.\n\n2) Iterate over each starting index `start`. If `s[start] = 0`, repeat step 2 and move on to the next index. Otherwise:\n    - Start an inner iteration over the ending index `end` from `start`.\n    - If the number represented by `s[start ~ end]` is valid, increment `dp[end + 1]` by `dp[start]`.\n\n3) Return `dp[m + 1]` when the iteration ends.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/QXSJNGT6/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"QXSJNGT6\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$m$$ be the length of the input string `s`.\n\n\n* Time complexity: $$O(m \\cdot \\log k)$$\n\n\n    - We create `dp` of length `m + 1` as memory, it takes $$O(m)$$ steps to update them.\n    - At each iteration step `s[start]`, we look for all possible ending index `end`. In the worst-case scenario, we have to traverse $\\log k$ indexes before `currNumber` is larger than `k`. This is because each iteration increases `currNumber` by a magnitude.\n\n    - To sum up, the overall time complexity is $$O(m \\cdot \\log k)$$. \n\n    \n\n* Space complexity: $$O(m)$$\n\n    - We create an array `dp` of size `m + 1`. \n\n<br/>\n\n\n\n---\n\n### Approach 3: Dynamic Programming (with less space complexity)\n\n\n#### Intuition   \n\nIn approach 2, we create an array `dp` of size `m + 1`. At each iteration step for the ending index `s[end]`, we increment `dp[end + 1]` by `dp[start]`. Each iteration over `end` increases the current integer made by `s[start ~ end]` by a magnitude, thus there are at most $$(\\log k)$$ cells we need to update before the integer exceeds `k`. \n\nThe question is, can we reduce the size of `dp` if only part of it ($$(\\log k)$$) are used each time?\n\n![img](../Figures/1416/k1.png)\n\nAs shown in the picture below, at most $$\\log k$$ cells are updated at each step. Once we pass the starting index `start` and move on to the next starting index `start + 1`, we will never need the value of `dp[start]` anymore. This implies that we don't need to store the entire `dp` as we did in approach 2. Instead, we can use less space by only maintaining a 'live window' of size $$\\log k + 1$$.\n\n\n![img](../Figures/1416/k3.png)\n\n\nWe can create `new_dp` of size $$\\log k + 1$$. For distinction, let's call the previous array `old_dp`. Since the `new_dp` might be shorter than `s`, whenever we need to update `new_dp[x]` as we did for `old_dp[x]`, we can get the remainder of the index `x` for modulo $$\\log k + 1$$ as $$x\\ \\% \\ (\\log k + 1)$$ and update $$\\text{new\\_dp} [x\\ \\% \\ (\\log k + 1)]$$ to avoid the case of index out of range.\n\n\n![img](../Figures/1416/k2.png)\n\n\nIn the example below, the size of 'live' window is `4`. If we move to the next starting index `1`, `new_dp[0]` will represent `old_dp[4]`. \n\n![img](../Figures/1416/k4.png)\n\n\nBefore we move on to the next starting index `start + 1`, we need to reset the value representing the current starting index `start` as `0`, that is, $$\\text{new\\_dp} [\\text{start}\\ \\% \\ (\\log k + 1)] = 0$$. The reasons are as we said before:\n\n\n> Once we pass the index `start` and move on to the next index, we will never need the value of `dp[start]` anymore.\n\nThus $$\\text{new\\_dp} [\\text{start}\\ \\% \\ (\\log k + 1)]$$ doesn't represent the cell $$\\text{old\\_dp} [\\text{start}]$$ anymore, but the cell with a larger index $$\\text{old\\_dp} [\\text{start} +  \\log k + 1]$$, so we need to reset it as `0` and update it in the further steps.\n\n\n<br>\n\n#### Algorithm\n\n1) We create an array `dp` of size `log k + 1`. Set `dp[0] = 1`.\n\n2) Iterate over each starting index `start`. If `s[start] = 0`, set `dp[start % (log k + 1)]` as `0`. Repeat step 2 and move on to the next index. Otherwise:\n    - Start an inner iteration over the ending index `end` from `start`.\n    - If the number represented by `s[start ~ end]` is valid, increment `dp[(end + 1) % (log k + 1)]` by `dp[start % (log k + 1)]`.\n    - Set `dp[start % (log k + 1)]` as `0`.\n3) Return `dp[(m + 1) % (log k + 1)]` when the iteration ends.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/TbMFWwiu/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"TbMFWwiu\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$m$$ be the length of the input string `s`.\n\n\n* Time complexity: $$O(m \\cdot \\log k)$$\n\n\n    - It takes $$O(m)$$ steps to iterate over string `s`.\n    - At each iteration step `s[start]`, we will look for all possible ending index `end`. In the worst-case scenario, we have to traverse $\\log k$ indexes before `currNumber` is larger than `k`. This is because each iteration increases `currNumber` by a magnitude.\n\n    - To sum up, the overall time complexity is $$O(m \\cdot \\log k)$$. \n\n    \n\n* Space complexity: $$O(log k)$$\n\n    - We create an array `dp` of size $$(\\log k)$$. \n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

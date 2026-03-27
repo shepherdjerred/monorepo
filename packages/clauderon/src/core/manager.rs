@@ -4382,7 +4382,7 @@ impl SessionManager {
             });
 
             // GitHub
-            let (source, readonly) = credential_source("GITHUB_TOKEN", "github_token");
+            let (source, readonly) = credential_source("GH_TOKEN", "github_token");
             credentials.push(CredentialStatus {
                 name: "GitHub".to_owned(),
                 service_id: "github".to_owned(),
@@ -4844,7 +4844,7 @@ impl SessionManager {
     /// Map service ID to environment variable name.
     fn credential_env_var(service_id: &str) -> anyhow::Result<&'static str> {
         match service_id {
-            "github" => Ok("GITHUB_TOKEN"),
+            "github" => Ok("GH_TOKEN"),
             "anthropic" => Ok("CLAUDE_CODE_OAUTH_TOKEN"),
             "openai" => Ok("OPENAI_API_KEY"),
             "pagerduty" => Ok("PAGERDUTY_TOKEN"),

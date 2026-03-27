@@ -1,0 +1,146 @@
+{
+  "questionId": "989",
+  "questionFrontendId": "952",
+  "title": "Largest Component Size by Common Factor",
+  "titleSlug": "largest-component-size-by-common-factor",
+  "difficulty": "Hard",
+  "content": "<p>You are given an integer array of unique positive integers <code>nums</code>. Consider the following graph:</p>\n\n<ul>\n\t<li>There are <code>nums.length</code> nodes, labeled <code>nums[0]</code> to <code>nums[nums.length - 1]</code>,</li>\n\t<li>There is an undirected edge between <code>nums[i]</code> and <code>nums[j]</code> if <code>nums[i]</code> and <code>nums[j]</code> share a common factor greater than <code>1</code>.</li>\n</ul>\n\n<p>Return <em>the size of the largest connected component in the graph</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2018/12/01/ex1.png\" style=\"width: 500px; height: 97px;\" />\n<pre>\n<strong>Input:</strong> nums = [4,6,15,35]\n<strong>Output:</strong> 4\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2018/12/01/ex2.png\" style=\"width: 500px; height: 85px;\" />\n<pre>\n<strong>Input:</strong> nums = [20,50,9,63]\n<strong>Output:</strong> 2\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2018/12/01/ex3.png\" style=\"width: 500px; height: 260px;\" />\n<pre>\n<strong>Input:</strong> nums = [2,3,6,7,4,12,21,39]\n<strong>Output:</strong> 8\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 2 * 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>5</sup></code></li>\n\t<li>All the values of <code>nums</code> are <strong>unique</strong>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"largestComponentSize\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"66.5K\", \"totalSubmission\": \"155.8K\", \"totalAcceptedRaw\": 66496, \"totalSubmissionRaw\": 155840, \"acRate\": \"42.7%\"}",
+  "likes": 1727,
+  "dislikes": 95,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Groups of Strings\", \"titleSlug\": \"groups-of-strings\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Distinct Prime Factors of Product of Array\", \"titleSlug\": \"distinct-prime-factors-of-product-of-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[4,6,15,35]",
+    "[20,50,9,63]",
+    "[2,3,6,7,4,12,21,39]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Number Theory",
+      "slug": "number-theory"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int largestComponentSize(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int largestComponentSize(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def largestComponentSize(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def largestComponentSize(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar largestComponentSize = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function largestComponentSize(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int LargestComponentSize(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int largestComponentSize(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func largestComponentSize(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun largestComponentSize(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func largestComponentSize(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn largest_component_size(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef largest_component_size(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function largestComponentSize($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int largestComponentSize(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def largestComponentSize(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec largest_component_size(nums :: [integer]) :: integer\n  def largest_component_size(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec largest_component_size(Nums :: [integer()]) -> integer().\nlargest_component_size(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (largest-component-size nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "979",
+    "content": "[TOC]\n\n## Solution\n\n\n---\n### Overview\n\nWe could consider this problem as a graph partition problem. \n\n>Each number represents a node in a graph.\nWe are asked to partition the nodes into several groups and find the largest one.\n\nSuppose that we have a means to determine and assign each node to a proper group, then we could easily solve the problem with a single iteration.\n\nWe could summarize the algorithm with the following Python pseudo code, where literally we count the appearance of each group.\n\n```python\n    group_count = {}\n    for num in number_list:\n        group_id = group(num)\n        group_count[group_id] += 1\n    return max(group_count.values())\n```\n\n>The key to the above algorithm lies in the questions on how we define a group and how we assign an element to a group.\n\nGiven the above intuition, it might remind you one of the most well-known data structures in computer science called [Disjoint Set](https://en.wikipedia.org/wiki/Disjoint-set_data_structure), which tracks a set of elements partitioned into a number of *disjoint* (non-overlapping) subsets.\n\n**Union-Find Algorithm**\n\nIndeed, the Disjoint-Set data structure would be the essential building block to solve this problem.\n\nThe Disjoint-Set data structure is also known as the Union-Find data structure. Because it mainly consists of two operations: `Union()` and `Find()` defined as follows:\n\n- `Find(x)`: get the identity of the group that the element `x` belongs to.\n\n- `Union(x, y)`: merge the two groups that the two elements belong to respectively.\n\nHere are the sample implementation of the Union-Find data structure, following the [pseudo-code](https://en.wikipedia.org/wiki/Disjoint-set_data_structure) presented on the wiki page.\n\n<iframe src=\"https://leetcode.com/playground/E29hQbzm/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"E29hQbzm\"></iframe>\n\nAs one can see, the code is actually surprisingly concise, yet powerful.\nIt could be even more concise, if we did not care about the load balancing during the merge of groups in the `Union()` function.\n\nWe would use the implementation of this Union-Find data structure in the following approaches.\n\n---\n### Approach 1: Union-Find via Factors \n\n**Intuition**\n\nNow that we are equipped with the Union-Find structure, which greatly facilitates the group identification and group merge operations,\nwe can now reformulate the problem with the help of Union-Find.\n\n>As we stated before, the problem can be considered as a _graph partition_ problem where we group nodes into a list of subsets.\n\nEach number in the input list is represented as a node in the graph.\nThe connection between the nodes (_i.e._ edge) can happen, if and only if the two nodes share a **common factor** greater than one.\n\nOne naive idea would be that we enumerate all pairs of nodes, in order to partition the nodes into groups, with the help of Union-Find data structure as we implemented. This could pass some test cases, though it would exceed the time limit for tougher cases, since the algorithm has a quadratic time complexity.\n\n>A more efficient idea would be that we build groups led by each of the common factors of the numbers. This can be done in a single iteration over each of the number.\n\nFor each number, we enumerate all factors that can divide the number, and then we **attribute** the number to each group led by the factor, _i.e._ `Union(num, factor)`.\n\n![Venn diagram](../Figures/952/952_venn_diagram_.png)\n\nAs one can see in the above example, essentially we build a [Venn diagram](https://en.wikipedia.org/wiki/Venn_diagram), where each subset contains a series of numbers as well as factors.\nTake the input number `6` as an example, it can be divided both by the factors of `2` and `3`.\nAs a result, it can be attributed to both groups that has the factors respectively.\nAnd thanks to the number `6`, eventually the groups led by `2` and `3` respectively can be merged together.\nAt the end, all the input numbers can be attributed to a single big group, thanks to all the joints among the subgroups.\n\n**Algorithm**\n\nWith the above intuition, we could implement the algorithm in two general steps:\n\n- Step 1). Attribute each number to a series of groups that are led by each of its factors. \n\n    - We iterate through each number, denoted as `num`. For each number, we iterate from 2 to `sqrt(num)` to find out all the factors.\n\n    - For each `factor` of `num`, we merge the groups of that possess the element `num` and `factor` respectively, _i.e._ `Union(num, factor)`. \n\n    - In addition, we perform the same union operation on the complement factor as well, _i.e._ `Union(num, num / factor)`.  \n\n- Step 2). Iterate through each number a second time, to find out the final group that the number belongs to.\n\n    - With the mapping between the number and its group ID, _i.e._ `{num -> group_id`}, it is intuitive to find out the group that has the most elements.\n\n<iframe src=\"https://leetcode.com/playground/HHFg2QFy/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"HHFg2QFy\"></iframe>\n\n**Note:** One might encounter *TLE* (Time Limit Exceeded) exception with the above solution (especially in Python), when the online judge is under load.\nBut under the normal circumstance, the solution would be accepted, which is even faster than 30% of submissions.\n\n**Complexity Analysis**\n\nSince we applied the Union-Find data structure in our algorithm, we would like to start with a statement on the time complexity of the data structure, as follows:\n\n>**Statement**: If $$M$$ operations, either Union or Find, are applied to $$N$$ elements, the total run time is $$\\mathcal{O}(M \\cdot \\log^{*}{N})$$, where $$\\log^{*}$$ is the [iterated logarithm](https://en.wikipedia.org/wiki/Iterated_logarithm).\n\nOne can refer to the [proof of Union-Find complexity](https://en.wikipedia.org/wiki/Proof_of_O(log*n)_time_complexity_of_union%E2%80%93find) for more details.\n\nIn our case, the number of elements in the Union-Find data structure is equal to the maximum number of the input list, _i.e._ `max(A)`.\n\nLet $$N$$ be the number of elements in the input list, and $$M$$ be the maximum value of the input list.\n\n- Time Complexity: $$\\mathcal{O}(N \\cdot \\sqrt{M} \\cdot \\log^{*}{M})$$ \n\n    - The number of factors for a given number is bounded by $$\\mathcal{O}(\\sqrt{M})$$. Assuming that any number that is less than $$\\sqrt{M}$$ can be divided by $$M$$, we would then have $$2 \\cdot \\sqrt{M}$$ pairs of factors.\n \n    - In the first step, we iterate through each number (_i.e._ $$N$$ iterations), and for each number, we iterate through all its factors (_i.e._ up to $$2 \\cdot \\sqrt{M}$$ iterations). As a result, the time complexity of this step would be $$\\mathcal{O}(N \\cdot \\sqrt{M} \\cdot \\log^{*}{M})$$.\n\n    - In the second step, we iterate through each number again.\n    But this time, for each iteration we perform only once the Union-Find operation.\n    Hence, the time complexity for this step would be $$\\mathcal{O}(N \\cdot \\log^{*}{M})$$.\n\n    - To sum up, the overall complexity of the algorithm would be $$\\mathcal{O}(N \\cdot \\sqrt{M} \\cdot \\log^{*}{M}) + \\mathcal{O}(N \\cdot \\log^{*}{M}) = \\mathcal{O}(N \\cdot \\sqrt{M} \\cdot \\log^{*}{M}) $$.\n\n- Space Complexity: $$\\mathcal{O}(M + N)$$\n\n    - The space complexity of the Union-Find data structure is $$\\mathcal{O}(M)$$.\n\n    - In the main algorithm, we use a hash table to keep track of the account for each group. In the worst case, each number forms an individual group. Therefore, the space complexity of this hash table is $$\\mathcal{O}(N)$$.\n\n    - To sum up, the overall space complexity of the algorithm is $$\\mathcal{O}(M) + \\mathcal{O}(N) = \\mathcal{O}(M + N)$$.\n<br/>\n<br/>\n\n---\n### Approach 2: Union-Find on Prime Factors\n\n**Intuition**\n\nOne might notice that in the above algorithm, we would enumerate through a series of **_non-essential_** factors for a number.\n\nFor instance, for the number 12, we have a number of factors as `[2, 3, 4, 6]`.\nIn this case, the factors of `[4, 6]` are not essential, since they have been _covered_ by the _prime factors_ of `[2, 3]`. \nIf there is another number (say `30`) that has a common factor with the number `12`, then this common factor is either one of the prime factors of `[2, 3]` or it can be further divided by these prime factors.\n\n>The intuition is that the prime factors of a number can represent all of its factors, _i.e._ the integer can be characterized by a series of prime factors.\n\nIndeed, _\"By the fundamental theorem of arithmetic, every positive integer has a unique [prime factorization](https://en.wikipedia.org/wiki/Prime_number#Unique_factorization)\",_  as we quote from [wikipedia](https://en.wikipedia.org/wiki/Integer_factorization).\n\nEach positive integer (except 1) can be decomposed into a series of prime numbers, _e.g._ $$ 12 = 2 * 2 * 3$$.\n\n>With the above theories, rather than enumerating all the factors of a number, we just need to enumerate the **prime factors** of a number, in our Union-Find data structure.\n\n\n**Sieve Method**\n\nBefore proceeding to the main algorithm for this problem, let us briefly list the algorithm to decompose a number into a series of prime factors, which itself is not an easy problem.\n\nHere we apply the [sieve of Eratosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes) (let's call it sieve method for short), an ancient algorithm to calculate all prime factors up to any given limit.\n\n<iframe src=\"https://leetcode.com/playground/dVMhWySC/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"dVMhWySC\"></iframe>\n\n**Algorithm**\n\nNow that we know how to decompose a number into a series of prime factors, we can simply replace common factors in the previous approach with the prime factors. This could work.\n\nHowever, there is another arguably more efficient method, which is that rather than Union-Find on all numbers together with its prime factors, we do the Union-Find **solely** on the prime factors, excluding the numbers.\n\nWe could therefore have much smaller set of elements for the Union-Find operations.\nWe illustrate how it could work on the same example before in the following graph.\n\n![Union-Find on prime factors](../Figures/952/952_prime_factors_.png)\n\nSimilar with the previous approach, we could implement the algorithm in two general steps:\n\n- Step 1). Decompose each number into its prime factors and apply `Union()` operations on the series of prime factors.\n\n    - We iterate through each number, denoted as `num`. For each number, we decompose it into prime factors.\n\n    - We join all groups that possess these prime factors, by applying `Union()` operation on each adjacent pair of prime factors.\n    \n    - In addition, we use a hash table to keep the mapping between each number and its any of prime factors. Later, we would use this table to find out which group that each number belongs to. \n\n\n- Step 2). Iterate through each number a second time, to find out the final group that the number belongs to.\n\n    - Since we build Union-Find sets solely on the prime factors, we could find out which group that each prime factor belongs to, _i.e._ `prime_factor -> group_id`.\n\n    - Thanks to the mapping between the number and its prime factor, _i.e._ `{num -> prime_factor`}, we could now find out which group that each number belongs with the above Union-Find sets, _i.e._ `num -> prime_factor -> group_id`.\n\n\n<iframe src=\"https://leetcode.com/playground/SGtHGgwk/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"SGtHGgwk\"></iframe>\n\n\n\n**Complexity Analysis**\n\nLet $$N$$ be the number of elements in the input list, and $$M$$ be the maximum value of the input list.\n\n- Time Complexity: $$\\mathcal{O}\\big(N \\cdot (\\log_{2}{M} \\cdot \\log^{*}{M} + \\sqrt{M}) \\big)$$ \n\n    - First of all, the time complexity of the sieve method to calculate the prime factors of is $$\\mathcal{O}(\\sqrt{M})$$.\n\n    - It is hard to estimate the number of prime factors for a given number. Since the smallest prime number is 2, a coarse upper bound for the number of the prime factors is $$\\log_{2}{M}$$, _e.g._ $$ 8 = 2 * 2 * 2$$.\n\n    - In the first step, we iterate through each number (_i.e._ $$N$$ iterations), and for each number, we iterate through all its factors (_i.e._ up to $$\\log_{2}{M}$$ iterations). As a result, together with the calculation of prime factors, the time complexity of this step would be $$\\mathcal{O}(N \\cdot \\log_{2}{M} \\cdot \\log^{*}{M}) + \\mathcal{O}(N \\cdot \\sqrt{M}) = \\mathcal{O}\\big(N \\cdot (\\log_{2}{M} \\cdot \\log^{*}{M} + \\sqrt{M}) \\big)$$.\n\n    - In the second step, we iterate through each number again.\n    But this time, for each iteration we perform only once the Union-Find operation, _i.e._ $$\\mathcal{O}(N \\cdot \\log^{*}{M})$$.\n\n    - To sum up, the overall complexity of the algorithm would be $$\\mathcal{O}\\big(N \\cdot (\\log_{2}{M} \\cdot \\log^{*}{M} + \\sqrt{M}) \\big)$$.\n\n    - As one might notice that, the asymptotic complexity of this approach seems to be inferior than the previous approach, due to the calculation of prime factors. However, in reality, the saving we gain on the Union-Find operations could outweigh the cost of prime factor calculation.\n\n- Space Complexity: $$\\mathcal{O}(M + N)$$\n\n    - The space complexity of the Union-Find data structure is $$\\mathcal{O}(M)$$.\n\n    - In the main algorithm, we use a hash table to keep track of the count for each group. In the worst case, each number forms an individual group. Therefore, the space complexity of this hash table is $$\\mathcal{O}(N)$$.\n\n    - In addition, we keep a map between each number and one of its prime factors. Hence the space complexity of this map is $$\\mathcal{O}(N)$$.\n\n    - To sum up, the overall space complexity of the algorithm is $$\\mathcal{O}(M) + \\mathcal{O}(N) + \\mathcal{O}(N) = \\mathcal{O}(M + N)$$.\n\n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

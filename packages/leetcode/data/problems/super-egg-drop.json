@@ -1,0 +1,138 @@
+{
+  "questionId": "923",
+  "questionFrontendId": "887",
+  "title": "Super Egg Drop",
+  "titleSlug": "super-egg-drop",
+  "difficulty": "Hard",
+  "content": "<p>You are given <code>k</code> identical eggs and you have access to a building with <code>n</code> floors labeled from <code>1</code> to <code>n</code>.</p>\n\n<p>You know that there exists a floor <code>f</code> where <code>0 &lt;= f &lt;= n</code> such that any egg dropped at a floor <strong>higher</strong> than <code>f</code> will <strong>break</strong>, and any egg dropped <strong>at or below</strong> floor <code>f</code> will <strong>not break</strong>.</p>\n\n<p>Each move, you may take an unbroken egg and drop it from any floor <code>x</code> (where <code>1 &lt;= x &lt;= n</code>). If the egg breaks, you can no longer use it. However, if the egg does not break, you may <strong>reuse</strong> it in future moves.</p>\n\n<p>Return <em>the <strong>minimum number of moves</strong> that you need to determine <strong>with certainty</strong> what the value of </em><code>f</code> is.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> k = 1, n = 2\n<strong>Output:</strong> 2\n<strong>Explanation: </strong>\nDrop the egg from floor 1. If it breaks, we know that f = 0.\nOtherwise, drop the egg from floor 2. If it breaks, we know that f = 1.\nIf it does not break, then we know f = 2.\nHence, we need at minimum 2 moves to determine with certainty what the value of f is.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> k = 2, n = 6\n<strong>Output:</strong> 3\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> k = 3, n = 14\n<strong>Output:</strong> 4\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= k &lt;= 100</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"superEggDrop\",\n  \"params\": [\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"98.7K\", \"totalSubmission\": \"329.2K\", \"totalAcceptedRaw\": 98749, \"totalSubmissionRaw\": 329192, \"acRate\": \"30.0%\"}",
+  "likes": 3827,
+  "dislikes": 207,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Egg Drop With 2 Eggs and N Floors\", \"titleSlug\": \"egg-drop-with-2-eggs-and-n-floors\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "1\n2",
+    "2\n6",
+    "3\n14"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 5, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int superEggDrop(int k, int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int superEggDrop(int k, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def superEggDrop(self, k: int, n: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def superEggDrop(self, k, n):\n        \"\"\"\n        :type k: int\n        :type n: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} k\n * @param {number} n\n * @return {number}\n */\nvar superEggDrop = function(k, n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function superEggDrop(k: number, n: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int SuperEggDrop(int k, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int superEggDrop(int k, int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func superEggDrop(k int, n int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun superEggDrop(k: Int, n: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func superEggDrop(_ k: Int, _ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn super_egg_drop(k: i32, n: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} k\n# @param {Integer} n\n# @return {Integer}\ndef super_egg_drop(k, n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $k\n     * @param Integer $n\n     * @return Integer\n     */\n    function superEggDrop($k, $n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int superEggDrop(int k, int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def superEggDrop(k: Int, n: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec super_egg_drop(k :: integer, n :: integer) :: integer\n  def super_egg_drop(k, n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec super_egg_drop(K :: integer(), N :: integer()) -> integer().\nsuper_egg_drop(K, N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (super-egg-drop k n)\n  (-> exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "528",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Dynamic Programming with Binary Search\n\n#### Intuition\n\nIt's natural to attempt dynamic programming, as we encounter similar subproblems. Our state is $(K, N)$: $K$ eggs and $N$ floors left.  When we drop an egg from floor $X$, it either survives and we have state $(K, N-X)$, or it breaks and we have state $(K-1, X-1)$.\n\nThis approach would lead to a $O(K N^2)$ algorithm, but this is not efficient enough for the given constraints.  However, we can try to speed it up.  Let $dp(K, N)$ be the maximum number of moves needed to solve the problem in state $(K, N)$.  Then, by our reasoning above, we have:\n\n$$\n\\text{dp}(K, N) = 1 + \\min\\limits_{1 \\leq X \\leq N} \\Big( \\max(\\text{dp}(K-1, X-1), \\text{dp}(K, N-X)) \\Big)\n$$\n\nNow for the key insight:  Because $\\text{dp}(K, N)$ is a function that is increasing on $N$, the first term $\\mathcal{T_1} = \\text{dp}(K-1, X-1)$ in our $\\max$ expression is an increasing function on $X$, and the second term $\\mathcal{T_2} = \\text{dp}(K, N-X)$ is a decreasing function on $X$.  This means that we do not need to check every $X$ to find the minimum -- instead, we can binary search for the best $X$.\n\n\n#### Algorithm\n\n<p align=\"center\">\n    <img src=\"../Figures/891/sketch.png\" alt=\"T1, T2 diagram\" style=\"height: 300px;\"/>\n</p>\n\nContinuing our discussion, if $\\mathcal{T_1} < \\mathcal{T_2}$, then the $X$ value chosen is too small; and if $\\mathcal{T_1} > \\mathcal{T_2}$, then $X$ is too big.  However, this argument is not quite correct: when there are only two possible values of $X$, we need to check both.\n\nUsing the above fact, we can use a binary search to find the correct value of $X$ more efficiently than checking all $N$ of them.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/f3msix68/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"f3msix68\"></iframe>\n\n#### Complexity Analysis\n\n* Time Complexity:  $O(K N \\log N)$.\n\n* Space Complexity:  $O(K N)$.\n<br />\n<br />\n\n\n---\n\n### Approach 2: Dynamic Programming with Optimality Criterion\n\n#### Intuition\n\nAs in *Approach 1*, we try to speed up our $O(K N^2)$ algorithm. Again, for a state of $K$ eggs and $N$ floors, where $\\text{dp}(K, N)$ is the answer for that state, we have:\n\n$$\n\\text{dp}(K, N) = 1 + \\min\\limits_{1 \\leq X \\leq N} \\Big( \\max(\\text{dp}(K-1, X-1), \\text{dp}(K, N-X)) \\Big)\n$$\n\nNow, suppose $X_{\\emptyset} = \\text{opt}(K, N)$ is the smallest $X$ for which that minimum is attained: that is, the smallest value for which\n\n$$\n\\text{dp}(K, N) = 1 + \\max(\\text{dp}(K-1, X_{\\emptyset}-1), \\text{dp}(K, N-X_{\\emptyset}))\n$$\n\nThe key insight that we will develop below, is that $\\text{opt}(K, N)$ is an increasing function in $N$.\n\n<p align=\"center\">\n    <img src=\"../Figures/891/sketch2.png\" alt=\"T1, T2 diagram\" style=\"height: 300px;\"/>\n</p>\n\nThe first term of our $\\max$ expression, $\\mathcal{T_1} = \\text{dp}(K-1, X-1)$, is increasing with respect to $X$, but constant with respect to $N$.  The second term, $\\mathcal{T_2} = \\text{dp}(K, N-X)$, is decreasing with respect to $X$, but increasing with respect to $N$.\n\nThis means that as $N$ increases, the intersection point $X_{\\emptyset} = \\text{opt}(K, N)$ of these two lines is increasing, as we can see in the diagram.\n\n\n#### Algorithm\n\nPerform \"bottom up\" dynamic programming based on the recurrence below, keeping track of $X_{\\emptyset} = \\text{opt}(K, N)$.  Again:\n\n$$\n\\text{dp}(K, N) = 1 + \\min\\limits_{1 \\leq X \\leq N} \\Big( \\max(\\text{dp}(K-1, X-1), \\text{dp}(K, N-X)) \\Big)\n$$\n\nWhen we want to find $\\text{dp}(K, N+1)$, instead of searching for $X$ from $1 \\leq X \\leq N$, we only have to search through $X_{\\emptyset} \\leq X \\leq N$.\n\nActually, (as illustrated by the diagram,) if ever the next $X+1$ is worse than the current $X$, then we've searched too far, and we know our current $X$ is best for this $N$.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/GTGyD7W5/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"GTGyD7W5\"></iframe>\n\n#### Complexity Analysis\n\n* Time Complexity:  $O(KN)$.\n\n* Space Complexity:  $O(N)$.\n<br />\n<br />\n\n\n---\n\n### Approach 3: Mathematical\n\n#### Intuition\n\nLet's ask the question in reverse: given $T$ moves (and $K$ eggs), what is the most number of floors $f(T, K)$ that we can still \"solve\" (find $0 \\leq F \\leq f(T, K)$ with certainty)?  Then, the problem is to find the least $T$ for which $f(T, K) \\geq N$.  Because more tries is always at least as good, $f$ is increasing on $T$, which means we could binary search for the answer.\n\nNow, we find a similar recurrence for $f$ as in the other approaches. If in an optimal strategy we drop the egg from floor $X_{\\emptyset}$, then either it breaks and we can solve $f(T-1, K-1)$ lower floors (floors $< X_{\\emptyset}$); or it doesn't break and we can solve $f(T-1, K)$ higher floors (floors $\\geq X_{\\emptyset}$).  In total,\n\n$$\nf(T, K) = 1 + f(T-1, K-1) + f(T-1, K)\n$$\n\nAlso, it is easily seen that $f(t, 1) = t$ when $t \\geq 1$, and $f(1, k) = 1$ when $k \\geq 1$.\n\n\n<p align=\"center\">\n    <img src=\"../Figures/891/sketch3.png\" alt=\"T1, T2 diagram\" style=\"height: 300px;\"\"/>\n</p>\n\nFrom here, we don't need to solve the recurrence mathematically - we could simply use it to generate all $O(K * \\max(T))$ possible values of $f(T, K)$.\n\nHowever, there is a mathematical solution to this recurrence. If $g(t, k) = f(t, k) - f(t, k-1)$, the difference between the $(k-1)$th and $k$th term, then subtracting the two equations:\n\n$$\nf(T, K) = 1 + f(T-1, K-1) + f(T-1, K)\n$$\n\n$$\nf(T, K-1) = 1 + f(T-1, K-2) + f(T-1, K-1)\n$$\n\nwe get:\n\n$$\ng(t, k) = g(t-1, k) + g(t-1, k-1)\n$$\n\nThis is a binomial recurrence with solution $g(t, k) = \\binom{t}{k+1}$, so that indeed,\n\n$$\nf(t, k) = \\sum\\limits_{1 \\leq x \\leq k} g(t, x) = \\sum \\binom{t}{x}\n$$\n\n\n#### Alternative Mathematical Derivation\n\nAlternatively, when we have $t$ tries and $K$ eggs, the result of our $t$ throws must be a $t$-length sequence of successful and failed throws, with at most K failed throws.  The number of sequences with $0$ failed throws is $\\binom{t}{0}$, the number of sequences with $1$ failed throw is $\\binom{t}{1}$ etc., so that the number of such sequences is $\\sum\\limits_{0 \\leq x \\leq K} \\binom{t}{x}$.\n\nHence, we can only distinguish at most these many floors in $t$ tries (as each sequence can only map to 1 answer per sequence.)  This process includes distinguishing $F = 0$, so that the corresponding value of $N$ is one less than this sum.\n\nHowever, this is also a lower bound for the number of floors that can be distinguished, as the result of a throw on floor $X$ will bound the answer to be either at most $X$ or greater than $X$.  Hence, in an optimal throwing strategy, each such sequence actually maps to a unique answer.\n\n#### Algorithm\n\nRecapping our algorithm, we have the increasing [wrt $t$] function $f(t, K) = \\sum\\limits_{1 \\leq x \\leq K} \\binom{t}{x}$, and we want the least $t$ so that $f(t, K) \\geq N$.  We binary search for the correct $t$.\n\nTo evaluate $f(t, K)$ quickly, we can transform the previous binomial coefficient to the next (in the summand) by the formula $\\binom{n}{k} * \\frac{n-k}{k+1} = \\binom{n}{k+1}$.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ZuKvz2SD/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"ZuKvz2SD\"></iframe>\n\n#### Complexity Analysis\n\n* Time Complexity:  $O(K\\log N)$.\n\n* Space Complexity:  $O(1)$.\n<br />\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

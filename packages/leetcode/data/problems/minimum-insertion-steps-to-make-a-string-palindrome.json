@@ -1,0 +1,137 @@
+{
+  "questionId": "1437",
+  "questionFrontendId": "1312",
+  "title": "Minimum Insertion Steps to Make a String Palindrome",
+  "titleSlug": "minimum-insertion-steps-to-make-a-string-palindrome",
+  "difficulty": "Hard",
+  "content": "<p>Given a string <code>s</code>. In one step you can insert any character at any index of the string.</p>\n\n<p>Return <em>the minimum number of steps</em> to make <code>s</code>&nbsp;palindrome.</p>\n\n<p>A&nbsp;<b>Palindrome String</b>&nbsp;is one that reads the same backward as well as forward.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;zzazz&quot;\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> The string &quot;zzazz&quot; is already palindrome we do not need any insertions.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;mbadm&quot;\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> String can be &quot;mbdadbm&quot; or &quot;mdbabdm&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;leetcode&quot;\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> Inserting 5 characters the string becomes &quot;leetcodocteel&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 500</code></li>\n\t<li><code>s</code> consists of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Is dynamic programming suitable for this problem ?",
+    "If we know the longest palindromic sub-sequence is x and the length of the string is n then, what is the answer to this problem? It is n - x as we need n - x insertions to make the remaining characters also palindrome."
+  ],
+  "metaData": "{\n  \"name\": \"minInsertions\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"304.9K\", \"totalSubmission\": \"413.4K\", \"totalAcceptedRaw\": 304890, \"totalSubmissionRaw\": 413369, \"acRate\": \"73.8%\"}",
+  "likes": 5584,
+  "dislikes": 76,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Number of Moves to Make Palindrome\", \"titleSlug\": \"minimum-number-of-moves-to-make-palindrome\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"zzazz\"",
+    "\"mbadm\"",
+    "\"leetcode\""
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"accenture\", \"name\": \"Accenture\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minInsertions(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minInsertions(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minInsertions(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minInsertions(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar minInsertions = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minInsertions(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinInsertions(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minInsertions(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minInsertions(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minInsertions(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minInsertions(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_insertions(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef min_insertions(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function minInsertions($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minInsertions(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minInsertions(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_insertions(s :: String.t) :: integer\n  def min_insertions(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_insertions(S :: unicode:unicode_binary()) -> integer().\nmin_insertions(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-insertions s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1807",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a string `s` and can insert any character at any index. We need to compute the fewest insertions needed to transform `s` into a palindrome. This means we are not allowed to delete or modify characters, only insert them.\n\n> A palindrome is a string that reads the same forward and backward, meaning that the first and last characters must match, the second and second-to-last must match, and so on.\n\n---\n\n### Approach 1: Recursive Dynamic Programming\n\n#### Intuition\n\nIf you are new to Dynamic Programming, please see our [Leetcode Explore Card](https://leetcode.com/explore/featured/card/dynamic-programming/) for more information on it!\n\nAs our task is to insert minimum number of additional characters to `s` to make it a palindrome, we would want to figure out the longest palindromic subsequence that we can make from the characters in `s`. Characters that cannot be included in the longest palindromic subsequence must be adjusted by adding additional characters at required indices to form the entire string palindrome.\n\n**The answer of the problem would be the length of `s` minus the length of the longest palindromic subsequence in `s`.**\n\nThere are several methods for determining the length of the longest palindromic subsequence in a string. The length of the longest common subsequence (LCS) in the given string and its reverse string is one of the most commonly used techniques. Here, we'll go over some of the approaches that make use of LCS.\n\nYou can see some approaches that do not use LCS in this [editoral](https://leetcode.com/problems/longest-palindromic-subsequence/editorial/) of the [longest palindromic subsequence problem](https://leetcode.com/problems/longest-palindromic-subsequence/description/).\n\nWe will use recursion to find the length of the longest common subsequence in this approach.\n\nLet's take two strings, `s1` which is equal to `s` and `s2` which is the reverse of `s`. We want to find the longest common subsequence between these two strings.\n\nIf the last characters of the substrings under consideration are the same, the last character will be considered in the final common subsequence. As a result, we add `1` and recursively calculate the length of the longest common subsequence in substrings formed by removing the last character from both strings.\n\nIf the last characters aren't the same, we search for the LCS recursively by removing the last character from the first substring while keeping the second substring as is. We also recurse by leaving the first substring as is and removing the last character from the second. We choose the maximum of these because we want the longest common subsequence.\n\nTo perform this recursion, we use two variables, `m` and `n`, where `m` denotes the first `m` characters from `s1` and `n` denotes the first `n` characters from `s2` that are being considered in the current recursion call. As a result, the recursive relation can be written as follows:\n\n> 1. If `s1[m - 1] == s2[n - 1]`, i.e., the last characters match, perform `answer = 1 + LCS(s1, s2, m - 1, n - 1)`.\n> 2. Else, perform `answer = max(LCS(s1, s2, m, n - 1), LCS(s1, s2, m - 1, n)`.\n\nwhere `LCS(string s1, string s2, int i, int j)` is a recursive method that returns the longest common subsequence of the substrings taking the first `i` characters of `s1` and the first `j` characters of `s2` into account. The LCS of `s1` and `s2` is `LCS(s1, s2, m, n)`, where `m` is the length of `s1` and `n` is the length of `s2`.\n\nThe recursion tree of the above relation for `s1` and `s2` would look something like this:\n\n![img](../Figures/1312/1312-1.png)\n\nSeveral subproblems, such as `LCS(s1, s2, m - 2, n - 1)`, `LCS(s1, s2, m - 1, n - 1)`, etc., are solved twice in the partial recursion tree shown above. If we draw the entire recursion tree, we can see that there are many subproblems that are solved repeatedly.\n\nTo avoid this issue, we store the solution of the subproblem in a 2D array when it is solved. When we encounter the same subproblem again, we simply refer to the array. This is called **memoization**.\n\nThe answer of the problem would be `n - LCS(s, sReverse, n, n)` where `n` is length of `s` and `sReverse` is the reverse string of `s`.\n\n#### Algorithm\n\n1. Create an integer variable `n` and initialize it to the size of `s`.\n2. Create a string variable `sReverse` and set it to the reverse of `s`.\n3. Create a 2D-array called `memo` having `n + 1` rows and `n + 1` columns where `memo[i][j]` contains the length of the longest common subsequence considering the first `i` characters of `s` and the first `j` characters of `sReverse`. We initialize the array to `-1`.\n4. Return `n - lcs(s, sReverse, n, n, memo)` where `lcs` is a recursive method with four parameters: the first string `s1`, the second string `s2`, the length of the substring from the start of `s1` under consideration, the length of the substring from the start of `s2` under consideration and `memo`. It returns the length of the longest common subsequence in the substrings of `s1` and `s2` under consideration. We perform the following in this method:\n    - If `m == 0 || n == 0`, it indicates one of the two substrings under consideration is empty, so we return `0`.\n    - If `memo[m][n] != -1`, it indicates that we have already solved this subproblem, so we return `memo[m][n]`.\n    - If the last characters of the substrings under consideration are the same, the last character has to be included. As a result, we add `1` and look for the length of the longest common subsequence by ignoring the last character of both the substrings under consideration. We return `memo[i][j] = 1 + lcs(s1, s2, m - 1, n - 1, memo)`.\n    - Otherwise, if the last characters do not match, we recursively search for the longest common subsequence in both the substrings formed after ignoring their last characters one by one. We pick the maximum of these two. We return `memo[i][j] = max(lcs(s1, s2, m - 1, n, memo), lcs(s1, s2, m, n - 1, memo))`.\n\n#### Implementation\n\n> Because of Python 3's inherently slow execution speed, it leads to a Time Limit Exceeded (TLE) error.\n\n<iframe src=\"https://leetcode.com/playground/hVkCgHTW/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"hVkCgHTW\"></iframe>\n\n#### Complexity Analysis\n\nHere, $n$ is the length of `s`.\n\n* Time complexity: $O(n^2)$\n\n    - Initializing the `memo` array takes $O(n^2)$ time.\n    - Since there are $O(n^2)$ states that we need to iterate over, the recursive function is called $O(n^2)$ times.\n\n* Space complexity: $O(n^2)$\n\n    - The `memo` array consumes $O(n^2)$ space.\n    - The recursion stack used in the solution can grow to a maximum size of $O(n)$. When we try to form the recursion tree, we see that there are maximum of two branches that can be formed at each level (when `s[m - 1] != s[n - 1]`). The recursion stack would only have one call out of the two branches. The height of such a tree will be $O(n)$ because at each level we are decrementing the length of the strings under consideration by `1`. As a result, the recursion tree that will be formed will have $O(n)$ height. Hence, the recursion stack will have a maximum of $O(n)$ elements.\n\n---\n\n### Approach 2: Iterative Dynamic Programming\n\n#### Intuition\n\nWe used memoization in the preceding approach to store the answers to subproblems in order to solve a larger problem. We can also use a bottom-up approach to solve such problems without using recursion. We build answers to subproblems iteratively first, then use them to build answers to larger problems.\n\nSimilar to the above approach, we create a reverse string of `s` called `sReverse` and pass both strings to the `lcs` method as `s1` and `s2` respectively.\n\nIn this approach, we modify the `lcs` method to make it iterative. In the `lcs` method, we create a 2D-array `dp`, where `dp[i][j]` contains the length of the longest common subsequence considering the first `i` characters of `s1` and the first `j` characters of `s2`. Our answer would be `dp[n][n]`, where `n` is the length of both `s1` and `s2`. The state transition would be as follows:\n\n1. If `s1[i - 1] == s2[j - 1]`, perform `dp[i][j] = 1 + dp[i - 1][j - 1]`.\n2. Otherwise, perform `dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])`.\n\nTo fill the `dp` array we will iterate using two loops with the outer loop running from `i = 0` to `i = n` and the inner loop from `j = 0` to `j = n`. The length of the longest common subsequence would be `dp[n][n]`.\n\nThe answer to the problem would be `n - lcs(s, sReverse)` where `n` is the length of `s`.\n\n#### Algorithm\n\n1. Create an integer variable `n` and initialize it to the size of `s`.\n2. Create a string variable `sReverse` and set it to the reverse of `s`.\n3. Return `n - lcs(s, sReverse)` where `lcs` is a method with two parameters: the first string `s1` and the second string `s2`. It returns the length of the longest common subsequence in `s1` and `s2`. We perform the following in this method:\n   - Create a 2D-array called `dp` having `n + 1` rows and `n + 1` columns, where `n` is the length of `s1`. Here, `dp[i][j]` will contain the length of the longest common subsequence considering the first `i` characters of `s1` and the first `j` characters of `s2`.\n   - We iterate using two loops. The outer loop iterates from `i = 0` to `i = n`, incrementing `i` by `1` after each iteration. The inner loop runs from `j = 0` to `j = n`.\n   - If `i == 0 || j == 0`, it indicates one of the two substrings under consideration is empty, so we mark `dp[i][j] = 0`.\n   - If the last characters of the substrings under consideration are the same, i.e., `s1[i - 1] == s2[j - 1]`, the last character has to be included. As a result, we add `1` to the length of the longest common subsequence by ignoring the last character of both the substrings under consideration. We perform `dp[i][j] = 1 + dp[i - 1][j - 1]`.\n   - Otherwise, if the last characters do not match, we search for the longest common subsequence in both the substrings formed after ignoring their last characters one by one. We pick the maximum of these two. We perform `dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])`.\n   - After all the iterations are complete, we return `dp[n][n]`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/a6LVvYnx/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"a6LVvYnx\"></iframe>\n\n#### Complexity Analysis\n\nHere, $n$ is the length of `s`.\n\n* Time complexity: $O(n^2)$\n\n    - Initializing the `dp` array takes $O(n^2)$ time.\n    - We fill the `dp` array which takes $O(n^2)$ time.\n\n* Space complexity: $O(n^2)$\n\n    - The `dp` array consumes $O(n^2)$ space.\n\n---\n\n### Approach 3: Dynamic Programming with Space Optimization\n\n#### Intuition\n\nWe have seen that the state transitions are:\n\n> 1. If `s[i - 1] == s[j - 1]`, perform `dp[i][j] = 1 + dp[i - 1][j - 1]`.\n> 2. Otherwise, perform `dp[i][j] = max(dp[i - 1][j], dp[i][j - 1]`.\n\nIf we examine this transition closely, we can see that in each iteration of the outer loop, we only need values from all columns in the previous and current rows. As a result, we do not need to store all rows in our `dp` matrix. We can just store two rows at a time and use them. To fill row `i` in the `dp` matrix, we need the values from row `i - 1` (`dp[i - 1][j - 1]`, `dp[i - 1][j]`) and previously computed value in the $i^{th}$ row itself (`dp[i][j - 1]`). Values in rows `i - 2`, `i - 3`, and so on are no longer needed.\n\nOur task is complete if we can store the values of the previous iteration, i.e., for row `i - 1` after each iteration of the outer loop.\n\nWe can solve this by using two 1D arrays. In the `lcs` method used in the previous approach, we create two 1D arrays of size `n + 1`, `dp` and `dpPrev`, where `n` is the size of `s2`.\n\nWe repeat the previous approach by running two loops. The outer loop runs from `i = 0` to `i = m` and the inner loop runs from `j = 0` to `j = n`.\n\nNow, when we iterate using the two loops, `dp[j]` would store the length of longest common subsequence of the substring considering the first `i` characters of `s1` and the first `j` characters of `s2`. It is similar to what `dp[i][j]` stored in previous approach.\n\nThe other array `dpPrev` is important to understand. It helps us by remembering the previous state that we completed previously. `dpPrev[j]` would store the length of the longest common subsequence of the substring considering the first `i - 1` characters of `s1` and the first `j` characters of `s2`. It is analogous to `dp[i - 1][j]` in the previous approach.\n\nBecause `dpPrev` stores the length of the longest common subsequence of the substring considering the first `i - 1` characters of `s1` and the first `j` characters of `s2`, we must copy the elements of `dp` to `dpPrev` after each outer loop iteration (or after every inner loop completion) to prepare for the next iteration. After we copy `dp` to `dpPrev`, for the next iteration which considers a substring of `s1` having first `i + 1` characters, `dpPrev` will hold values for a substring of `s1` having first `i` characters and all possible substrings (from the start) of `s2`, which is exactly what we want.\n\n#### Algorithm\n\n1. Create an integer variable `n` and initialize it to the size of `s`.\n2. Create a string variable `sReverse` and set it to the reverse of `s`.\n3. Return `n - lcs(s, sReverse, n, n)` where `lcs` is a recursive method with four parameters: the first string `s1`, the second string `s2`, the length of `s1` and the length of `s2`. It returns the length of the longest common subsequence in `s1` and `s2`. We perform the following in this method:\n    - Create a two 1D-arrays called `dp` and `dpPrev` of size `n + 1`.\n    - We iterate using two loops. The outer loop iterates from `i = 0` to `i = m` incrementing `i` by `1` after each iteration. The inner loop runs from `j = 0` to `j = n`.\n    - If `i == 0 || j == 0`, it indicates one of the two substrings under consideration is empty, so we mark `dp[j] = 0`.\n    - If the last characters of the substrings under consideration are the same, i.e., `s1[i - 1] == s2[j - 1]`, the last character has to be included. As a result, we add `1` to the length of the longest common subsequence by ignoring the last character of both the substrings under consideration. We perform `dp[j] = 1 + dpPrev[j - 1]`. Note that we have already computed the answers considering the first `i - 1` characters of `s1` and all possible substrings (from the start) of `s2`. We have it in `dpPrev` and used it.\n    - Otherwise, if the last characters do not match, we search for the longest common subsequence in both the substrings formed after ignoring their last characters one by one. We pick the maximum of these two. We perform `dp[j] = max(dpPrev[j], dp[j - 1])`.\n    - After the completion of inner loop, we copy `dp` to `dpPrev`.\n    - After all the iterations are complete, we return `dp[n]` (or `dpPrev[n]` as both are similar).\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/LPscqGQH/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"LPscqGQH\"></iframe>\n\n#### Complexity Analysis\n\nHere, $n$ is the length of `s`.\n\n* Time complexity: $O(n^2)$\n\n    - Initializing the `dp` and `dpPrev` arrays take $O(n)$ time.\n    - To get the answer, we use two loops that take $O(n^2)$ time.\n\n* Space complexity: $O(n)$\n\n    - The `dp` and `dpPrev` arrays take $O(n)$ space each.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

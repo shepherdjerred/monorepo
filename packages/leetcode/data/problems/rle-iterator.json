@@ -1,0 +1,135 @@
+{
+  "questionId": "936",
+  "questionFrontendId": "900",
+  "title": "RLE Iterator",
+  "titleSlug": "rle-iterator",
+  "difficulty": "Medium",
+  "content": "<p>We can use run-length encoding (i.e., <strong>RLE</strong>) to encode a sequence of integers. In a run-length encoded array of even length <code>encoding</code> (<strong>0-indexed</strong>), for all even <code>i</code>, <code>encoding[i]</code> tells us the number of times that the non-negative integer value <code>encoding[i + 1]</code> is repeated in the sequence.</p>\n\n<ul>\n\t<li>For example, the sequence <code>arr = [8,8,8,5,5]</code> can be encoded to be <code>encoding = [3,8,2,5]</code>. <code>encoding = [3,8,0,9,2,5]</code> and <code>encoding = [2,8,1,8,2,5]</code> are also valid <strong>RLE</strong> of <code>arr</code>.</li>\n</ul>\n\n<p>Given a run-length encoded array, design an iterator that iterates through it.</p>\n\n<p>Implement the <code>RLEIterator</code> class:</p>\n\n<ul>\n\t<li><code>RLEIterator(int[] encoded)</code> Initializes the object with the encoded array <code>encoded</code>.</li>\n\t<li><code>int next(int n)</code> Exhausts the next <code>n</code> elements and returns the last element exhausted in this way. If there is no element left to exhaust, return <code>-1</code> instead.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;RLEIterator&quot;, &quot;next&quot;, &quot;next&quot;, &quot;next&quot;, &quot;next&quot;]\n[[[3, 8, 0, 9, 2, 5]], [2], [1], [1], [2]]\n<strong>Output</strong>\n[null, 8, 8, 5, -1]\n\n<strong>Explanation</strong>\nRLEIterator rLEIterator = new RLEIterator([3, 8, 0, 9, 2, 5]); // This maps to the sequence [8,8,8,5,5].\nrLEIterator.next(2); // exhausts 2 terms of the sequence, returning 8. The remaining sequence is now [8, 5, 5].\nrLEIterator.next(1); // exhausts 1 term of the sequence, returning 8. The remaining sequence is now [5, 5].\nrLEIterator.next(1); // exhausts 1 term of the sequence, returning 5. The remaining sequence is now [5].\nrLEIterator.next(2); // exhausts 2 terms, returning -1. This is because the first term exhausted was 5,\nbut the second term did not exist. Since the last term exhausted does not exist, we return -1.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= encoding.length &lt;= 1000</code></li>\n\t<li><code>encoding.length</code> is even.</li>\n\t<li><code>0 &lt;= encoding[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>9</sup></code></li>\n\t<li>At most <code>1000</code> calls will be made to <code>next</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"classname\": \"RLEIterator\",\n  \"maxbytesperline\": 200000,\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer[]\",\n        \"name\": \"encoding\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"name\": \"next\",\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"n\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"systemdesign\": true,\n  \"params\": [\n    {\n      \"name\": \"inputs\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"inputs\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<String>\",\n    \"dealloc\": true\n  }\n}",
+  "stats": "{\"totalAccepted\": \"88.3K\", \"totalSubmission\": \"149.1K\", \"totalAcceptedRaw\": 88329, \"totalSubmissionRaw\": 149062, \"acRate\": \"59.3%\"}",
+  "likes": 769,
+  "dislikes": 201,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"RLEIterator\",\"next\",\"next\",\"next\",\"next\"]\n[[[3,8,0,9,2,5]],[2],[1],[1],[2]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 5, \"slug\": \"databricks\", \"name\": \"Databricks\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    },
+    {
+      "name": "Iterator",
+      "slug": "iterator"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class RLEIterator {\npublic:\n    RLEIterator(vector<int>& encoding) {\n        \n    }\n    \n    int next(int n) {\n        \n    }\n};\n\n/**\n * Your RLEIterator object will be instantiated and called as such:\n * RLEIterator* obj = new RLEIterator(encoding);\n * int param_1 = obj->next(n);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class RLEIterator {\n\n    public RLEIterator(int[] encoding) {\n        \n    }\n    \n    public int next(int n) {\n        \n    }\n}\n\n/**\n * Your RLEIterator object will be instantiated and called as such:\n * RLEIterator obj = new RLEIterator(encoding);\n * int param_1 = obj.next(n);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class RLEIterator:\n\n    def __init__(self, encoding: List[int]):\n        \n\n    def next(self, n: int) -> int:\n        \n\n\n# Your RLEIterator object will be instantiated and called as such:\n# obj = RLEIterator(encoding)\n# param_1 = obj.next(n)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class RLEIterator(object):\n\n    def __init__(self, encoding):\n        \"\"\"\n        :type encoding: List[int]\n        \"\"\"\n        \n\n    def next(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your RLEIterator object will be instantiated and called as such:\n# obj = RLEIterator(encoding)\n# param_1 = obj.next(n)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} encoding\n */\nvar RLEIterator = function(encoding) {\n    \n};\n\n/** \n * @param {number} n\n * @return {number}\n */\nRLEIterator.prototype.next = function(n) {\n    \n};\n\n/** \n * Your RLEIterator object will be instantiated and called as such:\n * var obj = new RLEIterator(encoding)\n * var param_1 = obj.next(n)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class RLEIterator {\n    constructor(encoding: number[]) {\n        \n    }\n\n    next(n: number): number {\n        \n    }\n}\n\n/**\n * Your RLEIterator object will be instantiated and called as such:\n * var obj = new RLEIterator(encoding)\n * var param_1 = obj.next(n)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class RLEIterator {\n\n    public RLEIterator(int[] encoding) {\n        \n    }\n    \n    public int Next(int n) {\n        \n    }\n}\n\n/**\n * Your RLEIterator object will be instantiated and called as such:\n * RLEIterator obj = new RLEIterator(encoding);\n * int param_1 = obj.Next(n);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} RLEIterator;\n\n\nRLEIterator* rLEIteratorCreate(int* encoding, int encodingSize) {\n    \n}\n\nint rLEIteratorNext(RLEIterator* obj, int n) {\n    \n}\n\nvoid rLEIteratorFree(RLEIterator* obj) {\n    \n}\n\n/**\n * Your RLEIterator struct will be instantiated and called as such:\n * RLEIterator* obj = rLEIteratorCreate(encoding, encodingSize);\n * int param_1 = rLEIteratorNext(obj, n);\n \n * rLEIteratorFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type RLEIterator struct {\n    \n}\n\n\nfunc Constructor(encoding []int) RLEIterator {\n    \n}\n\n\nfunc (this *RLEIterator) Next(n int) int {\n    \n}\n\n\n/**\n * Your RLEIterator object will be instantiated and called as such:\n * obj := Constructor(encoding);\n * param_1 := obj.Next(n);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class RLEIterator(encoding: IntArray) {\n\n    fun next(n: Int): Int {\n        \n    }\n\n}\n\n/**\n * Your RLEIterator object will be instantiated and called as such:\n * var obj = RLEIterator(encoding)\n * var param_1 = obj.next(n)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass RLEIterator {\n\n    init(_ encoding: [Int]) {\n        \n    }\n    \n    func next(_ n: Int) -> Int {\n        \n    }\n}\n\n/**\n * Your RLEIterator object will be instantiated and called as such:\n * let obj = RLEIterator(encoding)\n * let ret_1: Int = obj.next(n)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct RLEIterator {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl RLEIterator {\n\n    fn new(encoding: Vec<i32>) -> Self {\n        \n    }\n    \n    fn next(&self, n: i32) -> i32 {\n        \n    }\n}\n\n/**\n * Your RLEIterator object will be instantiated and called as such:\n * let obj = RLEIterator::new(encoding);\n * let ret_1: i32 = obj.next(n);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class RLEIterator\n\n=begin\n    :type encoding: Integer[]\n=end\n    def initialize(encoding)\n        \n    end\n\n\n=begin\n    :type n: Integer\n    :rtype: Integer\n=end\n    def next(n)\n        \n    end\n\n\nend\n\n# Your RLEIterator object will be instantiated and called as such:\n# obj = RLEIterator.new(encoding)\n# param_1 = obj.next(n)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class RLEIterator {\n    /**\n     * @param Integer[] $encoding\n     */\n    function __construct($encoding) {\n        \n    }\n  \n    /**\n     * @param Integer $n\n     * @return Integer\n     */\n    function next($n) {\n        \n    }\n}\n\n/**\n * Your RLEIterator object will be instantiated and called as such:\n * $obj = RLEIterator($encoding);\n * $ret_1 = $obj->next($n);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class RLEIterator {\n\n  RLEIterator(List<int> encoding) {\n    \n  }\n  \n  int next(int n) {\n    \n  }\n}\n\n/**\n * Your RLEIterator object will be instantiated and called as such:\n * RLEIterator obj = RLEIterator(encoding);\n * int param1 = obj.next(n);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class RLEIterator(_encoding: Array[Int]) {\n\n    def next(n: Int): Int = {\n        \n    }\n\n}\n\n/**\n * Your RLEIterator object will be instantiated and called as such:\n * val obj = new RLEIterator(encoding)\n * val param_1 = obj.next(n)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule RLEIterator do\n  @spec init_(encoding :: [integer]) :: any\n  def init_(encoding) do\n    \n  end\n\n  @spec next(n :: integer) :: integer\n  def next(n) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# RLEIterator.init_(encoding)\n# param_1 = RLEIterator.next(n)\n\n# RLEIterator.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec rle_iterator_init_(Encoding :: [integer()]) -> any().\nrle_iterator_init_(Encoding) ->\n  .\n\n-spec rle_iterator_next(N :: integer()) -> integer().\nrle_iterator_next(N) ->\n  .\n\n\n%% Your functions will be called as such:\n%% rle_iterator_init_(Encoding),\n%% Param_1 = rle_iterator_next(N),\n\n%% rle_iterator_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define rle-iterator%\n  (class object%\n    (super-new)\n    \n    ; encoding : (listof exact-integer?)\n    (init-field\n      encoding)\n    \n    ; next : exact-integer? -> exact-integer?\n    (define/public (next n)\n      )))\n\n;; Your rle-iterator% object will be instantiated and called as such:\n;; (define obj (new rle-iterator% [encoding encoding]))\n;; (define param_1 (send obj next n))"
+    }
+  ],
+  "solution": null
+}

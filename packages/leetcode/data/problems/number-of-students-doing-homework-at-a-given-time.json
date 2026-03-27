@@ -1,0 +1,127 @@
+{
+  "questionId": "1560",
+  "questionFrontendId": "1450",
+  "title": "Number of Students Doing Homework at a Given Time",
+  "titleSlug": "number-of-students-doing-homework-at-a-given-time",
+  "difficulty": "Easy",
+  "content": "<p>Given two integer arrays <code>startTime</code> and <code>endTime</code> and given an integer <code>queryTime</code>.</p>\n\n<p>The <code>ith</code> student started doing their homework at the time <code>startTime[i]</code> and finished it at time <code>endTime[i]</code>.</p>\n\n<p>Return <em>the number of students</em> doing their homework at time <code>queryTime</code>. More formally, return the number of students where <code>queryTime</code> lays in the interval <code>[startTime[i], endTime[i]]</code> inclusive.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> startTime = [1,2,3], endTime = [3,2,7], queryTime = 4\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> We have 3 students where:\nThe first student started doing homework at time 1 and finished at time 3 and wasn&#39;t doing anything at time 4.\nThe second student started doing homework at time 2 and finished at time 2 and also wasn&#39;t doing anything at time 4.\nThe third student started doing homework at time 3 and finished at time 7 and was the only student doing homework at time 4.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> startTime = [4], endTime = [4], queryTime = 4\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The only student was doing their homework at the queryTime.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>startTime.length == endTime.length</code></li>\n\t<li><code>1 &lt;= startTime.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= startTime[i] &lt;= endTime[i] &lt;= 1000</code></li>\n\t<li><code>1 &lt;= queryTime &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [
+    "Imagine that startTime[i] and endTime[i] form an interval (i.e. [startTime[i], endTime[i]]).",
+    "The answer is how many times the queryTime laid in those mentioned intervals."
+  ],
+  "metaData": "{\n  \"name\": \"busyStudent\",\n  \"params\": [\n    {\n      \"name\": \"startTime\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"endTime\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"queryTime\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"149.6K\", \"totalSubmission\": \"197.2K\", \"totalAcceptedRaw\": 149553, \"totalSubmissionRaw\": 197229, \"acRate\": \"75.8%\"}",
+  "likes": 934,
+  "dislikes": 157,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,2,3]\n[3,2,7]\n4",
+    "[4]\n[4]\n4"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int busyStudent(vector<int>& startTime, vector<int>& endTime, int queryTime) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int busyStudent(int[] startTime, int[] endTime, int queryTime) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def busyStudent(self, startTime: List[int], endTime: List[int], queryTime: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def busyStudent(self, startTime, endTime, queryTime):\n        \"\"\"\n        :type startTime: List[int]\n        :type endTime: List[int]\n        :type queryTime: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} startTime\n * @param {number[]} endTime\n * @param {number} queryTime\n * @return {number}\n */\nvar busyStudent = function(startTime, endTime, queryTime) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function busyStudent(startTime: number[], endTime: number[], queryTime: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int BusyStudent(int[] startTime, int[] endTime, int queryTime) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int busyStudent(int* startTime, int startTimeSize, int* endTime, int endTimeSize, int queryTime) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func busyStudent(startTime []int, endTime []int, queryTime int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun busyStudent(startTime: IntArray, endTime: IntArray, queryTime: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func busyStudent(_ startTime: [Int], _ endTime: [Int], _ queryTime: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn busy_student(start_time: Vec<i32>, end_time: Vec<i32>, query_time: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} start_time\n# @param {Integer[]} end_time\n# @param {Integer} query_time\n# @return {Integer}\ndef busy_student(start_time, end_time, query_time)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $startTime\n     * @param Integer[] $endTime\n     * @param Integer $queryTime\n     * @return Integer\n     */\n    function busyStudent($startTime, $endTime, $queryTime) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int busyStudent(List<int> startTime, List<int> endTime, int queryTime) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def busyStudent(startTime: Array[Int], endTime: Array[Int], queryTime: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec busy_student(start_time :: [integer], end_time :: [integer], query_time :: integer) :: integer\n  def busy_student(start_time, end_time, query_time) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec busy_student(StartTime :: [integer()], EndTime :: [integer()], QueryTime :: integer()) -> integer().\nbusy_student(StartTime, EndTime, QueryTime) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (busy-student startTime endTime queryTime)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

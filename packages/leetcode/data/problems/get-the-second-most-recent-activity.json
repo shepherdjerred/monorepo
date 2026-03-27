@@ -1,0 +1,53 @@
+{
+  "questionId": "1504",
+  "questionFrontendId": "1369",
+  "title": "Get the Second Most Recent Activity",
+  "titleSlug": "get-the-second-most-recent-activity",
+  "difficulty": "Hard",
+  "content": "<p>Table: <code>UserActivity</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| username      | varchar |\n| activity      | varchar |\n| startDate     | Date    |\n| endDate       | Date    |\n+---------------+---------+\nThis table may contain duplicates rows.\nThis table contains information about the activity performed by each user in a period of time.\nA person with username performed an activity from startDate to endDate.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to show the <strong>second most recent activity</strong> of each user.</p>\n\n<p>If the user only has one activity, return that one. A user cannot perform more than one activity at the same time.</p>\n\n<p>Return the result table in <strong>any</strong> order.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nUserActivity table:\n+------------+--------------+-------------+-------------+\n| username   | activity     | startDate   | endDate     |\n+------------+--------------+-------------+-------------+\n| Alice      | Travel       | 2020-02-12  | 2020-02-20  |\n| Alice      | Dancing      | 2020-02-21  | 2020-02-23  |\n| Alice      | Travel       | 2020-02-24  | 2020-02-28  |\n| Bob        | Travel       | 2020-02-11  | 2020-02-18  |\n+------------+--------------+-------------+-------------+\n<strong>Output:</strong> \n+------------+--------------+-------------+-------------+\n| username   | activity     | startDate   | endDate     |\n+------------+--------------+-------------+-------------+\n| Alice      | Dancing      | 2020-02-21  | 2020-02-23  |\n| Bob        | Travel       | 2020-02-11  | 2020-02-18  |\n+------------+--------------+-------------+-------------+\n<strong>Explanation:</strong> \nThe most recent activity of Alice is Travel from 2020-02-24 to 2020-02-28, before that she was dancing from 2020-02-21 to 2020-02-23.\nBob only has one record, we just take that one.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists UserActivity (username varchar(30), activity varchar(30), startDate date, endDate date)\"], \"mssql\": [\"Create table UserActivity (username varchar(30), activity varchar(30), startDate date, endDate date)\"], \"oraclesql\": [\"Create table UserActivity (username varchar(30), activity varchar(30), startDate date, endDate date)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"second_most_recent\", \"pythondata\": [\"UserActivity = pd.DataFrame([], columns=['username', 'activity', 'startDate', 'endDate']).astype({'username':'object', 'activity':'object', 'startDate':'datetime64[ns]', 'endDate':'datetime64[ns]'})\\n\"], \"postgresql\": [\"\\nCreate table If Not Exists UserActivity (username varchar(30), activity varchar(30), startDate date, endDate date)\"], \"database_schema\": {\"UserActivity\": {\"username\": \"VARCHAR(30)\", \"activity\": \"VARCHAR(30)\", \"startDate\": \"DATE\", \"endDate\": \"DATE\"}}}",
+  "stats": "{\"totalAccepted\": \"26.3K\", \"totalSubmission\": \"39K\", \"totalAcceptedRaw\": 26279, \"totalSubmissionRaw\": 39023, \"acRate\": \"67.3%\"}",
+  "likes": 168,
+  "dislikes": 13,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"UserActivity\":[\"username\",\"activity\",\"startDate\",\"endDate\"]},\"rows\":{\"UserActivity\":[[\"Alice\",\"Travel\",\"2020-02-12\",\"2020-02-20\"],[\"Alice\",\"Dancing\",\"2020-02-21\",\"2020-02-23\"],[\"Alice\",\"Travel\",\"2020-02-24\",\"2020-02-28\"],[\"Bob\",\"Travel\",\"2020-02-11\",\"2020-02-18\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef second_most_recent(user_activity: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

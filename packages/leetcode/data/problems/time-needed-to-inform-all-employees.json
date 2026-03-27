@@ -1,0 +1,141 @@
+{
+  "questionId": "1492",
+  "questionFrontendId": "1376",
+  "title": "Time Needed to Inform All Employees",
+  "titleSlug": "time-needed-to-inform-all-employees",
+  "difficulty": "Medium",
+  "content": "<p>A company has <code>n</code> employees with a unique ID for each employee from <code>0</code> to <code>n - 1</code>. The head of the company is the one with <code>headID</code>.</p>\n\n<p>Each employee has one direct manager given in the <code>manager</code> array where <code>manager[i]</code> is the direct manager of the <code>i-th</code> employee, <code>manager[headID] = -1</code>. Also, it is guaranteed that the subordination relationships have a tree structure.</p>\n\n<p>The head of the company wants to inform all the company employees of an urgent piece of news. He will inform his direct subordinates, and they will inform their subordinates, and so on until all employees know about the urgent news.</p>\n\n<p>The <code>i-th</code> employee needs <code>informTime[i]</code> minutes to inform all of his direct subordinates (i.e., After informTime[i] minutes, all his direct subordinates can start spreading the news).</p>\n\n<p>Return <em>the number of minutes</em> needed to inform all the employees about the urgent news.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 1, headID = 0, manager = [-1], informTime = [0]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> The head of the company is the only employee in the company.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/02/27/graph.png\" style=\"width: 404px; height: 174px;\" />\n<pre>\n<strong>Input:</strong> n = 6, headID = 2, manager = [2,2,-1,2,2,2], informTime = [0,0,1,0,0,0]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The head of the company with id = 2 is the direct manager of all the employees in the company and needs 1 minute to inform them all.\nThe tree structure of the employees in the company is shown.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= headID &lt; n</code></li>\n\t<li><code>manager.length == n</code></li>\n\t<li><code>0 &lt;= manager[i] &lt; n</code></li>\n\t<li><code>manager[headID] == -1</code></li>\n\t<li><code>informTime.length == n</code></li>\n\t<li><code>0 &lt;= informTime[i] &lt;= 1000</code></li>\n\t<li><code>informTime[i] == 0</code> if employee <code>i</code> has no subordinates.</li>\n\t<li>It is <strong>guaranteed</strong> that all the employees can be informed.</li>\n</ul>\n",
+  "hints": [
+    "The company can be represented as a tree, headID is always the root.",
+    "Store for each node the time needed to be informed of the news.",
+    "Answer is the max time a leaf node needs to be informed."
+  ],
+  "metaData": "{\n  \"name\": \"numOfMinutes\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"headID\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"manager\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"informTime\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"257.7K\", \"totalSubmission\": \"426.3K\", \"totalAcceptedRaw\": 257714, \"totalSubmissionRaw\": 426296, \"acRate\": \"60.5%\"}",
+  "likes": 4251,
+  "dislikes": 324,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Depth of Binary Tree\", \"titleSlug\": \"maximum-depth-of-binary-tree\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Binary Tree Maximum Path Sum\", \"titleSlug\": \"binary-tree-maximum-path-sum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "1\n0\n[-1]\n[0]",
+    "6\n2\n[2,2,-1,2,2,2]\n[0,0,1,0,0,0]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"medianet\", \"name\": \"Media.net\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numOfMinutes(int n, int headID, vector<int>& manager, vector<int>& informTime) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numOfMinutes(int n, int headID, int[] manager, int[] informTime) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numOfMinutes(self, n: int, headID: int, manager: List[int], informTime: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numOfMinutes(self, n, headID, manager, informTime):\n        \"\"\"\n        :type n: int\n        :type headID: int\n        :type manager: List[int]\n        :type informTime: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number} headID\n * @param {number[]} manager\n * @param {number[]} informTime\n * @return {number}\n */\nvar numOfMinutes = function(n, headID, manager, informTime) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numOfMinutes(n: number, headID: number, manager: number[], informTime: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumOfMinutes(int n, int headID, int[] manager, int[] informTime) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numOfMinutes(int n, int headID, int* manager, int managerSize, int* informTime, int informTimeSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numOfMinutes(n int, headID int, manager []int, informTime []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numOfMinutes(n: Int, headID: Int, manager: IntArray, informTime: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numOfMinutes(_ n: Int, _ headID: Int, _ manager: [Int], _ informTime: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn num_of_minutes(n: i32, head_id: i32, manager: Vec<i32>, inform_time: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer} head_id\n# @param {Integer[]} manager\n# @param {Integer[]} inform_time\n# @return {Integer}\ndef num_of_minutes(n, head_id, manager, inform_time)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer $headID\n     * @param Integer[] $manager\n     * @param Integer[] $informTime\n     * @return Integer\n     */\n    function numOfMinutes($n, $headID, $manager, $informTime) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numOfMinutes(int n, int headID, List<int> manager, List<int> informTime) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numOfMinutes(n: Int, headID: Int, manager: Array[Int], informTime: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec num_of_minutes(n :: integer, head_id :: integer, manager :: [integer], inform_time :: [integer]) :: integer\n  def num_of_minutes(n, head_id, manager, inform_time) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec num_of_minutes(N :: integer(), HeadID :: integer(), Manager :: [integer()], InformTime :: [integer()]) -> integer().\nnum_of_minutes(N, HeadID, Manager, InformTime) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (num-of-minutes n headID manager informTime)\n  (-> exact-integer? exact-integer? (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1869",
+    "content": "[TOC]\n\n## Solution\n\n--- \n### Overview\n\nThere are $N$ employees in a company with IDs from $0$ to $N - 1$; the company forms a tree structure with the root as `headID`.  Each employee except the `headID` has a manager, which is present in the array `manager`. Also, each employee needs some time to inform their subordinates of any piece of information, which is provided by the array `informTime`. An employee passes on the information to all the subordinates at the same time. We need to find out how long it takes for all the employees to receive the information from the head employee.\n\nIf we know when each employee will know the information, we can just find the maximum of all and return that. Hence, we need to find a way to iterate over all the employees with keeping the time they were made aware of the information. In this article, we will discuss two ways of iterating with the constraints we need.\n\nThe image below is showing a tree structure with thirteen employees, each having an informing time as shown in the array. The numbers above each node are when they receive the information, hence the `headID` has the information at `0`, and its subordinates get it at `informTime[headID]` and so on.\n\n![fig](../Figures/1376/1376A.png)\n</br>\n\n---\n\n\n### Approach 1: Depth-First Search (DFS)\n\n**Intuition**\n\nBefore we use any iterating algorithm, we need to prepare the tree in a way we can iterate quickly. The information starts from the `headID` at time `0`, then it traverses to its subordinates at the time `informTime[headID]`, and then their subordinates pass it on to their subordinates, and so on. Therefore, we need the parent-to-child relationship to iterate instead of the child-to-parent relationship that we have in the input. To do this, we would create an edge from `manager[i]` to `i` when the `manager[i]` isn't `-1`.\n\nWe start the DFS from the root node, i.e. `headID` with the `time` as `0`, then we iterate over its subordinates with `time` as `time + informTime[parent]`. Before we iterate over the subordinates, we update the variable `maxTime`, which is the maximum `time` we have seen so far. In the end, we can just return the `maxTime`, which is the time for the employee that got the information at last.\n\nNote that we don't have to keep track of the nodes we have traversed, as the structure we are traversing over is a directed tree without any cycles. Hence, we will never visit a node twice.\n\n**Algorithm**\n\n1. Create an adjacency list `adjList`; the $$i^{th}$$ index here would store the adjacent nodes to the employee with ID `i`.\n2. Iterate over the employees from `0` to `N - 1`, and for each employee `i`, store an edge `manager[i] -> i` if `manager[i]` isn't `-1`.\n3. Start the DFS with node `headID` and `time` as `0` for each node as `curr`:\n\n   i. Update the maximum time we have seen, `maxTime`, by comparing it with `time`.\n\n   ii. Iterate over the adjacent nodes of `curr`, and for each adjacent node, perform DFS with time as `time + informTime[curr]`.\n4. When the DFS is finished, return `maxTime`.\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/PwtqvsQS/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"PwtqvsQS\"></iframe>\n\n\n**Complexity Analysis**\n\nHere, $N$ is the number of employees.\n\n* Time complexity: $O(N)$.\n\n  We first iterate over the employees to create the adjacency list; then, we perform the DFS, where we iterate over each node once to find when they get the information from `headID`.\n\n* Space complexity: $O(N)$.\n\n  The size of the adjacency list is $N$, and there will be only $N - 1$ edges in the tree. There will be some stack space needed for DFS. The maximum active stack calls would equal the number of nodes for a skewed tree. Hence the total space complexity would be $O(N)$.\n  <br/>\n\n---\n### Approach 2: Breadth-First Search (BFS)\n\n**Intuition**\n\nThe other way to iterate over nodes while keeping the time it takes to get information is using Breadth-First Search (BFS). We can start from the `headID` with time as `0` and for each child node, put all the subordinates in the queue with time as `informTime[parent]`. Then similar to the DFS approach, we will update the maximum time we have seen so far, `maxTime` each time we extract a node from the queue. Also, we don't need to keep track of visited nodes just like we didn't in DFS, as there aren't any cycles.\n\n**Algorithm**\n\n1. Create an adjacency list `adjList`; the $$i^{th}$$ index here would store the adjacent nodes to the employee with ID `i`.\n2. Iterate over the employees from `0` to `N - 1`, and for each employee `i`, store an edge `manager[i] -> i` if `manager[i]` isn't `-1`.\n3. Initialize a queue `q` of pairs of integers. The first integer is the ID of an employee, and the second integer is the time at which this employee gets the information.\n4. Insert the first entry into the queue as `(headID, 0)`.\n5. Keep extracting pairs from the queue until it's empty. For each pair, update the `maxTime` first and then push each subordinate of the current employee with the additional time required to inform the subordinates via `informTime`.\n6. Return `maxTime` when the BFS is finished.\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/QdbNiyej/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"QdbNiyej\"></iframe>\n\n\n**Complexity Analysis**\n\nHere, $N$ is the number of employees.\n\n* Time complexity: $O(N)$.\n\n  We first iterate over the employees to create the adjacency list; then, we perform the BFS, where we iterate over each node once to find when they get the information from `headID`.\n\n* Space complexity: $O(N)$.\n\n  The size of the adjacency list is $N$, and there will be only $N - 1$ edges in the tree. Also, the size of the queue could be at max $O(N)$. Hence the total space complexity would be $O(N)$.\n  <br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

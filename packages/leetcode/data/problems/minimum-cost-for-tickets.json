@@ -1,0 +1,133 @@
+{
+  "questionId": "1025",
+  "questionFrontendId": "983",
+  "title": "Minimum Cost For Tickets",
+  "titleSlug": "minimum-cost-for-tickets",
+  "difficulty": "Medium",
+  "content": "<p>You have planned some train traveling one year in advance. The days of the year in which you will travel are given as an integer array <code>days</code>. Each day is an integer from <code>1</code> to <code>365</code>.</p>\n\n<p>Train tickets are sold in <strong>three different ways</strong>:</p>\n\n<ul>\n\t<li>a <strong>1-day</strong> pass is sold for <code>costs[0]</code> dollars,</li>\n\t<li>a <strong>7-day</strong> pass is sold for <code>costs[1]</code> dollars, and</li>\n\t<li>a <strong>30-day</strong> pass is sold for <code>costs[2]</code> dollars.</li>\n</ul>\n\n<p>The passes allow that many days of consecutive travel.</p>\n\n<ul>\n\t<li>For example, if we get a <strong>7-day</strong> pass on day <code>2</code>, then we can travel for <code>7</code> days: <code>2</code>, <code>3</code>, <code>4</code>, <code>5</code>, <code>6</code>, <code>7</code>, and <code>8</code>.</li>\n</ul>\n\n<p>Return <em>the minimum number of dollars you need to travel every day in the given list of days</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> days = [1,4,6,7,8,20], costs = [2,7,15]\n<strong>Output:</strong> 11\n<strong>Explanation:</strong> For example, here is one way to buy passes that lets you travel your travel plan:\nOn day 1, you bought a 1-day pass for costs[0] = $2, which covered day 1.\nOn day 3, you bought a 7-day pass for costs[1] = $7, which covered days 3, 4, ..., 9.\nOn day 20, you bought a 1-day pass for costs[0] = $2, which covered day 20.\nIn total, you spent $11 and covered all the days of your travel.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> days = [1,2,3,4,5,6,7,8,9,10,30,31], costs = [2,7,15]\n<strong>Output:</strong> 17\n<strong>Explanation:</strong> For example, here is one way to buy passes that lets you travel your travel plan:\nOn day 1, you bought a 30-day pass for costs[2] = $15 which covered days 1, 2, ..., 30.\nOn day 31, you bought a 1-day pass for costs[0] = $2 which covered day 31.\nIn total, you spent $17 and covered all the days of your travel.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= days.length &lt;= 365</code></li>\n\t<li><code>1 &lt;= days[i] &lt;= 365</code></li>\n\t<li><code>days</code> is in strictly increasing order.</li>\n\t<li><code>costs.length == 3</code></li>\n\t<li><code>1 &lt;= costs[i] &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"mincostTickets\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"days\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"costs\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"468.9K\", \"totalSubmission\": \"695.6K\", \"totalAcceptedRaw\": 468943, \"totalSubmissionRaw\": 695628, \"acRate\": \"67.4%\"}",
+  "likes": 8801,
+  "dislikes": 191,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Coin Change\", \"titleSlug\": \"coin-change\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Most Expensive Item That Can Not Be Bought\", \"titleSlug\": \"most-expensive-item-that-can-not-be-bought\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,4,6,7,8,20]\n[2,7,15]",
+    "[1,2,3,4,5,6,7,8,9,10,30,31]\n[2,7,15]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 18, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 13, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 9, \"slug\": \"turing\", \"name\": \"Turing\"}, {\"timesEncountered\": 5, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"zepto\", \"name\": \"Zepto\"}, {\"timesEncountered\": 2, \"slug\": \"intuit\", \"name\": \"Intuit\"}, {\"timesEncountered\": 2, \"slug\": \"grab\", \"name\": \"Grab\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int mincostTickets(vector<int>& days, vector<int>& costs) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int mincostTickets(int[] days, int[] costs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def mincostTickets(self, days: List[int], costs: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def mincostTickets(self, days, costs):\n        \"\"\"\n        :type days: List[int]\n        :type costs: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} days\n * @param {number[]} costs\n * @return {number}\n */\nvar mincostTickets = function(days, costs) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function mincostTickets(days: number[], costs: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MincostTickets(int[] days, int[] costs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int mincostTickets(int* days, int daysSize, int* costs, int costsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func mincostTickets(days []int, costs []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun mincostTickets(days: IntArray, costs: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func mincostTickets(_ days: [Int], _ costs: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn mincost_tickets(days: Vec<i32>, costs: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} days\n# @param {Integer[]} costs\n# @return {Integer}\ndef mincost_tickets(days, costs)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $days\n     * @param Integer[] $costs\n     * @return Integer\n     */\n    function mincostTickets($days, $costs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int mincostTickets(List<int> days, List<int> costs) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def mincostTickets(days: Array[Int], costs: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec mincost_tickets(days :: [integer], costs :: [integer]) :: integer\n  def mincost_tickets(days, costs) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec mincost_tickets(Days :: [integer()], Costs :: [integer()]) -> integer().\nmincost_tickets(Days, Costs) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (mincost-tickets days costs)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1969",
+    "content": "[TOC]\n\n## Solution\n\n### Overview\n\nWe are given some integers in the list `days` that represent the days of the year on which we have to travel; these days vary from `1` to `365`. We can travel only if we have a valid train ticket for that day; there are three ticket options.\n\n1. Ticket valid for `1` day at `costs[0]` dollars.\n2. Ticket valid for `7` days at `costs[1]` dollars.\n3. Ticket valid for `30` days at `costs[2]` dollars.\n\nWe need to return the minimum cost that is required to travel on every day that is given. We should take note of two characteristics of this problem at this time. First, as we iterate over the `days`, we must decide if we need to buy a new ticket today or if we already have one that is valid today; this choice will depend on our previous choices of when we bought a ticket and with what validity.  Also, we would need to decide which ticket to buy, which affects future decisions. In other words, each decision we make is affected by the previous decisions we have made. Second, the problem is asking to find the minimum cost required. These two characteristics suggest that we could solve this problem using dynamic programming. We will discuss two approaches using dynamic programming.\n\n---\n\n### Approach 1: Top-Down Dynamic Programming\n\n**Intuition**\n\nOn each day, if we don't need to travel, then we don't need to buy another ticket; however, if we need to travel today and don't have a ticket from earlier, then we have three choices; we can choose one of the three tickets with different validity and cost. After this, we will move on to the next day and then repeat the process, i.e., if travel on this day is not required, then move on to the next day; otherwise, make one of the three choices among the tickets. In the end, we will return the cost corresponding to the choice that has the minimum cost. This way, we will iterate over every possibility for each day and return the minimum of all the choices.\n\nFor this recursive approach, what are the parameter(s) that we need to track? We only need to track the current day that we are iterating over. We define a function `solve(currDay)` that returns the answer to the problem if we were to start on `currDay`.\n\nIn the recursive function, we will start with `currDay` as `1`. The base condition would be when we have covered all the days, which can be identified as `currDay > days[days.length - 1]`. Now we need to decide if we need to travel on this day or not; for this, we will check if the `currDay` is present in `days`. If not, then we don't need to buy a ticket, and hence we simply move on to the next day by returning `solve(currDay + 1)`. To efficiently find if `currDay` is present in `days` or not, we will create a hash set  `isTravelNeeded` which will have all the days on which we need to travel.\n\nIf we need to buy a ticket on this day, we have three choices:\n1. Buy a 1-day pass. We incur a cost of `costs[0]` and move on to the next day. The total cost is `cost[0] + solve(currDay + 1)`.\n2. Buy a 7-day pass. We incur a cost of `costs[1]` and don't need to worry about the next seven days. The total cost is `cost[1] + solve(currDay + 7)`.\n3. Buy a 30-day pass. We incur a cost of `costs[2]` and don't need to worry about the next thirty days. The total cost is `cost[2] + solve(currDay + 30)`.\n\nWe find all 3 costs and return the minimum of these three options.\nThis approach, however, is not efficient as there could be three options that we need to iterate over for each of the `K` days (`K` can be `365` at max) that would imply the total operations of $3^K$, which is not efficient. If we observe the below figure, there are repeated subproblems. Notice the green nodes are repeated subproblems signifying that we have already solved these subproblems before. To avoid recalculating results for previously seen subproblems, we will cache the result for each subproblem. The next time we need to calculate the result for a `currDay` we have already calculated, we can look up the result in constant time instead of recalculating the result.\n\n![fig](../Figures/983/983A.png)\n\n**Algorithm**\n\n1. Create a `dp` array with the size of the last day we need to travel plus `1`. Initialize all the values to `-1`, denoting that the answer for this day has not been calculated yet. Also, create a hash set `isTravelNeeded` from `days`.\n2. Create a function `solve` that takes `currDay` as an argument:\n    - If `currDay` is greater than the last day we need to travel, we can just return `0` as all days have already been covered.\n    - Check if `currDay` is not present in `isTravelNeeded` if not, we can just move on to `currDay + 1`.\n    - If the answer for `currDay` in the array `dp` isn't `-1`, it implies that the answer has already been calculated; hence just return it.\n    - Find the cost for the three tickets we can take for this day, add the corresponding cost, and update `dp[currDay]` accordingly in the recursive call.\n3. Call `solve` passing `currDay = 1` and return the answer.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/ge9Smsmn/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ge9Smsmn\"></iframe>\n\n**Complexity Analysis**\n\nHere, $K$ is the last day we need to travel, the last value in the array `days`.\n\n* Time complexity: $O(K)$.\n\n  The size of array `dp` is $K + 1$, and we need to find the answer for each of the $K$ states. For each state, the time required is $O(1)$ as there would be only three recursive calls for each state. Therefore, the time complexity would equal $O(K)$.\n\n* Space complexity: $O(K)$.\n\n  The size of array `dp` is $K + 1$; also, there would be some stack space required. The maximum active recursion depth would be $K$, i.e., one for each day. The size of the set `isTravelNeeded` will be equal to the size of `days`, i.e. $N$, considering the integers in `days` will always be strictly increasing we can say $N <= K$. Hence, the space complexity would equal $O(K)$.\n  <br/>\n\n---\n\n### Approach 2: Bottom-up Dynamic Programming\n\n**Intuition**\n\nIn the previous approach, the recursive calls incurred stack space. This can be avoided by applying the same approach iteratively, which is generally faster than the top-down approach. We will follow a similar approach as the previous one, just in a reverse manner.\n\nWe will start with the previous approach's base case and build up the answers for the remaining states using the recursive equation. In this approach, `dp[day]` represents the minimum cost to travel until `day`. For each value of `day`, we got here in one of three ways:\n\n1. We bought a one-day ticket on `day - 1` with cost `costs[0]`.\n2. We bought a seven-day ticket on `day - 7` with cost `costs[1]`.\n3. We bought a thirty-day ticket on `day - 30` with costs `costs[2]`.\n\nThe minimum cost would be the minimum cost of the above three options, i.e.\n\n    dp[day] = Min(dp[day - 1] + costs[0], dp[day - 7] + costs[1], dp[day - 30] + costs[2];\n\nThis is the recursive equation that would be required, but as we will iterate over every day from `1` to the last day in the array `days` we need a way to ignore the days where we don't need to travel. For this, we will keep one variable, `i`, that would denote the index of the next day in the array `days` for which we need to travel. If the day we are iterating over now is less than `days[i]` that would imply that we don't need to travel on this day. Hence, the cost for this day would be the same as the previous day.\n\n**Algorithm**\n\n1. Create a `dp` array with a size of the last day we need to travel plus `1`. Initialize all the values to `0`.\n2. Initialize `i = 0`; this index represents the index in the array `days` for which we must buy the ticket.\n3. Iterate over the days from `1` to the last day in the array `days`, and for each `day`:\n    1. If the current `day` is less than `days[i]`, the cost for `dp[day]` would be the same as `dp[day - 1]` as we don't need to travel on this day.\n    2. Otherwise, store the minimum of three options per the recursive equation in the array as `dp[day]`. Also, increment the variable `i` as we have bought the ticket for this index and now need to focus on the next index.\n4. Return `dp[lastDay]`; `lastDay` is the last value in the array `days`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/FivkgQ7C/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"FivkgQ7C\"></iframe>\n\n**Complexity Analysis**\n\nHere, $K$ is the last day that we need to travel, the last value in the array `days`.\n\n* Time complexity: $O(K)$.\n\n  The size of array `dp` is $K$, and we need to iterate over each of the $K$ days. For each day, the work required is $O(1)$. Therefore, the time complexity would equal $O(K)$.\n\n* Space complexity: $O(K)$.\n\n  The size of array `dp` is $K$. Hence, the space complexity would equal $O(K)$.\n  <br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

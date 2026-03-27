@@ -1,0 +1,138 @@
+{
+  "questionId": "1039",
+  "questionFrontendId": "997",
+  "title": "Find the Town Judge",
+  "titleSlug": "find-the-town-judge",
+  "difficulty": "Easy",
+  "content": "<p>In a town, there are <code>n</code> people labeled from <code>1</code> to <code>n</code>. There is a rumor that one of these people is secretly the town judge.</p>\n\n<p>If the town judge exists, then:</p>\n\n<ol>\n\t<li>The town judge trusts nobody.</li>\n\t<li>Everybody (except for the town judge) trusts the town judge.</li>\n\t<li>There is exactly one person that satisfies properties <strong>1</strong> and <strong>2</strong>.</li>\n</ol>\n\n<p>You are given an array <code>trust</code> where <code>trust[i] = [a<sub>i</sub>, b<sub>i</sub>]</code> representing that the person labeled <code>a<sub>i</sub></code> trusts the person labeled <code>b<sub>i</sub></code>. If a trust relationship does not exist in <code>trust</code> array, then such a trust relationship does not exist.</p>\n\n<p>Return <em>the label of the town judge if the town judge exists and can be identified, or return </em><code>-1</code><em> otherwise</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 2, trust = [[1,2]]\n<strong>Output:</strong> 2\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 3, trust = [[1,3],[2,3]]\n<strong>Output:</strong> 3\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 3, trust = [[1,3],[2,3],[3,1]]\n<strong>Output:</strong> -1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 1000</code></li>\n\t<li><code>0 &lt;= trust.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>trust[i].length == 2</code></li>\n\t<li>All the pairs of <code>trust</code> are <strong>unique</strong>.</li>\n\t<li><code>a<sub>i</sub> != b<sub>i</sub></code></li>\n\t<li><code>1 &lt;= a<sub>i</sub>, b<sub>i</sub> &lt;= n</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"findJudge\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"trust\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"743.5K\", \"totalSubmission\": \"1.5M\", \"totalAcceptedRaw\": 743536, \"totalSubmissionRaw\": 1469572, \"acRate\": \"50.6%\"}",
+  "likes": 6964,
+  "dislikes": 633,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Find the Celebrity\", \"titleSlug\": \"find-the-celebrity\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "2\n[[1,2]]",
+    "3\n[[1,3],[2,3]]",
+    "3\n[[1,3],[2,3],[3,1]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"arista-networks\", \"name\": \"Arista Networks\"}, {\"timesEncountered\": 2, \"slug\": \"turing\", \"name\": \"Turing\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findJudge(int n, vector<vector<int>>& trust) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findJudge(int n, int[][] trust) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findJudge(self, n: int, trust: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findJudge(self, n, trust):\n        \"\"\"\n        :type n: int\n        :type trust: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} trust\n * @return {number}\n */\nvar findJudge = function(n, trust) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findJudge(n: number, trust: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindJudge(int n, int[][] trust) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findJudge(int n, int** trust, int trustSize, int* trustColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findJudge(n int, trust [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findJudge(n: Int, trust: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findJudge(_ n: Int, _ trust: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_judge(n: i32, trust: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} trust\n# @return {Integer}\ndef find_judge(n, trust)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $trust\n     * @return Integer\n     */\n    function findJudge($n, $trust) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findJudge(int n, List<List<int>> trust) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findJudge(n: Int, trust: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_judge(n :: integer, trust :: [[integer]]) :: integer\n  def find_judge(n, trust) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_judge(N :: integer(), Trust :: [[integer()]]) -> integer().\nfind_judge(N, Trust) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-judge n trust)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "883",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Two Arrays\n\n**Intuition**\n\nThe `trust` relationships form a graph. Each `trust` pair, `[a, b]` represents a **directed edge** going from `a` to `b`.\n\nFor example, with `N = 5` and `trust = [[1,3],[2,3],[4,3],[4,1],[5,3],[5,1],[5,4]]`, we get the following graph. Who is the town judge?\n\n![Graph of the above example.](../Figures/997/with_judge.png)\n\nWhat about this example, with `trust = [[2,1],[3,1],[4,2],[4,3],[4,5],[5,1]]`?\n\n![Graph of the above example.](../Figures/997/without_judge.png)\n\nAnd what about this example, with `trust = [[1,4],[2,4],[3,2],[3,4],[4,2],[5,4]]`?\n\n![Graph of the above example.](../Figures/997/with_almost_judge.png)\n\nFor the first example, the town judge is `3`, because they are trusted by all four *other* people; `1`, `2`, `4`, and `5`, but they don't trust anybody themselves.\n\nFor the second example, there is no town judge. Nobody is trusted by everybody else.\n\nFor the third example, there is also no town judge. While `4` is trusted by everybody, `4` themselves trusts `2`. Therefore, `4` can't be the town judge.\n\nSome people would be tempted to launch straight into converting the input into a standard graph format, for example an adjacency list (or worse, a complicated linked structure), as soon as they make the observation that this has something to do with graphs. Then, they'll go back to trying to solve the actual problem. But as we'll see, it's better to start by looking really closely at the problem, as there's a way we can solve it without making a graph.\n\nIn graph theory, we say the **outdegree** of a vertex (person) is the number of directed edges going out of it. For this graph, the outdegree of the vertex represents the number of other people that person `trust`s.\n\nLikewise, we say that the **indegree** of a vertex (person) is the number of directed edges going *into* it. So here, it represents the number of people *that trust* that person.\n\nWe can define the town judge in terms of **indegree** and **outdegree**.\n\n> The town judge has an outdegree of `0` and an indegree of `N - 1` because they trust nobody, and everybody trusts them (except themselves).\n\nTherefore, this problem simplifies to calculating the **indegree** and **outdegree** for each person and then checking whether or not any of them meet the criteria of the town judge.\n\nWe can calculate the indegrees and outdegrees for everybody, using a single loop over the input `trust` array. We'll write the results into two arrays.\n\n```java\nint[] indegrees = new int[N + 1];\nint[] outdegrees = new int[N + 1];\n\nfor (int[] relation : trust) {\n    outdegrees[relation[0]]++;\n    indegrees[relation[1]]++; \n}\n```\n\nThen, we can simply loop over the people (numbered from `1` to `N`) and check whether or not they meet the town judge criteria.\n\n```java\nfor (int i = 1; i <= N; i++) {\n    if (indegrees[i] == N - 1 && outdegrees[i] == 0) {\n        return i;\n    }\n}\nreturn -1;\n```\n\nOne optimization we can make is to observe that it is *impossible* for there to be a town judge if there are not at least `N - 1` edges in the `trust` array. This is because a town judge must have `N - 1` in-going edges, and so if there aren't *at least* `N - 1` edges in total, then it is impossible to meet this requirement. This observation will also be very useful when we're reasoning about the time complexity.\n\n> If `trust.length < N - 1`, then we can immediately return `-1`.\n\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/4Vh62Pwd/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"4Vh62Pwd\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the *number of people*, and $$E$$ be the *number of edges* (trust relationships). \n\n- Time Complexity : $$O(E)$$.\n\n    We loop over the `trust` list once. The cost of doing this is $$O(E)$$.\n\n    We then loop over the people. The cost of doing this is $$O(N)$$.\n\n    Going by this, it now looks this is one those many graph problems where the cost is $$O(\\max(N, E) = O(N + E)$$. After all, we don't know whether $$E$$ or $$N$$ is the bigger one, right?\n    \n    *However*, remember how we terminate early if $$E < N - 1$$? This means that in the best case, the time complexity is $$O(1)$$. And in the worst case, we know that $$E ≥ N - 1$$. For the purpose of big-oh notation, we ignore the constant of $$1$$. Therefore, in the worst case, $$E$$ has to be bigger, and so we can simply drop the $$N$$, leaving $$O(E)$$.\n\n- Space Complexity : $$O(N)$$.\n    \n    We allocated 2 arrays; one for the indegrees and the other for the outdegrees. Each was of length `N + 1`. Because in big-oh notation we drop constants, this leaves us with $$O(N)$$.\n\n***This last note is provided more for interest than for interview preparation.*** A variant of the approach is to use a `HashMap`s instead of Arrays. That way, you'll only need to store indegrees and outdegrees that are non-zero. This will have no impact on the time complexity, because we still need to look at the entire input `Array`. It also has no impact on the *worst case* space complexity, because when a town judge exists, all the other `N - 1` people have an outdegree of at least `1` (from their trust of the town judge). In some cases where $$E ≥ N - 1$$ but there is no town judge, some memory might be saved, with a best case of $$O(\\sqrt{E}\\,)$$. This represents the situation of the number of unique people present in the `trust` Array being minimized (beyond an easy-level question interview, don't panic!). With the overhead of a `HashMap`, there's probably no gain of using one over an `Array` for this problem. \n\n</br>\n\n---\n\n### Approach 2: One Array\n\n**Intuition**\n\nJust to be clear, there's nothing wrong with Approach 1. If you got it, you're doing great! Approach 2 is a little more subtle. Coming up with these kinds of approaches is something you'll learn to do with experience.\n\nWe don't need separate arrays for indegree and outdegree. We can instead build a single Array with the result of `indegree - outdegree` for each person. In other words, we'll `+1` to their \"score\" for each person they are trusted by, and `-1` from their \"score\" for each person they trust. Therefore, for a person to maximize their \"score\", they should be trusted by as many people as possible, and trust as few people as possible.\n\nThe maximum indegree is `N - 1`. This represents everybody trusting the person (except for themselves, they cannot trust themselves). The minimum indegree is `0`. This represents not trusting anybody. Therefore, the maximum value for `indegree - outdegree` is  `(N - 1) - 0  =  N - 1`. These values also happen to be the definition of the town judge!\n\n> The town judge is the only person who could possibly have `indegree - outdegree` equal to `N - 1`.\n\n**Algorithm**\n\nEach person gains `1` \"point\" for each person they are trusted by, and loses `1` \"point\" for each person they trust. Then at the end, the town judge, if they exist, must be the person with `N - 1` \"points\".\n\n<iframe src=\"https://leetcode.com/playground/SATYUaTT/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"SATYUaTT\"></iframe>\n\n\n**Complexity Analysis**\n\nRecall that $$N$$ is the *number of people*, and $$E$$ is the *number of edges* (trust relationships). \n\n\n- Time Complexity : $$O(E)$$.\n\n    Same as above. We still need to loop through the $$E$$ edges in `trust`, and the argument about the relationship between $$N$$ and $$E$$ still applies.\n\n- Space Complexity : $$O(N)$$.\n\n    Same as above. We're still allocating an array of length $$N$$.\n\n</br>\n\n---\n\n### Bonus\n\n**Can There Be More Than One Town Judge?**\n\nIn the problem description, we're told that *iff* there is a town judge, there'll only be *one* town judge.\n\nIt's likely that not all interviewers would tell you directly that there can only be one town judge. If you asked them whether or not there could be more than one town judge, they might ask *you* if there could be. And the answer is... it's *impossible*! \n\nIf there were two town judges, then they would have to trust each other, otherwise we'd have a town judge not trusted by everybody. But this doesn't work, because town judges aren't supposed to trust anybody. Therefore, we know there can be at most one town judge.\n\n**A Related Question**\n\nSecondly, for *premium members*, there is a similar question on Leetcode, called [Find the Celebrity](https://leetcode.com/articles/find-the-celebrity/). You need to do the same thing—find a person who has an indegree of `N - 1` and an outdegree of `0`. However, the input format is a bit different.\n\nIt's well worth a look at. A seemingly small difference (the input format) completely changes what the optimal algorithm to solve it is. Interestingly though, the optimal algorithm for that problem can also be used here. The only difference is that there, it has a cost of $$O(N)$$, but here it has a cost of $$O(E)$$. Try and figure out why once you've solved both problems. It's a really nice example of cost analysis with graphs.\n\n</br>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

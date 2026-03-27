@@ -1,0 +1,129 @@
+{
+  "questionId": "1289",
+  "questionFrontendId": "1185",
+  "title": "Day of the Week",
+  "titleSlug": "day-of-the-week",
+  "difficulty": "Easy",
+  "content": "<p>Given a date, return the corresponding day of the week for that date.</p>\n\n<p>The input is given as three integers representing the <code>day</code>, <code>month</code> and <code>year</code> respectively.</p>\n\n<p>Return the answer as one of the following values&nbsp;<code>{&quot;Sunday&quot;, &quot;Monday&quot;, &quot;Tuesday&quot;, &quot;Wednesday&quot;, &quot;Thursday&quot;, &quot;Friday&quot;, &quot;Saturday&quot;}</code>.</p>\n\n<p><strong>Note:</strong> January 1, 1971 was a Friday.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> day = 31, month = 8, year = 2019\n<strong>Output:</strong> &quot;Saturday&quot;\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> day = 18, month = 7, year = 1999\n<strong>Output:</strong> &quot;Sunday&quot;\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> day = 15, month = 8, year = 1993\n<strong>Output:</strong> &quot;Sunday&quot;\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The given dates are valid dates between the years <code>1971</code> and <code>2100</code>.</li>\n</ul>\n",
+  "hints": [
+    "Sum up the number of days for the years before the given year.",
+    "Handle the case of a leap year.",
+    "Find the number of days for each month of the given year."
+  ],
+  "metaData": "{\n  \"name\": \"dayOfTheWeek\",\n  \"params\": [\n    {\n      \"name\": \"day\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"month\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"year\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"89.3K\", \"totalSubmission\": \"151.3K\", \"totalAcceptedRaw\": 89325, \"totalSubmissionRaw\": 151289, \"acRate\": \"59.0%\"}",
+  "likes": 454,
+  "dislikes": 2562,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "31\n8\n2019",
+    "18\n7\n1999",
+    "15\n8\n1993"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string dayOfTheWeek(int day, int month, int year) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String dayOfTheWeek(int day, int month, int year) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def dayOfTheWeek(self, day: int, month: int, year: int) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def dayOfTheWeek(self, day, month, year):\n        \"\"\"\n        :type day: int\n        :type month: int\n        :type year: int\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} day\n * @param {number} month\n * @param {number} year\n * @return {string}\n */\nvar dayOfTheWeek = function(day, month, year) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function dayOfTheWeek(day: number, month: number, year: number): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string DayOfTheWeek(int day, int month, int year) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* dayOfTheWeek(int day, int month, int year) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func dayOfTheWeek(day int, month int, year int) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun dayOfTheWeek(day: Int, month: Int, year: Int): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func dayOfTheWeek(_ day: Int, _ month: Int, _ year: Int) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn day_of_the_week(day: i32, month: i32, year: i32) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} day\n# @param {Integer} month\n# @param {Integer} year\n# @return {String}\ndef day_of_the_week(day, month, year)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $day\n     * @param Integer $month\n     * @param Integer $year\n     * @return String\n     */\n    function dayOfTheWeek($day, $month, $year) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String dayOfTheWeek(int day, int month, int year) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def dayOfTheWeek(day: Int, month: Int, year: Int): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec day_of_the_week(day :: integer, month :: integer, year :: integer) :: String.t\n  def day_of_the_week(day, month, year) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec day_of_the_week(Day :: integer(), Month :: integer(), Year :: integer()) -> unicode:unicode_binary().\nday_of_the_week(Day, Month, Year) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (day-of-the-week day month year)\n  (-> exact-integer? exact-integer? exact-integer? string?)\n  )"
+    }
+  ],
+  "solution": null
+}

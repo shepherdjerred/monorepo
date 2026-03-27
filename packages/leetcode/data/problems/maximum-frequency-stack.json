@@ -1,0 +1,140 @@
+{
+  "questionId": "931",
+  "questionFrontendId": "895",
+  "title": "Maximum Frequency Stack",
+  "titleSlug": "maximum-frequency-stack",
+  "difficulty": "Hard",
+  "content": "<p>Design a stack-like data structure to push elements to the stack and pop the most frequent element from the stack.</p>\n\n<p>Implement the <code>FreqStack</code> class:</p>\n\n<ul>\n\t<li><code>FreqStack()</code> constructs an empty frequency stack.</li>\n\t<li><code>void push(int val)</code> pushes an integer <code>val</code> onto the top of the stack.</li>\n\t<li><code>int pop()</code> removes and returns the most frequent element in the stack.\n\t<ul>\n\t\t<li>If there is a tie for the most frequent element, the element closest to the stack&#39;s top is removed and returned.</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;FreqStack&quot;, &quot;push&quot;, &quot;push&quot;, &quot;push&quot;, &quot;push&quot;, &quot;push&quot;, &quot;push&quot;, &quot;pop&quot;, &quot;pop&quot;, &quot;pop&quot;, &quot;pop&quot;]\n[[], [5], [7], [5], [7], [4], [5], [], [], [], []]\n<strong>Output</strong>\n[null, null, null, null, null, null, null, 5, 7, 5, 4]\n\n<strong>Explanation</strong>\nFreqStack freqStack = new FreqStack();\nfreqStack.push(5); // The stack is [5]\nfreqStack.push(7); // The stack is [5,7]\nfreqStack.push(5); // The stack is [5,7,5]\nfreqStack.push(7); // The stack is [5,7,5,7]\nfreqStack.push(4); // The stack is [5,7,5,7,4]\nfreqStack.push(5); // The stack is [5,7,5,7,4,5]\nfreqStack.pop();   // return 5, as 5 is the most frequent. The stack becomes [5,7,5,7,4].\nfreqStack.pop();   // return 7, as 5 and 7 is the most frequent, but 7 is closest to the top. The stack becomes [5,7,5,4].\nfreqStack.pop();   // return 5, as 5 is the most frequent. The stack becomes [5,7,4].\nfreqStack.pop();   // return 4, as 4, 5 and 7 is the most frequent, but 4 is closest to the top. The stack becomes [5,7].\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= val &lt;= 10<sup>9</sup></code></li>\n\t<li>At most <code>2 * 10<sup>4</sup></code> calls will be made to <code>push</code> and <code>pop</code>.</li>\n\t<li>It is guaranteed that there will be at least one element in the stack before calling <code>pop</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"classname\": \"FreqStack\",\n  \"maxbytesperline\": 200000,\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"name\": \"push\",\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"val\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"name\": \"pop\",\n      \"params\": [],\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"systemdesign\": true,\n  \"params\": [\n    {\n      \"name\": \"inputs\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"inputs\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<String>\",\n    \"dealloc\": true\n  }\n}",
+  "stats": "{\"totalAccepted\": \"224.5K\", \"totalSubmission\": \"336.5K\", \"totalAcceptedRaw\": 224524, \"totalSubmissionRaw\": 336458, \"acRate\": \"66.7%\"}",
+  "likes": 4954,
+  "dislikes": 78,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"FreqStack\",\"push\",\"push\",\"push\",\"push\",\"push\",\"push\",\"pop\",\"pop\",\"pop\",\"pop\"]\n[[],[5],[7],[5],[7],[4],[5],[],[],[],[]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 3, \"slug\": \"nutanix\", \"name\": \"Nutanix\"}, {\"timesEncountered\": 3, \"slug\": \"glovo\", \"name\": \"glovo\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class FreqStack {\npublic:\n    FreqStack() {\n        \n    }\n    \n    void push(int val) {\n        \n    }\n    \n    int pop() {\n        \n    }\n};\n\n/**\n * Your FreqStack object will be instantiated and called as such:\n * FreqStack* obj = new FreqStack();\n * obj->push(val);\n * int param_2 = obj->pop();\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class FreqStack {\n\n    public FreqStack() {\n        \n    }\n    \n    public void push(int val) {\n        \n    }\n    \n    public int pop() {\n        \n    }\n}\n\n/**\n * Your FreqStack object will be instantiated and called as such:\n * FreqStack obj = new FreqStack();\n * obj.push(val);\n * int param_2 = obj.pop();\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class FreqStack:\n\n    def __init__(self):\n        \n\n    def push(self, val: int) -> None:\n        \n\n    def pop(self) -> int:\n        \n\n\n# Your FreqStack object will be instantiated and called as such:\n# obj = FreqStack()\n# obj.push(val)\n# param_2 = obj.pop()"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class FreqStack(object):\n\n    def __init__(self):\n        \n\n    def push(self, val):\n        \"\"\"\n        :type val: int\n        :rtype: None\n        \"\"\"\n        \n\n    def pop(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your FreqStack object will be instantiated and called as such:\n# obj = FreqStack()\n# obj.push(val)\n# param_2 = obj.pop()"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar FreqStack = function() {\n    \n};\n\n/** \n * @param {number} val\n * @return {void}\n */\nFreqStack.prototype.push = function(val) {\n    \n};\n\n/**\n * @return {number}\n */\nFreqStack.prototype.pop = function() {\n    \n};\n\n/** \n * Your FreqStack object will be instantiated and called as such:\n * var obj = new FreqStack()\n * obj.push(val)\n * var param_2 = obj.pop()\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class FreqStack {\n    constructor() {\n        \n    }\n\n    push(val: number): void {\n        \n    }\n\n    pop(): number {\n        \n    }\n}\n\n/**\n * Your FreqStack object will be instantiated and called as such:\n * var obj = new FreqStack()\n * obj.push(val)\n * var param_2 = obj.pop()\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class FreqStack {\n\n    public FreqStack() {\n        \n    }\n    \n    public void Push(int val) {\n        \n    }\n    \n    public int Pop() {\n        \n    }\n}\n\n/**\n * Your FreqStack object will be instantiated and called as such:\n * FreqStack obj = new FreqStack();\n * obj.Push(val);\n * int param_2 = obj.Pop();\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} FreqStack;\n\n\nFreqStack* freqStackCreate() {\n    \n}\n\nvoid freqStackPush(FreqStack* obj, int val) {\n    \n}\n\nint freqStackPop(FreqStack* obj) {\n    \n}\n\nvoid freqStackFree(FreqStack* obj) {\n    \n}\n\n/**\n * Your FreqStack struct will be instantiated and called as such:\n * FreqStack* obj = freqStackCreate();\n * freqStackPush(obj, val);\n \n * int param_2 = freqStackPop(obj);\n \n * freqStackFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type FreqStack struct {\n    \n}\n\n\nfunc Constructor() FreqStack {\n    \n}\n\n\nfunc (this *FreqStack) Push(val int)  {\n    \n}\n\n\nfunc (this *FreqStack) Pop() int {\n    \n}\n\n\n/**\n * Your FreqStack object will be instantiated and called as such:\n * obj := Constructor();\n * obj.Push(val);\n * param_2 := obj.Pop();\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class FreqStack() {\n\n    fun push(`val`: Int) {\n        \n    }\n\n    fun pop(): Int {\n        \n    }\n\n}\n\n/**\n * Your FreqStack object will be instantiated and called as such:\n * var obj = FreqStack()\n * obj.push(`val`)\n * var param_2 = obj.pop()\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass FreqStack {\n\n    init() {\n        \n    }\n    \n    func push(_ val: Int) {\n        \n    }\n    \n    func pop() -> Int {\n        \n    }\n}\n\n/**\n * Your FreqStack object will be instantiated and called as such:\n * let obj = FreqStack()\n * obj.push(val)\n * let ret_2: Int = obj.pop()\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct FreqStack {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl FreqStack {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn push(&self, val: i32) {\n        \n    }\n    \n    fn pop(&self) -> i32 {\n        \n    }\n}\n\n/**\n * Your FreqStack object will be instantiated and called as such:\n * let obj = FreqStack::new();\n * obj.push(val);\n * let ret_2: i32 = obj.pop();\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class FreqStack\n    def initialize()\n        \n    end\n\n\n=begin\n    :type val: Integer\n    :rtype: Void\n=end\n    def push(val)\n        \n    end\n\n\n=begin\n    :rtype: Integer\n=end\n    def pop()\n        \n    end\n\n\nend\n\n# Your FreqStack object will be instantiated and called as such:\n# obj = FreqStack.new()\n# obj.push(val)\n# param_2 = obj.pop()"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class FreqStack {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param Integer $val\n     * @return NULL\n     */\n    function push($val) {\n        \n    }\n  \n    /**\n     * @return Integer\n     */\n    function pop() {\n        \n    }\n}\n\n/**\n * Your FreqStack object will be instantiated and called as such:\n * $obj = FreqStack();\n * $obj->push($val);\n * $ret_2 = $obj->pop();\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class FreqStack {\n\n  FreqStack() {\n    \n  }\n  \n  void push(int val) {\n    \n  }\n  \n  int pop() {\n    \n  }\n}\n\n/**\n * Your FreqStack object will be instantiated and called as such:\n * FreqStack obj = FreqStack();\n * obj.push(val);\n * int param2 = obj.pop();\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class FreqStack() {\n\n    def push(`val`: Int): Unit = {\n        \n    }\n\n    def pop(): Int = {\n        \n    }\n\n}\n\n/**\n * Your FreqStack object will be instantiated and called as such:\n * val obj = new FreqStack()\n * obj.push(`val`)\n * val param_2 = obj.pop()\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule FreqStack do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec push(val :: integer) :: any\n  def push(val) do\n    \n  end\n\n  @spec pop() :: integer\n  def pop() do\n    \n  end\nend\n\n# Your functions will be called as such:\n# FreqStack.init_()\n# FreqStack.push(val)\n# param_2 = FreqStack.pop()\n\n# FreqStack.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec freq_stack_init_() -> any().\nfreq_stack_init_() ->\n  .\n\n-spec freq_stack_push(Val :: integer()) -> any().\nfreq_stack_push(Val) ->\n  .\n\n-spec freq_stack_pop() -> integer().\nfreq_stack_pop() ->\n  .\n\n\n%% Your functions will be called as such:\n%% freq_stack_init_(),\n%% freq_stack_push(Val),\n%% Param_2 = freq_stack_pop(),\n\n%% freq_stack_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define freq-stack%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; push : exact-integer? -> void?\n    (define/public (push val)\n      )\n    ; pop : -> exact-integer?\n    (define/public (pop)\n      )))\n\n;; Your freq-stack% object will be instantiated and called as such:\n;; (define obj (new freq-stack%))\n;; (send obj push val)\n;; (define param_2 (send obj pop))"
+    }
+  ],
+  "solution": {
+    "id": "539",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach 1: Stack of Stacks\n\n**Intuition**\n\nEvidently, we care about the frequency of an element.  Let `freq` be a `Map` from $$x$$ to the number of occurrences of $$x$$.\n\nAlso, we (probably) care about `maxfreq`, the current maximum frequency of any element in the stack.  This is clear because we must pop the element with the maximum frequency.\n\nThe main question then becomes: among elements with the same (maximum) frequency, how do we know which element is most recent?  We can use a stack to query this information: the top of the stack is the most recent.\n\nTo this end, let `group` be a map from frequency to a stack of elements with that frequency.  We now have all the required components to implement `FreqStack`.\n\n**Algorithm**\n\nActually, as an implementation level detail, if `x` has frequency `f`, then we'll have `x` in all `group[i] (i <= f)`, not just the top.  This is because each `group[i]` will store information related to the `i`th copy of `x`.\n\nAfterwards, our goal is just to maintain `freq`, `group`, and `maxfreq` as described above.\n\n<iframe src=\"https://leetcode.com/playground/85UcQp3m/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"85UcQp3m\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(1)$$ for both `push` and `pop` operations.\n\n* Space Complexity:  $$O(N)$$, where `N` is the number of elements in the `FreqStack`.\n<br />\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

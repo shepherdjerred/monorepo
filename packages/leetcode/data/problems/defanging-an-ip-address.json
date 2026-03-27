@@ -1,0 +1,104 @@
+{
+  "questionId": "1205",
+  "questionFrontendId": "1108",
+  "title": "Defanging an IP Address",
+  "titleSlug": "defanging-an-ip-address",
+  "difficulty": "Easy",
+  "content": "<p>Given a valid (IPv4) IP <code>address</code>, return a defanged version of that IP address.</p>\r\n\r\n<p>A <em>defanged&nbsp;IP address</em>&nbsp;replaces every period <code>&quot;.&quot;</code> with <code>&quot;[.]&quot;</code>.</p>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong class=\"example\">Example 1:</strong></p>\r\n<pre><strong>Input:</strong> address = \"1.1.1.1\"\r\n<strong>Output:</strong> \"1[.]1[.]1[.]1\"\r\n</pre><p><strong class=\"example\">Example 2:</strong></p>\r\n<pre><strong>Input:</strong> address = \"255.100.50.0\"\r\n<strong>Output:</strong> \"255[.]100[.]50[.]0\"\r\n</pre>\r\n<p>&nbsp;</p>\r\n<p><strong>Constraints:</strong></p>\r\n\r\n<ul>\r\n\t<li>The given <code>address</code> is a valid IPv4 address.</li>\r\n</ul>",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"defangIPaddr\",\n  \"params\": [\n    {\n      \"name\": \"address\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"848.4K\", \"totalSubmission\": \"942.7K\", \"totalAcceptedRaw\": 848385, \"totalSubmissionRaw\": 942667, \"acRate\": \"90.0%\"}",
+  "likes": 2355,
+  "dislikes": 1787,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"1.1.1.1\"",
+    "\"255.100.50.0\""
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 17, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 10, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"robinhood\", \"name\": \"Robinhood\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string defangIPaddr(string address) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String defangIPaddr(String address) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def defangIPaddr(self, address: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def defangIPaddr(self, address):\n        \"\"\"\n        :type address: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} address\n * @return {string}\n */\nvar defangIPaddr = function(address) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function defangIPaddr(address: string): string {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string DefangIPaddr(string address) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\nchar * defangIPaddr(char * address){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func defangIPaddr(address string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun defangIPaddr(address: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func defangIPaddr(_ address: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn defang_i_paddr(address: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} address\n# @return {String}\ndef defang_i_paddr(address)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $address\n     * @return String\n     */\n    function defangIPaddr($address) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def defangIPaddr(address: String): String = {\n        \n    }\n}"
+    }
+  ],
+  "solution": null
+}

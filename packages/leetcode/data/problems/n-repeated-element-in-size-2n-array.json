@@ -1,0 +1,134 @@
+{
+  "questionId": "1001",
+  "questionFrontendId": "961",
+  "title": "N-Repeated Element in Size 2N Array",
+  "titleSlug": "n-repeated-element-in-size-2n-array",
+  "difficulty": "Easy",
+  "content": "<p>You are given an integer array <code>nums</code> with the following properties:</p>\n\n<ul>\n\t<li><code>nums.length == 2 * n</code>.</li>\n\t<li><code>nums</code> contains <code>n + 1</code> <strong>unique</strong> values, <code>n</code> of which occur <strong>exactly once</strong> in the array.</li>\n\t<li>Exactly one element of <code>nums</code> is repeated <code>n</code> times.</li>\n</ul>\n\n<p>Return <em>the element that is repeated </em><code>n</code><em> times</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> nums = [1,2,3,3]\n<strong>Output:</strong> 3\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> nums = [2,1,2,5,3,2]\n<strong>Output:</strong> 2\n</pre><p><strong class=\"example\">Example 3:</strong></p>\n<pre><strong>Input:</strong> nums = [5,1,5,2,5,3,5,4]\n<strong>Output:</strong> 5\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 5000</code></li>\n\t<li><code>nums.length == 2 * n</code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 10<sup>4</sup></code></li>\n\t<li><code>nums</code> contains <code>n + 1</code> <strong>unique</strong> elements and one of them is repeated exactly <code>n</code> times.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"repeatedNTimes\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"468.1K\", \"totalSubmission\": \"586.1K\", \"totalAcceptedRaw\": 468065, \"totalSubmissionRaw\": 586117, \"acRate\": \"79.9%\"}",
+  "likes": 1849,
+  "dislikes": 348,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,2,3,3]",
+    "[2,1,2,5,3,2]",
+    "[5,1,5,2,5,3,5,4]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"akamai\", \"name\": \"Akamai\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int repeatedNTimes(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int repeatedNTimes(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def repeatedNTimes(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def repeatedNTimes(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar repeatedNTimes = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function repeatedNTimes(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int RepeatedNTimes(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int repeatedNTimes(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func repeatedNTimes(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun repeatedNTimes(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func repeatedNTimes(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn repeated_n_times(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef repeated_n_times(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function repeatedNTimes($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int repeatedNTimes(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def repeatedNTimes(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec repeated_n_times(nums :: [integer]) :: integer\n  def repeated_n_times(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec repeated_n_times(Nums :: [integer()]) -> integer().\nrepeated_n_times(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (repeated-n-times nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "647",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach 1: Count\n\n**Intuition and Algorithm**\n\nLet's count the number of elements.  We can use a `HashMap` or an array - here, we use a `HashMap`.\n\nAfter, the element with a count larger than 1 must be the answer.\n\n<iframe src=\"https://leetcode.com/playground/ehRMy3ZE/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"ehRMy3ZE\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N)$$, where $$N$$ is the length of `A`.\n\n* Space Complexity:  $$O(N)$$.\n<br />\n<br />\n\n\n---\n### Approach 2: Compare\n\n**Intuition and Algorithm**\n\nIf we ever find a repeated element, it must be the answer.  Let's call this answer the *major element*.\n\nConsider all subarrays of length 4.  There must be a major element in at least one such subarray.\n\nThis is because either:\n\n* There is a major element in a length 2 subarray, or;\n* Every length 2 subarray has exactly 1 major element, which means that a length 4 subarray that begins at a major element will have 2 major elements.\n\nThus, we only have to compare elements with their neighbors that are distance 1, 2, or 3 away.\n\n<iframe src=\"https://leetcode.com/playground/FKAVZDLN/shared\" frameBorder=\"0\" width=\"100%\" height=\"225\" name=\"FKAVZDLN\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N)$$, where $$N$$ is the length of `A`.\n\n* Space Complexity:  $$O(1)$$.\n<br />\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

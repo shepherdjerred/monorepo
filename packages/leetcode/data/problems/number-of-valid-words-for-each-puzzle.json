@@ -1,0 +1,149 @@
+{
+  "questionId": "1282",
+  "questionFrontendId": "1178",
+  "title": "Number of Valid Words for Each Puzzle",
+  "titleSlug": "number-of-valid-words-for-each-puzzle",
+  "difficulty": "Hard",
+  "content": "With respect to a given <code>puzzle</code> string, a <code>word</code> is <em>valid</em> if both the following conditions are satisfied:\n<ul>\n\t<li><code>word</code> contains the first letter of <code>puzzle</code>.</li>\n\t<li>For each letter in <code>word</code>, that letter is in <code>puzzle</code>.\n\t<ul>\n\t\t<li>For example, if the puzzle is <code>&quot;abcdefg&quot;</code>, then valid words are <code>&quot;faced&quot;</code>, <code>&quot;cabbage&quot;</code>, and <code>&quot;baggage&quot;</code>, while</li>\n\t\t<li>invalid words are <code>&quot;beefed&quot;</code> (does not include <code>&#39;a&#39;</code>) and <code>&quot;based&quot;</code> (includes <code>&#39;s&#39;</code> which is not in the puzzle).</li>\n\t</ul>\n\t</li>\n</ul>\nReturn <em>an array </em><code>answer</code><em>, where </em><code>answer[i]</code><em> is the number of words in the given word list </em><code>words</code><em> that is valid with respect to the puzzle </em><code>puzzles[i]</code>.\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;aaaa&quot;,&quot;asas&quot;,&quot;able&quot;,&quot;ability&quot;,&quot;actt&quot;,&quot;actor&quot;,&quot;access&quot;], puzzles = [&quot;aboveyz&quot;,&quot;abrodyz&quot;,&quot;abslute&quot;,&quot;absoryz&quot;,&quot;actresz&quot;,&quot;gaswxyz&quot;]\n<strong>Output:</strong> [1,1,3,2,4,0]\n<strong>Explanation:</strong> \n1 valid word for &quot;aboveyz&quot; : &quot;aaaa&quot; \n1 valid word for &quot;abrodyz&quot; : &quot;aaaa&quot;\n3 valid words for &quot;abslute&quot; : &quot;aaaa&quot;, &quot;asas&quot;, &quot;able&quot;\n2 valid words for &quot;absoryz&quot; : &quot;aaaa&quot;, &quot;asas&quot;\n4 valid words for &quot;actresz&quot; : &quot;aaaa&quot;, &quot;asas&quot;, &quot;actt&quot;, &quot;access&quot;\nThere are no valid words for &quot;gaswxyz&quot; cause none of the words in the list contains letter &#39;g&#39;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;apple&quot;,&quot;pleas&quot;,&quot;please&quot;], puzzles = [&quot;aelwxyz&quot;,&quot;aelpxyz&quot;,&quot;aelpsxy&quot;,&quot;saelpxy&quot;,&quot;xaelpsy&quot;]\n<strong>Output:</strong> [0,1,3,2,0]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= words.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>4 &lt;= words[i].length &lt;= 50</code></li>\n\t<li><code>1 &lt;= puzzles.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>puzzles[i].length == 7</code></li>\n\t<li><code>words[i]</code> and <code>puzzles[i]</code> consist of lowercase English letters.</li>\n\t<li>Each <code>puzzles[i] </code>does not contain repeated characters.</li>\n</ul>\n",
+  "hints": [
+    "Exploit the fact that the length of the puzzle is only 7.",
+    "Use bit-masks to represent the word and puzzle strings.",
+    "For each puzzle, count the number of words whose bit-mask is a sub-mask of the puzzle's bit-mask."
+  ],
+  "metaData": "{\n  \"name\": \"findNumOfValidWords\",\n  \"params\": [\n    {\n      \"name\": \"words\",\n      \"type\": \"string[]\"\n    },\n    {\n      \"type\": \"string[]\",\n      \"name\": \"puzzles\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<integer>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"34.8K\", \"totalSubmission\": \"72.9K\", \"totalAcceptedRaw\": 34823, \"totalSubmissionRaw\": 72896, \"acRate\": \"47.8%\"}",
+  "likes": 1303,
+  "dislikes": 89,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"aaaa\",\"asas\",\"able\",\"ability\",\"actt\",\"actor\",\"access\"]\n[\"aboveyz\",\"abrodyz\",\"abslute\",\"absoryz\",\"actresz\",\"gaswxyz\"]",
+    "[\"apple\",\"pleas\",\"please\"]\n[\"aelwxyz\",\"aelpxyz\",\"aelpsxy\",\"saelpxy\",\"xaelpsy\"]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"dropbox\", \"name\": \"Dropbox\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Trie",
+      "slug": "trie"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> findNumOfValidWords(vector<string>& words, vector<string>& puzzles) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<Integer> findNumOfValidWords(String[] words, String[] puzzles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findNumOfValidWords(self, words: List[str], puzzles: List[str]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findNumOfValidWords(self, words, puzzles):\n        \"\"\"\n        :type words: List[str]\n        :type puzzles: List[str]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} words\n * @param {string[]} puzzles\n * @return {number[]}\n */\nvar findNumOfValidWords = function(words, puzzles) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findNumOfValidWords(words: string[], puzzles: string[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<int> FindNumOfValidWords(string[] words, string[] puzzles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* findNumOfValidWords(char** words, int wordsSize, char** puzzles, int puzzlesSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findNumOfValidWords(words []string, puzzles []string) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findNumOfValidWords(words: Array<String>, puzzles: Array<String>): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findNumOfValidWords(_ words: [String], _ puzzles: [String]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_num_of_valid_words(words: Vec<String>, puzzles: Vec<String>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} words\n# @param {String[]} puzzles\n# @return {Integer[]}\ndef find_num_of_valid_words(words, puzzles)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $words\n     * @param String[] $puzzles\n     * @return Integer[]\n     */\n    function findNumOfValidWords($words, $puzzles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> findNumOfValidWords(List<String> words, List<String> puzzles) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findNumOfValidWords(words: Array[String], puzzles: Array[String]): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_num_of_valid_words(words :: [String.t], puzzles :: [String.t]) :: [integer]\n  def find_num_of_valid_words(words, puzzles) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_num_of_valid_words(Words :: [unicode:unicode_binary()], Puzzles :: [unicode:unicode_binary()]) -> [integer()].\nfind_num_of_valid_words(Words, Puzzles) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-num-of-valid-words words puzzles)\n  (-> (listof string?) (listof string?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1204",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nAt first glance, this problem may appear to be quite challenging. The primary challenge is determining an efficient way to find the number of valid words for each puzzle. To achieve this, we need to somehow put the words into a data structure that allows us to perform a quick search. The problem will become a bit easier once we find an efficient data structure to use.\n\nIn the following approaches, we will discuss what clues can be extracted from the problem description and constraints and how we can use those clues to select a suitable data structure.\n\nBelow, two approaches are given. The first is a hashing approach based on the map, and the second one is a trie approach.\n\n</br>\n\n---\n\n### Approach 1: Hashing (Bitmask)\n\n**Intuition**\n\nWe have lots of puzzles to answer.\nTo handle a multi-query problem, such as this one, it is beneficial to select a data structure that allows us to efficiently address each query.\n\nFor example, to handle range sum queries, we would use a prefix-sum or a segment tree.\n\nBut here we have a problem that requires us to find out some valid words, or to \"filter\" words.\n\nIf a specific data structure does not immediately come to mind, do not panic! It's perfectly normal not to have an idea of how to approach the problem at this point.\n\n> **Interview Tip**: In a real interview, if you are unsure how to solve the problem, a good first step is to remain calm and reread the problem description looking for hidden clues.\n>\n> Also, remember to ask the interviewer about the problem constraints. The constraints are very important for solving problems as they can help us determine which data structures and algorithms can feasibly be used to solve the problem.\n>\n> However, if the interviewer chooses to deliberately hide the constraints, then they likely want you to find different methods under different assumed constraints. Although, on rare occasions, a problem may be too simple to provide constraints.\n\nThere are some critical constraints in the problem description:\n\n> - `1 <= words.length <= 10^5`\n> - `4 <= words[i].length <= 50`\n> - `1 <= puzzles.length <= 10^4`\n> - `puzzles[i].length == 7`\n\nNotice that we have many words and puzzles, but the length of each word and each puzzle is short.\n\n![visual](../Documents/1178/p01.drawio.svg)\n\nA notable constraint here is `puzzles[i].length == 7`.\n\n> **Interview Tip**: A constraint under $$10$$ usually accepts a method with $$N!$$ time complexity with respect to this constraint. Factorial time complexities can occur for operations like finding all permutations from a set or using brute-force to solve the traveling salesman problem.\n>\n> A constraint under $$30$$ usually accepts a method with $$2^N$$ time complexity at worst with respect to this constraint.  Some examples include iterating over all combinations or subsets from a set or some brute-force solutions that use DFS.\n>\n> However, a solution with better time complexity can still exist even when the constraints are small. One should use the constraints to estimate the complexity of the worst acceptable solution, not the best solution.\n\nBy now, you may already have an idea of how to solve this problem, and if not, it is still okay. No matter what, we can always start with a brute-force solution.\n\n> **Interview Tip**: When you still do not have any idea after rereading the problem, you can try a brute-force method that works but may have an unacceptable time complexity. Then you can either try to improve on the brute-force method or gain some insight from the brute-force method.\n\nIn the brute-force approach, for each `puzzle`, we iterate over each `word` and check whether this word is valid.\n\nFor a word to be \"valid\", it must meet two criteria:\n\n1. `word` contains the first letter in `puzzle`.\n2. `puzzle` contains every letter in `word`.\n\nSince we need to iterate over every `word` for every `puzzle`, the time complexity is **at least** $$O(words.length \\cdot puzzles.length)$$. Given that there could be as many as $$10^5$$ words and $$10^4$$ puzzles, there could be as many as $$10^9$$ word-puzzle pairs.\n\nTherefore, checking each `word` one by one will be too slow. Could we perhaps check multiple words **at the same time**?\n\nWhat if we group similar words and place them in the same bin and check the bins one by one...?\n\n![bins](../Documents/1178/p02.drawio.svg)\n\nIf the bins are implemented by a hash map, we do not have to iterate all the bins, instead, for each puzzle, we can look at only the bins that contain words that we need.\n\nThere are two common ways to group strings into \"bins\":\n\n1. Trie\n2. Set (hashing)\n\nWhich one is better? The lines of codes for trie may be significantly larger than those for hashing. For an interview, a set may be a better choice.\n\n> **Interview Tip**: In an interview, if the first solution that comes to mind involves a complex data structure, you can wait a minute and try thinking of other similar methods. In a real-world setting, we typically prioritize efficiency and readability. We prioritize these characteristics in an interview setting as well, however, we also value solutions that we are less likely to make a mistake while coding and solutions that do not require a long time to code.\n>\n> In this problem, you should consider your level of familiarity with the trie data structure before choosing between implementing a solution using a trie or a set. If the more comfortable approach is not the most efficient, then you should also weigh the increased chance of making a mistake versus the gain of having a more efficient solution.\n>\n> Worry not, as we will cover both methods in this article.\n\nNow, let's try to hash each `word` and put some of them into the same bin.\n\nSince we need to count the number of valid words, a map may be what we want, where the value stores the number of strings in the bin, and we haven't decided what the key is yet.\n\n##### Deciding the Details of Our Map\n\nThe next problem is what kinds of words we want to put together?\n\nNotice the two conditions for a word to be valid only depend on the letters in the word. So let's start by putting words that contain the **same letters** into the same bin.\n\nSo, our key can be a set containing what letters are in a word. Wait a minute, can we use a set as a key in a map?\n\nIt depends. Some languages allow us to create an immutable copy of a set, which can be used as a key. For instance, Python offers `frozenset`. However, most languages do not.\n\nIn most languages, we need to write a custom hashing function to map a set into a **string or number** to use a set as a key.\n\nWhen the number of distinct values that could be in a set is small (like 26 lowercase English letters), then we can transform each set into a number, using a very nice data structure called a bitmask (or bitset).\n\n##### Bitmask and Subset Iterating\n\nLet's quickly review how bitmasking works. Generally, we treat an integer as a binary number, and each digit in the binary number represents an item. The value of the digit acts like a flag indicating whether the set contains the item or not.\n\n![bitmask](../Documents/1178/p03.drawio.svg)\n\nGood! We can also use this method to get the letters contained in a word and a puzzle. Wait, how do we get the answer to a puzzle?\n\nThe target word should contain the first letter of the puzzle and cannot contain any letters that are not in the puzzle.\n\nTherefore, any word that does not contain the first letter in a puzzle cannot be valid for that puzzle. Thus, we only need to iterate over the **subsets** of letters contained in `puzzle` that also contain the first letter of `puzzle`.\n\nHere we find another challenge: How to iterate over all the subsets of a set? This is a classic [problem](https://leetcode.com/problems/subsets/) that can be solved using a depth-first search.\n\nHowever, when working with a bitmask that represents a set of all possible items, we can use a simple trick to find all possible subsets of those items using only a for loop.\n\nLet's have a quick look at how this works. The pseudo-code is as follows:\n\n```javascript\nfor (subset = bitmask; subsets >= 0; subset = (subset - 1) & bitmask) {\n  // do what you want with the current subset...\n}\n```\n\nOr with a while loop:\n\n```javascript\nlet subset = bitmask;\nwhile (subsets >= 0) {\n  // do what you want with the current subset...\n  subset = (subset - 1) & bitmask;\n}\n```\n\nWhy does this work? The subsets must be included in range `[0, bitmask]`, and if we iterate from `bitmask` to `0` one by one, we are guaranteed to visit the bitmask of every subset along the way.\n\nBut we can also meet those that are not a subset of `bitmask`. Fortunately, instead of decrementing `subset` by one at each iteration, we can use `subset = (subset - 1) & bitmask` to ensure that each `subset` only contains characters that exist in `bitmask`.\n\nAlso, we will not miss any subset because `subset - 1` turns at most one `1` into `0`.\n\n![iterating](../Documents/1178/p06.drawio.svg)\n\nAdding all of the steps together, for each `puzzle`, we just need to iterate over all the subsets of letters contained in `puzzle` that also contain the first letter of `puzzle`. For each subset, we add the number of words that match the subset to the count of valid words for the current puzzle. Thus, for one `puzzle`, the complexity is $$O(2^{puzzle.length})$$, which is much less than the total number of words in `words`.\n\n**Algorithm**\n\nStep 1: Build the map.\n\n- For each word in `words`:\n  - Transform it into a bitmask of its characters.\n  - If the bitmask has not been seen before, store it as a key in the map with a value of one.  \n    If it has been seen before, then increment the map's count for this bitmask by one.\n\nStep 2: Count the number of valid words for each puzzle.\n\n- For each puzzle in `puzzles`:\n  - Transform it into a bitmask of its characters.\n  - Iterate over every possible `submask` containing the first letter in `puzzle` (`puzzle[i][0]`).\n    A word is valid for a puzzle if its bitmask matches one of the puzzle's submasks.  \n    For each `submask`, increase the `count` by the number of words that match the `submask`.  \n    We can find the number of words that match the `submask` using the map built in the previous step.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/WR4vLyxr/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"WR4vLyxr\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ and $$M$$ be the length of `words` and `puzzles` respectively. Let $$\\bar N, \\bar M$$ be the average length of `words[i]` and `puzzles[i]` respectively. Let $$k$$ be the size of the character set.\n\nNote that in this problem, the value of $$\\bar M$$ is fixed at $$7$$, and the value of $$k$$ is fixed at $$26$$.\n\n- Time Complexity: $$O(N\\cdot \\bar N + M\\cdot 2^{\\bar M})$$.\n\n  For each `words[i]` in `words`, we spend $$O(\\bar N)$$ time to calculate its mask. For each `puzzles[i]` in `puzzles`, we spend $$O(\\bar M)$$ to transform its characters into a bitmask, and $$O(2^{\\bar M})$$ to iterate over all of its subsets.\n  \n  In total, we have $$O(N \\cdot \\bar N + M \\cdot (2^{\\bar M} + \\bar M)) = O(N \\cdot \\bar N + M \\cdot 2^{\\bar M})$$.\n\n- Space Complexity: $$O(N)$$.\n\n  We use a map to store the mask of each `word[i]`, and each entry uses an integer for the key and the value.\n\n  Alternatively, if you use a list with `length = (1<<k)`, then the space complexity is $$O(2^k)$$. Note that, in practice, $$2^{26}=67108864$$, which is much larger than the maximum of the given $$N$$, $$10^5$$.\n\n</br>\n\n---\n\n### Approach 2: Trie\n\n**Intuition**\n\n> The intuition of this approach is a continuation of the previous approach. It is recommended to read the previous approach first.\n\n> If you are unfamiliar with the trie data structure, we encourage you to check out the [Trie Explore Card](https://leetcode.com/explore/learn/card/trie/).\n\nA trie can help us to quickly determine whether a word exists among all the words. Thus, it is similar to a dictionary.\n\nHowever, if we want to put all the words into a trie, then in the worst case, none of the words start with the same letter, and thus every character of every word has its own node in the trie. Thus, the number of nodes in the trie would be $$O(\\sum N_i)$$, where $$N_i$$ is the length of `word[i]`.\n\nWait, can we reduce the number of nodes in the trie?\n\nAs determined in Approach 1, the validity of a word only depends on the letters in the word. So first, we can remove the duplicate letters from each word.\nIn this way, the maximum length of a word becomes $$26$$ instead of $$N_i$$. Moreover, we can sort the letters in `word` in ascending order to further aggregate the same letters together, because sorted words are more likely to share a common prefix than unsorted words.\n\n![reduce](../Documents/1178/p04.drawio.svg)\n\nAlso, we know that the length of `puzzle` is $$7$$, and a valid word must consist entirely of letters in `puzzle`.\nTherefore, any words containing more than **$$7$$ distinct letters** are always invalid. That is to say, our trie is at most $$7$$ levels deep. Also, since we sort the letters and remove duplicates in each word, we cannot have duplicate letters in any path from the root to a leaf in the trie.\n\n![further reduce](../Documents/1178/p05.drawio.svg)\n\nIn conclusion, the maximum number of nodes in the trie is $$7! = 5040$$, which is small enough to iterate over for each `puzzle`.\n\nAs before, we must search for all valid words for each puzzle. However, instead of checking every subset of the puzzle, we can now perform a simple tree iteration using DFS. We can traverse the tree following the nodes inside the sorted set of `puzzle`, and when we meet a word and have already seen the first letter in `puzzle`, then the word must be valid.\n\n**Algorithm**\n\nStep 1: Build the trie.\n\n- For each word in `words`:\n  - Sort the word and remove duplicate letters.\n  - Store the word, which is now a sorted list of distinct characters, in the trie.\n\nStep 2: Count the number of valid words for each puzzle.\n\n- For each puzzle in `puzzles`:\n  - Iterate over the trie to find all valid words for the current puzzle.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/EX9wb9Up/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"EX9wb9Up\"></iframe>\n\nNote: There are multiple ways to implement trie. We here chose to use a list to mimic the trie tree. If you are using a language with pointers and use pointers to implement the trie, remember to free the memory as needed.\n\n**Complexity Analysis**\n\nLet $$N$$ and $$M$$ be the length of `words` and `puzzles` respectively. Let $$\\bar N, \\bar M$$ be the average length of `words[i]` and `puzzles[i]` respectively. Let $$k$$ be the size of the character set.\n\nNote that in this problem, the value of $$\\bar M$$ is fixed at $$7$$, and the value of $$k$$ is fixed at $$26$$.\n\n- Time Complexity: $$O(N\\cdot (\\bar N \\log \\bar N + \\bar M) + M\\cdot \\bar M!)$$.\n\n  - To build the trie, for each `word[i]` in `words`, we spend $$O(\\bar N\\log \\bar N)$$ to sort it and remove the duplicates, and, we spend $$O(\\bar M)$$ to insert into the trie.\n  - To search for the answer for each `puzzles[i]` in `puzzles`, we spend $$O(\\bar M!)$$ to iterate the whole trie.\n  - Totally, we have $$O(N\\cdot (\\bar N \\log \\bar N + \\bar M) + M\\cdot \\bar M!)$$.\n  - Alternatively, one can use bucket sort to reduce the time complexity to $$O(N\\cdot (\\bar N + k +\\bar M)+ M\\cdot \\bar M!)$$.\n\n- Space Complexity: $$O(k\\cdot\\bar M!)$$.\n\n  Our trie has at most $$O(\\bar M!)$$ nodes, and each node is an array of size $$k$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

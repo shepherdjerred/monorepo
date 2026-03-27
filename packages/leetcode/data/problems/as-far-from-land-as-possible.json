@@ -1,0 +1,146 @@
+{
+  "questionId": "1117",
+  "questionFrontendId": "1162",
+  "title": "As Far from Land as Possible",
+  "titleSlug": "as-far-from-land-as-possible",
+  "difficulty": "Medium",
+  "content": "<p>Given an <code>n x n</code> <code>grid</code>&nbsp;containing only values <code>0</code> and <code>1</code>, where&nbsp;<code>0</code> represents water&nbsp;and <code>1</code> represents land, find a water cell such that its distance to the nearest land cell is maximized, and return the distance.&nbsp;If no land or water exists in the grid, return <code>-1</code>.</p>\n\n<p>The distance used in this problem is the Manhattan distance:&nbsp;the distance between two cells <code>(x0, y0)</code> and <code>(x1, y1)</code> is <code>|x0 - x1| + |y0 - y1|</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/05/03/1336_ex1.JPG\" style=\"width: 185px; height: 87px;\" />\n<pre>\n<strong>Input:</strong> grid = [[1,0,1],[0,0,0],[1,0,1]]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The cell (1, 1) is as far as possible from all the land with distance 2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/05/03/1336_ex2.JPG\" style=\"width: 184px; height: 87px;\" />\n<pre>\n<strong>Input:</strong> grid = [[1,0,0],[0,0,0],[0,0,0]]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The cell (2, 2) is as far as possible from all the land with distance 4.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == grid.length</code></li>\n\t<li><code>n == grid[i].length</code></li>\n\t<li><code>1 &lt;= n&nbsp;&lt;= 100</code></li>\n\t<li><code>grid[i][j]</code>&nbsp;is <code>0</code> or <code>1</code></li>\n</ul>\n",
+  "hints": [
+    "Can you think of this problem in a backwards way ?",
+    "Imagine expanding outward from each land cell. What kind of search does that ?",
+    "Use BFS starting from all land cells in the same time.",
+    "When do you reach the furthest water cell?"
+  ],
+  "metaData": "{\r\n  \"name\": \"maxDistance\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"grid\",\r\n      \"type\": \"integer[][]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"183.5K\", \"totalSubmission\": \"351.4K\", \"totalAcceptedRaw\": 183516, \"totalSubmissionRaw\": 351382, \"acRate\": \"52.2%\"}",
+  "likes": 4271,
+  "dislikes": 113,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Shortest Distance from All Buildings\", \"titleSlug\": \"shortest-distance-from-all-buildings\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"K Highest Ranked Items Within a Price Range\", \"titleSlug\": \"k-highest-ranked-items-within-a-price-range\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Manhattan Distance After K Changes\", \"titleSlug\": \"maximum-manhattan-distance-after-k-changes\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,0,1],[0,0,0],[1,0,1]]",
+    "[[1,0,0],[0,0,0],[0,0,0]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"hive\", \"name\": \"Hive\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"wix\", \"name\": \"Wix\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"uipath\", \"name\": \"UiPath\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxDistance(vector<vector<int>>& grid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxDistance(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxDistance(self, grid: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxDistance(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} grid\n * @return {number}\n */\nvar maxDistance = function(grid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxDistance(grid: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxDistance(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxDistance(int** grid, int gridSize, int* gridColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxDistance(grid [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxDistance(grid: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxDistance(_ grid: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_distance(grid: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} grid\n# @return {Integer}\ndef max_distance(grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $grid\n     * @return Integer\n     */\n    function maxDistance($grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxDistance(List<List<int>> grid) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxDistance(grid: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_distance(grid :: [[integer]]) :: integer\n  def max_distance(grid) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_distance(Grid :: [[integer()]]) -> integer().\nmax_distance(Grid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-distance grid)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1684",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nWe are given a matrix of size $N * N$ with only `0's` (water cell) and `1's` (land cell). We must find the maximum distance of any `0` to its nearest `1`. In other words, for every cell with a `0` value, we need to find the nearest `1` using manhattan distance, and the maximum distance among all the `0's` will be the answer.\n\nThe brute force approach would be to iterate over the `0s`. For each `0`, find the distance to every `1` in the matrix and take the minimum distance. The maximum of all these minimums will be the answer. This approach, however, is not efficient as in the worst case there could be $\\frac{N^2}{2}$ `0s` and $\\frac{N^2}{2}$ `1s`; hence the time complexity would be $O(N^4)$, which is not fast enough considering $N$ to be up to `100`.\n</br>\n\n---\n\n### Approach 1: Breadth-First Search (BFS)\n\n**Intuition**\n\nInstead of traversing over `0s` and finding the nearest `1` to each, what if we try to iterate from `1s`? One might think of doing the same brute force but in the opposite direction, i.e., for each `1` iterate over `0's` and store the minimum distance for each `0`. But this won't help as we still need to iterate over every pair of `0` and `1`.\n\nWe need the shortest distance here for all `0's`; breadth-first search traversal is a kind of traversal which is used for shortest path finding. Generally, we use it to find the shortest distance from a single source or node, but here we have multiple `1s`, so we will use a multi-source breadth-first search. The reason we use BFS from `1's` and not `0s` is that BFS from `0's` will need to be executed individually from each `0` to find its nearest `1`, and hence we will end up exploring every `(0, 1)` pair.\n\nEssentially we will start with all the `1's`, and at each step, we will iterate in all four directions (up, left, right, down) for each `1`. The moment we reach a water cell `0`, we can say that the number of steps we have taken so far is the minimum distance of this water cell from any land cell in the matrix. This way, we will iterate over the whole matrix until all cells are covered; the number of steps we would need to cover the last water cell is the maximum distance we need.\n\n![fig](../Figures/1162/1162A.png)\n\n**Algorithm**\n\n1. Iterate over the matrix and insert the land cell coordinates into the queue. Initialize a variable `distance` as `-1` to store the current step of BFS. Also, create a `grid` copy matrix as `visited` to mark the water cells as visited so that we don't insert them into the queue again.\n   > Note: The copy matrix `visited` can be avoided by updating the original matrix `grid` but changing the input parameter is not considered under good practices.\n\n2. Perform BFS: Traverse the current elements in the queue, and for each element, check the coordinates in the four directions if they are water cells (`0`). If yes, insert them into the queue and change them to land cell (`1`) in the matrix `visited`.\n3. After each level is traversed, i.e., the inner while loop completes, increment the variable `distance`.\n4. Repeat the above until the queue becomes empty.\n5. Return `distance`. If it is equal to `0`, it means there was no water cell, and the BFS finished after the first step itself, hence returning `-1`. When the matrix doesn't have any land cell, the while loop will not start at all, and hence `distance` will have its initial value (`-1`).\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/hWHLycQJ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"hWHLycQJ\"></iframe>\n\n**Complexity Analysis**\n\nHere $N$ is the side of the square matrix with size $N*N$.\n\n* Time complexity: $O(N^2)$.\n\n  We start traversing from land cells (`1`) and keep iterating over water cells until we convert all water cells to land. Notice that we never insert any cell into the queue twice as we mark the water cell as land when we visit them. Therefore, the time complexity equals $O(N^2)$.\n\n* Space complexity: $O(N^2)$.\n\n  There could be all cells in the queue at a particular time. Considering the matrix doesn't have any water cells, we insert all the land cells into the queue to initialize and thus will take $O(N^2)$ space. Also, we create `visited`, a copy matrix of `grid`. Hence, the space complexity is $O(N^2)$.\n  <br/>\n\n---\n\n### Approach 2: Dynamic-Programming\n\n**Intuition**\n\nThis problem is similar to the [01 Matrix](https://leetcode.com/problems/01-matrix/description/) problem. You may try to solve this problem as the solution discussed here would be very similar.\n\nFor every water cell, we need the distance to the nearest land cell. We can reach a cell from any of the four directions: up, down, left and right. Thus, the minimum distance for any cell could be written as the minimum distance of all the cells in these four directions plus one. Therefore, we will need to check all four directions. This is the central intuition behind using Dynamic Programming here as we try to find the answer for a cell using the distance of cells that we have already calculated.\n\nTo find the minimum distance for a cell, we will need the minimum distance of all the neighbour's cells. The catch is that we cannot have the minimum distance for all the neighbours in a single traversal. Because if we traverse from top-left to bottom-right, we will have the minimum distance of the upper and left cells as those cells would have already been traversed. Similarly, if we traverse in reverse from the bottom-right to the top-left, we will have the minimum distance of the cells on the right and in the down direction. Hence, we would need two traversals to find the minimum distance for all four neighbours. In the first traversal, we will iterate from top-left to bottom-right and store the minimum distance for cells using the distance of cells in the up and left direction, and then in the second traversal from bottom-right to top-left, to store the minimum distance using the remaining right and down directions.\n\n**Algorithm**\n\n1. Create a 2D array `dist` of the same size as the given `grid` to store the minimum distance from any land cell. Initialize all the cells to `MAX_DISTANCE`, the maximum possible manhattan distance in the matrix + 1.\n2. Iterate over the matrix from top-left to bottom-right and for each cell at `(i, j)`:\n\n    1. If the cell is a land cell, i.e., with value `1`, store the minimum distance in the array `dist` as `0`.\n    2. If the cell is a water cell, update the distance as the minimum of `grid[i - 1][j]` and `grid[i][j - 1]` plus `1` (If these cells don't exist, use the `MAX_DISTANCE` ).\n\n3. Iterate over the matrix from bottom-right to top-left, and for each cell at `(i, j)`, update the distance as the minimum of `grid[i + 1][j]` and `grid[i][j + 1]` plus `1`.\n4. Store the maximum of all the values in the array `dist` in the variable `ans`.\n5. Return `ans`. If the value of `ans` is `0` or `MAX_DISTANCE`, then return `-1` as these values imply that the matrix doesn't have a water or land cell.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/kz2iQCxz/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"kz2iQCxz\"></iframe>\n\n**Complexity Analysis**\n\nHere $N$ is the side of the square matrix with size $N*N$.\n\n* Time complexity: $O(N^2)$.\n\n  We iterate over the matrix twice from top to bottom and bottom to top; hence the total time complexity equals $O(N^2)$.\n\n* Space complexity: $O(N^2)$.\n\n  The only space we need is the matrix `dist` of size $N * N$ to store the minimum distance for all cells. Therefore, the total space complexity equals $O(N^2)$.\n  <br/>\n\n---\n### Approach 3: Space-Optimized Dynamic-Programming\n\n**Intuition**\n\n> Note: This approach needs changing of input parameter `grid` and hence is not an advisable approach. This approach has been added for completion if the interviewer specifically asks for it.\n\nIn the previous approach, we create a separate matrix, `dist`, to store the minimum distance. In this approach, we will store this info (minimum distance) in the same given matrix `grid`. The complete algorithm will remain the same, we will iterate over the matrix twice, but this time we will use the original matrix `grid` to store the distance.\n\n**Algorithm**\n\n1. Iterate over the matrix from top-left to bottom-right for each cell at `(i, j)`:\n\n    1. If the cell is a land cell, i.e., with value `1`, store the minimum distance in  `grid` as `0`.\n    2. If the cell is a water cell, first initialize it to `MAX_DISTANCE` and then update the distance as the minimum of `grid[i - 1][j]` and `grid[i][j - 1]` plus `1` (If these cells don't exist, use the `MAX_DISTANCE` ).\n\n2. Iterate over the matrix from bottom-right to top-left, and for each cell at `(i, j)`, update the distance as the minimum of `grid[i + 1][j]` and `grid[i][j + 1]` plus `1`. Also, keep updating the variable `ans` if the updated value in `grid[i][j]` is greater than `ans`.\n3. Return `ans`. If the value of `ans` is `0` or `MAX_DISTANCE`, then return `-1` as these values imply that the matrix doesn't have a water or land cell.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/MeYv9iwA/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"MeYv9iwA\"></iframe>\n\n**Complexity Analysis**\n\nHere $N$ is the side of the square matrix with size $N*N$.\n\n* Time complexity: $O(N^2)$.\n\n  We iterate over the matrix twice from top to bottom and bottom to top; hence the total time complexity equals $O(N^2)$.\n\n* Space complexity: $O(1)$.\n\n  We don't need extra space, so the space complexity is constant.\n  <br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

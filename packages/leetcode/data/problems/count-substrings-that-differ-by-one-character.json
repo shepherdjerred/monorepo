@@ -1,0 +1,139 @@
+{
+  "questionId": "1743",
+  "questionFrontendId": "1638",
+  "title": "Count Substrings That Differ by One Character",
+  "titleSlug": "count-substrings-that-differ-by-one-character",
+  "difficulty": "Medium",
+  "content": "<p>Given two strings <code>s</code> and <code>t</code>, find the number of ways you can choose a non-empty substring of <code>s</code> and replace a <strong>single character</strong> by a different character such that the resulting substring is a substring of <code>t</code>. In other words, find the number of substrings in <code>s</code> that differ from some substring in <code>t</code> by <strong>exactly</strong> one character.</p>\n\n<p>For example, the underlined substrings in <code>&quot;<u>compute</u>r&quot;</code> and <code>&quot;<u>computa</u>tion&quot;</code> only differ by the <code>&#39;e&#39;</code>/<code>&#39;a&#39;</code>, so this is a valid way.</p>\n\n<p>Return <em>the number of substrings that satisfy the condition above.</em></p>\n\n<p>A <strong>substring</strong> is a contiguous sequence of characters within a string.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;aba&quot;, t = &quot;baba&quot;\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> The following are the pairs of substrings from s and t that differ by exactly 1 character:\n(&quot;<u>a</u>ba&quot;, &quot;<u>b</u>aba&quot;)\n(&quot;<u>a</u>ba&quot;, &quot;ba<u>b</u>a&quot;)\n(&quot;ab<u>a</u>&quot;, &quot;<u>b</u>aba&quot;)\n(&quot;ab<u>a</u>&quot;, &quot;ba<u>b</u>a&quot;)\n(&quot;a<u>b</u>a&quot;, &quot;b<u>a</u>ba&quot;)\n(&quot;a<u>b</u>a&quot;, &quot;bab<u>a</u>&quot;)\nThe underlined portions are the substrings that are chosen from s and t.\n</pre>\n​​<strong class=\"example\">Example 2:</strong>\n\n<pre>\n<strong>Input:</strong> s = &quot;ab&quot;, t = &quot;bb&quot;\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The following are the pairs of substrings from s and t that differ by 1 character:\n(&quot;<u>a</u>b&quot;, &quot;<u>b</u>b&quot;)\n(&quot;<u>a</u>b&quot;, &quot;b<u>b</u>&quot;)\n(&quot;<u>ab</u>&quot;, &quot;<u>bb</u>&quot;)\n​​​​The underlined portions are the substrings that are chosen from s and t.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length, t.length &lt;= 100</code></li>\n\t<li><code>s</code> and <code>t</code> consist of lowercase English letters only.</li>\n</ul>\n",
+  "hints": [
+    "Take every substring of s, change a character, and see how many substrings of t match that substring.",
+    "Use a Trie to store all substrings of t as a dictionary."
+  ],
+  "metaData": "{\n  \"name\": \"countSubstrings\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"t\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"37.7K\", \"totalSubmission\": \"52.1K\", \"totalAcceptedRaw\": 37696, \"totalSubmissionRaw\": 52076, \"acRate\": \"72.4%\"}",
+  "likes": 1204,
+  "dislikes": 357,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count Words Obtained After Adding a Letter\", \"titleSlug\": \"count-words-obtained-after-adding-a-letter\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"aba\"\n\"baba\"",
+    "\"ab\"\n\"bb\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countSubstrings(string s, string t) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countSubstrings(String s, String t) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countSubstrings(self, s: str, t: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countSubstrings(self, s, t):\n        \"\"\"\n        :type s: str\n        :type t: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {string} t\n * @return {number}\n */\nvar countSubstrings = function(s, t) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countSubstrings(s: string, t: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountSubstrings(string s, string t) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int countSubstrings(char* s, char* t) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countSubstrings(s string, t string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countSubstrings(s: String, t: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countSubstrings(_ s: String, _ t: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_substrings(s: String, t: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {String} t\n# @return {Integer}\ndef count_substrings(s, t)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param String $t\n     * @return Integer\n     */\n    function countSubstrings($s, $t) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countSubstrings(String s, String t) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countSubstrings(s: String, t: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_substrings(s :: String.t, t :: String.t) :: integer\n  def count_substrings(s, t) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_substrings(S :: unicode:unicode_binary(), T :: unicode:unicode_binary()) -> integer().\ncount_substrings(S, T) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-substrings s t)\n  (-> string? string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

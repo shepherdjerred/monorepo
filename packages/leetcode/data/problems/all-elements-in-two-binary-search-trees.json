@@ -1,0 +1,148 @@
+{
+  "questionId": "1427",
+  "questionFrontendId": "1305",
+  "title": "All Elements in Two Binary Search Trees",
+  "titleSlug": "all-elements-in-two-binary-search-trees",
+  "difficulty": "Medium",
+  "content": "<p>Given two binary search trees <code>root1</code> and <code>root2</code>, return <em>a list containing all the integers from both trees sorted in <strong>ascending</strong> order</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/12/18/q2-e1.png\" style=\"width: 457px; height: 207px;\" />\n<pre>\n<strong>Input:</strong> root1 = [2,1,4], root2 = [1,0,3]\n<strong>Output:</strong> [0,1,1,2,3,4]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/12/18/q2-e5-.png\" style=\"width: 352px; height: 197px;\" />\n<pre>\n<strong>Input:</strong> root1 = [1,null,8], root2 = [8,1]\n<strong>Output:</strong> [1,1,8,8]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in each tree is in the range <code>[0, 5000]</code>.</li>\n\t<li><code>-10<sup>5</sup> &lt;= Node.val &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Traverse the first tree in list1 and the second tree in list2.",
+    "Merge the two trees in one list and sort it."
+  ],
+  "metaData": "{\n  \"name\": \"getAllElements\",\n  \"params\": [\n    {\n      \"name\": \"root1\",\n      \"type\": \"TreeNode\"\n    },\n    {\n      \"type\": \"TreeNode\",\n      \"name\": \"root2\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<integer>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"261.2K\", \"totalSubmission\": \"325.5K\", \"totalAcceptedRaw\": 261186, \"totalSubmissionRaw\": 325499, \"acRate\": \"80.2%\"}",
+  "likes": 3190,
+  "dislikes": 99,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[2,1,4]\n[1,0,3]",
+    "[1,null,8]\n[8,1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Search Tree",
+      "slug": "binary-search-tree"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    vector<int> getAllElements(TreeNode* root1, TreeNode* root2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public List<Integer> getAllElements(TreeNode root1, TreeNode root2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def getAllElements(self, root1: Optional[TreeNode], root2: Optional[TreeNode]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def getAllElements(self, root1, root2):\n        \"\"\"\n        :type root1: Optional[TreeNode]\n        :type root2: Optional[TreeNode]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root1\n * @param {TreeNode} root2\n * @return {number[]}\n */\nvar getAllElements = function(root1, root2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction getAllElements(root1: TreeNode | null, root2: TreeNode | null): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public IList<int> GetAllElements(TreeNode root1, TreeNode root2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\n/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* getAllElements(struct TreeNode* root1, struct TreeNode* root2, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc getAllElements(root1 *TreeNode, root2 *TreeNode) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun getAllElements(root1: TreeNode?, root2: TreeNode?): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func getAllElements(_ root1: TreeNode?, _ root2: TreeNode?) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn get_all_elements(root1: Option<Rc<RefCell<TreeNode>>>, root2: Option<Rc<RefCell<TreeNode>>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root1\n# @param {TreeNode} root2\n# @return {Integer[]}\ndef get_all_elements(root1, root2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root1\n     * @param TreeNode $root2\n     * @return Integer[]\n     */\n    function getAllElements($root1, $root2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  List<int> getAllElements(TreeNode? root1, TreeNode? root2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def getAllElements(root1: TreeNode, root2: TreeNode): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec get_all_elements(root1 :: TreeNode.t | nil, root2 :: TreeNode.t | nil) :: [integer]\n  def get_all_elements(root1, root2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec get_all_elements(Root1 :: #tree_node{} | null, Root2 :: #tree_node{} | null) -> [integer()].\nget_all_elements(Root1, Root2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (get-all-elements root1 root2)\n  (-> (or/c tree-node? #f) (or/c tree-node? #f) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "855",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Prerequisites\n\nTo solve this problem we will use recursive and iterative inorder traversals. Here are prerequisites you might want to check:\n\n1. There are three DFS ways to traverse the tree: preorder, postorder, and inorder. Please check two minutes picture explanation, if you don't remember them quite well: [here is the Python version](https://leetcode.com/problems/binary-tree-inorder-traversal/discuss/283746/all-dfs-traversals-preorder-inorder-postorder-in-python-in-1-line) and [here is Java version](https://leetcode.com/problems/binary-tree-inorder-traversal/discuss/328601/all-dfs-traversals-preorder-postorder-inorder-in-java-in-5-lines).\n\n2. > Inorder traversal of BST is an array sorted in ascending order.\n\n3. To compute in inorder traversal follow the direction `Left -> Node -> Right`.\n\n<iframe src=\"https://leetcode.com/playground/UEYRFWup/shared\" frameBorder=\"0\" width=\"100%\" height=\"174\" name=\"UEYRFWup\"></iframe>\n\n![traversal](../Figures/1305/inorder.png)\n<br />\n<br />\n\n\n---\n### Approach 1: Recursive Inorder Traversal + Sort, Linearithmic Time.\n\nLet's start with the shortest possible solution: \n\n- Implement recursive inorder traversal, 1 line in Python, 5 lines in Java.\n\n- Compute inorder traversal of each tree.\n\n- Merge both lists and then sort the result.\n\n![traversal](../Figures/1305/recursive_inorder.png)\n\nThis solution takes one minute to write, but the time complexity is linearithmic. \n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/LVcpqvSd/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"LVcpqvSd\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}((N + M)\\log(M + N))$$, where $$M$$ and $$N$$ are node numbers. To build inorder traversals takes $$\\mathcal{O}(N + M)$$, to merge and sort the resulting lists - $$\\mathcal{O}((N + M)\\log(M + N))$$.\n    \n* Space complexity: $$\\mathcal{O}(N + M)$$ to keep the output. \n<br />\n<br />\n\n\n---\n### Approach 2: Iterative Inorder Traversal, One Pass, Linear Time.\n\n**Intuition**\n\nNow let's optimize the first approach. \n\nFirst, since both inorder traversals are already sorted, [one could merge them into one sorted list in linear time](https://leetcode.com/articles/merged-two-sorted-lists/). However, it's still a two-pass solution: first to build two inorder traversals and then to merge them.\n\nA more elegant way here is to build iteratively inorder traversals for both trees in parallel, and at each step update the output list by the smallest value between both trees. That will be a pass solution. Here is how it works:\n\n![traversal](../Figures/1305/iterative.png)\n\n**Algorithm**\n\n- Do iterative inorder traversal of both trees in parallel.\n\n    - At each step add the smallest available value in the output.\n     \n- Return output list.\n\n**Implementation**\n\n!?!../Documents/1305_LIS.json:1000,530!?!\n\n<iframe src=\"https://leetcode.com/playground/VriePQY4/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"VriePQY4\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N + M)$$, where $$M$$ and $$N$$ are node numbers. It's a one-pass approach along each tree. \n    \n* Space complexity: $$\\mathcal{O}(N + M)$$ to keep the output and both stacks. \n<br />\n<br />\n\n\n---\n### Further Reading \n\nHere we implemented _recursive_ and _iterative_ inorder traversals. There is also _Morris_ inorder traversal, which is used for problems which require constant space solution. Here is a detailed comparison and implementation of all three inorder traversals: [Recover BST](https://leetcode.com/articles/recover-binary-search-tree/). \n<br />\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

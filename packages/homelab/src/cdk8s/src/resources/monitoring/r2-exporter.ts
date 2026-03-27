@@ -79,7 +79,7 @@ export async function createR2ExporterMonitoring(chart: Chart) {
           "r2-exporter-secret-ref",
           cloudflareSecret.name,
         ),
-        key: "api_token",
+        key: "CLOUDFLARE_API_TOKEN",
       }),
       CLOUDFLARE_ACCOUNT_ID: EnvValue.fromSecretValue({
         secret: Secret.fromSecretName(
@@ -87,7 +87,7 @@ export async function createR2ExporterMonitoring(chart: Chart) {
           "r2-exporter-account-ref",
           cloudflareSecret.name,
         ),
-        key: "account_id",
+        key: "CLOUDFLARE_ACCOUNT_ID",
       }),
       R2_BUCKET_NAME: EnvValue.fromValue("homelab"),
       SCRAPE_INTERVAL_SECONDS: EnvValue.fromValue("300"),

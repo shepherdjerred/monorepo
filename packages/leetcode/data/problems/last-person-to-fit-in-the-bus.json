@@ -1,0 +1,53 @@
+{
+  "questionId": "1327",
+  "questionFrontendId": "1204",
+  "title": "Last Person to Fit in the Bus",
+  "titleSlug": "last-person-to-fit-in-the-bus",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Queue</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| person_id   | int     |\n| person_name | varchar |\n| weight      | int     |\n| turn        | int     |\n+-------------+---------+\nperson_id column contains unique values.\nThis table has the information about all people waiting for a bus.\nThe person_id and turn columns will contain all numbers from 1 to n, where n is the number of rows in the table.\nturn determines the order of which the people will board the bus, where turn=1 denotes the first person to board and turn=n denotes the last person to board.\nweight is the weight of the person in kilograms.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>There is a queue of people waiting to board a bus. However, the bus has a weight limit of <code>1000</code><strong> kilograms</strong>, so there may be some people who cannot board.</p>\n\n<p>Write a solution to find the <code>person_name</code> of the <strong>last person</strong> that can fit on the bus without exceeding the weight limit. The test cases are generated such that the first person does not exceed the weight limit.</p>\n\n<p><strong>Note</strong> that <em>only one</em> person can board the bus at any given turn.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nQueue table:\n+-----------+-------------+--------+------+\n| person_id | person_name | weight | turn |\n+-----------+-------------+--------+------+\n| 5         | Alice       | 250    | 1    |\n| 4         | Bob         | 175    | 5    |\n| 3         | Alex        | 350    | 2    |\n| 6         | John Cena   | 400    | 3    |\n| 1         | Winston     | 500    | 6    |\n| 2         | Marie       | 200    | 4    |\n+-----------+-------------+--------+------+\n<strong>Output:</strong> \n+-------------+\n| person_name |\n+-------------+\n| John Cena   |\n+-------------+\n<strong>Explanation:</strong> The folowing table is ordered by the turn for simplicity.\n+------+----+-----------+--------+--------------+\n| Turn | ID | Name      | Weight | Total Weight |\n+------+----+-----------+--------+--------------+\n| 1    | 5  | Alice     | 250    | 250          |\n| 2    | 3  | Alex      | 350    | 600          |\n| 3    | 6  | John Cena | 400    | 1000         | (last person to board)\n| 4    | 2  | Marie     | 200    | 1200         | (cannot board)\n| 5    | 4  | Bob       | 175    | ___          |\n| 6    | 1  | Winston   | 500    | ___          |\n+------+----+-----------+--------+--------------+\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"manual\": false, \"mysql\": [\"Create table If Not Exists Queue (person_id int, person_name varchar(30), weight int, turn int)\"], \"mssql\": [\"Create table Queue (person_id int, person_name varchar(30), weight int, turn int)\"], \"oraclesql\": [\"Create table Queue (person_id int, person_name varchar(30), weight int, turn int)\"], \"database\": true, \"name\": \"last_passenger\", \"pythondata\": [\"Queue = pd.DataFrame([], columns=['person_id', 'person_name', 'weight', 'turn']).astype({'person_id':'Int64', 'person_name':'object', 'weight':'Int64', 'turn':'Int64'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Queue (person_id int, person_name varchar(30), weight int, turn int)\"], \"database_schema\": {\"Queue\": {\"person_id\": \"INT\", \"person_name\": \"VARCHAR(30)\", \"weight\": \"INT\", \"turn\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"331.6K\", \"totalSubmission\": \"480K\", \"totalAcceptedRaw\": 331623, \"totalSubmissionRaw\": 479968, \"acRate\": \"69.1%\"}",
+  "likes": 1101,
+  "dislikes": 50,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Running Total for Different Genders\", \"titleSlug\": \"running-total-for-different-genders\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"The Number of Seniors and Juniors to Join the Company\", \"titleSlug\": \"the-number-of-seniors-and-juniors-to-join-the-company\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"The Number of Seniors and Juniors to Join the Company II\", \"titleSlug\": \"the-number-of-seniors-and-juniors-to-join-the-company-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Queue\":[\"person_id\",\"person_name\",\"weight\",\"turn\"]},\"rows\":{\"Queue\":[[5,\"Alice\",250,1],[4,\"Bob\",175,5],[3,\"Alex\",350,2],[6,\"John Cena\",400,3],[1,\"Winston\",500,6],[2,\"Marie\",200,4]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"wayfair\", \"name\": \"Wayfair\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef last_passenger(queue: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

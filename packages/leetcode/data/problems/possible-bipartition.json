@@ -1,0 +1,141 @@
+{
+  "questionId": "922",
+  "questionFrontendId": "886",
+  "title": "Possible Bipartition",
+  "titleSlug": "possible-bipartition",
+  "difficulty": "Medium",
+  "content": "<p>We want to split a group of <code>n</code> people (labeled from <code>1</code> to <code>n</code>) into two groups of <strong>any size</strong>. Each person may dislike some other people, and they should not go into the same group.</p>\n\n<p>Given the integer <code>n</code> and the array <code>dislikes</code> where <code>dislikes[i] = [a<sub>i</sub>, b<sub>i</sub>]</code> indicates that the person labeled <code>a<sub>i</sub></code> does not like the person labeled <code>b<sub>i</sub></code>, return <code>true</code> <em>if it is possible to split everyone into two groups in this way</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 4, dislikes = [[1,2],[1,3],[2,4]]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> The first group has [1,4], and the second group has [2,3].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 3, dislikes = [[1,2],[1,3],[2,3]]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> We need at least 3 groups to divide them. We cannot put them in two groups.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 2000</code></li>\n\t<li><code>0 &lt;= dislikes.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>dislikes[i].length == 2</code></li>\n\t<li><code>1 &lt;= a<sub>i</sub> &lt; b<sub>i</sub> &lt;= n</code></li>\n\t<li>All the pairs of <code>dislikes</code> are <strong>unique</strong>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"possibleBipartition\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"dislikes\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"263.7K\", \"totalSubmission\": \"502.7K\", \"totalAcceptedRaw\": 263748, \"totalSubmissionRaw\": 502723, \"acRate\": \"52.5%\"}",
+  "likes": 4914,
+  "dislikes": 120,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "4\n[[1,2],[1,3],[2,4]]",
+    "3\n[[1,2],[1,3],[2,3]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"samsung\", \"name\": \"Samsung\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 3, \"slug\": \"meesho\", \"name\": \"Meesho\"}, {\"timesEncountered\": 2, \"slug\": \"pinterest\", \"name\": \"Pinterest\"}]}",
+  "topicTags": [
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool possibleBipartition(int n, vector<vector<int>>& dislikes) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean possibleBipartition(int n, int[][] dislikes) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def possibleBipartition(self, n: int, dislikes: List[List[int]]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def possibleBipartition(self, n, dislikes):\n        \"\"\"\n        :type n: int\n        :type dislikes: List[List[int]]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} dislikes\n * @return {boolean}\n */\nvar possibleBipartition = function(n, dislikes) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function possibleBipartition(n: number, dislikes: number[][]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool PossibleBipartition(int n, int[][] dislikes) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool possibleBipartition(int n, int** dislikes, int dislikesSize, int* dislikesColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func possibleBipartition(n int, dislikes [][]int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun possibleBipartition(n: Int, dislikes: Array<IntArray>): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func possibleBipartition(_ n: Int, _ dislikes: [[Int]]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn possible_bipartition(n: i32, dislikes: Vec<Vec<i32>>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} dislikes\n# @return {Boolean}\ndef possible_bipartition(n, dislikes)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $dislikes\n     * @return Boolean\n     */\n    function possibleBipartition($n, $dislikes) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool possibleBipartition(int n, List<List<int>> dislikes) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def possibleBipartition(n: Int, dislikes: Array[Array[Int]]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec possible_bipartition(n :: integer, dislikes :: [[integer]]) :: boolean\n  def possible_bipartition(n, dislikes) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec possible_bipartition(N :: integer(), Dislikes :: [[integer()]]) -> boolean().\npossible_bipartition(N, Dislikes) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (possible-bipartition n dislikes)\n  (-> exact-integer? (listof (listof exact-integer?)) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1618",
+    "content": "[TOC]\r\n\r\n## Solution\r\n\r\n---\r\n\r\n### Overview\r\n\r\nThe problem asks us to divide the given people into two groups such that no two people in the same group dislike each other.\r\n\r\nWe can represent this problem in the form of a graph, with people being the nodes and disliked pairs being the edges. Our task is to figure out whether we can divide the nodes into two sets such that there aren't any edges between nodes of the same set.\r\n\r\nA graph satisfying the above condition is said to be a [bipartite graph](https://en.wikipedia.org/wiki/Bipartite_graph). The following is an example of such a graph:\r\n\r\n![img](../Figures/886/bipartite.png)\r\n\r\nIn the above image, the nodes are split into groups of blue and red nodes, and within each group, there are no connecting edges.\r\n\r\n---\r\n\r\n### Approach 1: Breadth First Search\r\n\r\n#### Intuition\r\n\r\nOur task is to figure out whether we can divide the nodes (i.e., people) into two sets such that there aren't any edges between nodes in the same set. Intuitively, we can think of starting a traversal over such a graph. We can put the first node into the first set and all the neighbors of the node into the second set. Now, we can move one step further to the neighbours and put their neighbours in the first set. We can perform the same process to keep alternating sets between neighbors. We can use a breadth-first search traversal to assign the set to each of the nodes.\r\n\r\nA breadth-first search (BFS) is an algorithm for traversing or searching a graph. It traverses in a level-wise manner, i.e., all the nodes at the present level (say `l`) are explored before moving on to the nodes at the next level (`l + 1`), where a level's number is the distance from a starting node. BFS is implemented with a queue.\r\n\r\nIf you are not familiar with BFS traversal, we suggest you read our [Leetcode Explore Card](https://leetcode.com/explore/featured/card/graph/620/breadth-first-search-in-graph/).\r\n\r\nOur task is to split the nodes into two sets such that there aren't any edges between the nodes of the same set. Let's start by giving a unique identification/color to both groups. To distinguish them, we can use two colors, say, `RED` and `BLUE`. We need to assign a color to each node in such a way that all its neighbors (nodes that share an edge) do not have that color. Otherwise, it would result in a conflict.\r\n\r\nTo solve this problem, we can start a BFS traversal over the graph of people and start assigning the colors. We can assign `RED` to the starting node (it doesn't matter which color we choose for the first node). The color `BLUE` should then be assigned to all of the neighbors. Neighbors of `BLUE` nodes should have the color `RED`, and so on (keep alternating colors between neighbors). In the implementation, we can use a number to identify each color. Let's use `0` for `RED` and `1` for `BLUE`. \r\n\r\nTo flip the colors, we can use the formula `1 - color`. If we are at a `RED` node, then `1 - color = 1 - 0 = 1 = BLUE`. If we are at a `BLUE` node, then `1 - color = 1 - 1 = 0 = RED`.\r\n\r\nThere can be multiple connected components in the graph. We need to visit all of them to make sure we visit every node. In a single BFS traversal, we will visit all the nodes present in one connected component and color each of them accordingly. Here's an example of a successful split and an unsuccessful split of a graph having three components each:\r\n\r\n![img](../Figures/886/bfs1.png)\r\n\r\n\r\n#### Algorithm\r\n\r\n1. Create an adjacency list where `adj[X]` contains all the neighbors of node `X`.\r\n2. Initialize an array `color`, storing the color assigned to each node. Initialize it to `-1` for all nodes to indicate no colors have been assigned yet.\r\n3. Run a loop over all the nodes and check if there is any node `i` which is uncolored.\r\n4. If a node `i` has not been colored (`color[i] = -1`), start a BFS traversal which will cover all the nodes present in the same component as node `i`.\r\n    - Initialize a queue with `i` in the queue.\r\n    - Assign a color to the source node `i`, let's say `RED = 0`.\r\n5. Then, while the queue is not empty:\r\n    - Dequeue the first `node` from the queue.\r\n    - Iterate over all the neighbors of `node` and check if any `neighbor` has the same color as `node`. If any neighbor matches, then we have a conflict, so return false.\r\n    - If a color is not yet assigned to the `neighbor`, assign the opposite color to it. Then, put the neighbor onto the queue.\r\n6. If any BFS traversal has a conflict, we return `false` as the answer. Otherwise, we return `true` if we get through every node without conflict.\r\n\r\nHere's a visual example of the BFS traversal:\r\n\r\n![img](../Figures/886/bfs2.png)\r\n\r\n\r\n#### Implementation\r\n\r\n<iframe src=\"https://leetcode.com/playground/LdL9PWrq/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"LdL9PWrq\"></iframe>\r\n\r\n\r\n#### Complexity Analysis\r\n\r\nLet $E$ be the size of `dislikes` and $N$ be the number of people.\r\n\r\n* Time complexity: $O(N + E)$\r\n\r\n    - Each node is only queued once, which takes $O(1)$ time for each node. We also iterate over the edges of every node once (since we only visit each node once, we won't iterate over a node's edges multiple times), which adds $O(E)$ time.\r\n    - We also need $O(E)$ to initialize the adjacency list and $O(N)$ to initialize the `color` array.\r\n\r\n* Space complexity: $O(N + E)$\r\n\r\n    - In the worst case, the queue can grow to a size linear with `N`.\r\n    - We also require $O(E)$ and $O(N)$ space for the adjacency list and the `color` array respectively.\r\n\r\n---\r\n\r\n### Approach 2: Depth First Search\r\n\r\n#### Intuition\r\n\r\nIn DFS, we use a recursive function to explore nodes as far as possible along each branch. Upon reaching the end of a branch, we backtrack to the next branch and continue exploring.\r\n\r\nOnce we encounter an unvisited node, we will take one of its neighbor nodes (if exists) as the next node on this branch. Recursively call the function to take the next node as the 'starting node' and solve the subproblem.\r\n\r\nIf you are new to Depth First Search, please see our [Leetcode Explore Card](https://leetcode.com/explore/featured/card/graph/619/depth-first-search-in-graph/3882/) for more information on it!\r\n\r\nSimilar to BFS, we can also do a DFS traversal over the graph and assign colors in the same manner. We start by assigning `RED` to the starting node, then alternate colors between neighbors.\r\n\r\nJust like with BFS, in a single DFS traversal, we will visit all the nodes present in one connected component and color each of them accordingly. However, there can be multiple connected components in the graph, so we should do a DFS traversal on each of them.\r\n\r\n#### Algorithm\r\n\r\n1. Create an adjacency list where `adj[X]` contains all the neighbors of node `X`.\r\n2. Intialize an array `color`, storing the color assigned to each node. We would intialize it `-1` for all the nodes to indicate no color has been assigned yet.\r\n3. Run a loop over all the nodes and check if there is any node `i` which is uncolored.\r\n4. If a node `i` has not been colored (`color[i] = -1`), start a DFS traversal using node `i` as the `source` node. A DFS traversal will cover all the nodes present in the same component as node `source`.\r\n    - We will use a function `dfs` to perform the traversal. For each call, pass the `node` and the `color` it should be. For the first node, we can use `RED = 0`.\r\n    - Iterate over the neighbors of `node` and check if the `neighbor` has the same color as `node`. If any neighbor matches, we have a conflict, so return false.\r\n    - If a color is not yet assigned to the `neighbor`, recursively call `dfs` with the `neighbor`, passing the opposite color.\r\n5. If any DFS traversal has a conflict, we return false as the answer. Otherwise, we can return true if we get through all nodes without conflict.\r\n\r\n#### Implementation\r\n\r\n<iframe src=\"https://leetcode.com/playground/oHBcCXiZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"oHBcCXiZ\"></iframe>\r\n\r\n#### Complexity Analysis\r\n\r\nLet $E$ be the size of `dislikes` and $N$ be the number of people.\r\n\r\n* Time complexity: $O(N + E)$\r\n\r\n    - Each node is visited by the `dfs` function once, which takes $O(N)$ time in total. We also iterate over the edges of every node once (since we don't visit a node more than once, we don't iterate its edges more than once), which adds $O(E)$ time.\r\n    - We also need $O(E)$ to initialize the adjacency list and $O(N)$ to initialize the `color` array.\r\n\r\n* Space complexity: $O(N + E)$\r\n\r\n    - The recursion call stack used by `dfs` can have no more than $N$ elements in the worst-case scenario. It would take up $O(N)$ space in that case.\r\n    - We also require $O(E)$ and $O(N)$ space for the adjacency list and the `color` array respectively.\r\n\r\n---\r\n\r\n### Approach 3: Union-Find\r\n\r\n#### Intuition\r\n\r\nA disjoint-set data structure, also called a union–find data structure or merge–find set, is a data structure that stores a collection of disjoint (non-overlapping) sets. Equivalently, it stores a partition of a set into disjoint subsets. It provides operations for adding new sets, merging sets (replacing them by their union), and finding a representative member of a set. It does implements two useful operations:\r\n\r\na) `Find`: Determine which subset a particular element is in. This can be used to determine if two elements are in the same subset.\r\nb) `Union`: Join two subsets into a single subset.\r\n\r\nIf you are new to Union-Find, we suggest you read our [Leetcode Explore Card](https://leetcode.com/explore/learn/card/graph/618/disjoint-set/3881/). We will not talk about implementation details in this article, but only about the interface to the data structure.\r\n\r\nWe want to place the people that do not like each other into two different sets. It means we need to place all the neighbors of any node in a different set from the one the current node is in. This can be done by taking a union of all the neighbors so that they reside in a single set. Like in the previous approaches, if any neighbor is in the same set as the current node, it means we've got a conflict and the partition cannot be done.\r\n\r\nThere is also an interesting observation to think about. In a connected component of a graph, there can be at most two disjoint sets if we perform a union operation on all the neighbors of every node. Let us begin with node `A` which is pushed to set `S1` and then push all of `A`'s neighbors to another set, `S2`. Assume that we have now arrived at one of `A`'s neighbors, `B`. `B` will push all its neighbors to the same set as `A`. So all neighbors of `B` will be in set `S1`. Assume that we have now arrived at one of `B`'s neighbors, `C.` `C` will push all its neighbors to `S2`, and so on. We can see that each node can belong to either of the two sets, implying that the union-find approach would assist us in dividing the group of people into two disjoint sets. Just like in the previous two approaches, we can alternate between the two sets for each neighbor.\r\n\r\n#### Algorithm\r\n\r\n1. Create an adjacency list where `adj[X]` contains all the neighbors of node `X`.\r\n2. Create a class `UnionFind` defining standard methods `find` and `union_set`.\r\n3. Create an instance of `UnionFind`, passing the size as `n+1` (because the nodes are 1-indexed).\r\n4. Iterate over each node. For a particular node, we will visit all its neighbors.\r\n5. We have a conflict if we notice that a `node` and any of its `neighbor` are in the same set. We return `false` in such a case.\r\n6. Otherwise, we take the `union` of all the neighbors of the `node` with the first `neighbor`. This would move all the neighbors into a single set.\r\n7. If we do not encounter any conflict, we return `true` at the end.\r\n\r\n#### Implementation\r\n\r\n<iframe src=\"https://leetcode.com/playground/9t4UmE7Z/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"9t4UmE7Z\"></iframe>\r\n\r\n#### Complexity Analysis\r\n\r\nLet $E$ be the size of `dislikes` and $N$ be the number of people.\r\n\r\n* Time complexity: $O(N + E)$\r\n\r\n    - For $T$ operations, the amortized time complexity of the union-find algorithm (using path compression with union by rank) is $O(alpha(T))$. Here, $\\alpha(T)$ is the inverse Ackermann function that grows so slowly, that it doesn't exceed $4$ for all reasonable $T$ (approximately $ T < 10^{600}$). You can read more about the complexity of union-find [here](https://en.wikipedia.org/wiki/Disjoint-set_data_structure#Time_complexity).  Because the function grows so slowly, we consider it to be $O(1)$. Thus, the $E$ operations (iterating over each edge) we perform results in $O(E)$ time.\r\n    - We are initializing `parent` and `rank` arrays, which each need $O(N)$ time.\r\n    - We also loop through all of the nodes, which takes $O(N)$ time.\r\n\r\n* Space complexity: $O(N + E)$\r\n\r\n    - We are using `parent` and `rank` arrays, which take up $O(N)$ space each.\r\n    - $O(E)$ space is also required for the adjacency list.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

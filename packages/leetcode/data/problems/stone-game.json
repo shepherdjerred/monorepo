@@ -1,0 +1,141 @@
+{
+  "questionId": "909",
+  "questionFrontendId": "877",
+  "title": "Stone Game",
+  "titleSlug": "stone-game",
+  "difficulty": "Medium",
+  "content": "<p>Alice and Bob play a game with piles of stones. There are an <strong>even</strong> number of piles arranged in a row, and each pile has a <strong>positive</strong> integer number of stones <code>piles[i]</code>.</p>\n\n<p>The objective of the game is to end with the most stones. The <strong>total</strong> number of stones across all the piles is <strong>odd</strong>, so there are no ties.</p>\n\n<p>Alice and Bob take turns, with <strong>Alice starting first</strong>. Each turn, a player takes the entire pile of stones either from the <strong>beginning</strong> or from the <strong>end</strong> of the row. This continues until there are no more piles left, at which point the person with the <strong>most stones wins</strong>.</p>\n\n<p>Assuming Alice and Bob play optimally, return <code>true</code><em> if Alice wins the game, or </em><code>false</code><em> if Bob wins</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> piles = [5,3,4,5]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> \nAlice starts first, and can only take the first 5 or the last 5.\nSay she takes the first 5, so that the row becomes [3, 4, 5].\nIf Bob takes 3, then the board is [4, 5], and Alice takes 5 to win with 10 points.\nIf Bob takes the last 5, then the board is [3, 4], and Alice takes 4 to win with 9 points.\nThis demonstrated that taking the first 5 was a winning move for Alice, so we return true.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> piles = [3,7,2,3]\n<strong>Output:</strong> true\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= piles.length &lt;= 500</code></li>\n\t<li><code>piles.length</code> is <strong>even</strong>.</li>\n\t<li><code>1 &lt;= piles[i] &lt;= 500</code></li>\n\t<li><code>sum(piles[i])</code> is <strong>odd</strong>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"stoneGame\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"piles\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"331.9K\", \"totalSubmission\": \"454.3K\", \"totalAcceptedRaw\": 331898, \"totalSubmissionRaw\": 454286, \"acRate\": \"73.1%\"}",
+  "likes": 3536,
+  "dislikes": 2959,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Stone Game V\", \"titleSlug\": \"stone-game-v\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Stone Game VI\", \"titleSlug\": \"stone-game-vi\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Stone Game VII\", \"titleSlug\": \"stone-game-vii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Stone Game VIII\", \"titleSlug\": \"stone-game-viii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Stone Game IX\", \"titleSlug\": \"stone-game-ix\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Strictly Palindromic Number\", \"titleSlug\": \"strictly-palindromic-number\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Visit Array Positions to Maximize Score\", \"titleSlug\": \"visit-array-positions-to-maximize-score\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[5,3,4,5]",
+    "[3,7,2,3]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Game Theory",
+      "slug": "game-theory"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool stoneGame(vector<int>& piles) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean stoneGame(int[] piles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def stoneGame(self, piles: List[int]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def stoneGame(self, piles):\n        \"\"\"\n        :type piles: List[int]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} piles\n * @return {boolean}\n */\nvar stoneGame = function(piles) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function stoneGame(piles: number[]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool StoneGame(int[] piles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool stoneGame(int* piles, int pilesSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func stoneGame(piles []int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun stoneGame(piles: IntArray): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func stoneGame(_ piles: [Int]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn stone_game(piles: Vec<i32>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} piles\n# @return {Boolean}\ndef stone_game(piles)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $piles\n     * @return Boolean\n     */\n    function stoneGame($piles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool stoneGame(List<int> piles) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def stoneGame(piles: Array[Int]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec stone_game(piles :: [integer]) :: boolean\n  def stone_game(piles) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec stone_game(Piles :: [integer()]) -> boolean().\nstone_game(Piles) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (stone-game piles)\n  (-> (listof exact-integer?) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "521",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach 1: Dynamic Programming\n\n**Intuition**\n\nLet's change the game so that whenever Bob scores points, it deducts from Alice's score instead.\n\nLet `dp(i, j)` be the largest score Alice can achieve where the piles remaining are `piles[i], piles[i+1], ..., piles[j]`.  This is natural in games with scoring: we want to know what the value of each position of the game is.\n\nWe can formulate a recursion for `dp(i, j)` in terms of `dp(i+1, j)` and `dp(i, j-1)`, and we can use dynamic programming to not repeat work in this recursion.  (This approach can output the correct answer, because the states form a DAG (directed acyclic graph).)\n\n**Algorithm**\n\nWhen the piles remaining are `piles[i], piles[i+1], ..., piles[j]`, the player who's turn it is has at most 2 moves.\n\nThe person who's turn it is can be found by comparing `j-i` to `N` modulo 2.\n\nIf the player is Alice, then she either takes `piles[i]` or `piles[j]`, increasing her score by that amount.  Afterwards, the total score is either `piles[i] + dp(i+1, j)`, or `piles[j] + dp(i, j-1)`; and we want the maximum possible score.\n\nIf the player is Bob, then he either takes `piles[i]` or `piles[j]`, decreasing Alice's score by that amount.  Afterwards, the total score is either `-piles[i] + dp(i+1, j)`, or `-piles[j] + dp(i, j-1)`; and we want the *minimum* possible score.\n\n\n<iframe src=\"https://leetcode.com/playground/7tbdvrPo/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"7tbdvrPo\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N^2)$$, where $$N$$ is the number of piles.\n\n* Space Complexity:  $$O(N^2)$$, the space used storing the intermediate results of each subgame.\n<br />\n<br />\n\n\n---\n### Approach 2: Mathematical\n\n**Intuition and Algorithm**\n\nAlice clearly always wins the 2 pile game.  With some effort, we can see that she always wins the 4 pile game.\n\nIf Alice takes the first pile initially, she can always take the third pile.  If she takes the fourth pile initially, she can always take the second pile.  At least one of `first + third, second + fourth` is larger, so she can always win.\n\nWe can extend this idea to `N` piles.  Say the first, third, fifth, seventh, etc. piles are white, and the second, fourth, sixth, eighth, etc. piles are black.  Alice can always take either all white piles or all black piles, and one of the colors must have a sum number of stones larger than the other color.\n\nHence, Alice always wins the game.\n\n<iframe src=\"https://leetcode.com/playground/cuCFBK8X/shared\" frameBorder=\"0\" width=\"100%\" height=\"157\" name=\"cuCFBK8X\"></iframe>\n\n**Complexity Analysis**\n\n* Time and Space Complexity:  $$O(1)$$.\n<br />\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

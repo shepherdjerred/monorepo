@@ -1,0 +1,48 @@
+{
+  "questionId": "1162",
+  "questionFrontendId": "1076",
+  "title": "Project Employees II",
+  "titleSlug": "project-employees-ii",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Project</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| project_id  | int     |\n| employee_id | int     |\n+-------------+---------+\n(project_id, employee_id) is the primary key (combination of columns with unique values) of this table.\nemployee_id is a foreign key (reference column) to <code>Employee</code> table.\nEach row of this table indicates that the employee with employee_id is working on the project with project_id.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Employee</code></p>\n\n<pre>\n+------------------+---------+\n| Column Name      | Type    |\n+------------------+---------+\n| employee_id      | int     |\n| name             | varchar |\n| experience_years | int     |\n+------------------+---------+\nemployee_id is the primary key (column with unique values) of this table.\nEach row of this table contains information about one employee.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to report all the <strong>projects</strong> that have the most employees.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nProject table:\n+-------------+-------------+\n| project_id  | employee_id |\n+-------------+-------------+\n| 1           | 1           |\n| 1           | 2           |\n| 1           | 3           |\n| 2           | 1           |\n| 2           | 4           |\n+-------------+-------------+\nEmployee table:\n+-------------+--------+------------------+\n| employee_id | name   | experience_years |\n+-------------+--------+------------------+\n| 1           | Khaled | 3                |\n| 2           | Ali    | 2                |\n| 3           | John   | 1                |\n| 4           | Doe    | 2                |\n+-------------+--------+------------------+\n<strong>Output:</strong> \n+-------------+\n| project_id  |\n+-------------+\n| 1           |\n+-------------+\n<strong>Explanation:</strong> The first project has 3 employees while the second one has 2.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Project (project_id int, employee_id int)\", \"Create table If Not Exists Employee (employee_id int, name varchar(10), experience_years int)\"], \"mssql\": [\"Create table Project (project_id int, employee_id int)\", \"Create table Employee (employee_id int, name varchar(10), experience_years int)\"], \"oraclesql\": [\"Create table Project (project_id int, employee_id int)\", \"Create table Employee (employee_id int, name varchar(10), experience_years int)\"], \"database\": true, \"name\": \"project_employees_ii\", \"pythondata\": [\"Project = pd.DataFrame([], columns=['project_id', 'employee_id']).astype({'project_id':'Int64', 'employee_id':'Int64'})\", \"Employee = pd.DataFrame([], columns=['employee_id', 'name', 'experience_years']).astype({'employee_id':'Int64', 'name':'object', 'experience_years':'Int64'})\"], \"database_schema\": {\"Project\": {\"project_id\": \"INT\", \"employee_id\": \"INT\"}, \"Employee\": {\"employee_id\": \"INT\", \"name\": \"VARCHAR(10)\", \"experience_years\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"66.6K\", \"totalSubmission\": \"132.1K\", \"totalAcceptedRaw\": 66560, \"totalSubmissionRaw\": 132097, \"acRate\": \"50.4%\"}",
+  "likes": 207,
+  "dislikes": 63,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Project Employees I\", \"titleSlug\": \"project-employees-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Project Employees III\", \"titleSlug\": \"project-employees-iii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Project\":[\"project_id\",\"employee_id\"],\"Employee\":[\"employee_id\",\"name\",\"experience_years\"]},\"rows\":{\"Project\":[[1,1],[1,2],[1,3],[2,1],[2,4]],\"Employee\":[[1,\"Khaled\",3],[2,\"Ali\",2],[3,\"John\",1],[4,\"Doe\",2]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef project_employees_ii(project: pd.DataFrame, employee: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

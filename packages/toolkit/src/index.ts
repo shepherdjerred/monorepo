@@ -71,7 +71,7 @@ Options:
   --verbose, -v              Verbose output (timing, debug info)
 
 Environment Variables:
-  PAGERDUTY_API_KEY          PagerDuty API token
+  PAGERDUTY_TOKEN            PagerDuty API token
   BUGSINK_URL                Bugsink instance URL
   BUGSINK_TOKEN              Bugsink API token
   GRAFANA_URL                Grafana instance URL
