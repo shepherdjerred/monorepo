@@ -58,6 +58,7 @@ export function createInterviewSession(
   } = options;
 
   let lastCodeSnapshot: string | null = null;
+  let previousCodeSnapshot: string | null = null;
   let codeWatchInterval: ReturnType<typeof setInterval> | null = null;
 
   // Start code snapshot watcher
@@ -120,8 +121,12 @@ export function createInterviewSession(
     // Check for immediate next_move actions from reflections
     const immediateNextMove = findImmediateNextMove(reflections);
 
-    // Read code snapshot
+    // Read code snapshot and signal if it changed
     const codeSnapshot = await readCodeSnapshot();
+    if (codeSnapshot !== null && codeSnapshot !== previousCodeSnapshot) {
+      previousCodeSnapshot = codeSnapshot;
+      insertTranscript(session.db, "system", "[Code updated — the candidate's solution file has changed]");
+    }
 
     // Get recent transcript
     const recentTranscript = getTranscriptWindow(
@@ -152,7 +157,6 @@ export function createInterviewSession(
       hintsGiven: session.metadata.hintsGiven,
       testsRun: session.metadata.testsRun,
       recentTranscript,
-      codeSnapshot,
     });
 
     const builtContext = buildContext({
@@ -183,7 +187,7 @@ export function createInterviewSession(
 
     const toolsCalled: string[] = [];
     let partAdvanced = false;
-    const sessionEnded = false;
+    let sessionEnded = false;
 
     // Handle deterministic next_move from reflections
     if (immediateNextMove?.action === "reveal_next_part") {
@@ -195,6 +199,9 @@ export function createInterviewSession(
       );
       if (advanceResult !== null) {
         partAdvanced = true;
+        if (getCurrentPart() === undefined) {
+          sessionEnded = true;
+        }
         toolsCalled.push("reveal_next_part");
         insertTranscript(session.db, "tool_call", "reveal_next_part", {
           tool: "reveal_next_part",
@@ -229,6 +236,9 @@ export function createInterviewSession(
 
         if (toolCall.name === "reveal_next_part") {
           partAdvanced = true;
+          if (getCurrentPart() === undefined) {
+            sessionEnded = true;
+          }
         }
 
         insertTranscript(session.db, "tool_call", toolCall.name, {
@@ -351,7 +361,6 @@ export function createInterviewSession(
       hintsGiven: session.metadata.hintsGiven,
       testsRun: session.metadata.testsRun,
       recentTranscript,
-      codeSnapshot,
     });
 
     const builtContext = buildContext({

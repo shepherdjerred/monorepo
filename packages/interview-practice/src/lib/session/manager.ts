@@ -17,6 +17,7 @@ export type Session = {
 export async function createSession(options: {
   dataDir: string;
   question: { id: string; title: string };
+  difficulty: string;
   language: string;
   durationMinutes: number;
   voiceEnabled: boolean;
@@ -43,6 +44,7 @@ export async function createSession(options: {
     type: options.type ?? "leetcode",
     questionId: options.question.id,
     questionTitle: options.question.title,
+    difficulty: options.difficulty,
     status: "in-progress",
     startedAt: now,
     currentPart: 1,

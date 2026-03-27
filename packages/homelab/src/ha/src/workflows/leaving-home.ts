@@ -82,8 +82,7 @@ export function leavingHome({ hass, logger }: TServiceParams) {
     ) => {
       if (
         oldState &&
-        newState &&
-        newState.state === "not_home" &&
+        newState?.state === "not_home" &&
         oldState.state === "home" && // Only trigger if Shuxin is also not home (house is now empty)
         personShuxin.state === "not_home"
       ) {
@@ -99,8 +98,7 @@ export function leavingHome({ hass, logger }: TServiceParams) {
     ) => {
       if (
         oldState &&
-        newState &&
-        newState.state === "not_home" &&
+        newState?.state === "not_home" &&
         oldState.state === "home" && // Only trigger if Jerred is also not home (house is now empty)
         personJerred.state === "not_home"
       ) {

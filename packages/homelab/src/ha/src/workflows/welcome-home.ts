@@ -88,8 +88,7 @@ export function welcomeHome({ hass, logger }: TServiceParams) {
     ) => {
       if (
         oldState &&
-        newState &&
-        newState.state === "home" &&
+        newState?.state === "home" &&
         oldState.state === "not_home" && // Only trigger if Shuxin is not home (this is the first arrival)
         personShuxin.state === "not_home"
       ) {
@@ -105,8 +104,7 @@ export function welcomeHome({ hass, logger }: TServiceParams) {
     ) => {
       if (
         oldState &&
-        newState &&
-        newState.state === "home" &&
+        newState?.state === "home" &&
         oldState.state === "not_home" && // Only trigger if Jerred is not home (this is the first arrival)
         personJerred.state === "not_home"
       ) {

@@ -11,7 +11,6 @@ export type LeetcodePromptContext = {
   hintsGiven: number;
   testsRun: number;
   recentTranscript: TranscriptEntry[];
-  codeSnapshot: string | null;
 }
 
 export function buildLeetcodeSystemPrompt(ctx: LeetcodePromptContext): string {
@@ -72,13 +71,8 @@ ${tc.mustExplainComplexity ? "- Candidate has explained time/space complexity" :
 Frame the transition as: "${tc.transitionPrompt}"`);
   }
 
-  // CODE SNAPSHOT
-  if (ctx.codeSnapshot !== null) {
-    sections.push(`CANDIDATE'S CURRENT CODE (latest snapshot):
-\`\`\`
-${ctx.codeSnapshot}
-\`\`\``);
-  }
+  // Code snapshot is included separately by buildContext() with a dedicated token budget.
+  // Do not duplicate it here — it would be truncated when the persona is budget-capped.
 
   return sections.join("\n\n---\n\n");
 }

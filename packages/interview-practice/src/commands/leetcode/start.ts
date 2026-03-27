@@ -67,6 +67,7 @@ export async function startLeetcodeSession(
   const session = await createSession({
     dataDir: config.dataDir,
     question,
+    difficulty: question.difficulty,
     language: options.language,
     durationMinutes: timeMinutes,
     voiceEnabled: options.voice,

@@ -86,7 +86,7 @@ export function generateReport(
   return {
     sessionId: metadata.id,
     questionTitle: metadata.questionTitle,
-    difficulty: metadata.type === "leetcode" ? "leetcode" : "system-design",
+    difficulty: metadata.difficulty,
     language: metadata.language,
     status: metadata.status,
     startedAt: metadata.startedAt,

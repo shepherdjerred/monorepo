@@ -21,6 +21,7 @@ export const SessionMetadataSchema = z.object({
   type: SessionTypeSchema,
   questionId: z.uuid(),
   questionTitle: z.string(),
+  difficulty: z.string(),
   status: SessionStatusSchema,
   startedAt: z.iso.datetime(),
   endedAt: z.iso.datetime().optional(),

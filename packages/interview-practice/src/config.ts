@@ -26,8 +26,8 @@ export type AiProvider = z.infer<typeof AiProviderSchema>;
 
 const DEFAULT_MODELS: Record<string, string> = {
   anthropic: "claude-sonnet-4-6-20260217",
-  openai: "gpt-5.4-mini",
-  google: "gemini-3.1-flash-lite",
+  openai: "gpt-4o-mini",
+  google: "gemini-2.0-flash-lite",
 };
 
 function resolveDataDir(envValue = "~/.interview-practice"): string {
@@ -49,7 +49,7 @@ export function loadConfig(): Config {
     googleApiKey: Bun.env["GOOGLE_API_KEY"],
     conversationModel:
       Bun.env["CONVERSATION_MODEL"] ?? DEFAULT_MODELS[provider],
-    realtimeModel: Bun.env["REALTIME_MODEL"] ?? "gpt-realtime-mini",
+    realtimeModel: Bun.env["REALTIME_MODEL"] ?? "gpt-4o-mini-realtime-preview",
     realtimeVoice: Bun.env["REALTIME_VOICE"] ?? "ash",
     leetcodeTimeMinutes: Number.parseInt(
       Bun.env["LEETCODE_TIME_MINUTES"] ?? "25",

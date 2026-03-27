@@ -77,6 +77,7 @@ export async function startSystemDesignSession(
   const session = await createSession({
     dataDir: config.dataDir,
     question,
+    difficulty: question.difficulty,
     language: "n/a",
     durationMinutes: timeMinutes,
     voiceEnabled: options.voice,
@@ -319,7 +320,7 @@ async function runSystemDesignTurn(
 
   const toolsCalled: string[] = [];
   let phaseTransitioned = false;
-  const sessionEnded = false;
+  let sessionEnded = false;
 
   while (response.toolCalls.length > 0) {
     const toolResults: Message[] = [];
@@ -347,6 +348,9 @@ async function runSystemDesignTurn(
         if (parsed !== null) {
           currentPhase = parsed;
           phaseTransitioned = true;
+          if (parsed === "trade-offs") {
+            sessionEnded = true;
+          }
         }
       }
 

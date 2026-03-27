@@ -12,11 +12,11 @@ export type TokenBudgets = {
 };
 
 export const DEFAULT_BUDGETS: TokenBudgets = {
-  persona: 1000,
+  persona: 800,
   timerAndQuestion: 600,
   reflections: 400,
   transcript: 2000,
-  codeSnapshot: 500,
+  codeSnapshot: 2000,
 };
 
 export type ContextParts = {
@@ -89,21 +89,19 @@ export function truncateCodeSnapshot(
   const maxChars = budget * CHARS_PER_TOKEN;
   if (code.length <= maxChars) return code;
 
-  // Keep the last N lines (most recent code is most relevant)
+  // Keep the first N lines (function signature and main logic are most important)
   const lines = code.split("\n");
   const result: string[] = [];
   let totalChars = 0;
 
-  for (let i = lines.length - 1; i >= 0; i--) {
-    const line = lines[i];
-    if (line === undefined) continue;
+  for (const line of lines) {
     if (totalChars + line.length + 1 > maxChars && result.length > 0) break;
     totalChars += line.length + 1;
-    result.unshift(line);
+    result.push(line);
   }
 
   if (result.length < lines.length) {
-    result.unshift("[...earlier code truncated]");
+    result.push("[...remaining code truncated]");
   }
 
   return result.join("\n");
