@@ -1,0 +1,140 @@
+{
+  "questionId": "2833",
+  "questionFrontendId": "2747",
+  "title": "Count Zero Request Servers",
+  "titleSlug": "count-zero-request-servers",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer <code>n</code> denoting the total number of servers and a <strong>2D</strong> <strong>0-indexed </strong>integer array <code>logs</code>, where <code>logs[i] = [server_id, time]</code> denotes that the server with id <code>server_id</code> received a request at time <code>time</code>.</p>\n\n<p>You are also given an integer <code>x</code> and a <strong>0-indexed</strong> integer array <code>queries</code>.</p>\n\n<p>Return <em>a <strong>0-indexed</strong> integer array</em> <code>arr</code> <em>of length</em> <code>queries.length</code> <em>where</em> <code>arr[i]</code> <em>represents the number of servers that <strong>did not receive</strong> any requests during the time interval</em> <code>[queries[i] - x, queries[i]]</code>.</p>\n\n<p>Note that the time intervals are inclusive.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 3, logs = [[1,3],[2,6],[1,5]], x = 5, queries = [10,11]\n<strong>Output:</strong> [1,2]\n<strong>Explanation:</strong> \nFor queries[0]: The servers with ids 1 and 2 get requests in the duration of [5, 10]. Hence, only server 3 gets zero requests.\nFor queries[1]: Only the server with id 2 gets a request in duration of [6,11]. Hence, the servers with ids 1 and 3 are the only servers that do not receive any requests during that time period.\n\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 3, logs = [[2,4],[2,1],[1,2],[3,1]], x = 2, queries = [3,4]\n<strong>Output:</strong> [0,1]\n<strong>Explanation:</strong> \nFor queries[0]: All servers get at least one request in the duration of [1, 3].\nFor queries[1]: Only server with id 3 gets no request in the duration [2,4].\n\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= logs.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= queries.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code><font face=\"monospace\">logs[i].length == 2</font></code></li>\n\t<li><code>1 &lt;= logs[i][0] &lt;= n</code></li>\n\t<li><code>1 &lt;= logs[i][1] &lt;= 10<sup>6</sup></code></li>\n\t<li><code>1 &lt;= x &lt;= 10<sup>5</sup></code></li>\n\t<li><code>x &lt;&nbsp;queries[i]&nbsp;&lt;= 10<sup>6</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Can we use sorting and two-pointer approach here?",
+    "Sort the queries array and logs array based on time in increasing order.",
+    "For every window of size x, use sliding window and two-pointer approach to find the answer to the queries."
+  ],
+  "metaData": "{\n  \"name\": \"countServers\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"logs\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"x\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"queries\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"12.7K\", \"totalSubmission\": \"35.5K\", \"totalAcceptedRaw\": 12677, \"totalSubmissionRaw\": 35505, \"acRate\": \"35.7%\"}",
+  "likes": 405,
+  "dislikes": 58,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "3\n[[1,3],[2,6],[1,5]]\n5\n[10,11]",
+    "3\n[[2,4],[2,1],[1,2],[3,1]]\n2\n[3,4]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"honeywell\", \"name\": \"Honeywell\"}, {\"timesEncountered\": 2, \"slug\": \"lti\", \"name\": \"LTI\"}, {\"timesEncountered\": 2, \"slug\": \"dp-world\", \"name\": \"DP world\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> countServers(int n, vector<vector<int>>& logs, int x, vector<int>& queries) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] countServers(int n, int[][] logs, int x, int[] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countServers(self, n: int, logs: List[List[int]], x: int, queries: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countServers(self, n, logs, x, queries):\n        \"\"\"\n        :type n: int\n        :type logs: List[List[int]]\n        :type x: int\n        :type queries: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} logs\n * @param {number} x\n * @param {number[]} queries\n * @return {number[]}\n */\nvar countServers = function(n, logs, x, queries) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countServers(n: number, logs: number[][], x: number, queries: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] CountServers(int n, int[][] logs, int x, int[] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* countServers(int n, int** logs, int logsSize, int* logsColSize, int x, int* queries, int queriesSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countServers(n int, logs [][]int, x int, queries []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countServers(n: Int, logs: Array<IntArray>, x: Int, queries: IntArray): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countServers(_ n: Int, _ logs: [[Int]], _ x: Int, _ queries: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_servers(n: i32, logs: Vec<Vec<i32>>, x: i32, queries: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} logs\n# @param {Integer} x\n# @param {Integer[]} queries\n# @return {Integer[]}\ndef count_servers(n, logs, x, queries)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $logs\n     * @param Integer $x\n     * @param Integer[] $queries\n     * @return Integer[]\n     */\n    function countServers($n, $logs, $x, $queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> countServers(int n, List<List<int>> logs, int x, List<int> queries) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countServers(n: Int, logs: Array[Array[Int]], x: Int, queries: Array[Int]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_servers(n :: integer, logs :: [[integer]], x :: integer, queries :: [integer]) :: [integer]\n  def count_servers(n, logs, x, queries) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_servers(N :: integer(), Logs :: [[integer()]], X :: integer(), Queries :: [integer()]) -> [integer()].\ncount_servers(N, Logs, X, Queries) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-servers n logs x queries)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer? (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": null
+}

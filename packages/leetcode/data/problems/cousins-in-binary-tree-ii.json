@@ -1,0 +1,149 @@
+{
+  "questionId": "2677",
+  "questionFrontendId": "2641",
+  "title": "Cousins in Binary Tree II",
+  "titleSlug": "cousins-in-binary-tree-ii",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>root</code> of a binary tree, replace the value of each node in the tree with the <strong>sum of all its cousins&#39; values</strong>.</p>\n\n<p>Two nodes of a binary tree are <strong>cousins</strong> if they have the same depth with different parents.</p>\n\n<p>Return <em>the </em><code>root</code><em> of the modified tree</em>.</p>\n\n<p><strong>Note</strong> that the depth of a node is the number of edges in the path from the root node to it.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/01/11/example11.png\" style=\"width: 571px; height: 151px;\" />\n<pre>\n<strong>Input:</strong> root = [5,4,9,1,10,null,7]\n<strong>Output:</strong> [0,0,0,7,7,null,11]\n<strong>Explanation:</strong> The diagram above shows the initial binary tree and the binary tree after changing the value of each node.\n- Node with value 5 does not have any cousins so its sum is 0.\n- Node with value 4 does not have any cousins so its sum is 0.\n- Node with value 9 does not have any cousins so its sum is 0.\n- Node with value 1 has a cousin with value 7 so its sum is 7.\n- Node with value 10 has a cousin with value 7 so its sum is 7.\n- Node with value 7 has cousins with values 1 and 10 so its sum is 11.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/01/11/diagram33.png\" style=\"width: 481px; height: 91px;\" />\n<pre>\n<strong>Input:</strong> root = [3,1,2]\n<strong>Output:</strong> [0,0,0]\n<strong>Explanation:</strong> The diagram above shows the initial binary tree and the binary tree after changing the value of each node.\n- Node with value 3 does not have any cousins so its sum is 0.\n- Node with value 1 does not have any cousins so its sum is 0.\n- Node with value 2 does not have any cousins so its sum is 0.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[1, 10<sup>5</sup>]</code>.</li>\n\t<li><code>1 &lt;= Node.val &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Use DFS two times.",
+    "For the first time, find the sum of values of all the levels of the binary tree.",
+    "For the second time, update the value of the node with the sum of the values of the current level - sibling node’s values."
+  ],
+  "metaData": "{\n  \"name\": \"replaceValueInTree\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"TreeNode\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"TreeNode\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"128.4K\", \"totalSubmission\": \"169.5K\", \"totalAcceptedRaw\": 128420, \"totalSubmissionRaw\": 169513, \"acRate\": \"75.8%\"}",
+  "likes": 1227,
+  "dislikes": 54,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Cousins in Binary Tree\", \"titleSlug\": \"cousins-in-binary-tree\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Maximum Level Sum of a Binary Tree\", \"titleSlug\": \"maximum-level-sum-of-a-binary-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[5,4,9,1,10,null,7]",
+    "[3,1,2]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    TreeNode* replaceValueInTree(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public TreeNode replaceValueInTree(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def replaceValueInTree(self, root: Optional[TreeNode]) -> Optional[TreeNode]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def replaceValueInTree(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: Optional[TreeNode]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {TreeNode}\n */\nvar replaceValueInTree = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction replaceValueInTree(root: TreeNode | null): TreeNode | null {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public TreeNode ReplaceValueInTree(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nstruct TreeNode* replaceValueInTree(struct TreeNode* root) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc replaceValueInTree(root *TreeNode) *TreeNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun replaceValueInTree(root: TreeNode?): TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func replaceValueInTree(_ root: TreeNode?) -> TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn replace_value_in_tree(root: Option<Rc<RefCell<TreeNode>>>) -> Option<Rc<RefCell<TreeNode>>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {TreeNode}\ndef replace_value_in_tree(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return TreeNode\n     */\n    function replaceValueInTree($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  TreeNode? replaceValueInTree(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def replaceValueInTree(root: TreeNode): TreeNode = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec replace_value_in_tree(root :: TreeNode.t | nil) :: TreeNode.t | nil\n  def replace_value_in_tree(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec replace_value_in_tree(Root :: #tree_node{} | null) -> #tree_node{} | null.\nreplace_value_in_tree(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (replace-value-in-tree root)\n  (-> (or/c tree-node? #f) (or/c tree-node? #f))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2543",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Two Pass BFS\n\n#### Intuition\n\nCousins are nodes that share the same depth but have different parents. This means that to find the sum of a node’s cousins, we first need to know the total sum of all nodes at the same depth. If we subtract the sum of a node and its siblings from this total, we’re left with the sum of its cousins.\n\n![2641_cousins_II](../Figures/2641/2641_cousins_II.png)\n\nWith this thought in mind, we break down the solution into two parts. First, we perform a BFS traversal to calculate the sum of all nodes at each level. In BFS, we explore each level independently, which lets us sum the node values for each level as we go. We store these sums in an array, `levelSums`, so each level’s total is recorded and ready for the next part.\n\nIn the second part, we go through the tree again with another BFS traversal. Now, as we visit each node, we use the `levelSums` array recorded earlier. For each node, we subtract the value of itself and its sibling from the corresponding `levelSums` entry. The remaining sum is the cousin sum, which we then assign to the current node.\n\n#### Algorithm\n\n- If the `root` is null, return `root`.\n\n- Initialize a queue `nodeQueue` and push `root` into it.\n- Create an array `levelSums` to store the sum of node values at each level.\n\n- First BFS traversal to calculate the sum of nodes at each level:\n  - While the queue is not empty:\n    - Initialize `levelSum` to `0` for the current level.\n    - Get the number of nodes at the current level (`levelSize`).\n    - For each node at this level:\n      - Pop the front node from the queue and add its value to `levelSum`.\n      - If the node has a left child, push it to the queue.\n      - If the node has a right child, push it to the queue.\n    - After processing all nodes at the level, append `levelSum` to `levelSums`.\n\n- Second BFS traversal to update each node's value to the sum of its cousins:\n  - Push `root` back into the queue.\n  - Set `root.val` to `0` since it has no cousins.\n  - Initialize `levelIndex` to `1`.\n  \n  - While the queue is not empty:\n    - Get the number of nodes at the current level (`levelSize`).\n    - For each node at this level:\n      - Pop the front node from the queue.\n      - Calculate `siblingSum` by adding the values of the left and right children (if they exist).\n      - If the left child exists, update its value to `levelSums[levelIndex] - siblingSum` and push it to the queue.\n      - If the right child exists, update its value similarly and push it to the queue.\n    - Increment `levelIndex` after processing the current level.\n\n- Return the modified `root` of the tree.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/m8rZC574/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"m8rZC574\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the tree.\n\n- Time complexity: $O(n)$\n\n    In the first BFS, we traverse each node in the tree once to calculate the sum of values at each level. This requires visiting each of the $n$ nodes, leading to a time complexity of $O(n)$. Similarly, the second BFS traverses each node to update its value based on the sums of its cousins, which also takes $O(n)$ time. Thus, the overall time complexity is $O(n) + O(n) = O(n)$.\n\n- Space complexity: $O(n)$\n\n    The space complexity primarily comes from the queue used in the BFS and the array that stores the level sums. The maximum size of the queue will be the maximum width of the tree, which in the worst case (for a complete binary tree) can be $O(n)$. Additionally, the `levelSums` array will store one integer for each level of the tree. In a balanced binary tree, the height is $O(\\log n)$, leading to $O(\\log n)$ levels. However, in the worst case, we can have $O(n)$ elements in `levelSums` when considering unbalanced trees (e.g., all nodes have only one child). Thus, the overall space complexity can be represented as $O(n)$.\n\n---\n\n### Approach 2: Two Pass DFS\n\n#### Intuition\n\nWe can apply the same approach in DFS as we did in BFS. We begin with a DFS traversal to calculate the sum of the values of all nodes at each depth level. We define an array called `levelSums`, where each index corresponds to a specific level in the tree. As we traverse, we add each node's value to the appropriate index in `levelSums`. \n \nNext, we proceed with the second DFS traversal to update each node's values. In this traversal, we calculate each node's left and right children’s values, defaulting to zero if they are absent. If the node is at the root level or the first level, we set its value to zero since these nodes do not have cousins.\n\nFor deeper nodes, we compute their new value as the sum from `levelSums` at their level, subtracting their current value and the sum of their siblings.\n\n#### Algorithm\n\n- Declare an array `levelSums` to store the sum of values at each level of the tree.\n\n- Define the `replaceValueInTree` function:\n  - Call `calculateLevelSum(root, 0)` to perform a depth-first search (DFS) and calculate the sum of values at each level.\n  - Call `replaceValueInTreeInternal(root, 0, 0)` to replace each node's value with the sum of its cousins.\n  - Return the modified tree root.\n\n- Define the `calculateLevelSum` function:\n  - If `node` is `null`, return (base case).\n  - Add the value of `node` to `levelSums[level]` (accumulate the sum at the current level).\n  - Recursively call `calculateLevelSum` for the left child, increasing the level by 1.\n  - Recursively call `calculateLevelSum` for the right child, increasing the level by 1.\n\n- Define the `replaceValueInTreeInternal` function:\n  - If `node` is `null`, return (base case).\n  \n  - Determine the values of the left and right children:\n    - If `node.left` is `null`, set `leftChildVal` to 0; otherwise, set it to `node.left.val`.\n    - If `node.right` is `null`, set `rightChildVal` to 0; otherwise, set it to `node.right.val`.\n\n  - For the root and its children (level 0 and level 1):\n    - Set `node.val` to 0.\n\n  - For other levels:\n    - Set `node.val` to `levelSums[level] - node.val - siblingSum` (sum of cousins).\n\n  - Recursively call `replaceValueInTreeInternal` for the left child, passing the right child's value as the sibling sum and increasing the level by 1.\n  - Recursively call `replaceValueInTreeInternal` for the right child, passing the left child's value as the sibling sum and increasing the level by 1.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/g5KmjUxf/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"g5KmjUxf\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the tree.\n\n- Time complexity: $O(n)$\n\n    In the first DFS traversal, we visit each node exactly once to compute the sum of values at each level. Thus, this part has a time complexity of $O(n)$. In the second DFS, we again traverse each node exactly once to update the values based on the previously computed sums. Therefore, this part also has a time complexity of $O(n)$.\n\n    Thus, the overall time complexity is $O(n) + O(n) = O(n)$.\n\n- Space complexity: $O(n)$\n\n    The maximum depth of the recursion stack will be equal to the height of the tree, which is $O(h)$. In a balanced binary tree, $h$ is $O(\\log n)$, while in the worst case (for a skewed tree), $h$ can be $O(n)$.\n    \n    The `levelSums` array is determined by the maximum number of levels in the tree, which can be at most $n$. Thus, the overall space complexity can be represented as $O(n)$.\n\n---\n\n### Approach 3: Single BFS with Running Sum\n\n#### Intuition\n\nWe can aim to reduce our two-step process into a single traversal. So the question is: can we calculate the level sums and update the nodes’ values simultaneously? With some adjustments, it’s possible. Instead of storing each level’s sum first and revisiting it later, we calculate the cousin sum as we traverse each level and apply it immediately.\n\nWe begin by initializing a variable called `currentLevelSum`. This variable holds the total value of all nodes at the current level. We set `currentLevelSum` to the root value value since it is the only node at level zero. \n\nWe traverse the tree level-by-level to visit each node and apply a formula to determine its new value. The formula is:\n\n$\\text{currentNode.val} = \\text{currentLevelSum} - \\text{siblingSum}$\n\nThe formula subtracts the sum of each node's siblings from `currentLevelSum` to give us the sum of all other nodes at that level, which is effectively the sum of its cousins.\n\nWhile processing each node, we also need to prepare for the next level. For each child of the current node, we calculate their contribution to the sibling sum of their level. This ensures that when we update the children's values in the next iteration, we have the correct sibling sum to use. We then add these children to a queue to process them in the next level and continue till we process the entire tree.\n\n#### Algorithm\n\n- If `root` is null, return `root` (base case).\n\n- Initialize a queue `nodeQueue` and add the `root` node to it.\n- Set `currentLevelSum` to the value of `root`.\n\n- While the queue is not empty:\n  - Determine the number of nodes at the current level with `levelSize = nodeQueue.size()`.\n  - Initialize `nextLevelSum` to `0` for accumulating the sum of the next level.\n\n  - For each node in the current level (loop `levelSize` times):\n    - Remove the front node from the queue and assign it to `currentNode`.\n    - Update `currentNode.val` to `currentLevelSum - currentNode.val` (replace its value with the cousin sum).\n\n    - Calculate the `siblingSum` as the sum of the values of `currentNode`'s left and right children (if they exist):\n      - If `currentNode.left` is not null, add its value to `nextLevelSum` and update `currentNode.left.val` to `siblingSum`, then enqueue `currentNode.left`.\n      - If `currentNode.right` is not null, add its value to `nextLevelSum` and update `currentNode.right.val` to `siblingSum`, then enqueue `currentNode.right`.\n\n  - Update `currentLevelSum` to `nextLevelSum` for the next iteration.\n\n- After processing all levels, return the modified `root`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/dnB3neCy/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"dnB3neCy\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the tree.\n\n- Time complexity: $O(n)$\n\n    We traverse each node in the binary tree exactly once. During the traversal, we perform constant-time operations to update the node values and calculate sibling sums. Since there are $n$ nodes in total, the time complexity is $O(n)$.\n\n- Space complexity: $O(n)$\n\n    The space complexity is primarily determined by the queue used in the BFS. In the worst case, when the tree is completely unbalanced (like a linked list), the queue can grow to hold all $n$ nodes at once, leading to a space complexity of $O(n)$. While there are no additional data structures like arrays that grow with the number of nodes, the queue remains the primary contributor to space complexity.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

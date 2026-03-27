@@ -1,0 +1,114 @@
+{
+  "questionId": "2897",
+  "questionFrontendId": "2753",
+  "title": "Count Houses in a Circular Street II",
+  "titleSlug": "count-houses-in-a-circular-street-ii",
+  "difficulty": "Hard",
+  "content": "<p>You are given an object <code>street</code> of class <code>Street</code> that represents a <strong>circular</strong> street and a positive integer <code>k</code> which represents a maximum bound for the number of houses in that street (in other words, the number of houses is less than or equal to <code>k</code>). Houses&#39; doors could be open or closed initially (at least one is open).</p>\n\n<p>Initially, you are standing in front of a door to a house on this street. Your task is to count the number of houses in the street.</p>\n\n<p>The class <code>Street</code> contains the following functions which may help you:</p>\n\n<ul>\n\t<li><code>void closeDoor()</code>: Close the door of the house you are in front of.</li>\n\t<li><code>boolean isDoorOpen()</code>: Returns <code>true</code> if the door of the current house is open and <code>false</code> otherwise.</li>\n\t<li><code>void moveRight()</code>: Move to the right house.</li>\n</ul>\n\n<p><strong>Note</strong> that by <strong>circular</strong> street, we mean if you number the houses from <code>1</code> to <code>n</code>, then the right house of <code>house<sub>i</sub></code> is <code>house<sub>i+1</sub></code> for <code>i &lt; n</code>, and the right house of <code>house<sub>n</sub></code> is <code>house<sub>1</sub></code>.</p>\n\n<p>Return <code>ans</code> <em>which represents the number of houses on this street.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> street = [1,1,1,1], k = 10\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> There are 4 houses, and all their doors are open. \nThe number of houses is less than k, which is 10.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> street = [1,0,1,1,0], k = 5\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> There are 5 houses, and the doors of the 1st, 3rd, and 4th house (moving in the right direction) are open, and the rest are closed.\nThe number of houses is equal to k, which is 5.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == number of houses</code></li>\n\t<li><code>1 &lt;= n &lt;= k &lt;= 10<sup>5</sup></code></li>\n\t<li><code>street</code> is circular by definition provided in the statement.</li>\n\t<li>The input is generated such that at least one of the doors is open.</li>\n</ul>\n",
+  "hints": [
+    "First, imagine that there is exactly one open door and try to solve the problem.",
+    "Now close an opened door.",
+    "Then visit k houses by going right. If there is no open door, your assumption of having exactly one open door was right, and you have the answer.",
+    "If there is still an open door, go to step 1."
+  ],
+  "metaData": "{\n  \"name\": \"foobar\",\n  \"params\": [\n    {\n      \"name\": \"street\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"c\",\n    \"csharp\",\n    \"javascript\",\n    \"ruby\",\n    \"swift\",\n    \"golang\",\n    \"python3\",\n    \"scala\",\n    \"kotlin\",\n    \"rust\",\n    \"php\",\n    \"typescript\",\n    \"dart\"\n  ],\n  \"manual\": true,\n  \"typescriptCustomType\" : \"class Street {\\n    #doors: number[];\\n    #cur_index: number = 0;\\n\\n    constructor(doors: number[]) {\\n        this.#doors = doors;\\n    }\\n\\n    public closeDoor(): void {\\n        this.#doors[this.#cur_index] = 0;\\n    }\\n\\n    public isDoorOpen(): boolean {\\n        return this.#doors[this.#cur_index] !== 0;\\n    }\\n\\n    public moveRight(): void {\\n        this.#cur_index++;\\n        this.#cur_index %= this.#doors.length;\\n    }\\n}\"\n}",
+  "stats": "{\"totalAccepted\": \"943\", \"totalSubmission\": \"1.5K\", \"totalAcceptedRaw\": 943, \"totalSubmissionRaw\": 1519, \"acRate\": \"62.1%\"}",
+  "likes": 27,
+  "dislikes": 3,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,1,1,1]\n10",
+    "[1,0,1,1,0]\n5"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a street.\n * class Street {\n * public:\n *     Street(vector<int> doors);\n *     void closeDoor();\n *     bool isDoorOpen();\n *     void moveRight();\n * };\n */\nclass Solution {\npublic:\n    int houseCount(Street* street, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a street.\n * class Street {\n *     public Street(int[] doors);\n *     public void closeDoor();\n *     public boolean isDoorOpen();\n *     public void moveRight();\n * }\n */\nclass Solution {\n    public int houseCount(Street street, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a street.\n# class Street:\n#     def closeDoor(self):\n#         pass\n#     def isDoorOpen(self):\n#         pass\n#     def moveRight(self):\n#         pass\nclass Solution:\n    def houseCount(self, street: Optional['Street'], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a street.\n# class Street:\n#     def closeDoor(self):\n#         pass\n#     def isDoorOpen(self):\n#         pass\n#     def moveRight(self):\n#         pass\nclass Solution(object):\n    def houseCount(self, street, k):\n        \"\"\"\n        :type street: Street\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a street.\n * class Street {\n *     @param {number[]} doors\n *     constructor(doors);\n * \n *     @return {void}\n *     closeDoor();\n * \n *     @return {boolean}\n *     isDoorOpen();\n * \n *     @return {void}\n *     moveRight();\n * }\n */\n/**\n * @param {Street} street\n * @param {number} k\n * @return {number}\n */\nvar houseCount = function(street, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a street.\n * class Street {\n *     constructor(doors: number[]);\n *     public closeDoor(): void;\n *     public isDoorOpen(): boolean;\n *     public moveRight(): void;\n * }\n */\nfunction houseCount(street: Street | null, k: number): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a street.\n * class Street {\n *     public Street(int[] doors);\n *     public void CloseDoor();\n *     public bool IsDoorOpen();\n *     public void MoveRight();\n * }\n */\npublic class Solution {\n    public int HouseCount(Street street, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a street.\n * \n * YOU HAVE TO PASS THE OBJECT ITSELF AS THE FIRST PARAMETER\n * \n * struct Street {\n *     void (*closeDoor)(struct Street*);\n *     bool (*isDoorOpen)(struct Street*);\n *     void (*moveRight)(struct Street*);\n * };\n */\nint houseCount(struct Street* street, int k){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a street.\n * type Street interface {\n *     CloseDoor()\n *     IsDoorOpen() bool\n *     MoveRight()\n * }\n */\nfunc houseCount(street Street, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Definition for a street.\n * class Street(doors: IntArray) {\n *     fun closeDoor()\n *     fun isDoorOpen(): Boolean\n *     fun moveRight()\n * }\n */\nclass Solution {\n    fun houseCount(street: Street, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a street.\n * class Street {\n *     init(doors: [Int]) {}\n *     func closeDoor() {}\n *     func isDoorOpen() -> Bool {}\n *     func moveRight() {}\n * }\n */\nclass Solution {\n    func houseCount(_ street: Street, _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "/**\n * Definition for a street.\n * impl Street {\n *     pub fn new(doors: Vec<i32>) -> Self {}\n *     pub fn close_door(&mut self) {}\n *     pub fn is_door_open(&self) -> bool {}\n *     pub fn move_right(&mut self) {}\n * }\n */\nimpl Solution {\n    pub fn house_count(street: Street, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a street.\n# class Street\n#   def initialize(doors)\n#   end\n#   def close_door\n#   end\n#   def is_door_open\n#   end\n#   def move_right\n#   end\n# end\n# @param {Street} street\n# @param {Integer} k\n# @return {Integer}\ndef house_count(street, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a street.\n * class Street {\n *     function __construct($doors);\n *     function closeDoor();\n *      * @return Boolean\n *     function isDoorOpen();\n *     function moveRight();\n * }\n */\nclass Solution {\n\n    /**\n     * @param Street $street\n     * @param Integer $k\n     * @return Integer\n     */\n    function houseCount($street, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a street.\n * class Street {\n *   Street(List<int> doors);\n *   void closeDoor();\n *   bool isDoorOpen();\n *   void moveRight();\n * }\n */\nclass Solution {\n  int houseCount(Street street, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a street.\n * class Street(doors: Array[Int]) {\n *     def closeDoor(): Unit\n *     def isDoorOpen(): Boolean\n *     def moveRight(): Unit\n * }\n */\n\nobject Solution {\n    def houseCount(street: Street, k: Int): Int = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "2019",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach: Skip the First Open Door \n\n#### Intuition   \n\nThis problem is fascinating yet tricky. Before delving into the solution, let's address some smaller subproblems that will greatly help us find the answer.\n\n![img](../Figures/2753/1.png)\n\n\n1. Do the closed doors provide any assistance? The answer is No. As we can only close the open doors via `closeDoor()`. Therefore, open doors serve as **reference points**, allowing us to change their state while we cannot alter the state of closed doors.\n\n![img](../Figures/2753/2.png)\n\n\n2. Consider a scenario where there is one and **only one** open door. How can we determine the total number of houses? In this case, we can move to the house with the open door and calculate the number of `moveRight()` operations needed before we return to this house again. \n\n\n> This reveals an important principle: to count the number of houses, we must:\n> - complete at least one full circle around the houses.\n> - have reference points (open doors) at the beginning and end of this circle.\n\n![img](../Figures/2753/3.png)\n\nWith these insightful subproblems resolved, we are now well-equipped to tackle the main problem with a better understanding of its intricacies.\n\n<br>\n\nLet's simulate the process based on the above reasoning. As the closed doors do not serve as reference points, our first step is to perform `moveRight()` to an open door. Without loss of generality, let's stop at the first open door, which we will designate as `first_open`. This point is crucial for our calculations. \n\n\nNext, we encounter an important turning point, and the question arises: how should we handle this door?\n\n![img](../Figures/2753/5.png)\n\nYou might think that we can close it, continue moving to the right, and close subsequent open doors. However, this approach presents a problem: if we treat this first open door as a reference point and close it, we cannot establish a connection based on the number of steps taken between visiting this open door twice. In other words, not all houses have been visited between the first open and last closed doors. Even though we continue performing `moveRight()`, we cannot locate its position as we have closed it previously.\n\n![img](../Figures/2753/close.png)\n\n<br>\n\nInstead, if we skip the first open door and proceed to close all the open doors afterward, we find something interesting: the last door we close is precisely the same as the first open door. The number of `moveRight()` steps between these two reference points also represents the total number of houses!\n\n![img](../Figures/2753/skip.png)\n\n<br>\n\nIn essence, our approach is as follows: We perform `moveRight()` to update our current index (let's name it `x`, and start with `x = 0`). When we encounter the first open door, we designate its index as `first_open = x`. We leave it open and proceed to close all the open doors from now on. For each door we close, we calculate the number of steps taken from the first open door to this door as `x_from_first = x - first_open`. As we close the last door, which is also the first open oor, `x` becomes equal to `first_open` plus the total number of houses, so `x - first_open` precisely equals the number of steps taken in a circle as well as the total number of houses.\n\nBut when should we stop the `moveRight()` operations? We can still take advantage of the condition \"the number of houses is less than or equal to k\". After we skip the first open door, we have covered the entire circle before moving back again, which requires at most additional `k` steps. Therefore, the total number of `moveRight()` operations will not exceed `first_open + k`.\n\n> Since finding the first open door takes less than `k` steps, which is `first_open < k`, we can also set the boundary as `2 * k` for convenience.\n\n\nPlease refer to the following slides for a detailed example:\n\n!?!../Documents/2753/s1.json:601,301!?!\n\n\n<br>\n\n#### Algorithm\n\n1) Build the relation between the index of the current house and the number of steps taken as `x = 0`.\n\n2) Set `find_first` as `False`.\n\n3) Circle around the houses for at most `2 * k` steps. At each step, perform `isDoorOpen` to check the state of each door, if the current door is open:\n\n    - If `find_first = False`, set `find_first = True` and `x_first = x`.\n    - Otherwise, set `dist_from_first = x - x_first`, and close this door via `closeDoor()`.\n\n    Increment `x` by 1 and move to the next house on the right by performing `moveRight()`.\n\n4) Return `dist_from_first` once the iteration is complete.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/eZaDJEKo/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"eZaDJEKo\"></iframe>\n\n\n#### Complexity Analysis\n\n\n* Time complexity: $$O(k)$$\n\n    - We need at most $2\\cdot k$ steps of `moveRight()` to complete the traversal.\n\n\n* Space complexity: $$O(1)$$\n    \n    - Constant space is required to update several variables `x`, `find_first`, `dist_first_open`, and `x_first`.\n\n\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

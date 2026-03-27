@@ -1,0 +1,148 @@
+{
+  "questionId": "2764",
+  "questionFrontendId": "2658",
+  "title": "Maximum Number of Fish in a Grid",
+  "titleSlug": "maximum-number-of-fish-in-a-grid",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> 2D matrix <code>grid</code> of size <code>m x n</code>, where <code>(r, c)</code> represents:</p>\n\n<ul>\n\t<li>A <strong>land</strong> cell if <code>grid[r][c] = 0</code>, or</li>\n\t<li>A <strong>water</strong> cell containing <code>grid[r][c]</code> fish, if <code>grid[r][c] &gt; 0</code>.</li>\n</ul>\n\n<p>A fisher can start at any <strong>water</strong> cell <code>(r, c)</code> and can do the following operations any number of times:</p>\n\n<ul>\n\t<li>Catch all the fish at cell <code>(r, c)</code>, or</li>\n\t<li>Move to any adjacent <strong>water</strong> cell.</li>\n</ul>\n\n<p>Return <em>the <strong>maximum</strong> number of fish the fisher can catch if he chooses his starting cell optimally, or </em><code>0</code> if no water cell exists.</p>\n\n<p>An <strong>adjacent</strong> cell of the cell <code>(r, c)</code>, is one of the cells <code>(r, c + 1)</code>, <code>(r, c - 1)</code>, <code>(r + 1, c)</code> or <code>(r - 1, c)</code> if it exists.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/03/29/example.png\" style=\"width: 241px; height: 161px;\" />\n<pre>\n<strong>Input:</strong> grid = [[0,2,1,0],[4,0,0,3],[1,0,0,4],[0,3,2,0]]\n<strong>Output:</strong> 7\n<strong>Explanation:</strong> The fisher can start at cell <code>(1,3)</code> and collect 3 fish, then move to cell <code>(2,3)</code>&nbsp;and collect 4 fish.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/03/29/example2.png\" />\n<pre>\n<strong>Input:</strong> grid = [[1,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,1]]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The fisher can start at cells (0,0) or (3,3) and collect a single fish. \n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == grid.length</code></li>\n\t<li><code>n == grid[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 10</code></li>\n\t<li><code>0 &lt;= grid[i][j] &lt;= 10</code></li>\n</ul>\n",
+  "hints": [
+    "Run DFS from each non-zero cell.",
+    "Each time you pick a cell to start from, add up the number of fish contained in the cells you visit."
+  ],
+  "metaData": "{\n  \"name\": \"findMaxFish\",\n  \"params\": [\n    {\n      \"name\": \"grid\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"162.5K\", \"totalSubmission\": \"230.4K\", \"totalAcceptedRaw\": 162512, \"totalSubmissionRaw\": 230407, \"acRate\": \"70.5%\"}",
+  "likes": 951,
+  "dislikes": 67,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Number of Islands\", \"titleSlug\": \"number-of-islands\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Max Area of Island\", \"titleSlug\": \"max-area-of-island\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[0,2,1,0],[4,0,0,3],[1,0,0,4],[0,3,2,0]]",
+    "[[1,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,1]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findMaxFish(vector<vector<int>>& grid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findMaxFish(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findMaxFish(self, grid: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findMaxFish(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} grid\n * @return {number}\n */\nvar findMaxFish = function(grid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findMaxFish(grid: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindMaxFish(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findMaxFish(int** grid, int gridSize, int* gridColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findMaxFish(grid [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findMaxFish(grid: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findMaxFish(_ grid: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_max_fish(grid: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} grid\n# @return {Integer}\ndef find_max_fish(grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $grid\n     * @return Integer\n     */\n    function findMaxFish($grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findMaxFish(List<List<int>> grid) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findMaxFish(grid: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_max_fish(grid :: [[integer]]) :: integer\n  def find_max_fish(grid) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_max_fish(Grid :: [[integer()]]) -> integer().\nfind_max_fish(Grid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-max-fish grid)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2658",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a `grid` of size `m x n`, where each cell `(r, c)` can either be land or water. The grid is represented by an integer matrix where: \n- A land cell is denoted by `0`.\n- A water cell contains a number of fish, indicated by a value greater than `0`.\n\nWe need to find the largest number of fish that a fisher can collect by starting at an optimal water cell and moving to connected water cells. The fisher can collect fish from any water cell they start from, and then they can move to any adjacent water cell to continue collecting more fish. The fisher can repeat this operation as many times as needed, moving between connected water cells to collect fish.\n\nThis problem is closely related to the \"[Max Area of Island](https://leetcode.com/problems/max-area-of-island/description/)\" problem, which also deals with connected regions in a grid. However, the key difference here is that in this problem, the value in each water cell is not simply `1`, but rather the number of fish in that cell, which adds an extra layer of complexity.\n\n---\n\n### Approach 1: Depth-First Search\n\n#### Intuition\n\nWe can think of the grid as a map of a graph, where each water cell is a node connected to other water cells around it, either up, down, left, or right. The water cells are grouped together, forming distinct regions that are separated by land cells. The goal is to find the largest group of connected water cells, which represents the region with the most fish.\n\nTo solve this, we can use a [Depth-First Search (DFS)](https://leetcode.com/explore/learn/card/queue-stack/232/practical-application-stack/). DFS works by exploring every connected node (in this case, the water cells) starting from a given cell. When we find a water cell, we start a DFS from that cell. The DFS will look at all neighboring water cells (in all four directions), marking them as visited to ensure we don’t count them again.\n\nAs we traverse each connected water region, we also keep a running total of the number of fish in that region. This means that for every new DFS call, we add up all the fish in that group of connected cells.\n\nAfter exploring all the water cells in one region, we move on to the next unvisited water cell and repeat the process. While doing this, we always track the greatest number of fish encountered in any of the regions. By the time we finish going through the whole grid, we will have found the region with the most fish and that will be our result.\n\n#### Algorithm\n\nMain Function: `findMaxFish(vector<vector<int>>& grid)`\n\n1. Initialize `m` and `n` to represent the number of rows and columns in `grid`.\n2. Create a 2D vector `visited` of size `m x n` to track visited cells, initialized to `false`.\n3. Initialize `result` to `0`, which will store the maximum fish count from any connected component.\n4. Iterate through each cell `(i, j)` in the grid:\n   - If the cell is a water cell (`grid[i][j] > 0`) and has not been visited, call `countFishes(grid, visited, i, j)` to calculate the total fish in the connected component starting from `(i, j)`.\n   - Update `result` to the maximum of `result` and the fish count returned by `countFishes`.\n5. Return `result`.\n\nHelper Function: `countFishes(vector<vector<int>>& grid, vector<vector<bool>>& visited, int r, int c)`\n\n1. If the current cell `(r, c)`, is out of bounds, is a land cell (`grid[r][c] == 0`), or, has already been visited (`visited[r][c] == true`), return `0`.\n2. Mark the current cell `(r, c)` as visited by setting `visited[r][c] = true`.\n3. Recursively calculate the total fish count from all connected water cells:\n   - Call `countFishes` for the cells to the right, left, bottom, and top.\n4. Return the sum of fish in the current cell (`grid[r][c]`) and the fish counts from all valid neighboring cells.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/VHJhrpCk/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"VHJhrpCk\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ be the number of rows and $n$ be the number of columns in the `grid`.\n\n- Time Complexity: $O(m \\cdot n)$\n\n    In the worst case, where the `grid` is completely filled with water cells, the algorithm iterates through all `m x n` cells. For each cell, it performs a depth-first search (DFS) to calculate the total fish in the connected region. Therefore, the overall time complexity is $O(m \\cdot n)$.\n\n- Space Complexity: $O(m \\cdot n)$\n\n    The algorithm uses a `visited` matrix of size `m x n` to track visited cells. Additionally, the depth-first search (DFS) can recurse to explore all connected cells, contributing to the space complexity. Hence, the overall space complexity is $O(m \\cdot n)$.\n\n---\n\n### Approach 2: Breadth-First Search\n\n#### Intuition\n\nSimilar to Depth-First Search (DFS), we can also use a [Breadth-First Search (BFS)](https://leetcode.com/explore/learn/card/queue-stack/231/practical-application-queue/) to explore the grid and find the connected water regions. BFS works by exploring all neighboring cells at the present depth level before moving on to cells at the next level. This means that BFS explores level by level, starting from a water cell and expanding outward to its neighboring water cells.\n\nWe start by iterating through the grid and whenever we encounter a water cell that hasn't been visited yet, we initiate a BFS. From that cell, we explore its four neighboring cells (up, down, left, right), checking if they are also water cells and marking them as visited. This continues until all water cells in the current region have been explored.\n\nWhile performing the BFS, we accumulate the number of fish in the connected region by adding up the values of all the visited water cells. This ensures that we get the total number of fish in that region.\n\nAfter exploring all neighboring water cells in the current region, we move on to the next unvisited water cell and repeat the BFS process. Throughout the BFS traversal, we keep track of the largest fish count encountered. By the end of the grid traversal, we will have identified the connected water region with the most fish and return that as our result.\n\n#### Algorithm\n\nMain Function: `findMaxFish(vector<vector<int>>& grid)`\n\n1. Initialize Variables:\n   - `numRows` and `numCols` to represent the number of rows and columns in `grid`.\n   - `result` to store the maximum fish count found in any connected component. Initialized to `0`.\n   - `visited` as a 2D matrix of size `numRows x numCols` to track visited cells, initialized to `false`.\n\n2. Iterate through the Grid:\n   - For each cell `(i, j)` in the grid:\n     - If the cell contains water (`grid[i][j] > 0`) and has not been visited, call `countFishes(grid, visited, i, j)` to calculate the total fish in the connected component starting from `(i, j)`.\n     - Update `result` to the maximum of `result` and the fish count returned by `countFishes`.\n\n3. Return Result:\n   - After iterating through all cells, return the `result`.\n\nHelper Function: `countFishes(vector<vector<int>>& grid, vector<vector<bool>>& visited, int row, int col)`\n\n1. Initialize Variables:\n   - `numRows` and `numCols` to represent the dimensions of the grid.\n   - `fishCount` to accumulate the number of fish in the connected component, initialized to `0`.\n   - `q` as a queue for BFS traversal starting from the initial cell `(row, col)`.\n\n2. BFS Traversal:\n   - Push the initial cell `(row, col)` onto the queue and mark it as visited.\n   - While the queue is not empty:\n     - Dequeue the front element to get current coordinates `(row, col)`.\n     - Add the fish count from the current cell to `fishCount`.\n     - Explore all four directions (up, down, left, right) for connected water cells:\n       - If the neighboring cell is within bounds, contains water, and hasn't been visited, add it to the queue and mark it as visited.\n\n3. Return Fish Count:\n   - After exploring all possible connected cells, return `fishCount`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/afuZyzJQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"afuZyzJQ\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ be the number of rows and $n$ be the number of columns in the `grid`.\n\n- Time Complexity: $O(m \\cdot n)$\n\n    In the worst case, where the `grid` is completely filled with water cells, the algorithm iterates through all `m \\cdot n` cells. For each cell, it performs a Breadth-first search (BFS) to calculate the total fish in the connected region. Therefore, the overall time complexity is $O(m \\cdot n)$.\n\n- Space Complexity: $O(m \\cdot n)$\n\n    The algorithm uses a `visited` matrix of size `m \\cdot n` to track visited cells. Hence, the overall space complexity is $O(m \\cdot n)$.\n\n---\n\n### Approach 3: Union Find Algorithm\n\n#### Intuition\n\nAnother approach to solving problems based on graph connectivity is the union-find data structure.\n\nA disjoint-set data structure also called a union-find data structure or merge-find set, is a data structure that stores a collection of disjoint (non-overlapping) sets. Equivalently, it stores a partition of a set into disjoint subsets. It provides operations for adding new sets, merging sets (replacing them by their union), and finding a representative member of a set. More specifically, it allows us to perform two main operations:\n\n1. **Find**: This operation helps us determine which set a particular element belongs to. In our case, it will help us check if two water cells are part of the same connected region.\n2. **Union**: This operation merges two sets into one. It allows us to combine two connected water cells into the same region.\n\nFor this problem, we can think of each water cell as an individual set, and the goal is to merge them into larger sets based on their connectivity. As we perform the \"Union\" operation, we also need to keep track of the total number of fish in each connected component (group of connected water cells).\n\nIf you are new to Union-Find, we suggest you read our [LeetCode Explore Card](https://leetcode.com/explore/learn/card/graph/618/disjoint-set/3881/). We will not talk about implementation details in this article, but only about the interface to the data structure.\n\nOur task, as with the previous approaches, is to count the maximum sum of fishes among all the connected components formed in the graph with water cells acting as nodes and an edge between directly connected cells.\n\nFirst, we treat each water cell as its own separate component, initializing a structure to store the number of fish in each component. Initially, each water cell holds its own fish count.\n\nWe then iterate over all the cells in the grid. For each water cell, we check its four neighbors (up, down, left, right). If a neighboring cell is also water, we perform a \"Union\" operation to merge their components, effectively connecting the two cells. As we do this, we update the fish count for the newly merged component by adding the fish counts from both cells.\n\nAfter merging the cells, we keep track of the maximum fish count encountered in any connected component. This can be done by maintaining a separate array (let's call it `fishes`) where each entry corresponds to the total fish count of a particular connected component.\n\nAt the end of this process, the largest value in the `totalFish` array will give us the largest sum of fish in any connected component.\n\n#### Algorithm\n\nMain Function: `findMaxFish(vector<vector<int>>& grid)`\n\n- Initialize Variables:\n   - Determine the number of rows (`rows`) and columns (`cols`) in the grid.\n   - Compute the total number of cells (`totalCells`) which is `rows * cols`.\n\n- Union-Find Initialization:\n   - Create arrays `parent`, `componentSize`, and `totalFish`:\n     - `parent` keeps track of the root for each cell.\n     - `componentSize` tracks the size of the component (number of cells) each root represents.\n     - `totalFish` tracks the total fish count in the connected component represented by each root.\n   - Use `iota(parent.begin(), parent.end(), 0)` to initialize `parent` such that each cell is its own parent initially.\n\n- Setting Initial Fish Count:\n   - Traverse the grid and populate the `totalFish` array with the fish count of each cell.\n\n- Union Operation:\n   - Use direction vectors `dRow` and `dCol` to explore neighboring cells (right, left, down, up).\n   - For each water cell (`grid[row][col] > 0`), union its connected neighbors using the `unionComponents` function.\n\n- After processing all cells and merging components, iterate through the `totalFish` array to find the maximum fish count among all components that have a unique root.\n\n- Return the maximum fish count found.\n\nHelper Function: `unionComponents(vector<int>& parent, vector<int>& componentSize, vector<int>& totalFish, int x, int y)`\n\n- Find the root of `x`: Use `findParent` to get the root of component containing `x`.\n\n- Find the root of `y`: Use `findParent` to get the root of component containing `y`.\n\n- Union by size: If the roots are different, attach the smaller tree under the root of the larger tree, ensuring optimization.\n\n- Update Component Size and Fish Count: After merging, update the size of the new component and the total fish count accordingly.\n\nHelper Function: `findParent(vector<int>& parent, int x)`\n\n- If `parent[x]` equals `x`, then `x` is its own root. Otherwise, recursively find the parent of `parent[x]`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/goJL6dcH/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"goJL6dcH\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ be the number of rows and $n$ be the number of columns in the `grid`.\n\n- Time Complexity: $O((n \\cdot m) \\cdot \\alpha(n \\cdot m))$\n\n    The outer loop iterates over all cells in the grid, which takes $O(n \\cdot m)$ time.\n    \n    For each cell, the algorithm checks its four neighbors (right, left, down, up), which is a constant $O(4)$ operation.\n    \n    The `findParent` and `unionComponents` operations are performed using the Union-Find data structure with path compression and union by size. These operations have an amortized time complexity of $O(\\alpha(n \\cdot m))$, where $\\alpha$ is the inverse Ackermann function, which is very small and can be considered almost constant.\n\n    Therefore, the overall time complexity is $O((n \\cdot m) \\cdot \\alpha(n \\cdot m))$.\n\n- Space Complexity: $O(n \\cdot m)$\n\n    The algorithm uses three auxiliary arrays: `parent`, `componentSize`, and `totalFish`, each of size $n \\cdot m$.\n    \n    The space required for these arrays is $O(n \\cdot m)$.\n    \n    Additionally, the recursion stack for the `findParent` function is bounded by the height of the Union-Find tree, which is $O(\\alpha(n \\cdot m))$ due to path compression. However, this is negligible compared to the space used by the arrays.\n    \n    Therefore, the overall space complexity is $O(n \\cdot m)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

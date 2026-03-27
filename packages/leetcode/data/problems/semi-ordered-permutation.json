@@ -1,0 +1,132 @@
+{
+  "questionId": "2785",
+  "questionFrontendId": "2717",
+  "title": "Semi-Ordered Permutation",
+  "titleSlug": "semi-ordered-permutation",
+  "difficulty": "Easy",
+  "content": "<p>You are given a <strong>0-indexed</strong> permutation of <code>n</code> integers <code>nums</code>.</p>\n\n<p>A permutation is called <strong>semi-ordered</strong> if the first number equals <code>1</code> and the last number equals <code>n</code>. You can perform the below operation as many times as you want until you make <code>nums</code> a <strong>semi-ordered</strong> permutation:</p>\n\n<ul>\n\t<li>Pick two adjacent elements in <code>nums</code>, then swap them.</li>\n</ul>\n\n<p>Return <em>the minimum number of operations to make </em><code>nums</code><em> a <strong>semi-ordered permutation</strong></em>.</p>\n\n<p>A <strong>permutation</strong> is a sequence of integers from <code>1</code> to <code>n</code> of length <code>n</code> containing each number exactly once.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2,1,4,3]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> We can make the permutation semi-ordered using these sequence of operations: \n1 - swap i = 0 and j = 1. The permutation becomes [1,2,4,3].\n2 - swap i = 2 and j = 3. The permutation becomes [1,2,3,4].\nIt can be proved that there is no sequence of less than two operations that make nums a semi-ordered permutation. \n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2,4,1,3]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> We can make the permutation semi-ordered using these sequence of operations:\n1 - swap i = 1 and j = 2. The permutation becomes [2,1,4,3].\n2 - swap i = 0 and j = 1. The permutation becomes [1,2,4,3].\n3 - swap i = 2 and j = 3. The permutation becomes [1,2,3,4].\nIt can be proved that there is no sequence of less than three operations that make nums a semi-ordered permutation.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,3,4,2,5]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> The permutation is already a semi-ordered permutation.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= nums.length == n &lt;= 50</code></li>\n\t<li><code>1 &lt;= nums[i]&nbsp;&lt;= 50</code></li>\n\t<li><code>nums is a permutation.</code></li>\n</ul>\n",
+  "hints": [
+    "Find the index of elements 1 and n.",
+    "Let x be the position of 1 and y be the position of n. the answer is x + (n-y-1) if x < y and x + (n-y-1) - 1 if x > y."
+  ],
+  "metaData": "{\n  \"name\": \"semiOrderedPermutation\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"38K\", \"totalSubmission\": \"59.2K\", \"totalAcceptedRaw\": 38007, \"totalSubmissionRaw\": 59222, \"acRate\": \"64.2%\"}",
+  "likes": 229,
+  "dislikes": 21,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[2,1,4,3]",
+    "[2,4,1,3]",
+    "[1,3,4,2,5]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int semiOrderedPermutation(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int semiOrderedPermutation(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def semiOrderedPermutation(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def semiOrderedPermutation(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar semiOrderedPermutation = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function semiOrderedPermutation(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int SemiOrderedPermutation(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int semiOrderedPermutation(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func semiOrderedPermutation(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun semiOrderedPermutation(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func semiOrderedPermutation(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn semi_ordered_permutation(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef semi_ordered_permutation(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function semiOrderedPermutation($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int semiOrderedPermutation(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def semiOrderedPermutation(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec semi_ordered_permutation(nums :: [integer]) :: integer\n  def semi_ordered_permutation(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec semi_ordered_permutation(Nums :: [integer()]) -> integer().\nsemi_ordered_permutation(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (semi-ordered-permutation nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

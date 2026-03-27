@@ -1,0 +1,53 @@
+{
+  "questionId": "2842",
+  "questionFrontendId": "2688",
+  "title": "Find Active Users",
+  "titleSlug": "find-active-users",
+  "difficulty": "Medium",
+  "content": "<p>Table:<font face=\"monospace\">&nbsp;<code>Users</code></font></p>\n\n<pre>\n+-------------+----------+ \n| Column Name | Type     | \n+-------------+----------+ \n| user_id     | int      | \n| item        | varchar  |\n| created_at  | datetime |\n| amount      | int      |\n+-------------+----------+\nThis table may contain duplicate records. \nEach row includes the user ID, the purchased item, the date of purchase, and the purchase amount.\n</pre>\n\n<p>Write a solution to identify active users. An active user is a user that has made a second purchase <strong>within 7&nbsp;days&nbsp;</strong>of any other of their purchases.</p>\n\n<p>For example, if the ending date is May 31, 2023.&nbsp;So any date between May 31, 2023, and June 7, 2023 (inclusive) would be considered &quot;within 7 days&quot; of May 31, 2023.</p>\n\n<p>Return&nbsp;a list of&nbsp;<code>user_id</code>&nbsp;which denotes the list of active users&nbsp;in <strong>any order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:\n</strong>Users table:\n+---------+-------------------+------------+--------+ \n| user_id | item              | created_at | amount |  \n+---------+-------------------+------------+--------+\n| 5       | Smart Crock Pot   | 2021-09-18 | 698882 |\n| 6       | Smart Lock        | 2021-09-14 | 11487  |\n| 6       | Smart Thermostat  | 2021-09-10 | 674762 |\n| 8       | Smart Light Strip | 2021-09-29 | 630773 |\n| 4       | Smart Cat Feeder  | 2021-09-02 | 693545 |\n| 4       | Smart Bed         | 2021-09-13 | 170249 |\n+---------+-------------------+------------+--------+ \n<strong>Output:</strong>\n+---------+\n| user_id | \n+---------+\n| 6       | \n+---------+\n<strong>Explanation:</strong> \n- User with user_id 5 has only one transaction, so he is not an active user.\n- User with user_id 6 has two transaction his first transaction was on 2021-09-10 and second transation was on 2021-09-14. The distance between the first and second transactions date is &lt;= 7 days. So he is an active user. \n- User with user_id 8 has only one transaction, so he is not an active user.  \n- User with user_id 4 has two transaction his first transaction was on 2021-09-02 and second transation was on 2021-09-13. The distance between the first and second transactions date is &gt; 7 days. So he is not an active user. \n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Users (user_id int, item varchar(100),created_at date,amount int)\"], \"mssql\": [\"Create table Users (user_id int, item varchar(100),created_at date,amount int)\"], \"oraclesql\": [\"Create table Users (user_id int, item varchar(100),created_at date,amount int)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"find_active_users\", \"pythondata\": [\"Users = pd.DataFrame([], columns=['user_id', 'item', 'created_at', 'amount']).astype({'user_id':'Int64', 'item':'object', 'created_at':'datetime64[ns]', 'amount':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Users (user_id int, item varchar(100),created_at date,amount int)\"], \"database_schema\": {\"Users\": {\"user_id\": \"INT\", \"item\": \"VARCHAR(100)\", \"created_at\": \"DATE\", \"amount\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"6K\", \"totalSubmission\": \"13.3K\", \"totalAcceptedRaw\": 5978, \"totalSubmissionRaw\": 13275, \"acRate\": \"45.0%\"}",
+  "likes": 27,
+  "dislikes": 8,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Users\":[\"user_id\",\"item\",\"created_at\",\"amount\"]},\"rows\":{\"Users\":[[5,\"Smart Crock Pot\",\"2021-09-18\",698882],[6,\"Smart Lock\",\"2021-09-14\",11487],[6,\"Smart Thermostat\",\"2021-09-10\",674762],[8,\"Smart Light Strip\",\"2021-09-29\",630773],[4,\"Smart Cat Feeder\",\"2021-09-02\",693545],[4,\"Smart Bed\",\"2021-09-13\",170249]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_active_users(users: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

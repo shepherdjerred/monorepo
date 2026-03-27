@@ -1,0 +1,147 @@
+{
+  "questionId": "2827",
+  "questionFrontendId": "2709",
+  "title": "Greatest Common Divisor Traversal",
+  "titleSlug": "greatest-common-divisor-traversal",
+  "difficulty": "Hard",
+  "content": "<p>You are given a <strong>0-indexed</strong> integer array <code>nums</code>, and you are allowed to <strong>traverse</strong> between its indices. You can traverse between index <code>i</code> and index <code>j</code>, <code>i != j</code>, if and only if <code>gcd(nums[i], nums[j]) &gt; 1</code>, where <code>gcd</code> is the <strong>greatest common divisor</strong>.</p>\n\n<p>Your task is to determine if for <strong>every pair</strong> of indices <code>i</code> and <code>j</code> in nums, where <code>i &lt; j</code>, there exists a <strong>sequence of traversals</strong> that can take us from <code>i</code> to <code>j</code>.</p>\n\n<p>Return <code>true</code><em> if it is possible to traverse between all such pairs of indices,</em><em> or </em><code>false</code><em> otherwise.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2,3,6]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> In this example, there are 3 possible pairs of indices: (0, 1), (0, 2), and (1, 2).\nTo go from index 0 to index 1, we can use the sequence of traversals 0 -&gt; 2 -&gt; 1, where we move from index 0 to index 2 because gcd(nums[0], nums[2]) = gcd(2, 6) = 2 &gt; 1, and then move from index 2 to index 1 because gcd(nums[2], nums[1]) = gcd(6, 3) = 3 &gt; 1.\nTo go from index 0 to index 2, we can just go directly because gcd(nums[0], nums[2]) = gcd(2, 6) = 2 &gt; 1. Likewise, to go from index 1 to index 2, we can just go directly because gcd(nums[1], nums[2]) = gcd(3, 6) = 3 &gt; 1.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [3,9,5]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> No sequence of traversals can take us from index 0 to index 2 in this example. So, we return false.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [4,3,12,8]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> There are 6 possible pairs of indices to traverse between: (0, 1), (0, 2), (0, 3), (1, 2), (1, 3), and (2, 3). A valid sequence of traversals exists for each pair, so we return true.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Create a (prime) factor-numbers list for all the indices.",
+    "Add an edge between the neighbors of the (prime) factor-numbers list. The order of the numbers doesn’t matter. We only need edges between 2 neighbors instead of edges for all pairs.",
+    "The problem is now similar to checking if all the numbers (nodes of the graph) are in the same connected component.",
+    "Any algorithm (i.e., BFS, DFS, or Union-Find Set) should work to find or check connected components"
+  ],
+  "metaData": "{\n  \"name\": \"canTraverseAllPairs\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"76.5K\", \"totalSubmission\": \"183K\", \"totalAcceptedRaw\": 76461, \"totalSubmissionRaw\": 182998, \"acRate\": \"41.8%\"}",
+  "likes": 864,
+  "dislikes": 143,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Graph Connectivity With Threshold\", \"titleSlug\": \"graph-connectivity-with-threshold\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,3,6]",
+    "[3,9,5]",
+    "[4,3,12,8]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Number Theory",
+      "slug": "number-theory"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool canTraverseAllPairs(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean canTraverseAllPairs(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def canTraverseAllPairs(self, nums: List[int]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def canTraverseAllPairs(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {boolean}\n */\nvar canTraverseAllPairs = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function canTraverseAllPairs(nums: number[]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool CanTraverseAllPairs(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool canTraverseAllPairs(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func canTraverseAllPairs(nums []int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun canTraverseAllPairs(nums: IntArray): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func canTraverseAllPairs(_ nums: [Int]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn can_traverse_all_pairs(nums: Vec<i32>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Boolean}\ndef can_traverse_all_pairs(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Boolean\n     */\n    function canTraverseAllPairs($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool canTraverseAllPairs(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def canTraverseAllPairs(nums: Array[Int]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec can_traverse_all_pairs(nums :: [integer]) :: boolean\n  def can_traverse_all_pairs(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec can_traverse_all_pairs(Nums :: [integer()]) -> boolean().\ncan_traverse_all_pairs(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (can-traverse-all-pairs nums)\n  (-> (listof exact-integer?) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2337",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nThe problem provides an array of integers `nums` of length `n`, with `1 <= nums[i] <= MAX_VAL = 100000`. You can jump between two indices `i` and `j` if the gcd (greatest common divisor) between the two values at indices `i` and `j` is strictly greater than 1. Determine if every pair of indices can reach each other using any sequence of jumps.\nMagentaCobra marked this conversation as resolved.\n\n---\n\n### Approach 1: Creating a graph with dummy nodes and edges\n\n\n#### Intuition\n\nFirst, we should notice that this is a graph problem. The ability to jump between indices `i` and `j` is analogous to an edge between nodes `i` and `j`. With this in mind, we can restate the problem as a graph problem formally with the following: \n\nGiven a graph of `n` nodes with undirected edges `(i, j)` if and only if `gcd(nums[i], nums[j]) > 1`, determine if all nodes are reachable from each other. Note that edges are undirected because `gcd(nums[i], nums[j]) = gcd(nums[j], nums[i])`.\n\nIf all nodes can reach each other, this means that all nodes must be in one connected component. Rather than checking every pair of nodes to see if they can reach each other, it suffices to check if all nodes belong in the same connected component. This is because if more than one component exists in this graph, then two nodes from two different components cannot reach each other.\n\nUnfortunately, this graph can have `n(n-1)/2 = O(n^2)` edges in the worst case. Imagine if all numbers in the array were even. Then the gcd between any two indices is at least 2, so the graph would be complete and have too many edges. With the goal of creating a graph that is efficient enough to construct in the time limit, let's consider adding some dummy nodes to reduce the number of edges.\n\nIn addition to the original `n` nodes, add a dummy node for each prime number not exceeding `MAX_VAL` (the max value of `nums[i]`). Let’s define `g_i` as a node corresponding to the `i`th index of `nums`, and `d_p` as the dummy node corresponding to prime number `p`. If `nums[i]` is divisible by prime factor `p`, build an edge between `g_i` and `d_p`. \n\nAny two original nodes connected in the naive graph will stay connected in this new graph. Likewise, nodes that initially were in different components stay in different components. As a result, we can check if this new graph is connected. This works because `gcd(nums[i], nums[j]) > 1` is another way of saying that `nums[i]` and `nums[j]` share a prime factor, so nodes `g_i` and `g_j` will be connected via dummy node `d_p`, where `d_p` is any prime factor of `gcd(nums[i], nums[j])`.\n\nHere is the graph for `nums = [6, 8, 3, 15, 4]`. For simplicity, only dummy nodes for prime factors 2, 3, and 5 are shown.\n\n![figA](../Figures/2709/figure_2709.png)\n\nNote that in implementation, you can construct the graph slightly differently by creating non-dummy nodes for each value that appears in `nums`.\n\n#### Algorithm\n\n\n1. Handle the edge cases, if `n = 1`, return `true`, if `nums[i] = 1`, return `false`.\n2. Create an array of length `MAX_VAL`, with all elements initialized to `false`, and use the sieve of Eratosthenes to compute prime factors for all integers 1 to `MAX_VAL`.\n3. For each element `nums[i]`, iterate over all its prime factors, and for each prime factor `d_i` and add an edge between nodes `g_i` and `d_p`.\n4. Once constructing the graph, count the number of components.\n5. Return `true` if the graph has one component, and `false` otherwise.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/MU8SDHcp/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"MU8SDHcp\"></iframe>\n\n#### Complexity Analysis\n\nThere are less than `MAX_VAL` additional dummy nodes, and because any integer at most `MAX_VAL` will have at most 6 distinct prime factors, the graph will have at most 6`n` edges. To iterate over all prime factors efficiently, we can consider the harmonic series, or use the sieve of Eratosthenes algorithm to build this graph in `O(n log(MAX_VAL))` with `O(n)` memory. Checking the connectivity of this graph can be done with either BFS/DFS or union find, which can be done in `O(n)`.\n\n* Time complexity: $O(n*log(MAX\\_VAL))$.\n\n* Space complexity: $O(n)$.\n\nThe time complexity of union find (DSU) can be treated as `O(n)` only when both path-compression and rank-by-size are applied, which is used in the above solution code.\nThe time complexity of the Union-Find with path compression and union can be described using Ackermann's function, $A(m, n)$, in practice, it can be approximated as $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

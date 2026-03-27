@@ -1,0 +1,141 @@
+{
+  "questionId": "2800",
+  "questionFrontendId": "2696",
+  "title": "Minimum String Length After Removing Substrings",
+  "titleSlug": "minimum-string-length-after-removing-substrings",
+  "difficulty": "Easy",
+  "content": "<p>You are given a string <code>s</code> consisting only of <strong>uppercase</strong> English letters.</p>\n\n<p>You can apply some operations to this string where, in one operation, you can remove <strong>any</strong> occurrence of one of the substrings <code>&quot;AB&quot;</code> or <code>&quot;CD&quot;</code> from <code>s</code>.</p>\n\n<p>Return <em>the <strong>minimum</strong> possible length of the resulting string that you can obtain</em>.</p>\n\n<p><strong>Note</strong> that the string concatenates after removing the substring and could produce new <code>&quot;AB&quot;</code> or <code>&quot;CD&quot;</code> substrings.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;ABFCACDB&quot;\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> We can do the following operations:\n- Remove the substring &quot;<u>AB</u>FCACDB&quot;, so s = &quot;FCACDB&quot;.\n- Remove the substring &quot;FCA<u>CD</u>B&quot;, so s = &quot;FCAB&quot;.\n- Remove the substring &quot;FC<u>AB</u>&quot;, so s = &quot;FC&quot;.\nSo the resulting length of the string is 2.\nIt can be shown that it is the minimum length that we can obtain.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;ACBBD&quot;\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> We cannot do any operations on the string so the length remains the same.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 100</code></li>\n\t<li><code>s</code>&nbsp;consists only of uppercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Can we use brute force to solve the problem?",
+    "Repeatedly traverse the string to find and remove the substrings “AB” and “CD” until no more occurrences exist.",
+    "Can the solution be optimized using a stack?"
+  ],
+  "metaData": "{\n  \"name\": \"minLength\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"247.8K\", \"totalSubmission\": \"321.1K\", \"totalAcceptedRaw\": 247831, \"totalSubmissionRaw\": 321118, \"acRate\": \"77.2%\"}",
+  "likes": 1013,
+  "dislikes": 29,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"ABFCACDB\"",
+    "\"ACBBD\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"wells-fargo\", \"name\": \"Wells Fargo\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"jpmorgan\", \"name\": \"J.P. Morgan\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minLength(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minLength(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minLength(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minLength(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar minLength = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minLength(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinLength(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minLength(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minLength(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minLength(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minLength(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_length(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef min_length(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function minLength($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minLength(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minLength(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_length(s :: String.t) :: integer\n  def min_length(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_length(S :: unicode:unicode_binary()) -> integer().\nmin_length(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-length s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2453",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: String Replace\n\n#### Intuition\n\nThe core issue with this problem is the ripple effect of removing substrings. When we delete one occurrence of \"AB\" or \"CD\", it can create another substring that also needs removal. For example, in \"CABD\", if we remove \"AB\", we are left with \"CD\", which must also be eliminated to minimize the string length.\n\nA brute force approach will be to continuously check the string for \"AB\" and \"CD\" and remove them until none are left. Once the loop ends, the string will have no remaining \"AB\" or \"CD\", and we can return its length. Many programming languages offer built-in functions for finding and removing substrings, which will be helpful here.\n\n> Note: Some programming practices suggest avoiding direct modifications to input data. If this applies, consider making a copy of the input string before you start. It’s a good idea to clarify this with your interviewer before you implement the solution.\n\n#### Algorithm\n\n- Enter a loop that continues while `s` contains either \"AB\" or \"CD\".\n  - Check if `s` contains \"AB\":\n    - If \"AB\" is present, remove all occurrences of \"AB\" from `s`.\n  - If \"AB\" is not present, check if `s` contains \"CD\".\n    - If \"CD\" is present, remove all occurrences of \"CD\" from `s`.\n- After the loop ends, return the length of `s`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/KkwgASTV/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"KkwgASTV\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input string `s`. \n\n- Time complexity: $O(n^2)$\n\n    The outer while loop can run up to $n/2$ times in the worst case. This occurs when we remove two characters in each iteration (e.g., for a string like \"ABABABAB\"). Inside the loop, the string methods need to scan the entire string, which takes $O(n)$ time.\n\n    Thus, the overall time complexity of the algorithm is $O(n/2 \\cdot n) = O(n^2)$.\n\n- Space complexity: $O(n)$ for Python3 and Java, $O(1)$ for C++\n\n    In Python3 and Java, strings are immutable. So, each string operation creates a new string object. However, at any given time, we only need to store one version of the processed string. So, the space complexity is $O(n)$.\n\n    However, in C++, strings are mutable. So, string operations like `erase()` are performed in place. Thus, the space complexity in C++ is $O(1)$.\n\n---\n\n### Approach 2: Stack\n\n#### Intuition\n\nIn the string removal process, we face two choices for each character:\n\n1. Keep the character if it does not form a removable pattern.\n2. Remove it along with the previous character if it completes a pattern.\n\nUsing a stack simplifies this task. We push characters onto the stack as we read them and pop them off when we find a pattern.\n\nWe read the input string from left to right. For each character, we decide to either add it to the stack or remove a previous character. If the stack is not empty, we compare the current character with the top character on the stack. If they form \"AB\" or \"CD,\" we pop the stack. We do not push the current character, thus removing both characters. If there is no pattern, we push the current character onto the stack.\n\nAfter processing all characters, the remaining elements in the stack represent the minimum length of the string after all possible removals.\n\n#### Algorithm\n \n- Initialize a stack to store the characters from the string.\n- Iterate over each character in the input string `s`. For each character `currentChar`:\n  - If the stack is empty, push `currentChar` onto the stack and continue to the next character.\n  - If the current character is 'B' and the top of the stack is 'A', remove the top element from the stack.\n  - If the current character is 'D' and the top of the stack is 'C', remove the top element from the stack.\n  - If neither of the above conditions is met, push `currentChar` onto the stack.\n- After processing all characters, return the size of the stack.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/QejeDCWG/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"QejeDCWG\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input string `s`.  \n\n* Time complexity: $O(n)$\n\n    We iterate over each character of `s` exactly once. All stack operations inside the loop take constant time. Thus, the time complexity of the algorithm is $O(n)$.\n\n* Space complexity: $O(n)$\n\n    We use a stack to store characters from the input string. In the worst-case scenario, where no \"AB\" or \"CD\" patterns are found, we would end up storing all $n$ characters in the stack. Thus, the space complexity of the algorithm is $O(n)$.\n\n---\n\n### Approach 3: In Place Modification\n\n#### Intuition\n\nTo optimize space, we can modify the string in place.\n\nWe use two pointers:\n\n1. Read Pointer (`readPtr`): This pointer moves from left to right through the string, checking each character.\n2. Write Pointer (`writePtr`): This pointer tracks where to write the next character we want to keep.\n\nWe start by setting `writePtr` to 0. As we move `readPtr` through the string, we copy the character at `readPtr` to the position indicated by `writePtr`. Next, we check if the last two characters (positions `writePtr-1` and `writePtr`) form a removable pattern, such as \"AB\" or \"CD\". If they do, we decrease `writePtr`, which means we will overwrite this part in the next steps.\n\nIf the last two characters do not form a removable pattern, we increment `writePtr` to point to the next position where we can write a character. This way, we can effectively \"remove\" unwanted characters by overwriting them.\n\nAfter processing all characters, the position of `writePtr` tells us the length of the final string. All the characters we want to keep are now at the beginning of the array, up to the position of `writePtr`.\n\nThe algorithm is visualized below:\n\n!?!../Documents/2696/slideshow.json:802,442!?!\n\n#### Algorithm\n \n- Initialize a variable `writePtr` to 0, which will keep track of the current write position.\n- Iterate over each character in the string using a `readPtr`:\n  - Copy the character at `readPtr` to the position at `writePtr` in the string.\n  - Check if the following conditions are met:\n    - `writePtr` is greater than 0 (ensuring there's a previous character).\n    - The previous character (at `writePtr - 1`) is either 'A' or 'C'.\n    - The current character is exactly one ASCII value higher than the previous character.\n  - If these conditions are met:\n    - Decrement `writePtr` by 1, effectively removing the pair of characters.\n  - Else:\n    - Increment `writePtr` by 1, moving to the next position for writing.\n- Return the value of `writePtr`, which represents the length of the remaining string after all removals.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/KSQEfBwu/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"KSQEfBwu\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input string `s`. \n\n* Time complexity: $O(n)$\n\n    We iterate through the input string exactly once. All operations within the loop take constant time. Thus, the overall time complexity is linear, $O(n)$. \n\n* Space complexity: $O(n)$ for Java and Python3, $O(1)$ for C++\n\n    In Java and Python3, strings are immutable. So, the input string needs to be converted to an array or list to perform in place modifications. Thus, the space complexity remains $O(n)$.\n\n    String are mutable in C++. So, all modifications can be done on the input string itself. No additional data structures are used, so the space complexity is $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

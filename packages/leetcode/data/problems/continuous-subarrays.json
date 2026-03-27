@@ -1,0 +1,152 @@
+{
+  "questionId": "2868",
+  "questionFrontendId": "2762",
+  "title": "Continuous Subarrays",
+  "titleSlug": "continuous-subarrays",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> integer array <code>nums</code>. A subarray of <code>nums</code> is called <strong>continuous</strong> if:</p>\n\n<ul>\n\t<li>Let <code>i</code>, <code>i + 1</code>, ..., <code>j</code><sub> </sub>be the indices in the subarray. Then, for each pair of indices <code>i &lt;= i<sub>1</sub>, i<sub>2</sub> &lt;= j</code>, <code><font face=\"monospace\">0 &lt;=</font> |nums[i<sub>1</sub>] - nums[i<sub>2</sub>]| &lt;= 2</code>.</li>\n</ul>\n\n<p>Return <em>the total number of <strong>continuous</strong> subarrays.</em></p>\n\n<p>A subarray is a contiguous <strong>non-empty</strong> sequence of elements within an array.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [5,4,2,4]\n<strong>Output:</strong> 8\n<strong>Explanation:</strong> \nContinuous subarray of size 1: [5], [4], [2], [4].\nContinuous subarray of size 2: [5,4], [4,2], [2,4].\nContinuous subarray of size 3: [4,2,4].\nThere are no subarrys of size 4.\nTotal continuous subarrays = 4 + 3 + 1 = 8.\nIt can be shown that there are no more continuous subarrays.\n</pre>\n\n<p>&nbsp;</p>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3]\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> \nContinuous subarray of size 1: [1], [2], [3].\nContinuous subarray of size 2: [1,2], [2,3].\nContinuous subarray of size 3: [1,2,3].\nTotal continuous subarrays = 3 + 2 + 1 = 6.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Try using the sliding window technique.",
+    "Use a set or map to keep track of the maximum and minimum of subarrays."
+  ],
+  "metaData": "{\n  \"name\": \"continuousSubarrays\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"118.7K\", \"totalSubmission\": \"204.8K\", \"totalAcceptedRaw\": 118671, \"totalSubmissionRaw\": 204781, \"acRate\": \"58.0%\"}",
+  "likes": 1503,
+  "dislikes": 97,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[5,4,2,4]",
+    "[1,2,3]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 20, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Queue",
+      "slug": "queue"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    },
+    {
+      "name": "Monotonic Queue",
+      "slug": "monotonic-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long continuousSubarrays(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long continuousSubarrays(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def continuousSubarrays(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def continuousSubarrays(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar continuousSubarrays = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function continuousSubarrays(nums: number[]): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long ContinuousSubarrays(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long continuousSubarrays(int* nums, int numsSize){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func continuousSubarrays(nums []int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun continuousSubarrays(nums: IntArray): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func continuousSubarrays(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn continuous_subarrays(nums: Vec<i32>) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef continuous_subarrays(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function continuousSubarrays($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int continuousSubarrays(List<int> nums) {\n\n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def continuousSubarrays(nums: Array[Int]): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec continuous_subarrays(nums :: [integer]) :: integer\n  def continuous_subarrays(nums) do\n\n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec continuous_subarrays(Nums :: [integer()]) -> integer().\ncontinuous_subarrays(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (continuous-subarrays nums)\n  (-> (listof exact-integer?) exact-integer?)\n\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2613",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Sorted Map\n\n#### Intuition\n\nThe main challenge in this problem is to understand what makes a subarray 'continuous'. A subarray is considered continuous if the difference between any two elements within it is no more than 2. Understanding this simplifies the task and allows us to focus on the largest and smallest values, rather than checking every pair of elements.\n\nConsider the subarray [4, 5, 3] from the array [4, 5, 3, 2, 6]. This subarray is valid because the difference between the largest element (5) and the smallest (3) is 2 or less. We don't need to evaluate any other pairs of elements in the array, since they can't possibly lead to a higher difference.\n\nTo solve this problem, we need a mechanism to evaluate all possible subarrays efficiently. A sliding window approach, with a variable-sized window, is well-suited for this purpose. We'll start with an empty window and expand it by adding elements from the array, as long as the difference between the maximum and minimum elements in the window is 2 or less. If this condition is violated, we shrink the window from the left until it becomes valid again.\n\nTracking the maximum and minimum values efficiently in each window is essential for performance. It is possible to repeatedly iterate over each window to find the values, but that method is too slow for larger arrays.\n\nA more efficient method is to use a sorted map, which maintains elements in sorted order and allows quick retrieval of the maximum and minimum values in logarithmic time. The addition and removal of elements from a sorted map are similarly efficient, also taking logarithmic time.\n\nAs we expand the window, we add each new element to the sorted map. To check if the window remains valid, we compare the smallest and largest elements in the map. If their difference exceeds 2, we remove elements from the left until the condition is satisfied.\n\nFinally, we need to count the valid subarrays. For a valid window that spans from pointer `left` to `right`, the number of valid subarrays ending at `right` is calculated as `right - left + 1`. This is because every subarray that starts at any pointer between `left` and `right` and ends at `right` is considered valid. We sum up this count for all valid windows across the entire array and return the total as our final answer.\n\nThe slideshow below demonstrates the algorithm in action:\n\n!?!../Documents/2762/slideshow.json:870,916!?!\n\n#### Algorithm\n\n- Initialize a sorted map `freq` to maintain a sorted frequency map of elements in the current window.\n- Initialize variables:\n  - `left` and `right` to `0` to mark the boundaries of the sliding window.\n  - `n` to store the length of the input array.\n  - `count` to 0 to store the total count of valid subarrays.\n- While the `right` pointer is less than the length of `nums`:\n  - Add the current element at index `right` to the frequency map. If the element exists, increment its count, else set the count to `1`.\n  - While the difference between the maximum and minimum elements in the window exceeds 2:\n    - Decrement frequency of the element at index `left` in the map\n    - If the frequency becomes `0`, remove the element from the map.\n    - Increment the `left` pointer to shrink the window.\n  - Add the count of all valid subarrays ending at the current `right` pointer (calculated as `right - left + 1`).\n  - Increment the `right` pointer to expand the window.\n- Return the final count of all valid subarrays.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/TNduzRqu/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"TNduzRqu\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input array `nums`.\n\n- Time complexity: $O(n \\log k) \\approx O(n)$\n    \n    The outer loop iterates through the array once with the `right` pointer, taking $O(n)$ operations. For each element, we perform map operations (insertion, deletion, finding min/max) which take $O(\\log k)$ time, where $k$ is the size of the map. Since we maintain a window where the $max - min \\leq 2$, the size of the sorted map $k$ is bounded by $3$ (as elements can only differ by $0$, $1$, or $2$). Therefore, $\\log k$ is effectively constant, making the overall time complexity $O(n)$.\n\n    In the Python3 implementation, finding min/max keys in a dictionary takes $O(k)$ time where $k$ is the window size, making each iteration potentially slower than a sorted map's $O(\\log k)$ operations. However, this has a negligible effect in this problem since $k$ is bounded by $3$.\n\n- Space complexity: $O(k) \\approx O(1)$\n\n    The sorted map stores elements within the current window. Since the difference between any two elements in a valid window cannot exceed $2$, the maximum number of unique elements ($k$) possible in the map at any time is $3$. Therefore, the space complexity is constant, $O(1)$.\n\n---\n\n### Approach 2: Priority Queue\n\n#### Intuition\n\nThe main focus of our previous approach was to efficiently find the maximum and minimum values within a given window. Another data structure that excels at this task is a heap, or a priority queue.\n\nSince a heap can only remove either the maximum or the minimum value, not both, we'll need two heaps: a max-heap and a min-heap. We'll store the indices of the elements in the array `nums`, and the heaps will be organized based on the corresponding values in the array. The basic idea remains the same: we expand the window and add the new element to both heaps. This process continues as long as the difference between the maximum element (at the top of the max-heap) and the minimum element (at the top of the min-heap) is no greater than 2.\n\nIf the condition is violated, we need to move the start of the window forward until the condition is satisfied again. For each step we move the `left` pointer, we must clean up our heaps to discard any elements that are before the start of the window (this is where storing the indices becomes useful).\n\nJust like with our previous solution, once we have a valid window, counting the number of valid subarrays ending at the current `right` pointer is straightforward: it's simply `right - left + 1`. Each valid window contributes this many continuous subarrays to our final answer.\n\n> For a more comprehensive understanding of heaps, check out the [Heap Explore Card 🔗](https://leetcode.com/explore/featured/card/heap/). This resource provides an in-depth look at the heap data structure, explaining its key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n#### Algorithm\n\nInitialize variables:\n  - `left` and `right` to 0 to mark the boundaries of the sliding window.\n  - `count` to 0 to store the total count of valid subarrays.\n- Initialize:\n  -  a min-heap `minHeap` that stores indices, sorted by their corresponding values in `nums` in ascending order.\n  -  a max-heap `maxHeap` that stores indices, sorted by their corresponding values in the input array in descending order.\n- While the `right` pointer is less than the array length:\n  - Add the current index `right` to both the min-heap and the max-heap.\n  - While the `left` pointer is less than the `right` pointer and the difference between the maximum and minimum elements in the window exceeds 2:\n    - Increment the `left` pointer to shrink the window.\n    - Remove all indices from the max-heap and the min-heap that are less than the `left` pointer (outdated indices).\n  - Add the count of all valid subarrays ending at the current `right` pointer (calculated as `right - left + 1`)\n  - Increment the `right` pointer to expand the window.\n- Return the final `count` of all valid subarrays.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/mRpyvKPG/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"mRpyvKPG\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input array `nums`.\n\n- Time complexity: $O(n \\log n)$\n    \n    The outer loop iterates through the array once with the `right` pointer, taking $O(n)$ operations. For each element, we perform heap operations (insertion and deletion) which take $O(\\log n)$ time. Additionally, in the worst case, for each `right` pointer position, we might need to remove multiple outdated indices from both heaps, each removal taking $O(\\log n)$ time. Therefore, the overall time complexity is $O(n \\log n)$.\n\n- Space complexity: $O(n)$\n\n    The min heap and max heap both store indices of the array elements. In the worst case (when all elements in the array differ by at most $2$), both heaps might store all indices from the array simultaneously, making the space complexity $O(n)$.\n\n---\n\n### Approach 3: Monotonic Deque\n\n#### Intuition\n\nEach addition and deletion operation in a sorted map or a heap takes $O(\\log n)$ time. While this is quite efficient, we can still do better.\n\nConsider Example 1 from the problem description, where `nums: [5, 4, 2, 4]`. When the window expands to include `2` at index `2`, it becomes the minimum value in the window. Notice that the previous minimum (`4` at index `1`) is no longer relevant for the minimum calculation since it can never be the minimum value in the window again. Similarly, if we're tracking maximums and we encounter a value larger than some previous values, those smaller values can never be the maximum in any window containing our new value. They become irrelevant for our maximum tracking purposes.\n\nTo find the minimum value in the window, we need a data structure that only keeps track of the minimum value encountered most recently and discards any larger values found previously. Also, if a new element comes that is larger than the current minimum, the data structure needs to hold on to it in case the current minimum goes out of the window scope and this new element becomes the new minimum. The data structure perfectly suited for these needs is a monotonic queue.\n\nWe'll be using a deque (doubly ended queue) in our implementation to make the removal of irrelevant indices easier. A doubly ended queue allows pushing and popping elements from both sides of the queue. We maintain two deques:\n1. A min deque to track the minimum values in the current window. It will always store indices of elements in increasing order of their values.\n2. A max deque to track the maximum values in the current window. It will store indices in decreasing order of their values.\n\nAs with our previous approaches, we'll start our window from the first element and introduce values one by one. For each element, we first need to check whether adding the element maintains the monotonicity of the queue. The max deque needs to be monotonically decreasing so that the biggest element is at the top, and vice versa for the min deque. For each deque, we'll pop elements from the back until the monotonicity is satisfied, and then add the current index.\n\nNow, we need to check whether adding the new element breaks our condition or not. If it does, we need to move the `left` pointer forward. We place the `left` pointer past the smaller index among the tops of the queues, so we can jump directly past whichever of these appears first in our array. This lets us shrink our window optimally, removing the exact elements causing our property violation.\n\nFinally, once the window is satisfied, we count the number of subarrays that can be formed by the current window. The total count over all the windows is our answer.\n\n#### Algorithm\n\n- Initialize a deque:\n  - `maxQ` to maintain a monotonically decreasing sequence of indices for tracking the maximum elements.\n  - `minQ` to maintain a monotonically increasing sequence of indices for tracking the minimum elements.\n- Initialize variables: \n  - `left` to 0 to mark the start of the sliding window.\n  - `count` to 0 to store the total count of valid subarrays.\n- For each position `right` in the array:\n  - While the `maxQ` is not empty and the element at the last index in `maxQ` is less than the current element:\n    - Remove the last element from the `maxQ`.\n  - Add the current index to the `maxQ`.\n  - While the `minQ` is not empty and the element at the last index in `minQ` is greater than the current element:\n    - Remove the last element from the `minQ`.\n  - Add the current index to the `minQ`.\n  - While both queues are not empty and the difference between the maximum and minimum elements exceeds `2`:\n    - If the index at the front of `maxQ` is less than the index at the front of `minQ`:\n      - Update the `left` pointer to be one position after the front of `maxQ`.\n      - Remove the front element from `maxQ`.\n    - Else:\n      - Update the `left` pointer to be one position after the front of `minQ`.\n      - Remove the front element from `minQ`.\n  - Add the count of all valid subarrays ending at the current right pointer (calculated as `right - left + 1`)\n- Return the final count of all valid subarrays.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/fyBuZz6m/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"fyBuZz6m\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input array `nums`.\n\n- Time complexity: $O(n)$\n    \n    The outer loop iterates through the array once, taking $O(n)$ operations. For each element, we perform operations on the monotonic deques. Although we have nested while loops, each element can be added and removed from each deque exactly once throughout the entire process. The amortized cost of all deque operations over the entire execution is $O(n)$. \n    \n    Thus, the overall time complexity is $O(n)$.\n\n- Space complexity: $O(n)$\n\n    The monotonic deques store indices of the array elements. In the worst case (when all elements in the array are in decreasing order for `maxQ` or increasing order for `minQ`), both deques might store all indices from the array simultaneously, making the space complexity $O(n)$. \n    \n    However, in practice, due to the constraint that the max-min difference must be $\\leq 2$, the deques will typically store far fewer elements.\n\n---\n\n### Approach 4: Optimized Two Pointer\n\n#### Intuition\n\nInstead of maintaining complex data structures to track our window's properties, in this approach, we will directly calculate the number of valid subarrays in each window using a mathematical formula.\n\nConsider how a valid window evolves as we move through the array. Each time we add a new element, we have two possibilities: either it maintains the condition that the $max - min \\leq 2$, or it breaks this condition. When the condition breaks, we know that all previous subarrays up to that point form a complete, valid window. This gives us our first key insight: we can count all the subarrays before that point and add them to our result. To count all subarrays in a window of length $n$, we can use the formula $n \\cdot (n + 1) / 2$.\n\nHowever, there's an important observation to make here: when the condition breaks, instead of starting completely fresh, we can expand backward from our current position to include some previous elements. Consider the array `[1, 4, 3, 5]`. Let's say we encounter the value `5` after seeing values `3` and `4`. While `5` might break our current window, we can still include both `3` and `4` in our new window since they are within 2 of `5`.\n\nThis leads to our second key insight: after a window breaks, we can greedily expand leftward as long as elements remain within 2 of our current value. This backward expansion is crucial because it captures valid subarrays that we would miss if we simply started fresh at each breakpoint.\n\nHowever, this backward expansion introduces a counting challenge. When we expand backward, we've already counted some subarrays in our previous window that we'll count again in our new window. The solution is simple: we subtract the overcounted subarrays using the same $n \\cdot (n + 1) / 2$ formula for the overlapping portion.\n\nLet's take the example array `[1, 3, 4, 5]` to clarify this. Initially, we build a window `[1, 3]`, which breaks when we reach `4`. At this point, we count all subarrays in `[1, 3]`. Then, starting at `4`, we can actually expand backward to include `3` (but not `1`), forming a new window `[3, 4]`. We subtract the overcounted subarrays for the portion containing just `[3]`, then continue our process.\n\nWe continue this process until the `right` end of the window reaches the end of the array and we exit the loop. However, remember that the final subarray hasn't broken yet, so it hasn't been added to our total count. We use the $n \\cdot (n + 1) / 2$ formula one last time to account for this subarray and return the total count as our answer.\n\n#### Algorithm\n\n- Initialize:\n  - `left` and `right` to `0` to mark the boundaries of the sliding window.\n  - `curMin` and `curMax` to track the minimum and maximum elements in the current window.\n  - `windowLen` to `0` to store the length of the current valid window.\n  - `total` to `0` to store the total count of valid subarrays.\n- Set the initial window minimum and maximum to the first element of the array.\n- For each position `right` in the array:\n  - Update the current window minimum and maximum with the current element.\n  - If the difference between maximum and minimum exceeds `2`:\n    - Calculate the length of the previous valid window.\n    - Add all possible subarrays from the previous valid window using the formula $(n \\cdot (n+1))/2$.\n    - Start a new window at the current position.\n    - Reset the minimum and maximum to the current element.\n    - While the `left` pointer can be expanded (not at `0` and difference $\\leq$ 2):\n      - Decrement the left pointer.\n      - Update the window minimum and maximum with the new `left` element.\n    - If the `left` pointer was expanded:\n      - Calculate the new window length.\n      - Subtract the overcounted subarrays using the same formula $(n \\cdot (n+1))/2$.\n- Calculate the length of the final window.\n- Add all possible subarrays from the final window using the formula $(n \\cdot (n+1))/2$.\n- Return the `total` count of valid subarrays.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/P7PMhkCP/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"P7PMhkCP\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input array `nums`.\n\n- Time complexity: $O(n)$\n    \n    The algorithm iterates through the array once with the `right` pointer, taking $O(n)$ operations. For each element, when the window condition breaks, we may need to expand the `left` pointer backward. Although this involves a while loop, across the entire execution, the `left` pointer can only visit each position at most twice. Therefore, the amortized time complexity remains $O(n)$.\n\n- Space complexity: $O(1)$\n    \n    The algorithm only uses a constant number of variables regardless of the input size. No additional data structures are used that grow with the input size. Thus, the space complexity is constant, $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

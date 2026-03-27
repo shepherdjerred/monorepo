@@ -1,0 +1,137 @@
+{
+  "questionId": "2823",
+  "questionFrontendId": "2664",
+  "title": "The Knight’s Tour",
+  "titleSlug": "the-knights-tour",
+  "difficulty": "Medium",
+  "content": "<p>Given two positive integers <code>m</code> and <code>n</code> which are the height and width of a <strong>0-indexed</strong> 2D-array <code>board</code>, a pair of positive integers <code>(r, c)</code> which is the starting position of the knight on the board.</p>\n\n<p>Your task is to find an order of movements for the knight, in a manner that every cell of the&nbsp;<code>board</code> gets visited <strong>exactly</strong> once (the starting cell is considered visited and you <strong>shouldn&#39;t</strong> visit it again).</p>\n\n<p>Return <em>the array</em> <code>board</code> <em>in which the cells&#39; values show the order of visiting the cell starting from 0 (the initial place of the knight).</em></p>\n\n<p>Note that a <strong>knight</strong> can <strong>move</strong> from cell <code>(r1, c1)</code> to cell <code>(r2, c2)</code> if <code>0 &lt;= r2 &lt;= m - 1</code> and <code>0 &lt;= c2 &lt;= n - 1</code> and <code>min(abs(r1 - r2), abs(c1 - c2)) = 1</code> and <code>max(abs(r1 - r2), abs(c1 - c2)) = 2</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong>Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> m = 1, n = 1, r = 0, c = 0\n<strong>Output:</strong> [[0]]\n<strong>Explanation:</strong> There is only 1 cell and the knight is initially on it so there is only a 0 inside the 1x1 grid.\n</pre>\n\n<p><strong>Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> m = 3, n = 4, r = 0, c = 0\n<strong>Output:</strong> [[0,3,6,9],[11,8,1,4],[2,5,10,7]]\n<strong>Explanation:</strong> By the following order of movements we can visit the entire board.\n(0,0)-&gt;(1,2)-&gt;(2,0)-&gt;(0,1)-&gt;(1,3)-&gt;(2,1)-&gt;(0,2)-&gt;(2,3)-&gt;(1,1)-&gt;(0,3)-&gt;(2,2)-&gt;(1,0)</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= m,&nbsp;n &lt;= 5</code></li>\n\t<li><code>0 &lt;= r &lt;= m - 1</code></li>\n\t<li><code>0 &lt;= c &lt;= n - 1</code></li>\n\t<li>The inputs will be generated such that there exists at least one&nbsp;possible order of movements with the given condition</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"tourOfKnight\",\n  \"params\": [\n    {\n      \"name\": \"m\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"n\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"r\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"c\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[][]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"6.8K\", \"totalSubmission\": \"9.3K\", \"totalAcceptedRaw\": 6757, \"totalSubmissionRaw\": 9300, \"acRate\": \"72.7%\"}",
+  "likes": 57,
+  "dislikes": 16,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "1\n1\n0\n0",
+    "3\n4\n0\n0"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> tourOfKnight(int m, int n, int r, int c) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[][] tourOfKnight(int m, int n, int r, int c) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def tourOfKnight(self, m: int, n: int, r: int, c: int) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def tourOfKnight(self, m, n, r, c):\n        \"\"\"\n        :type m: int\n        :type n: int\n        :type r: int\n        :type c: int\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} m\n * @param {number} n\n * @param {number} r\n * @param {number} c\n * @return {number[][]}\n */\nvar tourOfKnight = function(m, n, r, c) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function tourOfKnight(m: number, n: number, r: number, c: number): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[][] TourOfKnight(int m, int n, int r, int c) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** tourOfKnight(int m, int n, int r, int c, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func tourOfKnight(m int, n int, r int, c int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun tourOfKnight(m: Int, n: Int, r: Int, c: Int): Array<IntArray> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func tourOfKnight(_ m: Int, _ n: Int, _ r: Int, _ c: Int) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn tour_of_knight(m: i32, n: i32, r: i32, c: i32) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} m\n# @param {Integer} n\n# @param {Integer} r\n# @param {Integer} c\n# @return {Integer[][]}\ndef tour_of_knight(m, n, r, c)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $m\n     * @param Integer $n\n     * @param Integer $r\n     * @param Integer $c\n     * @return Integer[][]\n     */\n    function tourOfKnight($m, $n, $r, $c) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> tourOfKnight(int m, int n, int r, int c) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def tourOfKnight(m: Int, n: Int, r: Int, c: Int): Array[Array[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec tour_of_knight(m :: integer, n :: integer, r :: integer, c :: integer) :: [[integer]]\n  def tour_of_knight(m, n, r, c) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec tour_of_knight(M :: integer(), N :: integer(), R :: integer(), C :: integer()) -> [[integer()]].\ntour_of_knight(M, N, R, C) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (tour-of-knight m n r c)\n  (-> exact-integer? exact-integer? exact-integer? exact-integer? (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2537",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nGiven the dimensions of a chessboard (`m`, `n`) and a knight’s starting position (`r`, `c`), our task is to find a sequence of moves that allows the knight to visit every square on the chessboard exactly once. A knight moves in an 'L' shape: two squares in one direction (either vertically or horizontally) and then one square perpendicular to that.\n\n![A knight's moves](../Figures/2664/knightmoves.png)\n\nWe need to output a 2-D array of size `m * n` where each cell indicates the order in which it was visited during the knight’s traversal.\n\nHere's what the traversal looks like for Example 2 of the problem description:\n\n!?!../Documents/2664/slideshow.json:562,424!?!\n\n---\n\n### Approach 1: Backtracking\n\n#### Intuition\n\nSince the board size is limited to $5 \\times 5$ or smaller, a brute force approach is feasible within these constraints. The simplest solution is to generate all possible move orders and check each for validity.\n\nHowever, we can often detect invalid sequences early. For example, if a knight lands on a square with no unvisited squares to move to, it’s clear the sequence can't form a valid solution, so we can stop. This technique, known as pruning, is achieved through backtracking. If you're unfamiliar with backtracking, refer to this [LeetCode Explore Card](https://leetcode.com/explore/learn/card/recursion-ii/472/backtracking/) for more details.\n\nTo implement this, we recursively fill the board. At each step, if there are no remaining moves, we've found a valid solution and return true.\n\nWe then examine all potential knight moves from the current cell, checking if each resulting cell is valid (within bounds and unvisited). If so, we mark the cell with the current move number and proceed with a recursive call to find the next move. If the recursive call returns true, we have a valid solution and return immediately. Otherwise, we unmark the cell and try the next knight move.\n\nThe recurrence relation for the function `solveKnightsTour` can be described as follows:\n\n$$\nT(r, c, k) = \n\\begin{cases} \n1 & \\text{if } k = 0 \\\\\n\\sum_{(r', c') \\in \\text{ValidMoves}(r, c)} T(r', c', k-1) & \\text{if } k > 0\n\\end{cases}\n$$\n\nWhere:\n- $T(r, c, k)$ is the number of ways to complete the tour with `k` remaining cells unvisited from position `(r, c)`.\n- $\\text{ValidMoves}(r, c)$ represents all the valid knight moves from position `(r, c)`.\n\nFinally, we call this recursive function with an empty board from the main function. The board will contain the correct move order when recursion completes, providing our required answer.\n\n#### Algorithm\n\n- Initialize a 2D integer array `chessboard` with dimensions `m * n` to represent the board.\n- Mark the starting position `(r, c)` on the `chessboard` with -1 as a temporary placeholder.\n- Invoke the recursive function `solveKnightsTour` with initial parameters: board dimensions, starting position, the `chessboard`, and a `moveCount` of 1.\n- After the tour is completed, reset the starting position on the `chessboard` to 0.\n- Return the completed chessboard.\n  \n- Define a function `solveKnightsTour` with parameters: the board dimensions, `currentRow`, `currentCol`, the `chessboard`, and `moveCount`:\n  - Check if `moveCount` equals the total number of cells (`rows * cols`). If so, return `true`.\n  - Iterate through all possible positions on the board using nested loops for rows and columns.\n    - For each position, call `isValidMove` to check if it's a legal knight's move from the current position.\n    - If the move is valid, mark the new position on the chessboard with the current move count.\n    - Recursively call `solveKnightsTour` for the new position and an incremented `moveCount`.\n    - If the recursive call returns true, it means a solution has been found, so return `true`.\n    - Else, backtrack by resetting the position to 0 on the `chessboard`.\n  - If no valid moves lead to a solution, return `false`.\n\n- Define a function `isValidMove` with parameters: the `chessboard`, `fromRow`, `fromCol`, `toRow`, and `toCol`:\n  -  Verify that the new position (`toRow, toCol`) is within the board boundaries (non-negative and less than board dimensions).\n  - Check if the move follows the knight's L-shaped pattern: the minimum of the absolute differences in rows and columns should be 1, and the maximum should be 2.\n  - Ensure the destination cell hasn't been visited before by checking if its value is 0.\n  - Return `true` only if all these conditions are satisfied.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/34hnfav6/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"34hnfav6\"></iframe>\n\n#### Complexity Analysis\n\n- Time complexity: $O(8^{(m \\times n)})$\n\n    The algorithm uses a depth-first search approach to explore all possible knight's tours. In the worst case, it might need to examine every possible sequence of moves before finding a valid tour or concluding that no tour exists.\n\n    For each cell, the knight has up to 8 possible moves. The algorithm explores each of these moves recursively. The depth of this recursion can go up to the total number of cells on the board, which is $m \\times n$.\n\n    This leads to a time complexity of $O(8^{(m \\times n)})$, which is exponential. It's worth noting that this is a loose upper bound, as the algorithm employs backtracking and prunes invalid moves, which can significantly reduce the actual number of explored paths in practice. \n\n- Space complexity: $O(m \\times n)$\n\n    In the worst case, the recursion can go as deep as the number of cells on the board, which is again $m \\times n$. The algorithm does not use any additional space proportional to the input size.\n\n    > Note: The size of the chessboard is not considered in our space complexity analysis since it is part of the output space.   \n\n---\n\n### Approach 2: Warnsdorff’s Rule\n\n#### Intuition\n\nThe knight's tour is a well-known problem that has no general solution with polynomial complexity. In fact, it's classified as an NP(Nondeterministic Polynomial time)-hard problem. This means it's not realistic to try reducing its big-O complexity from an exponential one. However, we can make the decision-making process within the recursion more efficient, which can significantly decrease the average runtime of the solution. One of the most famous strategies for this is called the Warnsdorff's Rule.\n\nWarnsdorff's Rule states that the best move is the one where the knight goes to the square with the fewest onward moves. This reduces the chance of the knight getting stuck in the future by leaving more paths open for future moves. If you are interested in a formal proof and a deeper understanding of the logic behind Warnsdorff’s Rule, take a look at this [paper](https://sites.science.oregonstate.edu/math_reu/proceedings/REU_Proceedings/Proceedings2004/2004Ganzfried.pdf).\n\nConsider this position from the knight's tour in Example 2 of the problem description:\n\n![](../Figures/2664/warnsdorff.png)\n\nFor the second move, there are two possible onward moves (#2.1 and #2.2), whereas the first move has only one option (#1.1). Following Warnsdorff's Rule, the knight should choose the first move (#1.0) since it leads to fewer future possibilities.\n\nThe basic recursion follows the previous approach, with added efficiency. At each knight position, we loop over all possible moves and calculate the \"degree\" of each move, defined as the number of reachable positions after that move. We store each move along with its degree in a list, which we then sort in ascending order based on degrees. This ensures that we evaluate the moves with the lowest degree first, increasing the likelihood of success. Once we find a successful move, we'll return from the recursion as before.\n\n#### Algorithm\n\n- Define an array `knightMoves` containing eight possible knight move patterns as (row, column) pairs.\n\n- In the main `tourOfKnight` function:\n  - Initialize a 2D array `chessboard` with dimensions `m * n`.\n  - Mark the starting position `(r, c)` on the chessboard with -1.\n  - Call the recursive function `solveKnightsTour` with initial parameters: board dimensions, starting position, the `chessboard`, and a `moveCount` of 1.\n  - After the tour is completed, reset the starting position on the `chessboard` to 0.\n  - Return the completed `chessboard`.\n\n- Define a function `solveKnightsTour` with parameters: the board dimensions, the current position, the `chessboard`, and `moveCount`:\n  - Check if the move count equals the total number of cells (`rows * cols`). If so, return `true`.\n   - Call `getNextMovesWarnsdorff` to get a sorted list of possible next moves.\n   - Iterate through `nextMoves`:\n     - Calculate the next position by adding the knight's move offsets to the current position.\n     - Check if the move is valid using the `isValidMove` function. If not valid, continue with the next iteration.\n     - Mark the new position on the `chessboard` with the current `moveCount`.\n     - Recursively call `solveKnightsTour` for the new position, incrementing the move count.\n     - If the recursive call returns true, return `true` to propagate this success upwards.\n     - Else, backtrack by resetting the position to 0 on the `chessboard`.\n  - If no valid moves lead to a solution, return `false`.\n\n- Define a function `getNextMovesWarnsdorff` with parameters: the `chessboard`, and the current position:\n  - Initialize a list `nextMoves` to store possible moves and their accessibility scores.\n  - For each of the eight possible `knightMoves`:\n    - Calculate the next position by applying the move offsets.\n    - Call `countAccessibleMoves` to determine the number of onward moves from this new position.\n    - Add a pair `(accessibilityScore, moveIndex)` to the `nextMoves` list.\n  - Sort the `nextMoves` list based on accessibility scores in ascending order.\n  - Return the sorted list of moves.\n\nDefine a function `countAccessibleMoves` with parameters: the `chessboard`, and the current position:\n  - Initialize a counter for accessible moves to 0.\n  - For each of the eight possible `knightMoves`:\n    - Calculate the next position by applying the move offsets.\n    - If the move is valid (checked using `isValidMove`), increment the counter.\n  - Return the total count.\n\nDefine a function `isValidMove` with parameters: the `chessboard`, and the current position:\n  - Check if the given position `(row, col)` is within the board boundaries (non-negative and less than board dimensions).\n  - Verify if the position has not been visited before by checking if its value on the `chessboard` is 0.\n  - Return `true` if both conditions are satisfied; otherwise, `false`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/4WuXVepF/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"4WuXVepF\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity: $O(8^{(m \\times n)})$\n\n    This algorithm employs Warnsdorff's heuristic, which significantly improves the average-case performance compared to the naive backtracking approach. However, the worst-case time complexity remains exponential, which $O(8^{(m \\times n)})$.\n\n* Space complexity: $O(m \\times n)$\n\n    The recursion takes up to $m \\times n$ space in the worst case. \n\n    The `nextMoves` list in the `getNextMovesWarnsdorff` function contains at most 8 elements at any given time, so its complexity is constant.\n\n    Thus, the overall space complexity remains $O(m \\times n)$.\n\n    > Note: The size of the chessboard is not considered in our space complexity analysis since it is part of the output space.  \n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

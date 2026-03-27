@@ -1,0 +1,141 @@
+{
+  "questionId": "2826",
+  "questionFrontendId": "2732",
+  "title": "Find a Good Subset of the Matrix",
+  "titleSlug": "find-a-good-subset-of-the-matrix",
+  "difficulty": "Hard",
+  "content": "<p>You are given a <strong>0-indexed</strong> <code>m x n</code> binary matrix <code>grid</code>.</p>\n\n<p>Let us call a <strong>non-empty</strong> subset of rows <strong>good</strong> if the sum of each column of the subset is at most half of the length of the subset.</p>\n\n<p>More formally, if the length of the chosen subset of rows is <code>k</code>, then the sum of each column should be at most <code>floor(k / 2)</code>.</p>\n\n<p>Return <em>an integer array that contains row indices of a good subset sorted in <strong>ascending</strong> order.</em></p>\n\n<p>If there are multiple good subsets, you can return any of them. If there are no good subsets, return an empty array.</p>\n\n<p>A <strong>subset</strong> of rows of the matrix <code>grid</code> is any matrix that can be obtained by deleting some (possibly none or all) rows from <code>grid</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> grid = [[0,1,1,0],[0,0,0,1],[1,1,1,1]]\n<strong>Output:</strong> [0,1]\n<strong>Explanation:</strong> We can choose the 0<sup>th</sup> and 1<sup>st</sup> rows to create a good subset of rows.\nThe length of the chosen subset is 2.\n- The sum of the 0<sup>th</sup>&nbsp;column is 0 + 0 = 0, which is at most half of the length of the subset.\n- The sum of the 1<sup>st</sup>&nbsp;column is 1 + 0 = 1, which is at most half of the length of the subset.\n- The sum of the 2<sup>nd</sup>&nbsp;column is 1 + 0 = 1, which is at most half of the length of the subset.\n- The sum of the 3<sup>rd</sup>&nbsp;column is 0 + 1 = 1, which is at most half of the length of the subset.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> grid = [[0]]\n<strong>Output:</strong> [0]\n<strong>Explanation:</strong> We can choose the 0<sup>th</sup> row to create a good subset of rows.\nThe length of the chosen subset is 1.\n- The sum of the 0<sup>th</sup>&nbsp;column is 0, which is at most half of the length of the subset.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> grid = [[1,1,1],[1,1,1]]\n<strong>Output:</strong> []\n<strong>Explanation:</strong> It is impossible to choose any subset of rows to create a good subset.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == grid.length</code></li>\n\t<li><code>n == grid[i].length</code></li>\n\t<li><code>1 &lt;= m &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= n &lt;= 5</code></li>\n\t<li><code>grid[i][j]</code> is either <code>0</code> or <code>1</code>.</li>\n</ul>\n",
+  "hints": [
+    "It can be proven, that if there exists a good subset of rows then there exists a good subset of rows with the size of either 1 or 2.",
+    "To check if there exists a good subset of rows of size 1, we check if there exists a row containing only zeros, if it does, we return its index as a good subset.",
+    "To check if there exists a good subset of rows of size 2, we iterate over two bit-masks, check if both are presented in the array and if they form a good subset, if they do, return their indices as a good subset."
+  ],
+  "metaData": "{\n  \"name\": \"goodSubsetofBinaryMatrix\",\n  \"params\": [\n    {\n      \"name\": \"grid\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<integer>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"8.3K\", \"totalSubmission\": \"17.7K\", \"totalAcceptedRaw\": 8270, \"totalSubmissionRaw\": 17673, \"acRate\": \"46.8%\"}",
+  "likes": 213,
+  "dislikes": 30,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[0,1,1,0],[0,0,0,1],[1,1,1,1]]",
+    "[[0]]",
+    "[[1,1,1],[1,1,1]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> goodSubsetofBinaryMatrix(vector<vector<int>>& grid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<Integer> goodSubsetofBinaryMatrix(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def goodSubsetofBinaryMatrix(self, grid: List[List[int]]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def goodSubsetofBinaryMatrix(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} grid\n * @return {number[]}\n */\nvar goodSubsetofBinaryMatrix = function(grid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function goodSubsetofBinaryMatrix(grid: number[][]): number[] {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<int> GoodSubsetofBinaryMatrix(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* goodSubsetofBinaryMatrix(int** grid, int gridSize, int* gridColSize, int* returnSize){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func goodSubsetofBinaryMatrix(grid [][]int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun goodSubsetofBinaryMatrix(grid: Array<IntArray>): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func goodSubsetofBinaryMatrix(_ grid: [[Int]]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn good_subsetof_binary_matrix(grid: Vec<Vec<i32>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} grid\n# @return {Integer[]}\ndef good_subsetof_binary_matrix(grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $grid\n     * @return Integer[]\n     */\n    function goodSubsetofBinaryMatrix($grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> goodSubsetofBinaryMatrix(List<List<int>> grid) {\n\n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def goodSubsetofBinaryMatrix(grid: Array[Array[Int]]): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec good_subsetof_binary_matrix(grid :: [[integer]]) :: [integer]\n  def good_subsetof_binary_matrix(grid) do\n\n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec good_subsetof_binary_matrix(Grid :: [[integer()]]) -> [integer()].\ngood_subsetof_binary_matrix(Grid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (good-subsetof-binary-matrix grid)\n  (-> (listof (listof exact-integer?)) (listof exact-integer?))\n\n  )"
+    }
+  ],
+  "solution": null
+}

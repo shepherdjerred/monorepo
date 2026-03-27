@@ -1,0 +1,132 @@
+{
+  "questionId": "2838",
+  "questionFrontendId": "2718",
+  "title": "Sum of Matrix After Queries",
+  "titleSlug": "sum-of-matrix-after-queries",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer <code>n</code> and a <strong>0-indexed</strong>&nbsp;<strong>2D array</strong> <code>queries</code> where <code>queries[i] = [type<sub>i</sub>, index<sub>i</sub>, val<sub>i</sub>]</code>.</p>\n\n<p>Initially, there is a <strong>0-indexed</strong> <code>n x n</code> matrix filled with <code>0</code>&#39;s. For each query, you must apply one of the following changes:</p>\n\n<ul>\n\t<li>if <code>type<sub>i</sub> == 0</code>, set the values in the row with <code>index<sub>i</sub></code> to <code>val<sub>i</sub></code>, overwriting any previous values.</li>\n\t<li>if <code>type<sub>i</sub> == 1</code>, set the values in the column with <code>index<sub>i</sub></code> to <code>val<sub>i</sub></code>, overwriting any previous values.</li>\n</ul>\n\n<p>Return <em>the sum of integers in the matrix after all queries are applied</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/05/11/exm1.png\" style=\"width: 681px; height: 161px;\" />\n<pre>\n<strong>Input:</strong> n = 3, queries = [[0,0,1],[1,2,2],[0,2,3],[1,0,4]]\n<strong>Output:</strong> 23\n<strong>Explanation:</strong> The image above describes the matrix after each query. The sum of the matrix after all queries are applied is 23. \n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/05/11/exm2.png\" style=\"width: 681px; height: 331px;\" />\n<pre>\n<strong>Input:</strong> n = 3, queries = [[0,0,4],[0,1,2],[1,0,1],[0,2,3],[1,2,1]]\n<strong>Output:</strong> 17\n<strong>Explanation:</strong> The image above describes the matrix after each query. The sum of the matrix after all queries are applied is 17.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= queries.length &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>queries[i].length == 3</code></li>\n\t<li><code>0 &lt;= type<sub>i</sub> &lt;= 1</code></li>\n\t<li><code>0 &lt;= index<sub>i</sub>&nbsp;&lt; n</code></li>\n\t<li><code>0 &lt;= val<sub>i</sub> &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Process queries in reversed order, as the latest queries represent the most recent changes in the matrix.",
+    "Once you encounter an operation on some row/column, no further operations will affect the values in this row/column. Keep track of seen rows and columns with a set.",
+    "When operating on an unseen row/column, the number of affected cells is the number of columns/rows you haven’t previously seen."
+  ],
+  "metaData": "{\n  \"name\": \"matrixSumQueries\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"queries\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"24.9K\", \"totalSubmission\": \"77.9K\", \"totalAcceptedRaw\": 24939, \"totalSubmissionRaw\": 77857, \"acRate\": \"32.0%\"}",
+  "likes": 733,
+  "dislikes": 28,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Range Sum Query 2D - Mutable\", \"titleSlug\": \"range-sum-query-2d-mutable\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Range Addition II\", \"titleSlug\": \"range-addition-ii\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "3\n[[0,0,1],[1,2,2],[0,2,3],[1,0,4]]",
+    "3\n[[0,0,4],[0,1,2],[1,0,1],[0,2,3],[1,2,1]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long matrixSumQueries(int n, vector<vector<int>>& queries) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long matrixSumQueries(int n, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def matrixSumQueries(self, n: int, queries: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def matrixSumQueries(self, n, queries):\n        \"\"\"\n        :type n: int\n        :type queries: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} queries\n * @return {number}\n */\nvar matrixSumQueries = function(n, queries) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function matrixSumQueries(n: number, queries: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long MatrixSumQueries(int n, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long matrixSumQueries(int n, int** queries, int queriesSize, int* queriesColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func matrixSumQueries(n int, queries [][]int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun matrixSumQueries(n: Int, queries: Array<IntArray>): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func matrixSumQueries(_ n: Int, _ queries: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn matrix_sum_queries(n: i32, queries: Vec<Vec<i32>>) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} queries\n# @return {Integer}\ndef matrix_sum_queries(n, queries)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $queries\n     * @return Integer\n     */\n    function matrixSumQueries($n, $queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int matrixSumQueries(int n, List<List<int>> queries) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def matrixSumQueries(n: Int, queries: Array[Array[Int]]): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec matrix_sum_queries(n :: integer, queries :: [[integer]]) :: integer\n  def matrix_sum_queries(n, queries) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec matrix_sum_queries(N :: integer(), Queries :: [[integer()]]) -> integer().\nmatrix_sum_queries(N, Queries) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (matrix-sum-queries n queries)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

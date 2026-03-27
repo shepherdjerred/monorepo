@@ -1,0 +1,40 @@
+{
+  "questionId": "2773",
+  "questionFrontendId": "2691",
+  "title": "Immutability Helper",
+  "titleSlug": "immutability-helper",
+  "difficulty": "Hard",
+  "content": "<p>Creating clones of immutable objects with minor alterations can be a tedious process. Write a class&nbsp;<code>ImmutableHelper</code>&nbsp;that serves as a tool to help with this requirement. The constructor accepts an immutable object&nbsp;<code>obj</code>&nbsp;which will be a JSON object or array.</p>\n\n<p>The class has a single method&nbsp;<code>produce</code>&nbsp;which&nbsp;accepts a&nbsp;function&nbsp;<code>mutator</code>. The function returns a new object which is similar to the original except it has&nbsp;those mutations applied.</p>\n\n<p><code>mutator</code>&nbsp;accepts a&nbsp;<strong>proxied</strong>&nbsp;version of&nbsp;<code>obj</code>. A user of this function can (appear to) mutate this object, but the original object&nbsp;<code>obj</code>&nbsp;should&nbsp;not actually be&nbsp;effected.</p>\n\n<p>For example, a user could write code like this:</p>\n\n<pre>\nconst originalObj = {&quot;x&quot;: 5};\nconst helper = new ImmutableHelper(originalObj);\nconst newObj = helper.produce((proxy) =&gt; {\n  proxy.x = proxy.x + 1;\n});\nconsole.log(originalObj); // {&quot;x&quot;: 5}\nconsole.log(newObj); // {&quot;x&quot;: 6}</pre>\n\n<p>Properties of the&nbsp;<code>mutator</code>&nbsp;function:</p>\n\n<ul>\n\t<li>It will always return <code>undefined</code>.</li>\n\t<li>It will never access keys that don&#39;t exist.</li>\n\t<li>It will never delete keys (<code>delete obj.key</code>)</li>\n\t<li>It will never call methods on a proxied object (<code>push</code>, <code>shift</code>, etc).</li>\n\t<li>It will never set keys to objects (<code>proxy.x = {}</code>)</li>\n</ul>\n\n<p><strong>Note on how the solution will be tested:</strong>&nbsp;the solution validator will only analyze&nbsp;differences between what was returned and the original&nbsp;<code>obj</code>. Doing a full comparison would be too computationally expensive. Also, any mutations to the original object will result in a wrong answer.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nobj = {&quot;val&quot;: 10}, \nmutators = [\n&nbsp; proxy =&gt; { proxy.val += 1; },\n&nbsp; proxy =&gt; { proxy.val -= 1; }\n]\n<strong>Output:</strong> \n[\n  {&quot;val&quot;: 11},\n&nbsp; {&quot;val&quot;: 9}\n]\n<strong>Explanation:</strong>\nconst helper = new ImmutableHelper({val: 10});\nhelper.produce(proxy =&gt; { proxy.val += 1; }); // { &quot;val&quot;: 11 }\nhelper.produce(proxy =&gt; { proxy.val -= 1; }); // { &quot;val&quot;: 9 }\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nobj = {&quot;arr&quot;: [1, 2, 3]} \nmutators = [\n&nbsp;proxy =&gt; { \n&nbsp;  proxy.arr[0] = 5; \n&nbsp;  proxy.newVal = proxy.arr[0] + proxy.arr[1];\n }\n]\n<strong>Output:</strong> \n[\n  {&quot;arr&quot;: [5, 2, 3], &quot;newVal&quot;: 7 } \n]\n<strong>Explanation: </strong>Two edits were made to the original array. The first element in the array was to set 5. Then a new key was added with a value of 7.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nobj = {&quot;obj&quot;: {&quot;val&quot;: {&quot;x&quot;: 10, &quot;y&quot;: 20}}}\nmutators = [\n&nbsp; proxy =&gt; { \n&nbsp;   let data = proxy.obj.val; \n&nbsp;   let temp = data.x; \n&nbsp;   data.x = data.y; \n&nbsp;   data.y = temp; \n&nbsp; }\n]\n<strong>Output:</strong> \n[\n  {&quot;obj&quot;: {&quot;val&quot;: {&quot;x&quot;: 20, &quot;y&quot;: 10}}}\n]\n<strong>Explanation:</strong> The values of &quot;x&quot; and &quot;y&quot; were swapped.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= JSON.stringify(obj).length &lt;= 4 * 10<sup>5</sup></code></li>\n\t<li><code>mutators</code> is an array of functions</li>\n\t<li><code><font face=\"monospace\">total calls to produce() &lt; 10<sup>5</sup></font></code></li>\n</ul>\n",
+  "hints": [
+    "Javascript has the concept of Proxy. That concept is critical to this problem.",
+    "You you need to keep track of which values in the JSON were overwritten with new values.",
+    "Somehow, keep a tree structure that exists parallel to the original object. This will keep track of all the edits.",
+    "When the mutator function is done. Return a clone with those mutations applied. It will be inefficient to clone the entire object so only clone the minimum number of nodes."
+  ],
+  "metaData": "{\n  \"name\": \"produce\",\n  \"params\": [\n    {\n      \"name\": \"obj\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"mutator\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  },\n  \"languages\": [\n    \"javascript\",\n    \"typescript\"\n  ],\n  \"manual\": true\n}",
+  "stats": "{\"totalAccepted\": \"385\", \"totalSubmission\": \"958\", \"totalAcceptedRaw\": 385, \"totalSubmissionRaw\": 958, \"acRate\": \"40.2%\"}",
+  "likes": 11,
+  "dislikes": 8,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Infinite Method Object\", \"titleSlug\": \"infinite-method-object\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Make Object Immutable\", \"titleSlug\": \"make-object-immutable\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "{\"val\":10}\n[proxy => { proxy.val += 1; }, proxy => { proxy.val -= 1; }]",
+    "{\"arr\":[1,2,3]}\n[proxy => { proxy.arr[0] = 5; proxy.newVal = proxy.arr[0] + proxy.arr[1]; }]",
+    "{\"obj\":{\"val\":{\"x\":10,\"y\":20}}}\n[proxy => { let data = proxy.obj.val; let temp = data.x; data.x = data.y; data.y = temp; }]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [],
+  "codeSnippets": [
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "var ImmutableHelper = function(obj) {\n    \n};\n\n/** \n * @param {Function} mutator\n * @return {JSON} clone of obj\n */\nImmutableHelper.prototype.produce = function(mutator) {\n    \n};\n\n/**\n * const originalObj = {\"x\": 5};\n * const mutator = new ImmutableHelper(originalObj);\n * const newObj = mutator.produce((proxy) => {\n *   proxy.x = proxy.x + 1;\n * });\n * console.log(originalObj); // {\"x: 5\"}\n * console.log(newObj); // {\"x\": 6}\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "type JSONValue = null | boolean | number | string | JSONValue[] | { [key: string]: JSONValue };\ntype InputObj = Record<string, JSONValue> | Array<JSONValue>;\n\nclass ImmutableHelper {\n    \n    constructor(obj: InputObj) {\n        \n    }\n    \n    produce(mutator: (obj: InputObj) => void) {\n        \n    }\n}\n\n/**\n * const originalObj = {\"x\": 5};\n * const mutator = new ImmutableHelper(originalObj);\n * const newObj = mutator.produce((proxy) => {\n *   proxy.x = proxy.x + 1;\n * });\n * console.log(originalObj); // {\"x: 5\"}\n * console.log(newObj); // {\"x\": 6}\n */"
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,136 @@
+{
+  "questionId": "2808",
+  "questionFrontendId": "2742",
+  "title": "Painting the Walls",
+  "titleSlug": "painting-the-walls",
+  "difficulty": "Hard",
+  "content": "<p>You are given two <strong>0-indexed</strong> integer arrays,&nbsp;<code>cost</code> and <code>time</code>, of size <code>n</code> representing the costs and the time taken to paint <code>n</code> different walls respectively. There are two painters available:</p>\n\n<ul>\n\t<li>A<strong>&nbsp;paid painter</strong>&nbsp;that paints the <code>i<sup>th</sup></code> wall in <code>time[i]</code> units of time and takes <code>cost[i]</code> units of money.</li>\n\t<li>A<strong>&nbsp;free painter</strong> that paints&nbsp;<strong>any</strong> wall in <code>1</code> unit of time at a cost of <code>0</code>. But the&nbsp;free painter can only be used if the paid painter is already <strong>occupied</strong>.</li>\n</ul>\n\n<p>Return <em>the minimum amount of money required to paint the </em><code>n</code><em>&nbsp;walls.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> cost = [1,2,3,2], time = [1,2,3,2]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The walls at index 0 and 1 will be painted by the paid painter, and it will take 3 units of time; meanwhile, the free painter will paint the walls at index 2 and 3, free of cost in 2 units of time. Thus, the total cost is 1 + 2 = 3.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> cost = [2,3,4,2], time = [1,1,1,1]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The walls at index 0 and 3 will be painted by the paid painter, and it will take 2 units of time; meanwhile, the free painter will paint the walls at index 1 and 2, free of cost in 2 units of time. Thus, the total cost is 2 + 2 = 4.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= cost.length &lt;= 500</code></li>\n\t<li><code>cost.length == time.length</code></li>\n\t<li><code>1 &lt;= cost[i] &lt;= 10<sup>6</sup></code></li>\n\t<li><code>1 &lt;= time[i] &lt;= 500</code></li>\n</ul>\n",
+  "hints": [
+    "Can we break the problem down into smaller subproblems and use DP?",
+    "Paid painters will be used for a maximum of N/2 units of time. There is no need to use paid painter for a time greater than this."
+  ],
+  "metaData": "{\n  \"name\": \"paintWalls\",\n  \"params\": [\n    {\n      \"name\": \"cost\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"time\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"79.6K\", \"totalSubmission\": \"162.7K\", \"totalAcceptedRaw\": 79643, \"totalSubmissionRaw\": 162671, \"acRate\": \"49.0%\"}",
+  "likes": 1498,
+  "dislikes": 95,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,2,3,2]\n[1,2,3,2]",
+    "[2,3,4,2]\n[1,1,1,1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 4, \"slug\": \"meesho\", \"name\": \"Meesho\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int paintWalls(vector<int>& cost, vector<int>& time) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int paintWalls(int[] cost, int[] time) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def paintWalls(self, cost: List[int], time: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def paintWalls(self, cost, time):\n        \"\"\"\n        :type cost: List[int]\n        :type time: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} cost\n * @param {number[]} time\n * @return {number}\n */\nvar paintWalls = function(cost, time) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function paintWalls(cost: number[], time: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int PaintWalls(int[] cost, int[] time) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int paintWalls(int* cost, int costSize, int* time, int timeSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func paintWalls(cost []int, time []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun paintWalls(cost: IntArray, time: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func paintWalls(_ cost: [Int], _ time: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn paint_walls(cost: Vec<i32>, time: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} cost\n# @param {Integer[]} time\n# @return {Integer}\ndef paint_walls(cost, time)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $cost\n     * @param Integer[] $time\n     * @return Integer\n     */\n    function paintWalls($cost, $time) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int paintWalls(List<int> cost, List<int> time) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def paintWalls(cost: Array[Int], time: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec paint_walls(cost :: [integer], time :: [integer]) :: integer\n  def paint_walls(cost, time) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec paint_walls(Cost :: [integer()], Time :: [integer()]) -> integer().\npaint_walls(Cost, Time) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (paint-walls cost time)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2065",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Top-Down Dynamic Programming\n\n**Intuition**\n\n> **Note.** For this approach, we assume that you already know the fundamentals of dynamic programming and are figuring out how to apply it to a wide range of problems, such as this one. If you are not yet at this stage, we recommend checking out our relevant [Explore Card content on dynamic programming](https://leetcode.com/explore/featured/card/dynamic-programming/) before coming back to this problem.\n\nIntuitively, we want to put the paid painter on walls that cost less and take longer to paint. The longer the paid painter paints, the more we can make use of the free painter. It seems extremely difficult to formulate a greedy approach since decisions will cascade on top of each other. Which walls do we pay for? Which walls do we have the free painter paint?\n\nGiven the constraints $$n \\leq 500$$, we should try a dynamic programming approach, which will consider all possible decisions.\n\nLet's say that we have the paid painter paint the $$i^{th}$$ wall. It costs us `cost[i]` money. The paid painter will paint `1` wall and be occupied for `time[i]` time. While the paid painter is occupied, the free painter can paint `time[i]` walls (since the free painter paints one wall per unit of time). Overall, we spent `cost[i]` money to paint `1 + time[i]` walls.\n\nThis is a variation of the classic knapsack problem. The $$i^{th}$$ item costs $$\\text{cost[i]}$$ and paints $$1 + \\text{time[i]}$$ walls. We need to paint $$n$$ walls while minimizing the total cost.\n\nLet `dp(i, remain)` be a function that returns the minimum cost to paint `remain` walls when considering index `i` and beyond. We have two base cases here.\n\n1. If `remain <= 0`, we have painted all the walls. We can `return 0`.\n2. If `i == n`, we have run out of walls to put the paid painter on and the task is impossible. We return a large value like infinity.\n\nNow, how do we calculate a given state `(i, remain)`? For the $$i^{th}$$ wall, we have two options. We can either hire the paid painter for this wall or not hire them.\n\n1. If we hire them, as mentioned above, we spend `cost[i]` and paint `1 + time[i]` walls. Then, we move to the next index. Thus, the cost of this option is `cost[i] + dp(i + 1, remain - 1 - time[i])`.\n2. If we don't hire them, we simply move to the next index. The cost of this option is `dp(i + 1, remain)`.\n\nLet's call the first option `paint` and the second option `dontPaint`. Then, `dp(i, remain) = min(paint, dontPaint)`.\n\nThis recursive approach is correct, but has an exponential time complexity because each `dp` call creates two more `dp` calls, some of which may have already been calculated. We must memoize our function to avoid repeated computation:\n\n![memoization](../Figures/2742/1.png)\n<br>\n\nIn the above image, states in color are calculated multiple times. In Java/C++, we will use a `memo` table to cache results. In Python, we will use [@functools.cache](https://docs.python.org/3/library/functools.html#functools.cache) to memoize our function.\n\nThe solution to the original problem will be `dp(0, n)`. We consider all walls starting from index `0` and beyond, and we need to paint a total of `n` walls.\n\n**Algorithm**\n\n1. Let `n = cost.length`.\n2. Define a memoized function `dp(i, remain)`:\n    - If `remain <= 0`, then `return 0`.\n    - If `i == n`, then return a very large value.\n    - Set `paint = cost[i] + dp(i + 1, remain - 1 - time[i])`.\n    - Set `dontPaint = dp(i + 1, remain)`.\n    - Return `min(paint, dontPaint)`.\n3. Return `dp(0, n)`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/fKabu3XW/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"fKabu3XW\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `cost` and `time`,\n\n* Time complexity: $$O(n^2)$$\n\n    `i` ranges from `0` to `n` and `remain` ranges from `n` to `0`. Thus, there are $$O(n^2)$$ states. Each state is calculated only once due to memoization. To calculate a state, we simply check two options `paint` and `dontPaint`, which costs $$O(1)$$.\n\n* Space complexity: $$O(n^2)$$\n\n    We use some space for the recursion call stack, but it is dominated by the space used to memoize our function, which is equal to the number of states. There are $$O(n^2)$$ states.\n    \n<br/>\n\n---\n\n### Approach 2: Bottom-Up Dynamic Programming\n\n**Intuition**\n\nWe can implement the same algorithm iteratively. In top-down, we start at the answer `(i = 0, remain = n)` and work our way down to the base cases:\n\n1. `remain <= 0`\n2. `i == n`\n\nIn bottom-up, we will start from these base cases and iterate toward the answer. We will use a table `dp` which is equivalent to the function from the previous approach. Here, `dp[i][remain]` is equal to `dp(i, remain)` from the previous approach.\n\nWe have a for loop for `i` starting from `n - 1` and iterating to `0`. Then we have a nested for loop for `remain` starting from `1` and iterating to `n`. At each inner loop iteration, we have a state `i, remain`. We can calculate this state the same way we did in the previous approach - by calculating `paint` and `dontPaint`.\n\nNote that when we calculate `paint`, `remain - 1 - time[i]` may be less than `0`, which would cause an index out-of-bound error. We can solve this by using `max(0, remain - 1 - time[i])` as an index, so any negative value is converted to `0`. Because the base case is `remain <= 0`, this will not affect the calculations.\n\n**Algorithm**\n\n1. Let `n = cost.length`.\n2. Create a `dp` table of size `(n + 1) * (n + 1)` with values initialized to `0`.\n3. Set the base cases:\n    - Set all values inside `dp[n]` to large values.\n    - The other base case is implicitly set since we initialized `dp` with `0`.\n4. Iterate `i` from `n - 1` until `0`:\n    - Iterate `remain` from `1` until `n`:\n        - Set `paint = cost[i] + dp[i + 1][max(0, remain - 1 - time[i])]`.\n        - Set `dontPaint = dp[i + 1][remain]`.\n        - Set `dp[i][remain] = min(paint, dontPaint)`.\n5. Return `dp[0][n]`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/SFoY6L73/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"SFoY6L73\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `cost` and `time`,\n\n* Time complexity: $$O(n^2)$$\n\n    `i` ranges from `0` to `n` and `remain` ranges from `n` to `0`. Thus, there are $$O(n^2)$$ states. Each state is calculated only once. To calculate a state, we simply check two options `paint` and `dontPaint`, which costs $$O(1)$$.\n\n* Space complexity: $$O(n^2)$$\n\n    The `dp` table takes $$O(n^2)$$ space.\n    \n<br/>\n\n---\n\n### Approach 3: Space-Optimized Dynamic Programming\n\n**Intuition**\n\nNotice that the recurrence relation to calculate `dp[i][remain]` only depends on `dp[i + 1]`. For example, when calculating `dp[7][remain]`, we only need the value from `dp[8]` and no longer care about values in `dp[9], dp[10], dp[11]` etc.\n\nWe only need extra space to track the `remain` dimension. We can replace our $$O(n^2)$$ table with two arrays of length $$O(n)$$. One array will represent `dp[i]` and the other one will represent `dp[i + 1]`.\n\nLet's call the table that represents `dp[i + 1]` `prevDp`. When we finish calculating `dp[i]`, we can set `prevDp = dp`. Then when we move to the next value of `i`, `prevDp` will correctly represent `dp[i + 1]` for the new value of `i`. For example:\n\n- When `i = 10`, `prevDp` is analogous to `dp[11]` from the previous approach, and `dp` is analogous to `dp[10]`. We calculate `dp`, then update `prevDp = dp`.\n- When `i = 9`, `prevDp` is analogous to `dp[10]` from the previous approach. Notice that we made this happen by updating `prevDp` in the last step. We calculate `dp`, analogous to `dp[9]`, and update `prevDp` again when finished.\n- When `i = 8`, `prevDp` is analogous to `dp[9]`, and so on...\n\nThe first value of `i` we iterate on is `n - 1`. Thus, `prevDp` initially represents `dp[n]`, which is one of our base cases - all values should be a large value like infinity, except `prevDp[0] = 0`, which is our other base case (`remain = 0`).\n\n**Algorithm**\n\n1. Let `n = cost.length`.\n2. Initialize arrays:\n    - `dp` of length `n + 1` with values set to `0`.\n    - `prevDp` of length `n + 1`. Set `prevDp[0] = 0` and all other values to a large value.\n3. Iterate `i` from `n - 1` until `0`:\n    - Reset the values of `dp`.\n    - Iterate `remain` from `1` until `n`:\n        - Set `paint = cost[i] + prevDp[max(0, remain - 1 - time[i])]`.\n        - Set `dontPaint = prevDp[remain]`.\n        - Set `dp[remain] = min(paint, dontPaint)`.\n    - Set `prevDp = dp`.\n4. Return `dp[n]`.\n\n**Implementation**\n\n> Implementation tip: compared to the previous approach, you can make the following replacements in code:\n>\n> `dp[i] -> dp`\n>\n> `dp[i + 1] -> prevDp`\n\n<iframe src=\"https://leetcode.com/playground/N93S5XWk/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"N93S5XWk\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `cost` and `time`,\n\n* Time complexity: $$O(n^2)$$\n\n    `i` ranges from `0` to `n` and `remain` ranges from `n` to `0`. Thus, there are $$O(n^2)$$ states. Each state is calculated only once. To calculate a state, we simply check two options `paint` and `dontPaint`, which costs $$O(1)$$.\n\n* Space complexity: $$O(n)$$\n\n    We have improved on space by making `dp` a 1d array of length $$O(n)$$.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

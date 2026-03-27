@@ -1,0 +1,141 @@
+{
+  "questionId": "2918",
+  "questionFrontendId": "2764",
+  "title": "Is Array a Preorder of Some ‌Binary Tree",
+  "titleSlug": "is-array-a-preorder-of-some-binary-tree",
+  "difficulty": "Medium",
+  "content": "<p>Given a <strong>0-indexed</strong> integer <strong>2D array</strong> <code>nodes</code>, your task is to determine if the given array represents the <strong>preorder</strong> traversal of some <strong>binary</strong> tree.</p>\n\n<p>For each index <code>i</code>, <code>nodes[i] = [id, parentId]</code>, where <code>id</code> is the id of the node at the index <code>i</code> and <code>parentId</code> is the id of its parent in the tree (if the node has no parent, then <code>parentId == -1</code>).</p>\n\n<p>Return <code>true</code> <em>if the given array </em><em>represents the preorder traversal of some tree, and</em> <code>false</code> <em>otherwise.</em></p>\n\n<p><strong>Note:</strong> the <strong>preorder</strong> traversal of a tree is a recursive way to traverse a tree in which we first visit the current node, then we do the preorder traversal for the left child, and finally, we do it for the right child.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nodes = [[0,-1],[1,0],[2,0],[3,2],[4,2]]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> The given nodes make the tree in the picture below.\nWe can show that this is the preorder traversal of the tree, first we visit node 0, then we do the preorder traversal of the right child which is [1], then we do the preorder traversal of the left child which is [2,3,4].\n</pre>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/07/04/1.png\" style=\"padding: 10px; background: #fff; border-radius: .5rem; width: 250px; height: 251px;\" /></p>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nodes = [[0,-1],[1,0],[2,0],[3,1],[4,1]]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> The given nodes make the tree in the picture below.\nFor the preorder traversal, first we visit node 0, then we do the preorder traversal of the right child which is [1,3,4], but we can see that in the given order, 2 comes between 1 and 3, so, it&#39;s not the preorder traversal of the tree.\n</pre>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/07/04/2.png\" style=\"padding: 10px; background: #fff; border-radius: .5rem; width: 250px; height: 251px;\" /></p>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nodes.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>nodes[i].length == 2</code></li>\n\t<li><code>0 &lt;= nodes[i][0] &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-1 &lt;= nodes[i][1] &lt;= 10<sup>5</sup></code></li>\n\t<li>The input is generated such that <code>nodes</code> make a binary tree.</li>\n</ul>\n",
+  "hints": [
+    "Think of using the stack data structure.",
+    "Put the first node in the stack.",
+    "Iterate over the array and check if the node at the top of the stack is its parent; if it’s not, then pop the last element of the stack and check until you reach the parent of the current node in the array.",
+    "If the stack gets empty at any point, then the array is not the preorder."
+  ],
+  "metaData": "{\n  \"name\": \"isPreorder\",\n  \"params\": [\n    {\n      \"name\": \"nodes\",\n      \"type\": \"list<list<integer>>\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"manual\": false\n}",
+  "stats": "{\"totalAccepted\": \"1.9K\", \"totalSubmission\": \"2.9K\", \"totalAcceptedRaw\": 1950, \"totalSubmissionRaw\": 2875, \"acRate\": \"67.8%\"}",
+  "likes": 35,
+  "dislikes": 5,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[0,-1],[1,0],[2,0],[3,2],[4,2]]",
+    "[[0,-1],[1,0],[2,0],[3,1],[4,1]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool isPreorder(vector<vector<int>>& nodes) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean isPreorder(List<List<Integer>> nodes) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def isPreorder(self, nodes: List[List[int]]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def isPreorder(self, nodes):\n        \"\"\"\n        :type nodes: List[List[int]]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} nodes\n * @return {boolean}\n */\nvar isPreorder = function(nodes) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function isPreorder(nodes: number[][]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool IsPreorder(IList<IList<int>> nodes) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool isPreorder(int** nodes, int nodesSize, int* nodesColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func isPreorder(nodes [][]int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun isPreorder(nodes: List<List<Int>>): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func isPreorder(_ nodes: [[Int]]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn is_preorder(nodes: Vec<Vec<i32>>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} nodes\n# @return {Boolean}\ndef is_preorder(nodes)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $nodes\n     * @return Boolean\n     */\n    function isPreorder($nodes) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool isPreorder(List<List<int>> nodes) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def isPreorder(nodes: List[List[Int]]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec is_preorder(nodes :: [[integer]]) :: boolean\n  def is_preorder(nodes) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec is_preorder(Nodes :: [[integer()]]) -> boolean().\nis_preorder(Nodes) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (is-preorder nodes)\n  (-> (listof (listof exact-integer?)) boolean?)\n  )"
+    }
+  ],
+  "solution": null
+}

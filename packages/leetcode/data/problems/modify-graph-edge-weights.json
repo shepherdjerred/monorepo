@@ -1,0 +1,144 @@
+{
+  "questionId": "2803",
+  "questionFrontendId": "2699",
+  "title": "Modify Graph Edge Weights",
+  "titleSlug": "modify-graph-edge-weights",
+  "difficulty": "Hard",
+  "content": "<p>You are given an <strong>undirected weighted</strong> <strong>connected</strong> graph containing <code>n</code> nodes labeled from <code>0</code> to <code>n - 1</code>, and an integer array <code>edges</code> where <code>edges[i] = [a<sub>i</sub>, b<sub>i</sub>, w<sub>i</sub>]</code> indicates that there is an edge between nodes <code>a<sub>i</sub></code> and <code>b<sub>i</sub></code> with weight <code>w<sub>i</sub></code>.</p>\n\n<p>Some edges have a weight of <code>-1</code> (<code>w<sub>i</sub> = -1</code>), while others have a <strong>positive</strong> weight (<code>w<sub>i</sub> &gt; 0</code>).</p>\n\n<p>Your task is to modify <strong>all edges</strong> with a weight of <code>-1</code> by assigning them <strong>positive integer values </strong>in the range <code>[1, 2 * 10<sup>9</sup>]</code> so that the <strong>shortest distance</strong> between the nodes <code>source</code> and <code>destination</code> becomes equal to an integer <code>target</code>. If there are <strong>multiple</strong> <strong>modifications</strong> that make the shortest distance between <code>source</code> and <code>destination</code> equal to <code>target</code>, any of them will be considered correct.</p>\n\n<p>Return <em>an array containing all edges (even unmodified ones) in any order if it is possible to make the shortest distance from </em><code>source</code><em> to </em><code>destination</code><em> equal to </em><code>target</code><em>, or an <strong>empty array</strong> if it&#39;s impossible.</em></p>\n\n<p><strong>Note:</strong> You are not allowed to modify the weights of edges with initial positive weights.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<p><strong class=\"example\"><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/04/18/graph.png\" style=\"width: 300px; height: 300px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> n = 5, edges = [[4,1,-1],[2,0,-1],[0,3,-1],[4,3,-1]], source = 0, destination = 1, target = 5\n<strong>Output:</strong> [[4,1,1],[2,0,1],[0,3,3],[4,3,1]]\n<strong>Explanation:</strong> The graph above shows a possible modification to the edges, making the distance from 0 to 1 equal to 5.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<p><strong class=\"example\"><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/04/18/graph-2.png\" style=\"width: 300px; height: 300px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> n = 3, edges = [[0,1,-1],[0,2,5]], source = 0, destination = 2, target = 6\n<strong>Output:</strong> []\n<strong>Explanation:</strong> The graph above contains the initial edges. It is not possible to make the distance from 0 to 2 equal to 6 by modifying the edge with weight -1. So, an empty array is returned.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<p><strong class=\"example\"><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/04/19/graph-3.png\" style=\"width: 300px; height: 300px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> n = 4, edges = [[1,0,4],[1,2,3],[2,3,5],[0,3,-1]], source = 0, destination = 2, target = 6\n<strong>Output:</strong> [[1,0,4],[1,2,3],[2,3,5],[0,3,1]]\n<strong>Explanation:</strong> The graph above shows a modified graph having the shortest distance from 0 to 2 as 6.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 100</code></li>\n\t<li><code><font face=\"monospace\">1 &lt;= edges.length &lt;= n * (n - 1) / 2</font></code></li>\n\t<li><code>edges[i].length == 3</code></li>\n\t<li><code>0 &lt;= a<sub>i</sub>, b<sub>i&nbsp;</sub>&lt;&nbsp;n</code></li>\n\t<li><code><font face=\"monospace\">w<sub>i</sub>&nbsp;= -1&nbsp;</font></code>or <code><font face=\"monospace\">1 &lt;= w<sub>i&nbsp;</sub>&lt;= 10<sup><span style=\"font-size: 10.8333px;\">7</span></sup></font></code></li>\n\t<li><code>a<sub>i&nbsp;</sub>!=&nbsp;b<sub>i</sub></code></li>\n\t<li><code>0 &lt;= source, destination &lt; n</code></li>\n\t<li><code>source != destination</code></li>\n\t<li><code><font face=\"monospace\">1 &lt;= target &lt;= 10<sup>9</sup></font></code></li>\n\t<li>The graph is connected, and there are no self-loops or repeated edges</li>\n</ul>\n",
+  "hints": [
+    "Firstly, check that it’s actually possible to make the shortest path from source to destination equal to the target.",
+    "If the shortest path from source to destination without the edges to be modified, is less than the target, then it is not possible.",
+    "If the shortest path from source to destination including the edges to be modified and assigning them a temporary weight of 1, is greater than the target, then it is also not possible.",
+    "Suppose we can find a modifiable edge (u, v) such that the length of the shortest path from source to u (dis1) plus the length of the shortest path from v to destination (dis2) is less than target (dis1 + dis2 < target), then we can change its weight to “target - dis1 - dis2”.",
+    "For all the other edges that still have the weight “-1”, change the weights into sufficient large number (target, target + 1 or 200000000 etc.)."
+  ],
+  "metaData": "{\n  \"name\": \"modifiedGraphEdges\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"edges\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"source\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"destination\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"target\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[][]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"67.5K\", \"totalSubmission\": \"121.4K\", \"totalAcceptedRaw\": 67518, \"totalSubmissionRaw\": 121418, \"acRate\": \"55.6%\"}",
+  "likes": 740,
+  "dislikes": 153,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "5\n[[4,1,-1],[2,0,-1],[0,3,-1],[4,3,-1]]\n0\n1\n5",
+    "3\n[[0,1,-1],[0,2,5]]\n0\n2\n6",
+    "4\n[[1,0,4],[1,2,3],[2,3,5],[0,3,-1]]\n0\n2\n6"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Shortest Path",
+      "slug": "shortest-path"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> modifiedGraphEdges(int n, vector<vector<int>>& edges, int source, int destination, int target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[][] modifiedGraphEdges(int n, int[][] edges, int source, int destination, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def modifiedGraphEdges(self, n: int, edges: List[List[int]], source: int, destination: int, target: int) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def modifiedGraphEdges(self, n, edges, source, destination, target):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :type source: int\n        :type destination: int\n        :type target: int\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} edges\n * @param {number} source\n * @param {number} destination\n * @param {number} target\n * @return {number[][]}\n */\nvar modifiedGraphEdges = function(n, edges, source, destination, target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function modifiedGraphEdges(n: number, edges: number[][], source: number, destination: number, target: number): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[][] ModifiedGraphEdges(int n, int[][] edges, int source, int destination, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** modifiedGraphEdges(int n, int** edges, int edgesSize, int* edgesColSize, int source, int destination, int target, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func modifiedGraphEdges(n int, edges [][]int, source int, destination int, target int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun modifiedGraphEdges(n: Int, edges: Array<IntArray>, source: Int, destination: Int, target: Int): Array<IntArray> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func modifiedGraphEdges(_ n: Int, _ edges: [[Int]], _ source: Int, _ destination: Int, _ target: Int) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn modified_graph_edges(n: i32, edges: Vec<Vec<i32>>, source: i32, destination: i32, target: i32) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} edges\n# @param {Integer} source\n# @param {Integer} destination\n# @param {Integer} target\n# @return {Integer[][]}\ndef modified_graph_edges(n, edges, source, destination, target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $edges\n     * @param Integer $source\n     * @param Integer $destination\n     * @param Integer $target\n     * @return Integer[][]\n     */\n    function modifiedGraphEdges($n, $edges, $source, $destination, $target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> modifiedGraphEdges(int n, List<List<int>> edges, int source, int destination, int target) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def modifiedGraphEdges(n: Int, edges: Array[Array[Int]], source: Int, destination: Int, target: Int): Array[Array[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec modified_graph_edges(n :: integer, edges :: [[integer]], source :: integer, destination :: integer, target :: integer) :: [[integer]]\n  def modified_graph_edges(n, edges, source, destination, target) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec modified_graph_edges(N :: integer(), Edges :: [[integer()]], Source :: integer(), Destination :: integer(), Target :: integer()) -> [[integer()]].\nmodified_graph_edges(N, Edges, Source, Destination, Target) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (modified-graph-edges n edges source destination target)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer? exact-integer? exact-integer? (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2418",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe've got a connected graph with `n` nodes, where edges connect pairs of nodes with certain weights. Our goal is to adjust the graph so that the shortest path between two specific nodes, `source` and `destination`, matches a given target distance.\n\nThe input provides:\n\n- The number of nodes `n`.\n- A list of edges, each described by $[a_i, b_i, w_i]$, where $a_i$ and $b_i$ are the nodes connected by the edge, and $w_i$ is its weight.\n- Two nodes, `source` and `destination`.\n- A `target` distance that we want the shortest path between `source` and `destination` to exactly match.\n\nSome edges have weights of `-1`, meaning we need to assign them positive weights. Other edges have fixed weights that can’t be changed.\n\nOur task is to find positive weights for the `-1` edges so that the shortest path from `source` to `destination` equals the `target` distance. The new weights should be between `1` and `2 * 10^9`.\n\nIf we can adjust the weights to meet the target distance, we return the updated list of edges. If not, we return an empty list. There might be several correct ways to set the weights, and any of them will work.\n\nThis problem is similar to designing a road network where some roads have fixed distances and others are planned but not yet constructed. The challenge is to adjust the planned road lengths so that the shortest route between two cities meets the specified distance, all while considering the existing infrastructure.\n\nTo fully grasp the solution, it’s a good idea to review [Dijkstra's algorithm](https://leetcode.com/explore/featured/card/graph/) first, as our approach relies heavily on its principles.\n\n---\n\n### Approach 1: Traditional Dijkstra's algorithm \n\n#### Intuition\n\nThe idea behind the solution is to use Dijkstra's algorithm, which is great for finding the shortest paths in a graph with non-negative edge weights. We tweak the algorithm a bit to handle situations where some of the edge weights have to be figured out as we go along.\n\nWe start by running Dijkstra's algorithm but ignore any edges with weights of `-1` for now. This first run helps us find the shortest distance from the `source` to the `destination`. We then check how this distance compares to our `target` distance.\n\n1. If the shortest distance matches the `target`, the current positive weights already give us the desired path length. In this case, we can set the `-1` edges to a large value (like `2 × 10^9`) to make sure they don’t change the shortest path.\n\n2. If the shortest distance is less than the `target`, there’s no way to extend the path to reach the `target` just by adjusting the `-1` edges. In this scenario, the graph structure doesn’t support increasing the path length, so we return an empty list.\n\n3. If the shortest distance is more than the `target`, we need to reduce the path length by tweaking the `-1` edges.\n\nWe start by setting a high weight on the `-1` edges to ensure they don’t interfere with our initial path calculation. Then, we adjust the weight of each `-1` edge to a smaller value (like `1`) and rerun Dijkstra’s algorithm to see if the shortest path gets closer to the target distance.\n\nIf changing an edge’s weight helps get the shortest path closer to the target, we update the weight. We repeat this until we find suitable weights for all `-1` edges that give us the target distance.\n\nIf we manage to find weights that achieve the target distance, we return the updated edge list. If not, we return an empty list.\n\n#### Algorithm\n\n- Define `INF` as a large constant representing infinity.\n\nInside the main function `modifiedGraphEdges`:\n\n- Calculate the initial shortest path from `source` to `destination` using Dijkstra's algorithm(`runDijkstra` helper function), storing the result in `currentShortestDistance`.\n- Check if the current distance is less than the target:\n  - If yes, return an empty result as it's impossible to achieve the target distance.\n- Determine if the current distance matches the target:\n  - If it does, set a flag `matchesTarget` to true.\n- Iterate through each edge to adjust weights:\n  - Skip edges that already have a positive weight since they don't need adjustment.\n  - Set edge weight:\n    - If `matchesTarget` is true, set the weight to a large value (`INF`).\n    - Otherwise, set the weight to 1.\n- Check if the current distance matches the target:\n  - If not, recompute the shortest distance using Dijkstra's algorithm with the updated edge weights.\n  - If the new distance is within the target range, adjust the edge weight to match the target, and update `matchesTarget` to true.\n- Return modified edges:\n  - If the target distance is achieved (`matchesTarget` is true), return the modified edges.\n  - Otherwise, return an empty result.\n\nInside the helper function `runDijkstra`:\n\n- Initialize adjacency matrix with a large value (`INF`) to represent no direct connection between nodes.\n- Initialize distance array to store the minimum distance from the source node to each node, initially set to `INF`.\n- Mark the distance to the source node as 0 because the shortest path to itself is zero.\n- Fill the adjacency matrix with the weights of the edges from the input.\n- Perform Dijkstra's algorithm:\n  - Iterate through all nodes to find the shortest path.\n  - Find the nearest unvisited node with the smallest distance from the source.\n  - Mark the nearest node as visited to avoid reprocessing.\n  - Update the minimum distance for each adjacent node based on the newly visited node's distance.\n- Return the shortest distance to the destination node as the result.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/4wcKVMHK/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"4wcKVMHK\"></iframe>\n\n#### Complexity Analysis\n\nLet $V$ be the number of nodes and $E$ be the number of edges.\n\n- Time complexity: $O(E \\times V^2)$\n\n    Dijkstra's algorithm runs in $O(V^2)$ time, due to the adjacency matrix representation.\n    \n    The overall complexity is $O(E \\times V^2)$ because we potentially run Dijkstra's algorithm for each modifiable edge.\n\n- Space complexity: $O(V^2)$\n\n    The space complexity is $O(V^2)$ due to the adjacency matrix, with additional space for the distance and visited arrays.\n\n---\n\n### Approach 2: Dijkstra's Algorithm with Min-Heap \n\n#### Intuition\n\nIn the traditional approach, after initializing distances, we repeatedly scan all nodes to find the unvisited node with the smallest tentative distance. This operation takes $O(n)$ time per selection, leading to an overall time complexity of $O(n^2)$ in the worst case.\n\nTo optimize this, we use a priority queue (min-heap) to manage and retrieve the node with the smallest tentative distance efficiently. When a node is processed, its neighbors are updated, and if a shorter path is found, the neighbor is pushed onto the priority queue with its updated distance. This ensures that the next node to be processed is always the one with the smallest distance.\n\nApart from the use of a priority queue, the approach remains largely the same: we construct the graph, ignoring edges with weights of `-1`, as these represent unknown or adjustable weights. We then compute the shortest distance from the source to the destination using the optimized Dijkstra algorithm. If the computed distance is already less than the target, we return an empty result.\n\nIf the distance matches the target, we set all `-1` edges to a large value (`INF`) to prevent any further adjustments. If the initial distance exceeds the target, we adjust the `-1` edges to a minimal weight of 1, re-run Dijkstra's algorithm, and fine-tune the last adjusted edge to exactly match the target.\n\n> Here we require additional memory for the priority queue. The queue needs to store nodes and their tentative distances, which slightly increases memory usage, but this is usually a reasonable trade-off for the gained efficiency.\n\n\n!?!../Documents/2699/modifygraph.json:835,575!?!\n\n\n#### Algorithm\n\n- Define `INF` as a large constant representing infinity.\n\nInside the main function `modifiedGraphEdges`:\n\n- Build the graph:\n  - Iterate through each edge in the input list.\n  - For edges with a positive weight (not `-1`), add them to the adjacency list for both nodes.\n\n- Calculate the initial shortest path from `source` to `destination` using Dijkstra's algorithm (`runDijkstra` helper function), storing the result in `currentShortestDistance`.\n\n- Check if the current shortest distance is less than the target:\n  - If true, return an empty result as it is impossible to achieve the target distance with the given edges.\n\n- Determine if the current distance matches the target:\n  - If it does, set a flag `matchesTarget` to true.\n\n- Iterate through each edge to adjust weights:\n  - Skip edges that already have a positive weight since they don't need adjustment.\n  - For each edge with weight `-1`:\n    - Set the edge weight to a large value (`INF`) if `matchesTarget` is true.\n    - Otherwise, set the edge weight to 1.\n    - Update the adjacency list with the new weight.\n\n- Check if the updated shortest distance matches the target:\n  - If `matchesTarget` is false, recompute the shortest distance using Dijkstra's algorithm with the updated edge weights.\n  - If the new distance is within the target range, adjust the edge weight to match the target distance, and update `matchesTarget` to true.\n\n- Return modified edges:\n  - If the target distance is achieved (`matchesTarget` is true), return the modified edges.\n  - Otherwise, return an empty result.\n\nInside the helper function `runDijkstra`:\n\n- Initialize the `minDistance` array to store the minimum distance from the source node to each node, initially set to `INF`.\n- Initialize a priority queue to process nodes in order of their current known shortest distance.\n- Set the `minDistance` to the source node as 0 because the shortest path to itself is zero.\n- Perform Dijkstra's algorithm:\n  - Iterate through all nodes to find the shortest path.\n  - Extract the node with the smallest distance from the source.\n  - Update the minimum distance for each adjacent node based on the extracted node's distance.\n  - Push updated distances into the priority queue.\n\n- Return the shortest distance to the destination node as the result.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/GmrtoLsP/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"GmrtoLsP\"></iframe>\n\n#### Complexity Analysis\n\nLet $V$ be the number of nodes and $E$ be the number of edges.\n\n- Time complexity: $O(E \\times (V + E) \\log V)$\n\n    Dijkstra's algorithm operates with a time complexity of $O((V + E) \\log V)$ when using a priority queue (min-heap). This is because each vertex and edge is processed at most once, and each priority queue operation (insertion and extraction) takes $O(\\log V)$ time. \n\n    Dijkstra's algorithm once executes the shortest path from the source to the destination with the current weights. Then, for each edge that weights `-1`, Dijkstra's algorithm is rerun after modifying the edge weight. In the worst-case scenario, where all edges weigh `-1`, this results in running Dijkstra's up to $E$ times. \n    \n    Thus, the overall time complexity for handling all possible edge modifications is $O(E \\times (V + E) \\log V)$.\n\n- Space complexity: $O(V + E)$\n    \n    The adjacency list representation of the graph requires $O(V + E)$ space. Each vertex has a list of its adjacent vertices and their corresponding edge weights.\n    \n    Dijkstra’s algorithm uses an array to store the shortest distance from the source to each vertex, which requires $O(V)$ space.\n    \n    The priority queue used during Dijkstra's algorithm can hold up to $V$ elements, which also requires $O(V)$ space.\n\n    Summing up these components, the total space complexity is $O(V + E)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

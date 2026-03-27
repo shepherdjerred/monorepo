@@ -1,0 +1,140 @@
+{
+  "questionId": "2865",
+  "questionFrontendId": "2714",
+  "title": "Find Shortest Path with K Hops",
+  "titleSlug": "find-shortest-path-with-k-hops",
+  "difficulty": "Hard",
+  "content": "<p>You are given a positive integer <code>n</code> which is the number of nodes of a <strong>0-indexed undirected weighted connected</strong> graph and a <strong>0-indexed</strong> <strong>2D array</strong> <code>edges</code> where <code>edges[i] = [u<sub>i</sub>, v<sub>i</sub>, w<sub>i</sub>]</code> indicates that there is an edge between nodes <code>u<sub>i</sub></code> and <code>v<sub>i</sub></code> with weight <code>w<sub>i</sub></code>.</p>\n\n<p>You are also given two&nbsp;nodes <code>s</code> and <code>d</code>, and a positive integer <code>k</code>, your task is to find the <strong>shortest</strong> path from <code>s</code> to <code>d</code>, but you can hop over <strong>at most</strong> <code>k</code> edges. In other words,&nbsp;make the weight of <strong>at most</strong> <code>k</code> edges <code>0</code> and then find the <strong>shortest</strong> path from <code>s</code> to <code>d</code>.</p>\n\n<p>Return <em>the length of the <strong>shortest</strong> path from </em><code>s</code><em> to </em><code>d</code><em> with the given condition</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 4, edges = [[0,1,4],[0,2,2],[2,3,6]], s = 1, d = 3, k = 2\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> In this example there is only one path from node 1 (the green node) to node 3 (the red node), which is (1-&gt;0-&gt;2-&gt;3) and the length of it is 4 + 2 + 6 = 12. Now we can make weight of two edges 0, we make weight of the blue edges 0, then we have 0 + 2 + 0 = 2. It can be shown that 2 is the minimum length of a path we can achieve with the given condition.\n</pre>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/05/30/1.jpg\" style=\"width: 170px; height: 171px;\" /></p>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 7, edges = [[3,1,9],[3,2,4],[4,0,9],[0,5,6],[3,6,2],[6,0,4],[1,2,4]], s = 4, d = 1, k = 2\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> In this example there are 2 paths from node 4 (the green node) to node 1 (the red node), which are (4-&gt;0-&gt;6-&gt;3-&gt;2-&gt;1) and (4-&gt;0-&gt;6-&gt;3-&gt;1). The first one has the length 9 + 4 + 2 + 4 + 4 = 23, and the second one has the length 9 + 4 + 2 + 9 = 24. Now if we make weight of the blue edges 0, we get the shortest path with the length 0 + 4 + 2 + 0 = 6. It can be shown that 6 is the minimum length of a path we can achieve with the given condition.\n</pre>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/05/30/2.jpg\" style=\"width: 400px; height: 171px;\" /></p>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 5, edges = [[0,4,2],[0,1,3],[0,2,1],[2,1,4],[1,3,4],[3,4,7]], s = 2, d = 3, k = 1\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> In this example there are 4 paths from node 2 (the green node) to node 3 (the red node), which are (2-&gt;1-&gt;3), (2-&gt;0-&gt;1-&gt;3), (2-&gt;1-&gt;0-&gt;4-&gt;3) and (2-&gt;0-&gt;4-&gt;3). The first two have the length 4 + 4 = 1 + 3 + 4 = 8, the third one has the length 4 + 3 + 2 + 7 = 16 and the last one has the length 1 + 2 + 7 = 10. Now if we make weight of the blue edge 0, we get the shortest path with the length 1 + 2 + 0 = 3. It can be shown that 3 is the minimum length of a path we can achieve with the given condition.\n</pre>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/05/30/3.jpg\" style=\"width: 300px; height: 296px;\" /></p>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 500</code></li>\n\t<li><code>n - 1 &lt;= edges.length &lt;= min(10<sup>4</sup>, n * (n - 1) / 2)</code></li>\n\t<li><code>edges[i].length = 3</code></li>\n\t<li><code>0 &lt;= edges[i][0], edges[i][1] &lt;= n - 1</code></li>\n\t<li><code>1 &lt;= edges[i][2] &lt;=&nbsp;10<sup>6</sup></code></li>\n\t<li><code>0 &lt;= s, d, k&nbsp;&lt;= n - 1</code></li>\n\t<li><code>s != d</code></li>\n\t<li>The input is generated such that the graph is <strong>connected</strong> and has <strong>no</strong>&nbsp;<strong>repeated edges</strong>&nbsp;or&nbsp;<strong>self-loops</strong></li>\n</ul>\n",
+  "hints": [
+    "Let's construct a new graph and run Dijkstra on it to get the answer to the problem.",
+    "We define the new graph as follows: Each node of this graph is a pair (v, c) where v is a node from the given graph and c is any number between 0 and k (inclusive).",
+    "Try to make edges of the defined graph in such a way that if we run Dijkstra on the node (s, 0), then the shortest path to node (d, k) would be the final answer.",
+    "Edge type one: If the edge (v, u, w) belongs to the initial graph, we put an edge with the weight of w between nodes (v, c) and (u, c) for any c between 0 and k (inclusive) in the new graph.",
+    "Edge type two: If the edge (v, u, w) belongs to the initial graph, we put an edge with the weight of 0 between nodes (v, c) and (u, c + 1), also between (u, c) and (v, c + 1) for any c between 0 and k - 1 (inclusive) in the new graph.",
+    "For the matter of time complexity, note that you **don’t need** to literally construct the described graph."
+  ],
+  "metaData": "{\n  \"name\": \"shortestPathWithHops\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"edges\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"s\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"d\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"2.4K\", \"totalSubmission\": \"3.4K\", \"totalAcceptedRaw\": 2352, \"totalSubmissionRaw\": 3424, \"acRate\": \"68.7%\"}",
+  "likes": 40,
+  "dislikes": 1,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "4\n[[0,1,4],[0,2,2],[2,3,6]]\n1\n3\n2",
+    "7\n[[3,1,9],[3,2,4],[4,0,9],[0,5,6],[3,6,2],[6,0,4],[1,2,4]]\n4\n1\n2",
+    "5\n[[0,4,2],[0,1,3],[0,2,1],[2,1,4],[1,3,4],[3,4,7]]\n2\n3\n1"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Shortest Path",
+      "slug": "shortest-path"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int shortestPathWithHops(int n, vector<vector<int>>& edges, int s, int d, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int shortestPathWithHops(int n, int[][] edges, int s, int d, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def shortestPathWithHops(self, n: int, edges: List[List[int]], s: int, d: int, k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def shortestPathWithHops(self, n, edges, s, d, k):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :type s: int\n        :type d: int\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} edges\n * @param {number} s\n * @param {number} d\n * @param {number} k\n * @return {number}\n */\nvar shortestPathWithHops = function(n, edges, s, d, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function shortestPathWithHops(n: number, edges: number[][], s: number, d: number, k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int ShortestPathWithHops(int n, int[][] edges, int s, int d, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int shortestPathWithHops(int n, int** edges, int edgesSize, int* edgesColSize, int s, int d, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func shortestPathWithHops(n int, edges [][]int, s int, d int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun shortestPathWithHops(n: Int, edges: Array<IntArray>, s: Int, d: Int, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func shortestPathWithHops(_ n: Int, _ edges: [[Int]], _ s: Int, _ d: Int, _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn shortest_path_with_hops(n: i32, edges: Vec<Vec<i32>>, s: i32, d: i32, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} edges\n# @param {Integer} s\n# @param {Integer} d\n# @param {Integer} k\n# @return {Integer}\ndef shortest_path_with_hops(n, edges, s, d, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $edges\n     * @param Integer $s\n     * @param Integer $d\n     * @param Integer $k\n     * @return Integer\n     */\n    function shortestPathWithHops($n, $edges, $s, $d, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int shortestPathWithHops(int n, List<List<int>> edges, int s, int d, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def shortestPathWithHops(n: Int, edges: Array[Array[Int]], s: Int, d: Int, k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec shortest_path_with_hops(n :: integer, edges :: [[integer]], s :: integer, d :: integer, k :: integer) :: integer\n  def shortest_path_with_hops(n, edges, s, d, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec shortest_path_with_hops(N :: integer(), Edges :: [[integer()]], S :: integer(), D :: integer(), K :: integer()) -> integer().\nshortest_path_with_hops(N, Edges, S, D, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (shortest-path-with-hops n edges s d k)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer? exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

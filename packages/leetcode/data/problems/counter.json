@@ -1,0 +1,42 @@
+{
+  "questionId": "2732",
+  "questionFrontendId": "2620",
+  "title": "Counter",
+  "titleSlug": "counter",
+  "difficulty": "Easy",
+  "content": "<p>Given an integer&nbsp;<code>n</code>,&nbsp;return a <code>counter</code> function. This <code>counter</code> function initially returns&nbsp;<code>n</code>&nbsp;and then returns 1 more than the previous value every subsequent time it is called (<code>n</code>, <code>n + 1</code>, <code>n + 2</code>, etc).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nn = 10 \n[&quot;call&quot;,&quot;call&quot;,&quot;call&quot;]\n<strong>Output:</strong> [10,11,12]\n<strong>Explanation: \n</strong>counter() = 10 // The first time counter() is called, it returns n.\ncounter() = 11 // Returns 1 more than the previous time.\ncounter() = 12 // Returns 1 more than the previous time.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nn = -2\n[&quot;call&quot;,&quot;call&quot;,&quot;call&quot;,&quot;call&quot;,&quot;call&quot;]\n<strong>Output:</strong> [-2,-1,0,1,2]\n<strong>Explanation:</strong> counter() initially returns -2. Then increases after each sebsequent call.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>-1000<sup>&nbsp;</sup>&lt;= n &lt;= 1000</code></li>\n\t<li><code>0 &lt;= calls.length &lt;= 1000</code></li>\n\t<li><code>calls[i] === &quot;call&quot;</code></li>\n</ul>\n",
+  "hints": [
+    "In JavaScript, a function can return a closure. A closure is defined as a function and the variables declared around it (it's lexical environment).",
+    "A count variable can be initialized in the outer function and mutated in the inner function."
+  ],
+  "metaData": "{\n  \"name\": \"createCounter\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"string[]\",\n      \"name\": \"calls\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"languages\": [\n    \"javascript\",\n    \"typescript\"\n  ],\n  \"manual\": true\n}",
+  "stats": "{\"totalAccepted\": \"700.6K\", \"totalSubmission\": \"850.1K\", \"totalAcceptedRaw\": 700645, \"totalSubmissionRaw\": 850117, \"acRate\": \"82.4%\"}",
+  "likes": 1625,
+  "dislikes": 130,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Memoize\", \"titleSlug\": \"memoize\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Function Composition\", \"titleSlug\": \"function-composition\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Counter II\", \"titleSlug\": \"counter-ii\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "10\n[\"call\",\"call\",\"call\"]",
+    "-2\n[\"call\",\"call\",\"call\",\"call\",\"call\"]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 6, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": []}",
+  "topicTags": [],
+  "codeSnippets": [
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {Function} counter\n */\nvar createCounter = function(n) {\n    \n    return function() {\n        \n    };\n};\n\n/** \n * const counter = createCounter(10)\n * counter() // 10\n * counter() // 11\n * counter() // 12\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function createCounter(n: number): () => number {\n    \n    return function() {\n        \n    }\n}\n\n\n/** \n * const counter = createCounter(10)\n * counter() // 10\n * counter() // 11\n * counter() // 12\n */"
+    }
+  ],
+  "solution": {
+    "id": "1878",
+    "content": "[TOC]\n\n## Solution\n---\n\n### Overview\n\nThis question is intended as an introduction to ***closures***. In JavaScript, functions have a reference to all variables declared in the same scope as well as any outer scopes. These scopes are known as the function's ***lexical environment***. The combination of the function and it's environment is known as a ***closure***.\n\n#### Closure Example\n\nIn Javascript, you can declare functions within other functions and return them. The inner function has access to any variables declared above it.\n\n```js\nfunction createAdder(a) {\n  return function add(b) {\n    const sum = a + b;\n    return sum;\n  }\n}\nconst addTo2 = createAdder(2);\naddTo2(5); // 7\n```\nThe inner function `add` has access to `a`. This allows the outer function to serve as a factory of new functions, each with different behavior.\n\n#### Closures Versus Classes\n\nYou may notice that in the above example `createAdder` is very similar to a class constructor.\n\n```js\nclass Adder {\n  constructor(a) {\n     this.a = a;\n  }\n\n  add(b) {\n    const sum = this.a + b;\n    return sum;\n  }\n}\nconst addTo2 = new Adder(2);\naddTo2.add(5); // 7\n```\n\nBesides differences in syntax, both code examples essentially serve the same purpose. They both allow you to pass in some state in a \"constructor\" and have \"methods\" that access this state.\n\nOne key difference is that closures allow for true ***encapsulation***. In the class example, there is nothing stopping you from writing `addTo2.a = 3;` and breaking it's expected behavior. However, in the closure example, it is theoretically impossible to access `a`. Note that as of 2022, true encapsulation is achievable in classes with [# prefix syntax](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_class_fields).\n\nAnother difference is how the functions are stored in memory. If you create many instances of a class, each instance stores a single reference to the ***prototype object*** where all the methods are stored. Whereas for closures, all the \"methods\" are generated and a \"copy\" of each is stored in memory each time the outer function is called. For this reason, classes can be more efficient, particularly in the case where there are many methods.\n\nUnlike in languages like Java, you will tend to see code written with functions rather than with classes. But since JavaScript is a multi-paradigm language, it will depend on the particular project you are working on.\n\n### Approach 1: Increment Then Return\n\nWe declare a variable `currentCount` and set it equal to `n - 1`. Then inside the counter function, increment `currentCount` and return the value. Note that since `currentCount` is modified, it should be declared with `let` rather than `const`. \n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/WrZn52J4/shared\" frameBorder=\"0\" width=\"100%\" height=\"174\" name=\"WrZn52J4\"></iframe>\n\n---\n### Approach 2: Postfix Increment Syntax\n\nJavaScript provides convenient syntax that returns a value and ***then*** increments it. This allows us to avoid having to initially set a variable to `n - 1`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/4D4W92NV/shared\" frameBorder=\"0\" width=\"100%\" height=\"140\" name=\"4D4W92NV\"></iframe>\n\n### Approach 3: Prefix Decrement and Increment Syntax\n\nJavaScript also has syntax that allows you to increment a value and ***then*** return it. Because the increment happens before the value is returned, we must first decrement the value initially similar to Approach 1.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/9e2kXFzQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"157\" name=\"9e2kXFzQ\"></iframe>\n\n### Approach 4: Postfix Increment Syntax With Arrow Function\n\nWe can reduce the amount of code in Approach 2 by using an arrow function with an implicit return.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/jEECfZNk/shared\" frameBorder=\"0\" width=\"100%\" height=\"140\" name=\"jEECfZNk\"></iframe>",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

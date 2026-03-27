@@ -1,0 +1,53 @@
+{
+  "questionId": "2830",
+  "questionFrontendId": "2669",
+  "title": "Count Artist Occurrences On Spotify Ranking List",
+  "titleSlug": "count-artist-occurrences-on-spotify-ranking-list",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code><font face=\"monospace\">Spotify</font></code></p>\n\n<pre>\n+-------------+---------+ \n| Column Name | Type    | \n+-------------+---------+ \n| id          | int     | \n| track_name  | varchar |\n| artist      | varchar |\n+-------------+---------+\n<code>id</code> is the primary key (column with unique values) for this table.\nEach row contains an id, track_name, and artist.\n</pre>\n\n<p>Write a solution to find how many times each artist appeared on the Spotify ranking list.</p>\n\n<p>Return the result table having the artist&#39;s name along with the corresponding number of occurrences&nbsp;ordered by occurrence count in&nbsp;<strong>descending </strong>order. If the occurrences are equal, then it&rsquo;s ordered by the artist&rsquo;s name in <strong>ascending</strong> order.</p>\n\n<p>The result format is in the following example​​​​​.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:\n</strong>Spotify table: \n+---------+--------------------+------------+ \n| id      | track_name         | artist     |  \n+---------+--------------------+------------+\n| 303651  | Heart Won&#39;t Forget | Sia        |\n| 1046089 | Shape of you       | Ed Sheeran |\n| 33445   | I&#39;m the one        | DJ Khalid  |\n| 811266  | Young Dumb &amp; Broke | DJ Khalid  | \n| 505727  | Happier            | Ed Sheeran |\n+---------+--------------------+------------+ \n<strong>Output:\n</strong>+------------+-------------+\n| artist     | occurrences | \n+------------+-------------+\n| DJ Khalid  | 2           |\n| Ed Sheeran | 2           |\n| Sia        | 1           | \n+------------+-------------+ \n\n<strong>Explanation: </strong>The count of occurrences is listed in descending order under the column name &quot;occurrences&quot;. If the number of occurrences is the same, the artist&#39;s names are sorted in ascending order.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Spotify (id int,track_name varchar(100),artist varchar(100))\"], \"mssql\": [\"Create table Spotify (id int,track_name varchar(100),artist varchar(100))\"], \"oraclesql\": [\"Create table  Spotify (id int,track_name varchar(100),artist varchar(100))\"], \"database\": true, \"name\": \"count_occurrences\", \"pythondata\": [\"Spotify = pd.DataFrame([], columns=['id', 'track_name', 'artist']).astype({'id':'Int64', 'track_name':'object', 'artist':'object'})\"], \"postgresql\": [\"Create table If Not Exists Spotify (id int,track_name varchar(100),artist varchar(100))\"], \"database_schema\": {\"Spotify\": {\"id\": \"INT\", \"track_name\": \"VARCHAR(100)\", \"artist\": \"VARCHAR(100)\"}}}",
+  "stats": "{\"totalAccepted\": \"6K\", \"totalSubmission\": \"8.1K\", \"totalAcceptedRaw\": 6022, \"totalSubmissionRaw\": 8120, \"acRate\": \"74.2%\"}",
+  "likes": 17,
+  "dislikes": 2,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Spotify\":[\"id\",\"track_name\",\"artist\"]},\"rows\":{\"Spotify\":[[303651,\"Heart Won't Forget\",\"Ed Sheeran\"],[1046089,\"Shape of you\",\"Sia\"],[33445,\"I'm the one\",\"DJ Khalid\"],[811266,\"Young Dumb & Broke\",\"DJ Khalid\"],[505727,\"Happier\",\"Ed Sheeran\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef count_occurrences(spotify: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

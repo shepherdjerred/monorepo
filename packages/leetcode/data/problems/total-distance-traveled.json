@@ -1,0 +1,130 @@
+{
+  "questionId": "2857",
+  "questionFrontendId": "2739",
+  "title": "Total Distance Traveled",
+  "titleSlug": "total-distance-traveled",
+  "difficulty": "Easy",
+  "content": "<p>A truck has two fuel tanks. You are given two integers, <code>mainTank</code> representing the fuel present in the main tank in liters and <code>additionalTank</code> representing the fuel present in the additional tank in liters.</p>\n\n<p>The truck has a mileage of <code>10</code> km per liter. Whenever <code>5</code> liters of fuel get&nbsp;used up in the main tank,&nbsp;if the additional tank has at least <code>1</code> liters of fuel, <code>1</code> liters of fuel will be transferred from the additional tank to the main tank.</p>\n\n<p>Return <em>the maximum distance which can be traveled.</em></p>\n\n<p><strong>Note: </strong>Injection from the additional tank is not continuous. It happens suddenly and immediately for every 5 liters consumed.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> mainTank = 5, additionalTank = 10\n<strong>Output:</strong> 60\n<strong>Explanation:</strong> \nAfter spending 5 litre of fuel, fuel remaining is (5 - 5 + 1) = 1 litre and distance traveled is 50km.\nAfter spending another 1 litre of fuel, no fuel gets injected in the main tank and the main tank becomes empty.\nTotal distance traveled is 60km.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> mainTank = 1, additionalTank = 2\n<strong>Output:</strong> 10\n<strong>Explanation:</strong> \nAfter spending 1 litre of fuel, the main tank becomes empty.\nTotal distance traveled is 10km.\n\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= mainTank, additionalTank &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "Avoid calculations in decimal to prevent precision errors."
+  ],
+  "metaData": "{\n  \"name\": \"distanceTraveled\",\n  \"params\": [\n    {\n      \"name\": \"mainTank\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"additionalTank\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"62.8K\", \"totalSubmission\": \"152K\", \"totalAcceptedRaw\": 62754, \"totalSubmissionRaw\": 151991, \"acRate\": \"41.3%\"}",
+  "likes": 327,
+  "dislikes": 107,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "5\n10",
+    "1\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"compass\", \"name\": \"Compass\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int distanceTraveled(int mainTank, int additionalTank) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int distanceTraveled(int mainTank, int additionalTank) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def distanceTraveled(self, mainTank: int, additionalTank: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def distanceTraveled(self, mainTank, additionalTank):\n        \"\"\"\n        :type mainTank: int\n        :type additionalTank: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} mainTank\n * @param {number} additionalTank\n * @return {number}\n */\nvar distanceTraveled = function(mainTank, additionalTank) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function distanceTraveled(mainTank: number, additionalTank: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int DistanceTraveled(int mainTank, int additionalTank) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int distanceTraveled(int mainTank, int additionalTank) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func distanceTraveled(mainTank int, additionalTank int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun distanceTraveled(mainTank: Int, additionalTank: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func distanceTraveled(_ mainTank: Int, _ additionalTank: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn distance_traveled(main_tank: i32, additional_tank: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} main_tank\n# @param {Integer} additional_tank\n# @return {Integer}\ndef distance_traveled(main_tank, additional_tank)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $mainTank\n     * @param Integer $additionalTank\n     * @return Integer\n     */\n    function distanceTraveled($mainTank, $additionalTank) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int distanceTraveled(int mainTank, int additionalTank) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def distanceTraveled(mainTank: Int, additionalTank: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec distance_traveled(main_tank :: integer, additional_tank :: integer) :: integer\n  def distance_traveled(main_tank, additional_tank) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec distance_traveled(MainTank :: integer(), AdditionalTank :: integer()) -> integer().\ndistance_traveled(MainTank, AdditionalTank) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (distance-traveled mainTank additionalTank)\n  (-> exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

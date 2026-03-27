@@ -1,0 +1,136 @@
+{
+  "questionId": "2751",
+  "questionFrontendId": "2653",
+  "title": "Sliding Subarray Beauty",
+  "titleSlug": "sliding-subarray-beauty",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code> containing <code>n</code> integers, find the <strong>beauty</strong> of each subarray of size <code>k</code>.</p>\n\n<p>The <strong>beauty</strong> of a subarray is the <code>x<sup>th</sup></code><strong> smallest integer </strong>in the subarray if it is <strong>negative</strong>, or <code>0</code> if there are fewer than <code>x</code> negative integers.</p>\n\n<p>Return <em>an integer array containing </em><code>n - k + 1</code> <em>integers, which denote the </em><strong>beauty</strong><em> of the subarrays <strong>in order</strong> from the first index in the array.</em></p>\n\n<ul>\n\t<li>\n\t<p>A subarray is a contiguous <strong>non-empty</strong> sequence of elements within an array.</p>\n\t</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,-1,-3,-2,3], k = 3, x = 2\n<strong>Output:</strong> [-1,-2,-2]\n<strong>Explanation:</strong> There are 3 subarrays with size k = 3. \nThe first subarray is <code>[1, -1, -3]</code> and the 2<sup>nd</sup> smallest negative integer is -1.&nbsp;\nThe second subarray is <code>[-1, -3, -2]</code> and the 2<sup>nd</sup> smallest negative integer is -2.&nbsp;\nThe third subarray is <code>[-3, -2, 3]&nbsp;</code>and the 2<sup>nd</sup> smallest negative integer is -2.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [-1,-2,-3,-4,-5], k = 2, x = 2\n<strong>Output:</strong> [-1,-2,-3,-4]\n<strong>Explanation:</strong> There are 4 subarrays with size k = 2.\nFor <code>[-1, -2]</code>, the 2<sup>nd</sup> smallest negative integer is -1.\nFor <code>[-2, -3]</code>, the 2<sup>nd</sup> smallest negative integer is -2.\nFor <code>[-3, -4]</code>, the 2<sup>nd</sup> smallest negative integer is -3.\nFor <code>[-4, -5]</code>, the 2<sup>nd</sup> smallest negative integer is -4.&nbsp;</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [-3,1,2,-3,0,-3], k = 2, x = 1\n<strong>Output:</strong> [-3,0,-3,-3,-3]\n<strong>Explanation:</strong> There are 5 subarrays with size k = 2<strong>.</strong>\nFor <code>[-3, 1]</code>, the 1<sup>st</sup> smallest negative integer is -3.\nFor <code>[1, 2]</code>, there is no negative integer so the beauty is 0.\nFor <code>[2, -3]</code>, the 1<sup>st</sup> smallest negative integer is -3.\nFor <code>[-3, 0]</code>, the 1<sup>st</sup> smallest negative integer is -3.\nFor <code>[0, -3]</code>, the 1<sup>st</sup> smallest negative integer is -3.</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == nums.length&nbsp;</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= n</code></li>\n\t<li><code>1 &lt;= x &lt;= k&nbsp;</code></li>\n\t<li><code>-50&nbsp;&lt;= nums[i] &lt;= 50&nbsp;</code></li>\n</ul>\n",
+  "hints": [
+    "Try to maintain the frequency of negative numbers in the current window of size k.",
+    "The x^th smallest negative integer can be gotten by iterating through the frequencies of the numbers in order."
+  ],
+  "metaData": "{\n  \"name\": \"getSubarrayBeauty\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"x\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"34.1K\", \"totalSubmission\": \"92.9K\", \"totalAcceptedRaw\": 34057, \"totalSubmissionRaw\": 92885, \"acRate\": \"36.7%\"}",
+  "likes": 747,
+  "dislikes": 140,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,-1,-3,-2,3]\n3\n2",
+    "[-1,-2,-3,-4,-5]\n2\n2",
+    "[-3,1,2,-3,0,-3]\n2\n1"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> getSubarrayBeauty(vector<int>& nums, int k, int x) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] getSubarrayBeauty(int[] nums, int k, int x) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def getSubarrayBeauty(self, nums: List[int], k: int, x: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def getSubarrayBeauty(self, nums, k, x):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :type x: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @param {number} x\n * @return {number[]}\n */\nvar getSubarrayBeauty = function(nums, k, x) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function getSubarrayBeauty(nums: number[], k: number, x: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] GetSubarrayBeauty(int[] nums, int k, int x) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* getSubarrayBeauty(int* nums, int numsSize, int k, int x, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func getSubarrayBeauty(nums []int, k int, x int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun getSubarrayBeauty(nums: IntArray, k: Int, x: Int): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func getSubarrayBeauty(_ nums: [Int], _ k: Int, _ x: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn get_subarray_beauty(nums: Vec<i32>, k: i32, x: i32) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @param {Integer} x\n# @return {Integer[]}\ndef get_subarray_beauty(nums, k, x)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @param Integer $x\n     * @return Integer[]\n     */\n    function getSubarrayBeauty($nums, $k, $x) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> getSubarrayBeauty(List<int> nums, int k, int x) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def getSubarrayBeauty(nums: Array[Int], k: Int, x: Int): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec get_subarray_beauty(nums :: [integer], k :: integer, x :: integer) :: [integer]\n  def get_subarray_beauty(nums, k, x) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec get_subarray_beauty(Nums :: [integer()], K :: integer(), X :: integer()) -> [integer()].\nget_subarray_beauty(Nums, K, X) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (get-subarray-beauty nums k x)\n  (-> (listof exact-integer?) exact-integer? exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": null
+}

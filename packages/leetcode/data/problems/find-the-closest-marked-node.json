@@ -1,0 +1,146 @@
+{
+  "questionId": "2880",
+  "questionFrontendId": "2737",
+  "title": "Find the Closest Marked Node",
+  "titleSlug": "find-the-closest-marked-node",
+  "difficulty": "Medium",
+  "content": "<p>You are given a positive integer <code>n</code> which is the number of nodes of a <strong>0-indexed directed weighted</strong> graph and a <strong>0-indexed</strong> <strong>2D array</strong> <code>edges</code> where <code>edges[i] = [u<sub>i</sub>, v<sub>i</sub>, w<sub>i</sub>]</code> indicates that there is an edge from node <code>u<sub>i</sub></code> to node <code>v<sub>i</sub></code> with weight <code>w<sub>i</sub></code>.</p>\n\n<p>You are also given a node <code>s</code> and a node array <code>marked</code>; your task is to find the <strong>minimum</strong> distance from <code>s</code> to <strong>any</strong> of the nodes in <code>marked</code>.</p>\n\n<p>Return <em>an integer denoting the minimum distance from </em><code>s</code><em> to any node in </em><code>marked</code><em> or </em><code>-1</code><em> if there are no paths from s to any of the marked nodes</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 4, edges = [[0,1,1],[1,2,3],[2,3,2],[0,3,4]], s = 0, marked = [2,3]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> There is one path from node 0 (the green node) to node 2 (a red node), which is 0-&gt;1-&gt;2, and has a distance of 1 + 3 = 4.\nThere are two paths from node 0 to node 3 (a red node), which are 0-&gt;1-&gt;2-&gt;3 and 0-&gt;3, the first one has a distance of 1 + 3 + 2 = 6 and the second one has a distance of 4.\nThe minimum of them is 4.\n</pre>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/06/13/image_2023-06-13_16-34-38.png\" style=\"width: 185px; height: 180px;\" /></p>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 5, edges = [[0,1,2],[0,2,4],[1,3,1],[2,3,3],[3,4,2]], s = 1, marked = [0,4]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> There are no paths from node 1 (the green node) to node 0 (a red node).\nThere is one path from node 1 to node 4 (a red node), which is 1-&gt;3-&gt;4, and has a distance of 1 + 2 = 3.\nSo the answer is 3.\n</pre>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/06/13/image_2023-06-13_16-35-13.png\" style=\"width: 300px; height: 285px;\" /></p>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 4, edges = [[0,1,1],[1,2,3],[2,3,2]], s = 3, marked = [0,1]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> There are no paths from node 3 (the green node) to any of the marked nodes (the red nodes), so the answer is -1.\n</pre>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/06/13/image_2023-06-13_16-35-47.png\" style=\"width: 420px; height: 80px;\" /></p>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 500</code></li>\n\t<li><code>1 &lt;= edges.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>edges[i].length = 3</code></li>\n\t<li><code>0 &lt;= edges[i][0], edges[i][1] &lt;= n - 1</code></li>\n\t<li><code>1 &lt;= edges[i][2] &lt;=&nbsp;10<sup>6</sup></code></li>\n\t<li><code>1 &lt;= marked.length&nbsp;&lt;= n - 1</code></li>\n\t<li><code>0 &lt;= s, marked[i]&nbsp;&lt;= n - 1</code></li>\n\t<li><code>s != marked[i]</code></li>\n\t<li><code>marked[i] != marked[j]</code> for every <code>i != j</code></li>\n\t<li>The&nbsp;graph might have&nbsp;<strong>repeated edges</strong>.</li>\n\t<li>The graph is generated such that it has no&nbsp;<strong>self-loops</strong>.</li>\n</ul>\n",
+  "hints": [
+    "Find the distance from s to all nodes.",
+    "You can use Dijkstra to find them.",
+    "Find the minimum distance between marked nodes."
+  ],
+  "metaData": "{\n  \"name\": \"minimumDistance\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"list<list<integer>>\",\n      \"name\": \"edges\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"s\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"marked\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"7.4K\", \"totalSubmission\": \"11.3K\", \"totalAcceptedRaw\": 7364, \"totalSubmissionRaw\": 11262, \"acRate\": \"65.4%\"}",
+  "likes": 58,
+  "dislikes": 6,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "4\n[[0,1,1],[1,2,3],[2,3,2],[0,3,4]]\n0\n[2,3]",
+    "5\n[[0,1,2],[0,2,4],[1,3,1],[2,3,3],[3,4,2]]\n1\n[0,4]",
+    "4\n[[0,1,1],[1,2,3],[2,3,2]]\n3\n[0,1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Shortest Path",
+      "slug": "shortest-path"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minimumDistance(int n, vector<vector<int>>& edges, int s, vector<int>& marked) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minimumDistance(int n, List<List<Integer>> edges, int s, int[] marked) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumDistance(self, n: int, edges: List[List[int]], s: int, marked: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumDistance(self, n, edges, s, marked):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :type s: int\n        :type marked: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} edges\n * @param {number} s\n * @param {number[]} marked\n * @return {number}\n */\nvar minimumDistance = function(n, edges, s, marked) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumDistance(n: number, edges: number[][], s: number, marked: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinimumDistance(int n, IList<IList<int>> edges, int s, int[] marked) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minimumDistance(int n, int** edges, int edgesSize, int* edgesColSize, int s, int* marked, int markedSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumDistance(n int, edges [][]int, s int, marked []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumDistance(n: Int, edges: List<List<Int>>, s: Int, marked: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumDistance(_ n: Int, _ edges: [[Int]], _ s: Int, _ marked: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_distance(n: i32, edges: Vec<Vec<i32>>, s: i32, marked: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} edges\n# @param {Integer} s\n# @param {Integer[]} marked\n# @return {Integer}\ndef minimum_distance(n, edges, s, marked)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $edges\n     * @param Integer $s\n     * @param Integer[] $marked\n     * @return Integer\n     */\n    function minimumDistance($n, $edges, $s, $marked) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimumDistance(int n, List<List<int>> edges, int s, List<int> marked) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumDistance(n: Int, edges: List[List[Int]], s: Int, marked: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_distance(n :: integer, edges :: [[integer]], s :: integer, marked :: [integer]) :: integer\n  def minimum_distance(n, edges, s, marked) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_distance(N :: integer(), Edges :: [[integer()]], S :: integer(), Marked :: [integer()]) -> integer().\nminimum_distance(N, Edges, S, Marked) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-distance n edges s marked)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer? (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2721",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Dijkstra's Algorithm\n\n#### Intuition\n\nWe are given a directed weighted graph and a starting node `s`. Our task is to find the node closest to `s` from the nodes given in another array `marked`. \n\nWhen solving shortest-path problems in graphs, the first algorithm that comes to mind is Dijkstra’s Algorithm. This well-known approach is especially effective for finding the shortest distance from a source node to other nodes in a weighted graph, as long as all edge weights are non-negative.\n\nThe core idea behind Dijkstra’s Algorithm is to explore the graph outward from the source node, always moving in order of increasing distance. This greedy strategy ensures that once we reach a node, we have found the shortest possible path to it.\n\nConsider how we might approach this problem intuitively. Starting at node `s`, we want to explore paths that are most promising first - those with the smallest total distance so far. For each step of our journey, we'd want to know: \"Of all the nodes I could visit next, which one can I reach with the minimum distance?\" After visiting that node, we'd update our knowledge about its neighbors and repeat the process.\n\nDijkstra’s Algorithm achieves this by maintaining two key data structures:  \n- An array `dist`, which stores the shortest known distance from `s` to each node. Initially, all values in `dist` are set to infinity, except for `s`, which is set to 0.  \n- A priority queue (min-heap) that helps efficiently select the next node to visit. Each entry in the queue consists of two values: `[current_distance, current_node]`, with nodes always processed in order of increasing distance. \n\nWe begin by inserting the source node into the priority queue. At each step, we extract the node with the smallest distance and check its neighbors. If the path through this node offers a shorter distance to a neighbor than what is currently recorded in `dist`, we update `dist` and add the neighbor to the queue for further exploration.\n\nOne micro optimization for our specific problem is that we don't actually need to find the shortest paths to all nodes. Since we're only interested in finding the minimum distance to any marked node, we can terminate our search as soon as we encounter the first marked node during our exploration. This is because Dijkstra always processes nodes in order of increasing distance from the source. So if the first marked node we encounter has a distance of 10, no other marked node that we haven't processed yet can have a shorter distance.\n\n#### Algorithm\n\n- Initialize a set `markSet` to store the marked nodes.\n- Add each node in the marked array to `markSet`.\n- Initialize an adjacency list representation `adj` as a list of lists containing integer arrays.\n- For each `edge` in the `edges` list:\n  - Get the source node (`edge[0]`) and add an array containing the destination node (`edge[1]`) and weight (`edge[2]`) to its adjacency list.\n- Initialize an integer array `dist` of size `n`.\n  - Fill the `dist` array with infinity.\n- Set the distance to the starting node `s` as `0`.\n- Initialize a priority queue `minHeap` that prioritizes elements based on the first value of the array.\n- Add the starting node `s` to the `minHeap` as an array `[0, s]`.\n- While `minHeap` is not empty:\n  - Poll the `node` with the minimum `distance` from the `minHeap`.\n  - If the current `node` is in the `markSet`:\n    - Return the distance to this node as we've found a marked node.\n  - For each `edge` connected to the current node:\n    - Extract the `nextNode` and the `weight` of the `edge`.\n    - Calculate the new distance as the sum of the current `distance` and the edge `weight`.\n    - If this new distance is less than the previously recorded distance to the next node:\n      - Update the distance array with the new distance.\n      - Add `nextNode` with its new distance to the `minHeap`.\n- If the algorithm completes without finding any marked node:\n  - Return `-1` indicating no path exists from `s` to any marked node.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/27FYCJh9/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"27FYCJh9\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes and $m$ be the number of edges in the graph.\n\n- Time complexity: $O(n + m \\log m)$  \n\n    The algorithm begins by converting the `marked` array into a set, which takes $O(n)$ time. Then, it constructs the adjacency list representation of the graph, which takes $O(m)$ time, as each edge is added once.\n\n    The main part of the algorithm is Dijkstra’s shortest path computation using a min-heap (priority queue). Unlike the standard Dijkstra's implementation that uses a visited set or decrease-key operation to prevent pushing multiple entries for the same node, this version may push the same node multiple times when shorter paths are found.\n\n    Since each edge can potentially lead to a new entry in the heap, the number of heap operations is $O(m)$, and each operation (push or pop) costs $O(\\log m)$. Therefore, the total time spent on heap operations is $O(m \\log m)$. Adding the initial setup, the overall time complexity is: $O(n + m \\log m)$\n\n- Space complexity: $O(n + m)$  \n\n    The adjacency list representation of the graph requires $O(n + m)$ space, where each node stores a list of its edges. The distance array takes $O(n)$ space, and the priority queue stores at most $O(n)$ elements, leading to an additional $O(n)$ space usage. The marked set also requires $O(n)$ space in the worst case. Thus, the total space complexity is $O(n + m)$.\n\n---\n\n### Approach 2: Bellman–Ford Algorithm\n\n#### Intuition\n\nDijkstra’s Algorithm is a great choice for finding shortest paths in graphs with non-negative edge weights, but it fails when negative weights are involved. The Bellman-Ford Algorithm, on the other hand, is designed to handle graphs with negative weights, making it more general. While we don't have negative weights in this problem, understanding Bellman-Ford helps us see an alternative approach that works under broader conditions.\n\nThe core idea behind Bellman-Ford is straightforward: in a graph with `n` nodes, the shortest path between any two nodes can have at most `n - 1` edges. If a path has `n` or more edges, it must contain a cycle. Since we're only interested in simple paths (paths without cycles), we never need more than `n - 1` edges to reach any node optimally.\n\nNow, let’s apply this to our problem. We start at node `s` and want to determine the shortest path to any node in the `marked` array. Instead of immediately finding the best path, Bellman-Ford gradually refines our understanding of distances by repeatedly considering all edges in the graph. \n\nTo implement this approach, we first initialize an array `dist`, where `dist[i]` represents the shortest known distance from `s` to node `i`. Initially, all values are set to infinity (or a very large number), except for `s`, which starts at `0` since it takes no cost to reach itself. This setup reflects our initial knowledge: we know how to reach `s` but have no information about the shortest paths to other nodes. \n\nThe algorithm’s core operation is **edge relaxation**. This means checking every edge `(u, v, weight)` in the graph and updating `dist[v]` if we find a shorter path to `v` through `u`. If `dist[u] + weight < dist[v]`, we update `dist[v]`. This process is repeated exactly `n - 1` times because, in the worst case, the shortest path to any node may require `n - 1` edges.\n\nWhy `n - 1` iterations? The first pass ensures that we find the shortest one-edge paths. The second pass builds on that, discovering the shortest two-edge paths, and so on. By the time we've repeated this process `n - 1` times, all shortest paths have been fully propagated throughout the graph.\n\nHere's a slideshow to demonstrate how the `dist` array is filled between each relaxation loop:\n\n!?!../Documents/2737/slideshow.json:942,982!?!\n\nAt this point, `dist` contains the shortest distance from `s` to every other node. But our goal is not to find all shortest paths, only the shortest distance to a `marked` node. To get our final answer, we simply look at all nodes in the `marked` array and find the smallest distance among them. If all marked nodes still have infinite distance, it means they are unreachable from `s`, so we return `-1`.\n\n#### Algorithm\n\n- Initialize an integer array `dist` of size `n` to track the shortest distance from the source to each node.\n  - Fill the `dist` array with infinity to represent unreachable nodes initially.\n- Set the distance to the starting node `s` as `0`.\n- Iterate over all the edges in the graph `n - 1` times:\n  - For each iteration, loop through all the edges in the graph:\n    - For each edge, extract the source node (`from`), the destination node (`to`), and the `weight`.\n    - If the current node is reachable (`dist[from] != infinity`) and we can improve the path to the destination node through the current node:\n      - Update the distance to the destination node with the new path.\n- Initialize a variable `minDist` to infinity to track the minimum distance to any marked node.\n- For each `node` in the `marked` array:\n  - If the distance to this marked `node` is less than the current minimum distance, update `minDist`.\n- Return `-1` if no path exists (`minDist` is still infinity), otherwise return the minimum distance.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/E5b9eqUx/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"E5b9eqUx\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes and $m$ be the number of edges in the graph.\n\n- Time complexity: $O(n \\cdot m)$\n\n    The Bellman-Ford algorithm performs $n - 1$ iterations, and in each iteration, it examines all $m$ edges in the graph. This results in a time complexity of $O(n \\cdot m)$. After the Bellman-Ford algorithm completes, the code iterates through the marked array once to find the minimum distance, which takes $O(|marked|)$ time. Since $\\text{|marked|} \\leq n$, the overall time complexity is dominated by the Bellman-Ford algorithm, resulting in $O(n \\cdot m)$.\n\n- Space complexity: $O(n)$\n\n    The space complexity is determined by the storage requirements for the distance array, which has size $n$. No additional data structures with significant space requirements are used in this implementation. Therefore, the overall space complexity is $O(n)$.\n\n---\n\n### Approach 3: Shortest Path Faster Algorithm (SPFA)\n\n#### Intuition\n\nNow, let's explore a lesser-known but powerful algorithm called the Shortest Path Faster Algorithm (SPFA). This algorithm is an optimization of Bellman-Ford and combines ideas from both Bellman-Ford and Breadth-First Search (BFS) to achieve better performance in many cases.\n\nTo understand SPFA, let’s consider why Bellman-Ford can be inefficient. When relaxing edges in the Bellman-Ford algorithm, many iterations might not lead to any improvements in the distance values. SPFA addresses this inefficiency by only considering nodes whose distances have been updated recently, as only these nodes have the potential to update their neighbors.\n\nThink of it like a road network: if the estimated travel time to a city changes, it might affect nearby cities but not those farther away. SPFA follows this natural flow of information by recalculating routes only through cities whose travel times have changed. \n\nThe key idea behind SPFA is that a node’s outgoing edges need to be checked only if its shortest known distance has been updated. To achieve this, SPFA maintains a queue of \"active\" nodes i.e., nodes that have recently had their shortest distances improved. When we improve the distance to a node, we add it to the queue (if it's not already there). Then, we process the queue by repeatedly:\n1. Removing a node from the queue.\n2. Exploring all its outgoing edges, potentially updating distances to neighbors.\n3. Adding any neighbor whose distance was improved to the queue.\n\nAlong with the queue and the distance array used in the Bellman-Ford Algorithm, SPFA also maintains a boolean array to track which nodes are currently in the queue. During relaxation, we only add nodes that are not currently enqueued to prevent duplicate entries.\n\nOnce the queue is empty, the shortest paths from the source to all reachable nodes have been found. The final step is to check the distances of all `marked` nodes and return the smallest among them. \n\nWhat makes SPFA particularly useful is that it adapts to the structure of the graph. In sparse graphs or graphs where the shortest paths are discovered quickly, SPFA can be significantly faster than the standard Bellman-Ford algorithm. However, it's worth noting that SPFA doesn't improve the worst-case time complexity – in worst-case scenarios, a node might enter the queue multiple times, potentially up to the number of edges in the graph.\n\n> For a more comprehensive understanding of various graph algorithms like Dijkstra's, Bellman-Ford, and SPFA, check out the [Graph Explore Card](https://leetcode.com/explore/learn/card/graph/622/single-source-shortest-path-algorithm/). This resource provides an in-depth look at popular graph algorithms, explaining their key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n#### Algorithm\n\n- Initialize a list of lists of pairs called `graph` to represent the adjacency list.\n- Build the graph by iterating through each edge in the edges list:\n  - Extract the source node (`from`), the destination node (`to`), and the weight.\n  - Add an array containing the destination node and weight to the source node's adjacency list.\n- Initialize an integer array `dist` of size `n` to track distances from the source.\n- Fill the `dist` array with infinity.\n- Set the distance to the starting node `s` as `0`.\n- Initialize a `queue` to implement the SPFA algorithm.\n- Add the source node `s` to the `queue`.\n- Initialize a boolean array `inQueue` of size `n` to track which nodes are currently in the `queue`.\n- Mark the source node as being in the `queue`.\n- While the `queue` is not empty:\n  - Remove the front node from the `queue` and store it in `current`.\n  - Mark the `current` node as no longer in the `queue`.\n  - For each neighbor of `current`:\n    - Extract the `nextNode` and the `weight` of the edge.\n    - Perform the relaxation step: if we can improve the path to the neighbor via the current node, update the distance.\n    - If the neighbor is not already in the `queue`, add it and mark it as being in the `queue`.\n- Initialize a variable `minDist` to infinity to track the minimum distance to any marked node.\n- For each node in the `marked` array:\n  - Update `minDist` to be the minimum of its current value and the distance to this marked node.\n- Return `-1` if no path exists (`minDist` is still infinity), otherwise return the minimum distance.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/n9XacJL2/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"n9XacJL2\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes and $m$ be the number of edges in the graph.\n\n- Time complexity: $O(n \\cdot m)$\n\n    In the worst case, each node could be enqueued and dequeued up to $O(n)$ times, and for each dequeue operation, we examine all adjacent edges. Building the adjacency list takes $O(n + m)$ time. The queue operations in the main algorithm could result in up to $O(n \\cdot m)$ operations in the worst case, as each edge might cause a node to be added to the queue multiple times. Finally, iterating through the marked array to find the minimum distance takes $O(\\text{|marked|})$ time, which is bounded by $O(n)$. \n    \n    Therefore, the overall time complexity is dominated by the SPFA implementation, resulting in $O(n \\cdot m)$.\n\n- Space complexity: $O(n + m)$\n\n    The space complexity includes several components. The adjacency list representation of the graph requires $O(n + m)$ space to store all nodes and their edges. The distance array and the `inQueue` boolean array each require $O(n)$ space. The queue can contain at most $n$ nodes at any time, requiring $O(n)$ space. Therefore, the overall space complexity is $O(n + m)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

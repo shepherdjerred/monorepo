@@ -1,0 +1,53 @@
+{
+  "questionId": "2852",
+  "questionFrontendId": "2752",
+  "title": "Customers with Maximum Number of Transactions on Consecutive Days",
+  "titleSlug": "customers-with-maximum-number-of-transactions-on-consecutive-days",
+  "difficulty": "Hard",
+  "content": "<p>Table: <code>Transactions</code></p>\n\n<pre>\n+------------------+------+\n| Column Name      | Type |\n+------------------+------+\n| transaction_id   | int  |\n| customer_id      | int  |\n| transaction_date | date |\n| amount           | int  |\n+------------------+------+\ntransaction_id is the column with unique values of this table.\nEach row contains information about transactions that includes unique (customer_id, transaction_date) along with the corresponding customer_id and amount.   \n</pre>\n\n<p>Write a solution to find all&nbsp;<code>customer_id</code>&nbsp;who made the maximum number of transactions on consecutive days.</p>\n\n<p>Return all <code>customer_id</code>&nbsp;with the maximum number of consecutive transactions.&nbsp;Order the result table by&nbsp;<code>customer_id</code> in <strong>ascending</strong> order.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nTransactions table:\n+----------------+-------------+------------------+--------+\n| transaction_id | customer_id | transaction_date | amount |\n+----------------+-------------+------------------+--------+\n| 1              | 101         | 2023-05-01       | 100    |\n| 2              | 101         | 2023-05-02       | 150    |\n| 3              | 101         | 2023-05-03       | 200    |\n| 4              | 102         | 2023-05-01       | 50     |\n| 5              | 102         | 2023-05-03       | 100    |\n| 6              | 102         | 2023-05-04       | 200    |\n| 7              | 105         | 2023-05-01       | 100    |\n| 8              | 105         | 2023-05-02       | 150    |\n| 9              | 105         | 2023-05-03       | 200    |\n+----------------+-------------+------------------+--------+\n<strong>Output:</strong> \n+-------------+\n| customer_id | \n+-------------+\n| 101         | \n| 105         | \n+-------------+\n<strong>Explanation:</strong> \n- customer_id 101 has a total of 3 transactions, and all of them are consecutive.\n- customer_id 102 has a total of 3 transactions, but only 2 of them are consecutive. \n- customer_id 105 has a total of 3 transactions, and all of them are consecutive.\nIn total, the highest number of consecutive transactions is 3, achieved by customer_id 101 and 105. The customer_id are sorted in ascending order.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Transactions (transaction_id int, customer_id int, transaction_date date, amount int)\"], \"mssql\": [\"Create table Transactions (transaction_id int, customer_id int, transaction_date date, amount int)\"], \"oraclesql\": [\"Create table Transactions (transaction_id int, customer_id int, transaction_date date, amount int)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"find_customers\", \"pythondata\": [\"Transactions = pd.DataFrame([], columns=['transaction_id', 'customer_id', 'transaction_date', 'amount']).astype({'transaction_id':'Int64', 'customer_id':'Int64', 'transaction_date':'datetime64[ns]', 'amount':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Transactions (transaction_id int, customer_id int, transaction_date date, amount int)\"], \"database_schema\": {\"Transactions\": {\"transaction_id\": \"INT\", \"customer_id\": \"INT\", \"transaction_date\": \"DATE\", \"amount\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"3.2K\", \"totalSubmission\": \"7.5K\", \"totalAcceptedRaw\": 3155, \"totalSubmissionRaw\": 7456, \"acRate\": \"42.3%\"}",
+  "likes": 16,
+  "dislikes": 35,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Transactions\":[\"transaction_id\",\"customer_id\",\"transaction_date\",\"amount\"]},\"rows\":{\"Transactions\":[[1,101,\"2023-05-01\",100],[2,101,\"2023-05-02\",150],[3,101,\"2023-05-03\",200],[4,102,\"2023-05-01\",50],[5,102,\"2023-05-03\",100],[6,102,\"2023-05-04\",200],[7,105,\"2023-05-01\",100],[8,105,\"2023-05-02\",150],[9,105,\"2023-05-03\",200]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_customers(transactions: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

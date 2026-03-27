@@ -1,0 +1,122 @@
+{
+  "questionId": "2875",
+  "questionFrontendId": "2728",
+  "title": "Count Houses in a Circular Street",
+  "titleSlug": "count-houses-in-a-circular-street",
+  "difficulty": "Easy",
+  "content": "<p>You are given an object <code>street</code> of class <code>Street</code> that represents a circular street and a positive integer <code>k</code> which represents a maximum bound for the number of houses in that street (in other words, the number of houses is less than or equal to <code>k</code>). Houses&#39; doors could be open or closed initially.</p>\n\n<p>Initially, you are standing in front of a door to a house on this street. Your task is to count the number of houses in the street.</p>\n\n<p>The class <code>Street</code> contains the following functions which may help you:</p>\n\n<ul>\n\t<li><code>void openDoor()</code>: Open the door of the house you are in front of.</li>\n\t<li><code>void closeDoor()</code>: Close the door of the house you are in front of.</li>\n\t<li><code>boolean isDoorOpen()</code>: Returns <code>true</code> if the door of the current house is open and <code>false</code> otherwise.</li>\n\t<li><code>void moveRight()</code>: Move to the right house.</li>\n\t<li><code>void moveLeft()</code>: Move to the left house.</li>\n</ul>\n\n<p>Return <code>ans</code> <em>which represents the number of houses on this street.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> street = [0,0,0,0], k = 10\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> There are 4 houses, and all their doors are closed. \nThe number of houses is less than k, which is 10.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> street = [1,0,1,1,0], k = 5\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> There are 5 houses, and the doors of the 1st, 3rd, and 4th house (moving in the right direction) are open, and the rest are closed.\nThe number of houses is equal to k, which is 5.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == number of houses</code></li>\n\t<li><code>1 &lt;= n &lt;= k &lt;= 10<sup>3</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Close the door of k houses moving in one direction.",
+    "Open the door of the current house.",
+    "Move in one direction and count until you reach the house with the open door."
+  ],
+  "metaData": "{\n  \"name\": \"houseCount\",\n  \"params\": [\n    {\n      \"name\": \"street\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"manual\": true,\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"c\",\n    \"csharp\",\n    \"javascript\",\n    \"ruby\",\n    \"swift\",\n    \"golang\",\n    \"python3\",\n    \"scala\",\n    \"kotlin\",\n    \"rust\",\n    \"php\",\n    \"typescript\",\n    \"racket\",\n    \"dart\"\n  ], \n\"typescriptCustomType\" : \"class Street {\\n    #doors: number[];\\n    #cur_index: number = 0;\\n\\n    constructor(doors: number[]) {\\n        this.#doors = doors;\\n    }\\n\\n    public openDoor(): void {\\n        this.#doors[this.#cur_index] = 1;\\n    }\\n\\n    public closeDoor(): void {\\n        this.#doors[this.#cur_index] = 0;\\n    }\\n\\n    public isDoorOpen(): boolean {\\n        return this.#doors[this.#cur_index] !== 0;\\n    }\\n\\n    public moveLeft(): void {\\n        this.#cur_index--;\\n        while (this.#cur_index < 0) {\\n            this.#cur_index += this.#doors.length;\\n        }\\n    }\\n\\n    public moveRight(): void {\\n        this.#cur_index++;\\n        this.#cur_index %= this.#doors.length;\\n    }\\n}\\n\"\n}",
+  "stats": "{\"totalAccepted\": \"3.3K\", \"totalSubmission\": \"3.8K\", \"totalAcceptedRaw\": 3284, \"totalSubmissionRaw\": 3812, \"acRate\": \"86.1%\"}",
+  "likes": 60,
+  "dislikes": 12,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[0,0,0,0]\n10",
+    "[1,0,1,1,0]\n5"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Interactive",
+      "slug": "interactive"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a street.\n * class Street {\n * public:\n *     Street(vector<int> doors);\n *     void openDoor();\n *     void closeDoor();\n *     bool isDoorOpen();\n *     void moveRight();\n *     void moveLeft();\n * };\n */\nclass Solution {\npublic:\n    int houseCount(Street* street, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a street.\n * class Street {\n *     public Street(int[] doors);\n *     public void openDoor();\n *     public void closeDoor();\n *     public boolean isDoorOpen();\n *     public void moveRight();\n *     public void moveLeft();\n * }\n */\nclass Solution {\n    public int houseCount(Street street, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a street.\n# class Street:\n#     def openDoor(self):\n#         pass\n#     def closeDoor(self):\n#         pass\n#     def isDoorOpen(self):\n#         pass\n#     def moveRight(self):\n#         pass\n#     def moveLeft(self):\n#         pass\nclass Solution:\n    def houseCount(self, street: Optional['Street'], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a street.\n# class Street:\n#     def openDoor(self):\n#         pass\n#     def closeDoor(self):\n#         pass\n#     def isDoorOpen(self):\n#         pass\n#     def moveRight(self):\n#         pass\n#     def moveLeft(self):\n#         pass\nclass Solution(object):\n    def houseCount(self, street, k):\n        \"\"\"\n        :type street: Street\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a street.\n * class Street {\n *     @param {number[]} doors\n *     constructor(doors);\n * \n *     @return {void}\n *     openDoor();\n * \n *     @return {void}\n *     closeDoor();\n * \n *     @return {boolean}\n *     isDoorOpen();\n * \n *     @return {void}\n *     moveRight();\n * \n *     @return {void}\n *     moveLeft();\n * }\n */\n/**\n * @param {Street} street\n * @param {number} k\n * @return {number}\n */\nvar houseCount = function(street, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a street.\n * class Street {\n *     constructor(doors: number[]);\n *     public openDoor(): void;\n *     public closeDoor(): void;\n *     public isDoorOpen(): boolean;\n *     public moveRight(): void;\n *     public moveLeft(): void;\n * }\n */\nfunction houseCount(street: Street | null, k: number): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a street.\n * class Street {\n *     public Street(int[] doors);\n *     public void OpenDoor();\n *     public void CloseDoor();\n *     public bool IsDoorOpen();\n *     public void MoveRight();\n *     public void MoveLeft();\n * }\n */\npublic class Solution {\n    public int HouseCount(Street street, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a street.\n * \n * YOU HAVE TO PASS THE OBJECT ITSELF AS THE FIRST PARAMETER\n * \n * struct Street {\n *     void (*openDoor)(struct Street*);\n *     void (*closeDoor)(struct Street*);\n *     bool (*isDoorOpen)(struct Street*);\n *     void (*moveRight)(struct Street*);\n *     void (*moveLeft)(struct Street*);\n * };\n */\nint houseCount(struct Street* street, int k){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a street.\n * type Street interface {\n *     OpenDoor()\n *     CloseDoor()\n *     IsDoorOpen() bool\n *     MoveRight()\n *     MoveLeft()\n * }\n */\nfunc houseCount(street Street, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Definition for a street.\n * class Street(doors: IntArray) {\n *     fun openDoor()\n *     fun closeDoor()\n *     fun isDoorOpen(): Boolean\n *     fun moveRight()\n *     fun moveLeft()\n * }\n */\nclass Solution {\n    fun houseCount(street: Street, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a street.\n * class Street {\n *     init(doors: [Int]) {}\n *     func openDoor() {}\n *     func closeDoor() {}\n *     func isDoorOpen() -> Bool {}\n *     func moveRight() {}\n *     func moveLeft() {}\n * }\n */\nclass Solution {\n    func houseCount(_ street: Street, _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "/**\n * Definition for a street.\n * impl Street {\n *     pub fn new(doors: Vec<i32>) -> Self {}\n *     pub fn open_door(&mut self) {}\n *     pub fn close_door(&mut self) {}\n *     pub fn is_door_open(&self) -> bool {}\n *     pub fn move_right(&mut self) {}\n *     pub fn move_left(&mut self) {}\n * }\n */\nimpl Solution {\n    pub fn house_count(street: Street, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a street.\n# class Street\n#   def initialize(doors)\n#   end\n#   def open_door\n#   end\n#   def close_door\n#   end\n#   def is_door_open\n#   end\n#   def move_right\n#   end\n#   def move_left\n#   end\n# end\n# @param {Street} street\n# @param {Integer} k\n# @return {Integer}\ndef house_count(street, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a street.\n * class Street {\n *     function __construct($doors);\n *     function openDoor();\n *     function closeDoor();\n *      * @return Boolean\n *     function isDoorOpen();\n *     function moveRight();\n *     function moveLeft();\n * }\n */\nclass Solution {\n\n    /**\n     * @param Street $street\n     * @param Integer $k\n     * @return Integer\n     */\n    function houseCount($street, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a street.\n * class Street {\n *   Street(List<int> doors);\n *   void openDoor();\n *   void closeDoor();\n *   bool isDoorOpen();\n *   void moveRight();\n *   void moveLeft();\n * }\n */\nclass Solution {\n  int houseCount(Street street, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a street.\n * class Street(doors: Array[Int]) {\n *     def openDoor(): Unit\n *     def closeDoor(): Unit\n *     def isDoorOpen(): Boolean\n *     def moveRight(): Unit\n *     def moveLeft(): Unit\n * }\n */\n\nobject Solution {\n    def houseCount(street: Street, k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a street:\n#|\n\n(define street%\n  (class object%\n    (super-new)\n    (init (doors '()))\n    (define/public (open-door) (-> void?))\n    (define/public (close-door) (-> void?))\n    (define/public (is-door-open) (-> boolean?)) \n    (define/public (move-right) (-> void?))\n    (define/public (move-left) (-> void?))\n  ))\n\n|#\n\n(define (house-count street k)\n  ;; (-> street? exact-integer? exact-integer?)\n\n  )"
+    }
+  ],
+  "solution": null
+}

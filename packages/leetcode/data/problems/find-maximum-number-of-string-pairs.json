@@ -1,0 +1,140 @@
+{
+  "questionId": "2847",
+  "questionFrontendId": "2744",
+  "title": "Find Maximum Number of String Pairs",
+  "titleSlug": "find-maximum-number-of-string-pairs",
+  "difficulty": "Easy",
+  "content": "<p>You are given a <strong>0-indexed</strong> array <code>words</code> consisting of <strong>distinct</strong> strings.</p>\n\n<p>The string <code>words[i]</code> can be paired with the string <code>words[j]</code> if:</p>\n\n<ul>\n\t<li>The string <code>words[i]</code> is equal to the reversed string of <code>words[j]</code>.</li>\n\t<li><code>0 &lt;= i &lt; j &lt; words.length</code>.</li>\n</ul>\n\n<p>Return <em>the <strong>maximum</strong> number of pairs that can be formed from the array </em><code>words</code><em>.</em></p>\n\n<p>Note that&nbsp;each string can belong in&nbsp;<strong>at most one</strong> pair.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;cd&quot;,&quot;ac&quot;,&quot;dc&quot;,&quot;ca&quot;,&quot;zz&quot;]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> In this example, we can form 2 pair of strings in the following way:\n- We pair the 0<sup>th</sup> string with the 2<sup>nd</sup> string, as the reversed string of word[0] is &quot;dc&quot; and is equal to words[2].\n- We pair the 1<sup>st</sup> string with the 3<sup>rd</sup> string, as the reversed string of word[1] is &quot;ca&quot; and is equal to words[3].\nIt can be proven that 2 is the maximum number of pairs that can be formed.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;ab&quot;,&quot;ba&quot;,&quot;cc&quot;]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> In this example, we can form 1 pair of strings in the following way:\n- We pair the 0<sup>th</sup> string with the 1<sup>st</sup> string, as the reversed string of words[1] is &quot;ab&quot; and is equal to words[0].\nIt can be proven that 1 is the maximum number of pairs that can be formed.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;aa&quot;,&quot;ab&quot;]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> In this example, we are unable to form any pair of strings.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= words.length &lt;= 50</code></li>\n\t<li><code>words[i].length == 2</code></li>\n\t<li><code>words</code>&nbsp;consists of distinct strings.</li>\n\t<li><code>words[i]</code>&nbsp;contains only lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Notice that array words consist of distinct strings.",
+    "Iterate over all indices (i, j) and check if they can be paired."
+  ],
+  "metaData": "{\n  \"name\": \"maximumNumberOfStringPairs\",\n  \"params\": [\n    {\n      \"name\": \"words\",\n      \"type\": \"string[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"114.8K\", \"totalSubmission\": \"139.4K\", \"totalAcceptedRaw\": 114822, \"totalSubmissionRaw\": 139387, \"acRate\": \"82.4%\"}",
+  "likes": 469,
+  "dislikes": 18,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Group Shifted Strings\", \"titleSlug\": \"group-shifted-strings\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Palindrome Pairs\", \"titleSlug\": \"palindrome-pairs\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"cd\",\"ac\",\"dc\",\"ca\",\"zz\"]",
+    "[\"ab\",\"ba\",\"cc\"]",
+    "[\"aa\",\"ab\"]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximumNumberOfStringPairs(vector<string>& words) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximumNumberOfStringPairs(String[] words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumNumberOfStringPairs(self, words: List[str]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumNumberOfStringPairs(self, words):\n        \"\"\"\n        :type words: List[str]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} words\n * @return {number}\n */\nvar maximumNumberOfStringPairs = function(words) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumNumberOfStringPairs(words: string[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaximumNumberOfStringPairs(string[] words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maximumNumberOfStringPairs(char** words, int wordsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumNumberOfStringPairs(words []string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumNumberOfStringPairs(words: Array<String>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumNumberOfStringPairs(_ words: [String]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_number_of_string_pairs(words: Vec<String>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} words\n# @return {Integer}\ndef maximum_number_of_string_pairs(words)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $words\n     * @return Integer\n     */\n    function maximumNumberOfStringPairs($words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumNumberOfStringPairs(List<String> words) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumNumberOfStringPairs(words: Array[String]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_number_of_string_pairs(words :: [String.t]) :: integer\n  def maximum_number_of_string_pairs(words) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_number_of_string_pairs(Words :: [unicode:unicode_binary()]) -> integer().\nmaximum_number_of_string_pairs(Words) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-number-of-string-pairs words)\n  (-> (listof string?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

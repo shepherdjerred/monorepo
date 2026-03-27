@@ -1,0 +1,142 @@
+{
+  "questionId": "2837",
+  "questionFrontendId": "2749",
+  "title": "Minimum Operations to Make the Integer Zero",
+  "titleSlug": "minimum-operations-to-make-the-integer-zero",
+  "difficulty": "Medium",
+  "content": "<p>You are given two integers <code>num1</code> and <code>num2</code>.</p>\n\n<p>In one operation, you can choose integer <code>i</code> in the range <code>[0, 60]</code> and subtract <code>2<sup>i</sup> + num2</code> from <code>num1</code>.</p>\n\n<p>Return <em>the integer denoting the <strong>minimum</strong> number of operations needed to make</em> <code>num1</code> <em>equal to</em> <code>0</code>.</p>\n\n<p>If it is impossible to make <code>num1</code> equal to <code>0</code>, return <code>-1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> num1 = 3, num2 = -2\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> We can make 3 equal to 0 with the following operations:\n- We choose i = 2 and subtract 2<sup>2</sup> + (-2) from 3, 3 - (4 + (-2)) = 1.\n- We choose i = 2 and subtract 2<sup>2</sup>&nbsp;+ (-2) from 1, 1 - (4 + (-2)) = -1.\n- We choose i = 0 and subtract 2<sup>0</sup>&nbsp;+ (-2) from -1, (-1) - (1 + (-2)) = 0.\nIt can be proven, that 3 is the minimum number of operations that we need to perform.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> num1 = 5, num2 = 7\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> It can be proven, that it is impossible to make 5 equal to 0 with the given operation.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= num1 &lt;= 10<sup>9</sup></code></li>\n\t<li><code><font face=\"monospace\">-10<sup>9</sup>&nbsp;&lt;= num2 &lt;= 10<sup>9</sup></font></code></li>\n</ul>\n",
+  "hints": [
+    "If we want to make integer n equal to 0 by only subtracting powers of 2 from n, in how many operations can we achieve it?",
+    "We need at least - the number of bits in the binary representation of n, and at most - n.",
+    "Notice that, if it is possible to make num1 equal to 0, then we need at most 60 operations.",
+    "Iterate on the number of operations."
+  ],
+  "metaData": "{\n  \"name\": \"makeTheIntegerZero\",\n  \"params\": [\n    {\n      \"name\": \"num1\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"num2\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"96.9K\", \"totalSubmission\": \"166.4K\", \"totalAcceptedRaw\": 96896, \"totalSubmissionRaw\": 166447, \"acRate\": \"58.2%\"}",
+  "likes": 769,
+  "dislikes": 376,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Broken Calculator\", \"titleSlug\": \"broken-calculator\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Operations to Reduce X to Zero\", \"titleSlug\": \"minimum-operations-to-reduce-x-to-zero\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "3\n-2",
+    "5\n7"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Brainteaser",
+      "slug": "brainteaser"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int makeTheIntegerZero(int num1, int num2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int makeTheIntegerZero(int num1, int num2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def makeTheIntegerZero(self, num1: int, num2: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def makeTheIntegerZero(self, num1, num2):\n        \"\"\"\n        :type num1: int\n        :type num2: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} num1\n * @param {number} num2\n * @return {number}\n */\nvar makeTheIntegerZero = function(num1, num2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function makeTheIntegerZero(num1: number, num2: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MakeTheIntegerZero(int num1, int num2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int makeTheIntegerZero(int num1, int num2) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func makeTheIntegerZero(num1 int, num2 int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun makeTheIntegerZero(num1: Int, num2: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func makeTheIntegerZero(_ num1: Int, _ num2: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn make_the_integer_zero(num1: i32, num2: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} num1\n# @param {Integer} num2\n# @return {Integer}\ndef make_the_integer_zero(num1, num2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $num1\n     * @param Integer $num2\n     * @return Integer\n     */\n    function makeTheIntegerZero($num1, $num2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int makeTheIntegerZero(int num1, int num2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def makeTheIntegerZero(num1: Int, num2: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec make_the_integer_zero(num1 :: integer, num2 :: integer) :: integer\n  def make_the_integer_zero(num1, num2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec make_the_integer_zero(Num1 :: integer(), Num2 :: integer()) -> integer().\nmake_the_integer_zero(Num1, Num2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (make-the-integer-zero num1 num2)\n  (-> exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2824",
+    "content": "### Approach: Enumeration\n\n#### Intuition\n\nWe can start enumerating the values of the operand $k$ from $1$, and as we enumerate each number, we check whether the current number of operations can make $\\textit{num}_1$ equal to $0$. If so, we return the current $k$ value.\n\nAssuming the operation is performed $k$ times, this is equivalent to subtracting $\\textit{num}_2$, $k$ times, from $\\textit{num}_1$, and then determining whether the remainder can be expressed as the sum of $k$ powers of two (not necessarily distinct). Let $x = \\textit{num}_1 - k \\times \\textit{num}_2$. We only need to determine whether $x$ can be expressed as the sum of $k$ powers of two.\n\nLet $f(x)$ be the number of 1s in the binary representation of $x$. For $k$ to be valid, the following conditions must be met:\n\n* $k \\le x$, this is the upper limit of $k$. When $k > x$, even $k$ copies of $2^0$ are not sufficient.\n* $k \\ge f(x)$, this is the lower bound of $k$. We need at least $f(x)$ powers of two to form $x$. Of course, we can use more than $f(x)$ powers of two, since two $2^{i-1}$ can combine to form $2^i$.\n\nThe value of $k$ is valid if and only if $f(x) \\le k \\le x$.\n\nNext, observe how $x$ changes as $k$ increases. When $k = 0$, we have $x > k$, and $x$ decreases monotonically as $k$ increases. Therefore, if $x < k$ ever occurs, the inequality will continue to hold as $k$ increases further. Thus, when $x < k$ occurs for the first time, we can conclude that the problem has no solution and return $-1$ immediately.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/f6s9rizr/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"f6s9rizr\"></iframe>\n\n#### Complexity Analysis\n\n- Time complexity: $O(\\log \\textit{num}_1)$\n\n    Each iteration increases $k$ by $1$ while simultaneously decreasing $x = \\textit{num}_1 - k \\times \\textit{num}_2$. Since $x$ decreases monotonically with $k$, the number of iterations is bounded by how quickly $x$ becomes smaller than $k$. This transition occurs at most on the order of $\\log(\\textit{num}_1)$, because representing $x$ in terms of powers of two relates directly to its binary length. Therefore, the overall time complexity is $O(\\log \\textit{num}_1)$.\n\n- Space complexity: $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

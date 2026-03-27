@@ -1,0 +1,148 @@
+{
+  "questionId": "2755",
+  "questionFrontendId": "2707",
+  "title": "Extra Characters in a String",
+  "titleSlug": "extra-characters-in-a-string",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> string <code>s</code> and a dictionary of words <code>dictionary</code>. You have to break <code>s</code> into one or more <strong>non-overlapping</strong> substrings such that each substring is present in <code>dictionary</code>. There may be some <strong>extra characters</strong> in <code>s</code> which are not present in any of the substrings.</p>\n\n<p>Return <em>the <strong>minimum</strong> number of extra characters left over if you break up </em><code>s</code><em> optimally.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;leetscode&quot;, dictionary = [&quot;leet&quot;,&quot;code&quot;,&quot;leetcode&quot;]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> We can break s in two substrings: &quot;leet&quot; from index 0 to 3 and &quot;code&quot; from index 5 to 8. There is only 1 unused character (at index 4), so we return 1.\n\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;sayhelloworld&quot;, dictionary = [&quot;hello&quot;,&quot;world&quot;]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> We can break s in two substrings: &quot;hello&quot; from index 3 to 7 and &quot;world&quot; from index 8 to 12. The characters at indices 0, 1, 2 are not used in any substring and thus are considered as extra characters. Hence, we return 3.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 50</code></li>\n\t<li><code>1 &lt;= dictionary.length &lt;= 50</code></li>\n\t<li><code>1 &lt;= dictionary[i].length &lt;= 50</code></li>\n\t<li><code>dictionary[i]</code>&nbsp;and <code>s</code> consists of only lowercase English letters</li>\n\t<li><code>dictionary</code> contains distinct words</li>\n</ul>\n",
+  "hints": [
+    "Can we use Dynamic Programming here?",
+    "Define DP[i] as the min extra character if breaking up s[0:i] optimally."
+  ],
+  "metaData": "{\n  \"name\": \"minExtraChar\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"string[]\",\n      \"name\": \"dictionary\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"198.2K\", \"totalSubmission\": \"346K\", \"totalAcceptedRaw\": 198245, \"totalSubmissionRaw\": 345962, \"acRate\": \"57.3%\"}",
+  "likes": 2633,
+  "dislikes": 138,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Word Break\", \"titleSlug\": \"word-break\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"leetscode\"\n[\"leet\",\"code\",\"leetcode\"]",
+    "\"sayhelloworld\"\n[\"hello\",\"world\"]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Trie",
+      "slug": "trie"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minExtraChar(string s, vector<string>& dictionary) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minExtraChar(String s, String[] dictionary) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minExtraChar(self, s: str, dictionary: List[str]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minExtraChar(self, s, dictionary):\n        \"\"\"\n        :type s: str\n        :type dictionary: List[str]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {string[]} dictionary\n * @return {number}\n */\nvar minExtraChar = function(s, dictionary) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minExtraChar(s: string, dictionary: string[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinExtraChar(string s, string[] dictionary) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minExtraChar(char* s, char** dictionary, int dictionarySize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minExtraChar(s string, dictionary []string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minExtraChar(s: String, dictionary: Array<String>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minExtraChar(_ s: String, _ dictionary: [String]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_extra_char(s: String, dictionary: Vec<String>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {String[]} dictionary\n# @return {Integer}\ndef min_extra_char(s, dictionary)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param String[] $dictionary\n     * @return Integer\n     */\n    function minExtraChar($s, $dictionary) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minExtraChar(String s, List<String> dictionary) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minExtraChar(s: String, dictionary: Array[String]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_extra_char(s :: String.t, dictionary :: [String.t]) :: integer\n  def min_extra_char(s, dictionary) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_extra_char(S :: unicode:unicode_binary(), Dictionary :: [unicode:unicode_binary()]) -> integer().\nmin_extra_char(S, Dictionary) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-extra-char s dictionary)\n  (-> string? (listof string?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2012",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nThe problem is about breaking a given string, `s` of length `n`, into non-overlapping substrings such that each substring is present in a given `dictionary` of words. The objective is to minimize the number of extra characters left over after the string is broken up optimally. The maximum number of characters that could possibly be left over after breaking up the string is `n`. This is the case where we find no match in the `dictionary` and all the characters must be removed. In the best-case scenario, no characters need to be removed (i.e. we can match every character to a non overlapping substring)\n\n---\n\n### Approach 1: Top Down Dynamic Programming with Substring Method\n\n\n#### Intuition\n\nWe will consider breaking the given string into non-overlapping substrings that exist in the dictionary while minimizing the number of extra characters left over.\n\nTo solve this problem, we can utilize a recursive approach with memoization. We define a recursive function `dp` that takes an index `start` as a parameter. This index represents the current position in the string where we are considering adding characters to form a valid word. The function `dp` returns the minimum number of extra characters needed to form a valid concatenation of words starting from the `start` index.\n\nThe `dp` function represents the dynamic programming approach used to solve the problem. It takes a single argument, `start`, which represents the index in the string `s` that we are currently considering. We will try to find a word in `dictionary` that **starts** at this index.\n\nThe function `dp` returns the minimum number of extra characters needed to form a valid concatenation of words starting from the `start` index.\n\nThe recurrence relation in the `dp` function is as follows:\n\n- If the `start` index reaches the end of the string (`start == n`), indicating that we have considered all characters in `s`, the function returns 0, as no extra characters are needed.\n- If the `start` index is not at the end of the string, the function considers two possibilities:\n  1. Counting the current character at `start` as an extra character by recursively calling `dp` with the next index (`start + 1`). This corresponds to the case where the current character is not part of any valid word in the dictionary. The result is incremented by 1, as we are counting the current character as an extra.\n  2. Iterating over all possible `end` indices from `start` to the end of the string. For each `end`, the function checks if the substring `s[start:end+1]` exists in `dictionary`. We can convert `dictionary` to a set before starting the DP to make these checks more efficient. If it does, the function recursively calls `dp` with the next index after the valid word's end index, `end + 1`. The result is updated to the minimum value between the current minimum and the value returned from the recursive call.\n\nFor each recursive call, we keep track of the minimum number of extra characters needed to form a valid concatenation. We update this minimum by considering both possibilities and selecting the option with the minimum number of extra characters.\n\nTo optimize the solution, we use memoization, which allows us to avoid redundant calculations. By caching the results of previously computed recursive calls, we can retrieve them directly instead of recomputing them, which significantly improves the efficiency of the algorithm.\n\nThe initial call to the recursive function is made with `start` set to 0, indicating that we start from the beginning of the string. The result of the function is the minimum number of extra characters needed to form a valid concatenation of words from the dictionary.\n\nHere's how this algorithm will work for the string s `\"LTSCD\"` and dictionary `[\"LT\", \"CD\"]`:\n\n![figA](../Figures/2707/FigA.png)\n\n#### Algorithm\n\n\n1. To achieve `O(1)` lookups, convert the list of strings in the dictionary to a set.\n2. Define a recursive function called `dp` that takes the starting index of the substring as a parameter.\n3. At each recursive call of `dp` check if the starting index `start` has reached the end of the string `s`. If so, return 0.\n4. Set `ans`, the answer for the current state, to `dp(start + 1) + 1`.\n5. If the starting index is not at the end of the string, explore all possible substrings starting from the current index `start`.\n6. For each possible substring, checks if it exists in the `dictionary`. If it does, recursively calculate the minimum number of extra characters starting from the next index `dp(end + 1)`.\n7. Keep track of the minimum number of extra characters encountered so far (`ans`) and update it whenever a lower value is found.\n8. To optimize the solution and avoid redundant computations, utilize memoization. Store the results of previously computed subproblems in a separate data structure.\n9. Finally, call the `dp` function with the starting index set to 0.\n\n#### Implementation\n\n> Note: In Python, we are using `@functools.cache` to perform the memoization.\n\n<iframe src=\"https://leetcode.com/playground/4Utr3H9x/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"4Utr3H9x\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the total characters in the string.\nLet $M$ be the average length of the strings in `dictionary`.\nLet $K$ be the length of the `dictionary`.\n\n* Time complexity: $O(N^3)$. There can be $N + 1$ unique states of the `dp` method. In each state of `dp`, we iterate over `end`, which is $O(N)$ iterations. In each of these iterations, we create a substring, which costs $O(N)$. Hence, the overall cost of the `dp` method is $O(N^3)$.\n\n* Space complexity: $O(N + M \\cdot K)$. The HashSet used to store the strings in the `dictionary` will incur a cost of $O(M \\cdot K)$. Additionally, the `dp` method will consume stack space and traverse to a depth of $N$ in the worst case scenario, resulting in a cost of $O(N)$.\n\n---\n\n### Approach 2: Bottom Up Dynamic Programming with Substring Method\n\n\n#### Intuition\n\nAs shown in the first approach to solve this problem, we can utilize a dynamic programming approach. But this time bottom up. This solution converts the top down approach used above to a bottom up approach. We start by initializing a dynamic programming table `dp` with values corresponding to the minimum number of extra characters at each position in the string. Notice that here, `dp[start]` is equal to `dp(start)` from the previous approach.\n\nWith bottom up, we need to start from the base case. The base case we defined above is when `start = n`. Thus, we iterate through the string backward (starting from `n - 1`), considering each position as a potential starting point for a substring. For each position, we can apply the same recurrence from the previous approach - explore all possible substrings starting from that point and calculate the minimum number of extra characters associated with each substring. We update the dynamic programming table accordingly.\n\nBy the end of the iteration, the value at the first position of the dynamic programming table represents the minimum number of extra characters left over after breaking the string optimally. This value is our desired result, which we return as the output.\n\n#### Algorithm\n\n1. To achieve `O(1)` lookups, convert the list of strings in the dictionary to a set.\n2. Create a dynamic programming array `dp` of size `n + 1`.\n3. Iterate over the string `s` from right to left, starting from last character (`n - 1`) down to the first character (`0`).\n4. Initialize `dp[start]` by `dp[start] + 1` to consider the case where the character at index `start` is an extra character.\n5. For each starting index `start`, consider all possible substrings starting from `start` and ending at various indices `end` from `start` to `n - 1`.\n6. If the substring from `start` to `end` is found in the `dictionary` set, update `dp[start]` by taking the minimum of its current value and `dp[end + 1]`.\n7. Finally, return the value at `dp[0]`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/7uuyviFJ/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"7uuyviFJ\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the total characters in the string.\nLet $M$ be the average length of the strings in `dictionary`.\nLet $K$ be the length of the `dictionary`.\n\n* Time complexity: $O(N^3)$. The two nested loops used to perform the dynamic programming operation cost $O(N^2)$. The substring method inside the inner loop costs another $O(N)$. Hence, the overall time complexity is $O(N^3)$.\n\n* Space complexity: $O(N + M \\cdot K)$. The HashSet used to store the strings in the `dictionary` will incur a cost of $O(M \\cdot K)$. The `dp` array will incur a cost of $O(N)$.\n\n---\n\n### Approach 3: Top Down Dynamic Programming with Trie\n\n#### Intuition\n\nTo optimize the top down dynamic programming approach shared earlier we can try to get rid of the `substring` method. If we can get rid of the `substring` method we can reduce the time complexity to $O(N^2)$. We can use the [trie](https://en.wikipedia.org/wiki/Trie) data structure to reduce the time complexity of the algorithm. If you are not familiar with tries, we highly recommend you solve [this problem](https://leetcode.com/problems/implement-trie-prefix-tree/) first. In this article, we will assume you are already familiar with tries.\n\nFirst, we create a trie data structure by building a trie from the given dictionary of words. Each `TrieNode` represents a character, and we connect the nodes to form a hierarchical structure based on the characters in the words. We mark the nodes that correspond to the end of a word.\n\nTo find the minimum number of extra characters, we use the same recursive function `dp` from the first approach, with a few modifications. It takes an index representing the starting position in the string.\n\nLike in the first approach, we initialize the answer for a given `start` index as `dp(start + 1) + 1`. Then we try all possible `end` positions by iteration over the string starting from `end = start`. As we iterate, we traverse the Trie data structure to check if the characters in the string exist in the trie.\n\nIf we encounter a TrieNode marked as the end of a word, we update the minimum count by recursively calling `dp` on the next index without adding any extra characters. If we find that no TrieNode exists at all for a character, we can immediately break since no words will exist beyond this point.\n\n#### Algorithm\n\n1. Start by defining a `TrieNode` class with `children` and `is_word` attributes. Each node represents a character in the trie.\n2. The `buildTrie` function is used to construct the trie by iterating through each word in the dictionary and adding it to the trie character by character.\n3. Define a recursive helper function called `dp`.\n4. At each recursive call of `dp` check if the starting index `start` has reached the end of the string `s`. If so, return 0.\n5. The base case of the recursion is when the starting index reaches the end of the string, in which case it returns 0.\n6. Traverse the trie starting from the root and follow the characters of the substring, checking if each character exists in the trie.\n7. If a character is not found in the trie, break out of the loop.\n8. If a valid substring is found in the trie (`node.is_word == true`), call `dp(end + 1)`.\n9. Track the minimum number of extra characters encountered so far(`ans`) and update it whenever a lower value is found.\n10. To optimize the solution, apply memoization. Store the results of previously computed subproblems in a separate data structure.\n11. Finally, call `dp` with the starting index set to 0.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/exdfhkAT/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"exdfhkAT\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the total characters in the string.\nLet $M$ be the average length of the strings in `dictionary`.\nLet $K$ be the length of the `dictionary`.\n\n* Time complexity: $O(N^2 + M \\cdot K)$. There can be $N + 1$ unique states of the `dp` method. Each state of the `dp` method costs $O(N)$ to compute. Hence, the overall cost of the `dp` method is $O((N + 1) \\cdot N)$ or simply $O(N^2)$. Building the trie costs $O(M \\cdot K)$.\n\n* Space complexity: $O(N + M \\cdot K)$. The Trie used to store the strings in the `dictionary` will incur a cost of $O(M \\cdot K)$. Additionally, the `dp` method will consume stack space and traverse to a depth of $N$, resulting in a cost of $O(N)$.\n\n---\n\n### Approach 4: Bottom Up Dynamic Programming with Trie\n\n\n#### Intuition\n\nWe can optimize the bottom up approach the same way we optimized the top down approach, by using a Trie to avoid needing to create substrings.\n\n\nWe initialize a dynamic programming table, `dp`, where each position represents the minimum number of extra characters starting from that index. This is the same table as the one from approach 2.\n\nFor each index `start`, we initialize `dp[start] = dp[start + 1] + 1` as the base case. Then we iterate backward through the string, starting from the last index. For each index, we update the corresponding value in the `dp` table by considering all possible substrings starting from that position. We traverse the Trie data structure, checking if the characters in the string exist in the Trie. If a character doesn't exist in the Trie, we can immediately break.\n\nIf we encounter a TrieNode marked as the end of a word during traversal, we update the `dp` value at the start index by taking the minimum between the current value and the value at the end index without adding any extra characters.\n\n#### Algorithm\n\nThe algorithm used in the solution can be explained in the following short points:\n\n1. Define a `TrieNode` class with `children` and `is_word` attributes. Each node represents a character in the trie.\n2. The `buildTrie` function is used to construct the trie by iterating through each word in the dictionary and adding it to the trie character by character.\n3. Initialize the root of the trie, the length of the input string, and a dynamic programming array `dp` of size `n + 1`.\n4. Iterate over the string `s` from right to left, starting from the last character down to the first character.\n5. For each starting index `start`, calculate the minimum number of extra characters needed to break down the substring from `start` to the end of the string.\n8. Initialize `dp[start]` with `dp[start + 1] + 1`.\n9. Traverse the trie starting from the root and follow the characters of the substring, checking if each character exists in the trie.\n10. If a character is not found in the trie, break out of the for loop.\n11. If a valid substring is found in the trie (`node.is_word == true`), update `dp[start]` by taking the minimum of its current value and `dp[end + 1]`.\n12. Finally, return the value at `dp[0]`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/jZ8RYQGN/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"jZ8RYQGN\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the total characters in the string.\nLet $M$ be the average length of the strings in `dictionary`.\nLet $K$ be the length of the `dictionary`.\n\n* Time complexity: $O(N^2 + M \\cdot K)$. The two nested for loops that are being used for the dynamic programming operation cost $O(N^2)$. Building the trie costs $O(M \\cdot K)$.\n\n* Space complexity: $O(N + M \\cdot K)$. The Trie used to store the strings in `dictionary` will incur a cost of $O(M \\cdot K)$. The `dp` array will incur a cost of $O(N)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,131 @@
+{
+  "questionId": "2540",
+  "questionFrontendId": "2647",
+  "title": "Color the Triangle Red",
+  "titleSlug": "color-the-triangle-red",
+  "difficulty": "Hard",
+  "content": "<p>You are given an integer <code>n</code>. Consider an equilateral triangle of side length <code>n</code>, broken up into <code>n<sup>2</sup></code> unit equilateral triangles. The triangle has <code>n</code> <strong>1-indexed</strong> rows where the <code>i<sup>th</sup></code> row has <code>2i - 1</code> unit equilateral triangles.</p>\n\n<p>The triangles in the <code>i<sup>th</sup></code> row are also <strong>1-indexed</strong> with coordinates from <code>(i, 1)</code> to <code>(i, 2i - 1)</code>. The following image shows a triangle of side length <code>4</code> with the indexing of its triangle.</p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/09/01/triangle4.jpg\" style=\"width: 402px; height: 242px;\" />\n<p>Two triangles are <strong>neighbors</strong> if they <strong>share a side</strong>. For example:</p>\n\n<ul>\n\t<li>Triangles <code>(1,1)</code> and <code>(2,2)</code> are neighbors</li>\n\t<li>Triangles <code>(3,2)</code> and <code>(3,3)</code> are neighbors.</li>\n\t<li>Triangles <code>(2,2)</code> and <code>(3,3)</code> are not neighbors because they do not share any side.</li>\n</ul>\n\n<p>Initially, all the unit triangles are <strong>white</strong>. You want to choose <code>k</code> triangles and color them <strong>red</strong>. We will then run the following algorithm:</p>\n\n<ol>\n\t<li>Choose a white triangle that has <strong>at least two</strong> red neighbors.\n\n\t<ul>\n\t\t<li>If there is no such triangle, stop the algorithm.</li>\n\t</ul>\n\t</li>\n\t<li>Color that triangle <strong>red</strong>.</li>\n\t<li>Go to step 1.</li>\n</ol>\n\n<p>Choose the minimum <code>k</code> possible and set <code>k</code> triangles red before running this algorithm such that after the algorithm stops, all unit triangles are colored red.</p>\n\n<p>Return <em>a 2D list of the coordinates of the triangles that you will color red initially</em>. The answer has to be of the smallest size possible. If there are multiple valid solutions, return any.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/09/01/example1.jpg\" style=\"width: 500px; height: 263px;\" />\n<pre>\n<strong>Input:</strong> n = 3\n<strong>Output:</strong> [[1,1],[2,1],[2,3],[3,1],[3,5]]\n<strong>Explanation:</strong> Initially, we choose the shown 5 triangles to be red. Then, we run the algorithm:\n- Choose (2,2) that has three red neighbors and color it red.\n- Choose (3,2) that has two red neighbors and color it red.\n- Choose (3,4) that has three red neighbors and color it red.\n- Choose (3,3) that has three red neighbors and color it red.\nIt can be shown that choosing any 4 triangles and running the algorithm will not make all triangles red.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/09/01/example2.jpg\" style=\"width: 300px; height: 101px;\" />\n<pre>\n<strong>Input:</strong> n = 2\n<strong>Output:</strong> [[1,1],[2,1],[2,3]]\n<strong>Explanation:</strong> Initially, we choose the shown 3 triangles to be red. Then, we run the algorithm:\n- Choose (2,2) that has three red neighbors and color it red.\nIt can be shown that choosing any 2 triangles and running the algorithm will not make all triangles red.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [
+    "Calculate the minimal value of k by strategically designing a monovariant.",
+    "Construct the solution four rows at a time, going bottom up."
+  ],
+  "metaData": "{\n  \"name\": \"colorRed\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[][]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"466\", \"totalSubmission\": \"782\", \"totalAcceptedRaw\": 466, \"totalSubmissionRaw\": 782, \"acRate\": \"59.6%\"}",
+  "likes": 11,
+  "dislikes": 19,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "3",
+    "2"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> colorRed(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[][] colorRed(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def colorRed(self, n: int) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def colorRed(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {number[][]}\n */\nvar colorRed = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function colorRed(n: number): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[][] ColorRed(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** colorRed(int n, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func colorRed(n int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun colorRed(n: Int): Array<IntArray> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func colorRed(_ n: Int) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn color_red(n: i32) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Integer[][]}\ndef color_red(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Integer[][]\n     */\n    function colorRed($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> colorRed(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def colorRed(n: Int): Array[Array[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec color_red(n :: integer) :: [[integer]]\n  def color_red(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec color_red(N :: integer()) -> [[integer()]].\ncolor_red(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (color-red n)\n  (-> exact-integer? (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": null
+}

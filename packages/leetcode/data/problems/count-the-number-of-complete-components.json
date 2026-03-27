@@ -1,0 +1,145 @@
+{
+  "questionId": "2793",
+  "questionFrontendId": "2685",
+  "title": "Count the Number of Complete Components",
+  "titleSlug": "count-the-number-of-complete-components",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer <code>n</code>. There is an <strong>undirected</strong> graph with <code>n</code> vertices, numbered from <code>0</code> to <code>n - 1</code>. You are given a 2D integer array <code>edges</code> where <code>edges[i] = [a<sub>i</sub>, b<sub>i</sub>]</code> denotes that there exists an <strong>undirected</strong> edge connecting vertices <code>a<sub>i</sub></code> and <code>b<sub>i</sub></code>.</p>\n\n<p>Return <em>the number of <strong>complete connected components</strong> of the graph</em>.</p>\n\n<p>A <strong>connected component</strong> is a subgraph of a graph in which there exists a path between any two vertices, and no vertex of the subgraph shares an edge with a vertex outside of the subgraph.</p>\n\n<p>A connected component is said to be <b>complete</b> if there exists an edge between every pair of its vertices.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<p><strong class=\"example\"><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/04/11/screenshot-from-2023-04-11-23-31-23.png\" style=\"width: 671px; height: 270px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> n = 6, edges = [[0,1],[0,2],[1,2],[3,4]]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> From the picture above, one can see that all of the components of this graph are complete.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<p><strong class=\"example\"><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/04/11/screenshot-from-2023-04-11-23-32-00.png\" style=\"width: 671px; height: 270px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> n = 6, edges = [[0,1],[0,2],[1,2],[3,4],[3,5]]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The component containing vertices 0, 1, and 2 is complete since there is an edge between every pair of two vertices. On the other hand, the component containing vertices 3, 4, and 5 is not complete since there is no edge between vertices 4 and 5. Thus, the number of complete components in this graph is 1.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 50</code></li>\n\t<li><code>0 &lt;= edges.length &lt;= n * (n - 1) / 2</code></li>\n\t<li><code>edges[i].length == 2</code></li>\n\t<li><code>0 &lt;= a<sub>i</sub>, b<sub>i</sub> &lt;= n - 1</code></li>\n\t<li><code>a<sub>i</sub> != b<sub>i</sub></code></li>\n\t<li>There are no repeated edges.</li>\n</ul>\n",
+  "hints": [
+    "Find the connected components of an undirected graph using depth-first search (DFS) or breadth-first search (BFS).",
+    "For each connected component, count the number of nodes and edges in the component.",
+    "A connected component is complete if and only if the number of edges in the component is equal to m*(m-1)/2, where m is the number of nodes in the component."
+  ],
+  "metaData": "{\n  \"name\": \"countCompleteComponents\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"edges\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"158.5K\", \"totalSubmission\": \"203.8K\", \"totalAcceptedRaw\": 158489, \"totalSubmissionRaw\": 203826, \"acRate\": \"77.8%\"}",
+  "likes": 1276,
+  "dislikes": 32,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Number of Connected Components in an Undirected Graph\", \"titleSlug\": \"number-of-connected-components-in-an-undirected-graph\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "6\n[[0,1],[0,2],[1,2],[3,4]]",
+    "6\n[[0,1],[0,2],[1,2],[3,4],[3,5]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countCompleteComponents(int n, vector<vector<int>>& edges) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countCompleteComponents(int n, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countCompleteComponents(self, n: int, edges: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countCompleteComponents(self, n, edges):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} edges\n * @return {number}\n */\nvar countCompleteComponents = function(n, edges) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countCompleteComponents(n: number, edges: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountCompleteComponents(int n, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int countCompleteComponents(int n, int** edges, int edgesSize, int* edgesColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countCompleteComponents(n int, edges [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countCompleteComponents(n: Int, edges: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countCompleteComponents(_ n: Int, _ edges: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_complete_components(n: i32, edges: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} edges\n# @return {Integer}\ndef count_complete_components(n, edges)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $edges\n     * @return Integer\n     */\n    function countCompleteComponents($n, $edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countCompleteComponents(int n, List<List<int>> edges) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countCompleteComponents(n: Int, edges: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_complete_components(n :: integer, edges :: [[integer]]) :: integer\n  def count_complete_components(n, edges) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_complete_components(N :: integer(), Edges :: [[integer()]]) -> integer().\ncount_complete_components(N, Edges) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-complete-components n edges)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2711",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nBefore diving into the solution, let’s clarify what a **complete connected component** is. A complete connected component is a set of nodes and edges in a graph (also known as a subgraph) that satisfies the following conditions:\n\n- It is **connected**, meaning every pair of vertices in the subgraph is reachable through some path, and no vertex connects to another component.  \n- It is **complete**, meaning every vertex in the component has a direct edge to every other vertex. Notice that every complete subgraph is also a connected subgraph, but the reverse is not always true.\n\nIn simpler terms, we are looking for connected subgraphs that form perfect [cliques](https://en.wikipedia.org/wiki/Clique_(graph_theory)) - where each vertex is directly connected to all others within the component.\n\n![types of subgraph](../Figures/2685/subgraphs.png)\n\n> A strong grasp of fundamental graph algorithms like Depth-First Search, Breadth-First Search, and Disjoint Set Union is essential for understanding the solutions ahead. If you need a refresher or want to explore these concepts further, check out the [Graph Explore Card](https://leetcode.com/explore/learn/card/graph/). This resource provides an in-depth look at key graph algorithms, their applications, and a variety of problems to reinforce the underlying patterns.\n    \n---\n\n### Approach 1: Adjacency List\n\n#### Intuition\n\nThe most common way to represent a graph is through an adjacency list, where each node points to a list of all the nodes it is directly connected to.\n\nFor example, consider a graph where vertices `0`, `1`, and `2` form a complete component. Their adjacency lists would look like this:\n\n- Vertex `0`’s neighbors: `[1, 2]`\n- Vertex `1`’s neighbors: `[0, 2]`\n- Vertex `2`’s neighbors: `[0, 1]`\n\nNow, let’s take a moment to include each vertex as its own neighbor. This does not violate any constraints since every node is naturally reachable from itself. After this adjustment, the adjacency lists would look like:\n\n- Vertex `0`’s neighbors: `[0, 1, 2]`\n- Vertex `1`’s neighbors: `[0, 1, 2]`\n- Vertex `2`’s neighbors: `[0, 1, 2]`\n\nThis leads to a key insight: in a complete connected component, every vertex must have the exact same set of neighbors (including itself). This forms a unique \"adjacency pattern\" that is shared by all vertices in the same component.\n\nLet us create the adjacency list for the graph and include each vertex as a neighbor in its own list. Now, we need to identify all vertices that share the same neighbor pattern.  \n\nTo do this, we can use a hash map where the key represents a unique neighbor pattern, and the value keeps track of how many times this pattern appears in the graph. However, there may be cases where two neighbor patterns are the same but appear differently in the adjacency list (for example, `0: [0, 1, 2]` and `2: [2, 1, 0]`). To ensure they are grouped together, we first sort each neighbor list before adding it to the map.  \n\nNext, we go through each entry in the map to count how many unique patterns were collected. But one final check is needed: the size of the adjacency list must match the number of vertices that share this pattern. In other words, the size of the list should be equal to its frequency of occurrence in the map.  \n\nWhy? Because in a complete component with `k` vertices, each vertex must have exactly `k` neighbors (including itself). And exactly `k` vertices must share this pattern - one for each member of the component.  \n\nFinally, we count the number of entries in the map that pass this validation and return this count as our answer.\n\n#### Algorithm\n\n- Initialize:\n  - an array of adjacency lists called `graph` with size `n`.\n  - a hash map `componentFreq` to track frequencies of unique adjacency lists.\n- Loop through each `vertex` from `0` to `n - 1`:\n  - Initialize the adjacency list for the current vertex and add the vertex itself (self-loop).\n- Build the graph by looping through each `edge = [u, v]` in the `edges` array:\n  - Push `v` into `u`'s adjacency list (`graph[u]`).\n  - Push `u` into `v`'s adjacency list (`graph[v]`).\n- For each vertex from `0` to `n - 1`:\n  - Get and sort its list of neighbors.\n  - Increment the frequency count for this specific adjacency pattern in the `componentFreq` map.\n- Initialize a counter variable `completeCount` to zero.\n- Iterate through each entry in the `componentFreq` map:\n  - If the size of the adjacency list equals its frequency count, increment `completeCount`.\n- Return the final value of `completeCount`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/g4GoucsF/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"g4GoucsF\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of vertices and $m$ be the number of edges in the given graph.\n\n- Time complexity: $O(n + m \\log n)$\n\n    The solution's time complexity stems from several operations. Initializing the adjacency lists requires $O(n)$ time as we create a list for each vertex. When building the adjacency lists from the edges, we spend $O(m)$ time adding each edge to the lists of both vertices it connects. \n    \n    The most expensive operation comes when we sort each vertex's adjacency list, which costs $O(d_i \\log d_i)$ for a vertex with degree $d_i$. Across all vertices, this sorting accounts for $O(\\sum_{i=0}^{n-1} d_i \\log d_i)$ time. Since $\\sum d_i = 2m$ and the maximum degree is bounded by $n$, this simplifies to $O(m \\log n)$ in the worst case. The final operations of processing vertices and counting complete components take $O(n)$ time. \n    \n    Therefore, the overall time complexity is dominated by the sorting step, giving us $O(n + m \\log n)$.\n\n- Space complexity: $O(n + m + S)$\n\n    For space complexity, we use memory for the adjacency list array itself, which requires $O(n)$ space. The contents of all adjacency lists collectively require space proportional to the number of edges, contributing $O(m)$ to our space usage. \n\n    The space taken by the sorting algorithm ($S$) depends on the language of implementation:\n    - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n)$.\n    - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worst-case space complexity of $O(\\log n)$.\n    - In Python, the `sort()` method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has a space complexity of $O(n)$ .\n    \n    While the hash map stores references to these same adjacency lists, it doesn't significantly increase the asymptotic space complexity. Each unique component pattern may be stored once in the hash map, but the total size of all stored patterns remains bounded by the total size of all adjacency lists, which is $O(n + m)$. \n    \n    Therefore, the overall space complexity is $O(n + m + S)$.  \n\n---\n\n### Approach 2: Depth-First Search (DFS)\n\n#### Intuition\n\nLet's now return to traditional graph traversal techniques to solve this problem. Depth-first search (DFS) is particularly well-suited for this task. Starting from an unvisited vertex, DFS explores as far as possible along a branch before backtracking, ensuring that every vertex reachable from the starting point is visited.  \n\nBut how do we determine if a component is complete? One approach is to check every pair of vertices in the component to see if they share an edge, but this would be inefficient.  \n\nInstead, we can take advantage of a key property of complete graphs: in a complete graph with $n$ vertices, there must be exactly $\\frac{n \\cdot (n-1)}{2}$ unique edges - equal to the number of pairs of nodes in the graph. Since our graph is undirected but our adjacency list counts each edge twice (once from each endpoint), the total edge count from the adjacency lists should be $n \\cdot (n-1)$.  \n\nDuring our DFS traversal, we will track two crucial pieces of information for each component:  \n1. The number of vertices in the component.  \n2. The total number of edges connected to vertices in the component.  \n\nFor each new vertex we visit, we increment the vertex count and add all its edges to the total edge count. Once the traversal is complete, we check if the gathered values match the expected count. We keep track of all components that meet this condition, and after visiting all vertices, we return this count as our final answer.\n\n#### Algorithm\n\n- Initialize an array of adjacency lists called `graph` with size `n` to represent the undirected graph.\n- Build the graph by looping through each edge in the `edges` array:\n  - Add each vertex to the other's adjacency list.\n- Initialize a counter variable `completeCount` to zero.\n- Create a hash set `visited` to keep track of visited vertices.\n- Loop through each `vertex` from `0` to `n - 1`:\n  - Skip if the `vertex` has already been visited.\n  - Initialize an array `componentInfo` with two elements to track: `[0]`: number of vertices and `[1]`: total edges.\n  - Call the `dfs` function starting from the current `vertex`.\n  - Check if the component is complete by comparing the number of edges to `vertices * (vertices - 1)`.\n  - Increment `completeCount` if the condition is met.\n- Return the final value of `completeCount`.\n\nHelper method `dfs(curr, graph, visited, componentInfo)`:\n- Mark the current vertex as visited.\n- Increment the vertex count in `componentInfo[0]`.\n- Add the number of edges from the current vertex to `componentInfo[1]`.\n- Recursively explore all unvisited neighbors of the current vertex.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/keZDcvFS/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"keZDcvFS\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of vertices and $m$ be the number of edges in the given graph.\n\n- Time complexity: $O(n + m)$  \n\n    The algorithm begins with graph initialization, where populating the adjacency list by processing $m$ edges requires $O(m)$, since each edge is added to two lists. \n    \n    The core of the solution is a DFS traversal, which visits each vertex once and explores all edges connected to it. Since each edge is considered at most twice (once from each endpoint), DFS runs in $O(n + m)$. \n    \n    Summing these components, the overall time complexity remains $O(n + m)$.  \n\n- Space complexity: $O(n + m)$  \n\n    The adjacency list representation requires $O(n)$ for the array and $O(m)$ for the edge storage. The `visited` set stores at most $O(n)$ vertices, while the recursive DFS calls can create a call stack of size $O(n)$ in the worst case. The `componentInfo` array uses constant space. \n    \n    Combining these, the overall space complexity is $O(n + m)$, dominated by the graph representation and recursion stack.\n\n---\n\n### Approach 3: Breadth-First Search (BFS)\n\n#### Intuition\n\nThe other quintessential graph traversal algorithm is the Breadth-First Search (BFS), which can also be used to solve this problem.  \n\nBFS explores each component using a queue. We maintain a `visited` array to track which vertices have been visited. When we encounter an unvisited vertex, we add it to the queue and begin exploring its connected component.  \n\nAlong with the queue, we maintain a list called `component` to store all vertices belonging to the current component. Once the exploration is complete, we need to verify whether the component is fully connected. For a component with `k` vertices to be complete, every vertex must have exactly `k - 1` edges connecting it to the other vertices within the component.  \n\nAfter finishing the BFS traversal for a component, we iterate through the gathered vertices in `component`. If the size of the component is `k` and each vertex has exactly `k - 1` edges, we confirm that it is a complete component and increment our count.  \n\nOnce all vertices in the graph have been explored, we return this count as our final answer.\n\n#### Algorithm\n\n- Initialize an array of adjacency lists called `graph` with size `n` to represent the undirected graph.\n- Build the graph by looping through each edge in the `edges` array:\n  - Add each vertex to the other's adjacency list.\n- Create a boolean array `visited` of size `n` to track visited vertices.\n- Initialize a counter variable `completeComponents` to zero.\n- Loop through each `vertex` from `0` to `n - 1`:\n  - Skip if the `vertex` has already been visited.\n  - Create a list called `component` to store vertices in the current component.\n  - Initialize a `queue` and add the current vertex to it.\n  - Mark the current `vertex` as visited.\n  - Perform BFS:\n    - Poll the next vertex from the queue.\n    - Add it to the component list.\n    - Process all unvisited neighbors by adding them to the queue and marking them as visited.\n  - After BFS completes, check if the component is complete:\n    - Initialize `isComplete` as `true`.\n    - For each `node` in the component:\n      - Check if the number of its neighbors equals `component.size - 1`.\n      - If not, set `isComplete` to `false` and break.\n  - If the component is complete, increment `completeComponents`.\n- Return the final value of `completeComponents`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/RgcCySnK/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"RgcCySnK\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of vertices and $m$ be the number of edges in the given graph.\n\n- Time complexity: $O(n + m)$\n\n    The solution first builds an adjacency list representation, which takes $O(n)$ time for initialization and $O(m)$ time to add all edges. Then, for each unvisited vertex, we perform a BFS traversal that visits each vertex and edge exactly once across all components, taking $O(n + m)$ time in total. \n    \n    For each component found, we check if it's complete by examining the degree of each vertex in the component, which cumulatively takes $O(n)$ time. \n    \n    Therefore, the overall time complexity is $O(n + m)$.\n\n- Space complexity: $O(n + m)$\n\n    The adjacency list requires $O(n + m)$ space: $O(n)$ for the array of lists and $O(m)$ for storing all edges. The visited array requires $O(n)$ space. The queue used in BFS and the list to store component vertices can each contain at most $O(n)$ vertices. \n    \n    Therefore, the overall space complexity is $O(n + m)$.\n\n---\n\n### Approach 4: Disjoint Set Union (Union-Find)\n\n#### Intuition\n\nA complete connected component has a distinct property: it is a disjoint unit of the graph, meaning it does not share any connections with other parts of the graph. Our task is to identify these disjoint units and check whether their vertices and edges meet the criteria for completeness and connectivity.  \n\nOne of the most effective ways to find separate groups in a graph is by using the Union-Find algorithm (also known as Disjoint Set Union). This method helps group vertices that belong together. Each group has a representative vertex, known as the leader, which serves as the group's identifier. To determine whether two vertices belong to the same group, we simply check if they share the same leader.  \n\nIn our Union-Find implementation, we also track the size of each component. Maintaining size is not only useful for optimizing the merging of components - since attaching a smaller component to a larger one is more efficient - but also plays a crucial role in this problem: it tells us exactly how many vertices exist in each component. To verify whether a component is a valid complete connected component, we check if its edge count matches $\\frac{k \\cdot (k - 1)}{2}$, where $k$ is the number of vertices in the component.  \n\nNow, let’s implement our solution. First, we initialize a Union-Find structure and perform the \"union\" operation for each edge in our input. Since an edge signifies that two vertices belong to the same component, applying \"union\" to all edges ensures that all vertices are grouped correctly.  \n\nNext, we count the number of edges in each component. To do this, we use a hash map that associates each component with its edge count. Since Union-Find assigns each component a unique representative (the root of its tree), we use these representatives as keys in the map.  \n\nFinally, we iterate through each group leader and check if the group forms a complete component. A group is complete if its edge count equals $\\frac{k \\cdot (k - 1)}{2}$. If it does, we increment our final count. Once all components have been processed, we return the total number of complete components as our answer.\n\n#### Algorithm\n\n- Create a `UnionFind` data structure `dsu` to track connected components in the graph.\n- Initialize a hash map `edgeCount` to track the number of edges in each component.\n- Loop through each edge in the `edges` array:\n  - Join the two vertices using the `union` operation.\n- Loop through the `edges` again:\n  - Find the root of the component containing the first vertex of each edge.\n  - Increment the edge count for that component in the `edgeCount` map.\n- Initialize a counter variable `completeCount` to zero.\n- Loop through each `vertex` from `0` to `n - 1`:\n  - If the `vertex` is a root (representative) of its component:\n    - Calculate the expected number of edges for a complete component with that many vertices: `(size[vertex] * (size[vertex] - 1)) / 2`.\n  - Compare the actual edge count with the expected edge count.\n    - If they match, increment `completeCount`.\n- Return the final value of `completeCount`.\n\nHelper class `UnionFind`:\n- Initialize a `UnionFind` class with two instance variables:\n  - An array `parent` to track the parent of each node.\n  - An array `size` to track the size of each component.\n- In the constructor `dsu(n)`:\n  - Initialize both arrays with size `n`.\n  - Fill the `parent` array with `-1` to indicate each node is its own parent initially.\n  - Fill the `size` array with `1` as each node starts in its own single-node component.\n  \n- In the `find(node)` method:\n  - Check if the node's parent is `-1` (indicating it's a root).\n  - If it is a root, return the `node` itself.\n  - Otherwise, recursively find the root and update the `node`'s parent (path compression).\n\n- In the `union(node1, node2)` method:\n  - Find the roots of nodes `node1` and `node2` using the `find` method.\n  - If both nodes already belong to the same component (same root), return early.\n  - Apply union-by-size strategy:\n    - If the component containing `node1` is larger:\n      - Make `root1` the parent of `root2`.\n      - Add the size of `root2`'s component to `root1`'s component size.\n    - Otherwise, make `root2` the parent of `root1` and alter size accordingly.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/RYozofJc/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"RYozofJc\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of vertices and $m$ be the number of edges in the given graph.\n\n- Time complexity: $O(n + m\\alpha(n))$\n\n    The solution uses a Union-Find data structure with path compression and union by size. Building the Union-Find structure takes $O(n)$ time for initialization. Processing all edges through union operations takes $O(m\\alpha(n))$ time, where $\\alpha(n)$ is the inverse Ackermann function, which grows extremely slowly and is practically constant. \n    \n    Counting edges in each component requires iterating through all edges again, taking $O(m)$ time. Finally, checking if each component is complete involves iterating through all vertices once, taking $O(n)$ time. \n    \n    Therefore, the overall time complexity is $O(n + m\\alpha(n))$, which is essentially linear in practice.\n\n- Space complexity: $O(n)$\n\n    The Union-Find data structure uses two arrays of size $n$ for parent pointers and component sizes, requiring $O(n)$ space. The edge count map stores at most $n$ entries (one for each potential component root), requiring $O(n)$ space. Therefore, the overall space complexity is $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

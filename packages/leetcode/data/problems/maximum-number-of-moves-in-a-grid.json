@@ -1,0 +1,140 @@
+{
+  "questionId": "2794",
+  "questionFrontendId": "2684",
+  "title": "Maximum Number of Moves in a Grid",
+  "titleSlug": "maximum-number-of-moves-in-a-grid",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> <code>m x n</code> matrix <code>grid</code> consisting of <strong>positive</strong> integers.</p>\n\n<p>You can start at <strong>any</strong> cell in the first column of the matrix, and traverse the grid in the following way:</p>\n\n<ul>\n\t<li>From a cell <code>(row, col)</code>, you can move to any of the cells: <code>(row - 1, col + 1)</code>, <code>(row, col + 1)</code> and <code>(row + 1, col + 1)</code> such that the value of the cell you move to, should be <strong>strictly</strong> bigger than the value of the current cell.</li>\n</ul>\n\n<p>Return <em>the <strong>maximum</strong> number of <strong>moves</strong> that you can perform.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/04/11/yetgriddrawio-10.png\" style=\"width: 201px; height: 201px;\" />\n<pre>\n<strong>Input:</strong> grid = [[2,4,3,5],[5,4,9,3],[3,4,2,11],[10,9,13,15]]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> We can start at the cell (0, 0) and make the following moves:\n- (0, 0) -&gt; (0, 1).\n- (0, 1) -&gt; (1, 2).\n- (1, 2) -&gt; (2, 3).\nIt can be shown that it is the maximum number of moves that can be made.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/04/12/yetgrid4drawio.png\" />\n<strong>Input:</strong> grid = [[3,2,4],[2,1,9],[1,1,7]]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> Starting from any cell in the first column we cannot perform any moves.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == grid.length</code></li>\n\t<li><code>n == grid[i].length</code></li>\n\t<li><code>2 &lt;= m, n &lt;= 1000</code></li>\n\t<li><code>4 &lt;= m * n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= grid[i][j] &lt;= 10<sup>6</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Consider using dynamic programming to find the maximum number of moves that can be made from each cell.",
+    "The final answer will be the maximum value in cells of the first column."
+  ],
+  "metaData": "{\n  \"name\": \"maxMoves\",\n  \"params\": [\n    {\n      \"name\": \"grid\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"132.7K\", \"totalSubmission\": \"225.9K\", \"totalAcceptedRaw\": 132717, \"totalSubmissionRaw\": 225906, \"acRate\": \"58.7%\"}",
+  "likes": 955,
+  "dislikes": 28,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[2,4,3,5],[5,4,9,3],[3,4,2,11],[10,9,13,15]]",
+    "[[3,2,4],[2,1,9],[1,1,7]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"accenture\", \"name\": \"Accenture\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxMoves(vector<vector<int>>& grid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxMoves(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxMoves(self, grid: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxMoves(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} grid\n * @return {number}\n */\nvar maxMoves = function(grid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxMoves(grid: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxMoves(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxMoves(int** grid, int gridSize, int* gridColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxMoves(grid [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxMoves(grid: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxMoves(_ grid: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_moves(grid: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} grid\n# @return {Integer}\ndef max_moves(grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $grid\n     * @return Integer\n     */\n    function maxMoves($grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxMoves(List<List<int>> grid) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxMoves(grid: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_moves(grid :: [[integer]]) :: integer\n  def max_moves(grid) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_moves(Grid :: [[integer()]]) -> integer().\nmax_moves(Grid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-moves grid)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2548",
+    "content": "## Solution\n\n---\n\n### Overview\n\nWe have an `M x N` matrix called `grid`, filled with positive integers. The challenge is to start from any cell in the first column and find out how many moves we can make to the right while following specific rules.\n\nFrom any cell `(i, j)` in the first column, we can move to the next column in one of three ways:\n1. Directly right to the cell `(i, j + 1)`.\n2. Diagonally up-right to the cell `(i - 1, j + 1)`.\n3. Diagonally down-right to the cell `(i + 1, j + 1)`.\n\nHowever, there's an important condition: we can only make a move if the value in the destination cell is greater than the value in the current cell. \n\nOur goal is to determine the maximum number of moves we can make, starting from any cell in the first column.\n\n![fig](../Figures/2684/2684A.png)\n\n---\n\n### Approach 1: Breadth-First Search (BFS)\n\n#### Intuition\n\nLet's consider the scenario with a single starting point from the first column. To solve the problem, the most intuitive approach is to explore the possible cells (those with a greater value) from the current cell and continue moving until there are no further options. The maximum number of moves made during this process would be our answer. In this case, we would track the cells we have visited to ensure that each cell is not visited more than once.\n\nHowever, tracking visited cells raises a question: is it possible to reach the same cell from different starting points with different numbers of moves? If so, we would need to revisit a cell for each starting point to find the maximum move count. We can prove that this is not possible. The number of moves required to reach a particular cell from different starting points would always be the same. This is because, in each move, the column index strictly increases (as we move from a cell in column `j` to a cell in column `j + 1`). Therefore, reaching cell `(i, j)` from any starting cell in the first column (say `(x, 0)`) requires exactly `j` moves, and it's not possible to reach it in more or fewer moves.\n\nTo extend this approach for starting from any cell in the first column, we can use a traversal method known as Breadth-First Search (BFS). A variation of BFS that starts with multiple initial sources is called Multi-Source BFS. In this case, the approach remains similar to the single-source scenario, except that all cells in the first column are used as starting points in the BFS queue. We then explore the possible next cells that have not been visited yet and have a value greater than the current cell. We keep track of the number of moves made so far, and each time we process a cell from the queue, we update the maximum moves recorded. At the end, this value represents the maximum possible moves.\n\n#### Algorithm\n\n1. Initialize Variables:\n    - Get the dimensions of the grid: `M` (number of rows) and `N` (number of columns).\n    - Create a queue `q` for BFS traversal.\n    - Create a 2D list `vis` of size `M x N` initialized to False to keep track of visited cells.\n    - Define possible directions for movement to adjacent rows in the next column as `dirs = [-1, 0, 1]`.\n2. Enqueue Starting Cells:\n    - For each row in the first column (`col = 0`):\n        - Mark the cell as visited.\n        - Enqueue the cell along with the initial move count `0`.\n3. Perform BFS Traversal:\n    - Initialize `maxMoves` to `0` to store the maximum number of moves made.\n    - While the queue is not empty:\n        - Get the size of the current queue (`sz`) representing the number of cells to process at this level.\n        - For each cell in the current level:\n            - Dequeue the cell and extract its row, column, and move count.\n            - Update `maxMoves` as the maximum between `maxMoves` and the current move count.\n            - Explore Possible Moves:\n                -  For each direction (`dir`) in `dirs`:\n                    -  Calculate the new row as `newRow = row + dir` and the new column as `newCol = col + 1`.\n                    - Check if the new cell is within bounds, not yet visited, and its value is greater than the current cell's value.\n                    - If valid, mark the new cell as visited, and enqueue it with the incremented move count (`count + 1`).\n4. After processing all cells, return `maxMoves`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/25bnsXdR/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"25bnsXdR\"></iframe>\n\n#### Complexity Analysis\n\nHere, $M$ is the number of rows and $N$ is the number of columns in the given matrix `grid`.\n\n- Time complexity: $O(M \\cdot N)$\n\n  We will always be visiting a cell only once due to the visited array. We started from the cells in the first column and might end up in visiting all the cells in the matrix. Hence the time complexity is equal to $O(M \\cdot N)$.\n\n- Space complexity: $O(M \\cdot N)$\n\n  We need the visited array as the size of the given matrix `grid` to keep track of each cell. Also, the queue used in the BFS will have the $M$ number of entries at max, i.e. one for each row. Hence, the total space complexity is equal to $O(M \\cdot N)$.\n\n---\n\n### Approach 2: Top-Down Dynamic Programming\n\n#### Intuition\n\nThis approach uses a similar idea but with a different strategy. As discussed earlier, one method is to explore the possible cells from the current cell and continue until no further options remain. This works well when there is a single starting cell.\n\nHowever, in the given problem, there are multiple starting cells, and repeating the process for each one independently might be inefficient. This is because we could end up traversing the same cells multiple times from different starting points. The key insight for using dynamic programming here is that the number of moves possible from a cell is fixed, regardless of how we reach that cell. In other words, once we have calculated the number of moves for a cell, we can reuse that value whenever we encounter that cell again, rather than recalculating it.\n\nTo solve the problem, we'll perform a recursive process to explore the possible cells for each starting point in the first column and determine the maximum number of moves we can make. After calculating the moves for each starting cell, we will return the highest value as the maximum possible moves. During this process, we'll use memoization to store the number of moves for each cell, allowing us to return the result directly if we revisit that cell, thus avoiding redundant recursion\n\n#### Algorithm\n\n1. Define possible directions for movement to adjacent rows in the next column as `dirs = [-1, 0, 1]`.\n2. Define DFS Function:\n    - The DFS function takes `row`, `col`, `grid`, and `dp` array as parameters.\n    - Get the dimensions `M` (number of rows) and `N` (number of columns).\n    - Check Memoized Result: If `dp[row][col]` is not `-1`, return its value, as the maximum moves for this cell have already been computed.\n    - Initialize `max_moves` to `0` to track the maximum moves possible from this cell.\n        - Explore All Directions:\n        - For each direction in dirs:\n            - Compute the next cell position as `new_row = row + dir` and `new_col = col + 1`.\n            - Check Validity: Ensure that the new position is within grid bounds and the next cell value is greater than the current cell's value.\n            - If valid, recursively call DFS on the new position and update `max_moves` as max(`max_moves`, `1 + DFS(new_row, new_col, grid, dp)`).\n    - Store the computed `max_moves` for `dp[row][col]` and return it.\n3. Call the above function for all the cells in the first column and find the maximum returned value as `maxMoves`.\n4. Return `maxMoves`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/VPnLRcnW/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"VPnLRcnW\"></iframe>\n\n#### Complexity Analysis\n\nHere, $M$ is the number of rows and $N$ is the number of columns in the given matrix `grid`.\n\n- Time complexity: $O(M \\cdot N)$\n\n  We will always be the calculating the moves for each cell only once due to the `dp` array. We might end up finding all the states in the `dp` that are $M \\cdot N$ and hence the time complexity is equal to $O(M \\cdot N)$.\n\n- Space complexity: $O(M \\cdot N)$\n\n  The size of array `dp` is same as the size of the given matrix `grid` to keep the answer of each cell. There will also be some stack space required to keep all the active stack calls which can be at max equal to number of columns as there can be one active stack call for each move. Hence, the total space complexity is equal to $O(M \\cdot N)$.\n\n---\n\n### Approach 3: Bottom-up Dynamic Programming\n\n#### Intuition\n\nThis approach is similar to the previous one, but instead of using recursion, we calculate the state values iteratively in a `dp` array. This helps save space that would otherwise be used for the recursion stack. The process of filling the values in this approach is essentially the reverse of the previous method.\n\nFor each cell in the grid, the `dp` array stores the number of moves required to reach that cell when starting from any cell in the first column. We begin with the base case: the cells in the first column are initialized with a value of `1`. Although logically, the number of moves should be `0` since we can't move to a cell starting from itself, we assign a value of `1` to these cells as an indicator that they are reachable. Cells with a value of `0` in `dp` will represent those that cannot be reached from any starting point in the first column. We can adjust the extra `1` by subtracting it from the result before returning the final answer.\n\nTo calculate the values for the remaining cells, we iterate through the columns from `1` to `N - 1`, and within each column, we iterate over the rows from `0` to `M - 1`. This order is necessary because determining the value for cell `(i, j)` depends on the values of the cells in the previous column, namely `(i - 1, j - 1)`, `(i, j - 1)`, and `(i + 1, j - 1)`. Thus, when processing column `j`, we must already have the values for all rows in column `j - 1`.\n\nFor each cell `(i, j)`, we check the three potential cells from the previous column. If any of these cells have a value less than the current cell and their dp value is not zero (indicating that the cell is reachable), we update `dp[i][j]` to be the maximum of its current value and one plus the value of the reachable cell:\n\n> $ \\text {dp[i][j] = max(dp[i][j],  dp[i - 1][j - 1] + 1, dp[i][j - 1] + 1, dp[i + 1][j - 1] + 1)}$\n\nThis formula is used provided that the value of the previous cell is greater than the current cell and has a positive dp value. The maximum number of moves we can make from any cell in the first column will be the highest value in the `dp` array after subtracting the extra `1` that we initially added.\n\n#### Algorithm\n\n1. Initialize variables:\n    - Get the grid dimensions `M` (rows) and `N` (columns).\n    - Create a 2D dp array of size `M x N` initialized to `0` to store the maximum moves from each cell.\n2. Set Initial reachable cells:\n    - For each cell in the first column (`col = 0`), set `dp[i][0] = 1` for all rows `i`. This indicates that these cells are reachable as starting points.\n3. Iterate over each cell in column major order, for each cell `(i, j)`\n    - Check the possible cells in the previous column:\n        - If the current cell `grid[i][j]` is greater than the cell directly to its left `grid[i][j - 1]` and `dp[i][j - 1] > 0` (reachable):\n            - Update dp[i][j] with the maximum of its current value and dp[i][j - 1] + 1.\n        - If `i - 1` (upper diagonal) is valid, and `grid[i][j]` is greater than `grid[i - 1][j - 1]` and `dp[i - 1][j - 1] > 0`:\n            - Update `dp[i][j]` with the maximum of its current value and `dp[i - 1][j - 1] + 1`.\n        - If `i + 1` (lower diagonal) is valid, and `grid[i][j]` is greater than `grid[i + 1][j - 1]` and `dp[i + 1][j - 1] > 0`:\n            - Update `dp[i][j]` with the maximum of its current value and `dp[i + 1][j - 1] + 1`.\n4. Find the maximum value of all `dp[i][j] - 1` as `maxMoves`\n5. Return `maxMoves`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/2wpPakvv/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"2wpPakvv\"></iframe>\n\n#### Complexity Analysis\n\nHere, $M$ is the number of rows and $N$ is the number of columns in the given matrix `grid`.\n\n- Time complexity: $O(M \\cdot N)$\n\n  We will be finding the values for each cell in the array `dp` with size as $M \\cdot N$ and hence the time complexity is equal to $O(M \\cdot N)$.\n\n- Space complexity: $O(M \\cdot N)$\n\n  The size of array `dp` is same as the size of the given matrix `grid` to keep the answer of each cell. Hence, the total space complexity is equal to $O(M \\cdot N)$.\n\n---\n\n### Approach 4: Space-Optimized Bottom-up Dynamic Programming\n\n#### Intuition\n\nIn our previous solution, we used a `dp` array with a size of `M x N` to keep track of the number of moves possible for each cell in a grid. But if we dig a bit deeper, we’ll notice that for any cell `(i, j)`, the answer only depends on values from the previous column, `j - 1`, because any moves to `(i, j)` come from there.\n\nThis observation simplifies things a lot! Instead of storing results for every single cell in the grid, we can just keep track of two columns at a time: the previous column (for reference) and the current column (for updating values). As we move to the next column, we simply update our \"previous column\" values to reflect the new current column results. This way, we’re only using two arrays, one for each column we need, instead of the whole `M x N` grid. This small adjustment saves a lot of memory, giving us a big boost in efficiency.\n\n#### Algorithm\n\n1. Initialize Variables:\n    - Get the grid dimensions `M` (rows) and `N` (columns).\n    - Create a dp array of size `M x 2` initialized to `0` to store the maximum moves.\n        - dp[i][0] tracks moves for the current column.\n        - dp[i][1] tracks moves for the next column.\n2. Set initial reachable cells:\n    - For each cell in the first column (`col = 0`), set `dp[i][0] = 1` for all rows `i`, indicating that these cells are reachable starting points.\n3. Iterate over each cell in column major order, for each cell `(i, j)`\n    - Check Possible Moves:\n        - If `grid[i][j]` is greater than `grid[i][j - 1]` and `dp[i][0] > 0` (reachable):\n            - Update `dp[i][1]` as `max(dp[i][1], dp[i][0] + 1)`.\n        - If `i - 1` (upper diagonal) is valid and `grid[i][j]` is greater than `grid[i - 1][j - 1]` and `dp[i - 1][0] > 0`:\n            - Update `dp[i][1]` as `max(dp[i][1], dp[i - 1][0] + 1)`.\n        - If `i + 1` (lower diagonal) is valid and grid[i][j] is greater than `grid[i + 1][j - 1]` and `dp[i + 1][0] > 0`:\n            - Update `dp[i][1]` as `max(dp[i][1], dp[i + 1][0] + 1)`.\n        - Update `maxMoves` with `max(maxMoves, dp[i][1] - 1)` to track the maximum number of moves so far.\n4. After processing each column `j`, shift values from `dp[i][1]` to `dp[i][0]` for the next iteration, and reset `dp[i][1]` to `0` for all rows `i`.\n5. Return `maxMoves`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/4r8yVBnB/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"4r8yVBnB\"></iframe>\n\n#### Complexity Analysis\n\nHere, $M$ is the number of rows and $N$ is the number of columns in the given matrix `grid`.\n\n- Time complexity: $O(M \\cdot N)$\n\n  We will be finding the values for each cell in the array `dp` with size as $M \\cdot N$ and hence the time complexity is equal to $O(M \\cdot N)$.\n\n- Space complexity: $O(M)$\n\n  The size of array `dp` is $2 * M$. Hence, the total space complexity is equal to $O(M)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

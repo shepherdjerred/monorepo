@@ -1,0 +1,137 @@
+{
+  "questionId": "2792",
+  "questionFrontendId": "2683",
+  "title": "Neighboring Bitwise XOR",
+  "titleSlug": "neighboring-bitwise-xor",
+  "difficulty": "Medium",
+  "content": "<p>A <strong>0-indexed</strong> array <code>derived</code> with length <code>n</code> is derived by computing the <strong>bitwise XOR</strong>&nbsp;(&oplus;) of adjacent values in a <strong>binary array</strong> <code>original</code> of length <code>n</code>.</p>\n\n<p>Specifically, for each index <code>i</code> in the range <code>[0, n - 1]</code>:</p>\n\n<ul>\n\t<li>If <code>i = n - 1</code>, then <code>derived[i] = original[i] &oplus; original[0]</code>.</li>\n\t<li>Otherwise, <code>derived[i] = original[i] &oplus; original[i + 1]</code>.</li>\n</ul>\n\n<p>Given an array <code>derived</code>, your task is to determine whether there exists a <strong>valid binary array</strong> <code>original</code> that could have formed <code>derived</code>.</p>\n\n<p>Return <em><strong>true</strong> if such an array exists or <strong>false</strong> otherwise.</em></p>\n\n<ul>\n\t<li>A binary array is an array containing only <strong>0&#39;s</strong> and <strong>1&#39;s</strong></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> derived = [1,1,0]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> A valid original array that gives derived is [0,1,0].\nderived[0] = original[0] &oplus; original[1] = 0 &oplus; 1 = 1 \nderived[1] = original[1] &oplus; original[2] = 1 &oplus; 0 = 1\nderived[2] = original[2] &oplus; original[0] = 0 &oplus; 0 = 0\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> derived = [1,1]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> A valid original array that gives derived is [0,1].\nderived[0] = original[0] &oplus; original[1] = 1\nderived[1] = original[1] &oplus; original[0] = 1\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> derived = [1,0]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> There is no valid original array that gives derived.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == derived.length</code></li>\n\t<li><code>1 &lt;= n&nbsp;&lt;= 10<sup>5</sup></code></li>\n\t<li>The values in <code>derived</code>&nbsp;are either <strong>0&#39;s</strong> or <strong>1&#39;s</strong></li>\n</ul>\n",
+  "hints": [
+    "Understand that from the original element, we are using each element twice to construct the derived array",
+    "The xor-sum of the derived array should be 0 since there is always a duplicate occurrence of each element."
+  ],
+  "metaData": "{\n  \"name\": \"doesValidArrayExist\",\n  \"params\": [\n    {\n      \"name\": \"derived\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"163.5K\", \"totalSubmission\": \"204.9K\", \"totalAcceptedRaw\": 163540, \"totalSubmissionRaw\": 204901, \"acRate\": \"79.8%\"}",
+  "likes": 803,
+  "dislikes": 50,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Bitwise OR of Adjacent Elements\", \"titleSlug\": \"bitwise-or-of-adjacent-elements\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,1,0]",
+    "[1,1]",
+    "[1,0]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool doesValidArrayExist(vector<int>& derived) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean doesValidArrayExist(int[] derived) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def doesValidArrayExist(self, derived: List[int]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def doesValidArrayExist(self, derived):\n        \"\"\"\n        :type derived: List[int]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} derived\n * @return {boolean}\n */\nvar doesValidArrayExist = function(derived) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function doesValidArrayExist(derived: number[]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool DoesValidArrayExist(int[] derived) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool doesValidArrayExist(int* derived, int derivedSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func doesValidArrayExist(derived []int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun doesValidArrayExist(derived: IntArray): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func doesValidArrayExist(_ derived: [Int]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn does_valid_array_exist(derived: Vec<i32>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} derived\n# @return {Boolean}\ndef does_valid_array_exist(derived)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $derived\n     * @return Boolean\n     */\n    function doesValidArrayExist($derived) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool doesValidArrayExist(List<int> derived) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def doesValidArrayExist(derived: Array[Int]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec does_valid_array_exist(derived :: [integer]) :: boolean\n  def does_valid_array_exist(derived) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec does_valid_array_exist(Derived :: [integer()]) -> boolean().\ndoes_valid_array_exist(Derived) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (does-valid-array-exist derived)\n  (-> (listof exact-integer?) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2643",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given an integer array `derived` of length `n`. This array is formed by taking a binary array `original` (an array containing only 0s and 1s) and computing the bitwise XOR between adjacent elements in it.\n\nFor the last element in `derived`, the XOR is calculated as:\n$$derived[n-1] = original[n - 1] \\oplus original[0]$$\n\nOur task is to determine if there exists a binary array `original` that could have generated the `derived` array.\n\nTo understand how to approach the problem, let’s recall some fundamental properties of XOR:\n\n1. Commutativity: $a \\oplus b = b \\oplus a$\n    The order in which you XOR two numbers doesn’t matter.\n\n2. Associativity: $(a \\oplus b) \\oplus c = a \\oplus (b \\oplus c)$\n    Grouping of XOR operations doesn’t affect the result.\n\n3. Identity: $a \\oplus 0 = a$\n    XOR with 0 leaves the number unchanged.\n\n4. Self-inverse: $a \\oplus a = 0$\n    XORing a number with itself results in 0.\n\n5. Inversion:\n    If $a \\oplus b = c$, then:\n    - $a = b \\oplus c$\n    - $b = a \\oplus c$\n\nThese properties will help us manipulate XOR equations in coming sections to solve the problem.\n\n---\n\n### Approach 1: Simulation\n\n#### Intuition\n\nTo determine whether a valid `original` array can be constructed from the given `derived` array, we can carefully simulate how the `original` array would be built.\n\nFrom the problem, we know:\n$$derived[i] = original[i] \\oplus original[i + 1]$$\n\nUsing the inversion property of XOR, we can rewrite this as:\n$$original[i + 1] = derived[i] \\oplus original[i]$$\n\nThis means that if we know the value of the `original[i]`, we can calculate the next element, `original[i+1]`, using the corresponding value from `derived`.\n\nThe first element of `original`, `original[0]`, can be either 0 or 1 (since it’s binary).\n- If we assume `original[0] = 0`, we can calculate the rest of the array.\n- Similarly, we can repeat the process assuming `original[0] = 1`.\n\nOnce we compute all the elements of the `original` for both starting points, we need to check if they satisfy the circular condition:\n$$derived[n - 1] = original[n - 1] \\oplus original[0]$$\n\nThis ensures that the last element in `derived` matches the XOR of the first and last elements of `original`.\n\nIf the circular condition is satisfied for either of the two cases (`original[0] = 0` or `original[0] = 1`), then a valid `original` array exists, and we return true. Otherwise, we return false.\n\n#### Algorithm\n\n1. Create an array `original` initialized with `{0}`.\n\n2. Construct the `original` array assuming the first element is `0`:\n   - Iterate through the `derived` array using a loop:\n     - For each index `i`, calculate the next element in `original` as `(derived[i] ^ original[i])` and append it to `original`.\n\n3. Check if the first and last elements of `original` are equal and store the result in `checkForZero`.\n\n4. Create an array `original` initialized with `{1}`.\n\n5. Construct the `original` array assuming the first element is `1`:\n   - Iterate through the `derived` array using a loop:\n     - For each index `i`, calculate the next element in `original` as `(derived[i] ^ original[i])` and append it to `original`.\n\n6. Check if the first and last elements of `original` are equal and store the result in `checkForOne`.\n\n7. Return the logical OR of `checkForZero` and `checkForOne`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/7stVVpPs/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"7stVVpPs\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `derived` array.\n\n- Time Complexity: $O(n)$\n\n    The algorithm constructs the `original` array twice, once starting with `original[0] = 0` and once with `original[0] = 1`. Each construction involves iterating through the `derived` array once, which takes $O(n)$ time. Therefore, the overall time complexity is $O(2 \\cdot n) = O(n)$.\n\n- Space Complexity: $O(n)$\n\n    The algorithm uses an additional array `original` to store the intermediate results during its construction. The size of the `original` array is equal to the size of the `derived` array, requiring $O(n)$ space. No other significant data structures are used, so the overall space complexity is $O(n)$.\n\n---\n\n### Approach 2: Optimized Simulation\n\n#### Intuition\n\nFrom Approach 1, we know that the entire array can be reconstructed based on the initial value of `original[0]`.\n\nSince the value of `original[0]` is not provided, there are two possibilities: `original[0] = 0` or `original[0] = 1`. In the previous approach, we constructed both possible `original` arrays and checked if either satisfies the condition `original[0] == original[n - 1]`, which ensures the array forms a valid cycle.\n\nHowever, the properties of XOR simplify this further. XOR uniquely determines one value given another, and the sequence of values in `original` is fully dictated by `derived` and the starting value of `original[0]`. More importantly, if the condition `original[0] == original[n - 1]` fails for one starting value, it will also fail for the other, and if it holds for one, it will hold for both. This eliminates the need to check both cases separately.\n\nFor example, consider `derived = [1, 0, 1]` and `n = 4`. We can start by assuming `original[0] = 0`. Using this assumption, we calculate the rest of the `original` array:\n\n- $original[1] = derived[0] \\oplus original[0] = 1 \\oplus 0 = 1$\n- $original[2] = derived[1] \\oplus original[1] = 0 \\oplus 1 = 1$\n- $original[3] = derived[2] \\oplus original[2] = 1 \\oplus 1 = 0$\n\nNow, we check if `original[0] == original[n - 1]` (i.e., `original[0] == original[3]`). In this case, it holds true (`0 == 0`), which means our assumption `original[0] = 0` works. There's no need to test `original[0] = 1`, because XOR has the property of reversibility and consistency across calculations. If one assumption about `original[0]` (e.g., `original[0] = 0`) works, the same result will hold for the other assumption (`original[0] = 1`), but with the values flipped across the entire sequence.\n\nBased on this, we only need to simulate the process once, assuming `original[0] = 0`. We calculate the rest of the `original` array using the `derived` values and verify if the condition `original[0] == original[n - 1]` is satisfied. If it is, we return `true`; otherwise, we return `false`.\n\n#### Algorithm\n\n- Initialize the `original` array with the first element as `0`.\n\n- Generate the original array based on the `derived` array and the first element of `original[0] = 0`:\n  - Iterate through each element `i` in the `derived` array.\n  - Compute the value of the current element in `original` by applying XOR between `derived[i]` and `original[i]`.\n  - Append this computed value to the `original` array.\n\n- Check if the array is valid by comparing the first and last elements of the `original` array:\n  - If the first element is equal to the last element, the array is valid, and return `true`.\n  - Otherwise, return `false`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/7t6h5DW6/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"7t6h5DW6\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `derived` array.\n\n- Time complexity: $O(n)$  \n  \n    The algorithm iterates through the `derived` array once, performing a constant-time XOR operation for each element. The final comparison is also constant time.\n\n- Space complexity: $O(n)$  \n  \n    The `original` array stores $n + 1$ elements, growing linearly with the input size. Input space is not counted.\n\n---\n\n### Approach 3: Cumulative XOR\n\n#### Intuition\n\nObserve the following equations that represent the relationship between the elements of the `derived` and `original` arrays:\n\n```\nderived[0] = original[0] XOR original[1]\nderived[1] = original[1] XOR original[2]\nderived[2] = original[2] XOR original[3]\nderived[3] = original[3] XOR original[4]\n\n...\n\nderived[n-1] = original[n-1] XOR original[0]\n```\n\nEach element in `original` appears exactly twice in the equations: once as `original[i]` and once as `original[i+1]`. For example:\n\n- `original[0]` appears in `derived[0]` (`original[0] XOR original[1]`)\n- `original[0]` also appears in `derived[n-1]` (`original[n-1] XOR original[0]`)\n\nSince XOR is both commutative and associative, the order doesn’t matter. When all occurrences of `original[i]` are XORed together, they cancel each other out: `original[0] XOR original[0] XOR original[1] XOR original[1] ... = 0`\n\nIf the `derived` array is valid (i.e., it was generated from some `original`), then the XOR of all elements in derived must be 0. This is because all elements of `original` cancel out when XORed.\n\n#### Algorithm\n\n1. Initialize a variable `XOR` to 0. This will store the cumulative XOR of elements in the `derived` array.\n\n2. Iterate through each element in the `derived` array:\n   - For each element, compute the XOR with the current value of `XOR` and update `XOR`.\n\n3. After the loop, check the value of `XOR`:\n   - If `XOR == 0`, return `true` (indicating the array is valid).\n   - Otherwise, return `false`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/N6UppPrB/shared\" frameBorder=\"0\" width=\"100%\" height=\"225\" name=\"N6UppPrB\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `derived` array.\n\n- Time Complexity: $O(n)$\n\n    The algorithm iterates through all elements of the `derived` array once to compute the cumulative XOR. Each XOR operation takes constant time, and the loop runs for $n$ iterations. Thus, the time complexity is $O(n)$.\n\n- Space Complexity: $O(1)$\n\n    The algorithm uses a single integer variable `XOR` to store the cumulative XOR of elements in the array. No additional data structures are used, so the space complexity is $O(1)$.\n\n---\n\n### Approach 4: Sum Parity\n\n#### Intuition\n\nSimilar to the previous approach, we can rely on the properties of XOR. However, this time, we focus on the parity (even or odd nature) of the numbers involved.\n\nThe XOR of two binary numbers produces a result based on their bits. Specifically:\n\n```\n0 XOR 0 = 0\n1 XOR 1 = 0\n0 XOR 1 = 1\n1 XOR 0 = 1\n```\n\nNotice that when two identical numbers are XORed, the result is 0.\n\nFor an XOR operation to result in a balanced and valid sequence, the total number of 1s in the `derived` array (which represents mismatched bits) must be even. This is because each 1 in `derived` corresponds to a mismatch between adjacent elements in the original array, and mismatches can only be resolved in pairs.\n\nThe sum of the elements in `derived` gives the total count of 1s in the array.\n\n- If the sum is even, it means that the mismatches can be paired and resolved, allowing us to construct a valid `original` array.\n- If the sum is odd, it’s impossible to resolve the mismatches, and no valid original array can exist.\n\n#### Algorithm\n\n1. Initialize a variable `sum` to 0. This will store the cumulative sum of elements in the `derived` array.\n\n2. Iterate through each element in the `derived` array:\n   - For each element, add it's value to `sum`.\n\n3. After the loop, check the value of `sum`:\n   - If `sum % 2 == 0`, return `true` (indicating the array is valid).\n   - Otherwise, return `false`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/3gh7ennv/shared\" frameBorder=\"0\" width=\"100%\" height=\"225\" name=\"3gh7ennv\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `derived` array.\n\n- Time Complexity: $O(n)$\n\n    The algorithm iterates through all elements of the `derived` array once to compute the cumulative sum and find it's parity. Thus, the time complexity is $O(n)$.\n\n- Space Complexity: $O(1)$\n\n    No additional data structures are used, so the space complexity is $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

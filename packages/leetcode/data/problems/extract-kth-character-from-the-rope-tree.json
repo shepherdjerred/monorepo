@@ -1,0 +1,87 @@
+{
+  "questionId": "2843",
+  "questionFrontendId": "2689",
+  "title": "Extract Kth Character From The Rope Tree",
+  "titleSlug": "extract-kth-character-from-the-rope-tree",
+  "difficulty": "Easy",
+  "content": "<p>You are given the <code>root</code> of a binary tree and an integer <code>k</code>. Besides the left and right children, every node of this tree has two other properties, a <strong>string</strong> <code>node.val</code> containing only lowercase English letters (possibly empty) and a non-negative integer <code>node.len</code>. There are two types of nodes in this tree:</p>\n\n<ul>\n\t<li><strong>Leaf</strong>: These nodes have no children, <code>node.len = 0</code>, and <code>node.val</code> is some <strong>non-empty</strong> string.</li>\n\t<li><strong>Internal</strong>: These nodes have at least one child (also at most two children), <code>node.len &gt; 0</code>, and <code>node.val</code> is an <strong>empty</strong> string.</li>\n</ul>\n\n<p>The tree described above is called a <em>Rope</em> binary tree. Now we define <code>S[node]</code> recursively as follows:</p>\n\n<ul>\n\t<li>If <code>node</code> is some leaf node, <code>S[node] = node.val</code>,</li>\n\t<li>Otherwise if <code>node</code> is some internal node, <code>S[node] = concat(S[node.left], S[node.right])</code> and <code>S[node].length = node.len</code>.</li>\n</ul>\n\n<p>Return<em> k-th character of the string</em> <code>S[root]</code>.</p>\n\n<p><strong>Note:</strong> If <code>s</code> and <code>p</code> are two strings, <code>concat(s, p)</code> is a string obtained by concatenating <code>p</code> to <code>s</code>. For example, <code>concat(&quot;ab&quot;, &quot;zz&quot;) = &quot;abzz&quot;</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> root = [10,4,&quot;abcpoe&quot;,&quot;g&quot;,&quot;rta&quot;], k = 6\n<strong>Output:</strong> &quot;b&quot;\n<strong>Explanation:</strong> In the picture below, we put an integer on internal nodes that represents node.len, and a string on leaf nodes that represents node.val.\nYou can see that S[root] = concat(concat(&quot;g&quot;, &quot;rta&quot;), &quot;abcpoe&quot;) = &quot;grtaabcpoe&quot;. So S[root][5], which represents 6th character of it, is equal to &quot;b&quot;.\n</pre>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/05/14/example1.png\" style=\"width: 300px; height: 213px; margin-left: 280px; margin-right: 280px;\" /></p>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> root = [12,6,6,&quot;abc&quot;,&quot;efg&quot;,&quot;hij&quot;,&quot;klm&quot;], k = 3\n<strong>Output:</strong> &quot;c&quot;\n<strong>Explanation:</strong> In the picture below, we put an integer on internal nodes that represents node.len, and a string on leaf nodes that represents node.val.\nYou can see that S[root] = concat(concat(&quot;abc&quot;, &quot;efg&quot;), concat(&quot;hij&quot;, &quot;klm&quot;)) = &quot;abcefghijklm&quot;. So S[root][2], which represents the 3rd character of it, is equal to &quot;c&quot;.\n</pre>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/05/14/example2.png\" style=\"width: 400px; height: 232px; margin-left: 255px; margin-right: 255px;\" /></p>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> root = [&quot;ropetree&quot;], k = 8\n<strong>Output:</strong> &quot;e&quot;\n<strong>Explanation:</strong> In the picture below, we put an integer on internal nodes that represents node.len, and a string on leaf nodes that represents node.val.\nYou can see that S[root] = &quot;ropetree&quot;. So S[root][7], which represents 8th character of it, is equal to &quot;e&quot;.\n</pre>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/05/14/example3.png\" style=\"width: 80px; height: 78px; margin-left: 400px; margin-right: 400px;\" /></p>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[1, 10<sup>3</sup>]</code></li>\n\t<li><code>node.val</code> contains only lowercase English letters</li>\n\t<li><code>0 &lt;= node.val.length &lt;= 50</code></li>\n\t<li><code>0 &lt;= node.len &lt;= 10<sup>4</sup></code></li>\n\t<li>for leaf nodes, <code>node.len = 0</code> and <code>node.val</code> is non-empty</li>\n\t<li>for internal nodes, <code>node.len &gt; 0</code> and <code>node.val</code> is empty</li>\n\t<li><code>1 &lt;= k &lt;= S[root].length</code></li>\n</ul>\n",
+  "hints": [
+    "Think of recursive methods.",
+    "Write a recursive function that gives a node of the tree and returns S[node].",
+    "Call the function above on the root of the tree and get k-th character of it."
+  ],
+  "metaData": "{\n  \"name\": \"getKthCharacter\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"TreeNode\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"character\"\n  },\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"c\",\n    \"csharp\",\n    \"javascript\",\n    \"swift\",\n    \"golang\",\n    \"python3\"\n  ],\n  \"manual\": true\n}",
+  "stats": "{\"totalAccepted\": \"4.9K\", \"totalSubmission\": \"6.6K\", \"totalAcceptedRaw\": 4865, \"totalSubmissionRaw\": 6630, \"acRate\": \"73.4%\"}",
+  "likes": 41,
+  "dislikes": 29,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[10,4,\"abcpoe\",\"g\",\"rta\"]\n6",
+    "[12,6,6,\"abc\",\"efg\",\"hij\",\"klm\"]\n3",
+    "[\"ropetree\"]\n8"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a rope tree node.\n * struct RopeTreeNode {\n *     int len;\n *     string val;\n *     RopeTreeNode *left;\n *     RopeTreeNode *right;\n *     RopeTreeNode() : len(0), val(\"\"), left(nullptr), right(nullptr) {}\n *     RopeTreeNode(string s) : len(0), val(std::move(s)), left(nullptr), right(nullptr) {}\n *     RopeTreeNode(int x) : len(x), val(\"\"), left(nullptr), right(nullptr) {}\n *     RopeTreeNode(int x, RopeTreeNode *left, RopeTreeNode *right) : len(x), val(\"\"), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    char getKthCharacter(RopeTreeNode* root, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a rope tree node.\n * class RopeTreeNode {\n *     int len;\n *     String val;\n *     RopeTreeNode left;\n *     RopeTreeNode right;\n *     RopeTreeNode() {}\n *     RopeTreeNode(String val) {\n *         this.len = 0;\n *         this.val = val;\n *     }\n *     RopeTreeNode(int len) {\n *         this.len = len;\n *         this.val = \"\";\n *     }\n *     RopeTreeNode(int len, RopeTreeNode left, RopeTreeNode right) {\n *         this.len = len;\n *         this.val = \"\";\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public char getKthCharacter(RopeTreeNode root, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a rope tree node.\n# class RopeTreeNode(object):\n#     def __init__(self, len=0, val=\"\", left=None, right=None):\n#         self.len = len\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def getKthCharacter(self, root: Optional[object], k: int) -> str:\n        \"\"\"\n        :type root: Optional[RopeTreeNode]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a rope tree node.\n# class RopeTreeNode(object):\n#     def __init__(self, len=0, val=\"\", left=None, right=None):\n#         self.len = len\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def getKthCharacter(self, root, k):\n        \"\"\"\n        :type root: Optional[RopeTreeNode]\n        :type k: int\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a rope tree node.\n * class RopeTreeNode {\n *     constructor(len, val, left, right) {\n *         this.len = (len===undefined ? 0 : len);\n *         this.val = (val===undefined ? \"\" : val);\n *         this.left = (left===undefined ? null : left);\n *         this.right = (right===undefined ? null : right);\n *     }\n * }\n */\n/**\n * @param {RopeTreeNode} root\n * @param {number} k\n * @return {character}\n */\nvar getKthCharacter = function(root, k) {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a rope tree node.\n * public class RopeTreeNode {\n *     public int len;\n *     public string val;\n *     public RopeTreeNode left;\n *     public RopeTreeNode right;\n *     public RopeTreeNode(int len=0, string val=\"\", RopeTreeNode left=null, RopeTreeNode right=null) {\n *         this.len = len;\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public char GetKthCharacter(RopeTreeNode root, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a rope tree node. */\nstruct RopeTreeNode {\n    int len;\n    char* val;\n    struct RopeTreeNode* left;\n    struct RopeTreeNode* right;\n};\n\n/// DO NOT MODIFY THE CODE ABOVE\n\nchar getKthCharacter(struct RopeTreeNode* root, int k){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a rope tree node.\n * type RopeTreeNode struct {\n * \t   len   int\n * \t   val   string\n * \t   left  *RopeTreeNode\n * \t   right *RopeTreeNode\n * }\n */\nfunc getKthCharacter(root *TreeNode, k int) byte {\n    \n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a rope tree node.\n * public class RopeTreeNode {\n *     var len: Int\n *     var val: String\n *     var left: RopeTreeNode?\n *     var right: RopeTreeNode?\n *     init(len: Int = 0, val: String = \"\", left: RopeTreeNode? = nil, right: RopeTreeNode? = nil) {\n *         self.len = len\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func getKthCharacter(_ root: RopeTreeNode?, _ k: Int) -> Character {\n        \n    }\n}"
+    }
+  ],
+  "solution": null
+}
