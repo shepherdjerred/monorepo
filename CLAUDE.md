@@ -106,18 +106,41 @@ Each package has its own CLAUDE.md with specific instructions:
 
 ## Toolkit — Fetch & Recall
 
-The `toolkit` CLI (`~/.local/bin/toolkit`) provides web fetching and local RAG search.
+The `toolkit` CLI (`~/.local/bin/toolkit`) provides web fetching and local RAG search across all Claude history.
+
+### Searching past work
+
+Use `toolkit recall search` to find context from previous conversations, plans, research, docs, and fetched pages **before** answering knowledge questions or starting tasks that may have been discussed before.
 
 ```bash
-# Fetch a web page (saves to ~/.recall/fetched/ as markdown)
-toolkit fetch <url>
-toolkit fetch <url> --browser    # Use PinchTab (real Chrome) if lightpanda is blocked
+# Search across everything (hybrid semantic + keyword)
+toolkit recall search "how does the CI pipeline work"
+toolkit recall search "kubernetes resource limits"
+toolkit recall search "interview prep system design"
+```
 
-# Search across plans, research, memories, conversations, and fetched pages
-toolkit recall search "<query>"
-toolkit recall add <path>        # Index a file or directory
-toolkit recall reindex           # Re-scan all watched directories
-toolkit recall status            # Index stats, daemon health
+This searches:
+- All past Claude conversations (`.jsonl` files)
+- Claude plans and research (`~/.claude/plans/`, `~/.claude/research/`)
+- Claude memories (`~/.claude/projects/*/memory/`)
+- Monorepo docs (`packages/docs/`)
+- Fetched web pages (`~/.recall/fetched/`)
+
+### Fetching web pages
+
+```bash
+toolkit fetch <url>              # Fetch via lightpanda, save + index
+toolkit fetch <url> --browser    # Use PinchTab (real Chrome) if lightpanda is blocked
+toolkit fetch <url> --crawl      # Crawl a docs site
 ```
 
 **Use `toolkit fetch` instead of raw `lightpanda fetch`** — it saves the output and auto-indexes it for future search.
+
+### Index management
+
+```bash
+toolkit recall add <path>        # Index a file or directory
+toolkit recall reindex           # Re-scan all watched directories
+toolkit recall status            # Index stats, daemon health
+toolkit recall debug             # Full diagnostic check
+```

@@ -39,7 +39,7 @@ export async function hybridSearch(
 
     try {
       const vectors = await embedder.embed([query]);
-      queryVector = vectors[0]!;
+      queryVector = vectors[0] ?? [];
     } catch {
       if (verbose) {
         console.error("[search] embedding failed, falling back to keyword-only");
@@ -55,7 +55,7 @@ export async function hybridSearch(
 
     if (verbose) {
       console.error(
-        `[search] embed: ${Math.round(embedMs)}ms, vec: ${vecCandidates.length} candidates in ${Math.round(vecMs)}ms`,
+        `[search] embed: ${String(Math.round(embedMs))}ms, vec: ${String(vecCandidates.length)} candidates in ${String(Math.round(vecMs))}ms`,
       );
     }
 
@@ -80,7 +80,7 @@ export async function hybridSearch(
 
     if (verbose) {
       console.error(
-        `[search] fts: ${ftsCandidates.length} candidates in ${Math.round(ftsMs)}ms`,
+        `[search] fts: ${String(ftsCandidates.length)} candidates in ${String(Math.round(ftsMs))}ms`,
       );
     }
 
@@ -121,7 +121,7 @@ export async function hybridSearch(
 
   if (verbose) {
     console.error(
-      `[search] total: ${finalResults.length} results in ${Math.round(totalMs)}ms`,
+      `[search] total: ${String(finalResults.length)} results in ${String(Math.round(totalMs))}ms`,
     );
   }
 
@@ -169,7 +169,7 @@ function reciprocalRankFusion(
   }
 
   return [...scores.values()]
-    .sort((a, b) => b.score - a.score)
+    .toSorted((a, b) => b.score - a.score)
     .map(({ result, score }) => ({ ...result, score }));
 }
 
@@ -185,7 +185,7 @@ function keywordSearch(
 
   if (verbose) {
     console.error(
-      `[search] keyword-only: ${results.length} results in ${Math.round(ftsMs)}ms`,
+      `[search] keyword-only: ${String(results.length)} results in ${String(Math.round(ftsMs))}ms`,
     );
   }
 

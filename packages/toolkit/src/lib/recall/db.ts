@@ -115,7 +115,7 @@ export class RecallDb {
           doc_path: "",
           chunk_index: 0,
           text: "",
-          vector: new Array<number>(EMBEDDING_DIM).fill(0),
+          vector: Array.from<number>({ length: EMBEDDING_DIM }).fill(0),
         },
       ]);
       await this.lanceTable.delete('id = "__init__"');
@@ -230,10 +230,11 @@ export class RecallDb {
     limit: number,
   ): Promise<(ChunkRow & { _distance: number })[]> {
     const table = await this.getLanceTable();
-    return await table
+    const results = await table
       .vectorSearch(queryVector)
       .limit(limit)
-      .toArray() as (ChunkRow & { _distance: number })[];
+      .toArray();
+    return results as unknown as (ChunkRow & { _distance: number })[];
   }
 
   // Aggregate queries

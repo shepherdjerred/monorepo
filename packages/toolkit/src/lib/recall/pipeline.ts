@@ -14,15 +14,18 @@ export type IndexResult = {
   durationMs: number;
 };
 
-export async function indexFile(
-  db: RecallDb,
-  embedder: EmbeddingClient | null,
-  filePath: string,
-  source: string,
-  tags: string[] = [],
-  force = false,
-  verbose = false,
-): Promise<IndexResult> {
+export type IndexFileOptions = {
+  db: RecallDb;
+  embedder: EmbeddingClient | null;
+  filePath: string;
+  source: string;
+  tags?: string[];
+  force?: boolean;
+  verbose?: boolean;
+};
+
+export async function indexFile(options: IndexFileOptions): Promise<IndexResult> {
+  const { db, embedder, filePath, source, tags = [], force = false, verbose = false } = options;
   const start = performance.now();
   const absPath = path.resolve(filePath);
 
@@ -35,7 +38,7 @@ export async function indexFile(
   const rawContent = isConversation ? null : await readFile(absPath, "utf8");
   const contentHash = isConversation
     ? `mtime:${String(fileStat.mtimeMs)}`
-    : createHash("sha256").update(rawContent!).digest("hex");
+    : createHash("sha256").update(rawContent ?? "").digest("hex");
 
   // Check if already indexed with same hash
   if (!force) {
@@ -60,26 +63,28 @@ export async function indexFile(
     title = path.basename(absPath, ".jsonl");
     fileTags = [...tags];
   } else {
-    const { data, content: mdBody } = matter(rawContent!);
+    const { data, content: mdBody } = matter(rawContent ?? "");
     body = mdBody;
-    title =
-      (data["title"] as string | undefined) ??
-      path.basename(absPath, path.extname(absPath));
+    const rawTitle = data["title"];
+    title = typeof rawTitle === "string"
+      ? rawTitle
+      : path.basename(absPath, path.extname(absPath));
+    const rawTags = data["tags"];
     fileTags = [
       ...tags,
-      ...((data["tags"] as string[] | undefined) ?? []),
+      ...(Array.isArray(rawTags) ? rawTags.map(String) : []),
     ];
   }
 
   if (verbose) {
-    console.error(`[index] ${absPath} (${body.length} chars)`);
+    console.error(`[index] ${absPath} (${String(body.length)} chars)`);
   }
 
   // Chunk
   const chunks = chunkMarkdown(body);
 
   if (verbose) {
-    console.error(`[index] ${chunks.length} chunks`);
+    console.error(`[index] ${String(chunks.length)} chunks`);
   }
 
   // Remove old data
@@ -104,7 +109,7 @@ export async function indexFile(
       doc_path: absPath,
       chunk_index: chunk.index,
       text: chunk.text,
-      vector: vectors[i]!,
+      vector: vectors[i] ?? [],
     }));
 
     await db.addChunks(chunkRows);
@@ -130,7 +135,7 @@ export async function indexFile(
 
   if (verbose) {
     console.error(
-      `[index] done: ${chunks.length} chunks in ${Math.round(durationMs)}ms`,
+      `[index] done: ${String(chunks.length)} chunks in ${String(Math.round(durationMs))}ms`,
     );
   }
 

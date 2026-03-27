@@ -26,9 +26,7 @@ export async function crawlSite(options: CrawlOptions): Promise<CrawlResult> {
   const start = performance.now();
   const { baseUrl, maxDepth, useBrowser, useSitemap, verbose, tags } = options;
 
-  let urls: string[];
-
-  urls = await (useSitemap ? fetchSitemapUrls(baseUrl, useBrowser, verbose) : discoverUrls(baseUrl, maxDepth, useBrowser, verbose));
+  const urls = await (useSitemap ? fetchSitemapUrls(baseUrl, useBrowser, verbose) : discoverUrls(baseUrl, maxDepth, useBrowser, verbose));
 
   if (verbose) {
     console.error(`[crawl] discovered ${String(urls.length)} URLs`);
@@ -89,7 +87,8 @@ async function discoverUrls(
   const discovered: string[] = [];
 
   while (queue.length > 0) {
-    const item = queue.shift()!;
+    const item = queue.shift();
+    if (item == null) break;
     const normalized = normalizeUrl(item.url);
 
     if (visited.has(normalized)) continue;
@@ -163,10 +162,12 @@ async function fetchSitemapUrls(
   const locRegex = /<loc>([^<]+)<\/loc>/g;
   let match;
   while ((match = locRegex.exec(content)) != null) {
-    const url = match[1]!.trim();
+    const url = match[1];
+    if (url == null) continue;
+    const trimmedUrl = url.trim();
     // Filter to same domain and base path
-    if (url.startsWith(parsed.origin) && url.startsWith(baseUrl.replace(/\/$/, ""))) {
-      urls.push(url);
+    if (trimmedUrl.startsWith(parsed.origin) && trimmedUrl.startsWith(baseUrl.replace(/\/$/, ""))) {
+      urls.push(trimmedUrl);
     }
   }
 
@@ -188,11 +189,13 @@ function extractLinks(
   const links = new Set<string>();
 
   // Match markdown links: [text](url)
-  const mdLinkRegex = /\[([^\]]*)\]\(([^)]+)\)/g;
+  const mdLinkRegex = /\[[^\]]*\]\(([^)]+)\)/g;
   let match;
   while ((match = mdLinkRegex.exec(content)) != null) {
-    const href = match[2]!.trim();
-    const resolved = resolveUrl(href, pageUrl);
+    const href = match[1];
+    if (href == null) continue;
+    const trimmedHref = href.trim();
+    const resolved = resolveUrl(trimmedHref, pageUrl);
     if (resolved != null && extractDomain(resolved) === targetDomain) {
       links.add(normalizeUrl(resolved));
     }

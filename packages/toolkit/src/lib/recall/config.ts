@@ -17,7 +17,7 @@ export const WATCHED_DIRS: WatchedDir[] = [
     directory: path.join(HOME, ".claude", "plans"),
     patterns: ["*.md"],
     source: "claude-plan",
-    recursive: false,
+    recursive: true,
   },
   {
     directory: path.join(HOME, ".claude-extra"),
@@ -29,15 +29,13 @@ export const WATCHED_DIRS: WatchedDir[] = [
     directory: path.join(HOME, ".claude", "research"),
     patterns: ["*.md"],
     source: "claude-research",
-    recursive: false,
+    recursive: true,
   },
   {
     directory: path.join(HOME, ".claude", "projects"),
     patterns: ["*.md"],
     source: "claude-memory",
     recursive: true,
-    // Only index files under */memory/ subdirectories
-    pathFilter: (p: string) => p.includes("/memory/"),
   },
   {
     directory: FETCHED_DIR,

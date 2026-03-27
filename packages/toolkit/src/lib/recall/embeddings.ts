@@ -1,4 +1,19 @@
+import { z } from "zod";
 import { EMBEDDING_DIM } from "./config.ts";
+
+const ReadyMessage = z.object({ error: z.string().optional(), ready: z.boolean().optional() });
+const EmbedResponse = z.object({ embeddings: z.array(z.array(z.number())).optional(), error: z.string().optional() });
+
+function asReader(value: unknown): ReadableStreamDefaultReader<Uint8Array> {
+  const stream = value as unknown;
+  // Bun.spawn with stdout: "pipe" returns a ReadableStream
+  return (stream as ReadableStream<Uint8Array>).getReader();
+}
+
+function asStdinWriter(value: unknown): { write: (data: string) => void; flush: () => void; end: () => void } {
+  // Bun.spawn with stdin: "pipe" returns a FileSink
+  return value as unknown as { write: (data: string) => void; flush: () => void; end: () => void };
+}
 
 const EMBED_SERVER_SCRIPT = `
 import sys, os, json, warnings
@@ -67,8 +82,7 @@ for line in sys.stdin:
 
 export class EmbeddingClient {
   private proc: ReturnType<typeof Bun.spawn> | null = null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private reader: any = null;
+  private reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
   private readonly decoder = new TextDecoder();
   private lineBuffer = "";
   private ready = false;
@@ -127,16 +141,22 @@ export class EmbeddingClient {
     });
 
     // Keep a single reader for the lifetime of the process
-    this.reader = (this.proc.stdout as ReadableStream<Uint8Array>).getReader();
+    // Bun.spawn with stdout: "pipe" returns ReadableStream<Uint8Array>
+    const stdoutStream = this.proc.stdout;
+    if (stdoutStream == null || typeof (stdoutStream as unknown as ReadableStream<Uint8Array>).getReader !== "function") {
+      throw new Error("Embedding server stdout is not a readable stream");
+    }
+    this.reader = (stdoutStream as unknown as ReadableStream<Uint8Array>).getReader();
 
     const firstLine = await this.readLine();
     if (firstLine == null) {
       throw new Error("Embedding server did not start");
     }
 
-    const msg = JSON.parse(firstLine) as { ready?: boolean; error?: string };
-    if (msg.error != null) {
-      throw new Error(msg.error);
+    const msg = JSON.parse(firstLine) as unknown;
+    const msgObj = msg as Record<string, unknown>;
+    if (typeof msgObj["error"] === "string") {
+      throw new Error(msgObj["error"]);
     }
 
     this.ready = true;
@@ -150,7 +170,7 @@ export class EmbeddingClient {
     }
 
     const request = JSON.stringify({ texts }) + "\n";
-    const stdin = this.proc.stdin as import("bun").FileSink;
+    const stdin = this.proc.stdin as unknown as { write: (data: string) => void; flush: () => void };
     stdin.write(request);
     stdin.flush();
 
@@ -178,7 +198,7 @@ export class EmbeddingClient {
   private async readLine(): Promise<string | null> {
     if (this.reader == null) return null;
 
-    while (true) {
+    for (;;) {
       const newlineIdx = this.lineBuffer.indexOf("\n");
       if (newlineIdx !== -1) {
         const line = this.lineBuffer.slice(0, newlineIdx);
@@ -186,7 +206,7 @@ export class EmbeddingClient {
         return line;
       }
 
-      const { value, done } = await this.reader.read();
+      const { value, done }: ReadableStreamReadResult<Uint8Array> = await this.reader.read();
       if (done) {
         return this.lineBuffer.length > 0 ? this.lineBuffer : null;
       }
@@ -197,7 +217,7 @@ export class EmbeddingClient {
   shutdown(): void {
     if (this.proc != null) {
       try {
-        const stdin = this.proc.stdin as import("bun").FileSink;
+        const stdin = this.proc.stdin as unknown as { end: () => void };
         stdin.end();
       } catch {
         // ignore
@@ -213,13 +233,13 @@ export class EmbeddingClient {
 
 /** Deterministic mock embeddings for testing (no MLX needed) */
 export function mockEmbed(text: string): number[] {
-  const vec = new Array<number>(EMBEDDING_DIM);
+  const vec = Array.from<number>({ length: EMBEDDING_DIM });
   let hash = 0;
   for (let i = 0; i < text.length; i++) {
-    hash = (hash * 31 + text.charCodeAt(i)) | 0;
+    hash = Math.trunc(hash * 31 + (text.codePointAt(i) ?? 0));
   }
   for (let i = 0; i < EMBEDDING_DIM; i++) {
-    hash = (hash * 1_103_515_245 + 12_345) | 0;
+    hash = Math.trunc(hash * 1_103_515_245 + 12_345);
     vec[i] = ((hash >> 16) & 0x7f_ff) / 0x7f_ff;
   }
   return vec;

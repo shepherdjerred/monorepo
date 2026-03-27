@@ -20,7 +20,12 @@ export async function viewLogs(options: LogViewOptions): Promise<void> {
     process.exit(1);
   }
 
-  await (options.follow ? tailFollow(logFiles[0]!.name, options) : showRecent(logFiles, options));
+  const firstFile = logFiles[0];
+  if (firstFile == null) {
+    console.error("No log files found in ~/.recall/logs/");
+    process.exit(1);
+  }
+  await (options.follow ? tailFollow(firstFile.name, options) : showRecent(logFiles, options));
 }
 
 async function showRecent(
@@ -34,7 +39,7 @@ async function showRecent(
   for (const file of logFiles) {
     const filePath = path.join(LOGS_DIR, file.name);
     try {
-      const content = await readFile(filePath, "utf-8");
+      const content = await readFile(filePath, "utf8");
       const fileLines = content.trim().split("\n").filter(Boolean);
 
       for (const line of fileLines) {
@@ -78,7 +83,7 @@ async function tailFollow(
   // Show last 10 lines first
   if (exists != null) {
     try {
-      const content = await readFile(filePath, "utf-8");
+      const content = await readFile(filePath, "utf8");
       const lines = content.trim().split("\n").filter(Boolean);
       const recent = lines.slice(-10);
       for (const line of recent) {
@@ -92,7 +97,8 @@ async function tailFollow(
   }
 
   // Poll for new content
-  const interval = setInterval(async () => {
+  const interval = setInterval(() => {
+    void (async () => {
     try {
       const currentStat = await stat(filePath).catch(() => null);
       if (currentStat == null || currentStat.size <= offset) return;
@@ -111,6 +117,7 @@ async function tailFollow(
     } catch {
       // ignore read errors
     }
+    })();
   }, 500);
 
   // Keep alive
@@ -119,7 +126,7 @@ async function tailFollow(
     process.exit(0);
   });
 
-  await new Promise(() => {}); // never resolves
+  await new Promise(() => { /* never resolves — keeps process alive */ });
 }
 
 function matchesFilters(
@@ -142,10 +149,10 @@ function matchesFilters(
 function formatLogLine(line: string): string {
   try {
     const entry = JSON.parse(line) as Record<string, unknown>;
-    const ts = (entry["ts"] as string).slice(11, 19); // HH:MM:SS
-    const level = (entry["level"] as string).toUpperCase().padEnd(5);
-    const mod = (entry["mod"] as string ?? "").padEnd(8);
-    const msg = entry["msg"] as string ?? "";
+    const ts = String(entry["ts"] ?? "").slice(11, 19); // HH:MM:SS
+    const level = String(entry["level"] ?? "").toUpperCase().padEnd(5);
+    const mod = String(entry["mod"] ?? "").padEnd(8);
+    const msg = String(entry["msg"] ?? "");
 
     // Gather extra fields
     const skip = new Set(["ts", "level", "mod", "msg"]);
@@ -174,8 +181,10 @@ function parseSince(since: string | undefined): string | undefined {
   const match = /^(\d+)([mhd])$/.exec(since);
   if (match == null) return undefined;
 
-  const amount = Number.parseInt(match[1]!, 10);
-  const unit = match[2]!;
+  const amountStr = match[1];
+  const unit = match[2];
+  if (amountStr == null || unit == null) return undefined;
+  const amount = Number.parseInt(amountStr, 10);
   const now = new Date();
 
   switch (unit) {

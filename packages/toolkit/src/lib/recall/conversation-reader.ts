@@ -11,6 +11,27 @@ export type Conversation = {
   projectDir: string;
 };
 
+function getStringProp(obj: Record<string, unknown>, key: string): string | undefined {
+  const val = obj[key];
+  return typeof val === "string" ? val : undefined;
+}
+
+function extractText(msg: Record<string, unknown>): string {
+  const content = msg["content"];
+  if (typeof content === "string") return content;
+  if (!Array.isArray(content)) return "";
+  return (content as unknown[])
+    .filter(
+      (c): c is Record<string, unknown> =>
+        typeof c === "object" &&
+        c != null &&
+        (c as Record<string, unknown>)["type"] === "text" &&
+        typeof (c as Record<string, unknown>)["text"] === "string",
+    )
+    .map((c) => c["text"] as string)
+    .join("\n");
+}
+
 /**
  * Read a Claude Code conversation JSONL file and extract text content.
  * Returns concatenated user + assistant messages as a single markdown string.
@@ -22,37 +43,18 @@ export async function readConversation(filePath: string): Promise<string> {
 
   for (const line of lines) {
     try {
-      const obj = JSON.parse(line) as {
-        type?: string;
-        message?: {
-          role?: string;
-          content?: string | { type?: string; text?: string }[];
-        };
-        timestamp?: string;
-      };
+      const obj = JSON.parse(line) as Record<string, unknown>;
 
-      if (obj.type !== "user" && obj.type !== "assistant") continue;
+      if (obj["type"] !== "user" && obj["type"] !== "assistant") continue;
 
-      const msg = obj.message;
-      if (msg == null) continue;
+      const msg = obj["message"];
+      if (msg == null || typeof msg !== "object") continue;
 
-      const role = msg.role as "user" | "assistant" | undefined;
+      const msgRecord = msg as Record<string, unknown>;
+      const role = getStringProp(msgRecord, "role");
       if (role !== "user" && role !== "assistant") continue;
 
-      let text = "";
-      if (typeof msg.content === "string") {
-        text = msg.content;
-      } else if (Array.isArray(msg.content)) {
-        text = msg.content
-          .filter(
-            (c): c is { type: string; text: string } =>
-              typeof c === "object" &&
-              c?.type === "text" &&
-              typeof c.text === "string",
-          )
-          .map((c) => c.text)
-          .join("\n");
-      }
+      const text = extractText(msgRecord);
 
       if (text.trim().length === 0) continue;
 
@@ -62,10 +64,11 @@ export async function readConversation(filePath: string): Promise<string> {
       // Skip tool use results and system messages
       if (text.startsWith("<tool_use>") || text.startsWith("<system")) continue;
 
+      const timestamp = getStringProp(obj, "timestamp");
       messages.push({
         role,
         text: text.trim(),
-        ...(obj.timestamp == null ? {} : { timestamp: obj.timestamp }),
+        ...(timestamp == null ? {} : { timestamp }),
       });
     } catch {
       // Skip malformed lines

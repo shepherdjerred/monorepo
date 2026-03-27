@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-restricted-imports -- Bun has no built-in fs.watch equivalent
 import { watch } from "node:fs";
 import { stat } from "node:fs/promises";
 import path from "node:path";
@@ -41,7 +42,7 @@ export async function runWatcher(verbose: boolean): Promise<void> {
 
   if (verbose) {
     console.error(
-      `[watch] initial reindex: ${String(result.indexed)} indexed, ${String(result.skipped)} skipped in ${Math.round(result.durationMs)}ms`,
+      `[watch] initial reindex: ${String(result.indexed)} indexed, ${String(result.skipped)} skipped in ${String(Math.round(result.durationMs))}ms`,
     );
   }
 
@@ -55,7 +56,8 @@ export async function runWatcher(verbose: boolean): Promise<void> {
 
     pending.set(
       filePath,
-      setTimeout(async () => {
+      setTimeout(() => {
+        void (async () => {
         pending.delete(filePath);
         try {
           const exists = await stat(filePath).catch(() => null);
@@ -69,26 +71,24 @@ export async function runWatcher(verbose: boolean): Promise<void> {
           } else if (filePath.endsWith(".md") || filePath.endsWith(".jsonl")) {
             // File changed — reindex
             const start = performance.now();
-            const result = await indexFile(
+            const indexResult = await indexFile({
               db,
-              useEmbedder,
+              embedder: useEmbedder,
               filePath,
               source,
-              [],
-              false,
               verbose,
-            );
+            });
             const ms = performance.now() - start;
 
-            if (!result.skipped) {
+            if (!indexResult.skipped) {
               await logger.info("watch", "indexed", {
                 path: filePath,
-                chunks: result.chunksCreated,
+                chunks: indexResult.chunksCreated,
                 ms: Math.round(ms),
               });
               if (verbose) {
                 console.error(
-                  `[watch] indexed: ${filePath} (${String(result.chunksCreated)} chunks, ${Math.round(ms)}ms)`,
+                  `[watch] indexed: ${filePath} (${String(indexResult.chunksCreated)} chunks, ${String(Math.round(ms))}ms)`,
                 );
               }
             }
@@ -100,6 +100,7 @@ export async function runWatcher(verbose: boolean): Promise<void> {
           });
           if (verbose) console.error(`[watch] error: ${filePath}: ${String(error)}`);
         }
+        })();
       }, DEBOUNCE_MS),
     );
   };
@@ -156,19 +157,20 @@ export async function runWatcher(verbose: boolean): Promise<void> {
   );
 
   // Handle graceful shutdown
-  const shutdown = async () => {
+  const shutdown = () => {
     console.error("\n[watch] shutting down...");
     for (const w of watchers) w.close();
     for (const timer of pending.values()) clearTimeout(timer);
     embedder.shutdown();
-    await logger.info("watch", "daemon_stop", { pid: process.pid });
-    db.close();
-    process.exit(0);
+    void logger.info("watch", "daemon_stop", { pid: process.pid }).then(() => {
+      db.close();
+      process.exit(0);
+    });
   };
 
   process.on("SIGINT", shutdown);
   process.on("SIGTERM", shutdown);
 
   // Keep process alive
-  await new Promise(() => {}); // never resolves
+  await new Promise(() => { /* never resolves — keeps process alive */ });
 }

@@ -29,10 +29,10 @@ export async function handleFetchCommand(
   if (values.crawl) {
     const result = await crawlSite({
       baseUrl: url,
-      maxDepth: Number.parseInt(values.depth ?? "2", 10),
-      useBrowser: values.browser ?? false,
-      useSitemap: values.sitemap ?? false,
-      verbose: values.verbose ?? false,
+      maxDepth: Number.parseInt(values.depth, 10),
+      useBrowser: values.browser,
+      useSitemap: values.sitemap,
+      verbose: values.verbose,
       tags: values.tags?.split(",") ?? [],
     });
 
@@ -41,7 +41,7 @@ export async function handleFetchCommand(
     if (result.errors > 0) {
       console.log(`  Errors:  ${String(result.errors)}`);
     }
-    console.log(`  Duration: ${Math.round(result.durationMs)}ms`);
+    console.log(`  Duration: ${String(Math.round(result.durationMs))}ms`);
     for (const p of result.savedPaths) {
       console.log(`  ${p}`);
     }
@@ -50,8 +50,8 @@ export async function handleFetchCommand(
 
   await fetchPage({
     url,
-    useBrowser: values.browser ?? false,
-    verbose: values.verbose ?? false,
+    useBrowser: values.browser,
+    verbose: values.verbose,
     tags: values.tags?.split(",") ?? [],
   });
 }

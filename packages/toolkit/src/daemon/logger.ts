@@ -52,7 +52,7 @@ export class Logger {
     };
 
     const line = JSON.stringify(entry) + "\n";
-    await appendFile(this.logPath, line, "utf-8");
+    await appendFile(this.logPath, line, "utf8");
   }
 
   info(mod: string, msg: string, extra: Record<string, unknown> = {}): Promise<void> {
@@ -108,7 +108,7 @@ export class Logger {
         });
       }
 
-      return logFiles.sort((a, b) => b.date.localeCompare(a.date));
+      return logFiles.toSorted((a, b) => b.date.localeCompare(a.date));
     } catch {
       return [];
     }

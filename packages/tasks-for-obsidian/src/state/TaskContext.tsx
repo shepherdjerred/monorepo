@@ -39,7 +39,7 @@ const TaskContext = createContext<TaskContextValue | null>(null);
 
 export function TaskProvider({ children }: { children: React.ReactNode }) {
   const client = useApiClient();
-  const [tasks, setTasks] = useState<Map<TaskId, Task>>(new Map());
+  const [tasks, setTasks] = useState(new Map<TaskId, Task>());
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<AppError | null>(null);
 

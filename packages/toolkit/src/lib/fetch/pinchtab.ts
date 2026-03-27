@@ -47,7 +47,7 @@ export async function fetchWithPinchtab(
 
   if (verbose) {
     console.error(
-      `[fetch] response: ${stdout.length.toLocaleString()} chars in ${Math.round(durationMs)}ms`,
+      `[fetch] response: ${stdout.length.toLocaleString()} chars in ${String(Math.round(durationMs))}ms`,
     );
   }
 

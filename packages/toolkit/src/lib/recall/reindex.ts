@@ -58,15 +58,14 @@ export async function reindexAll(
     }
 
     try {
-      const result = await indexFile(
+      const result = await indexFile({
         db,
         embedder,
-        file.path,
-        file.source,
-        [],
-        full,
+        filePath: file.path,
+        source: file.source,
+        force: full,
         verbose,
-      );
+      });
 
       if (result.skipped) {
         skipped++;
@@ -92,21 +91,17 @@ export async function reindexAll(
     .all();
   let removed = 0;
   for (const row of allMetadata) {
-    if (!allIndexedPaths.has(row.path)) {
-      try {
-        const exists = await stat(row.path).catch(() => null);
-        if (exists == null) {
-          await db.deleteChunks(row.path);
-          db.deleteFts(row.path);
-          db.deleteMetadata(row.path);
-          removed++;
-          if (verbose) {
-            console.error(`[reindex] removed stale: ${row.path}`);
-          }
-        }
-      } catch {
-        // ignore stat errors
-      }
+    if (allIndexedPaths.has(row.path)) continue;
+
+    const exists = await stat(row.path).catch(() => null);
+    if (exists != null) continue;
+
+    await db.deleteChunks(row.path);
+    db.deleteFts(row.path);
+    db.deleteMetadata(row.path);
+    removed++;
+    if (verbose) {
+      console.error(`[reindex] removed stale: ${row.path}`);
     }
   }
 
