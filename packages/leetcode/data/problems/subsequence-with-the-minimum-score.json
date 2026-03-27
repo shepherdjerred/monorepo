@@ -1,0 +1,136 @@
+{
+  "questionId": "2701",
+  "questionFrontendId": "2565",
+  "title": "Subsequence With the Minimum Score",
+  "titleSlug": "subsequence-with-the-minimum-score",
+  "difficulty": "Hard",
+  "content": "<p>You are given two strings <code>s</code> and <code>t</code>.</p>\n\n<p>You are allowed to remove any number of characters from the string <code>t</code>.</p>\n\n<p>The score of the string is <code>0</code> if no characters are removed from the string <code>t</code>, otherwise:</p>\n\n<ul>\n\t<li>Let <code>left</code> be the minimum index among all removed characters.</li>\n\t<li>Let <code>right</code> be the maximum index among all removed characters.</li>\n</ul>\n\n<p>Then the score of the string is <code>right - left + 1</code>.</p>\n\n<p>Return <em>the minimum possible score to make </em><code>t</code><em>&nbsp;a subsequence of </em><code>s</code><em>.</em></p>\n\n<p>A <strong>subsequence</strong> of a string is a new string that is formed from the original string by deleting some (can be none) of the characters without disturbing the relative positions of the remaining characters. (i.e., <code>&quot;ace&quot;</code> is a subsequence of <code>&quot;<u>a</u>b<u>c</u>d<u>e</u>&quot;</code> while <code>&quot;aec&quot;</code> is not).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abacaba&quot;, t = &quot;bzaa&quot;\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> In this example, we remove the character &quot;z&quot; at index 1 (0-indexed).\nThe string t becomes &quot;baa&quot; which is a subsequence of the string &quot;abacaba&quot; and the score is 1 - 1 + 1 = 1.\nIt can be proven that 1 is the minimum score that we can achieve.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;cde&quot;, t = &quot;xyz&quot;\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> In this example, we remove characters &quot;x&quot;, &quot;y&quot; and &quot;z&quot; at indices 0, 1, and 2 (0-indexed).\nThe string t becomes &quot;&quot; which is a subsequence of the string &quot;cde&quot; and the score is 2 - 0 + 1 = 3.\nIt can be proven that 3 is the minimum score that we can achieve.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length, t.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s</code> and <code>t</code> consist of only lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Maintain two pointers: i and j. We need to perform a similar operation: while t[0:i] + t[j:n] is not a subsequence of the string s, increase j.",
+    "We can check the condition greedily. Create the array leftmost[i] which denotes minimum index k, such that in prefix s[0:k] exists subsequence t[0:i]. Similarly, we define rightmost[i].",
+    "If leftmost[i] < rightmost[j] then t[0:i] + t[j:n] is the subsequence of s."
+  ],
+  "metaData": "{\n  \"name\": \"minimumScore\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"t\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"10.3K\", \"totalSubmission\": \"31.1K\", \"totalAcceptedRaw\": 10320, \"totalSubmissionRaw\": 31108, \"acRate\": \"33.2%\"}",
+  "likes": 406,
+  "dislikes": 7,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Longest Common Subsequence\", \"titleSlug\": \"longest-common-subsequence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"abacaba\"\n\"bzaa\"",
+    "\"cde\"\n\"xyz\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"doordash\", \"name\": \"DoorDash\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minimumScore(string s, string t) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minimumScore(String s, String t) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumScore(self, s: str, t: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumScore(self, s, t):\n        \"\"\"\n        :type s: str\n        :type t: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {string} t\n * @return {number}\n */\nvar minimumScore = function(s, t) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumScore(s: string, t: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinimumScore(string s, string t) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minimumScore(char* s, char* t) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumScore(s string, t string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumScore(s: String, t: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumScore(_ s: String, _ t: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_score(s: String, t: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {String} t\n# @return {Integer}\ndef minimum_score(s, t)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param String $t\n     * @return Integer\n     */\n    function minimumScore($s, $t) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimumScore(String s, String t) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumScore(s: String, t: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_score(s :: String.t, t :: String.t) :: integer\n  def minimum_score(s, t) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_score(S :: unicode:unicode_binary(), T :: unicode:unicode_binary()) -> integer().\nminimum_score(S, T) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-score s t)\n  (-> string? string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

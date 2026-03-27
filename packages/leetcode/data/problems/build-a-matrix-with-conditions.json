@@ -1,0 +1,144 @@
+{
+  "questionId": "2472",
+  "questionFrontendId": "2392",
+  "title": "Build a Matrix With Conditions",
+  "titleSlug": "build-a-matrix-with-conditions",
+  "difficulty": "Hard",
+  "content": "<p>You are given a <strong>positive</strong> integer <code>k</code>. You are also given:</p>\n\n<ul>\n\t<li>a 2D integer array <code>rowConditions</code> of size <code>n</code> where <code>rowConditions[i] = [above<sub>i</sub>, below<sub>i</sub>]</code>, and</li>\n\t<li>a 2D integer array <code>colConditions</code> of size <code>m</code> where <code>colConditions[i] = [left<sub>i</sub>, right<sub>i</sub>]</code>.</li>\n</ul>\n\n<p>The two arrays contain integers from <code>1</code> to <code>k</code>.</p>\n\n<p>You have to build a <code>k x k</code> matrix that contains each of the numbers from <code>1</code> to <code>k</code> <strong>exactly once</strong>. The remaining cells should have the value <code>0</code>.</p>\n\n<p>The matrix should also satisfy the following conditions:</p>\n\n<ul>\n\t<li>The number <code>above<sub>i</sub></code> should appear in a <strong>row</strong> that is strictly <strong>above</strong> the row at which the number <code>below<sub>i</sub></code> appears for all <code>i</code> from <code>0</code> to <code>n - 1</code>.</li>\n\t<li>The number <code>left<sub>i</sub></code> should appear in a <strong>column</strong> that is strictly <strong>left</strong> of the column at which the number <code>right<sub>i</sub></code> appears for all <code>i</code> from <code>0</code> to <code>m - 1</code>.</li>\n</ul>\n\n<p>Return <em><strong>any</strong> matrix that satisfies the conditions</em>. If no answer exists, return an empty matrix.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/07/06/gridosdrawio.png\" style=\"width: 211px; height: 211px;\" />\n<pre>\n<strong>Input:</strong> k = 3, rowConditions = [[1,2],[3,2]], colConditions = [[2,1],[3,2]]\n<strong>Output:</strong> [[3,0,0],[0,0,1],[0,2,0]]\n<strong>Explanation:</strong> The diagram above shows a valid example of a matrix that satisfies all the conditions.\nThe row conditions are the following:\n- Number 1 is in row <u>1</u>, and number 2 is in row <u>2</u>, so 1 is above 2 in the matrix.\n- Number 3 is in row <u>0</u>, and number 2 is in row <u>2</u>, so 3 is above 2 in the matrix.\nThe column conditions are the following:\n- Number 2 is in column <u>1</u>, and number 1 is in column <u>2</u>, so 2 is left of 1 in the matrix.\n- Number 3 is in column <u>0</u>, and number 2 is in column <u>1</u>, so 3 is left of 2 in the matrix.\nNote that there may be multiple correct answers.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> k = 3, rowConditions = [[1,2],[2,3],[3,1],[2,3]], colConditions = [[2,1]]\n<strong>Output:</strong> []\n<strong>Explanation:</strong> From the first two conditions, 3 has to be below 1 but the third conditions needs 3 to be above 1 to be satisfied.\nNo matrix can satisfy all the conditions, so we return the empty matrix.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= k &lt;= 400</code></li>\n\t<li><code>1 &lt;= rowConditions.length, colConditions.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>rowConditions[i].length == colConditions[i].length == 2</code></li>\n\t<li><code>1 &lt;= above<sub>i</sub>, below<sub>i</sub>, left<sub>i</sub>, right<sub>i</sub> &lt;= k</code></li>\n\t<li><code>above<sub>i</sub> != below<sub>i</sub></code></li>\n\t<li><code>left<sub>i</sub> != right<sub>i</sub></code></li>\n</ul>\n",
+  "hints": [
+    "Can you think of the problem in terms of graphs?",
+    "What algorithm allows you to find the order of nodes in a graph?"
+  ],
+  "metaData": "{\n  \"name\": \"buildMatrix\",\n  \"params\": [\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"rowConditions\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"colConditions\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[][]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"105.5K\", \"totalSubmission\": \"133K\", \"totalAcceptedRaw\": 105529, \"totalSubmissionRaw\": 133032, \"acRate\": \"79.3%\"}",
+  "likes": 1507,
+  "dislikes": 56,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Course Schedule\", \"titleSlug\": \"course-schedule\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Course Schedule II\", \"titleSlug\": \"course-schedule-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Eventual Safe States\", \"titleSlug\": \"find-eventual-safe-states\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Loud and Rich\", \"titleSlug\": \"loud-and-rich\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "3\n[[1,2],[3,2]]\n[[2,1],[3,2]]",
+    "3\n[[1,2],[2,3],[3,1],[2,3]]\n[[2,1]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Topological Sort",
+      "slug": "topological-sort"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> buildMatrix(int k, vector<vector<int>>& rowConditions, vector<vector<int>>& colConditions) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[][] buildMatrix(int k, int[][] rowConditions, int[][] colConditions) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def buildMatrix(self, k: int, rowConditions: List[List[int]], colConditions: List[List[int]]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def buildMatrix(self, k, rowConditions, colConditions):\n        \"\"\"\n        :type k: int\n        :type rowConditions: List[List[int]]\n        :type colConditions: List[List[int]]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} k\n * @param {number[][]} rowConditions\n * @param {number[][]} colConditions\n * @return {number[][]}\n */\nvar buildMatrix = function(k, rowConditions, colConditions) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function buildMatrix(k: number, rowConditions: number[][], colConditions: number[][]): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[][] BuildMatrix(int k, int[][] rowConditions, int[][] colConditions) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** buildMatrix(int k, int** rowConditions, int rowConditionsSize, int* rowConditionsColSize, int** colConditions, int colConditionsSize, int* colConditionsColSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func buildMatrix(k int, rowConditions [][]int, colConditions [][]int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun buildMatrix(k: Int, rowConditions: Array<IntArray>, colConditions: Array<IntArray>): Array<IntArray> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func buildMatrix(_ k: Int, _ rowConditions: [[Int]], _ colConditions: [[Int]]) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn build_matrix(k: i32, row_conditions: Vec<Vec<i32>>, col_conditions: Vec<Vec<i32>>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} k\n# @param {Integer[][]} row_conditions\n# @param {Integer[][]} col_conditions\n# @return {Integer[][]}\ndef build_matrix(k, row_conditions, col_conditions)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $k\n     * @param Integer[][] $rowConditions\n     * @param Integer[][] $colConditions\n     * @return Integer[][]\n     */\n    function buildMatrix($k, $rowConditions, $colConditions) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> buildMatrix(int k, List<List<int>> rowConditions, List<List<int>> colConditions) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def buildMatrix(k: Int, rowConditions: Array[Array[Int]], colConditions: Array[Array[Int]]): Array[Array[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec build_matrix(k :: integer, row_conditions :: [[integer]], col_conditions :: [[integer]]) :: [[integer]]\n  def build_matrix(k, row_conditions, col_conditions) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec build_matrix(K :: integer(), RowConditions :: [[integer()]], ColConditions :: [[integer()]]) -> [[integer()]].\nbuild_matrix(K, RowConditions, ColConditions) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (build-matrix k rowConditions colConditions)\n  (-> exact-integer? (listof (listof exact-integer?)) (listof (listof exact-integer?)) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2379",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given an integer `k` and two 2D integer arrays `rowConditions` and `colConditions`. The constructed matrix's size should be `k x k` containing each value from `1` to `k` exactly once. `rowConditions` contains tuples of the form: `[above, below]` for every index `i`, which denotes that the integer `above` should appear in a row strictly above the integer `below`. Similarly, in `colConditions`, the tuples are of the form `[left, right]` and denote that `left` should appear in a column strictly to the left of `right`. We need to return any matrix that satisfies these conditions.\n\nLet's say that `rowConditions` is given by `[1,2],[2,3],[3,4]` for `k=4`. This implies that 1 should appear above 2, 2 should appear above 3, and 3 should appear above 4 in the matrix. Therefore, `[1,2,3,4]` is the only solution possible for the row arrangement. Now, observe that any possible column arrangement can be used to create this row solution i.e. if we have found the solution arrays for rows and columns we can merge them to create the desired matrix.\n\nTherefore, we can solve this problem for rows and columns, by calculating their solutions independently and then merging those solutions in a matrix as given above. Let's try to calculate the solution array for `rowConditions` first by representing the information in the form of a graph:\n\n- Let `G(V,E)` represent directed, unweighted graphs.\n- Each value from `1` to `k` would represent a vertex in the graph.\n- The edges are modeled after the prerequisite relationship between the numbers. So, a pair `[a,b]` in the `rowConditions` array means `a` must appear before `b`. The graph represents this as a directed edge `a ➔ b`.\n- If the graph would be acyclic, then an ordering would always be possible. Since it's mentioned that such an ordering may not always be possible, we may have a cyclic graph.\n\nWe are trying to order nodes based on the edges such that if `a->b` is an edge, `a` must appear before `b` in the ordering. Such an ordering of subjects is referred to as a [Topological Sorted Order](https://en.wikipedia.org/wiki/Topological_sorting). There are two approaches that we will be looking at in this article to solve this problem.\n\n---\n\n### Approach 1: Depth-First Search\n\n#### Intuition\n\nDuring depth-first traversal in a graph, starting from node `A`, DFS explores all paths stemming from `A` before completing its recursion for `A` and moving to other nodes. Consequently, all nodes in these paths have `A` as an ancestor, making `A` a prerequisite for all paths originating from it.\n\nNow, we know how to get all the integers that have a particular integer as a prerequisite. If a valid ordering of integers is possible, the node `A` would come before all the other sets of integers that have it as a prerequisite. This idea for solving the problem can be explored using a depth-first search.\n\nInitialize a recursive function given by `dfs` where the recursive stack will contain the topologically sorted order of the nodes in our graph.\n\nFor each node in our graph, we will run a depth-first search in case that node was not already visited in some other node's DFS traversal. Once the processing of all the neighbors is done, we will add this node to the stack. We are using the recursion stack to simulate the ordering we need.\n\nOnce all the nodes have been processed, we will return the nodes as they are returned in the recursion stack from top to bottom.\n\nNow that we have topologically sorted arrays for both `rowConditions` and `colConditions`, how can we utilize them to construct the matrix? Each row and column should correspond to their respective sorted arrays. Therefore, the value at position `matrix[i][j]` is derived from `rowConditions[i]` and `colConditions[j]`.\n\n#### Algorithm\n\n**Main function - `buildMatrix(k, rowConditions, colConditions)`**\n\n1. Create two arrays given by `orderRows` and `orderColumns` to store the topological sorted sequence.\n2. Store the values of `topoSort(rowConditions,k)` and `topoSort(colConditions,k)` in them.\n3. If either of the arrays is empty, return `{}`.\n4. Create a `matrix` of size `k x k` and initialize all values with 0.\n5. Iterate `i` through all values from `0` to `k`:\n    - Iterate `j` through all values from `0` to `k`:   \n        - If `orderRows[i] == orderColumns[j]`, store `orderRows[i]` in `matrix[i][j]`.\n6. Return the `matrix`.\n\n**`topoSort(edges,n)`**\n\n1. Initialize an adjacency matrix `adj` with `n+1` rows, and an empty array `order`. Also, initialize a `visited` array and a boolean `hasCycle` variable with `false`.\n2. Store all the `edges` in `adj` by pushing `b` in `adj[a]` denoting an edge from `a` to `b`.  \n4. For all nodes with an index from `1` to `n`:\n    - If the current node is not visited, perform `dfs(i, adj, visited, order, hasCycle)`. If the `hasCycle` value is `true`, return an empty array.\n5. Reverse the `order` array.\n6. Return `order`.  \n\n**`dfs(node, adj, visited, order, hasCycle)`**\n\n1. Set `visited[node]` to `1`.\n2. Iterate over all neighbors of `node`:\n    - If `visited[neighbor] == 0`, perform `dfs(neighbor, adj, visited, order, hasCycle)`. If `hasCycle` is true, return.\n    - If `visited[neighbor] == 1`, set `hasCycle` to true, return.\n4. Set `visited[node]` as `2`.\n5. Push `node` in `order` array.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/HcR3PUwv/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"HcR3PUwv\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `rowConditions` and `colConditions` array.\n\n- Time complexity: $O(max(k\\cdot k,n))$\n\n   Since the total edges in the graph are $n$ and all the nodes are visited exactly once, the time complexity of the depth-first search operation is $O(n)$. \n   \n   The time complexity of creating and filling the values of a $k \\cdot k$ sized matrix is $O(k\\cdot k)$. Both these operations are performed independently. \n   \n   Therefore, the time complexity is given by $O(max(k\\cdot k,n))$.\n\n- Space complexity: $O(max(k\\cdot k,n))$\n\n   Since the total edges in the graph are $n$, the space complexity of the depth-first search operation is $O(n)$. The space complexity of creating a $k \\cdot k$ sized matrix is $O(k\\cdot k)$. Both these operations are performed independently. \n   \n   Therefore, the space complexity is given by $O(max(k\\cdot k,n))$.\n\n---\n\n### Approach 2: Kahn's Algorithm\n\n#### Intuition\n\nKahn’s algorithm works by keeping track of the number of incoming edges into each node (in-degree). It works by repeatedly visiting the nodes with an in-degree of zero and deleting all the edges associated with it leading to a decrement of in-degree for the nodes whose incoming edges are deleted. This process continues until no elements with zero in-degree can be found.\n\nIf you are not familiar with Kahn's algorithm, we suggest you read our [LeetCode Explore Card](https://leetcode.com/explore/learn/card/graph/623/kahns-algorithm-for-topological-sorting/3886/).\n\nAfter constructing the graph, we can push all the nodes with in-degree 0 to a queue. These nodes represent integers that are not constrained by the position of other integers. In a queue, push these integers first, since they can be completed without any prerequisites.\n\nNow, iterate over all the queue elements, push them in the topologically sorted array, and reduce the in-degree by 1 of each direct neighbor of the current node. If the in-degree of the direct neighbor becomes 0, push it in the queue. Repeat the process till you have visited all the nodes with zero in-degree.\n\nFor example, let's say the given graph has three edges: `1 -> 2`, `2 -> 3`, and `1 -> 3`. In this graph, the in-degree of each node represents the number of prerequisites that must be completed before reaching that node:\n\n- Node `1` has an in-degree of `0`\n- Node `2` has an in-degree of `1`\n- Node `3` has an in-degree of `2`\n\nWe start with node `1`, as it has no prerequisites. We add it to our queue and process it first. Node `1` is a direct prerequisite for both nodes `2` and `3`, so we decrement their in-degrees:\n\n- Node `2`'s in-degree becomes `0`\n- Node `3`'s in-degree becomes `1`\n\nNow we can add node `2` to our queue, as its in-degree is `0`. Processing node `2`, we decrement the in-degree of its neighbor, node `3`:\n\n- Node `3`'s in-degree becomes `0`\n\nFinally, we add node `3` to our queue and process it.\n\nThe resulting topologically sorted order is `1 -> 2 -> 3`.\n\n#### Algorithm\n\n**Main function - `buildMatrix(k, rowConditions, colConditions)`**\n\n1. Create two arrays given by `orderRows` and `orderColumns` to store the topological sorted sequence.\n2. Store the values of `topoSort(rowConditions, k)` and `topoSort(colConditions, k)` in them.\n3. If either of the arrays is empty, return `{}`.\n4. Create `matrix` of size `k x k` and initialize all values with 0.\n5. Iterate `i` through all values from `1` to `k`:\n    - Iterate `j` through all values from `1` to `k`:\n        - If `orderRows[i] = orderColumns[j]`, store `orderRows[i]` in `matrix[i][j]`.\n6. Return the `matrix`.\n\n**`topoSort(edges, n)`**\n\n1. Initialize an adjacency matrix `adj` with `n+1` rows, an array `deg` with size `n+1`, and an empty array `order`.\n2. Store all the `edges` in `adj` by pushing `b` in `adj[a]` (denoting an edge from `a` to `b`). Also, increment the in-degree of `b` in the `deg` array.\n3. Initialize a queue `q` and push all nodes with in-degree values 0 to the queue.\n4. While `q` is not empty:\n    - Store the front element of `q` in `f` and pop it.\n    - Push `f` in `order`.\n    - Decrement `n` by 1.\n    - Iterate through each neighbor of `f`:\n        - Decrement the in-degree of the neighbor. If the in-degree becomes 0, push it in `q`.\n5. If `n` is not equal to 0, return an empty array.\n6. Return `order`.\n\n!?!../Documents/2392/slideshow1.json:960,540!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/7Ckf6TjR/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"7Ckf6TjR\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `rowConditions` and `colConditions` array.\n\n- Time complexity: $O(max(k\\cdot k,n))$\n\n   Since the total edges in the graph are $n$ and all the nodes are visited exactly once, the time complexity of the breadth-first search operation is $O(n)$. \n   \n   The time complexity of creating and filling the values of a $k \\cdot k$ sized matrix is $O(k\\cdot k)$. Both these operations are performed independently. \n   \n   Therefore, the time complexity is given by $O(max(k\\cdot k,n))$.\n\n- Space complexity: $O(max(k\\cdot k,n))$\n\n   Since the total edges in the graph are $n$, the space complexity of the breadth-first search operation is $O(n)$. \n   \n   The space complexity of creating a $k \\cdot k$ sized matrix is $O(k\\cdot k)$. Both these operations are performed independently. \n   \n   Therefore, the space complexity is given by $O(max(k\\cdot k,n))$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

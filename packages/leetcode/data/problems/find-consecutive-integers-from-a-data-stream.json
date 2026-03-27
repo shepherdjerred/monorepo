@@ -1,0 +1,142 @@
+{
+  "questionId": "2620",
+  "questionFrontendId": "2526",
+  "title": "Find Consecutive Integers from a Data Stream",
+  "titleSlug": "find-consecutive-integers-from-a-data-stream",
+  "difficulty": "Medium",
+  "content": "<p>For a stream of integers, implement a data structure that checks if the last <code>k</code> integers parsed in the stream are <strong>equal</strong> to <code>value</code>.</p>\n\n<p>Implement the <strong>DataStream</strong> class:</p>\n\n<ul>\n\t<li><code>DataStream(int value, int k)</code> Initializes the object with an empty integer stream and the two integers <code>value</code> and <code>k</code>.</li>\n\t<li><code>boolean consec(int num)</code> Adds <code>num</code> to the stream of integers. Returns <code>true</code> if the last <code>k</code> integers are equal to <code>value</code>, and <code>false</code> otherwise. If there are less than <code>k</code> integers, the condition does not hold true, so returns <code>false</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;DataStream&quot;, &quot;consec&quot;, &quot;consec&quot;, &quot;consec&quot;, &quot;consec&quot;]\n[[4, 3], [4], [4], [4], [3]]\n<strong>Output</strong>\n[null, false, false, true, false]\n\n<strong>Explanation</strong>\nDataStream dataStream = new DataStream(4, 3); //value = 4, k = 3 \ndataStream.consec(4); // Only 1 integer is parsed, so returns False. \ndataStream.consec(4); // Only 2 integers are parsed.\n                      // Since 2 is less than k, returns False. \ndataStream.consec(4); // The 3 integers parsed are all equal to value, so returns True. \ndataStream.consec(3); // The last k integers parsed in the stream are [4,4,3].\n                      // Since 3 is not equal to value, it returns False.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= value, num &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= 10<sup>5</sup></code></li>\n\t<li>At most <code>10<sup>5</sup></code> calls will be made to <code>consec</code>.</li>\n</ul>\n",
+  "hints": [
+    "Keep track of the last integer which is not equal to <code>value</code>.",
+    "Use a queue-type data structure to store the last <code>k</code> integers."
+  ],
+  "metaData": "{\n  \"classname\": \"DataStream\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer\",\n        \"name\": \"value\"\n      },\n      {\n        \"name\": \"k\",\n        \"type\": \"integer\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"num\"\n        }\n      ],\n      \"name\": \"consec\",\n      \"return\": {\n        \"type\": \"boolean\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"37K\", \"totalSubmission\": \"72.7K\", \"totalAcceptedRaw\": 37041, \"totalSubmissionRaw\": 72688, \"acRate\": \"51.0%\"}",
+  "likes": 342,
+  "dislikes": 39,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Number of Zero-Filled Subarrays\", \"titleSlug\": \"number-of-zero-filled-subarrays\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"DataStream\",\"consec\",\"consec\",\"consec\",\"consec\"]\n[[4,3],[4],[4],[4],[3]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"intel\", \"name\": \"Intel\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Queue",
+      "slug": "queue"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    },
+    {
+      "name": "Data Stream",
+      "slug": "data-stream"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class DataStream {\npublic:\n    DataStream(int value, int k) {\n        \n    }\n    \n    bool consec(int num) {\n        \n    }\n};\n\n/**\n * Your DataStream object will be instantiated and called as such:\n * DataStream* obj = new DataStream(value, k);\n * bool param_1 = obj->consec(num);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class DataStream {\n\n    public DataStream(int value, int k) {\n        \n    }\n    \n    public boolean consec(int num) {\n        \n    }\n}\n\n/**\n * Your DataStream object will be instantiated and called as such:\n * DataStream obj = new DataStream(value, k);\n * boolean param_1 = obj.consec(num);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class DataStream:\n\n    def __init__(self, value: int, k: int):\n        \n\n    def consec(self, num: int) -> bool:\n        \n\n\n# Your DataStream object will be instantiated and called as such:\n# obj = DataStream(value, k)\n# param_1 = obj.consec(num)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class DataStream(object):\n\n    def __init__(self, value, k):\n        \"\"\"\n        :type value: int\n        :type k: int\n        \"\"\"\n        \n\n    def consec(self, num):\n        \"\"\"\n        :type num: int\n        :rtype: bool\n        \"\"\"\n        \n\n\n# Your DataStream object will be instantiated and called as such:\n# obj = DataStream(value, k)\n# param_1 = obj.consec(num)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} value\n * @param {number} k\n */\nvar DataStream = function(value, k) {\n    \n};\n\n/** \n * @param {number} num\n * @return {boolean}\n */\nDataStream.prototype.consec = function(num) {\n    \n};\n\n/** \n * Your DataStream object will be instantiated and called as such:\n * var obj = new DataStream(value, k)\n * var param_1 = obj.consec(num)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class DataStream {\n    constructor(value: number, k: number) {\n        \n    }\n\n    consec(num: number): boolean {\n        \n    }\n}\n\n/**\n * Your DataStream object will be instantiated and called as such:\n * var obj = new DataStream(value, k)\n * var param_1 = obj.consec(num)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class DataStream {\n\n    public DataStream(int value, int k) {\n        \n    }\n    \n    public bool Consec(int num) {\n        \n    }\n}\n\n/**\n * Your DataStream object will be instantiated and called as such:\n * DataStream obj = new DataStream(value, k);\n * bool param_1 = obj.Consec(num);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} DataStream;\n\n\nDataStream* dataStreamCreate(int value, int k) {\n    \n}\n\nbool dataStreamConsec(DataStream* obj, int num) {\n    \n}\n\nvoid dataStreamFree(DataStream* obj) {\n    \n}\n\n/**\n * Your DataStream struct will be instantiated and called as such:\n * DataStream* obj = dataStreamCreate(value, k);\n * bool param_1 = dataStreamConsec(obj, num);\n \n * dataStreamFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type DataStream struct {\n    \n}\n\n\nfunc Constructor(value int, k int) DataStream {\n    \n}\n\n\nfunc (this *DataStream) Consec(num int) bool {\n    \n}\n\n\n/**\n * Your DataStream object will be instantiated and called as such:\n * obj := Constructor(value, k);\n * param_1 := obj.Consec(num);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class DataStream(value: Int, k: Int) {\n\n    fun consec(num: Int): Boolean {\n        \n    }\n\n}\n\n/**\n * Your DataStream object will be instantiated and called as such:\n * var obj = DataStream(value, k)\n * var param_1 = obj.consec(num)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass DataStream {\n\n    init(_ value: Int, _ k: Int) {\n        \n    }\n    \n    func consec(_ num: Int) -> Bool {\n        \n    }\n}\n\n/**\n * Your DataStream object will be instantiated and called as such:\n * let obj = DataStream(value, k)\n * let ret_1: Bool = obj.consec(num)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct DataStream {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl DataStream {\n\n    fn new(value: i32, k: i32) -> Self {\n        \n    }\n    \n    fn consec(&self, num: i32) -> bool {\n        \n    }\n}\n\n/**\n * Your DataStream object will be instantiated and called as such:\n * let obj = DataStream::new(value, k);\n * let ret_1: bool = obj.consec(num);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class DataStream\n\n=begin\n    :type value: Integer\n    :type k: Integer\n=end\n    def initialize(value, k)\n        \n    end\n\n\n=begin\n    :type num: Integer\n    :rtype: Boolean\n=end\n    def consec(num)\n        \n    end\n\n\nend\n\n# Your DataStream object will be instantiated and called as such:\n# obj = DataStream.new(value, k)\n# param_1 = obj.consec(num)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class DataStream {\n    /**\n     * @param Integer $value\n     * @param Integer $k\n     */\n    function __construct($value, $k) {\n        \n    }\n  \n    /**\n     * @param Integer $num\n     * @return Boolean\n     */\n    function consec($num) {\n        \n    }\n}\n\n/**\n * Your DataStream object will be instantiated and called as such:\n * $obj = DataStream($value, $k);\n * $ret_1 = $obj->consec($num);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class DataStream {\n\n  DataStream(int value, int k) {\n    \n  }\n  \n  bool consec(int num) {\n    \n  }\n}\n\n/**\n * Your DataStream object will be instantiated and called as such:\n * DataStream obj = DataStream(value, k);\n * bool param1 = obj.consec(num);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class DataStream(_value: Int, _k: Int) {\n\n    def consec(num: Int): Boolean = {\n        \n    }\n\n}\n\n/**\n * Your DataStream object will be instantiated and called as such:\n * val obj = new DataStream(value, k)\n * val param_1 = obj.consec(num)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule DataStream do\n  @spec init_(value :: integer, k :: integer) :: any\n  def init_(value, k) do\n    \n  end\n\n  @spec consec(num :: integer) :: boolean\n  def consec(num) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# DataStream.init_(value, k)\n# param_1 = DataStream.consec(num)\n\n# DataStream.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec data_stream_init_(Value :: integer(), K :: integer()) -> any().\ndata_stream_init_(Value, K) ->\n  .\n\n-spec data_stream_consec(Num :: integer()) -> boolean().\ndata_stream_consec(Num) ->\n  .\n\n\n%% Your functions will be called as such:\n%% data_stream_init_(Value, K),\n%% Param_1 = data_stream_consec(Num),\n\n%% data_stream_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define data-stream%\n  (class object%\n    (super-new)\n    \n    ; value : exact-integer?\n    ; k : exact-integer?\n    (init-field\n      value\n      k)\n    \n    ; consec : exact-integer? -> boolean?\n    (define/public (consec num)\n      )))\n\n;; Your data-stream% object will be instantiated and called as such:\n;; (define obj (new data-stream% [value value] [k k]))\n;; (define param_1 (send obj consec num))"
+    }
+  ],
+  "solution": null
+}

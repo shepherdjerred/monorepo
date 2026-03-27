@@ -1,0 +1,143 @@
+{
+  "questionId": "2434",
+  "questionFrontendId": "2349",
+  "title": "Design a Number Container System",
+  "titleSlug": "design-a-number-container-system",
+  "difficulty": "Medium",
+  "content": "<p>Design a number container system that can do the following:</p>\n\n<ul>\n\t<li><strong>Insert </strong>or <strong>Replace</strong> a number at the given index in the system.</li>\n\t<li><strong>Return </strong>the smallest index for the given number in the system.</li>\n</ul>\n\n<p>Implement the <code>NumberContainers</code> class:</p>\n\n<ul>\n\t<li><code>NumberContainers()</code> Initializes the number container system.</li>\n\t<li><code>void change(int index, int number)</code> Fills the container at <code>index</code> with the <code>number</code>. If there is already a number at that <code>index</code>, replace it.</li>\n\t<li><code>int find(int number)</code> Returns the smallest index for the given <code>number</code>, or <code>-1</code> if there is no index that is filled by <code>number</code> in the system.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;NumberContainers&quot;, &quot;find&quot;, &quot;change&quot;, &quot;change&quot;, &quot;change&quot;, &quot;change&quot;, &quot;find&quot;, &quot;change&quot;, &quot;find&quot;]\n[[], [10], [2, 10], [1, 10], [3, 10], [5, 10], [10], [1, 20], [10]]\n<strong>Output</strong>\n[null, -1, null, null, null, null, 1, null, 2]\n\n<strong>Explanation</strong>\nNumberContainers nc = new NumberContainers();\nnc.find(10); // There is no index that is filled with number 10. Therefore, we return -1.\nnc.change(2, 10); // Your container at index 2 will be filled with number 10.\nnc.change(1, 10); // Your container at index 1 will be filled with number 10.\nnc.change(3, 10); // Your container at index 3 will be filled with number 10.\nnc.change(5, 10); // Your container at index 5 will be filled with number 10.\nnc.find(10); // Number 10 is at the indices 1, 2, 3, and 5. Since the smallest index that is filled with 10 is 1, we return 1.\nnc.change(1, 20); // Your container at index 1 will be filled with number 20. Note that index 1 was filled with 10 and then replaced with 20. \nnc.find(10); // Number 10 is at the indices 2, 3, and 5. The smallest index that is filled with 10 is 2. Therefore, we return 2.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= index, number &lt;= 10<sup>9</sup></code></li>\n\t<li>At most <code>10<sup>5</sup></code> calls will be made <strong>in total</strong> to <code>change</code> and <code>find</code>.</li>\n</ul>\n",
+  "hints": [
+    "Use a hash table to efficiently map each number to all of its indices in the container and to map each index to their current number.",
+    "In addition, you can use ordered set to store all of the indices for each number to solve the find method. Do not forget to update the ordered set according to the change method."
+  ],
+  "metaData": "{\n  \"classname\": \"NumberContainers\",\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"index\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"number\"\n        }\n      ],\n      \"name\": \"change\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"number\"\n        }\n      ],\n      \"name\": \"find\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"148.9K\", \"totalSubmission\": \"260.9K\", \"totalAcceptedRaw\": 148937, \"totalSubmissionRaw\": 260858, \"acRate\": \"57.1%\"}",
+  "likes": 966,
+  "dislikes": 74,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Seat Reservation Manager\", \"titleSlug\": \"seat-reservation-manager\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Design a Food Rating System\", \"titleSlug\": \"design-a-food-rating-system\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"NumberContainers\",\"find\",\"change\",\"change\",\"change\",\"change\",\"find\",\"change\",\"find\"]\n[[],[10],[2,10],[1,10],[3,10],[5,10],[10],[1,20],[10]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 17, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class NumberContainers {\npublic:\n    NumberContainers() {\n        \n    }\n    \n    void change(int index, int number) {\n        \n    }\n    \n    int find(int number) {\n        \n    }\n};\n\n/**\n * Your NumberContainers object will be instantiated and called as such:\n * NumberContainers* obj = new NumberContainers();\n * obj->change(index,number);\n * int param_2 = obj->find(number);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class NumberContainers {\n\n    public NumberContainers() {\n        \n    }\n    \n    public void change(int index, int number) {\n        \n    }\n    \n    public int find(int number) {\n        \n    }\n}\n\n/**\n * Your NumberContainers object will be instantiated and called as such:\n * NumberContainers obj = new NumberContainers();\n * obj.change(index,number);\n * int param_2 = obj.find(number);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class NumberContainers:\n\n    def __init__(self):\n        \n\n    def change(self, index: int, number: int) -> None:\n        \n\n    def find(self, number: int) -> int:\n        \n\n\n# Your NumberContainers object will be instantiated and called as such:\n# obj = NumberContainers()\n# obj.change(index,number)\n# param_2 = obj.find(number)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class NumberContainers(object):\n\n    def __init__(self):\n        \n\n    def change(self, index, number):\n        \"\"\"\n        :type index: int\n        :type number: int\n        :rtype: None\n        \"\"\"\n        \n\n    def find(self, number):\n        \"\"\"\n        :type number: int\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your NumberContainers object will be instantiated and called as such:\n# obj = NumberContainers()\n# obj.change(index,number)\n# param_2 = obj.find(number)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar NumberContainers = function() {\n    \n};\n\n/** \n * @param {number} index \n * @param {number} number\n * @return {void}\n */\nNumberContainers.prototype.change = function(index, number) {\n    \n};\n\n/** \n * @param {number} number\n * @return {number}\n */\nNumberContainers.prototype.find = function(number) {\n    \n};\n\n/** \n * Your NumberContainers object will be instantiated and called as such:\n * var obj = new NumberContainers()\n * obj.change(index,number)\n * var param_2 = obj.find(number)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class NumberContainers {\n    constructor() {\n        \n    }\n\n    change(index: number, number: number): void {\n        \n    }\n\n    find(number: number): number {\n        \n    }\n}\n\n/**\n * Your NumberContainers object will be instantiated and called as such:\n * var obj = new NumberContainers()\n * obj.change(index,number)\n * var param_2 = obj.find(number)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class NumberContainers {\n\n    public NumberContainers() {\n        \n    }\n    \n    public void Change(int index, int number) {\n        \n    }\n    \n    public int Find(int number) {\n        \n    }\n}\n\n/**\n * Your NumberContainers object will be instantiated and called as such:\n * NumberContainers obj = new NumberContainers();\n * obj.Change(index,number);\n * int param_2 = obj.Find(number);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} NumberContainers;\n\n\nNumberContainers* numberContainersCreate() {\n    \n}\n\nvoid numberContainersChange(NumberContainers* obj, int index, int number) {\n    \n}\n\nint numberContainersFind(NumberContainers* obj, int number) {\n    \n}\n\nvoid numberContainersFree(NumberContainers* obj) {\n    \n}\n\n/**\n * Your NumberContainers struct will be instantiated and called as such:\n * NumberContainers* obj = numberContainersCreate();\n * numberContainersChange(obj, index, number);\n \n * int param_2 = numberContainersFind(obj, number);\n \n * numberContainersFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type NumberContainers struct {\n    \n}\n\n\nfunc Constructor() NumberContainers {\n    \n}\n\n\nfunc (this *NumberContainers) Change(index int, number int)  {\n    \n}\n\n\nfunc (this *NumberContainers) Find(number int) int {\n    \n}\n\n\n/**\n * Your NumberContainers object will be instantiated and called as such:\n * obj := Constructor();\n * obj.Change(index,number);\n * param_2 := obj.Find(number);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class NumberContainers() {\n\n    fun change(index: Int, number: Int) {\n        \n    }\n\n    fun find(number: Int): Int {\n        \n    }\n\n}\n\n/**\n * Your NumberContainers object will be instantiated and called as such:\n * var obj = NumberContainers()\n * obj.change(index,number)\n * var param_2 = obj.find(number)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass NumberContainers {\n\n    init() {\n        \n    }\n    \n    func change(_ index: Int, _ number: Int) {\n        \n    }\n    \n    func find(_ number: Int) -> Int {\n        \n    }\n}\n\n/**\n * Your NumberContainers object will be instantiated and called as such:\n * let obj = NumberContainers()\n * obj.change(index, number)\n * let ret_2: Int = obj.find(number)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct NumberContainers {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl NumberContainers {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn change(&self, index: i32, number: i32) {\n        \n    }\n    \n    fn find(&self, number: i32) -> i32 {\n        \n    }\n}\n\n/**\n * Your NumberContainers object will be instantiated and called as such:\n * let obj = NumberContainers::new();\n * obj.change(index, number);\n * let ret_2: i32 = obj.find(number);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class NumberContainers\n    def initialize()\n        \n    end\n\n\n=begin\n    :type index: Integer\n    :type number: Integer\n    :rtype: Void\n=end\n    def change(index, number)\n        \n    end\n\n\n=begin\n    :type number: Integer\n    :rtype: Integer\n=end\n    def find(number)\n        \n    end\n\n\nend\n\n# Your NumberContainers object will be instantiated and called as such:\n# obj = NumberContainers.new()\n# obj.change(index, number)\n# param_2 = obj.find(number)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class NumberContainers {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param Integer $index\n     * @param Integer $number\n     * @return NULL\n     */\n    function change($index, $number) {\n        \n    }\n  \n    /**\n     * @param Integer $number\n     * @return Integer\n     */\n    function find($number) {\n        \n    }\n}\n\n/**\n * Your NumberContainers object will be instantiated and called as such:\n * $obj = NumberContainers();\n * $obj->change($index, $number);\n * $ret_2 = $obj->find($number);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class NumberContainers {\n\n  NumberContainers() {\n    \n  }\n  \n  void change(int index, int number) {\n    \n  }\n  \n  int find(int number) {\n    \n  }\n}\n\n/**\n * Your NumberContainers object will be instantiated and called as such:\n * NumberContainers obj = NumberContainers();\n * obj.change(index,number);\n * int param2 = obj.find(number);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class NumberContainers() {\n\n    def change(index: Int, number: Int): Unit = {\n        \n    }\n\n    def find(number: Int): Int = {\n        \n    }\n\n}\n\n/**\n * Your NumberContainers object will be instantiated and called as such:\n * val obj = new NumberContainers()\n * obj.change(index,number)\n * val param_2 = obj.find(number)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule NumberContainers do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec change(index :: integer, number :: integer) :: any\n  def change(index, number) do\n    \n  end\n\n  @spec find(number :: integer) :: integer\n  def find(number) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# NumberContainers.init_()\n# NumberContainers.change(index, number)\n# param_2 = NumberContainers.find(number)\n\n# NumberContainers.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec number_containers_init_() -> any().\nnumber_containers_init_() ->\n  .\n\n-spec number_containers_change(Index :: integer(), Number :: integer()) -> any().\nnumber_containers_change(Index, Number) ->\n  .\n\n-spec number_containers_find(Number :: integer()) -> integer().\nnumber_containers_find(Number) ->\n  .\n\n\n%% Your functions will be called as such:\n%% number_containers_init_(),\n%% number_containers_change(Index, Number),\n%% Param_2 = number_containers_find(Number),\n\n%% number_containers_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define number-containers%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; change : exact-integer? exact-integer? -> void?\n    (define/public (change index number)\n      )\n    ; find : exact-integer? -> exact-integer?\n    (define/public (find number)\n      )))\n\n;; Your number-containers% object will be instantiated and called as such:\n;; (define obj (new number-containers%))\n;; (send obj change index number)\n;; (define param_2 (send obj find number))"
+    }
+  ],
+  "solution": {
+    "id": "2670",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nWe need to design a number container system to efficiently manage and query numbers based on their indices. This system should support two primary operations:\n\n1. **Inserting or Replacing a Number:** We can insert a number at a specific index, or replace the number already present at that index.\n2. **Finding the Smallest Index of a Number:** We need to retrieve the smallest index where a given number is present. If the number doesn't exist in the system, we should return `-1`.\n\nTo achieve this, we need to implement a class `NumberContainers` with the following methods:\n\n- **`NumberContainers()`**: Initializes the container system. This involves setting up the internal data structures to store the mappings between numbers and indices.\n- **`void change(int index, int number)`**: Updates the system by associating the given `number` with the provided `index`. If the index already contains a number, it should be replaced. If this operation introduces new data or modifies existing mappings, the system must ensure consistency for subsequent queries.\n- **`int find(int number)`**: Returns the smallest index where the specified `number` exists. If the number is not present, it returns `-1`.\n\n---\n\n### Approach 1: Two Maps\n\n#### Intuition   \n\nWe need to focus on two main operations: `change`, which allows us to insert or replace a number at a specific index, and `find`, which retrieves the smallest index associated with a given number.\n\nThe key to implementing these operations efficiently lies in using map data structures:\n1. **`indexToNumber`**: This map holds the relationship between an index and the number currently stored at that index. It allows us to quickly check if an index already contains a number and enables efficient replacement during the `change` operation.\n2. **`numberToIndices`**: This map keeps track of the indices where each number is present. By using a set to store these indices, we ensure that they remain automatically sorted, enabling efficient insertion and retrieval of the smallest index for a number.\n\nWith these structures in mind, let’s break the solution into two parts: first, the `change` operation, and second, the `find` operation.\n\n##### 1. Change Operation (Insertion and Replacement)\n\nThe `change` operation begins by checking if the given index already holds a number. If the index does contain a number, we first remove this index from the set of indices associated with the old number in the `numberToIndices` map. This step ensures that the old number no longer references the index after the replacement. Once the index is removed, we check whether the set for the old number has become empty. If it has, we remove the old number entirely from the map to maintain a clean and efficient data structure.\n\nAfter handling the removal, we proceed to insert the new number at the given index. This involves adding the index to the set of indices for the new number in `numberToIndices`. Because we are using a set, the indices remain sorted automatically, allowing us to avoid any additional effort to manage their order. This also prepares us for the `find` operation, where the smallest index will always be readily accessible.\n\n##### 2. Find Operation (Retrieve Smallest Index)\n\nFor the `find` operation, we need to return the smallest index that contains the given number. To achieve this, we check the `numberToIndices` map. If the number isn't found, we return `-1`, indicating that the number is not present. If the number exists, the smallest index will always be the first element in the set of indices (since sets store elements in ascending order). This allows us to quickly return the result with minimal effort.\n\n> For a more comprehensive understanding of hash tables, check out the [Hash Table Explore Card 🔗](https://leetcode.com/explore/learn/card/hash-table/). This resource provides an in-depth look at hash tables, explaining their key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\nThe algorithm is visualized below:\n\n!?!../Documents/2349/number_container.json:878,908!?!\n\n#### Algorithm\n\n- Initialize two unordered maps:\n  - `numberToIndices`: A map from a number to a set of indices where the number is located.\n  - `indexToNumbers`: A map from an index to the number stored at that index.\n\n- `change(index, number)`:\n  - If the index is already mapped to a number (i.e., if the index exists in the map or collection of numbers):\n    - Retrieve the previous number stored at the index (`previousNumber`).\n    - Remove the current index from the set of indices associated with the previous number in `numberToIndices`.\n    - If there are no more indices associated with the previous number, remove the entry for `previousNumber` in `numberToIndices`.\n  - Update the `indexToNumbers` map to associate the given index with the new number.\n  - Add the index to the set of indices associated with the new number in `numberToIndices`.\n\n- `find(number)`:\n  - If the number exists in `numberToIndices`:\n    - Return the smallest index where this number is located (i.e., the first element in the set of indices).\n  - If the number does not exist, return `-1`.\n\n#### Implementation\n\n> **Note:** A constructor is used to initialize the object's state when it is created. It sets up the necessary data structures, default values, or any other required initial configuration for the object. In the case of the `NumberContainers` class, the constructor is used to initialize the maps (`indexToNumbers` and `numberToIndices`) that store the necessary data. Without a constructor, these data structures would remain uninitialized, leading to errors or unexpected behavior when the object is used. Essentially, the constructor ensures that the object is in a valid, usable state right from the moment it is instantiated.\n\n<iframe src=\"https://leetcode.com/playground/bsvhFLJ4/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"bsvhFLJ4\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of indices and unique numbers.\n\n- Time complexity: $O(\\log n)$ per `change` operation and $O(1)$ per `find` operation.\n\n    The `change` operation involves updating two maps (`indexToNumbers` and `numberToIndices`) and performing operations on a set. Checking and updating the maps takes $O(1)$ time on average, but the set operations (adding or removing an index) take $O(\\log k)$ time, where $k$ is the number of indices associated with a number. In the worst case, $k$ can be $n$, so the `change` operation is $O(\\log n)$.\n\n    The `find` operation is efficient because it only requires checking if a number exists in the set map (which is $O(1)$) and retrieving the smallest index from the set (which is also $O(1)$ due to the sorted nature of set). Thus, the `find` operation is $O(1)$.\n\n- Space complexity: $O(n)$.\n\n    The space complexity is dominated by the `numberToIndices` map, which stores a set for each unique number. In the worst case, each set can store up to $n$ indices, leading to a total space usage of $O(n)$.\n\n    The `indexToNumbers` map contributes $O(n)$ space since it stores a mapping from each index to its corresponding number. \n    \n    Therefore, the overall space complexity is $O(n)$.\n\n--- \n\n### Approach 2: Using Min Heap with Lazy Update\n\n#### Intuition   \n\nAn alternate solution could be to use min heaps (priority queues) for managing the indices associated with each number. Similar to Approach 1, we use maps to manage the relationships between indices and numbers, but instead of keeping the indices in a sorted set, we store them in a priority queue (min heap) to handle the ordering for us in this approach.\n\nWe follow a similar structure as Approach 1, with two main maps:\n\n1. **`indexToNumbers`**: This map links each index to the number it holds. It helps verify whether an index is still valid during the `find` operation.\n2. **`numberToIndices`**: Instead of using a sorted set to store indices, we use a **min heap (priority queue)**. The priority queue allows us to efficiently retrieve the smallest index associated with a number, as it automatically keeps the indices sorted.\n\nWhat makes this approach different is the **Lazy Update** technique. The term \"lazy\" refers to the deferred handling of index validity during the `find` operation, rather than cleaning up indices immediately after a change.\n\n##### Change Operation (Insertion and Replacement)\n\nSimilar to Approach 1, we first update the `indexToNumbers` map to reflect the new number at the given index. Then, instead of immediately removing any outdated indices, we lazily add the new index to the min heap associated with the new number in `numberToIndices`.\n\nThe key difference here is that we don't bother cleaning up the heap during the `change` operation. Instead, we defer removing the stale indices until the `find` operation requires it.\n\n##### Find Operation (Retrieve Smallest Index)\n\nThe Lazy Update technique becomes crucial in the `find` operation. Here, when we need to retrieve the smallest index for a given number, we check the `numberToIndices` map. If the number doesn’t exist, we return `-1`.\n\nIf the number does exist, we retrieve the min heap for that number. At this point, we don’t assume that the top element of the heap is necessarily valid. The heap may contain stale indices that are no longer associated with the target number. Instead of removing them immediately, we lazily pop the top element of the heap and check if it still maps to the target number using the `indexToNumbers` map.\n\nIf it does, we return the index. If not, we continue popping the heap until we find a valid index or exhaust the heap. This \"lazy\" way ensures that the heap is only cleaned up when it's absolutely necessary, avoiding unnecessary operations during the `change` phase.\n\n> For a more comprehensive understanding of heaps and priority queues, check out the [Heap Explore Card 🔗](https://leetcode.com/explore/learn/card/heap/). This resource provides an in-depth look at heap-based algorithms, explaining their key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n#### Algorithm\n\n- Initialize `numberToIndices` as an hash map where the key is a number and the value is a min-heap (priority queue) of indices for that number.\n- Initialize `indexToNumbers` as a hash map where the key is an index and the value is the corresponding number at that index.\n\n- `change(index, number)`:\n  - Update the mapping of `indexToNumbers` to associate the given `index` with the new `number`.\n  - Add the `index` to the min-heap corresponding to the `number` in `numberToIndices`.\n \n- `find(number)`:\n  - If the `number` is not present in `numberToIndices`, return `-1` (indicating the number does not exist).\n  - Retrieve the min-heap (priority queue) associated with the `number`.\n  - While the min-heap is not empty:\n    - Get the top element (`index`) of the heap.\n    - If the `index` corresponds to the target `number` in `indexToNumbers`, return that `index`.\n    - If the `index` maps to a different number, remove the stale index by popping it from the heap.\n  - If no valid index is found, return `-1`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/QE4J2iuC/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"QE4J2iuC\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of indices and unique numbers.\n\n- Time complexity: $O(\\log n)$ per `change` operation and $O(k \\log n)$ per `find` operation in the worst case.\n\n    The `change` operation involves updating the `indexToNumbers` map, which is $O(1)$, and adding an index to a heap (min-heap) in the `numberToIndices` map. The heap insertion operation takes $O(\\log n)$ time in the worst case. Thus, the `change` operation is $O(\\log n)$.\n\n    The `find` operation involves checking if the number exists in the `numberToIndices` map, which is $O(1)$. However, in the worst case, it may need to remove stale indices from the heap (min-heap) until a valid index is found. Each removal from the heap takes $O(\\log n)$ time, and in the worst case, this could happen $k$ times, where $k$ is the number of stale indices. Thus, the `find` operation is $O(k \\log n)$ in the worst case.\n\n- Space complexity: $O(n)$\n\n    The space complexity is dominated by the `numberToIndices` map, which stores a heap (min-heap) for each unique number. In the worst case, all $n$ calls could be `change` operations, leading to $n$ indices being stored across all heaps. Thus, the total space used by the heaps is $O(n)$.\n\n    The `indexToNumbers` map also contributes $O(n)$ space since it stores a mapping from each index to its corresponding number. Therefore, the overall space complexity is $O(n)$.\n \n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

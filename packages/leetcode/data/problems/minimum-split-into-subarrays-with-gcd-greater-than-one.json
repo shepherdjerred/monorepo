@@ -1,0 +1,144 @@
+{
+  "questionId": "2579",
+  "questionFrontendId": "2436",
+  "title": "Minimum Split Into Subarrays With GCD Greater Than One",
+  "titleSlug": "minimum-split-into-subarrays-with-gcd-greater-than-one",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array <code>nums</code> consisting of positive integers.</p>\n\n<p>Split the array into <strong>one or more</strong> disjoint subarrays such that:</p>\n\n<ul>\n\t<li>Each element of the array belongs to <strong>exactly one</strong> subarray, and</li>\n\t<li>The <strong>GCD</strong> of the elements of each subarray is strictly greater than <code>1</code>.</li>\n</ul>\n\n<p>Return <em>the minimum number of subarrays that can be obtained after the split</em>.</p>\n\n<p><strong>Note</strong> that:</p>\n\n<ul>\n\t<li>The <strong>GCD</strong> of a subarray is the largest positive integer that evenly divides all the elements of the subarray.</li>\n\t<li>A <strong>subarray</strong> is a contiguous part of the array.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [12,6,3,14,8]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> We can split the array into the subarrays: [12,6,3] and [14,8].\n- The GCD of 12, 6 and 3 is 3, which is strictly greater than 1.\n- The GCD of 14 and 8 is 2, which is strictly greater than 1.\nIt can be shown that splitting the array into one subarray will make the GCD = 1.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [4,12,6,14]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> We can split the array into only one subarray, which is the whole array.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 2000</code></li>\n\t<li><code>2 &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "How does the GCD of an array change when you add more elements to a subarray?",
+    "The GCD will always decrease when increasing the size of the subarray,",
+    "Keep adding elements to a subarray and if adding a new element will make the GCD = 1, add a new split and a new subarray."
+  ],
+  "metaData": "{\n  \"name\": \"minimumSplits\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"2.9K\", \"totalSubmission\": \"4.1K\", \"totalAcceptedRaw\": 2901, \"totalSubmissionRaw\": 4132, \"acRate\": \"70.2%\"}",
+  "likes": 45,
+  "dislikes": 11,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Minimum Subarrays in a Valid Split\", \"titleSlug\": \"minimum-subarrays-in-a-valid-split\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[12,6,3,14,8]",
+    "[4,12,6,14]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Number Theory",
+      "slug": "number-theory"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minimumSplits(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minimumSplits(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumSplits(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumSplits(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar minimumSplits = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumSplits(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinimumSplits(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minimumSplits(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumSplits(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumSplits(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumSplits(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_splits(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef minimum_splits(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function minimumSplits($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimumSplits(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumSplits(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_splits(nums :: [integer]) :: integer\n  def minimum_splits(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_splits(Nums :: [integer()]) -> integer().\nminimum_splits(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-splits nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,144 @@
+{
+  "questionId": "2603",
+  "questionFrontendId": "2512",
+  "title": "Reward Top K Students",
+  "titleSlug": "reward-top-k-students",
+  "difficulty": "Medium",
+  "content": "<p>You are given two string arrays <code>positive_feedback</code> and <code>negative_feedback</code>, containing the words denoting positive and negative feedback, respectively. Note that <strong>no</strong> word is both positive and negative.</p>\n\n<p>Initially every student has <code>0</code> points. Each positive word in a feedback report <strong>increases</strong> the points of a student by <code>3</code>, whereas each negative word <strong>decreases</strong> the points by <code>1</code>.</p>\n\n<p>You are given <code>n</code> feedback reports, represented by a <strong>0-indexed</strong> string array <code>report</code>&nbsp;and a <strong>0-indexed</strong> integer array <code>student_id</code>, where <code>student_id[i]</code> represents the ID of the student who has received the feedback report <code>report[i]</code>. The ID of each student is <strong>unique</strong>.</p>\n\n<p>Given an integer <code>k</code>, return <em>the top </em><code>k</code><em> students after ranking them in <strong>non-increasing</strong> order by their points</em>. In case more than one student has the same points, the one with the lower ID ranks higher.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> positive_feedback = [&quot;smart&quot;,&quot;brilliant&quot;,&quot;studious&quot;], negative_feedback = [&quot;not&quot;], report = [&quot;this student is studious&quot;,&quot;the student is smart&quot;], student_id = [1,2], k = 2\n<strong>Output:</strong> [1,2]\n<strong>Explanation:</strong> \nBoth the students have 1 positive feedback and 3 points but since student 1 has a lower ID he ranks higher.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> positive_feedback = [&quot;smart&quot;,&quot;brilliant&quot;,&quot;studious&quot;], negative_feedback = [&quot;not&quot;], report = [&quot;this student is not studious&quot;,&quot;the student is smart&quot;], student_id = [1,2], k = 2\n<strong>Output:</strong> [2,1]\n<strong>Explanation:</strong> \n- The student with ID 1 has 1 positive feedback and 1 negative feedback, so he has 3-1=2 points. \n- The student with ID 2 has 1 positive feedback, so he has 3 points. \nSince student 2 has more points, [2,1] is returned.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= positive_feedback.length, negative_feedback.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= positive_feedback[i].length, negative_feedback[j].length &lt;= 100</code></li>\n\t<li>Both <code>positive_feedback[i]</code> and <code>negative_feedback[j]</code> consists of lowercase English letters.</li>\n\t<li>No word is present in both <code>positive_feedback</code> and <code>negative_feedback</code>.</li>\n\t<li><code>n == report.length == student_id.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>4</sup></code></li>\n\t<li><code>report[i]</code> consists of lowercase English letters and spaces <code>&#39; &#39;</code>.</li>\n\t<li>There is a single space between consecutive words of <code>report[i]</code>.</li>\n\t<li><code>1 &lt;= report[i].length &lt;= 100</code></li>\n\t<li><code>1 &lt;= student_id[i] &lt;= 10<sup>9</sup></code></li>\n\t<li>All the values of <code>student_id[i]</code> are <strong>unique</strong>.</li>\n\t<li><code>1 &lt;= k &lt;= n</code></li>\n</ul>\n",
+  "hints": [
+    "Hash the positive and negative feedback words separately.",
+    "Calculate the points for each student’s feedback.",
+    "Sort the students accordingly to find the top <em>k</em> among them."
+  ],
+  "metaData": "{\n  \"name\": \"topStudents\",\n  \"params\": [\n    {\n      \"name\": \"positive_feedback\",\n      \"type\": \"string[]\"\n    },\n    {\n      \"type\": \"string[]\",\n      \"name\": \"negative_feedback\"\n    },\n    {\n      \"type\": \"string[]\",\n      \"name\": \"report\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"student_id\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<integer>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"30.3K\", \"totalSubmission\": \"64.5K\", \"totalAcceptedRaw\": 30281, \"totalSubmissionRaw\": 64497, \"acRate\": \"46.9%\"}",
+  "likes": 364,
+  "dislikes": 92,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Queue Reconstruction by Height\", \"titleSlug\": \"queue-reconstruction-by-height\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"K Highest Ranked Items Within a Price Range\", \"titleSlug\": \"k-highest-ranked-items-within-a-price-range\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"smart\",\"brilliant\",\"studious\"]\n[\"not\"]\n[\"this student is studious\",\"the student is smart\"]\n[1,2]\n2",
+    "[\"smart\",\"brilliant\",\"studious\"]\n[\"not\"]\n[\"this student is not studious\",\"the student is smart\"]\n[1,2]\n2"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"bookingcom\", \"name\": \"Booking.com\"}], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> topStudents(vector<string>& positive_feedback, vector<string>& negative_feedback, vector<string>& report, vector<int>& student_id, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<Integer> topStudents(String[] positive_feedback, String[] negative_feedback, String[] report, int[] student_id, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def topStudents(self, positive_feedback: List[str], negative_feedback: List[str], report: List[str], student_id: List[int], k: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def topStudents(self, positive_feedback, negative_feedback, report, student_id, k):\n        \"\"\"\n        :type positive_feedback: List[str]\n        :type negative_feedback: List[str]\n        :type report: List[str]\n        :type student_id: List[int]\n        :type k: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} positive_feedback\n * @param {string[]} negative_feedback\n * @param {string[]} report\n * @param {number[]} student_id\n * @param {number} k\n * @return {number[]}\n */\nvar topStudents = function(positive_feedback, negative_feedback, report, student_id, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function topStudents(positive_feedback: string[], negative_feedback: string[], report: string[], student_id: number[], k: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<int> TopStudents(string[] positive_feedback, string[] negative_feedback, string[] report, int[] student_id, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* topStudents(char** positive_feedback, int positive_feedbackSize, char** negative_feedback, int negative_feedbackSize, char** report, int reportSize, int* student_id, int student_idSize, int k, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func topStudents(positive_feedback []string, negative_feedback []string, report []string, student_id []int, k int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun topStudents(positive_feedback: Array<String>, negative_feedback: Array<String>, report: Array<String>, student_id: IntArray, k: Int): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func topStudents(_ positive_feedback: [String], _ negative_feedback: [String], _ report: [String], _ student_id: [Int], _ k: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn top_students(positive_feedback: Vec<String>, negative_feedback: Vec<String>, report: Vec<String>, student_id: Vec<i32>, k: i32) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} positive_feedback\n# @param {String[]} negative_feedback\n# @param {String[]} report\n# @param {Integer[]} student_id\n# @param {Integer} k\n# @return {Integer[]}\ndef top_students(positive_feedback, negative_feedback, report, student_id, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $positive_feedback\n     * @param String[] $negative_feedback\n     * @param String[] $report\n     * @param Integer[] $student_id\n     * @param Integer $k\n     * @return Integer[]\n     */\n    function topStudents($positive_feedback, $negative_feedback, $report, $student_id, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> topStudents(List<String> positive_feedback, List<String> negative_feedback, List<String> report, List<int> student_id, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def topStudents(positive_feedback: Array[String], negative_feedback: Array[String], report: Array[String], student_id: Array[Int], k: Int): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec top_students(positive_feedback :: [String.t], negative_feedback :: [String.t], report :: [String.t], student_id :: [integer], k :: integer) :: [integer]\n  def top_students(positive_feedback, negative_feedback, report, student_id, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec top_students(Positive_feedback :: [unicode:unicode_binary()], Negative_feedback :: [unicode:unicode_binary()], Report :: [unicode:unicode_binary()], Student_id :: [integer()], K :: integer()) -> [integer()].\ntop_students(Positive_feedback, Negative_feedback, Report, Student_id, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (top-students positive_feedback negative_feedback report student_id k)\n  (-> (listof string?) (listof string?) (listof string?) (listof exact-integer?) exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": null
+}

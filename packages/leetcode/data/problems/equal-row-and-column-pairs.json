@@ -1,0 +1,145 @@
+{
+  "questionId": "2428",
+  "questionFrontendId": "2352",
+  "title": "Equal Row and Column Pairs",
+  "titleSlug": "equal-row-and-column-pairs",
+  "difficulty": "Medium",
+  "content": "<p>Given a <strong>0-indexed</strong> <code>n x n</code> integer matrix <code>grid</code>, <em>return the number of pairs </em><code>(r<sub>i</sub>, c<sub>j</sub>)</code><em> such that row </em><code>r<sub>i</sub></code><em> and column </em><code>c<sub>j</sub></code><em> are equal</em>.</p>\n\n<p>A row and column pair is considered equal if they contain the same elements in the same order (i.e., an equal array).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/06/01/ex1.jpg\" style=\"width: 150px; height: 153px;\" />\n<pre>\n<strong>Input:</strong> grid = [[3,2,1],[1,7,6],[2,7,7]]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> There is 1 equal row and column pair:\n- (Row 2, Column 1): [2,7,7]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/06/01/ex2.jpg\" style=\"width: 200px; height: 209px;\" />\n<pre>\n<strong>Input:</strong> grid = [[3,1,2,2],[1,4,4,5],[2,4,2,2],[2,4,2,2]]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> There are 3 equal row and column pairs:\n- (Row 0, Column 0): [3,1,2,2]\n- (Row 2, Column 2): [2,4,2,2]\n- (Row 3, Column 2): [2,4,2,2]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == grid.length == grid[i].length</code></li>\n\t<li><code>1 &lt;= n &lt;= 200</code></li>\n\t<li><code>1 &lt;= grid[i][j] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "We can use nested loops to compare every row against every column.",
+    "Another loop is necessary to compare the row and column element by element.",
+    "It is also possible to hash the arrays and compare the hashed values instead."
+  ],
+  "metaData": "{\n  \"name\": \"equalPairs\",\n  \"params\": [\n    {\n      \"name\": \"grid\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"398.9K\", \"totalSubmission\": \"563K\", \"totalAcceptedRaw\": 398939, \"totalSubmissionRaw\": 562977, \"acRate\": \"70.9%\"}",
+  "likes": 2491,
+  "dislikes": 192,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Delete Greatest Value in Each Row\", \"titleSlug\": \"delete-greatest-value-in-each-row\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[3,2,1],[1,7,6],[2,7,7]]",
+    "[[3,1,2,2],[1,4,4,5],[2,4,2,2],[2,4,2,2]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int equalPairs(vector<vector<int>>& grid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int equalPairs(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def equalPairs(self, grid: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def equalPairs(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} grid\n * @return {number}\n */\nvar equalPairs = function(grid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function equalPairs(grid: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int EqualPairs(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int equalPairs(int** grid, int gridSize, int* gridColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func equalPairs(grid [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun equalPairs(grid: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func equalPairs(_ grid: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn equal_pairs(grid: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} grid\n# @return {Integer}\ndef equal_pairs(grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $grid\n     * @return Integer\n     */\n    function equalPairs($grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int equalPairs(List<List<int>> grid) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def equalPairs(grid: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec equal_pairs(grid :: [[integer]]) :: integer\n  def equal_pairs(grid) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec equal_pairs(Grid :: [[integer()]]) -> integer().\nequal_pairs(Grid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (equal-pairs grid)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1895",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Brute Force\n\n#### Intuition   \n\nLet's start with the most intuitive approach, which is brute force. Since we need to find the number of matching rows and columns, we traverse through every possible combination of rows and columns (row R, col C) and check if all elements at the same position in R and C are equal to each other. \n\n![img](../Figures/2352/b1.png)\n\n<br>\n\n#### Algorithm\n\n1) Initialize `count` to 0.\n\n2) Iterate over each row R in `grid`.\n\n3) For each row, iterate over each column C in `grid`.\n\n4) Check if row R equals column C by comparing each element at the same index `i` in both R and C. If row R equals column C, increment `count` by 1.\n\n5) Return `count` after iterating over all row-column pairs.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/9QvDwwqr/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"9QvDwwqr\"></iframe>\n\n#### Complexity Analysis\n\nLet $$n \\times n$$ be the size of `grid`.\n\n* Time complexity: $$O(n^3)$$\n\n    - There are a total of $$O(n^2)$$ pairs when iterating over each row R and column C. Traversing each element in R and C takes $$O(n)$$ time.\n    \n\n* Space complexity: $$O(1)$$\n\n    - we are use constant amount of extra space to store the answer `count`.\n\n<br/>\n\n---\n\n### Approach 2: Hash Map\n\n#### Intuition   \n\nThe brute force approach involves comparing each row R with each column C, resulting in a time complexity of $$O(n^3)$$. However, we can optimize this approach by using a hash map data structure to reduce the time complexity.\n\nIn this approach, we can consider each row as the key and store it in a hash map. The corresponding value for each key would be the frequency of that row in the grid. Then, we can traverse through each column of the grid and increment the answer by the frequency of the equivalent row in the hash map.\n\n\n![img](../Figures/2352/1.png)\n\nTaking the example shown in the picture, we traverse each row of the grid and use it as a key and record its frequency in a hash map. \n\n> Note that arrays cannot typically be used as keys, so we need to convert them into equivalent **hashable** objects, such as tuples in Python or strings in Java. The converted object still maintains a one-to-one correspondence with the original object, allowing us to record the frequency of the original array by hash map.\n\n![img](../Figures/2352/2.png)\n\nNext, we traverse through each column of the grid, convert the array of each column into a hashable object of the same type as the previous keys, and then retrieve its number of occurrences in the hash map. This provides us with the number of rows in the grid that are equal to this column.\n\n![img](../Figures/2352/3.png)\n\nWe found that `[3,1,2,2]` appears once and `[2,4,2,2]` appears twice. Therefore, the final answer is 3.\n\n<br>\n\n#### Algorithm\n\n1) Create an empty hash map `row_counter` and set `count` to 0.\n\n2) For each row `row` in the grid, convert it into an equivalent hashable object and use it as a key to the `row_counter`. Increment the value of the corresponding key by 1.\n\n3) For each column in the grid, convert it into the same type of hashable object and check if it appears in the `row_counter`. If it does, increment `count` by the frequency.\n\n4) Return the answer `count`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/n5trUdRN/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"n5trUdRN\"></iframe>\n\n#### Complexity Analysis\n\nLet $$n \\times n$$ be the size of `grid`.\n\n* Time complexity: $$O(n^2)$$\n\n    - We iterate over each row and column only once, converting one array of length $$n$$ into a hashable object takes $$O(n)$$ time.\n    - Operations like adding or checking on hash map take $$O(1)$$ time.\n    \n\n* Space complexity: $$O(n^2)$$\n\n    - We store each row of the grid in the hash map, in the worst-case scenario, `row_counter` might contains $$n$$ distinct rows of length $$n$$. \n\n<br/>\n\n---\n\n### Approach 3: Trie\n\n#### Intuition   \n\n> If you are not familiar with trie, please refer to this problem [Implement Trie](https://leetcode.com/problems/implement-trie-prefix-tree/solution/). In this article, we will focus on the usage of trie rather than on implementation details.\n\nTrie, also known as prefix tree, is a tree-like data structure which is often used to store strings (In this problem, we store arrays of integers instead of strings). The key advantage of trie is its efficient search time, which can be achieved in $$O(n)$$ time where $$n$$ is the length of the array. Trie works by storing each element of the array in a separate node, and each node has an array of children representing the possible characters that can follow the current element. \n\nDepending on the requirements, we can modify the original trie by adding more elements. In this problem, we need to determine the frequency of each row, so we add a variable called `count` into the trie node. To construct the trie, we traverse each row of the grid and insert the row into the trie by traversing down the trie based on each element in the row. At the end of the row, we increment `count` associated with the last node in the trie to indicate that we have recorded the occurrence of this row.\n\n\n![img](../Figures/2352/t1.png)\n\nTo count the number of pairs of equal row and column, we traverse through each column `col_array` of the grid and search for it in the trie by traversing down the trie based on each element in `col_array`. If we reach the end of the array and encounter a node, we know that there are rows in `grid` equal to this column, and we can increment the answer by the value of `count` of this node.\n\n![img](../Figures/2352/t2.png)\n\nIn the above image, we see that the value of `count` of the last node is 1, indicating that there is one row in the grid that matches the column `col_array` we are searching for.\n\n<br>\n\nIf we can't find a node associated with current value in `col_array`, it means that there is no such array stored in the trie that is equal to `col_array`, so we stop the search.\n\n![img](../Figures/2352/t3.png)\n\n<br>\n\n#### Algorithm\n\n1) Initialize a empty trie `my_trie` and set `count` as 0.\n\n2) Insert each row of `grid` into `my_trie`.\n\n3) Search for each column `col_array` in the trie.\n\n4) If the `col_array` is found in the trie, add the frequency count to the `count`.\n\n5) Return the answer `count`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/bFrCm69i/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"bFrCm69i\"></iframe>\n\n#### Complexity Analysis\n\nLet $$n \\times n$$ be the size of `grid`.\n\n* Time complexity: $$O(n^2)$$\n\n    - The length of input rows is fixed to $$n$$, the time complexity of building a trie for $$n$$ rows is $$O(n^2)$$, since we need to traverse each element in the array to insert it into the trie.\n\n    - The time complexity of search an array of length $$n$$ is $$O(n)$$ as we need to iterate over the entire array in the worst-case scenario.\n    \n\n* Space complexity: $$O(n^2)$$\n\n    - In a trie, each node represents a number. Therefore, for $$n$$ rows of length $$n$$, the trie has $$n^2$$ nodes in the worst-case scenario.\n\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

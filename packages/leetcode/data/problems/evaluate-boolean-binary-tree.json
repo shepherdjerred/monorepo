@@ -1,0 +1,140 @@
+{
+  "questionId": "2416",
+  "questionFrontendId": "2331",
+  "title": "Evaluate Boolean Binary Tree",
+  "titleSlug": "evaluate-boolean-binary-tree",
+  "difficulty": "Easy",
+  "content": "<p>You are given the <code>root</code> of a <strong>full binary tree</strong> with the following properties:</p>\n\n<ul>\n\t<li><strong>Leaf nodes</strong> have either the value <code>0</code> or <code>1</code>, where <code>0</code> represents <code>False</code> and <code>1</code> represents <code>True</code>.</li>\n\t<li><strong>Non-leaf nodes</strong> have either the value <code>2</code> or <code>3</code>, where <code>2</code> represents the boolean <code>OR</code> and <code>3</code> represents the boolean <code>AND</code>.</li>\n</ul>\n\n<p>The <strong>evaluation</strong> of a node is as follows:</p>\n\n<ul>\n\t<li>If the node is a leaf node, the evaluation is the <strong>value</strong> of the node, i.e. <code>True</code> or <code>False</code>.</li>\n\t<li>Otherwise, <strong>evaluate</strong> the node&#39;s two children and <strong>apply</strong> the boolean operation of its value with the children&#39;s evaluations.</li>\n</ul>\n\n<p>Return<em> the boolean result of <strong>evaluating</strong> the </em><code>root</code><em> node.</em></p>\n\n<p>A <strong>full binary tree</strong> is a binary tree where each node has either <code>0</code> or <code>2</code> children.</p>\n\n<p>A <strong>leaf node</strong> is a node that has zero children.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/05/16/example1drawio1.png\" style=\"width: 700px; height: 252px;\" />\n<pre>\n<strong>Input:</strong> root = [2,1,3,null,null,0,1]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> The above diagram illustrates the evaluation process.\nThe AND node evaluates to False AND True = False.\nThe OR node evaluates to True OR False = True.\nThe root node evaluates to True, so we return true.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> root = [0]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> The root node is a leaf node and it evaluates to false, so we return false.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[1, 1000]</code>.</li>\n\t<li><code>0 &lt;= Node.val &lt;= 3</code></li>\n\t<li>Every node has either <code>0</code> or <code>2</code> children.</li>\n\t<li>Leaf nodes have a value of <code>0</code> or <code>1</code>.</li>\n\t<li>Non-leaf nodes have a value of <code>2</code> or <code>3</code>.</li>\n</ul>\n",
+  "hints": [
+    "Traverse the tree using depth-first search in post-order.",
+    "Can you use recursion to solve this easily?"
+  ],
+  "metaData": "{\n  \"name\": \"evaluateTree\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"TreeNode\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"224.7K\", \"totalSubmission\": \"272.7K\", \"totalAcceptedRaw\": 224733, \"totalSubmissionRaw\": 272677, \"acRate\": \"82.4%\"}",
+  "likes": 1549,
+  "dislikes": 44,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Check If Two Expression Trees are Equivalent\", \"titleSlug\": \"check-if-two-expression-trees-are-equivalent\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Design an Expression Tree With Evaluate Function\", \"titleSlug\": \"design-an-expression-tree-with-evaluate-function\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Flips in Binary Tree to Get Result\", \"titleSlug\": \"minimum-flips-in-binary-tree-to-get-result\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,1,3,null,null,0,1]",
+    "[0]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    bool evaluateTree(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public boolean evaluateTree(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def evaluateTree(self, root: Optional[TreeNode]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def evaluateTree(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {boolean}\n */\nvar evaluateTree = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction evaluateTree(root: TreeNode | null): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public bool EvaluateTree(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nbool evaluateTree(struct TreeNode* root) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc evaluateTree(root *TreeNode) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun evaluateTree(root: TreeNode?): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func evaluateTree(_ root: TreeNode?) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn evaluate_tree(root: Option<Rc<RefCell<TreeNode>>>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {Boolean}\ndef evaluate_tree(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return Boolean\n     */\n    function evaluateTree($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  bool evaluateTree(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def evaluateTree(root: TreeNode): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec evaluate_tree(root :: TreeNode.t | nil) :: boolean\n  def evaluate_tree(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec evaluate_tree(Root :: #tree_node{} | null) -> boolean().\nevaluate_tree(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (evaluate-tree root)\n  (-> (or/c tree-node? #f) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2311",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a full binary tree where the leaf nodes store boolean values (`True` or `False`), and non-leaf nodes store boolean operations (**AND** or **OR**). Our task is to return the evaluation result of the root node.\n\nThe evaluation result of any leaf node is given by its stored boolean value, while for a non-leaf node, the evaluation result is determined by applying the boolean operation stored in the node to the evaluations of its children.\n\n**Key Observations:**\n1. The given tree is a full binary tree. This implies that there will be no nodes in the tree with exactly one child node.\n2. Leaf nodes have either the value `0` or `1`, where `0` represents `False` and `1` represents `True`. Non-leaf nodes have either the value `2` or `3`, where `2` represents the boolean **OR** and `3` represents the boolean **AND**.\n\n> **Note:** \n> * The Boolean **OR** returns `True` if at least one of the conditions is `True`. For example, `True OR False` evaluates to `True`. The Boolean **AND** returns `True` only if both conditions are `True`. For example, `True AND False` evaluates to `False`. \n> * A leaf node is a node that has zero children.\n\n---\n\n### Approach 1: Recursion (Depth First Search)\n\n#### Intuition\n\nLet's assume that we want to evaluate the tree shown below:\n\n![image.png](../Figures/2331/2.png)\n\nIn the tree depicted above, the root node has exactly two leaf child nodes. The tree can be evaluated as `True OR False`, resulting in `True`. However, there may be cases where the root node has non-leaf children. For example:\n\n![image.png](../Figures/2331/1.png)\n\nLet's assume that `evaluateTree(Node)` denotes the boolean result after evaluating a subtree rooted at any node of the tree, given by `Node`. For the tree given above, it can be observed that `evaluateTree(root)` is determined by performing the stored boolean operation in the root on `evaluateTree(left child of root)` and `evaluateTree(right child of root)`.\n\nWe need to evaluate the children of the root node in order to calculate the evaluation of the root node. Therefore, the most intuitive way to solve this problem is through recursion. \n\nLet's adapt our recursive solution based on these insights:\n\n* The base case occurs when we have reached a leaf node while traversing the tree. In this case, we will return the boolean value of the leaf node.\n \n* Calculate the evaluation for the left child and the right child of the current node recursively. The evaluation for the current node is given by performing the stored operation on the results of the left and right child.\n \n* Return the boolean evaluation for the current node. This evaluation might be useful for calculating the evaluation of the parents or ancestors of the current node.\n\n#### Algorithm\n\n1. If the root node is a leaf node (left and right children are `null`), return the boolean value of the root node.\n2. Initialize `evaluateLeftSubtree` with `evaluateTree(left child of root)` and `evaluateRightSubtree` with `evaluateTree(right child of root)`.\n3. There are two cases possible for non-leaf roots:\n  * if the value of the root node is `2`, return the boolean **OR** of `evaluateLeftSubtree` and `evaluateRightSubtree`.\n  * if the value of the root node is `3`, return the boolean **AND** of `evaluateLeftSubtree` and `evaluateRightSubtree`.\n\n!?!../Documents/2331/slideshow1.json:960,540!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/5Qeajzb6/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"5Qeajzb6\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the tree.\n\n- Time complexity: $O(n)$\n\n  We make a recursive call on every node of the tree exactly once. Since we visit each node of the tree exactly once, the time complexity can be stated as $O(n)$.\n\n- Space complexity: $O(n)$\n\n  The space complexity of the algorithm is primarily determined by two factors: the auxiliary space used and the recursion stack space. The auxiliary space is $O(1)$ because we have created two boolean variables. \n  \n  Additionally, the recursion stack space can grow up to $O(n)$ in the worst case, constrained by the length of the path traversed up to a particular node, as each recursive call may add a node to the stack. \n  \n  Therefore, the overall space complexity is the sum of these two components, resulting in $O(1) + O(n)$, which simplifies to $O(n)$.\n\n---\n\n### Approach 2: Iterative approach (Depth First Search)\n\n#### Intuition\n\nThe evaluation of the root node is given by the sum of the evaluation of the subtrees rooted at the left child and right child of the root node. Therefore, if we want to calculate the evaluation of the root, we must know the evaluation of the subtrees rooted at the left child and right child of the root.\n\nWhile solving iteratively, we need to choose a data structure that can mimic the evaluation process of depth-first search in the previous case. Therefore, we can use a stack data structure to perform a traversal on the tree iteratively.\n\n> A stack is a data structure that follows the Last-In, First-Out (LIFO) principle, allowing elements to be inserted and removed from only one end, typically referred to as the \"top\" of the stack.\n\nAnalogous to the recursive approach discussed above, where the function `evaluateTree(Node)` calculates the evaluation for a subtree rooted at `Node`, we define that if the element at the top of the stack in the current iteration is `Node`, we will calculate its evaluation in this iteration.\n\nThe stack contains the root node of the tree in the first iteration. If the root is a leaf node (in the case where the tree has a single node) or both the left and right children of the root node are leaf nodes, the root node can be evaluated directly.\n\nIn other cases, we cannot evaluate the root node directly. Therefore, we must calculate the evaluated values of the right and left children, which will be used to determine the evaluation of the root node. Consequently, we will push the left child and right child of the current node onto the stack without popping the root node from the stack. Since the stack follows the Last In, First Out (LIFO) principle, we will calculate the evaluations of the left child and right child of the root node before reaching the root node again.\n\nIn this approach, we need to store the evaluations of the left child and right child of `Node`, where `Node` is the root of the subtree we evaluate. One option is to store the evaluations in the data of the node itself. We were storing the boolean operations for non-leaf nodes in the data. Therefore, once the node is evaluated, we don't need the boolean operation stored in it. However, it is not considered good practice to mutate the given input.\n\nUsing a hashmap is another method to store the evaluations of the nodes. A hashmap provides constant lookup and insertion time for the nodes. After evaluating a node, we can store its evaluated value in a hashmap, which can be used to evaluate other elements of the stack.\n\nIn cases where the current node is a leaf node or both children of the current node have already been evaluated, we can pop the top element of the stack and add the evaluated value to the hashmap with the current node as the key. However, in cases where the children have not been evaluated, we will push both children of the current node onto the stack.\n\n#### Algorithm\n\n1. Initialize a stack `st` with the `root` node. Also, create a hashmap `evaluated` with `node` data type for the key and `boolean` for values.\n2. Iterate until `st` is empty:\n    - Initialise the top element of the `st` with `topNode`.\n    - If the `topNode` is a leaf node:\n        - Pop the top element of `st` and add the value of the node to `evaluated` with the node as the key.\n    - If both the children of `topNode` are present in the hashmap `evaluated`:\n        - If the value of `topNode` is 2:\n            - Store the evaluation of `topNode` as `boolean OR` of the evaluations of the children of `topNode` in `evaluated`.\n        - If the value of `topNode` is 3:\n            - Store the evaluation of `topNode` as `boolean AND` of the evaluations of the children of `topNode` in `evaluated`.\n        - Pop the top element of `st`.\n    - If any of the children of `topNode` are not present in `evaluated`:\n        - Push the left and right child of `topNode` in `st`. \n4. Return the evaluated boolean value of `root` stored in `evaluated`.\n\n!?!../Documents/2331/slideshow2.json:960,540!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/GwNCrKJY/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"GwNCrKJY\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the tree.\n\n* Time complexity: $O(n)$\n\n  We iterate through the tree using a stack with constant insertion and deletion time. Additionally, we iterate through every node at most two times. Therefore, the time complexity is $O(n)$.\n\n* Space complexity: $O(n)$\n\n  Since every node can be inserted into the stack at most once, the stack can contain at most $n$ nodes. The hashmap stores the value of every node as a key exactly once. Therefore, the overall space complexity is $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

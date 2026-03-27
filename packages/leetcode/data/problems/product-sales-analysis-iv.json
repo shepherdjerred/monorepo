@@ -1,0 +1,53 @@
+{
+  "questionId": "2451",
+  "questionFrontendId": "2324",
+  "title": "Product Sales Analysis IV",
+  "titleSlug": "product-sales-analysis-iv",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Sales</code></p>\n\n<pre>\n+-------------+-------+\n| Column Name | Type  |\n+-------------+-------+\n| sale_id     | int   |\n| product_id  | int   |\n| user_id     | int   |\n| quantity    | int   |\n+-------------+-------+\nsale_id contains unique values.\nproduct_id is a foreign key (reference column) to <code>Product</code> table.\nEach row of this table shows the ID of the product and the quantity purchased by a user.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Product</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| product_id  | int  |\n| price       | int  |\n+-------------+------+\nproduct_id contains unique values.\nEach row of this table indicates the price of each product.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution that reports for each user the product id on which the user spent the most money. In case the same user spent the most money on two or more products, report all of them.</p>\n\n<p>Return the resulting table in <strong>any order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nSales table:\n+---------+------------+---------+----------+\n| sale_id | product_id | user_id | quantity |\n+---------+------------+---------+----------+\n| 1       | 1          | 101     | 10       |\n| 2       | 3          | 101     | 7        |\n| 3       | 1          | 102     | 9        |\n| 4       | 2          | 102     | 6        |\n| 5       | 3          | 102     | 10       |\n| 6       | 1          | 102     | 6        |\n+---------+------------+---------+----------+\nProduct table:\n+------------+-------+\n| product_id | price |\n+------------+-------+\n| 1          | 10    |\n| 2          | 25    |\n| 3          | 15    |\n+------------+-------+\n<strong>Output:</strong> \n+---------+------------+\n| user_id | product_id |\n+---------+------------+\n| 101     | 3          |\n| 102     | 1          |\n| 102     | 2          |\n| 102     | 3          |\n+---------+------------+ \n<strong>Explanation:</strong> \nUser 101:\n    - Spent 10 * 10 = 100 on product 1.\n    - Spent 7 * 15 = 105 on product 3.\nUser 101 spent the most money on product 3.\nUser 102:\n    - Spent (9 + 6) * 10 = 150 on product 1.\n    - Spent 6 * 25 = 150 on product 2.\n    - Spent 10 * 15 = 150 on product 3.\nUser 102 spent the most money on products 1, 2, and 3.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Sales (sale_id int, product_id int, user_id int, quantity int)\", \"Create table If Not Exists Product (product_id int, price int)\"], \"mssql\": [\"Create table Sales (sale_id int, product_id int, user_id int, quantity int)\", \"Create table Product (product_id int, price int)\"], \"oraclesql\": [\"Create table Sales (sale_id int, product_id int, user_id int, quantity int)\", \"Create table Product (product_id int, price int)\"], \"database\": true, \"name\": \"product_sales_analysis\", \"pythondata\": [\"Sales = pd.DataFrame([], columns=['sale_id', 'product_id', 'user_id', 'quantity']).astype({'sale_id':'Int64', 'product_id':'Int64', 'user_id':'Int64', 'quantity':'Int64'})\", \"Product = pd.DataFrame([], columns=['product_id', 'price']).astype({'product_id':'Int64', 'price':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Sales (sale_id int, product_id int, user_id int, quantity int)\", \"Create table If Not Exists Product (product_id int, price int)\"], \"database_schema\": {\"Sales\": {\"sale_id\": \"INT\", \"product_id\": \"INT\", \"user_id\": \"INT\", \"quantity\": \"INT\"}, \"Product\": {\"product_id\": \"INT\", \"price\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"11.3K\", \"totalSubmission\": \"14.9K\", \"totalAcceptedRaw\": 11305, \"totalSubmissionRaw\": 14890, \"acRate\": \"75.9%\"}",
+  "likes": 61,
+  "dislikes": 1,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Product Sales Analysis I\", \"titleSlug\": \"product-sales-analysis-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Product Sales Analysis II\", \"titleSlug\": \"product-sales-analysis-ii\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Product Sales Analysis III\", \"titleSlug\": \"product-sales-analysis-iii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Sales\": [\"sale_id\", \"product_id\", \"user_id\", \"quantity\"], \"Product\": [\"product_id\", \"price\"]}, \"rows\": {\"Sales\": [[1, 1, 101, 10], [2, 3, 101, 7], [3, 1, 102, 9], [4, 2, 102, 6], [5, 3, 102, 10], [6, 1, 102, 6]], \"Product\": [[1, 10], [2, 25], [3, 15]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef product_sales_analysis(sales: pd.DataFrame, product: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

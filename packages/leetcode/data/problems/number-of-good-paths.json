@@ -1,0 +1,154 @@
+{
+  "questionId": "2505",
+  "questionFrontendId": "2421",
+  "title": "Number of Good Paths",
+  "titleSlug": "number-of-good-paths",
+  "difficulty": "Hard",
+  "content": "<p>There is a tree (i.e. a connected, undirected graph with no cycles) consisting of <code>n</code> nodes numbered from <code>0</code> to <code>n - 1</code> and exactly <code>n - 1</code> edges.</p>\n\n<p>You are given a <strong>0-indexed</strong> integer array <code>vals</code> of length <code>n</code> where <code>vals[i]</code> denotes the value of the <code>i<sup>th</sup></code> node. You are also given a 2D integer array <code>edges</code> where <code>edges[i] = [a<sub>i</sub>, b<sub>i</sub>]</code> denotes that there exists an <strong>undirected</strong> edge connecting nodes <code>a<sub>i</sub></code> and <code>b<sub>i</sub></code>.</p>\n\n<p>A <strong>good path</strong> is a simple path that satisfies the following conditions:</p>\n\n<ol>\n\t<li>The starting node and the ending node have the <strong>same</strong> value.</li>\n\t<li>All nodes between the starting node and the ending node have values <strong>less than or equal to</strong> the starting node (i.e. the starting node&#39;s value should be the maximum value along the path).</li>\n</ol>\n\n<p>Return <em>the number of distinct good paths</em>.</p>\n\n<p>Note that a path and its reverse are counted as the <strong>same</strong> path. For example, <code>0 -&gt; 1</code> is considered to be the same as <code>1 -&gt; 0</code>. A single node is also considered as a valid path.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/08/04/f9caaac15b383af9115c5586779dec5.png\" style=\"width: 400px; height: 333px;\" />\n<pre>\n<strong>Input:</strong> vals = [1,3,2,1,3], edges = [[0,1],[0,2],[2,3],[2,4]]\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> There are 5 good paths consisting of a single node.\nThere is 1 additional good path: 1 -&gt; 0 -&gt; 2 -&gt; 4.\n(The reverse path 4 -&gt; 2 -&gt; 0 -&gt; 1 is treated as the same as 1 -&gt; 0 -&gt; 2 -&gt; 4.)\nNote that 0 -&gt; 2 -&gt; 3 is not a good path because vals[2] &gt; vals[0].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/08/04/149d3065ec165a71a1b9aec890776ff.png\" style=\"width: 273px; height: 350px;\" />\n<pre>\n<strong>Input:</strong> vals = [1,1,2,2,3], edges = [[0,1],[1,2],[2,3],[2,4]]\n<strong>Output:</strong> 7\n<strong>Explanation:</strong> There are 5 good paths consisting of a single node.\nThere are 2 additional good paths: 0 -&gt; 1 and 2 -&gt; 3.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/08/04/31705e22af3d9c0a557459bc7d1b62d.png\" style=\"width: 100px; height: 88px;\" />\n<pre>\n<strong>Input:</strong> vals = [1], edges = []\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The tree consists of only one node, so there is one good path.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == vals.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 3 * 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= vals[i] &lt;= 10<sup>5</sup></code></li>\n\t<li><code>edges.length == n - 1</code></li>\n\t<li><code>edges[i].length == 2</code></li>\n\t<li><code>0 &lt;= a<sub>i</sub>, b<sub>i</sub> &lt; n</code></li>\n\t<li><code>a<sub>i</sub> != b<sub>i</sub></code></li>\n\t<li><code>edges</code> represents a valid tree.</li>\n</ul>\n",
+  "hints": [
+    "Can you process nodes from smallest to largest value?",
+    "Try to build the graph from nodes with the smallest value to the largest value.",
+    "May union find help?"
+  ],
+  "metaData": "{\n  \"name\": \"numberOfGoodPaths\",\n  \"params\": [\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"vals\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"edges\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"65K\", \"totalSubmission\": \"115.3K\", \"totalAcceptedRaw\": 64958, \"totalSubmissionRaw\": 115347, \"acRate\": \"56.3%\"}",
+  "likes": 2453,
+  "dislikes": 113,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Checking Existence of Edge Length Limited Paths\", \"titleSlug\": \"checking-existence-of-edge-length-limited-paths\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Checking Existence of Edge Length Limited Paths II\", \"titleSlug\": \"checking-existence-of-edge-length-limited-paths-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Longest Nice Substring\", \"titleSlug\": \"longest-nice-substring\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Count Good Triplets in an Array\", \"titleSlug\": \"count-good-triplets-in-an-array\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count Pairs Of Similar Strings\", \"titleSlug\": \"count-pairs-of-similar-strings\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,3,2,1,3]\n[[0,1],[0,2],[2,3],[2,4]]",
+    "[1,1,2,2,3]\n[[0,1],[1,2],[2,3],[2,4]]",
+    "[1]\n[]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numberOfGoodPaths(vector<int>& vals, vector<vector<int>>& edges) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numberOfGoodPaths(int[] vals, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numberOfGoodPaths(self, vals: List[int], edges: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numberOfGoodPaths(self, vals, edges):\n        \"\"\"\n        :type vals: List[int]\n        :type edges: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} vals\n * @param {number[][]} edges\n * @return {number}\n */\nvar numberOfGoodPaths = function(vals, edges) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numberOfGoodPaths(vals: number[], edges: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumberOfGoodPaths(int[] vals, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numberOfGoodPaths(int* vals, int valsSize, int** edges, int edgesSize, int* edgesColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numberOfGoodPaths(vals []int, edges [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numberOfGoodPaths(vals: IntArray, edges: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numberOfGoodPaths(_ vals: [Int], _ edges: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn number_of_good_paths(vals: Vec<i32>, edges: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} vals\n# @param {Integer[][]} edges\n# @return {Integer}\ndef number_of_good_paths(vals, edges)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $vals\n     * @param Integer[][] $edges\n     * @return Integer\n     */\n    function numberOfGoodPaths($vals, $edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numberOfGoodPaths(List<int> vals, List<List<int>> edges) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numberOfGoodPaths(vals: Array[Int], edges: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec number_of_good_paths(vals :: [integer], edges :: [[integer]]) :: integer\n  def number_of_good_paths(vals, edges) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec number_of_good_paths(Vals :: [integer()], Edges :: [[integer()]]) -> integer().\nnumber_of_good_paths(Vals, Edges) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (number-of-good-paths vals edges)\n  (-> (listof exact-integer?) (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1637",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nThe problem presents an undirected tree with `n` nodes. Each node of the tree has a value associated to it. Our task is to compute the total number of distinct **good paths** where a good path is defined as:\n\n1. The starting node and the ending node have the same value.\n2. All nodes between the starting node and the ending node have values less than or equal to the starting node (i.e. the starting node's value should be the maximum value along the path).\n\n---\n\n### Approach: Union-Find\n\n#### Intuition\n\nAn intuitive approach would be to start from a node and traverse to its neighbors, which have a lower value than the node. From the neighbors, we move to their neighbors. If we find another node with a value similar to the start node, we have one good path. We can repeat the same process for every node in the tree. In such a way, we traverse the tree, moving to neighbors with lower values for every node, and count the total number of good paths. We can choose BFS or DFS for the graph traversal. Each graph traversal takes $O(n)$ time, and since we would do a complete traversal starting from every node, we would take $O(n^2)$ time. This approach would indicate that the time limit has been exceeded (TLE).\n\nLet's think of a faster way by making some observations.\n\nThere is no point in traversing from a node to its neighbor where the `vals[neighbor] > vals[node]`. It violates the good path constraints. So, for any `node`, the only nodes that matter are the ones that have values less than `vals[node]`. Intuitively, this does give some hints about sorting the nodes according to their values, starting with the smallest value first and then going to higher values.\n\nLet's look at an example. Consider a node with the value `X` in a tree `T`. Let's try to find the number of good paths that start and end with the value `X`. The nodes having values greater than `X` are of no use, so let's remove them and form a new subgraph of all the nodes (and edges in `T` connected to these nodes) having values less than or equal to `X`. Note that the new subgraph could be a connected tree, or there could be multiple connected trees separated from each other.\n\nLet's say we have two existing trees (components) `c1` and `c2` which are subgraphs of `T`.\n\nImagine if there were 6 nodes with the value `X`, say `a`, `b`, `c`, `d`, `e`, and `f`. We want to add all of them to the subgraph and find the number of good paths starting and ending with `X`. Let's say `a`, `b`, and `c` connect with some nodes in `c1`. Nodes `d` and `e` connect with some nodes in `c2`. Node `f` does not connect with any existing component and creates a new component `c3` with just the node `f`.\n\nLet's compute the number of good paths. In component `c1`, if we start with node `a` we get three good paths. The `a` node itself as well as the paths from `a` to `b` and `a` to `c`. For node `b`, we have the node itself and the path to `c` (the path to `a` is already covered). And for node `c`, we just have the node itself. So, there are six good paths formed in component `c1`. What if there were `N` nodes in place of three? Starting from the first node, we would have `N` good paths: the node itself and `N - 1` paths to other nodes with the same value. For the second node, we would have `N - 1` options (since the first node is already covered), and so on. So, if `N` nodes having the same value connect in a component, the good paths would be `N + N - 1 + N - 2 + .. + 1 = N * (N + 1) / 2`.\n\nSimilarly, we can count three good paths forming in component `c2`. We can also use the same formula with `N = 2` which gives `(2 * (2 + 1) / 2) = 3` good paths.\n\nFor the component `c3`, there is one good path for node `f`, the node itself. It needs nodes with higher values to connect to other nodes in the original tree `T`, which do not lead to the formation of a good path. Here, `N = 1`, so using the formula gives us one good path.\n\nHaving added all the nodes with the value `X`, how can we compute the good paths with starting nodes having a value `X + 1` (or next higher value)? To the subgraph formed above, we add all the nodes having the value `X + 1` and repeat the same process to compute all the good paths starting with the value `X + 1`. The nodes with the value `X` can serve as intermediate nodes in a good path starting and ending with the value `X + 1`.\n\nWe can extend the above to start with value `1` first, then add nodes with value `2`, then add nodes with value `3`, and so on, to the subgraph formed in the previous iteration. We should begin from the lowest and move to the higher values of the nodes. For each value, we should add all the nodes with the same value to the existing subgraph and calculate the number of good paths formed in each component. This way, we build the complete tree at the end by adding nodes of the same value at each step.\n\nThis approach can be implemented with a disjoint-set data structure, also called a union-find data structure. It is a data structure that stores a collection of disjoint (non-overlapping) sets. Equivalently, it stores a partition of a set into disjoint subsets. It provides operations for adding new sets, merging sets (replacing them by their union), and finding a representative member of a set. It implements two useful operations:\n\na) `Find`: Determine which subset a particular element is in. This can be used to determine if two elements are in the same subset.\nb) `Union`: Join two subsets into a single subset.\n\nIf you are new to Union-Find, we suggest you read our [Leetcode Explore Card](https://leetcode.com/explore/learn/card/graph/618/disjoint-set/3881/). We will not talk about implementation details in this article, but only about the interface to the data structure.\n\nIn this approach, we will create a map, say `valuesToNodes` to map a value to all the nodes that have that value. The map is sorted with respect to the keys, which are the node values. We iterate over every `value, nodes[]` entry in `valuesToNodes`.\n\nFor each `node` in `nodes[]`, we check all `neighbor`. If `vals[node] >= vals[neighbor]`, `neighbor` is already covered, and it is a node in the subgraph. It can be used as an intermediate node in a good path if formed using it. We perform `union (node, neighbor)` to add `node` to the current subgraph. Otherwise, if `vals[node] < vals[neighbor]`, the `node` is not added to the existing components, and it creates a new component with the `node` itself.\n\nThe next step is to compute the number of nodes with the same value added to each component and use the above formula to count the number of good paths. We can do this by using a map, say `groups` where the key is the unique id of the component (or tree) and the value is the count of nodes from `nodes[]` in that component. Iterate over all the `nodes[]` and for each `node`, we increment `group[find(node)]` by one. This way, we have the count of nodes in each component.\n\nWe iterate over the `group` map, and for each entry `id, size`, we add `size * (size + 1) / 2` to the count of good paths.\n\nRefer to the following slides for a step-by-step visual example:\n\n!?!../Documents/2421_number_of_good_paths.json:601,301!?!\n\n<br>\n\n#### Algorithm\n\n1. Create an adjacency list where `adj[X]` contains all the neighbors of node `X`.\n2. Create a map `valuesToNodes` where `valuesToNodes[X]` is an array that contains all the nodes having the value `X`. The data structure chosen to create such a map sorts the keys in non-decreasing order, i.e., the keys are sorted.\n    - Iterate over all the nodes and add each `node` to `valuesToNodes[vals[node]]`.\n3. Create a class `UnionFind` defining standard methods `find` and `union_set`.\n4. Create an instance of `UnionFind`, passing the size as `n`. Also, initialize the count of good paths variable `goodPaths` with `0`.\n5. Iterate over each entry `value, nodes` in `valuesToNodes` in ascending order.\n    - For every `node` in `nodes`, iterate over its neighbors.\n    - For each `neighbor` of the `node`, if `vals[node] >= vals[neighbor]` we perform a `union` of the `node` with the `neighbor`.\n    - After iterating through all the `nodes`, we create a map `group`. `group[A]` contains the number of nodes (from the `nodes` array) that belong to the same component `A`. For every `node` in `nodes`, we find its component and increment the size of that component by `1` in `groups`, i.e., `group[find(node)] = group[find(node)] + 1`.\n    - We iterate through all the entries in the `group` and, for each key, get the value called `size` corresponding to it. Add `(size * (size + 1) / 2)` to the `goodPaths`.\n6. Return `goodPaths`. \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/PY6U2kr6/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"PY6U2kr6\"></iframe>\n\n#### Complexity Analysis\n\nHere, $n$ is the number of nodes.\n\n* Time complexity: $O(n \\cdot log(n))$\n\n    - For $T$ operations, the amortized time complexity of the union-find algorithm (using path compression with union by rank) is $O(alpha(T))$. Here, $\\alpha(T)$ is the inverse Ackermann function that grows so slowly, that it doesn't exceed $4$ for all reasonable $T$ (approximately $ T < 10^{600}$). You can read more about the complexity of union-find [here](https://en.wikipedia.org/wiki/Disjoint-set_data_structure#Time_complexity). Because the function grows so slowly, we consider it to be $O(1)$. We iterate over each edge once from the larger value node to the smaller one, or if the neighbors (nodes that share an edge) have equal value, we iterate that edge twice, which is also linear. To iterate over $n - 1$ edges, we have to perform $O(n)$ operations which needs $O(n)$ time.\n    - We also need a map `valuesToNodes` having sorted keys. Each operation in such a data structure comes with a $log$ factor. We push all the `n` nodes into the map and iterate over all of them, which further adds $O(n \\cdot log(n)))$ time.\n    - The `group` map has unsorted keys, and each of its operation takes $O(1)$ time on average. We need $O(n)$ time to iterate through all of the nodes to find the set size using it.\n    - Additionally, we need $O(n)$ time each to initialize the `adj`, `parent` and `rank` arrays.\n\n* Space complexity: $O(n)$\n\n    - We require $O(n)$ space each for the `adj`, `parent` and `rank` arrays.\n    - We also require $O(n)$ space for the `valuesToNodes` and the `group` maps.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

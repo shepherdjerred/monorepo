@@ -1,0 +1,147 @@
+{
+  "questionId": "2689",
+  "questionFrontendId": "2561",
+  "title": "Rearranging Fruits",
+  "titleSlug": "rearranging-fruits",
+  "difficulty": "Hard",
+  "content": "<p>You have two fruit baskets containing <code>n</code> fruits each. You are given two <strong>0-indexed</strong> integer arrays <code>basket1</code> and <code>basket2</code> representing the cost of fruit in each basket. You want to make both baskets <strong>equal</strong>. To do so, you can use the following operation as many times as you want:</p>\n\n<ul>\n\t<li>Choose two indices <code>i</code> and <code>j</code>, and swap the <code>i<sup><font size=\"1\">th</font></sup></code> fruit of <code>basket1</code> with the <code>j<sup><font size=\"1\">th</font></sup></code> fruit of <code>basket2</code>.</li>\n\t<li>The cost of the swap is <code>min(basket1[i], basket2[j])</code>.</li>\n</ul>\n\n<p>Two baskets are considered equal if sorting them according to the fruit cost makes them exactly the same baskets.</p>\n\n<p>Return <em>the minimum cost to make both the baskets equal or </em><code>-1</code><em> if impossible.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> basket1 = [4,2,2,2], basket2 = [1,4,1,2]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> Swap index 1 of basket1 with index 0 of basket2, which has cost 1. Now basket1 = [4,1,2,2] and basket2 = [2,4,1,2]. Rearranging both the arrays makes them equal.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> basket1 = [2,3,4,1], basket2 = [3,2,5,1]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> It can be shown that it is impossible to make both the baskets equal.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>basket1.length == basket2.length</code></li>\n\t<li><code>1 &lt;= basket1.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= basket1[i], basket2[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Create two frequency maps for both arrays, and find the minimum element among all elements of both arrays.",
+    "Check if the sum of frequencies of an element in both arrays is odd, if so return -1",
+    "Store the elements that need to be swapped in a vector, and sort it.",
+    "Can we reduce swapping cost with the help of minimum element?",
+    "Calculate the minimum cost of swapping."
+  ],
+  "metaData": "{\n  \"name\": \"minCost\",\n  \"params\": [\n    {\n      \"name\": \"basket1\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"basket2\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"98K\", \"totalSubmission\": \"170.8K\", \"totalAcceptedRaw\": 98032, \"totalSubmissionRaw\": 170759, \"acRate\": \"57.4%\"}",
+  "likes": 942,
+  "dislikes": 57,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"The Latest Time to Catch a Bus\", \"titleSlug\": \"the-latest-time-to-catch-a-bus\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Number of Operations to Make Arrays Similar\", \"titleSlug\": \"minimum-number-of-operations-to-make-arrays-similar\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[4,2,2,2]\n[1,4,1,2]",
+    "[2,3,4,1]\n[3,2,5,1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 3, \"slug\": \"atlassian\", \"name\": \"Atlassian\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sort",
+      "slug": "sort"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long minCost(vector<int>& basket1, vector<int>& basket2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long minCost(int[] basket1, int[] basket2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minCost(self, basket1: List[int], basket2: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minCost(self, basket1, basket2):\n        \"\"\"\n        :type basket1: List[int]\n        :type basket2: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} basket1\n * @param {number[]} basket2\n * @return {number}\n */\nvar minCost = function(basket1, basket2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minCost(basket1: number[], basket2: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long MinCost(int[] basket1, int[] basket2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long minCost(int* basket1, int basket1Size, int* basket2, int basket2Size) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minCost(basket1 []int, basket2 []int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minCost(basket1: IntArray, basket2: IntArray): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minCost(_ basket1: [Int], _ basket2: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_cost(basket1: Vec<i32>, basket2: Vec<i32>) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} basket1\n# @param {Integer[]} basket2\n# @return {Integer}\ndef min_cost(basket1, basket2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $basket1\n     * @param Integer[] $basket2\n     * @return Integer\n     */\n    function minCost($basket1, $basket2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minCost(List<int> basket1, List<int> basket2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minCost(basket1: Array[Int], basket2: Array[Int]): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_cost(basket1 :: [integer], basket2 :: [integer]) :: integer\n  def min_cost(basket1, basket2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_cost(Basket1 :: [integer()], Basket2 :: [integer()]) -> integer().\nmin_cost(Basket1, Basket2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-cost basket1 basket2)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2810",
+    "content": "### Approach: Greedy\n\n#### Intuition\n\nAccording to the problem, the cost $x$ of any fruit must appear an even number of times across the two fruit baskets; otherwise, it is impossible to evenly distribute the fruit with cost $x$ between the two baskets. To compute the imbalance in fruit costs between the two baskets, we can use two hash tables, $\\textit{count}_1$ and $\\textit{count}_2$, to count the number of times each fruit cost appears in $\\textit{basket}_1$ and $\\textit{basket}_2$, respectively. For a given fruit cost $x$:\n\n1. If $\\textit{count}_1[x] + \\textit{count}_2[x]$ is odd, we return $-1$ immediately, since balancing is impossible.\n\n2. If $\\textit{count}_1[x] > \\textit{count}_2[x]$, then $\\frac{\\textit{count}_1[x] - \\textit{count}_2[x]}{2}$ fruits with cost $x$ must be moved from $\\textit{basket}_1$ to $\\textit{basket}_2$, and vice versa.\n\nFollowing point 2, we enumerate all such costs $x$ and add each to a list called $\\textit{merge}$ with a count equal to the number of excess fruits that need to be exchanged. We then sort $\\textit{merge}$ in increasing order. According to the greedy strategy, we pair the smallest values from the first half of the list with the largest from the second half to minimize the overall exchange cost. For each pair of costs $x_1$ and $x_2$ ($x_1 \\lt x_2$), there are two possible exchange strategies:\n\n1. Direct exchange: Swap $x_1$ with $x_2$, with a cost of $x_1$.\n\n2. Indirect exchange: Both $x_1$ and $x_2$ are exchanged through the minimum fruit cost $m$ across both baskets, with a total cost of $2 \\times m$.\n\nWe iterate over the first half of the $\\textit{merge}$ list, and for each element $x$, we accumulate the cost $\\min(x, 2 \\times m)$ into the final result.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Y3GLF3KY/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Y3GLF3KY\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the arrays $\\textit{basket1}$ and $\\textit{basket2}$.\n\n- Time complexity: $O(n \\log n)$.\n  \n  Sorting the $\\textit{merge}$ array requires $O(n \\log n)$ time.\n\n- Space complexity: $O(n)$.\n  \n  The hash tables and the $\\textit{merge}$ array each require $O(n)$ space.\n  \n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

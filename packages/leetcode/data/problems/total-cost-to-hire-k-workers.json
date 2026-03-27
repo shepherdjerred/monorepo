@@ -1,0 +1,145 @@
+{
+  "questionId": "2553",
+  "questionFrontendId": "2462",
+  "title": "Total Cost to Hire K Workers",
+  "titleSlug": "total-cost-to-hire-k-workers",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> integer array <code>costs</code> where <code>costs[i]</code> is the cost of hiring the <code>i<sup>th</sup></code> worker.</p>\n\n<p>You are also given two integers <code>k</code> and <code>candidates</code>. We want to hire exactly <code>k</code> workers according to the following rules:</p>\n\n<ul>\n\t<li>You will run <code>k</code> sessions and hire exactly one worker in each session.</li>\n\t<li>In each hiring session, choose the worker with the lowest cost from either the first <code>candidates</code> workers or the last <code>candidates</code> workers. Break the tie by the smallest index.\n\t<ul>\n\t\t<li>For example, if <code>costs = [3,2,7,7,1,2]</code> and <code>candidates = 2</code>, then in the first hiring session, we will choose the <code>4<sup>th</sup></code> worker because they have the lowest cost <code>[<u>3,2</u>,7,7,<u><strong>1</strong>,2</u>]</code>.</li>\n\t\t<li>In the second hiring session, we will choose <code>1<sup>st</sup></code> worker because they have the same lowest cost as <code>4<sup>th</sup></code> worker but they have the smallest index <code>[<u>3,<strong>2</strong></u>,7,<u>7,2</u>]</code>. Please note that the indexing may be changed in the process.</li>\n\t</ul>\n\t</li>\n\t<li>If there are fewer than candidates workers remaining, choose the worker with the lowest cost among them. Break the tie by the smallest index.</li>\n\t<li>A worker can only be chosen once.</li>\n</ul>\n\n<p>Return <em>the total cost to hire exactly </em><code>k</code><em> workers.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> costs = [17,12,10,2,7,2,11,20,8], k = 3, candidates = 4\n<strong>Output:</strong> 11\n<strong>Explanation:</strong> We hire 3 workers in total. The total cost is initially 0.\n- In the first hiring round we choose the worker from [<u>17,12,10,2</u>,7,<u>2,11,20,8</u>]. The lowest cost is 2, and we break the tie by the smallest index, which is 3. The total cost = 0 + 2 = 2.\n- In the second hiring round we choose the worker from [<u>17,12,10,7</u>,<u>2,11,20,8</u>]. The lowest cost is 2 (index 4). The total cost = 2 + 2 = 4.\n- In the third hiring round we choose the worker from [<u>17,12,10,7,11,20,8</u>]. The lowest cost is 7 (index 3). The total cost = 4 + 7 = 11. Notice that the worker with index 3 was common in the first and last four workers.\nThe total hiring cost is 11.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> costs = [1,2,4,1], k = 3, candidates = 3\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> We hire 3 workers in total. The total cost is initially 0.\n- In the first hiring round we choose the worker from [<u>1,2,4,1</u>]. The lowest cost is 1, and we break the tie by the smallest index, which is 0. The total cost = 0 + 1 = 1. Notice that workers with index 1 and 2 are common in the first and last 3 workers.\n- In the second hiring round we choose the worker from [<u>2,4,1</u>]. The lowest cost is 1 (index 2). The total cost = 1 + 1 = 2.\n- In the third hiring round there are less than three candidates. We choose the worker from the remaining workers [<u>2,4</u>]. The lowest cost is 2 (index 0). The total cost = 2 + 2 = 4.\nThe total hiring cost is 4.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= costs.length &lt;= 10<sup>5 </sup></code></li>\n\t<li><code>1 &lt;= costs[i] &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= k, candidates &lt;= costs.length</code></li>\n</ul>\n",
+  "hints": [
+    "Maintain two minheaps: one for the left and one for the right.",
+    "Compare the top element from two heaps and remove the appropriate one.",
+    "Add a new element to the heap and maintain its size as k."
+  ],
+  "metaData": "{\n  \"name\": \"totalCost\",\n  \"params\": [\n    {\n      \"name\": \"costs\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"candidates\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"164.1K\", \"totalSubmission\": \"376.8K\", \"totalAcceptedRaw\": 164130, \"totalSubmissionRaw\": 376800, \"acRate\": \"43.6%\"}",
+  "likes": 2079,
+  "dislikes": 758,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Meeting Rooms II\", \"titleSlug\": \"meeting-rooms-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Time to Cross a Bridge\", \"titleSlug\": \"time-to-cross-a-bridge\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[17,12,10,2,7,2,11,20,8]\n3\n4",
+    "[1,2,4,1]\n3\n3"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"mathworks\", \"name\": \"MathWorks\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"gsa-capital\", \"name\": \"GSA Capital\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long totalCost(vector<int>& costs, int k, int candidates) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long totalCost(int[] costs, int k, int candidates) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def totalCost(self, costs: List[int], k: int, candidates: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def totalCost(self, costs, k, candidates):\n        \"\"\"\n        :type costs: List[int]\n        :type k: int\n        :type candidates: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} costs\n * @param {number} k\n * @param {number} candidates\n * @return {number}\n */\nvar totalCost = function(costs, k, candidates) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function totalCost(costs: number[], k: number, candidates: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long TotalCost(int[] costs, int k, int candidates) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long totalCost(int* costs, int costsSize, int k, int candidates) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func totalCost(costs []int, k int, candidates int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun totalCost(costs: IntArray, k: Int, candidates: Int): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func totalCost(_ costs: [Int], _ k: Int, _ candidates: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn total_cost(costs: Vec<i32>, k: i32, candidates: i32) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} costs\n# @param {Integer} k\n# @param {Integer} candidates\n# @return {Integer}\ndef total_cost(costs, k, candidates)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $costs\n     * @param Integer $k\n     * @param Integer $candidates\n     * @return Integer\n     */\n    function totalCost($costs, $k, $candidates) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int totalCost(List<int> costs, int k, int candidates) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def totalCost(costs: Array[Int], k: Int, candidates: Int): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec total_cost(costs :: [integer], k :: integer, candidates :: integer) :: integer\n  def total_cost(costs, k, candidates) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec total_cost(Costs :: [integer()], K :: integer(), Candidates :: integer()) -> integer().\ntotal_cost(Costs, K, Candidates) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (total-cost costs k candidates)\n  (-> (listof exact-integer?) exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1871",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach 1: 2 Priority Queues\n\n#### Intuition   \n\n> If you are not familiar with the priority queue, please refer to our explore cards [Heaps Explore Card](https://leetcode.com/explore/featured/card/graph/619/depth-first-search-in-graph/). We will focus on the usage in this article and not the implementation details.\n\n\n**For the sake of brevity, let `m` represent the input integer `candidates` for the rest of the article.**\n\n\nTo begin with, we need to understand the problem requirements. In each of the `k` hiring rounds, we must hire a worker with the lowest cost (with the smallest index being a tiebreaker) based on the provided rules.\n\n\nWe have the option to select the worker with the lowest cost from either the first `m` candidates or the last `m` candidates from `costs`. Once we choose a worker from either of these sections, we remove the chosen worker from the array, which makes space for another worker to be in either the first or last `m` candidates. We continue to select the worker with the lowest cost, each time making space for another worker from `costs` to be into consideration. Because we need to repeatedly find the minimum cost, using a priority queue is the most appropriate approach to simulate this process.\n\n\n<br>\n\nDuring each hiring session, our goal is to select the worker with the lowest cost. As mentioned above, after selecting a worker, a spot will open up for another worker to be among the first or last `m` candidates. As such, we need to distinguish between the first `m` candidates and the last `m` candidates. That way, when we choose a worker, we know if a spot was opened in the first `m` candidates or the last `m` candidates.\n\n\n\n![img](../Figures/2462/1.png)\n\nTo store the workers in two sections separately, we can use two priority queues, `head_workers` and `tail_workers`, where the worker with the lowest cost has the highest priority. \n\n\n![img](../Figures/2462/2.png)\n\n\nThroughout the process, after we hire a worker from a section, we need to add an additional candidate to this section. Therefore, we need two pointers, `next_head` and `next_tail`, that denotes the next worker to be added to the respective queues.\n\n![img](../Figures/2462/3.png)\n\n\nJust like in this situation shown in the picture, if two workers with the same cost appear at the top of both queues, we will hire the one from `head_workers`, since this worker has a smaller index compared with the other one from `tail_workers`. Afterwards, we need to refill `head_workers` with the worker at `next_head` to ensure that it still contains the first `m` unselected candidates.\n\n![img](../Figures/2462/4.png)\n\nWe add the worker `costs[next_head]` to `head_workers`, and then increment this pointer by 1, indicating the next unselected worker.\n\n![img](../Figures/2462/5.png)\n\n\nHowever, if we encounter the condition `next_tail < next_head`, it indicates that all the workers have been selected as candidates and there are no more workers outside the two queues. To avoid double counting, we should not add a worker to both queues or update either pointer. Therefore, we can simply move on without making any updates to the queues or pointers.\n\n![img](../Figures/2462/6.png)\n\n\n\n<br>\n\n#### Algorithm\n\n1) Initialize two priority queues `head_workers` and `tail_workers` that store the first `m` workers and the last `m` workers, where the worker with the lowest cost has the highest priority.\n\n2) Set up two pointers `next_head = m`, `next_tail = n - m - 1` indicating the next worker to be added to two queues.\n\n3) Compare the top workers in both queues, and hire the one with the lowest cost, if both workers have the same cost, hire the worker from `head_workers`. Add the cost of this worker to the total cost.\n\n4) If `next_head <= next_tail`, we need to fill the queue with one worker:\n\n    - If the hired worker is from `head_workers`, we add the worker `costs[next_head]` to it and increment `next_head` by 1. \n    - If the hired worker is from `tail_workers`, we add the worker `costs[tail_head]` to it and decrement `tail_head` by 1.\n\n    Otherwise, skip this step.\n\n5) Repeat steps 3 and 4 `k` times.\n\n\n6) Return the total cost of all the hired workers.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/nVvzczAb/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"nVvzczAb\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$m$$ be the given integer `candidates`.\n\n\n* Time complexity: $$O((k + m) \\cdot\\log m)$$\n\n    - We need to initialize two priority queues of size $$m$$, which takes $$O(m \\cdot\\log m)$$ time.\n    - During the hiring rounds, we keep removing the top element from priority queues and adding new elements for up to $$k$$ times. Operations on a priority queue take amortized $$O(\\log m)$$ time. Thus this process takes $$O(k \\cdot\\log m)$$ time.\n    - Note: in Python, `heapq.heapify()` creates the priority queue in linear time. Therefore, in Python, the time complexity is $$O(m + k \\cdot \\log m)$$.\n\n    \n\n* Space complexity: $$O(m)$$\n\n    - We need to store the first $$m$$ and the last $$m$$ workers in two priority queues.\n\n<br/>\n\n\n\n---\n\n### Approach 2: 1 Priority Queue\n\n#### Intuition   \n\nWe can also implement the hiring process using a single priority queue. However, if we only store the costs of the candidates as before, we cannot sort them based on their index. To address this, we can add a new field to each worker to denote their section ID. For instance, we can assign `0` to the first `m` candidates and `1` to the last `m` candidates. This way, when two workers have the same cost, the priority queue can sort them based on their section IDs, and the worker with the smaller section ID will be hired. This approach fully meets the requirements given in the problem.\n\nAs illustrated in the following picture, we store each candidate in `pq`, in the format of `(cost, section ID)`. For example:\n- `costs[1] = 12` is from the head section and stored as `(12, 0)`.\n\n- `costs[9] = 2` is from the tail section and stored as `(2, 1)`.\n\n![img](../Figures/2462/7.png)\n\nWe will proceed with the hiring process for `k` rounds by hiring the top worker from `pq` each time. \n\n\nSimilar to the previous solution: \n> If we choose a worker from `head_workers`, we add the worker at `next_head` to `head_workers`. \n> If we choose a worker from `tail_workers`, we add the worker at `next_tail` to `tail_workers`.\n\n\nHere, we check whether the hired worker is from the first `m` candidates or the last `m` candidates by checking his section ID.\n> If the section ID is `0`, it means that the worker is from the first `m` candidates, we add the worker at `next_head` to `pq` with a section ID as `0`. \n> If the section ID is `1`, it means that the worker is from the last `m` candidates, we add the worker at `next_tail` to `pq` with a section ID as `1`. \n\n![img](../Figures/2462/8.png)\n\n\n\n<br>\n\n#### Algorithm\n\n1) Create a priority queue `pq` and initialize it with the first `m` workers and last `m` workers from `costs`, along with their section IDs (0 for the first `m` workers, and 1 for the last `m` workers). The worker with the lowest cost has the highest priority.\n\n2) Initialize two pointers `next_head = m` and `next_tail = n - m - 1`, indicating the next worker to be added to `pq`.\n\n3) Pop the top worker with the lowest cost from `pq` and add the cost of this hired worker to the total cost.\n\n4) If `next_head >= next_tail`, we need to fill `pq` with the next worker:\n    - If the hired worker's section ID is `0`, we push the worker `costs[next_head]` to into `pq` and increment `next_head` by 1. \n    - If the hired worker's section ID is `1`, we push the worker `costs[next_tail]` to into `pq` and decrement `next_tail` by 1.\n\n    Otherwise, skip this step.\n\n5) Repeat steps 3 and 4 `k` times.\n\n\n6) Return the total cost of all the hired workers.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ep4hDwjw/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ep4hDwjw\"></iframe>\n\n\n#### Complexity Analysis\n\nFor the sake of brevity, let $$m$$ be the given integer `candidates`.\n\n* Time complexity: $$O((k + m) \\cdot\\log m)$$\n\n    - We need to initialize one priority queue `pq` of size up to $$2\\cdot m$$, which takes $$O(m \\cdot\\log m)$$ time.\n    - During `k` hiring rounds, we keep popping top elements from `pq` and pushing new elements into `pq` for up to $$k$$ times. Operations on a priority queue take amortized $$O(\\log m)$$ time. Thus this process takes $$O(k \\cdot\\log m)$$ time.\n    - Note: in Python, `heapq.heapify()` creates the priority queue in linear time. Therefore, in Python, the time complexity is $$O(m + k \\cdot \\log m)$$.\n\n    \n\n* Space complexity: $$O(m)$$\n\n    - We need to store at most $$2 \\cdot m$$ elements (the first $$m$$ and the last $$m$$ elements) of `costs` in the priority queue `pq`.\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

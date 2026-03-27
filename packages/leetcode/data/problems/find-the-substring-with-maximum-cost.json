@@ -1,0 +1,139 @@
+{
+  "questionId": "2669",
+  "questionFrontendId": "2606",
+  "title": "Find the Substring With Maximum Cost",
+  "titleSlug": "find-the-substring-with-maximum-cost",
+  "difficulty": "Medium",
+  "content": "<p>You are given a string <code>s</code>, a string <code>chars</code> of <strong>distinct</strong> characters and an integer array <code>vals</code> of the same length as <code>chars</code>.</p>\n\n<p>The <strong>cost of the substring </strong>is the sum of the values of each character in the substring. The cost of an empty string is considered <code>0</code>.</p>\n\n<p>The <strong>value of the character </strong>is defined in the following way:</p>\n\n<ul>\n\t<li>If the character is not in the string <code>chars</code>, then its value is its corresponding position <strong>(1-indexed)</strong> in the alphabet.\n\n\t<ul>\n\t\t<li>For example, the value of <code>&#39;a&#39;</code> is <code>1</code>, the value of <code>&#39;b&#39;</code> is <code>2</code>, and so on. The value of <code>&#39;z&#39;</code> is <code>26</code>.</li>\n\t</ul>\n\t</li>\n\t<li>Otherwise, assuming <code>i</code> is the index where the character occurs in the string <code>chars</code>, then its value is <code>vals[i]</code>.</li>\n</ul>\n\n<p>Return <em>the maximum cost among all substrings of the string</em> <code>s</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;adaa&quot;, chars = &quot;d&quot;, vals = [-1000]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The value of the characters &quot;a&quot; and &quot;d&quot; is 1 and -1000 respectively.\nThe substring with the maximum cost is &quot;aa&quot; and its cost is 1 + 1 = 2.\nIt can be proven that 2 is the maximum cost.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abc&quot;, chars = &quot;abc&quot;, vals = [-1,-1,-1]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> The value of the characters &quot;a&quot;, &quot;b&quot; and &quot;c&quot; is -1, -1, and -1 respectively.\nThe substring with the maximum cost is the empty substring &quot;&quot; and its cost is 0.\nIt can be proven that 0 is the maximum cost.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s</code> consist of lowercase English letters.</li>\n\t<li><code>1 &lt;= chars.length &lt;= 26</code></li>\n\t<li><code>chars</code> consist of <strong>distinct</strong> lowercase English letters.</li>\n\t<li><code>vals.length == chars.length</code></li>\n\t<li><code>-1000 &lt;= vals[i] &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [
+    "Create a new integer array where arr[i] denotes the value of character s[i].",
+    "We can use Kadane’s maximum subarray sum algorithm to find the maximum cost."
+  ],
+  "metaData": "{\n  \"name\": \"maximumCostSubstring\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"chars\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"vals\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"32K\", \"totalSubmission\": \"55.3K\", \"totalAcceptedRaw\": 32000, \"totalSubmissionRaw\": 55298, \"acRate\": \"57.9%\"}",
+  "likes": 394,
+  "dislikes": 13,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Subarray\", \"titleSlug\": \"maximum-subarray\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"adaa\"\n\"d\"\n[-1000]",
+    "\"abc\"\n\"abc\"\n[-1,-1,-1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"josh-technology\", \"name\": \"josh technology\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximumCostSubstring(string s, string chars, vector<int>& vals) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximumCostSubstring(String s, String chars, int[] vals) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumCostSubstring(self, s: str, chars: str, vals: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumCostSubstring(self, s, chars, vals):\n        \"\"\"\n        :type s: str\n        :type chars: str\n        :type vals: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {string} chars\n * @param {number[]} vals\n * @return {number}\n */\nvar maximumCostSubstring = function(s, chars, vals) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumCostSubstring(s: string, chars: string, vals: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaximumCostSubstring(string s, string chars, int[] vals) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maximumCostSubstring(char* s, char* chars, int* vals, int valsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumCostSubstring(s string, chars string, vals []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumCostSubstring(s: String, chars: String, vals: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumCostSubstring(_ s: String, _ chars: String, _ vals: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_cost_substring(s: String, chars: String, vals: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {String} chars\n# @param {Integer[]} vals\n# @return {Integer}\ndef maximum_cost_substring(s, chars, vals)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param String $chars\n     * @param Integer[] $vals\n     * @return Integer\n     */\n    function maximumCostSubstring($s, $chars, $vals) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumCostSubstring(String s, String chars, List<int> vals) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumCostSubstring(s: String, chars: String, vals: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_cost_substring(s :: String.t, chars :: String.t, vals :: [integer]) :: integer\n  def maximum_cost_substring(s, chars, vals) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_cost_substring(S :: unicode:unicode_binary(), Chars :: unicode:unicode_binary(), Vals :: [integer()]) -> integer().\nmaximum_cost_substring(S, Chars, Vals) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-cost-substring s chars vals)\n  (-> string? string? (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

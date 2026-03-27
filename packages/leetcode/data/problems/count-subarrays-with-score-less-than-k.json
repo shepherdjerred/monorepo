@@ -1,0 +1,145 @@
+{
+  "questionId": "2394",
+  "questionFrontendId": "2302",
+  "title": "Count Subarrays With Score Less Than K",
+  "titleSlug": "count-subarrays-with-score-less-than-k",
+  "difficulty": "Hard",
+  "content": "<p>The <strong>score</strong> of an array is defined as the <strong>product</strong> of its sum and its length.</p>\n\n<ul>\n\t<li>For example, the score of <code>[1, 2, 3, 4, 5]</code> is <code>(1 + 2 + 3 + 4 + 5) * 5 = 75</code>.</li>\n</ul>\n\n<p>Given a positive integer array <code>nums</code> and an integer <code>k</code>, return <em>the <strong>number of non-empty subarrays</strong> of</em> <code>nums</code> <em>whose score is <strong>strictly less</strong> than</em> <code>k</code>.</p>\n\n<p>A <strong>subarray</strong> is a contiguous sequence of elements within an array.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2,1,4,3,5], k = 10\n<strong>Output:</strong> 6\n<strong>Explanation:</strong>\nThe 6 subarrays having scores less than 10 are:\n- [2] with score 2 * 1 = 2.\n- [1] with score 1 * 1 = 1.\n- [4] with score 4 * 1 = 4.\n- [3] with score 3 * 1 = 3. \n- [5] with score 5 * 1 = 5.\n- [2,1] with score (2 + 1) * 2 = 6.\nNote that subarrays such as [1,4] and [4,3,5] are not considered because their scores are 10 and 36 respectively, while we need scores strictly less than 10.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,1,1], k = 5\n<strong>Output:</strong> 5\n<strong>Explanation:</strong>\nEvery subarray except [1,1,1] has a score less than 5.\n[1,1,1] has a score (1 + 1 + 1) * 3 = 9, which is greater than 5.\nThus, there are 5 subarrays having scores less than 5.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= 10<sup>15</sup></code></li>\n</ul>\n",
+  "hints": [
+    "If we add an element to a list of elements, how will the score change?",
+    "How can we use this to determine the number of subarrays with score less than k in a given range?",
+    "How can we use “Two Pointers” to generalize the solution, and thus count all possible subarrays?"
+  ],
+  "metaData": "{\n  \"name\": \"countSubarrays\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"long\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"145.8K\", \"totalSubmission\": \"234K\", \"totalAcceptedRaw\": 145799, \"totalSubmissionRaw\": 234005, \"acRate\": \"62.3%\"}",
+  "likes": 1615,
+  "dislikes": 61,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Subarray\", \"titleSlug\": \"maximum-subarray\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Subarray Product Less Than K\", \"titleSlug\": \"subarray-product-less-than-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Binary Subarrays With Sum\", \"titleSlug\": \"binary-subarrays-with-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,1,4,3,5]\n10",
+    "[1,1,1]\n5"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 24, \"slug\": \"pinterest\", \"name\": \"Pinterest\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long countSubarrays(vector<int>& nums, long long k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long countSubarrays(int[] nums, long k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countSubarrays(self, nums: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countSubarrays(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number}\n */\nvar countSubarrays = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countSubarrays(nums: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long CountSubarrays(int[] nums, long k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long countSubarrays(int* nums, int numsSize, long long k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countSubarrays(nums []int, k int64) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countSubarrays(nums: IntArray, k: Long): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countSubarrays(_ nums: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_subarrays(nums: Vec<i32>, k: i64) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Integer}\ndef count_subarrays(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Integer\n     */\n    function countSubarrays($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countSubarrays(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countSubarrays(nums: Array[Int], k: Long): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_subarrays(nums :: [integer], k :: integer) :: integer\n  def count_subarrays(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_subarrays(Nums :: [integer()], K :: integer()) -> integer().\ncount_subarrays(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-subarrays nums k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2742",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach: Sliding Window\n\n#### Intuition\n\nAccording to the definition of array scores in the question, and given that $\\textit{nums}$ is an array of positive integers, for a subarray $[i, j]$, as the right endpoint $j$ is fixed, the sum of the subarray decreases and its length shortens with the increase of the left endpoint $i$, so the score of the subarray monotonically decreases. If the score of the subarray $[i, j]$ is less than $k$, since the score is monotonically decreasing, then the score of the subarray $[p, j], i < p \\leq j$ is also less than $k$.\n\nBased on the above properties, we can use the sliding window method to solve the question. Starting from $j = 0$, enumerate the right endpoint of the subarray and maintain a left endpoint $i$ (initially set to $0$). For each $j$:\n\n- Expand window: Add $\\textit{nums}[j]$ to the subarray sum corresponding to the current window $\\textit{total}$.\n\n- Shrink window: If the score of the corresponding subarray in the current window, $\\textit{total} \\times (j - i + 1)$, is greater than or equal to $k$, it indicates that the subarray does not meet the requirements, and therefore, the left endpoint $i$ needs to be moved to the right until the score is less than $k$.\n\n- Count the number of subarrays: At this moment, the number of subarrays with $j$ as the right endpoint and a score less than $k$ is $j - i + 1$, and it is accumulated into the final result $\\textit{res}$.\n\nAfter the enumeration, return the final result $\\textit{res}$.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/5CroPzAm/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"5CroPzAm\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the $\\textit{nums}$.\n\n- Time complexity: $O(n)$.\n\nWe only need to traverse the array once.\n\n- Space complexity: $O(1)$.\n\nOnly a few additional variables are needed.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

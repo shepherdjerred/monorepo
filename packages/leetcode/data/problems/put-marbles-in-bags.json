@@ -1,0 +1,145 @@
+{
+  "questionId": "2681",
+  "questionFrontendId": "2551",
+  "title": "Put Marbles in Bags",
+  "titleSlug": "put-marbles-in-bags",
+  "difficulty": "Hard",
+  "content": "<p>You have <code>k</code> bags. You are given a <strong>0-indexed</strong> integer array <code>weights</code> where <code>weights[i]</code> is the weight of the <code>i<sup>th</sup></code> marble. You are also given the integer <code>k.</code></p>\n\n<p>Divide the marbles into the <code>k</code> bags according to the following rules:</p>\n\n<ul>\n\t<li>No bag is empty.</li>\n\t<li>If the <code>i<sup>th</sup></code> marble and <code>j<sup>th</sup></code> marble are in a bag, then all marbles with an index between the <code>i<sup>th</sup></code> and <code>j<sup>th</sup></code> indices should also be in that same bag.</li>\n\t<li>If a bag consists of all the marbles with an index from <code>i</code> to <code>j</code> inclusively, then the cost of the bag is <code>weights[i] + weights[j]</code>.</li>\n</ul>\n\n<p>The <strong>score</strong> after distributing the marbles is the sum of the costs of all the <code>k</code> bags.</p>\n\n<p>Return <em>the <strong>difference</strong> between the <strong>maximum</strong> and <strong>minimum</strong> scores among marble distributions</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> weights = [1,3,5,1], k = 2\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> \nThe distribution [1],[3,5,1] results in the minimal score of (1+1) + (3+1) = 6. \nThe distribution [1,3],[5,1], results in the maximal score of (1+3) + (5+1) = 10. \nThus, we return their difference 10 - 6 = 4.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> weights = [1, 3], k = 2\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> The only distribution possible is [1],[3]. \nSince both the maximal and minimal score are the same, we return 0.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= k &lt;= weights.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= weights[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Each bag will contain a subarray, and only the endpoints of these subarrays matter.",
+    "Each subarray only contributes two numbers to the sum. Use this property to choose the subarrays optimally.",
+    "Try to use a priority queue."
+  ],
+  "metaData": "{\n  \"name\": \"putMarbles\",\n  \"params\": [\n    {\n      \"name\": \"weights\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"153.5K\", \"totalSubmission\": \"212.8K\", \"totalAcceptedRaw\": 153518, \"totalSubmissionRaw\": 212760, \"acRate\": \"72.2%\"}",
+  "likes": 2649,
+  "dislikes": 125,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,3,5,1]\n2",
+    "[1,3]\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 17, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long putMarbles(vector<int>& weights, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long putMarbles(int[] weights, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def putMarbles(self, weights: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def putMarbles(self, weights, k):\n        \"\"\"\n        :type weights: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} weights\n * @param {number} k\n * @return {number}\n */\nvar putMarbles = function(weights, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function putMarbles(weights: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long PutMarbles(int[] weights, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long putMarbles(int* weights, int weightsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func putMarbles(weights []int, k int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun putMarbles(weights: IntArray, k: Int): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func putMarbles(_ weights: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn put_marbles(weights: Vec<i32>, k: i32) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} weights\n# @param {Integer} k\n# @return {Integer}\ndef put_marbles(weights, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $weights\n     * @param Integer $k\n     * @return Integer\n     */\n    function putMarbles($weights, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int putMarbles(List<int> weights, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def putMarbles(weights: Array[Int], k: Int): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec put_marbles(weights :: [integer], k :: integer) :: integer\n  def put_marbles(weights, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec put_marbles(Weights :: [integer()], K :: integer()) -> integer().\nput_marbles(Weights, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (put-marbles weights k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1806",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nAs shown in the picture below, we put `4` marbles in `k = 2` bags.\n\n![img](../Figures/2551/1.png)\n\nThere are several ways to split marbles into two bags, we have shown two of them that bring the maximum cost `10` and the minimum cost `6`. Therefore the difference between them is `10 - 6 = 4`.\n\n---\n\n### Approach: Sorting\n\n#### Intuition   \n\nLet's start with a brute-force approach. Since we are looking for the maximum score and the minimum score, we shall try iterating over all possible splits. Splitting `n` marbles into `k` consecutive groups is a typical sticks-and-stones problem that has as many as $${n - 1 \\choose k - 1} ={{(n - 1)!}  \\over {(k - 1)!(n - k)!}}$$ solutions, thus it is impractical to iterate over all possibilities.\n\nWe might also think of using dynamic programming to solve the subproblem `(x, y)`: splitting previous `x` marbles into `y` bags, then moving on to the next larger subproblem `(x + 1, y)` or `(x, y + 1)`, until we reach the best solution of the entire problem `(n, k)`. However, given the size of the input array and the maximum value of `k`, dynamic programming brings at most $$O(n ^ 2)$$ time thus it won't pass the time limit.\n\n<br>\n\nLet's shift our thinking a bit. Instead of focusing on how to partition the array of marbles, let's now focus on the **boundary** of each subarray, the **splitting point** and try to find the relation between the score and these splitting points. \n\nIn the picture below, we split the array into 4 subarrays (shown in different colors) and resulting in 3 splitting points, each of which is made of 2 adjacent ends. \n\n**What is the score of this split?** \n\nSince the score of a subarray only matters with its two ends, we can tell that the total score equals the sum of the first element, the last element, and the sum of every pair (two adjacent ends at each split).\n\n\n![img](../Figures/2551/2.png)\n\n\n<br>\n\nIn general, if we partition the array into `k` groups, we always make `k - 1` splitting points regardless of how the array is partitioned.\n\n![img](../Figures/2551/3.png)\n\n<br>\n\nNow we know how to find the maximum score, by finding the sum of the largest `k - 1` pairs. Similarly, we can get the minimum score by finding the sum of the smallest `k - 1` pairs. This can be done by collecting every pair sum in an array `pairWeights` and sorting them.\n\n![img](../Figures/2551/4.png)\n\n\n$$\\text{MaxScore} = \\text{weights}[0] + \\text{weights}[n - 1] + \\sum_{i = n - k}^{n - 1} {\\text{pairWeights}[i]}$$ (if sorted the array `pairWeights` in non-decreasing order)\n\n$$\\text{MinScore} = \\text{weights}[0] + \\text{weights}[n - 1] + \\sum_{i = 0}^{k-2} {\\text{pairWeights[i]}}$$\n\n\n\nThen we have the difference between them as $$\\text{answer} = \\text{MaxScore - MinScore} \\\\\n= \\sum_{i = n - k}^{n - 1} {\\text{pairWeights[i]}} - \\sum_{i = 0}^{k-2} {\\text{pairWeights[i]}}$$\n\n\n\n<br>\n\n#### Algorithm\n\n- Initialize `n` as the size of the `weights` array.  \n- Create a array `pairWeights` of size `n - 1` to store sums of adjacent pairs.  \n- Iterate over `weights`:  \n  - For each pair of adjacent elements, store their sum in `pairWeights`.  \n- Sort the `pairWeights` array in ascending order.  \n- Initialize `answer` as `0` to store the difference between max and min sums.  \n- Iterate over the first and last `k - 1` elements of `pairWeights`:  \n  - Add the difference between the largest `k - 1` sums and smallest `k - 1` sums to `answer`.  \n- Return `answer` as the result.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/9z9wcxKo/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"9z9wcxKo\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `weights` array.\n\n- Time complexity: $O(n \\log n)$\n\n    The first loop iterates over the `weights` array to compute the `pairWeights` array, which takes $O(n)$ time. Sorting the `pairWeights` array takes $O(n \\log n)$ time.\n\n    The final loop iterates over the first $k-1$ elements of the sorted `pairWeights` array, which takes $O(k)$ time. Since $k$ can be at most $n$, this loop is $O(n)$ in the worst case.\n    \n    Therefore, the overall time complexity is dominated by the sorting step, resulting in $O(n \\log n)$.\n\n- Space complexity: $O(n + S) \\approx O(n)$\n\n    The `pairWeights` array stores $n-1$ elements, which requires $O(n)$ space.\n    \n    The space taken by the sorting algorithm ($S$) depends on the language of implementation:\n    - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O(\\log n)$.\n    - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worst-case space complexity of $O(\\log n)$.\n    - In Python, the `sort()` method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has a space complexity of $O(n)$.\n\n    All other variables used by the algorithm take constant space. Thus, the space complexity is $O(n + S) \\approx O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

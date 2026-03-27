@@ -1,0 +1,140 @@
+{
+  "questionId": "2535",
+  "questionFrontendId": "2393",
+  "title": "Count Strictly Increasing Subarrays",
+  "titleSlug": "count-strictly-increasing-subarrays",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array <code>nums</code> consisting of <strong>positive</strong> integers.</p>\n\n<p>Return <em>the number of <strong>subarrays</strong> of </em><code>nums</code><em> that are in <strong>strictly increasing</strong> order.</em></p>\n\n<p>A <strong>subarray</strong> is a <strong>contiguous</strong> part of an array.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,3,5,4,4,6]\n<strong>Output:</strong> 10\n<strong>Explanation:</strong> The strictly increasing subarrays are the following:\n- Subarrays of length 1: [1], [3], [5], [4], [4], [6].\n- Subarrays of length 2: [1,3], [3,5], [4,6].\n- Subarrays of length 3: [1,3,5].\nThe total number of subarrays is 6 + 3 + 1 = 10.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,4,5]\n<strong>Output:</strong> 15\n<strong>Explanation:</strong> Every subarray is strictly increasing. There are 15 possible subarrays that we can take.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>6</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Find the number of strictly increasing subarrays that end at a specific index. Can you calculate that for each index from 0 to n - 1?",
+    "The answer will be the sum of the number of subarrays that end at each index."
+  ],
+  "metaData": "{\n  \"name\": \"countSubarrays\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"8.2K\", \"totalSubmission\": \"11.5K\", \"totalAcceptedRaw\": 8213, \"totalSubmissionRaw\": 11504, \"acRate\": \"71.4%\"}",
+  "likes": 143,
+  "dislikes": 2,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Maximum Ascending Subarray Sum\", \"titleSlug\": \"maximum-ascending-subarray-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,3,5,4,4,6]",
+    "[1,2,3,4,5]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"bridgewater-associates\", \"name\": \"Bridgewater Associates\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long countSubarrays(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long countSubarrays(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countSubarrays(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countSubarrays(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar countSubarrays = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countSubarrays(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long CountSubarrays(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long countSubarrays(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countSubarrays(nums []int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countSubarrays(nums: IntArray): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countSubarrays(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_subarrays(nums: Vec<i32>) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef count_subarrays(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function countSubarrays($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countSubarrays(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countSubarrays(nums: Array[Int]): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_subarrays(nums :: [integer]) :: integer\n  def count_subarrays(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_subarrays(Nums :: [integer()]) -> integer().\ncount_subarrays(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-subarrays nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2003",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Dynamic Programming\n\n**Intuition**\n\nWe are given an array of $N$ positive integers; we need to return the number of subarrays that are strictly increasing. A straightforward way to do this is to iterate over every possible subarray and then check if the subarray is strictly increasing or not. To do this, we would need to iterate over every pair of indices and then iterate over the elements between these indices to check if the elements are in the required order or not; hence this would be an $O(N^3)$ approach which is not very efficient.\n\n\nLet's try to solve this problem by breaking it into subproblems; let's say the number of increasing subarrays between indices `0` and `x - 1` is `k`. Now, we consider the element at index `x`.\n\nIf we have `nums[x] > nums[x - 1]`, then we could take all `k` subarrays and simply append `nums[x]` to it. We also consider `nums[x]` as its own subarray, thus we have found `k + 1` new increasing subarrays ending at index `x`.\n\nOtherwise, if `nums[x] <= nums[x - 1]`, adding this new element will invalidate any previous subarrays. Thus we only gain one new increasing subarray, the one consisting of only `nums[x]`.\n\nTherefore, we keep the length of the current subarray `currSubarray`, which is strictly increasing, and for each new element that we iterate over, we will check if it's greater than the last element. If it is, we will increment `currSubarray`; otherwise, we will reset it to `1`. After each element, we will add `currSubarray` to the total count of subarrays we have found so far `subarrayCount`.\n\n!?!../Documents/2393_Count_Strictly_Increasing_Subarrays.json:960,720!?! <br>\n\n\n**Algorithm**\n\n1. Initialize `currSubarray` and `subarrayCount` to `1`; This is because we will start from the element at index `1`, and hence the initial subarray is `[nums[0]]`.\n2. Iterate over the elements from index `1` to the last index; For each index `i`:\n    1. Check if `nums[i] > nums[i - 1]`, if true then increment `currSubarray`\n    2. If the above condition is false, reset `currSubarray` to `1`.\n    3. Add `currSubarray` to `subarrayCount`.\n3. Return `subarrayCount`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/kffpuWUz/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"kffpuWUz\"></iframe>\n\n**Complexity Analysis**\n\nHere, $N$ is the number of elements in the array `nums`.\n\n* Time complexity: $O(N)$\n\n  We iterate over the array `nums` once, and hence the total time complexity is equal to $O(N)$.\n\n* Space complexity: $O(1)$\n\n  We don't require any extra space apart from the two variables `currSubarray` and `subarrayCount`, and hence the space complexity is constant.\n  <br/>\n\n---\n\n### Approach 2: Greedy\n\n**Intuition**\n\nIf we observe the previous approach closely, we will observe that for every additional element in the strictly increasing subarray, we are adding the updated length to the final answer. So, if the subarray length is `5`, that means we have added `{1, 2, 3, 4, 5}` to the answer during the previous 5 iterations. Hence, an increasing subarray with size `5` would contribute `1 + 2 + 3 + 4 + 5 = 15` increasing subarrays to the answer.\n\nAs per the above observation, we will just find the length of each strictly increasing subarray, and for each subarray of length `K`, we can add $\\frac{K \\cdot (K + 1)}{2}$ to the final answer. This is the formula [for the first K natural numbers](https://en.wikipedia.org/wiki/1_%2B_2_%2B_3_%2B_4_%2B_%E2%8B%AF#Partial_sums).\n\n**Algorithm**\n\n1. Initialize  `subarrayCount` to `0`.\n2. Iterate over the elements from index `0` to the last index; For each index `i`:\n    1. Keep iterating over the elements while `nums[i] < nums[i + 1]`, i.e. elements are in strictly increasing order.\n    2. Store the length of this subarray in the variable `currSubarray`. It should be initialized to `1` before the while loop.\n    3. Add the value `(currSubarray * (currSubarray + 1)) / 2` to `subarrayCount`.\n3. Return `subarrayCount`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/HttXdrZK/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"HttXdrZK\"></iframe>\n\n**Complexity Analysis**\n\nHere, $N$ is the number of elements in the array `nums`.\n\n* Time complexity: $O(N)$\n\n  Despite the nested loop, each element is only iterated over once as `i` is strictly increasing, and hence the total time complexity is equal to $O(N)$.\n\n* Space complexity: $O(1)$\n\n  We don't require any extra space apart from the two variables `currSubarray` and `subarrayCount`, and hence the space complexity is constant.\n  <br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,136 @@
+{
+  "questionId": "2710",
+  "questionFrontendId": "2571",
+  "title": "Minimum Operations to Reduce an Integer to 0",
+  "titleSlug": "minimum-operations-to-reduce-an-integer-to-0",
+  "difficulty": "Medium",
+  "content": "<p>You are given a positive integer <code>n</code>, you can do the following operation <strong>any</strong> number of times:</p>\n\n<ul>\n\t<li>Add or subtract a <strong>power</strong> of <code>2</code> from <code>n</code>.</li>\n</ul>\n\n<p>Return <em>the <strong>minimum</strong> number of operations to make </em><code>n</code><em> equal to </em><code>0</code>.</p>\n\n<p>A number <code>x</code> is power of <code>2</code> if <code>x == 2<sup>i</sup></code>&nbsp;where <code>i &gt;= 0</code><em>.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 39\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> We can do the following operations:\n- Add 2<sup>0</sup> = 1 to n, so now n = 40.\n- Subtract 2<sup>3</sup> = 8 from n, so now n = 32.\n- Subtract 2<sup>5</sup> = 32 from n, so now n = 0.\nIt can be shown that 3 is the minimum number of operations we need to make n equal to 0.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 54\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> We can do the following operations:\n- Add 2<sup>1</sup> = 2 to n, so now n = 56.\n- Add 2<sup>3</sup> = 8 to n, so now n = 64.\n- Subtract 2<sup>6</sup> = 64 from n, so now n = 0.\nSo the minimum number of operations is 3.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Can we set/unset the bits in binary representation?",
+    "If there are multiple adjacent ones, how can we optimally add and subtract in 2 operations such that all ones get unset?",
+    "Bonus: Try to solve the problem with higher constraints: n ≤ 10^18."
+  ],
+  "metaData": "{\n  \"name\": \"minOperations\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"54.2K\", \"totalSubmission\": \"87.8K\", \"totalAcceptedRaw\": 54222, \"totalSubmissionRaw\": 87816, \"acRate\": \"61.7%\"}",
+  "likes": 629,
+  "dislikes": 201,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Plus One\", \"titleSlug\": \"plus-one\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "39",
+    "54"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 11, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 3, \"slug\": \"6sense\", \"name\": \"6sense\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minOperations(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minOperations(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minOperations(self, n: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minOperations(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {number}\n */\nvar minOperations = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minOperations(n: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinOperations(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minOperations(int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minOperations(n int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minOperations(n: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minOperations(_ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_operations(n: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Integer}\ndef min_operations(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Integer\n     */\n    function minOperations($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minOperations(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minOperations(n: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_operations(n :: integer) :: integer\n  def min_operations(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_operations(N :: integer()) -> integer().\nmin_operations(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-operations n)\n  (-> exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

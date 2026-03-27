@@ -1,0 +1,144 @@
+{
+  "questionId": "2497",
+  "questionFrontendId": "2410",
+  "title": "Maximum Matching of Players With Trainers",
+  "titleSlug": "maximum-matching-of-players-with-trainers",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> integer array <code>players</code>, where <code>players[i]</code> represents the <strong>ability</strong> of the <code>i<sup>th</sup></code> player. You are also given a <strong>0-indexed</strong> integer array <code>trainers</code>, where <code>trainers[j]</code> represents the <strong>training capacity </strong>of the <code>j<sup>th</sup></code> trainer.</p>\n\n<p>The <code>i<sup>th</sup></code> player can <strong>match</strong> with the <code>j<sup>th</sup></code> trainer if the player&#39;s ability is <strong>less than or equal to</strong> the trainer&#39;s training capacity. Additionally, the <code>i<sup>th</sup></code> player can be matched with at most one trainer, and the <code>j<sup>th</sup></code> trainer can be matched with at most one player.</p>\n\n<p>Return <em>the <strong>maximum</strong> number of matchings between </em><code>players</code><em> and </em><code>trainers</code><em> that satisfy these conditions.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> players = [4,7,9], trainers = [8,2,5,8]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong>\nOne of the ways we can form two matchings is as follows:\n- players[0] can be matched with trainers[0] since 4 &lt;= 8.\n- players[1] can be matched with trainers[3] since 7 &lt;= 8.\nIt can be proven that 2 is the maximum number of matchings that can be formed.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> players = [1,1,1], trainers = [10]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong>\nThe trainer can be matched with any of the 3 players.\nEach player can only be matched with one trainer, so the maximum answer is 1.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= players.length, trainers.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= players[i], trainers[j] &lt;= 10<sup>9</sup></code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Note:</strong> This question is the same as <a href=\"https://leetcode.com/problems/assign-cookies/description/\" target=\"_blank\"> 445: Assign Cookies.</a></p>\n",
+  "hints": [
+    "Sort both the arrays.",
+    "Construct the matching greedily."
+  ],
+  "metaData": "{\n  \"name\": \"matchPlayersAndTrainers\",\n  \"params\": [\n    {\n      \"name\": \"players\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"trainers\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"181.6K\", \"totalSubmission\": \"241.4K\", \"totalAcceptedRaw\": 181627, \"totalSubmissionRaw\": 241365, \"acRate\": \"75.2%\"}",
+  "likes": 922,
+  "dislikes": 34,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Most Profit Assigning Work\", \"titleSlug\": \"most-profit-assigning-work\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Long Pressed Name\", \"titleSlug\": \"long-pressed-name\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Interval List Intersections\", \"titleSlug\": \"interval-list-intersections\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Largest Merge Of Two Strings\", \"titleSlug\": \"largest-merge-of-two-strings\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Tasks You Can Assign\", \"titleSlug\": \"maximum-number-of-tasks-you-can-assign\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Successful Pairs of Spells and Potions\", \"titleSlug\": \"successful-pairs-of-spells-and-potions\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"The Latest Time to Catch a Bus\", \"titleSlug\": \"the-latest-time-to-catch-a-bus\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximize Greatness of an Array\", \"titleSlug\": \"maximize-greatness-of-an-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[4,7,9]\n[8,2,5,8]",
+    "[1,1,1]\n[10]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int matchPlayersAndTrainers(vector<int>& players, vector<int>& trainers) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int matchPlayersAndTrainers(int[] players, int[] trainers) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def matchPlayersAndTrainers(self, players: List[int], trainers: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def matchPlayersAndTrainers(self, players, trainers):\n        \"\"\"\n        :type players: List[int]\n        :type trainers: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} players\n * @param {number[]} trainers\n * @return {number}\n */\nvar matchPlayersAndTrainers = function(players, trainers) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function matchPlayersAndTrainers(players: number[], trainers: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MatchPlayersAndTrainers(int[] players, int[] trainers) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int matchPlayersAndTrainers(int* players, int playersSize, int* trainers, int trainersSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func matchPlayersAndTrainers(players []int, trainers []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun matchPlayersAndTrainers(players: IntArray, trainers: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func matchPlayersAndTrainers(_ players: [Int], _ trainers: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn match_players_and_trainers(players: Vec<i32>, trainers: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} players\n# @param {Integer[]} trainers\n# @return {Integer}\ndef match_players_and_trainers(players, trainers)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $players\n     * @param Integer[] $trainers\n     * @return Integer\n     */\n    function matchPlayersAndTrainers($players, $trainers) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int matchPlayersAndTrainers(List<int> players, List<int> trainers) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def matchPlayersAndTrainers(players: Array[Int], trainers: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec match_players_and_trainers(players :: [integer], trainers :: [integer]) :: integer\n  def match_players_and_trainers(players, trainers) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec match_players_and_trainers(Players :: [integer()], Trainers :: [integer()]) -> integer().\nmatch_players_and_trainers(Players, Trainers) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (match-players-and-trainers players trainers)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2795",
+    "content": "### Approach: Sorting + Two Pointers + Greedy\n\n#### Intuition\n\nTo match the maximum number of athletes, we can follow a greedy strategy: sort both athletes and trainers in increasing order of ability, and for each athlete, assign the trainer with the smallest possible ability who can still match that athlete. This ensures that stronger trainers are preserved for athletes who need them.\n\nLet’s understand why this works.\n\nSuppose there are $m$ athletes, with their abilities stored in the array `players[0]` to `players[m - 1]`, and $n$ trainers, with abilities in `trainers[0]` to `trainers[n - 1]`. We assume both arrays are sorted in non-decreasing order.\n\nNow consider matching trainers to athletes one by one. Suppose we’ve already matched trainers to the first $i - 1$ athletes. For the $i$-th athlete, we want to match the trainer with the smallest ability who can still satisfy this athlete, i.e., the first trainer `trainers[j]` such that `trainers[j] ≥ players[i]`.\n\nWe argue that this is optimal:\n\n* **Case 1**: If `players[i + 1] ≤ trainers[j]`, then we could match `trainers[j]` to `players[i + 1]` and `trainers[j + 1]` to `players[i]`, but this would still result in the same number of total matches.\n\n* **Case 2**: If `trainers[j + 1]` is used for `players[i]` instead of `trainers[j]`, and if `players[i + 1] > trainers[j]`, then `trainers[j]` will not be able to match any athlete, reducing the total number of matches.\n\nHence, it's better to use the smallest suitable trainer for each athlete in order.\n\nBased on the above analysis, we can apply a greedy method to match the maximum number of athletes. First, sort both the `players` and `trainers` arrays in increasing order. Then, use two pointers: one for iterating through the `players` array and the other for the `trainers` array. For each player, we try to find the first available trainer whose ability is greater than or equal to that of the player.\n\nBecause both arrays are sorted, we can find matches using a single linear pass. If a trainer can match a player, we count it and move both pointers forward. If the current trainer is not strong enough, we move to the next trainer. This continues until we reach the end of either array. At that point, the number of successful matches recorded is the maximum number of athletes that can be matched with the available trainers.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/bxD4hvHZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"bxD4hvHZ\"></iframe>\n\n#### Complexity analysis\n\nLet $m$ be the length of the `players` array, and $n$ be the length of the `trainers` array.\n\n- Time complexity: $O(m \\log m + n \\log n)$. \n  \n  We sort both arrays, which takes $O(m \\log m)$ and $O(n \\log n)$ time respectively. After sorting, we traverse both arrays once using two pointers, which takes $O(m + n)$ time. So the overall time complexity is: $O(m \\log m + n \\log n)$.\n\n- Space complexity: $O(\\log m + \\log n)$\n  \n  The space complexity mainly refers to the additional space required for sorting.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

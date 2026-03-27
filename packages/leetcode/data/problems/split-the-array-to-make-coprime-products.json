@@ -1,0 +1,139 @@
+{
+  "questionId": "2647",
+  "questionFrontendId": "2584",
+  "title": "Split the Array to Make Coprime Products",
+  "titleSlug": "split-the-array-to-make-coprime-products",
+  "difficulty": "Hard",
+  "content": "<p>You are given a <strong>0-indexed</strong> integer array <code>nums</code> of length <code>n</code>.</p>\n\n<p>A <strong>split</strong> at an index <code>i</code> where <code>0 &lt;= i &lt;= n - 2</code> is called <strong>valid</strong> if the product of the first <code>i + 1</code> elements and the product of the remaining elements are coprime.</p>\n\n<ul>\n\t<li>For example, if <code>nums = [2, 3, 3]</code>, then a split at the index <code>i = 0</code> is valid because <code>2</code> and <code>9</code> are coprime, while a split at the index <code>i = 1</code> is not valid because <code>6</code> and <code>3</code> are not coprime. A split at the index <code>i = 2</code> is not valid because <code>i == n - 1</code>.</li>\n</ul>\n\n<p>Return <em>the smallest index </em><code>i</code><em> at which the array can be split validly or </em><code>-1</code><em> if there is no such split</em>.</p>\n\n<p>Two values <code>val1</code> and <code>val2</code> are coprime if <code>gcd(val1, val2) == 1</code> where <code>gcd(val1, val2)</code> is the greatest common divisor of <code>val1</code> and <code>val2</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong>Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/12/14/second.PNG\" style=\"width: 450px; height: 211px;\" />\n<pre>\n<strong>Input:</strong> nums = [4,7,8,15,3,5]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The table above shows the values of the product of the first i + 1 elements, the remaining elements, and their gcd at each index i.\nThe only valid split is at index 2.\n</pre>\n\n<p><strong>Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/12/14/capture.PNG\" style=\"width: 450px; height: 215px;\" />\n<pre>\n<strong>Input:</strong> nums = [4,7,15,8,3,5]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> The table above shows the values of the product of the first i + 1 elements, the remaining elements, and their gcd at each index i.\nThere is no valid split.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == nums.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>6</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Two numbers with GCD equal to 1 have no common prime divisor.",
+    "Find the prime factorization of the left and right sides and check if they share a prime divisor."
+  ],
+  "metaData": "{\n  \"name\": \"findValidSplit\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"18.9K\", \"totalSubmission\": \"66K\", \"totalAcceptedRaw\": 18949, \"totalSubmissionRaw\": 66045, \"acRate\": \"28.7%\"}",
+  "likes": 321,
+  "dislikes": 112,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Replace Non-Coprime Numbers in Array\", \"titleSlug\": \"replace-non-coprime-numbers-in-array\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[4,7,8,15,3,5]",
+    "[4,7,15,8,3,5]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"zomato\", \"name\": \"Zomato\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Number Theory",
+      "slug": "number-theory"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findValidSplit(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findValidSplit(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findValidSplit(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findValidSplit(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar findValidSplit = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findValidSplit(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindValidSplit(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findValidSplit(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findValidSplit(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findValidSplit(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findValidSplit(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_valid_split(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef find_valid_split(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function findValidSplit($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findValidSplit(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findValidSplit(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_valid_split(nums :: [integer]) :: integer\n  def find_valid_split(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_valid_split(Nums :: [integer()]) -> integer().\nfind_valid_split(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-valid-split nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

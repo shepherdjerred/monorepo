@@ -1,0 +1,133 @@
+{
+  "questionId": "2580",
+  "questionFrontendId": "2490",
+  "title": "Circular Sentence",
+  "titleSlug": "circular-sentence",
+  "difficulty": "Easy",
+  "content": "<p>A <strong>sentence</strong> is a list of words that are separated by a<strong> single</strong> space with no leading or trailing spaces.</p>\n\n<ul>\n\t<li>For example, <code>&quot;Hello World&quot;</code>, <code>&quot;HELLO&quot;</code>, <code>&quot;hello world hello world&quot;</code> are all sentences.</li>\n</ul>\n\n<p>Words consist of <strong>only</strong> uppercase and lowercase English letters. Uppercase and lowercase English letters are considered different.</p>\n\n<p>A sentence is <strong>circular </strong>if:</p>\n\n<ul>\n\t<li>The last character of each word in the sentence is equal to the first character of its next word.</li>\n\t<li>The last character of the last word is equal to the first character of the first word.</li>\n</ul>\n\n<p>For example, <code>&quot;leetcode exercises sound delightful&quot;</code>, <code>&quot;eetcode&quot;</code>, <code>&quot;leetcode eats soul&quot; </code>are all circular sentences. However, <code>&quot;Leetcode is cool&quot;</code>, <code>&quot;happy Leetcode&quot;</code>, <code>&quot;Leetcode&quot;</code> and <code>&quot;I like Leetcode&quot;</code> are <strong>not</strong> circular sentences.</p>\n\n<p>Given a string <code>sentence</code>, return <code>true</code><em> if it is circular</em>. Otherwise, return <code>false</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> sentence = &quot;leetcode exercises sound delightful&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> The words in sentence are [&quot;leetcode&quot;, &quot;exercises&quot;, &quot;sound&quot;, &quot;delightful&quot;].\n- leetcod<u>e</u>&#39;s&nbsp;last character is equal to <u>e</u>xercises&#39;s first character.\n- exercise<u>s</u>&#39;s&nbsp;last character is equal to <u>s</u>ound&#39;s first character.\n- soun<u>d</u>&#39;s&nbsp;last character is equal to <u>d</u>elightful&#39;s first character.\n- delightfu<u>l</u>&#39;s&nbsp;last character is equal to <u>l</u>eetcode&#39;s first character.\nThe sentence is circular.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> sentence = &quot;eetcode&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> The words in sentence are [&quot;eetcode&quot;].\n- eetcod<u>e</u>&#39;s&nbsp;last character is equal to <u>e</u>etcode&#39;s first character.\nThe sentence is circular.</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> sentence = &quot;Leetcode is cool&quot;\n<strong>Output:</strong> false\n<strong>Explanation:</strong> The words in sentence are [&quot;Leetcode&quot;, &quot;is&quot;, &quot;cool&quot;].\n- Leetcod<u>e</u>&#39;s&nbsp;last character is <strong>not</strong> equal to <u>i</u>s&#39;s first character.\nThe sentence is <strong>not</strong> circular.</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= sentence.length &lt;= 500</code></li>\n\t<li><code>sentence</code> consist of only lowercase and uppercase English letters and spaces.</li>\n\t<li>The words in <code>sentence</code> are separated by a single space.</li>\n\t<li>There are no leading or trailing spaces.</li>\n</ul>\n",
+  "hints": [
+    "Check the character before the empty space and the character after the empty space.",
+    "Check the first character and the last character of the sentence."
+  ],
+  "metaData": "{\n  \"name\": \"isCircularSentence\",\n  \"params\": [\n    {\n      \"name\": \"sentence\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"189.1K\", \"totalSubmission\": \"269.3K\", \"totalAcceptedRaw\": 189059, \"totalSubmissionRaw\": 269319, \"acRate\": \"70.2%\"}",
+  "likes": 763,
+  "dislikes": 28,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Defuse the Bomb\", \"titleSlug\": \"defuse-the-bomb\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"leetcode exercises sound delightful\"",
+    "\"eetcode\"",
+    "\"Leetcode is cool\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool isCircularSentence(string sentence) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean isCircularSentence(String sentence) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def isCircularSentence(self, sentence: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def isCircularSentence(self, sentence):\n        \"\"\"\n        :type sentence: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} sentence\n * @return {boolean}\n */\nvar isCircularSentence = function(sentence) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function isCircularSentence(sentence: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool IsCircularSentence(string sentence) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool isCircularSentence(char* sentence) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func isCircularSentence(sentence string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun isCircularSentence(sentence: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func isCircularSentence(_ sentence: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn is_circular_sentence(sentence: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} sentence\n# @return {Boolean}\ndef is_circular_sentence(sentence)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $sentence\n     * @return Boolean\n     */\n    function isCircularSentence($sentence) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool isCircularSentence(String sentence) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def isCircularSentence(sentence: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec is_circular_sentence(sentence :: String.t) :: boolean\n  def is_circular_sentence(sentence) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec is_circular_sentence(Sentence :: unicode:unicode_binary()) -> boolean().\nis_circular_sentence(Sentence) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (is-circular-sentence sentence)\n  (-> string? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2546",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Split Sentence\n\n#### Intuition\n\nA sentence is considered circular if the last character of each word matches the first character of the next word. Additionally, the last character of the last word must be the same as the first character of the first word.\n\nTo check this, we can split the sentence into individual words. In Java and Python, we can easily do this using the `split()` function. In C++, we can use `istringstream` to break the sentence at the spaces. Once we have the words separated, we can store them in an array or list.\n\nNext, we compare the last character of each word with the first character of the following word. If all these comparisons hold, then we can say the sentence is circular. If we find even one mismatch, then the sentence is not circular.\n\n#### Algorithm\n\n- Split the input `sentence` into an array of words.\n\n- Store the length of the `words` array in variable `n`.\n\n- Initialize `last` to the last character of the last word (`words[n - 1]`).\n\n- Iterate through each word in the `words` array using a loop:\n  - Compare the first character of the current word (`words[i]`) with `last`.\n  - If they are not equal, return `false` (the circular condition is violated).\n  - Update `last` to the last character of the current word.\n\n- If all words satisfy the circular condition, return `true`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/QL3YbBFM/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"QL3YbBFM\"></iframe>\n\n#### Complexity Analysis\n\nLet `n` be the length of the string `sentence`.\n\n- Time complexity: $O(n)$\n\n    The algorithm iterates through the list of words exactly once. During each iteration, it performs constant-time operations. Therefore, the overall time complexity is linear.\n\n- Space complexity: $O(n)$\n\n    The space complexity is determined by the `words` array created by the split function, which holds `n` words. This requires $O(n)$ space. Additionally, no other significant space is used apart from a few variables, which contributes only a constant amount of space.\n\n---\n\n### Approach 2: Space-optimized Approach\n\n#### Intuition\n\nInstead of splitting the sentence into an array of words, we can process the `sentence` directly by checking each character. This allows us to find where each word starts and ends without needing to store all the words separately in an array.\n\nAs we go through the `sentence`, we'll identify the beginning of a new word using spaces. For each new word found, we check if its first character matches the last character of the previous word. If this holds for all the words, it suggests the sentence is circular.\n\nFinally, we make one last check: we see if the last character of the last word matches the first character of the first word. If all these conditions are met, we return `true`, indicating that the sentence is indeed circular.\n\n#### Algorithm\n\n- Iterate through each character in the `sentence` using an index `i`.\n  - For each space character found (`sentence[i] == ' '`):\n    - Check if the character before the space (`sentence[i - 1]`) is not equal to the character after the space (`sentence[i + 1]`).\n      - If they are not equal, return `false` (indicating the sentence is not circular).\n\n- After checking all spaces, verify if the first character of the sentence (`sentence[0]`) is equal to the last character (`sentence[sentence.size() - 1]`).\n  - If they are equal, return `true` (indicating the sentence is circular); otherwise, return `false`.\n\n!?!../Documents/2490/slideshow1.json:960,540!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/oTxcZa4o/shared\" frameBorder=\"0\" width=\"100%\" height=\"225\" name=\"oTxcZa4o\"></iframe>\n\n#### Complexity Analysis\n\nLet `n` be the length of the string `sentence`.\n\n- Time complexity: $O(n)$\n\n    The algorithm iterates through the list of words exactly once. During each iteration, it performs constant-time operations. Therefore, the overall time complexity is linear.\n\n- Space complexity: $O(1)$\n\n    The algorithm uses few variables, which do not depend on the length of the string. No additional data structures are created to store the results, so the overall space complexity is constant.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

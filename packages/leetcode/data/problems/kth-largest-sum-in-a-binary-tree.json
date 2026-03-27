@@ -1,0 +1,144 @@
+{
+  "questionId": "2646",
+  "questionFrontendId": "2583",
+  "title": "Kth Largest Sum in a Binary Tree",
+  "titleSlug": "kth-largest-sum-in-a-binary-tree",
+  "difficulty": "Medium",
+  "content": "<p>You are given the <code>root</code> of a binary tree and a positive integer <code>k</code>.</p>\n\n<p>The <strong>level sum</strong> in the tree is the sum of the values of the nodes that are on the <strong>same</strong> level.</p>\n\n<p>Return<em> the </em><code>k<sup>th</sup></code><em> <strong>largest</strong> level sum in the tree (not necessarily distinct)</em>. If there are fewer than <code>k</code> levels in the tree, return <code>-1</code>.</p>\n\n<p><strong>Note</strong> that two nodes are on the same level if they have the same distance from the root.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/12/14/binaryytreeedrawio-2.png\" style=\"width: 301px; height: 284px;\" />\n<pre>\n<strong>Input:</strong> root = [5,8,9,2,1,3,7,4,6], k = 2\n<strong>Output:</strong> 13\n<strong>Explanation:</strong> The level sums are the following:\n- Level 1: 5.\n- Level 2: 8 + 9 = 17.\n- Level 3: 2 + 1 + 3 + 7 = 13.\n- Level 4: 4 + 6 = 10.\nThe 2<sup>nd</sup> largest level sum is 13.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/12/14/treedrawio-3.png\" style=\"width: 181px; height: 181px;\" />\n<pre>\n<strong>Input:</strong> root = [1,2,null,3], k = 1\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The largest level sum is 3.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is <code>n</code>.</li>\n\t<li><code>2 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= Node.val &lt;= 10<sup>6</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= n</code></li>\n</ul>\n",
+  "hints": [
+    "Find the sum of values of nodes on each level and return the kth largest one.",
+    "To find the sum of the values of nodes on each level, you can use a DFS or BFS algorithm to traverse the tree and keep track of the level of each node."
+  ],
+  "metaData": "{\n  \"name\": \"kthLargestLevelSum\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"TreeNode\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"180.7K\", \"totalSubmission\": \"306.5K\", \"totalAcceptedRaw\": 180740, \"totalSubmissionRaw\": 306543, \"acRate\": \"59.0%\"}",
+  "likes": 1078,
+  "dislikes": 40,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Binary Tree Preorder Traversal\", \"titleSlug\": \"binary-tree-preorder-traversal\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Maximum Level Sum of a Binary Tree\", \"titleSlug\": \"maximum-level-sum-of-a-binary-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Level of Tree with Minimum Sum\", \"titleSlug\": \"find-the-level-of-tree-with-minimum-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[5,8,9,2,1,3,7,4,6]\n2",
+    "[1,2,null,3]\n1"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    long long kthLargestLevelSum(TreeNode* root, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public long kthLargestLevelSum(TreeNode root, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def kthLargestLevelSum(self, root: Optional[TreeNode], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def kthLargestLevelSum(self, root, k):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @param {number} k\n * @return {number}\n */\nvar kthLargestLevelSum = function(root, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction kthLargestLevelSum(root: TreeNode | null, k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public long KthLargestLevelSum(TreeNode root, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nlong long kthLargestLevelSum(struct TreeNode* root, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc kthLargestLevelSum(root *TreeNode, k int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun kthLargestLevelSum(root: TreeNode?, k: Int): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func kthLargestLevelSum(_ root: TreeNode?, _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn kth_largest_level_sum(root: Option<Rc<RefCell<TreeNode>>>, k: i32) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @param {Integer} k\n# @return {Integer}\ndef kth_largest_level_sum(root, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @param Integer $k\n     * @return Integer\n     */\n    function kthLargestLevelSum($root, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  int kthLargestLevelSum(TreeNode? root, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def kthLargestLevelSum(root: TreeNode, k: Int): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec kth_largest_level_sum(root :: TreeNode.t | nil, k :: integer) :: integer\n  def kth_largest_level_sum(root, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec kth_largest_level_sum(Root :: #tree_node{} | null, K :: integer()) -> integer().\nkth_largest_level_sum(Root, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (kth-largest-level-sum root k)\n  (-> (or/c tree-node? #f) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2689",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given the `root` of a binary tree and an integer `k`, where we want to find the `k-th` largest level sum of the tree. A level sum of a tree for a given level can be defined as the sum of the values of all nodes that all have equal distance from the `root`. \n\n### Approach 1: Level Order Traversal + Max Heap \n\n### Intuition\n\nTo calculate the sum of each level in a tree, we can use level order traversal, which processes nodes level by level. This is similar to breadth-first search (BFS), where we visit all neighbors of a node before moving on. However, unlike traditional BFS, all nodes at a given level are processed together in level-order traversal. So, for each level `i`, we visit all nodes and maintain a `sum` variable to track the sum of nodes for that level.  \n\nSince we need to find the `k-th` largest sum, we can store each level's sum in a max heap. By removing the first `k-1` elements from the heap, the `k-th` largest element remains at the top and can be accessed directly.  \n\n### Algorithm\n\n1. Initialize a max heap/priority queue `pq` \n2. Initialize a queue `bfsQueue` to maintain the ordering of which nodes to visit for our level order traversal\n3. Start by adding `root` to `bfsQueue`\n4. Perform level order traversal. While `bfsQueue` is not empty:\n    * Initialize `size` to be the current number of nodes of `bfsQueue`, which are all the nodes for the current level that we want to visit\n    * For `size` iterations:\n        * Initialize `sum` to `0`\n        * Visit the next node by removing the next node in `bfsQueue`. Store it in `poppedNode`\n        * Update `sum`: `sum += poppedNode.val`\n        * Add the left and right children of `poppedNode` to the queue, if they exist. These children will be a part of the next level of the tree that will be visited in the next iteration. \n    * `sum` now contains a level order sum. Add it to `pq`\n5. If `pq` has less than `k` sums, then return -1 because we have less than `k` levels in our tree\n6. Otherwise, remove the first `k-1` elements from `pq`, and then return the top element: `pq.peek()`\n\n### Implementation\n\n<iframe src=\"https://leetcode.com/playground/iupTHRrb/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"iupTHRrb\"></iframe>\n\n### Complexity Analysis \n\nLet $N$ be the total number of nodes in our tree.\n\n* Time Complexity: $O((N + K) \\cdot \\log N)$\n\n    The level order traversal takes $O(N)$ time. Since our heap can have a maximum of $O(N)$ elements, adding a sum to the heap takes $O(\\log N)$ time, resulting in a total heap build time of $O(N \\cdot \\log N)$. Popping $k-1$ elements from the heap takes $O(k \\cdot \\log N)$ time. Therefore, the overall time complexity is $O((N + K) \\cdot \\log N)$.\n\n* Space Complexity: $O(N)$\n\n    The space usage is determined by both the level-order traversal queue and the heap. The queue, which reaches its maximum size when storing all nodes at the last level, requires $O(N)$ space. The heap, in the worst case (such as when the tree is a single path of $N$ nodes), can also take up to $O(N)$ space. Therefore, the overall space complexity is $O(N)$.  \n\n### Approach 2: Level Order Traversal + Min Heap\n\n### Intuition\n\nIn Approach 1, our max heap stored sums for all levels of the tree, making heap operations costly. In Approach 2, we use a min heap instead, where the smallest level sum is at the top. As we add new level sums, if the heap size exceeds `k`, we remove the top element. This ensures that, after processing all level sums, our heap contains the `k` largest sums, with the `k-th` largest at the top, which we can return. All smaller sums would have been evicted earlier whenever the heap size exceeded `k`. By limiting the heap size to `k`, where $k \\leq \\log N$, we reduce the overall time complexity.  \n\n### Algorithm\n\n1. Initialize a min heap/priority queue `pq` \n2. Initialize a queue `bfsQueue` to maintain the ordering of which nodes to visit for our level order traversal\n3. Start by adding `root` to `bfsQueue`\n4. Perform level order traversal. While `bfsQueue` is not empty:\n    * Initialize `size` to be the current number of nodes of `bfsQueue`, which are all the nodes for the current level that we want to visit\n    * For `size` iterations:\n        * Initialize `sum` to `0`\n        * Visit the next node by removing the next node in `bfsQueue`. Store it in `poppedNode`\n        * Update `sum`: `sum += poppedNode.val`\n        * Add the left and right children of `poppedNode` to the queue, if they exist. These children will be a part of the next level of the tree that will be visited in the next iteration. \n    * `sum` now contains a level order sum. Add it to `pq`\n    * If size of `pq` now exceeds `k` elements, remove the top element.\n5. If `pq` has less than `k` sums, then return -1 because we have less than `k` levels in our tree\n6. Top element is the `k-th` largest sum so return it: `pq.peek()`\n\n### Implementation\n\n<iframe src=\"https://leetcode.com/playground/AHjgz2oC/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"AHjgz2oC\"></iframe>\n\n### Complexity Analysis\n\nLet $N$ be the total number of nodes in our tree.\n\n* Time Complexity: $O(N \\cdot \\log k)$\n\n    The level order traversal requires $O(N)$ time. We add to the heap a maximum of $O(N)$ times, with a maximum heap size of $k$, so building the heap takes $O(N \\cdot \\log k)$.\n\n* Space Complexity: $O(N)$\n\n    The space complexity is dominated by the level order traversal queue and the heap. The queue will reach $O(N)$ at the last level, while the heap has a maximum size of $O(k)$. Therefore, the total space complexity is $O(N)$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

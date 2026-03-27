@@ -1,0 +1,139 @@
+{
+  "questionId": "2722",
+  "questionFrontendId": "2614",
+  "title": "Prime In Diagonal",
+  "titleSlug": "prime-in-diagonal",
+  "difficulty": "Easy",
+  "content": "<p>You are given a 0-indexed two-dimensional integer array <code>nums</code>.</p>\n\n<p>Return <em>the largest <strong>prime</strong> number that lies on at least one of the <b>diagonals</b> of </em><code>nums</code>. In case, no prime is present on any of the diagonals, return<em> 0.</em></p>\n\n<p>Note that:</p>\n\n<ul>\n\t<li>An integer is <strong>prime</strong> if it is greater than <code>1</code> and has no positive integer divisors other than <code>1</code> and itself.</li>\n\t<li>An integer <code>val</code> is on one of the <strong>diagonals</strong> of <code>nums</code> if there exists an integer <code>i</code> for which <code>nums[i][i] = val</code> or an <code>i</code> for which <code>nums[i][nums.length - i - 1] = val</code>.</li>\n</ul>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/03/06/screenshot-2023-03-06-at-45648-pm.png\" style=\"width: 181px; height: 121px;\" /></p>\n\n<p>In the above diagram, one diagonal is <strong>[1,5,9]</strong> and another diagonal is<strong> [3,5,7]</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [[1,2,3],[5,6,7],[9,10,11]]\n<strong>Output:</strong> 11\n<strong>Explanation:</strong> The numbers 1, 3, 6, 9, and 11 are the only numbers present on at least one of the diagonals. Since 11 is the largest prime, we return 11.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [[1,2,3],[5,17,7],[9,11,10]]\n<strong>Output:</strong> 17\n<strong>Explanation:</strong> The numbers 1, 3, 9, 10, and 17 are all present on at least one of the diagonals. 17 is the largest prime, so we return 17.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 300</code></li>\n\t<li><code>nums.length == nums<sub>i</sub>.length</code></li>\n\t<li><code>1 &lt;= nums<span style=\"font-size: 10.8333px;\">[i][j]</span>&nbsp;&lt;= 4*10<sup>6</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Iterate over the diagonals of the matrix and check for each element.",
+    "Check if the element is prime or not in O(sqrt(n)) time."
+  ],
+  "metaData": "{\n  \"name\": \"diagonalPrime\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"69.8K\", \"totalSubmission\": \"186.1K\", \"totalAcceptedRaw\": 69818, \"totalSubmissionRaw\": 186136, \"acRate\": \"37.5%\"}",
+  "likes": 408,
+  "dislikes": 47,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[1,2,3],[5,6,7],[9,10,11]]",
+    "[[1,2,3],[5,17,7],[9,11,10]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    },
+    {
+      "name": "Number Theory",
+      "slug": "number-theory"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int diagonalPrime(vector<vector<int>>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int diagonalPrime(int[][] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def diagonalPrime(self, nums: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def diagonalPrime(self, nums):\n        \"\"\"\n        :type nums: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} nums\n * @return {number}\n */\nvar diagonalPrime = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function diagonalPrime(nums: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int DiagonalPrime(int[][] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int diagonalPrime(int** nums, int numsSize, int* numsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func diagonalPrime(nums [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun diagonalPrime(nums: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func diagonalPrime(_ nums: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn diagonal_prime(nums: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} nums\n# @return {Integer}\ndef diagonal_prime(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $nums\n     * @return Integer\n     */\n    function diagonalPrime($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int diagonalPrime(List<List<int>> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def diagonalPrime(nums: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec diagonal_prime(nums :: [[integer]]) :: integer\n  def diagonal_prime(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec diagonal_prime(Nums :: [[integer()]]) -> integer().\ndiagonal_prime(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (diagonal-prime nums)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

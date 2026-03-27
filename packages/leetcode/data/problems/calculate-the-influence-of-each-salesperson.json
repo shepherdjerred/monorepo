@@ -1,0 +1,53 @@
+{
+  "questionId": "2515",
+  "questionFrontendId": "2372",
+  "title": "Calculate the Influence of Each Salesperson",
+  "titleSlug": "calculate-the-influence-of-each-salesperson",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Salesperson</code></p>\n\n<pre>\n+----------------+---------+\n| Column Name    | Type    |\n+----------------+---------+\n| salesperson_id | int     |\n| name           | varchar |\n+----------------+---------+\nsalesperson_id contains unique values.\nEach row in this table shows the ID of a salesperson.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Customer</code></p>\n\n<pre>\n+----------------+------+\n| Column Name    | Type |\n+----------------+------+\n| customer_id    | int  |\n| salesperson_id | int  |\n+----------------+------+\ncustomer_id contains unique values.\nsalesperson_id is a foreign key (reference column) from the Salesperson table.\nEach row in this table shows the ID of a customer and the ID of the salesperson. \n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Sales</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| sale_id     | int  |\n| customer_id | int  |\n| price       | int  |\n+-------------+------+\nsale_id contains unique values.\ncustomer_id is a foreign key (reference column) from the Customer table.\nEach row in this table shows ID of a customer and the price they paid for the sale with sale_id.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to report the sum of prices paid by the customers of each salesperson. If a salesperson does not have any customers, the total value should be <code>0</code>.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The&nbsp;result format is shown in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nSalesperson table:\n+----------------+-------+\n| salesperson_id | name  |\n+----------------+-------+\n| 1              | Alice |\n| 2              | Bob   |\n| 3              | Jerry |\n+----------------+-------+\nCustomer table:\n+-------------+----------------+\n| customer_id | salesperson_id |\n+-------------+----------------+\n| 1           | 1              |\n| 2           | 1              |\n| 3           | 2              |\n+-------------+----------------+\nSales table:\n+---------+-------------+-------+\n| sale_id | customer_id | price |\n+---------+-------------+-------+\n| 1       | 2           | 892   |\n| 2       | 1           | 354   |\n| 3       | 3           | 988   |\n| 4       | 3           | 856   |\n+---------+-------------+-------+\n<strong>Output:</strong> \n+----------------+-------+-------+\n| salesperson_id | name  | total |\n+----------------+-------+-------+\n| 1              | Alice | 1246  |\n| 2              | Bob   | 1844  |\n| 3              | Jerry | 0     |\n+----------------+-------+-------+\n<strong>Explanation:</strong> \nAlice is the salesperson for customers 1 and 2.\n  - Customer 1 made one purchase with 354.\n  - Customer 2 made one purchase with 892.\nThe total for Alice is 354 + 892 = 1246.\n\nBob is the salesperson for customers 3.\n  - Customer 1 made one purchase with 988 and 856.\nThe total for Bob is 988 + 856 = 1844.\n\nJerry is not the salesperson of any customer.\nThe total for Jerry is 0.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Salesperson (salesperson_id int, name varchar(30))\", \"Create table If Not Exists Customer (customer_id int, salesperson_id int)\", \"Create table If Not Exists Sales (sale_id int, customer_id int, price int)\"], \"mssql\": [\"Create table Salesperson (salesperson_id int, name varchar(30))\", \"Create table Customer (customer_id int, salesperson_id int)\", \"Create table Sales (sale_id int, customer_id int, price int)\"], \"oraclesql\": [\"Create table Salesperson (salesperson_id int, name varchar(30))\", \"Create table Customer (customer_id int, salesperson_id int)\", \"Create table Sales (sale_id int, customer_id int, price int)\"], \"database\": true, \"name\": \"calculate_influence\", \"pythondata\": [\"Salesperson = pd.DataFrame([], columns=['salesperson_id', 'name']).astype({'salesperson_id':'Int64', 'name':'object'})\", \"Customer = pd.DataFrame([], columns=['customer_id', 'salesperson_id']).astype({'customer_id':'Int64', 'salesperson_id':'Int64'})\", \"Sales = pd.DataFrame([], columns=['sale_id', 'customer_id', 'price']).astype({'sale_id':'Int64', 'customer_id':'Int64', 'price':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Salesperson (salesperson_id int, name varchar(30))\", \"Create table If Not Exists Customer (customer_id int, salesperson_id int)\", \"Create table If Not Exists Sales (sale_id int, customer_id int, price int)\"], \"database_schema\": {\"Salesperson\": {\"salesperson_id\": \"INT\", \"name\": \"VARCHAR(30)\"}, \"Customer\": {\"customer_id\": \"INT\", \"salesperson_id\": \"INT\"}, \"Sales\": {\"sale_id\": \"INT\", \"customer_id\": \"INT\", \"price\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"8K\", \"totalSubmission\": \"9.6K\", \"totalAcceptedRaw\": 8026, \"totalSubmissionRaw\": 9568, \"acRate\": \"83.9%\"}",
+  "likes": 40,
+  "dislikes": 4,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Salesperson\":[\"salesperson_id\",\"name\"],\"Customer\":[\"customer_id\",\"salesperson_id\"],\"Sales\":[\"sale_id\",\"customer_id\",\"price\"]},\"rows\":{\"Salesperson\":[[1,\"Alice\"],[2,\"Bob\"],[3,\"Jerry\"]],\"Customer\":[[1,1],[2,1],[3,2]],\"Sales\":[[1,2,892],[2,1,354],[3,3,988],[4,3,856]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef calculate_influence(salesperson: pd.DataFrame, customer: pd.DataFrame, sales: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

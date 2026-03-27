@@ -1,0 +1,139 @@
+{
+  "questionId": "2725",
+  "questionFrontendId": "2611",
+  "title": "Mice and Cheese",
+  "titleSlug": "mice-and-cheese",
+  "difficulty": "Medium",
+  "content": "<p>There are two mice and <code>n</code> different types of cheese, each type of cheese should be eaten by exactly one mouse.</p>\n\n<p>A point of the cheese with index <code>i</code> (<strong>0-indexed</strong>) is:</p>\n\n<ul>\n\t<li><code>reward1[i]</code> if the first mouse eats it.</li>\n\t<li><code>reward2[i]</code> if the second mouse eats it.</li>\n</ul>\n\n<p>You are given a positive integer array <code>reward1</code>, a positive integer array <code>reward2</code>, and a non-negative integer <code>k</code>.</p>\n\n<p>Return <em><strong>the maximum</strong> points the mice can achieve if the first mouse eats exactly </em><code>k</code><em> types of cheese.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> reward1 = [1,1,3,4], reward2 = [4,4,1,1], k = 2\n<strong>Output:</strong> 15\n<strong>Explanation:</strong> In this example, the first mouse eats the 2<sup>nd</sup>&nbsp;(0-indexed) and the 3<sup>rd</sup>&nbsp;types of cheese, and the second mouse eats the 0<sup>th</sup>&nbsp;and the 1<sup>st</sup> types of cheese.\nThe total points are 4 + 4 + 3 + 4 = 15.\nIt can be proven that 15 is the maximum total points that the mice can achieve.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> reward1 = [1,1], reward2 = [1,1], k = 2\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> In this example, the first mouse eats the 0<sup>th</sup>&nbsp;(0-indexed) and 1<sup>st</sup>&nbsp;types of cheese, and the second mouse does not eat any cheese.\nThe total points are 1 + 1 = 2.\nIt can be proven that 2 is the maximum total points that the mice can achieve.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n == reward1.length == reward2.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= reward1[i],&nbsp;reward2[i] &lt;= 1000</code></li>\n\t<li><code>0 &lt;= k &lt;= n</code></li>\n</ul>\n",
+  "hints": [
+    "The intended solution uses greedy approach.",
+    "Imagine at first that the second mouse eats all the cheese, then we should choose k types of cheese with the maximum sum of - reward2[i] + reward1[i]."
+  ],
+  "metaData": "{\n  \"name\": \"miceAndCheese\",\n  \"params\": [\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"reward1\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"reward2\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"38.5K\", \"totalSubmission\": \"79.3K\", \"totalAcceptedRaw\": 38525, \"totalSubmissionRaw\": 79275, \"acRate\": \"48.6%\"}",
+  "likes": 677,
+  "dislikes": 73,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"House Robber\", \"titleSlug\": \"house-robber\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,1,3,4]\n[4,4,1,1]\n2",
+    "[1,1]\n[1,1]\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"doordash\", \"name\": \"DoorDash\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int miceAndCheese(vector<int>& reward1, vector<int>& reward2, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int miceAndCheese(int[] reward1, int[] reward2, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def miceAndCheese(self, reward1: List[int], reward2: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def miceAndCheese(self, reward1, reward2, k):\n        \"\"\"\n        :type reward1: List[int]\n        :type reward2: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} reward1\n * @param {number[]} reward2\n * @param {number} k\n * @return {number}\n */\nvar miceAndCheese = function(reward1, reward2, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function miceAndCheese(reward1: number[], reward2: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MiceAndCheese(int[] reward1, int[] reward2, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int miceAndCheese(int* reward1, int reward1Size, int* reward2, int reward2Size, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func miceAndCheese(reward1 []int, reward2 []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun miceAndCheese(reward1: IntArray, reward2: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func miceAndCheese(_ reward1: [Int], _ reward2: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn mice_and_cheese(reward1: Vec<i32>, reward2: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} reward1\n# @param {Integer[]} reward2\n# @param {Integer} k\n# @return {Integer}\ndef mice_and_cheese(reward1, reward2, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $reward1\n     * @param Integer[] $reward2\n     * @param Integer $k\n     * @return Integer\n     */\n    function miceAndCheese($reward1, $reward2, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int miceAndCheese(List<int> reward1, List<int> reward2, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def miceAndCheese(reward1: Array[Int], reward2: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec mice_and_cheese(reward1 :: [integer], reward2 :: [integer], k :: integer) :: integer\n  def mice_and_cheese(reward1, reward2, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec mice_and_cheese(Reward1 :: [integer()], Reward2 :: [integer()], K :: integer()) -> integer().\nmice_and_cheese(Reward1, Reward2, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (mice-and-cheese reward1 reward2 k)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

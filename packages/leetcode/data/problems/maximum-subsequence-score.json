@@ -1,0 +1,145 @@
+{
+  "questionId": "2636",
+  "questionFrontendId": "2542",
+  "title": "Maximum Subsequence Score",
+  "titleSlug": "maximum-subsequence-score",
+  "difficulty": "Medium",
+  "content": "<p>You are given two <strong>0-indexed</strong> integer arrays <code>nums1</code> and <code>nums2</code> of equal length <code>n</code> and a positive integer <code>k</code>. You must choose a <strong>subsequence</strong> of indices from <code>nums1</code> of length <code>k</code>.</p>\n\n<p>For chosen indices <code>i<sub>0</sub></code>, <code>i<sub>1</sub></code>, ..., <code>i<sub>k - 1</sub></code>, your <strong>score</strong> is defined as:</p>\n\n<ul>\n\t<li>The sum of the selected elements from <code>nums1</code> multiplied with the <strong>minimum</strong> of the selected elements from <code>nums2</code>.</li>\n\t<li>It can defined simply as: <code>(nums1[i<sub>0</sub>] + nums1[i<sub>1</sub>] +...+ nums1[i<sub>k - 1</sub>]) * min(nums2[i<sub>0</sub>] , nums2[i<sub>1</sub>], ... ,nums2[i<sub>k - 1</sub>])</code>.</li>\n</ul>\n\n<p>Return <em>the <strong>maximum</strong> possible score.</em></p>\n\n<p>A <strong>subsequence</strong> of indices of an array is a set that can be derived from the set <code>{0, 1, ..., n-1}</code> by deleting some or no elements.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [1,3,3,2], nums2 = [2,1,3,4], k = 3\n<strong>Output:</strong> 12\n<strong>Explanation:</strong> \nThe four possible subsequence scores are:\n- We choose the indices 0, 1, and 2 with score = (1+3+3) * min(2,1,3) = 7.\n- We choose the indices 0, 1, and 3 with score = (1+3+2) * min(2,1,4) = 6. \n- We choose the indices 0, 2, and 3 with score = (1+3+2) * min(2,3,4) = 12. \n- We choose the indices 1, 2, and 3 with score = (3+3+2) * min(1,3,4) = 8.\nTherefore, we return the max score, which is 12.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [4,2,3,1,1], nums2 = [7,5,10,9,6], k = 1\n<strong>Output:</strong> 30\n<strong>Explanation:</strong> \nChoosing index 2 is optimal: nums1[2] * nums2[2] = 3 * 10 = 30 is the maximum possible score.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == nums1.length == nums2.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= nums1[i], nums2[j] &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= n</code></li>\n</ul>\n",
+  "hints": [
+    "How can we use sorting here?",
+    "Try sorting the two arrays based on second array.",
+    "Loop through nums2 and compute the max product given the minimum is nums2[i]. Update the answer accordingly."
+  ],
+  "metaData": "{\n  \"name\": \"maxScore\",\n  \"params\": [\n    {\n      \"name\": \"nums1\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"nums2\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"151.4K\", \"totalSubmission\": \"277.2K\", \"totalAcceptedRaw\": 151360, \"totalSubmissionRaw\": 277172, \"acRate\": \"54.6%\"}",
+  "likes": 3162,
+  "dislikes": 211,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"IPO\", \"titleSlug\": \"ipo\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Cost to Hire K Workers\", \"titleSlug\": \"minimum-cost-to-hire-k-workers\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,3,3,2]\n[2,1,3,4]\n3",
+    "[4,2,3,1,1]\n[7,5,10,9,6]\n1"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long maxScore(vector<int>& nums1, vector<int>& nums2, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long maxScore(int[] nums1, int[] nums2, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxScore(self, nums1: List[int], nums2: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxScore(self, nums1, nums2, k):\n        \"\"\"\n        :type nums1: List[int]\n        :type nums2: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums1\n * @param {number[]} nums2\n * @param {number} k\n * @return {number}\n */\nvar maxScore = function(nums1, nums2, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxScore(nums1: number[], nums2: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long MaxScore(int[] nums1, int[] nums2, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long maxScore(int* nums1, int nums1Size, int* nums2, int nums2Size, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxScore(nums1 []int, nums2 []int, k int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxScore(nums1: IntArray, nums2: IntArray, k: Int): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxScore(_ nums1: [Int], _ nums2: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_score(nums1: Vec<i32>, nums2: Vec<i32>, k: i32) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums1\n# @param {Integer[]} nums2\n# @param {Integer} k\n# @return {Integer}\ndef max_score(nums1, nums2, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums1\n     * @param Integer[] $nums2\n     * @param Integer $k\n     * @return Integer\n     */\n    function maxScore($nums1, $nums2, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxScore(List<int> nums1, List<int> nums2, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxScore(nums1: Array[Int], nums2: Array[Int], k: Int): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_score(nums1 :: [integer], nums2 :: [integer], k :: integer) :: integer\n  def max_score(nums1, nums2, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_score(Nums1 :: [integer()], Nums2 :: [integer()], K :: integer()) -> integer().\nmax_score(Nums1, Nums2, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-score nums1 nums2 k)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1831",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nAs shown in the picture below, if we select the index `0`, `2`, and `3`, the score is defined as **the product** of the following two terms:\n- The sum of all selected `nums1[i]`, `sum = 1 + 3 + 2 = 6`.\n- The minimum one from the selected `nums2[i]`, `min = min(2, 3, 4) = 2`.\n\n![img](../Figures/2542/1.png)\n\nThus the score equals `6 * 2 = 12`. Our task is to find the maximum score if we pick `k` indexes.\n\n---\n\n### Approach: Priority Queue\n\n#### Intuition   \n\nStart with a brute force approach, if we find the maximum score by checking all groups of indexes with size `k`, there are $${n \\choose k} = {{n!}\\over{k! (n - k)!}}$$ possibilities. We can't afford to check them one by one.\n\nLet's first focus on the minimum of the selected elements from `nums2`. If we pick `nums2[i]` as the minimum, it means the other `k - 1` selected elements from `nums2` are larger or equal to `nums2[i]`.\n\n\nWe can thus take advantage of this restriction on the selection by sorting `nums2`, which can reduce the time complexity. Assume that we have sorted `nums2` by decreasing order (Note that we can't change the relative order of  `nums1` and `nums2`, so its better to store each pair as `(nums1[i], nums2[i])` and sort the collection of pairs according to `nums2[i]`). \n\nAs shown in the picture below, if we pick `nums2[i]` (colored in red) as the minimum selected element from `nums2`, we can freely select the rest `k - 1` indexes to the left of `i` without changing the second term: minimum of the selected elements from `nums2`. \n\n![img](../Figures/2542/2.png)\n\nRecall the definition of the score, the second term has been fixed as `nums2[i]`, so we can maximzie the total score by maximizing the first term, that is, by selecting the maximum `k` elements from `nums1` including `nums1[i]`.\n\n![img](../Figures/2542/3.png)\n\nThis can be done efficiently by maintaining a min-heap that always contains the largest `k` elements we have seen. Whenever we pick a new `nums2[i]` as the minimum from `nums2`, we shall remove one element from the heap (which represents removing a `nums1` number and add `nums[i]` to it. Now the heap contains the largest `k` element including `nums1[i]` again, the current score equals the sum of this heap times `nums2[i]`.\n \nWe can iterate over `nums2` and repeat the above process. At each step, we calculate the current score and update `answer` as the maximum score we have met.\n\n\nTake the following slides as an example:\n\n!?!../Documents/2542/s1.json:601,301!?!\n\n\n\n<br>\n\n#### Algorithm\n\n1) Store every pair `(nums1[i], nums2[i])` in array `pairs`, and sort `pairs` by the second element (`nums2[i]`) in decreasing order.\n\n2) Use a min-heap `top_k_heap` to store the first `k` `nums1[i]` and a variable `top_k_sum` to store their sum.\n\n\n3) Initialize `answer` as the sum of elements in `top_k_heap` (i.e. `top_k_sum`) times `pairs[k - 1][1]`.\n\n4) Iterate over indices starting from `k`, at each index `i`:\n\n\n    - Remove the smallest element stored in `top_k_heap` and from `top_k_sum`.\n    - Add the current `nums1[i]` to the heap and `top_k_sum`.\n    - Get the current score as the sum of `top_k_heap` (i.e. `top_k_sum`) times `nums2[i]`, and update `answer` as the maximum score we have met.\n\n5) Return `answer`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/o7saKYKD/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"o7saKYKD\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of the input array `nums1`.\n\n* Time complexity: $$O(n \\cdot \\log n)$$\n\n    - We need to sort `nums2`, it takes $$O(n \\cdot \\log n)$$.\n    - Then we iterate over `pairs` of length `n`. At each iteration step `i`, we remove the smallest element from `top_k_heap` and add one element `pairs[i][0]` to it. Both the inserting and removing operations to priority queue of size $$k$$ take $$O(\\log k)$$ time.\n    - To sum up, the overall time complexity is $$O(n \\cdot \\log n)$$, because $$k \\leq n$$. \n\n    \n\n* Space complexity: $$O(n)$$\n\n    - We store every pair `(nums1[i], nums2[i])` in a 2-d array `pairs`, it takes $$O(n)$$ space.\n    - The in-place sorting method also uses some additional space, in Python, it uses $O(n)$ space and in Java, it uses $O(\\log n)$ space.\n    - The priority queue contains at most $$k$$ elements thus it takes $$O(k)$$ space.\n\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

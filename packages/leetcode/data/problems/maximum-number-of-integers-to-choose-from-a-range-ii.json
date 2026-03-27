@@ -1,0 +1,140 @@
+{
+  "questionId": "2702",
+  "questionFrontendId": "2557",
+  "title": "Maximum Number of Integers to Choose From a Range II",
+  "titleSlug": "maximum-number-of-integers-to-choose-from-a-range-ii",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>banned</code> and two integers <code>n</code> and <code>maxSum</code>. You are choosing some number of integers following the below rules:</p>\n\n<ul>\n\t<li>The chosen integers have to be in the range <code>[1, n]</code>.</li>\n\t<li>Each integer can be chosen <strong>at most once</strong>.</li>\n\t<li>The chosen integers should not be in the array <code>banned</code>.</li>\n\t<li>The sum of the chosen integers should not exceed <code>maxSum</code>.</li>\n</ul>\n\n<p>Return <em>the <strong>maximum</strong> number of integers you can choose following the mentioned rules</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> banned = [1,4,6], n = 6, maxSum = 4\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> You can choose the integer 3.\n3 is in the range [1, 6], and do not appear in banned. The sum of the chosen integers is 3, which does not exceed maxSum.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> banned = [4,3,5,6], n = 7, maxSum = 18\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> You can choose the integers 1, 2, and 7.\nAll these integers are in the range [1, 7], all do not appear in banned, and their sum is 10, which does not exceed maxSum.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= banned.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= banned[i] &lt;= n &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= maxSum &lt;= 10<sup>15</sup></code></li>\n</ul>\n",
+  "hints": [
+    "It is optimal always to take the smallest possible integer you can choose.",
+    "Between every consecutive banned integers, can you find how many integers you can choose?",
+    "Think of using binary search to find that."
+  ],
+  "metaData": "{\n  \"name\": \"maxCount\",\n  \"params\": [\n    {\n      \"name\": \"banned\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"n\"\n    },\n    {\n      \"type\": \"long\",\n      \"name\": \"maxSum\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"2.9K\", \"totalSubmission\": \"8.2K\", \"totalAcceptedRaw\": 2870, \"totalSubmissionRaw\": 8212, \"acRate\": \"34.9%\"}",
+  "likes": 42,
+  "dislikes": 26,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"First Missing Positive\", \"titleSlug\": \"first-missing-positive\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find All Numbers Disappeared in an Array\", \"titleSlug\": \"find-all-numbers-disappeared-in-an-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Append K Integers With Minimal Sum\", \"titleSlug\": \"append-k-integers-with-minimal-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Replace Elements in an Array\", \"titleSlug\": \"replace-elements-in-an-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Integers to Choose From a Range I\", \"titleSlug\": \"maximum-number-of-integers-to-choose-from-a-range-i\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximize the Distance Between Points on a Square\", \"titleSlug\": \"maximize-the-distance-between-points-on-a-square\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,4,6]\n6\n4",
+    "[4,3,5,6]\n7\n18"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"paypal\", \"name\": \"PayPal\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxCount(vector<int>& banned, int n, long long maxSum) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxCount(int[] banned, int n, long maxSum) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxCount(self, banned: List[int], n: int, maxSum: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxCount(self, banned, n, maxSum):\n        \"\"\"\n        :type banned: List[int]\n        :type n: int\n        :type maxSum: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} banned\n * @param {number} n\n * @param {number} maxSum\n * @return {number}\n */\nvar maxCount = function(banned, n, maxSum) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxCount(banned: number[], n: number, maxSum: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxCount(int[] banned, int n, long maxSum) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxCount(int* banned, int bannedSize, int n, long long maxSum) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxCount(banned []int, n int, maxSum int64) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxCount(banned: IntArray, n: Int, maxSum: Long): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxCount(_ banned: [Int], _ n: Int, _ maxSum: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_count(banned: Vec<i32>, n: i32, max_sum: i64) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} banned\n# @param {Integer} n\n# @param {Integer} max_sum\n# @return {Integer}\ndef max_count(banned, n, max_sum)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $banned\n     * @param Integer $n\n     * @param Integer $maxSum\n     * @return Integer\n     */\n    function maxCount($banned, $n, $maxSum) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxCount(List<int> banned, int n, int maxSum) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxCount(banned: Array[Int], n: Int, maxSum: Long): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_count(banned :: [integer], n :: integer, max_sum :: integer) :: integer\n  def max_count(banned, n, max_sum) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_count(Banned :: [integer()], N :: integer(), MaxSum :: integer()) -> integer().\nmax_count(Banned, N, MaxSum) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-count banned n maxSum)\n  (-> (listof exact-integer?) exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,148 @@
+{
+  "questionId": "1418",
+  "questionFrontendId": "2305",
+  "title": "Fair Distribution of Cookies",
+  "titleSlug": "fair-distribution-of-cookies",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>cookies</code>, where <code>cookies[i]</code> denotes the number of cookies in the <code>i<sup>th</sup></code> bag. You are also given an integer <code>k</code> that denotes the number of children to distribute <strong>all</strong> the bags of cookies to. All the cookies in the same bag must go to the same child and cannot be split up.</p>\n\n<p>The <strong>unfairness</strong> of a distribution is defined as the <strong>maximum</strong> <strong>total</strong> cookies obtained by a single child in the distribution.</p>\n\n<p>Return <em>the <strong>minimum</strong> unfairness of all distributions</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> cookies = [8,15,10,20,8], k = 2\n<strong>Output:</strong> 31\n<strong>Explanation:</strong> One optimal distribution is [8,15,8] and [10,20]\n- The 1<sup>st</sup> child receives [8,15,8] which has a total of 8 + 15 + 8 = 31 cookies.\n- The 2<sup>nd</sup> child receives [10,20] which has a total of 10 + 20 = 30 cookies.\nThe unfairness of the distribution is max(31,30) = 31.\nIt can be shown that there is no distribution with an unfairness less than 31.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> cookies = [6,1,3,2,2,4,1,2], k = 3\n<strong>Output:</strong> 7\n<strong>Explanation:</strong> One optimal distribution is [6,1], [3,2,2], and [4,1,2]\n- The 1<sup>st</sup> child receives [6,1] which has a total of 6 + 1 = 7 cookies.\n- The 2<sup>nd</sup> child receives [3,2,2] which has a total of 3 + 2 + 2 = 7 cookies.\n- The 3<sup>rd</sup> child receives [4,1,2] which has a total of 4 + 1 + 2 = 7 cookies.\nThe unfairness of the distribution is max(7,7,7) = 7.\nIt can be shown that there is no distribution with an unfairness less than 7.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= cookies.length &lt;= 8</code></li>\n\t<li><code>1 &lt;= cookies[i] &lt;= 10<sup>5</sup></code></li>\n\t<li><code>2 &lt;= k &lt;= cookies.length</code></li>\n</ul>\n",
+  "hints": [
+    "We have to give each bag to one of the children. How can we enumerate all of the possibilities?",
+    "Use recursion and keep track of the current number of cookies each child has. Once all the bags have been distributed, find the child with the most cookies."
+  ],
+  "metaData": "{\n  \"name\": \"distributeCookies\",\n  \"params\": [\n    {\n      \"name\": \"cookies\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"120.1K\", \"totalSubmission\": \"171.9K\", \"totalAcceptedRaw\": 120072, \"totalSubmissionRaw\": 171924, \"acRate\": \"69.8%\"}",
+  "likes": 2736,
+  "dislikes": 127,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Split Array Largest Sum\", \"titleSlug\": \"split-array-largest-sum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Split Array with Equal Sum\", \"titleSlug\": \"split-array-with-equal-sum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Partition to K Equal Sum Subsets\", \"titleSlug\": \"partition-to-k-equal-sum-subsets\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum XOR Sum of Two Arrays\", \"titleSlug\": \"minimum-xor-sum-of-two-arrays\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"The Number of Good Subsets\", \"titleSlug\": \"the-number-of-good-subsets\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Number of Work Sessions to Finish the Tasks\", \"titleSlug\": \"minimum-number-of-work-sessions-to-finish-the-tasks\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Partition Array Into Two Arrays to Minimize Sum Difference\", \"titleSlug\": \"partition-array-into-two-arrays-to-minimize-sum-difference\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Rows Covered by Columns\", \"titleSlug\": \"maximum-rows-covered-by-columns\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Distribute Money to Maximum Children\", \"titleSlug\": \"distribute-money-to-maximum-children\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[8,15,10,20,8]\n2",
+    "[6,1,3,2,2,4,1,2]\n3"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Bitmask",
+      "slug": "bitmask"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int distributeCookies(vector<int>& cookies, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int distributeCookies(int[] cookies, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def distributeCookies(self, cookies: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def distributeCookies(self, cookies, k):\n        \"\"\"\n        :type cookies: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} cookies\n * @param {number} k\n * @return {number}\n */\nvar distributeCookies = function(cookies, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function distributeCookies(cookies: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int DistributeCookies(int[] cookies, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int distributeCookies(int* cookies, int cookiesSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func distributeCookies(cookies []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun distributeCookies(cookies: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func distributeCookies(_ cookies: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn distribute_cookies(cookies: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} cookies\n# @param {Integer} k\n# @return {Integer}\ndef distribute_cookies(cookies, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $cookies\n     * @param Integer $k\n     * @return Integer\n     */\n    function distributeCookies($cookies, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int distributeCookies(List<int> cookies, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def distributeCookies(cookies: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec distribute_cookies(cookies :: [integer], k :: integer) :: integer\n  def distribute_cookies(cookies, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec distribute_cookies(Cookies :: [integer()], K :: integer()) -> integer().\ndistribute_cookies(Cookies, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (distribute-cookies cookies k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1902",
+    "content": "[TOC]\n\n## Solution\n---\n\n### Approach: Backtracking\n\n#### Intuition   \n\n> If you are not familiar with recursion, please refer to our explore cards [Recursion Explore Card](https://leetcode.com/explore/featured/card/recursion-i/). We will focus on the usage in this article and not the underlying principles or implementation details.\n\nThe concept of backtracking involves attempting all possible distributions of cookies. We distribute the current cookie to each child and recursively repeat the process with the next cookie until all the cookies are distributed. Once all the cookies have been distributed, we compute the unfairness of the current distribution and update the minimum unfairness encountered.\n\n\nLet’s take a look at a scenario with 3 cookies and 3 children that serves as a great example of this.\n\nInitially, we move along the path in yellow by distributing all 3 cookies to child 0, but it is not a valid distribution as child 1 and child 2 receive no cookies.\n\n![img](../Figures/2305/3.png)\n\nAs a result, we backtrack to the next possible distribution (by distributing the last cookie to child 1) and repeat this process.\n\n![img](../Figures/2305/4.png)\n\nAfter distributing all cookies, we will determine if the current distribution is valid, and if so, we will calculate the unfairness of this distribution.\n\nTo optimize the backtracking approach, we can use an early stop technique. Consider the same example in the image below: suppose that we have already distributed the first 2 cookies to child 0. When we come to the last cookie, should we continue the recursion process by distributing it to any child?\n\nThe answer is NO, because child 1 and child 2 require at least two cookies, and at this point, we only have one cookie remaining. Consequently, no matter how we distribute this last cookie, it will inevitably lead to an invalid distribution. Therefore, we can discard this path and not proceed further with it.\n\n![img](../Figures/2305/5.png)\n\nTo implement the early stop technique, we will introduce a parameter named `zero_count` that represents **the number of children without a cookie**. During the backtracking process, if we have fewer undistributed cookies than `zero_count`, it means that some children will always end up with no cookie. At this point, we can terminate the recursion because it becomes impossible to obtain a valid distribution. The image below illustrates this concept, where the red states are not computed thanks to the early stop, significantly reducing unnecessary recursion steps.\n\n![img](../Figures/2305/6.png)\n\nTherefore, the algorithm only tracks the paths that lead to valid distributions and updates the global minimum by the maximum unfairness of each valid distribution.\n\n\n<br>\n\n#### Algorithm\n\n1) Create an array `distribute` of length `k` initialized with all zeros, which represents the unfairness of each child.\n\n2) Define the recursive function `dfs(i, zero_count)` to distribute the $i^{th}$ cookie:\n    - If the number of undistributed cookies is less than `zero_count`, which is `n - i < zero_count`, return a large integer like `float('inf')`, implying that the current distribution is invalid.\n    - If `i = n`, return the maximum value of `distribute` which is the unfairness of this distribution.\n    - Otherwise, set `answer` as `float('inf')` and continue with step 3.\n\n3) Iterate through `distribute` and for each child `j`:\n    - Increment `distribute[j]` by `cookie[i]`, if `distribute[i]` is 0 before the distribution, decrement `zero_count` by 1.\n    - Recursively call `dfs(i + 1, zero_count)` and update `answer` as the minimum unfairness encountered, `answer = min(answer, dfs(i + 1, zero_count))`.\n    - Decrement `distribute[j]` by `cookie[i]`, if `distribute[i]` is 0 after the process, increment `zero_count` by 1. (This is the backtrack step)\n\n\n    Return `answer` after the iteration is complete.\n\n\n4) Return `dfs(0, distribute)`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/NJKWuHZS/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"NJKWuHZS\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $n$ be the length of `cookies`.\n\n* Time complexity: $O(k^n)$\n\n    - The algorithm attempts to distribute each of the $n$ cookies to each of the $k$ children, resulting in at most $O(k^n)$ distinct distributions. \n    \n* Space complexity: $O(k + n)$\n    - The array `distribute` represents the status of $k$ children, thus taking up $O(k)$ space.\n    - The space complexity of a recursive call depends on the maximum depth of the recursive call stack, which is at most $n$. As each recursive call increments `i` by 1. Therefore, at most $n$ levels of recursion will be created, and each level consumes a constant amount of space.    \n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

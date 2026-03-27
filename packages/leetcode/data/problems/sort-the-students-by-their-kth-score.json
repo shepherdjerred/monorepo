@@ -1,0 +1,135 @@
+{
+  "questionId": "2631",
+  "questionFrontendId": "2545",
+  "title": "Sort the Students by Their Kth Score",
+  "titleSlug": "sort-the-students-by-their-kth-score",
+  "difficulty": "Medium",
+  "content": "<p>There is a class with <code>m</code> students and <code>n</code> exams. You are given a <strong>0-indexed</strong> <code>m x n</code> integer matrix <code>score</code>, where each row represents one student and <code>score[i][j]</code> denotes the score the <code>i<sup>th</sup></code> student got in the <code>j<sup>th</sup></code> exam. The matrix <code>score</code> contains <strong>distinct</strong> integers only.</p>\n\n<p>You are also given an integer <code>k</code>. Sort the students (i.e., the rows of the matrix) by their scores in the <code>k<sup>th</sup></code>&nbsp;(<strong>0-indexed</strong>) exam from the highest to the lowest.</p>\n\n<p>Return <em>the matrix after sorting it.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/11/30/example1.png\" style=\"width: 600px; height: 136px;\" />\n<pre>\n<strong>Input:</strong> score = [[10,6,9,1],[7,5,11,2],[4,8,3,15]], k = 2\n<strong>Output:</strong> [[7,5,11,2],[10,6,9,1],[4,8,3,15]]\n<strong>Explanation:</strong> In the above diagram, S denotes the student, while E denotes the exam.\n- The student with index 1 scored 11 in exam 2, which is the highest score, so they got first place.\n- The student with index 0 scored 9 in exam 2, which is the second highest score, so they got second place.\n- The student with index 2 scored 3 in exam 2, which is the lowest score, so they got third place.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/11/30/example2.png\" style=\"width: 486px; height: 121px;\" />\n<pre>\n<strong>Input:</strong> score = [[3,4],[5,6]], k = 0\n<strong>Output:</strong> [[5,6],[3,4]]\n<strong>Explanation:</strong> In the above diagram, S denotes the student, while E denotes the exam.\n- The student with index 1 scored 5 in exam 0, which is the highest score, so they got first place.\n- The student with index 0 scored 3 in exam 0, which is the lowest score, so they got second place.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == score.length</code></li>\n\t<li><code>n == score[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 250</code></li>\n\t<li><code>1 &lt;= score[i][j] &lt;= 10<sup>5</sup></code></li>\n\t<li><code>score</code> consists of <strong>distinct</strong> integers.</li>\n\t<li><code>0 &lt;= k &lt; n</code></li>\n</ul>\n",
+  "hints": [
+    "Find the row with the highest score in the kth exam and swap it with the first row.",
+    "After fixing the first row, perform the same operation for the rest of the rows, and the matrix's rows will get sorted one by one."
+  ],
+  "metaData": "{\n  \"name\": \"sortTheStudents\",\n  \"params\": [\n    {\n      \"name\": \"score\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[][]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"89.2K\", \"totalSubmission\": \"103.8K\", \"totalAcceptedRaw\": 89224, \"totalSubmissionRaw\": 103773, \"acRate\": \"86.0%\"}",
+  "likes": 732,
+  "dislikes": 53,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Erect the Fence\", \"titleSlug\": \"erect-the-fence\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Custom Sort String\", \"titleSlug\": \"custom-sort-string\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Sort the People\", \"titleSlug\": \"sort-the-people\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sort Threats by Severity and Exploitability\", \"titleSlug\": \"sort-threats-by-severity-and-exploitability\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[10,6,9,1],[7,5,11,2],[4,8,3,15]]\n2",
+    "[[3,4],[5,6]]\n0"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"lime\", \"name\": \"Lime\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> sortTheStudents(vector<vector<int>>& score, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[][] sortTheStudents(int[][] score, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def sortTheStudents(self, score: List[List[int]], k: int) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def sortTheStudents(self, score, k):\n        \"\"\"\n        :type score: List[List[int]]\n        :type k: int\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} score\n * @param {number} k\n * @return {number[][]}\n */\nvar sortTheStudents = function(score, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function sortTheStudents(score: number[][], k: number): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[][] SortTheStudents(int[][] score, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** sortTheStudents(int** score, int scoreSize, int* scoreColSize, int k, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func sortTheStudents(score [][]int, k int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun sortTheStudents(score: Array<IntArray>, k: Int): Array<IntArray> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func sortTheStudents(_ score: [[Int]], _ k: Int) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn sort_the_students(score: Vec<Vec<i32>>, k: i32) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} score\n# @param {Integer} k\n# @return {Integer[][]}\ndef sort_the_students(score, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $score\n     * @param Integer $k\n     * @return Integer[][]\n     */\n    function sortTheStudents($score, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> sortTheStudents(List<List<int>> score, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def sortTheStudents(score: Array[Array[Int]], k: Int): Array[Array[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec sort_the_students(score :: [[integer]], k :: integer) :: [[integer]]\n  def sort_the_students(score, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec sort_the_students(Score :: [[integer()]], K :: integer()) -> [[integer()]].\nsort_the_students(Score, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (sort-the-students score k)\n  (-> (listof (listof exact-integer?)) exact-integer? (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": null
+}

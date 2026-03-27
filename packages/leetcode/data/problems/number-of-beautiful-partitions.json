@@ -1,0 +1,136 @@
+{
+  "questionId": "2569",
+  "questionFrontendId": "2478",
+  "title": "Number of Beautiful Partitions",
+  "titleSlug": "number-of-beautiful-partitions",
+  "difficulty": "Hard",
+  "content": "<p>You are given a string <code>s</code> that consists of the digits <code>&#39;1&#39;</code> to <code>&#39;9&#39;</code> and two integers <code>k</code> and <code>minLength</code>.</p>\n\n<p>A partition of <code>s</code> is called <strong>beautiful</strong> if:</p>\n\n<ul>\n\t<li><code>s</code> is partitioned into <code>k</code> non-intersecting substrings.</li>\n\t<li>Each substring has a length of <strong>at least</strong> <code>minLength</code>.</li>\n\t<li>Each substring starts with a <strong>prime</strong> digit and ends with a <strong>non-prime</strong> digit. Prime digits are <code>&#39;2&#39;</code>, <code>&#39;3&#39;</code>, <code>&#39;5&#39;</code>, and <code>&#39;7&#39;</code>, and the rest of the digits are non-prime.</li>\n</ul>\n\n<p>Return<em> the number of <strong>beautiful</strong> partitions of </em><code>s</code>. Since the answer may be very large, return it <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>A <strong>substring</strong> is a contiguous sequence of characters within a string.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;23542185131&quot;, k = 3, minLength = 2\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> There exists three ways to create a beautiful partition:\n&quot;2354 | 218 | 5131&quot;\n&quot;2354 | 21851 | 31&quot;\n&quot;2354218 | 51 | 31&quot;\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;23542185131&quot;, k = 3, minLength = 3\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> There exists one way to create a beautiful partition: &quot;2354 | 218 | 5131&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;3312958&quot;, k = 3, minLength = 1\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> There exists one way to create a beautiful partition: &quot;331 | 29 | 58&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= k, minLength &lt;= s.length &lt;= 1000</code></li>\n\t<li><code>s</code> consists of the digits <code>&#39;1&#39;</code> to <code>&#39;9&#39;</code>.</li>\n</ul>\n",
+  "hints": [
+    "Try using a greedy approach where you take as many digits as possible from the left of the string for each partition.",
+    "You can also use a dynamic programming approach, let an array dp where dp[i] is the solution of the problem for the prefix of the string ending at index i, the answer of the problem will be dp[n-1]. What are the transitions of this dp?"
+  ],
+  "metaData": "{\n  \"name\": \"beautifulPartitions\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"minLength\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"13.3K\", \"totalSubmission\": \"40.4K\", \"totalAcceptedRaw\": 13291, \"totalSubmissionRaw\": 40378, \"acRate\": \"32.9%\"}",
+  "likes": 371,
+  "dislikes": 18,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Restore The Array\", \"titleSlug\": \"restore-the-array\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Number of Ways to Separate Numbers\", \"titleSlug\": \"number-of-ways-to-separate-numbers\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"23542185131\"\n3\n2",
+    "\"23542185131\"\n3\n3",
+    "\"3312958\"\n3\n1"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int beautifulPartitions(string s, int k, int minLength) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int beautifulPartitions(String s, int k, int minLength) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def beautifulPartitions(self, s: str, k: int, minLength: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def beautifulPartitions(self, s, k, minLength):\n        \"\"\"\n        :type s: str\n        :type k: int\n        :type minLength: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {number} k\n * @param {number} minLength\n * @return {number}\n */\nvar beautifulPartitions = function(s, k, minLength) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function beautifulPartitions(s: string, k: number, minLength: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int BeautifulPartitions(string s, int k, int minLength) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int beautifulPartitions(char* s, int k, int minLength) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func beautifulPartitions(s string, k int, minLength int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun beautifulPartitions(s: String, k: Int, minLength: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func beautifulPartitions(_ s: String, _ k: Int, _ minLength: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn beautiful_partitions(s: String, k: i32, min_length: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {Integer} k\n# @param {Integer} min_length\n# @return {Integer}\ndef beautiful_partitions(s, k, min_length)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param Integer $k\n     * @param Integer $minLength\n     * @return Integer\n     */\n    function beautifulPartitions($s, $k, $minLength) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int beautifulPartitions(String s, int k, int minLength) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def beautifulPartitions(s: String, k: Int, minLength: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec beautiful_partitions(s :: String.t, k :: integer, min_length :: integer) :: integer\n  def beautiful_partitions(s, k, min_length) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec beautiful_partitions(S :: unicode:unicode_binary(), K :: integer(), MinLength :: integer()) -> integer().\nbeautiful_partitions(S, K, MinLength) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (beautiful-partitions s k minLength)\n  (-> string? exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

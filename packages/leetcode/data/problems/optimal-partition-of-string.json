@@ -1,0 +1,140 @@
+{
+  "questionId": "2487",
+  "questionFrontendId": "2405",
+  "title": "Optimal Partition of String",
+  "titleSlug": "optimal-partition-of-string",
+  "difficulty": "Medium",
+  "content": "<p>Given a string <code>s</code>, partition the string into one or more <strong>substrings</strong> such that the characters in each substring are <strong>unique</strong>. That is, no letter appears in a single substring more than <strong>once</strong>.</p>\n\n<p>Return <em>the <strong>minimum</strong> number of substrings in such a partition.</em></p>\n\n<p>Note that each character should belong to exactly one substring in a partition.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abacaba&quot;\n<strong>Output:</strong> 4\n<strong>Explanation:</strong>\nTwo possible partitions are (&quot;a&quot;,&quot;ba&quot;,&quot;cab&quot;,&quot;a&quot;) and (&quot;ab&quot;,&quot;a&quot;,&quot;ca&quot;,&quot;ba&quot;).\nIt can be shown that 4 is the minimum number of substrings needed.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;ssssss&quot;\n<strong>Output:</strong> 6\n<strong>Explanation:\n</strong>The only valid partition is (&quot;s&quot;,&quot;s&quot;,&quot;s&quot;,&quot;s&quot;,&quot;s&quot;,&quot;s&quot;).\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s</code> consists of only English lowercase letters.</li>\n</ul>\n",
+  "hints": [
+    "Try to come up with a greedy approach.",
+    "From left to right, extend every substring in the partition as much as possible."
+  ],
+  "metaData": "{\n  \"name\": \"partitionString\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"manual\": false\n}",
+  "stats": "{\"totalAccepted\": \"275.1K\", \"totalSubmission\": \"350.9K\", \"totalAcceptedRaw\": 275103, \"totalSubmissionRaw\": 350941, \"acRate\": \"78.4%\"}",
+  "likes": 2812,
+  "dislikes": 114,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Longest Substring Without Repeating Characters\", \"titleSlug\": \"longest-substring-without-repeating-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Substring with At Least K Repeating Characters\", \"titleSlug\": \"longest-substring-with-at-least-k-repeating-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Partition Labels\", \"titleSlug\": \"partition-labels\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Partition Array into Disjoint Intervals\", \"titleSlug\": \"partition-array-into-disjoint-intervals\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Sum of Distinct Subarrays With Length K\", \"titleSlug\": \"maximum-sum-of-distinct-subarrays-with-length-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"abacaba\"",
+    "\"ssssss\""
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"ibm\", \"name\": \"IBM\"}], \"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int partitionString(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int partitionString(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def partitionString(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def partitionString(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar partitionString = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function partitionString(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int PartitionString(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int partitionString(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func partitionString(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun partitionString(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func partitionString(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn partition_string(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef partition_string(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function partitionString($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int partitionString(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def partitionString(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec partition_string(s :: String.t) :: integer\n  def partition_string(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec partition_string(S :: unicode:unicode_binary()) -> integer().\npartition_string(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (partition-string s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1812",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a string `s`. \n\nOur task is to partition the string into one or more substrings such that the characters in each substring are unique.\n\nWe have to return the minimum number of substrings in such a partition.\n\n---\n\n### Approach: Greedy\n\n#### Intuition\n\nIntuitively, we can consider adding characters to a substring as long as we don't see a character that has already been added to the current substring. When we see a character that is already present in the substring, we start a new substring and repeat this process until we iterate over the entire string `s`.\n\nThe intuition is correct because there is no point in not adding a character if it is not present in the current substring. We should add it so that it forms larger substrings, resulting in a lower total number of substrings formed.\n\nWe'll use an array of size `26` to keep track of the characters in the ongoing substring. We will store the beginning of the current substring as well as keep track of the most recent position of each character. This allows us to determine whether the current character is already present in the current substring.\n\nOther data structures, such as a hash set, can be used for minor space optimization in cases where we may not have all of the `26` characters added to the hash set, but we must clear it completely at the start of each substring, resulting in some additional operations.\n\n#### Algorithm\n\n1. Create an array `lastSeen` of size `26` to keep track of the most recent position of each character. We fill it with `-1`.\n2. Create an integer variable `count` to keep track of the number of substrings formed. We initialize it with `1` to start adding characters to the first substring until we can't add anymore.\n3. Create another integer variable `substringStart` to hold the starting index of the substring under consideration. We initialize it to `0` because the first substring begins at index `0`.\n4. Iterate over the string `s` and for each index `i`:\n    - If the most recent position of the character `s[i]` is greater than or equal to the starting position of the substring, i.e. `lastSeen[s[i] - 'a'] >= substringStart`, it means we have already included this character in this substring. As a result, we increase the `count` by `1` as we start a new substring and set `substringStart = i`.\n    - We update `lastSeen` for the current character by performing `lastSeen[s[i] - 'a'] = i`.\n5. Return `count`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ifxdvTLf/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"ifxdvTLf\"></iframe>\n\n#### Complexity Analysis\n\nHere, $n$ is the length of the string `s`.\n\n* Time complexity: $O(n)$\n\n    - It takes $O(26) = O(1)$ to initialize the `lastSeen` array.\n    - We iterate over the complete string `s` which takes $O(n)$ time.\n\n* Space complexity: $O(26) = O(1)$\n\n    - We use the array `lastSeen` of size $26$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

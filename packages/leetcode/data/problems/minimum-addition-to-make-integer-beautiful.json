@@ -1,0 +1,132 @@
+{
+  "questionId": "2544",
+  "questionFrontendId": "2457",
+  "title": "Minimum Addition to Make Integer Beautiful",
+  "titleSlug": "minimum-addition-to-make-integer-beautiful",
+  "difficulty": "Medium",
+  "content": "<p>You are given two positive integers <code>n</code> and <code>target</code>.</p>\n\n<p>An integer is considered <strong>beautiful</strong> if the sum of its digits is less than or equal to <code>target</code>.</p>\n\n<p>Return the <em>minimum <strong>non-negative</strong> integer </em><code>x</code><em> such that </em><code>n + x</code><em> is beautiful</em>. The input will be generated such that it is always possible to make <code>n</code> beautiful.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 16, target = 6\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> Initially n is 16 and its digit sum is 1 + 6 = 7. After adding 4, n becomes 20 and digit sum becomes 2 + 0 = 2. It can be shown that we can not make n beautiful with adding non-negative integer less than 4.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 467, target = 6\n<strong>Output:</strong> 33\n<strong>Explanation:</strong> Initially n is 467 and its digit sum is 4 + 6 + 7 = 17. After adding 33, n becomes 500 and digit sum becomes 5 + 0 + 0 = 5. It can be shown that we can not make n beautiful with adding non-negative integer less than 33.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 1, target = 1\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> Initially n is 1 and its digit sum is 1, which is already smaller than or equal to target.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>12</sup></code></li>\n\t<li><code>1 &lt;= target &lt;= 150</code></li>\n\t<li>The input will be generated such that it is always possible to make <code>n</code> beautiful.</li>\n</ul>\n",
+  "hints": [
+    "Think about each digit independently.",
+    "Turn the rightmost non-zero digit to zero until the digit sum is greater than target."
+  ],
+  "metaData": "{\n  \"name\": \"makeIntegerBeautiful\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"long\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"target\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"25.1K\", \"totalSubmission\": \"65K\", \"totalAcceptedRaw\": 25118, \"totalSubmissionRaw\": 65025, \"acRate\": \"38.6%\"}",
+  "likes": 549,
+  "dislikes": 26,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Happy Number\", \"titleSlug\": \"happy-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "16\n6",
+    "467\n6",
+    "1\n1"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long makeIntegerBeautiful(long long n, int target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long makeIntegerBeautiful(long n, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def makeIntegerBeautiful(self, n: int, target: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def makeIntegerBeautiful(self, n, target):\n        \"\"\"\n        :type n: int\n        :type target: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number} target\n * @return {number}\n */\nvar makeIntegerBeautiful = function(n, target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function makeIntegerBeautiful(n: number, target: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long MakeIntegerBeautiful(long n, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long makeIntegerBeautiful(long long n, int target) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func makeIntegerBeautiful(n int64, target int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun makeIntegerBeautiful(n: Long, target: Int): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func makeIntegerBeautiful(_ n: Int, _ target: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn make_integer_beautiful(n: i64, target: i32) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer} target\n# @return {Integer}\ndef make_integer_beautiful(n, target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer $target\n     * @return Integer\n     */\n    function makeIntegerBeautiful($n, $target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int makeIntegerBeautiful(int n, int target) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def makeIntegerBeautiful(n: Long, target: Int): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec make_integer_beautiful(n :: integer, target :: integer) :: integer\n  def make_integer_beautiful(n, target) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec make_integer_beautiful(N :: integer(), Target :: integer()) -> integer().\nmake_integer_beautiful(N, Target) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (make-integer-beautiful n target)\n  (-> exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

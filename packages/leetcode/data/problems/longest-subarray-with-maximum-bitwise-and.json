@@ -1,0 +1,140 @@
+{
+  "questionId": "2503",
+  "questionFrontendId": "2419",
+  "title": "Longest Subarray With Maximum Bitwise AND",
+  "titleSlug": "longest-subarray-with-maximum-bitwise-and",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>nums</code> of size <code>n</code>.</p>\n\n<p>Consider a <strong>non-empty</strong> subarray from <code>nums</code> that has the <strong>maximum</strong> possible <strong>bitwise AND</strong>.</p>\n\n<ul>\n\t<li>In other words, let <code>k</code> be the maximum value of the bitwise AND of <strong>any</strong> subarray of <code>nums</code>. Then, only subarrays with a bitwise AND equal to <code>k</code> should be considered.</li>\n</ul>\n\n<p>Return <em>the length of the <strong>longest</strong> such subarray</em>.</p>\n\n<p>The bitwise AND of an array is the bitwise AND of all the numbers in it.</p>\n\n<p>A <strong>subarray</strong> is a contiguous sequence of elements within an array.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,3,2,2]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong>\nThe maximum possible bitwise AND of a subarray is 3.\nThe longest subarray with that value is [3,3], so we return 2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,4]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong>\nThe maximum possible bitwise AND of a subarray is 4.\nThe longest subarray with that value is [4], so we return 1.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>6</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Notice that the bitwise AND of two different numbers will always be strictly less than the maximum of those two numbers.",
+    "What does that tell us about the nature of the subarray that we should choose?"
+  ],
+  "metaData": "{\n  \"name\": \"longestSubarray\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"253.5K\", \"totalSubmission\": \"387.7K\", \"totalAcceptedRaw\": 253487, \"totalSubmissionRaw\": 387745, \"acRate\": \"65.4%\"}",
+  "likes": 1319,
+  "dislikes": 110,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Number of Different Integers in a String\", \"titleSlug\": \"number-of-different-integers-in-a-string\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Remove Colored Pieces if Both Neighbors are the Same Color\", \"titleSlug\": \"remove-colored-pieces-if-both-neighbors-are-the-same-color\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Number of Maximum Bitwise-OR Subsets\", \"titleSlug\": \"count-number-of-maximum-bitwise-or-subsets\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Smallest Subarrays With Maximum Bitwise OR\", \"titleSlug\": \"smallest-subarrays-with-maximum-bitwise-or\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,3,2,2]",
+    "[1,2,3,4]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"fourkites\", \"name\": \"fourkites\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Brainteaser",
+      "slug": "brainteaser"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int longestSubarray(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int longestSubarray(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def longestSubarray(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def longestSubarray(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar longestSubarray = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function longestSubarray(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int LongestSubarray(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int longestSubarray(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func longestSubarray(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun longestSubarray(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func longestSubarray(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn longest_subarray(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef longest_subarray(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function longestSubarray($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int longestSubarray(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def longestSubarray(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec longest_subarray(nums :: [integer]) :: integer\n  def longest_subarray(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec longest_subarray(Nums :: [integer()]) -> integer().\nlongest_subarray(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (longest-subarray nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2435",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe need to find the longest subarray in an integer array where the bitwise AND of all elements equals the maximum possible bitwise AND of any subarray. Bitwise AND results in a value that is always less than or equal to the operands and this operation is commonly used in fields like network filtering, hardware design, and cryptography for tasks such as subnet masking, configuration checks, and data analysis.\n\n--- \n\n### Approach: Longest consecutive sequence of the maximum value\n\n#### Intuition\n\nTo understand this problem, we first need to understand what a bitwise AND operation is. In simple terms, a bitwise AND operation takes two binary representations of an integer and performs the logical AND operation on each pair of the corresponding bits. If both bits are 1, the result is 1; otherwise, it's 0.\n\nFor example, take the numbers 12 (which is `1100` in binary) and 7 (`0111` in binary). \nPerforming a bitwise AND on these numbers gives the following:\n\n| Bit Position | 3rd Bit | 2nd Bit | 1st Bit | 0th Bit |\n|--------------|---------|---------|---------|---------|\n| Number 12    |    1    |    1    |    0    |    0    |\n| Number 7     |    0    |    1    |    1    |    1    |\n| Bitwise AND  |    0    |    1    |    0    |    0    |\n\nAs we can see, the result is `0100`, which is the binary representation of `4`.\n\nNow, let’s look at the problem. We're given an array, and the goal is to find a subarray where the bitwise AND of all the numbers is as large as possible. A subarray is a continuous portion of the array, and we want to return the length of the subarray that has the highest bitwise AND value.\n\nThe maximum possible bitwise AND of a subarray would be the maximum number in the array itself. This is because the bitwise AND operation with a larger number and a smaller number would always result in a number less than or equal to the smaller number. Therefore, the maximum possible bitwise AND of a subarray can only be achieved when all the numbers in the subarray are equal to the maximum number in the array.\n\nLet’s look at some examples of subarrays and their bitwise AND results:\n\n| Subarray | Bitwise AND Calculation | Result |\n|----------|-------------------------|--------|\n| [4, 6] | 4 AND 6 = 0100 AND 0110 | 0100 = 4 |\n| [4, 6, 7] | 4 AND 6 AND 7 = 0100 AND 0110 AND 0111 | 0100 = 4 |\n| [4, 6, 7, 8] | 4 AND 6 AND 7 AND 8 = 0100 AND 0110 AND 0111 AND 1000 | 0000 = 0 |\n| [6, 7] | 6 AND 7 = 0110 AND 0111 | 0110 = 6 |\n| [6, 7, 8] | 6 AND 7 AND 8 = 0110 AND 0111 AND 1000 | 0000 = 0 |\n| [7, 8] | 7 AND 8 = 0111 AND 1000 | 0000 = 0 |\n| [8, 8] | 8 AND 8 = 1000 AND 1000 | 1000 = 8 |\n\nFrom this, we can see that the largest bitwise AND can only be achieved when all the elements in the subarray are equal to the maximum number. So, the task is to find the longest subarray where all the numbers are the maximum value in the array.\n\n#### Algorithm\n\n1. Initialize `max_val = 0`, `ans = 0`, and `current_streak = 0` to track the maximum value, the length of the longest subarray, and the current streak of elements, respectively.\n2. Iterate through each element `num` in the array `nums`.\n3. If `max_val < num`, update `max_val` to `num`, and reset `ans` and `current_streak` to 0 since a new maximum value is found.\n4. If `max_val == num`, increment `current_streak` by 1 because the current element is equal to the maximum value.\n5. If `max_val != num`, reset `current_streak` to 0 as the current element breaks the streak of numbers equal to the maximum value.\n6. Update `ans` to be the maximum of `ans` and `current_streak` to ensure `ans` holds the length of the longest subarray with the maximum value.\n7. After the loop finishes, return `ans`, which represents the length of the longest subarray where the bitwise AND equals the maximum value.\n\n#### Implementation \n\n<iframe src=\"https://leetcode.com/playground/7VjPNXee/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"7VjPNXee\"></iframe>\n\nLet $N$ be the length of `nums`.\n\n* Time Complexity: $O(N)$\n\n    The time complexity is $O(N)$ because the function processes each element of the `nums` list exactly once. This is done through a single loop that iterates over the array. Each operation inside the loop—whether it's comparisons, assignments, or finding the maximum—takes constant time. As a result, the total time required scales linearly with the size of the input array.\n\n* Space Complexity: $O(1)$\n    \n    The function uses a fixed amount of extra space regardless of the size of the input array `nums`. Specifically, it only requires a few variables (`max_val`, `ans`, `current_streak`, and `num`) to keep track of intermediate values. This fixed space usage means the space complexity remains constant.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

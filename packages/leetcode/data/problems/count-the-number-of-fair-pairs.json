@@ -1,0 +1,145 @@
+{
+  "questionId": "2699",
+  "questionFrontendId": "2563",
+  "title": "Count the Number of Fair Pairs",
+  "titleSlug": "count-the-number-of-fair-pairs",
+  "difficulty": "Medium",
+  "content": "<p>Given a <strong>0-indexed</strong> integer array <code>nums</code> of size <code>n</code> and two integers <code>lower</code> and <code>upper</code>, return <em>the number of fair pairs</em>.</p>\n\n<p>A pair <code>(i, j)</code> is <b>fair </b>if:</p>\n\n<ul>\n\t<li><code>0 &lt;= i &lt; j &lt; n</code>, and</li>\n\t<li><code>lower &lt;= nums[i] + nums[j] &lt;= upper</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [0,1,7,4,4,5], lower = 3, upper = 6\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> There are 6 fair pairs: (0,3), (0,4), (0,5), (1,3), (1,4), and (1,5).\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,7,9,2,5], lower = 11, upper = 11\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> There is a single fair pair: (2,3).\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>nums.length == n</code></li>\n\t<li><code><font face=\"monospace\">-10<sup>9</sup></font>&nbsp;&lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code><font face=\"monospace\">-10<sup>9</sup>&nbsp;&lt;= lower &lt;= upper &lt;= 10<sup>9</sup></font></code></li>\n</ul>\n",
+  "hints": [
+    "Sort the array in ascending order.",
+    "For each number in the array, keep track of the smallest and largest numbers in the array that can form a fair pair with this number.",
+    "As you move to larger number, both boundaries move down."
+  ],
+  "metaData": "{\n  \"name\": \"countFairPairs\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"lower\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"upper\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"237.8K\", \"totalSubmission\": \"451.4K\", \"totalAcceptedRaw\": 237814, \"totalSubmissionRaw\": 451380, \"acRate\": \"52.7%\"}",
+  "likes": 2013,
+  "dislikes": 150,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count of Range Sum\", \"titleSlug\": \"count-of-range-sum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Finding Pairs With a Certain Sum\", \"titleSlug\": \"finding-pairs-with-a-certain-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Number of Pairs With Absolute Difference K\", \"titleSlug\": \"count-number-of-pairs-with-absolute-difference-k\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Count Pairs Whose Sum is Less than Target\", \"titleSlug\": \"count-pairs-whose-sum-is-less-than-target\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[0,1,7,4,4,5]\n3\n6",
+    "[1,7,9,2,5]\n11\n11"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"mcdonalds\", \"name\": \"McDonalds\"}], \"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 10, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"qualcomm\", \"name\": \"Qualcomm\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long countFairPairs(vector<int>& nums, int lower, int upper) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long countFairPairs(int[] nums, int lower, int upper) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countFairPairs(self, nums: List[int], lower: int, upper: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countFairPairs(self, nums, lower, upper):\n        \"\"\"\n        :type nums: List[int]\n        :type lower: int\n        :type upper: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} lower\n * @param {number} upper\n * @return {number}\n */\nvar countFairPairs = function(nums, lower, upper) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countFairPairs(nums: number[], lower: number, upper: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long CountFairPairs(int[] nums, int lower, int upper) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long countFairPairs(int* nums, int numsSize, int lower, int upper) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countFairPairs(nums []int, lower int, upper int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countFairPairs(nums: IntArray, lower: Int, upper: Int): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countFairPairs(_ nums: [Int], _ lower: Int, _ upper: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_fair_pairs(nums: Vec<i32>, lower: i32, upper: i32) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} lower\n# @param {Integer} upper\n# @return {Integer}\ndef count_fair_pairs(nums, lower, upper)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $lower\n     * @param Integer $upper\n     * @return Integer\n     */\n    function countFairPairs($nums, $lower, $upper) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countFairPairs(List<int> nums, int lower, int upper) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countFairPairs(nums: Array[Int], lower: Int, upper: Int): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_fair_pairs(nums :: [integer], lower :: integer, upper :: integer) :: integer\n  def count_fair_pairs(nums, lower, upper) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_fair_pairs(Nums :: [integer()], Lower :: integer(), Upper :: integer()) -> integer().\ncount_fair_pairs(Nums, Lower, Upper) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-fair-pairs nums lower upper)\n  (-> (listof exact-integer?) exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2559",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nWe have an array called `nums` with `n` elements, along with two integers, `lower` and `upper`. Our task is to find out how many pairs of indices `(i, j)` exist in the array such that the sum of the elements at these indices, `nums[i] + nums[j]`, falls between `lower` and `upper`. Plus, we need to make sure that `i` is less than `j`.\n\nGiven that the number of elements in the array can be as large as $10^5$, we need to think about an efficient solution—something that works in linear or log-linear time.\n\nIf you're feeling stuck, it might help to look at [this similar problem](https://leetcode.com/problems/count-pairs-whose-sum-is-less-than-target/description/) before diving deeper.\n\nSince we’re dealing with specific lower and upper bounds, it’s natural to think about using binary search. However, for binary search to be effective, we need to sort the array first. You might wonder if sorting will mess up our index requirements. The good news is that it won’t! Sorting the array allows us to find pairs easily because the order of addition doesn’t change the sum; that is, `nums[i] + nums[j]` is the same as `nums[j] + nums[i]`. \n\nSo, our goal is to count unique pairs where `i` is not equal to `j` while ensuring their sums fall within the specified range.\n\n---\n\n### Approach 1: Binary Search \n\n#### Intuition   \n\n> If you are not familiar with binary search, please refer to our explore cards [Binary Search Explore Card](https://leetcode.com/explore/learn/card/binary-search/). We will focus on the usage in this article and not the underlying principles or implementation details.\n\nWe can iterate through the sorted array while keeping one element of the pair fixed. For each fixed element, we'll find out how many valid choices we have for the second element. Because the array is sorted, the first valid choice will give us a sum that is just greater than or equal to `lower`, and the last valid choice will yield a sum that is just less than or equal to `upper`. Since the sums increase steadily, all valid second elements will cluster together in the array.\n\nTo count the number of pairs with sums that fall within the range `[lower, upper]`, we can use a clever technique. First, we calculate how many pairs have sums that are less than `lower`. Then, we count how many pairs have sums that are less than `upper + 1`. By taking the difference between these two counts, we can easily determine how many pairs have sums within the desired range.\n\nNow, how do we find the number of pairs for the lower limit using binary search? After fixing the first element `nums[i]`, the second element must be less than `lower - nums[i]` to keep the sum below `lower`. We can efficiently find how many elements meet this condition by performing a binary search in the array for values less than or equal to `lower - nums[i]`. \n\nSimilarly, we can find the number of elements that are less than or equal to `upper + 1 - nums[i]`. The difference between these two counts will give us the total number of valid pairs for that particular fixed element.\n\n#### Algorithm\n\n> Note: The typical way to calculate the midpoint is `(left + right) / 2`. However, a safer approach is to use `left + (right - left) / 2`. While both formulas yield the same result, the second method is safer because it prevents overflow by ensuring that no value larger than `right` is stored. In contrast, the first method can lead to overflow if `left` and `right` are very large.\n\nFunction - `lower_bound(nums, low, high, element)`:\n\n1. Initialize a loop that continues as long as `low` is less than or equal to `high`:\n    - Calculate the middle index `mid` using the formula `low + (high - low) / 2`.\n    - If `nums[mid]` is greater than or equal to `element`, adjust the `high` index to `mid - 1`.\n    - Otherwise, adjust the `low` index to `mid + 1`.\n2. Return the `low` index after the loop ends, which represents the lower bound position.\n\nMain Function - `countFairPairs(nums, lower, upper)`:\n\n1. Sort the array `nums`.\n2. Initialize a variable `ans` to 0, which will hold the count of valid pairs.\n3. Iterate through each element in the sorted array using index `i`:\n    - For each element `nums[i]`, determine the number of possible pairs with a sum less than `lower`:\n        - Use `lower_bound` to find the index of the first element in the subarray `nums[i + 1]` to `nums[end]` that is greater than or equal to `lower - nums[i]`.\n    - Similarly, determine the number of possible pairs with a sum less than or equal to `upper`:\n        - Use `lower_bound` to find the index of the first element in the subarray that is greater than or equal to `upper - nums[i] + 1`.\n    - The difference `high - low` gives the count of valid pairs with sums within the range `[lower, upper]` for the current element.\n    - Update `ans` by adding the difference calculated.\n4. After iterating through all elements, return the value of `ans`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/PtF5DvjT/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"PtF5DvjT\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $n$ be the size of the given `nums` array.\n\n- Time Complexity: $O(n \\log n)$\n\n    Sorting the `nums` array takes $O(n \\log n)$ time. \n\n    The loop iterates through each element of the sorted array and calls the `lower_bound` function twice, which itself takes $O(logn)$ time. Therefore, the overall time complexity for processing all `n` elements is $O(n \\log n)$.\n\n    Combining these, the total time complexity is: $O(n \\log n + n \\log n)$ = $O(n \\log n)$\n\n- Space complexity: $O(n)$ or $O(\\log n)$.\n\n    The space complexity of the sorting algorithm depends on the programming language.\n    - In Python, the sort method sorts a list using the Timsort algorithm which is a combination of Merge Sort and  Insertion Sort and has $O(n)$ additional space.\n    - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n )$ for sorting two arrays.\n    - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worse-case space complexity of $O( \\log n )$.\n\n    Therefore, the space complexity is given by $O(n)$ or $O(\\log n)$.\n\n> In this problem, we’re assuming it’s okay to sort the input to solve it. But in real-world scenarios, that might not always be the best approach. Sorting can change the original order of the input, which might be important in some cases where we have to use it later.\n\n---\n\n### Approach 2: Two Pointers\n\n#### Intuition   \n\nIn the previous solution, we noticed that when selecting the second element of our pair, it’s important to consider only those that are consecutive to the first element. This creates a “window” of valid choices. Specifically, this window starts from the index right after our chosen first element (which we can call `current index + 1`). We ignore elements before this index because they would lead to redundant pairs.\n\nAs we move to the next element in the array, we adjust this window. Since the new first element we’re considering is larger but we want the same target sum, the second element must now be smaller. This means we gradually shift the end of our window backward to focus on smaller values in the array.\n\nTo visualize this, we can use two pointers: `left` for the current element and `right` for the end of our window. The size of the window can be calculated with the formula `right - (left + 1) + 1`, which simplifies to `right - left`. As we progress through the array, we keep moving the `right` pointer back until we find that the sum of `nums[left] + nums[right]` is just below our target sum. For each index, we then add the size of this window to our result.\n\nThe difference between these two counts will give us the number of pairs that fall within our desired range.\n\n#### Algorithm\n\nFunction - `lower_bound(nums, value)`:\n\n1. Initialize two pointers, `left` to 0 and `right` to the last index of `nums`.\n2. Initialize a variable `result` to 0.\n3. While `left` is less than `right`:\n    - Calculate the sum of `nums[left]` and `nums[right]`.\n    - If the sum is less than `value`:\n        - Add the number of valid pairs `(right - left)` to `result`.\n        - Increment `left` to consider the next element.\n    - Else:\n        - Decrement `right` to reduce the sum.\n4. Return the value of `result`.\n\nMain Function - `countFairPairs(nums, lower, upper)`:\n\n1. Sort the array `nums`.\n2. Return the difference between the result of `lower_bound(nums, upper + 1)` and `lower_bound(nums, lower)`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/iidN9v9x/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"iidN9v9x\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $n$ be the size of the given `nums` array.\n\n- Time Complexity: $O(n \\log n)$\n\n    Sorting the `nums` array takes $O(n \\log n)$ time. \n\n    The method lower_bound is called twice, but its complexity is $O(n)$ because it iterates through the entire array to count the valid pairs. \n    \n    Thus, the overall time complexity is dominated by the sorting step, resulting in $O(n \\log n)$.\n\n- Space complexity: $O(n)$ or $O(\\log n)$.\n\n    The space complexity of the sorting algorithm depends on the programming language.\n    - In Python, the sort method sorts a list using the Timsort algorithm which is a combination of Merge Sort and  Insertion Sort and has $O(n)$ additional space.\n    - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n )$ for sorting two arrays.\n    - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worse-case space complexity of $O( \\log n )$.\n\n    Therefore, the space complexity is given by $O(n)$ or $O(\\log n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

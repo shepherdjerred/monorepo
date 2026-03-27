@@ -1,0 +1,135 @@
+{
+  "questionId": "2642",
+  "questionFrontendId": "2532",
+  "title": "Time to Cross a Bridge",
+  "titleSlug": "time-to-cross-a-bridge",
+  "difficulty": "Hard",
+  "content": "<p>There are <code>k</code> workers who want to move <code>n</code> boxes from the right (old) warehouse to the left (new) warehouse. You are given the two integers <code>n</code> and <code>k</code>, and a 2D integer array <code>time</code> of size <code>k x 4</code> where <code>time[i] = [right<sub>i</sub>, pick<sub>i</sub>, left<sub>i</sub>, put<sub>i</sub>]</code>.</p>\n\n<p>The warehouses are separated by a river and connected by a bridge. Initially, all <code>k</code> workers are waiting on the left side of the bridge. To move the boxes, the <code>i<sup>th</sup></code> worker can do the following:</p>\n\n<ul>\n\t<li>Cross the bridge to the right side in <code>right<sub>i</sub></code> minutes.</li>\n\t<li>Pick a box from the right warehouse in <code>pick<sub>i</sub></code> minutes.</li>\n\t<li>Cross the bridge to the left side in <code>left<sub>i</sub></code> minutes.</li>\n\t<li>Put the box into the left warehouse in <code>put<sub>i</sub></code> minutes.</li>\n</ul>\n\n<p>The <code>i<sup>th</sup></code> worker is <strong>less efficient</strong> than the j<code><sup>th</sup></code> worker if either condition is met:</p>\n\n<ul>\n\t<li><code>left<sub>i</sub> + right<sub>i</sub> &gt; left<sub>j</sub> + right<sub>j</sub></code></li>\n\t<li><code>left<sub>i</sub> + right<sub>i</sub> == left<sub>j</sub> + right<sub>j</sub></code> and <code>i &gt; j</code></li>\n</ul>\n\n<p>The following rules regulate the movement of the workers through the bridge:</p>\n\n<ul>\n\t<li>Only one worker can use the bridge at a time.</li>\n\t<li>When the bridge is unused prioritize the <strong>least efficient</strong> worker (who have picked up the box) on the right side to cross. If not,&nbsp;prioritize the <strong>least efficient</strong> worker on the left side to cross.</li>\n\t<li>If enough workers have already been dispatched from the left side to pick up all the remaining boxes, <strong>no more</strong> workers will be sent from the left side.</li>\n</ul>\n\n<p>Return the <strong>elapsed minutes</strong> at which the last box reaches the <strong>left side of the bridge</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 1, k = 3, time = [[1,1,2,1],[1,1,3,1],[1,1,4,1]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">6</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<pre>\nFrom 0 to 1 minutes: worker 2 crosses the bridge to the right.\nFrom 1 to 2 minutes: worker 2 picks up a box from the right warehouse.\nFrom 2 to 6 minutes: worker 2 crosses the bridge to the left.\nFrom 6 to 7 minutes: worker 2 puts a box at the left warehouse.\nThe whole process ends after 7 minutes. We return 6 because the problem asks for the instance of time at which the last worker reaches the left side of the bridge.\n</pre>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 3, k = 2, time =</span> [[1,5,1,8],[10,10,10,10]]</p>\n\n<p><strong>Output:</strong> 37</p>\n\n<p><strong>Explanation:</strong></p>\n\n<pre>\n<img src=\"https://assets.leetcode.com/uploads/2024/11/21/378539249-c6ce3c73-40e7-4670-a8b5-7ddb9abede11.png\" style=\"width: 450px; height: 176px;\" />\n</pre>\n\n<p>The last box reaches the left side at 37 seconds. Notice, how we <strong>do not</strong> put the last boxes down, as that would take more time, and they are already on the left with the workers.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n, k &lt;= 10<sup>4</sup></code></li>\n\t<li><code>time.length == k</code></li>\n\t<li><code>time[i].length == 4</code></li>\n\t<li><code>1 &lt;= left<sub>i</sub>, pick<sub>i</sub>, right<sub>i</sub>, put<sub>i</sub> &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [
+    "Try simulating this process.",
+    "We can use a priority queue to query over the least efficient worker."
+  ],
+  "metaData": "{\n  \"name\": \"findCrossingTime\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"time\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"5.8K\", \"totalSubmission\": \"13K\", \"totalAcceptedRaw\": 5780, \"totalSubmissionRaw\": 13025, \"acRate\": \"44.4%\"}",
+  "likes": 125,
+  "dislikes": 226,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"The Latest Time to Catch a Bus\", \"titleSlug\": \"the-latest-time-to-catch-a-bus\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Total Cost to Hire K Workers\", \"titleSlug\": \"total-cost-to-hire-k-workers\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "1\n3\n[[1,1,2,1],[1,1,3,1],[1,1,4,1]]",
+    "3\n2\n[[1,9,1,8],[10,10,10,10]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findCrossingTime(int n, int k, vector<vector<int>>& time) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findCrossingTime(int n, int k, int[][] time) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findCrossingTime(self, n: int, k: int, time: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findCrossingTime(self, n, k, time):\n        \"\"\"\n        :type n: int\n        :type k: int\n        :type time: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number} k\n * @param {number[][]} time\n * @return {number}\n */\nvar findCrossingTime = function(n, k, time) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findCrossingTime(n: number, k: number, time: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindCrossingTime(int n, int k, int[][] time) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findCrossingTime(int n, int k, int** time, int timeSize, int* timeColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findCrossingTime(n int, k int, time [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findCrossingTime(n: Int, k: Int, time: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findCrossingTime(_ n: Int, _ k: Int, _ time: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_crossing_time(n: i32, k: i32, time: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer} k\n# @param {Integer[][]} time\n# @return {Integer}\ndef find_crossing_time(n, k, time)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer $k\n     * @param Integer[][] $time\n     * @return Integer\n     */\n    function findCrossingTime($n, $k, $time) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findCrossingTime(int n, int k, List<List<int>> time) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findCrossingTime(n: Int, k: Int, time: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_crossing_time(n :: integer, k :: integer, time :: [[integer]]) :: integer\n  def find_crossing_time(n, k, time) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_crossing_time(N :: integer(), K :: integer(), Time :: [[integer()]]) -> integer().\nfind_crossing_time(N, K, Time) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-crossing-time n k time)\n  (-> exact-integer? exact-integer? (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

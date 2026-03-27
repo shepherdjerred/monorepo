@@ -1,0 +1,139 @@
+{
+  "questionId": "2561",
+  "questionFrontendId": "2465",
+  "title": "Number of Distinct Averages",
+  "titleSlug": "number-of-distinct-averages",
+  "difficulty": "Easy",
+  "content": "<p>You are given a <strong>0-indexed</strong> integer array <code>nums</code> of <strong>even</strong> length.</p>\n\n<p>As long as <code>nums</code> is <strong>not</strong> empty, you must repetitively:</p>\n\n<ul>\n\t<li>Find the minimum number in <code>nums</code> and remove it.</li>\n\t<li>Find the maximum number in <code>nums</code> and remove it.</li>\n\t<li>Calculate the average of the two removed numbers.</li>\n</ul>\n\n<p>The <strong>average</strong> of two numbers <code>a</code> and <code>b</code> is <code>(a + b) / 2</code>.</p>\n\n<ul>\n\t<li>For example, the average of <code>2</code> and <code>3</code> is <code>(2 + 3) / 2 = 2.5</code>.</li>\n</ul>\n\n<p>Return<em> the number of <strong>distinct</strong> averages calculated using the above process</em>.</p>\n\n<p><strong>Note</strong> that when there is a tie for a minimum or maximum number, any can be removed.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [4,1,4,0,3,5]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong>\n1. Remove 0 and 5, and the average is (0 + 5) / 2 = 2.5. Now, nums = [4,1,4,3].\n2. Remove 1 and 4. The average is (1 + 4) / 2 = 2.5, and nums = [4,3].\n3. Remove 3 and 4, and the average is (3 + 4) / 2 = 3.5.\nSince there are 2 distinct numbers among 2.5, 2.5, and 3.5, we return 2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,100]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong>\nThere is only one average to be calculated after removing 1 and 100, so we return 1.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= nums.length &lt;= 100</code></li>\n\t<li><code>nums.length</code> is even.</li>\n\t<li><code>0 &lt;= nums[i] &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "Try sorting the array.",
+    "Store the averages being calculated, and find the distinct ones."
+  ],
+  "metaData": "{\n  \"name\": \"distinctAverages\",\n  \"params\": [\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"nums\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"74K\", \"totalSubmission\": \"125.6K\", \"totalAcceptedRaw\": 74010, \"totalSubmissionRaw\": 125628, \"acRate\": \"58.9%\"}",
+  "likes": 428,
+  "dislikes": 35,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Two Sum\", \"titleSlug\": \"two-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Finding Pairs With a Certain Sum\", \"titleSlug\": \"finding-pairs-with-a-certain-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Average of Smallest and Largest Elements\", \"titleSlug\": \"minimum-average-of-smallest-and-largest-elements\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[4,1,4,0,3,5]",
+    "[1,100]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int distinctAverages(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int distinctAverages(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def distinctAverages(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def distinctAverages(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar distinctAverages = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function distinctAverages(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int DistinctAverages(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int distinctAverages(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func distinctAverages(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun distinctAverages(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func distinctAverages(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn distinct_averages(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef distinct_averages(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function distinctAverages($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int distinctAverages(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def distinctAverages(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec distinct_averages(nums :: [integer]) :: integer\n  def distinct_averages(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec distinct_averages(Nums :: [integer()]) -> integer().\ndistinct_averages(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (distinct-averages nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

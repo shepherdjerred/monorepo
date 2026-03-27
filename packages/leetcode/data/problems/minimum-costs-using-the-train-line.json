@@ -1,0 +1,138 @@
+{
+  "questionId": "2500",
+  "questionFrontendId": "2361",
+  "title": "Minimum Costs Using the Train Line",
+  "titleSlug": "minimum-costs-using-the-train-line",
+  "difficulty": "Hard",
+  "content": "<p>A train line going through a city has two routes, the regular route and the express route. Both routes go through the <strong>same</strong> <code>n + 1</code> stops labeled from <code>0</code> to <code>n</code>. Initially, you start on the regular route at stop <code>0</code>.</p>\n\n<p>You are given two <strong>1-indexed</strong> integer arrays <code>regular</code> and <code>express</code>, both of length <code>n</code>. <code>regular[i]</code> describes the cost it takes to go from stop <code>i - 1</code> to stop <code>i</code> using the regular route, and <code>express[i]</code> describes the cost it takes to go from stop <code>i - 1</code> to stop <code>i</code> using the express route.</p>\n\n<p>You are also given an integer <code>expressCost</code> which represents the cost to transfer from the regular route to the express route.</p>\n\n<p>Note that:</p>\n\n<ul>\n\t<li>There is no cost to transfer from the express route back to the regular route.</li>\n\t<li>You pay <code>expressCost</code> <strong>every</strong> time you transfer from the regular route to the express route.</li>\n\t<li>There is no extra cost to stay on the express route.</li>\n</ul>\n\n<p>Return <em>a <strong>1-indexed</strong> array </em><code>costs</code><em> of length </em><code>n</code><em>, where </em><code>costs[i]</code><em> is the <strong>minimum</strong> cost to reach stop </em><code>i</code><em> from stop </em><code>0</code>.</p>\n\n<p>Note that a stop can be counted as <strong>reached</strong> from either route.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/07/25/ex1drawio.png\" style=\"width: 442px; height: 150px;\" />\n<pre>\n<strong>Input:</strong> regular = [1,6,9,5], express = [5,2,3,10], expressCost = 8\n<strong>Output:</strong> [1,7,14,19]\n<strong>Explanation:</strong> The diagram above shows how to reach stop 4 from stop 0 with minimum cost.\n- Take the regular route from stop 0 to stop 1, costing 1.\n- Take the express route from stop 1 to stop 2, costing 8 + 2 = 10.\n- Take the express route from stop 2 to stop 3, costing 3.\n- Take the regular route from stop 3 to stop 4, costing 5.\nThe total cost is 1 + 10 + 3 + 5 = 19.\nNote that a different route could be taken to reach the other stops with minimum cost.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/07/25/ex2drawio.png\" style=\"width: 346px; height: 150px;\" />\n<pre>\n<strong>Input:</strong> regular = [11,5,13], express = [7,10,6], expressCost = 3\n<strong>Output:</strong> [10,15,24]\n<strong>Explanation:</strong> The diagram above shows how to reach stop 3 from stop 0 with minimum cost.\n- Take the express route from stop 0 to stop 1, costing 3 + 7 = 10.\n- Take the regular route from stop 1 to stop 2, costing 5.\n- Take the express route from stop 2 to stop 3, costing 3 + 6 = 9.\nThe total cost is 10 + 5 + 9 = 24.\nNote that the expressCost is paid again to transfer back to the express route.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == regular.length == express.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= regular[i], express[i], expressCost &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Notice and evaluate the different ways there are to move from one stop to the next.",
+    "From the express route at a previous stop, we can use either the express route or the regular route to the next stop without paying expressCost.",
+    "From the regular route at a previous stop, we can either use the express route after paying expressCost or use the regular route without paying expressCost.",
+    "Iterate through the stops and compare the above cases to obtain the minimum costs for each stop."
+  ],
+  "metaData": "{\n  \"name\": \"minimumCosts\",\n  \"params\": [\n    {\n      \"name\": \"regular\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"express\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"expressCost\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"15K\", \"totalSubmission\": \"19.3K\", \"totalAcceptedRaw\": 15008, \"totalSubmissionRaw\": 19266, \"acRate\": \"77.9%\"}",
+  "likes": 196,
+  "dislikes": 33,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Bus Routes\", \"titleSlug\": \"bus-routes\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Distance Between Bus Stops\", \"titleSlug\": \"distance-between-bus-stops\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,6,9,5]\n[5,2,3,10]\n8",
+    "[11,5,13]\n[7,10,6]\n3"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"citadel\", \"name\": \"Citadel\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<long long> minimumCosts(vector<int>& regular, vector<int>& express, int expressCost) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long[] minimumCosts(int[] regular, int[] express, int expressCost) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumCosts(self, regular: List[int], express: List[int], expressCost: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumCosts(self, regular, express, expressCost):\n        \"\"\"\n        :type regular: List[int]\n        :type express: List[int]\n        :type expressCost: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} regular\n * @param {number[]} express\n * @param {number} expressCost\n * @return {number[]}\n */\nvar minimumCosts = function(regular, express, expressCost) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumCosts(regular: number[], express: number[], expressCost: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long[] MinimumCosts(int[] regular, int[] express, int expressCost) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nlong long* minimumCosts(int* regular, int regularSize, int* express, int expressSize, int expressCost, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumCosts(regular []int, express []int, expressCost int) []int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumCosts(regular: IntArray, express: IntArray, expressCost: Int): LongArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumCosts(_ regular: [Int], _ express: [Int], _ expressCost: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_costs(regular: Vec<i32>, express: Vec<i32>, express_cost: i32) -> Vec<i64> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} regular\n# @param {Integer[]} express\n# @param {Integer} express_cost\n# @return {Integer[]}\ndef minimum_costs(regular, express, express_cost)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $regular\n     * @param Integer[] $express\n     * @param Integer $expressCost\n     * @return Integer[]\n     */\n    function minimumCosts($regular, $express, $expressCost) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> minimumCosts(List<int> regular, List<int> express, int expressCost) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumCosts(regular: Array[Int], express: Array[Int], expressCost: Int): Array[Long] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_costs(regular :: [integer], express :: [integer], express_cost :: integer) :: [integer]\n  def minimum_costs(regular, express, express_cost) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_costs(Regular :: [integer()], Express :: [integer()], ExpressCost :: integer()) -> [integer()].\nminimum_costs(Regular, Express, ExpressCost) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-costs regular express expressCost)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1999",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nThere are $N + 1$ stops; we are initially at stop `0`. There are two types of routes that go through these stops; one regular and the other one express. We are given two 1-indexed integer arrays, `regular` and `express`, both of length $N$. `regular[i]` describes the cost it takes to go from `stop[i - 1]` to `stop[i]` using the regular route and `express[i]` describes the cost it takes to go from `stop[i - 1]` to `stop[i]` using the express route.\n\nAlso, we can switch the routes from regular to express or vice versa, but we have to incur `expressCost` when switching from regular to express while there is no cost to switch back to regular from the express route. We need to return a 1-indexed array `costs` of length $N$, where `costs[i]` is the minimum cost to reach stop ` i` from stop `0`.\n\nWe should take note of two characteristics of this problem at this time. First, as we iterate over the stops, we must decide whether to use the regular or express route. The cost for these choices will depend on the route we're currently on, which in turn depends on our previous choices of routes. In other words, each decision we make is affected by the previous decisions we have made. Second, the problem is asking to find the minimum cost required. These two characteristics suggest that we could solve this problem using dynamic programming. We will discuss two approaches using dynamic programming, and the third one is just the space-optimized version of the second approach.\n</br>\n\n---\n\n### Approach 1: Top-Down Dynamic Programming\n\n**Intuition**\n\nAt each stop `i`, we have two options; take the regular route or take the express route.\n1. If we are taking the regular route, we need to spend `regular[i]`.\n2. If we are taking the express route, we need to check the current lane we're on. If we are currently in the regular lane then we need to spend `expressCost` to switch to the express lane and then `express[i]` to travel to the next stop. If we are already in the express lane, we just need to spend `express[i]`.\n\nAt each stop `i`, we will return the minimum cost of the two options, and after making one of these choices, we will recursively move on to the next stop and repeat the process for the next stop until we covered all the stops. Ultimately, when we reach the last stop, we can return `0` as the cost.\n\nRemember, we must return the minimum cost to reach each stop from the `0th` stop. Hence, at every step, we will keep storing the minimum cost of the two options and store it corresponding to the current stop we're currently on. Therefore, we will start from the last stop, and at each stop, we will make the two choices as we discussed and return the minimum of the two options; also store this as the minimum cost to reach this stop from stop `0`.\n\nWhat are the parameters that we need to track here? The first one is the index of the stop that we are currently on; also we need to track the lane as well to find if we need to incur `expressCost` or not while switching lanes. Hence, we will store the results corresponding to these two parameters, the index and the lane type (`1` for regular and `0` for express).\n\nNote that because it is free to move from the express lane to the regular lane, one could always arrive at stop `i` in the express lane and then move to the regular lane for free. This means when it comes to reaching stop `i`, it can never be more expensive to be in the regular lane than to be in the express lane, and thus the answer for each stop can be represented as the cost in the regular lane.\n\nThis approach, however, is not efficient as we need to iterate over every two possibilities for each of the $N$ stops; therefore, there could be at-max $2^N$ operations which could be huge considering the number of stops can be up to $10^5$. If we observe the below figure, there are repeated subproblems. Notice the green nodes are repeated subproblems signifying that we have already solved these subproblems before. To avoid recalculating results for previously seen subproblems, we will cache the result for each subproblem. The next time we need to calculate the result for the same `stop` and `lane` (regular / express) we have already calculated, we can look up the result in constant time instead of recalculating the result.\n\n![fig](../Figures/2361/2361A.png)\n\n**Algorithm**\n\n1. Create a 2D array `dp` with size `N * 2`. Initialize all indices to `-1` to denote that the answer for these states has not yet been calculated.\n2. Call the recursive function `solve()` with `i = regular.size() - 1` and `lane = 1`, for each state, do the following:\n\n    1. If `i < 0`, i.e. all stops are covered, then return `0`.\n    2. Store the cost using the regular lane in the variable `regularLane`; the cost would be `regular[i]` plus the recursive call with index as `i - 1` and lane as `1`.\n    3. Store the cost using the express lane in the variable `expressLane`; the cost would be `express[i]` plus the recursive call with index as `i - 1` and lane as `0`, also there would be an extra `expressCost` if previously we were on the regular lane.\n    4. Return minimum of `regularLane` and `expressLane`; also store it as `dp[i][lane]`.\n3. Iterate over all the stops, and for each stop `i`, store the cost to reach it from `0` as `dp[i][1]` in the array `ans`.\n4. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/XDcy8PKj/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"XDcy8PKj\"></iframe>\n\n**Complexity Analysis**\n\nHere, $N$ is the number of stops.\n\n* Time complexity: $O(N)$\n\n  We have $N$ stops, and for each stop, we will make two recursive calls for the two options; thus, the total number of operations could be $2 *N$, and we need to find the answer to each state to solve the original problem. For each state, the time complexity is $O(1)$ as we are just making recursive calls and finding the minimum of two integers. Hence, the total time complexity equals $O(N)$.\n\n* Space complexity: $O(N)$\n\n  The size of array `dp` is $2 * N$; also, there would be some stack space; the maximum number of active stack calls would be equal to $N$. We also need an array to store the answer `ans`, but generally, the space to store the answer is not considered part of the space complexity. Thus, the total space complexity equals $O(N)$.\n  <br/>\n\n---\n\n### Approach 2: Bottom-Up Dynamic Programming\n\n**Intuition**\n\nIn the previous approach, the recursive calls incurred stack space. This can be avoided by applying the same approach iteratively, which is generally faster than the top-down approach. We will follow a similar approach as the previous one, just in a reverse manner.\n\nIn this approach, we will start from the stop `0` and try to find the cost to reach the $i^{th}$ stop from `0` using the minimum cost we have calculated for previous stops. As the base case, the cost to reach stop `0` in the regular lane is `0` since we start there. However, the cost to reach stop `0` using the express lane is `expressCost` as this is the cost to switch lanes.\n\nNow, we will iterate over the stops from `1` to `N`, and for each stop, we will find the minimum cost from each of the two routes, i.e. regular lane and express lane. For the regular lane, the cost to reach stop `i` would be `regular[i - 1] + min(dp[i - 1][1], dp[i - 1][0])`; this is because we can switch from express lane to regular with no cost, so we take the minimum of the two and add the cost to travel the regular lane. For the express lane, the minimum cost would be `express[i - 1] + min(expressCost + dp[i - 1][1], dp[i - 1][0])`; for this, we have to add `expressCost` to the cost via regular route while switching from the regular lane, we take the minimum of two and add the cost to travel via express lane. Hence the recursive equation for the minimum cost at stop `i` is:\n\n> dp[i][1] = regular[i - 1] + Min(dp[i - 1][1], dp[i - 1][0]); Minimum cost to reach i via regular lane.\n\n> dp[i][0] = express[i - 1] + Min(expressCost + dp[i - 1][1], dp[i - 1][0]); Minimum cost to reach i via express lane.\n\n> Minimum cost to reach stop i = Min(dp[i][0], dp[i][1]);\n\nWe will store these minimum costs for each stop in an array `ans` and can return it in the end.\n\n\n**Algorithm**\n\n1. Create a 2D array `dp` with size `N * 2`.\n2. Initialize `dp[0][1] = 0` and `dp[0][0] = expressCost`; `dp[i][j]` denotes the cost to reach stop `i` from `0` via lane `j` which could be `1` (regular) or `0`(express).\n3. Iterate over the stops from `1` to `N`, and for each stop `i` find the cost as follows:\n\n    1. `dp[i][1] = regular[i - 1] + Min(dp[i - 1][1], dp[i - 1][0])`\n    2. `dp[i][0] = express[i - 1] + Min(expressCost + dp[i - 1][1], dp[i - 1][0])`\n    3. `Min(dp[i][0], dp[i][1])`; store it in the array `ans`.\n\n4. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/PQsJkc7r/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"PQsJkc7r\"></iframe>\n\n**Complexity Analysis**\n\nHere, $N$ is the number of stops.\n\n* Time complexity: $O(N)$\n\n  We iterate over each stop once to find the minimum cost, and hence the total time complexity is equal to $O(N)$.\n\n* Space complexity: $O(N)$\n\n  The size of array `dp` is $2 * N$. We also need an array to store the answer `ans`, but generally, the space to store the answer is not considered part of the space complexity. Thus, the total space complexity is equal to $O(N)$.\n  <br/>\n\n---\n\n### Approach 3: Space-Optimized Bottom-Up Dynamic Programming\n\n**Intuition**\n\nIn the previous approach to find the minimum cost for the stop `i`, we only need the minimum cost for the stop `i - 1` via the two lanes; We can observe that we always use the `dp[i - 1]` values to find the answer for `dp[i]`; but we still keep all the previously calculated results in the array `dp`. To save space, we can just use two variables, one `prevRegularLane` to store the minimum cost to reach $(i - 1)^{th}$ stop from `0` via the regular lane and another `prevExpressLane` to store the minimum cost to reach stop $(i - 1)^{th}$ stop from `0` via the express lane.\n\nAfter calculating the result for the current stop `i`; we will update these two variables with the minimum cost for `i` so that we can use them for the $(i + 1)^{th}$ stop iteration. This way, we will follow the same approach as the last without the `dp` array. This will help in reducing the space complexity.\n\n**Algorithm**\n\n1. Initialize `prevRegularLane = 0` and `prevExpressLane= expressCost`;  `prevExpressLane` denotes the minimum cost to reach the previous stop from `0` using the regular lane, and `prevExpressLane` denotes the minimum cost to reach the previous stop from `0` using the express lane.\n2. Iterate over the stops from `1` to `N`, and for each stop `i` find the cost as follows:\n\n    1. `regularLaneCost = regular[i - 1] + Min(prevRegularLane, prevExpressLane)`\n    2. `expressLaneCost = express[i - 1] + Min(expressCost + prevRegularLane, prevExpressLane)`\n    3. `Min(regularLaneCost, expressLaneCost)`; store it in the array `ans`.\n    4. Assign `prevRegularLane = regularLaneCost` & `prevExpressLane = expressLaneCost` to update the previous values.\n\n3. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/Z2utwdgK/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"Z2utwdgK\"></iframe>\n\n**Complexity Analysis**\n\nHere, $N$ is the number of stops.\n\n* Time complexity: $O(N)$\n\n  We iterate over each stop once to find the minimum cost, and hence the total time complexity is equal to $O(N)$.\n\n* Space complexity: $O(1)$\n\n  We only need two variables here, `prevRegularLane` and `prevExpressLane`, to find the following stop answer. We also need an array to store the answer `ans`, but generally, the space to store the answer is not considered part of the space complexity. Thus, the total space complexity is equal to constant.\n  <br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

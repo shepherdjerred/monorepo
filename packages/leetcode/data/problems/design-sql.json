@@ -1,0 +1,139 @@
+{
+  "questionId": "2555",
+  "questionFrontendId": "2408",
+  "title": "Design SQL",
+  "titleSlug": "design-sql",
+  "difficulty": "Medium",
+  "content": "<p>You are given two string arrays, <code>names</code> and <code>columns</code>, both of size <code>n</code>. The <code>i<sup>th</sup></code> table is represented by the name <code>names[i]</code> and contains <code>columns[i]</code> number of columns.</p>\n\n<p>You need to implement a class that supports the following <strong>operations</strong>:</p>\n\n<ul>\n\t<li><strong>Insert</strong> a row in a specific table with an id assigned using an <em>auto-increment</em> method, where the id of the first inserted row is 1, and the id of each <em>new </em>row inserted into the same table is <strong>one greater</strong> than the id of the <strong>last inserted</strong> row, even if the last row was <em>removed</em>.</li>\n\t<li><strong>Remove</strong> a row from a specific table. Removing a row <strong>does not</strong> affect the id of the next inserted row.</li>\n\t<li><strong>Select</strong> a specific cell from any table and return its value.</li>\n\t<li><strong>Export</strong> all rows from any table in csv format.</li>\n</ul>\n\n<p>Implement the <code>SQL</code> class:</p>\n\n<ul>\n\t<li><code>SQL(String[] names, int[] columns)</code>\n\n\t<ul>\n\t\t<li>Creates the <code>n</code> tables.</li>\n\t</ul>\n\t</li>\n\t<li><code>bool ins(String name, String[] row)</code>\n\t<ul>\n\t\t<li>Inserts <code>row</code> into the table <code>name</code> and returns <code>true</code>.</li>\n\t\t<li>If <code>row.length</code> <strong>does not</strong> match the expected number of columns, or <code>name</code> is <strong>not</strong> a valid table, returns <code>false</code> without any insertion.</li>\n\t</ul>\n\t</li>\n\t<li><code>void rmv(String name, int rowId)</code>\n\t<ul>\n\t\t<li>Removes the row <code>rowId</code> from the table <code>name</code>.</li>\n\t\t<li>If <code>name</code> is <strong>not</strong> a valid table or there is no row with id <code>rowId</code>, no removal is performed.</li>\n\t</ul>\n\t</li>\n\t<li><code>String sel(String name, int rowId, int columnId)</code>\n\t<ul>\n\t\t<li>Returns the value of the cell at the specified <code>rowId</code> and <code>columnId</code> in the table <code>name</code>.</li>\n\t\t<li>If <code>name</code> is <strong>not</strong> a valid table, or the cell <code>(rowId, columnId)</code> is <strong>invalid</strong>, returns <code>&quot;&lt;null&gt;&quot;</code>.</li>\n\t</ul>\n\t</li>\n\t<li><code>String[] exp(String name)</code>\n\t<ul>\n\t\t<li>Returns the rows present in the table <code>name</code>.</li>\n\t\t<li>If name is <strong>not</strong> a valid table, returns an empty array. Each row is represented as a string, with each cell value (<strong>including</strong> the row&#39;s id) separated by a <code>&quot;,&quot;</code>.</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<pre class=\"example-io\">\n[&quot;SQL&quot;,&quot;ins&quot;,&quot;sel&quot;,&quot;ins&quot;,&quot;exp&quot;,&quot;rmv&quot;,&quot;sel&quot;,&quot;exp&quot;]\n[[[&quot;one&quot;,&quot;two&quot;,&quot;three&quot;],[2,3,1]],[&quot;two&quot;,[&quot;first&quot;,&quot;second&quot;,&quot;third&quot;]],[&quot;two&quot;,1,3],[&quot;two&quot;,[&quot;fourth&quot;,&quot;fifth&quot;,&quot;sixth&quot;]],[&quot;two&quot;],[&quot;two&quot;,1],[&quot;two&quot;,2,2],[&quot;two&quot;]]\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n[null,true,&quot;third&quot;,true,[&quot;1,first,second,third&quot;,&quot;2,fourth,fifth,sixth&quot;],null,&quot;fifth&quot;,[&quot;2,fourth,fifth,sixth&quot;]]</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<pre class=\"example-io\">\n// Creates three tables.\nSQL sql = new SQL([&quot;one&quot;, &quot;two&quot;, &quot;three&quot;], [2, 3, 1]);\n\n// Adds a row to the table &quot;two&quot; with id 1. Returns True.\nsql.ins(&quot;two&quot;, [&quot;first&quot;, &quot;second&quot;, &quot;third&quot;]);\n\n// Returns the value &quot;third&quot; from the third column\n// in the row with id 1 of the table &quot;two&quot;.\nsql.sel(&quot;two&quot;, 1, 3);\n\n// Adds another row to the table &quot;two&quot; with id 2. Returns True.\nsql.ins(&quot;two&quot;, [&quot;fourth&quot;, &quot;fifth&quot;, &quot;sixth&quot;]);\n\n// Exports the rows of the table &quot;two&quot;.\n// Currently, the table has 2 rows with ids 1 and 2.\nsql.exp(&quot;two&quot;);\n\n// Removes the first row of the table &quot;two&quot;. Note that the second row\n// will still have the id 2.\nsql.rmv(&quot;two&quot;, 1);\n\n// Returns the value &quot;fifth&quot; from the second column\n// in the row with id 2 of the table &quot;two&quot;.\nsql.sel(&quot;two&quot;, 2, 2);\n\n// Exports the rows of the table &quot;two&quot;.\n// Currently, the table has 1 row with id 2.\nsql.exp(&quot;two&quot;);\n</pre>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<pre class=\"example-io\">\n[&quot;SQL&quot;,&quot;ins&quot;,&quot;sel&quot;,&quot;rmv&quot;,&quot;sel&quot;,&quot;ins&quot;,&quot;ins&quot;]\n[[[&quot;one&quot;,&quot;two&quot;,&quot;three&quot;],[2,3,1]],[&quot;two&quot;,[&quot;first&quot;,&quot;second&quot;,&quot;third&quot;]],[&quot;two&quot;,1,3],[&quot;two&quot;,1],[&quot;two&quot;,1,2],[&quot;two&quot;,[&quot;fourth&quot;,&quot;fifth&quot;]],[&quot;two&quot;,[&quot;fourth&quot;,&quot;fifth&quot;,&quot;sixth&quot;]]]\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n[null,true,&quot;third&quot;,null,&quot;&lt;null&gt;&quot;,false,true]\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<pre class=\"example-io\">\n// Creates three tables.\nSQL sQL = new SQL([&quot;one&quot;, &quot;two&quot;, &quot;three&quot;], [2, 3, 1]); \n\n// Adds a row to the table &quot;two&quot; with id 1. Returns True. \nsQL.ins(&quot;two&quot;, [&quot;first&quot;, &quot;second&quot;, &quot;third&quot;]); \n\n// Returns the value &quot;third&quot; from the third column \n// in the row with id 1 of the table &quot;two&quot;.\nsQL.sel(&quot;two&quot;, 1, 3); \n\n// Removes the first row of the table &quot;two&quot;.\nsQL.rmv(&quot;two&quot;, 1); \n\n// Returns &quot;&lt;null&gt;&quot; as the cell with id 1 \n// has been removed from table &quot;two&quot;.\nsQL.sel(&quot;two&quot;, 1, 2); \n\n// Returns False as number of columns are not correct.\nsQL.ins(&quot;two&quot;, [&quot;fourth&quot;, &quot;fifth&quot;]); \n\n// Adds a row to the table &quot;two&quot; with id 2. Returns True.\nsQL.ins(&quot;two&quot;, [&quot;fourth&quot;, &quot;fifth&quot;, &quot;sixth&quot;]); \n</pre>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == names.length == columns.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= names[i].length, row[i].length, name.length &lt;= 10</code></li>\n\t<li><code>names[i]</code>, <code>row[i]</code>, and <code>name</code> consist only of lowercase English letters.</li>\n\t<li><code>1 &lt;= columns[i] &lt;= 10</code></li>\n\t<li><code>1 &lt;= row.length &lt;= 10</code></li>\n\t<li>All <code>names[i]</code> are <strong>distinct</strong>.</li>\n\t<li>At most <code>2000</code> calls will be made to <code>ins</code> and <code>rmv</code>.</li>\n\t<li>At most <code>10<sup>4</sup></code> calls will be made to <code>sel</code>.</li>\n\t<li>At most <code>500</code> calls will be made to <code>exp</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<strong>Follow-up:</strong> Which approach would you choose if the table might become sparse due to many deletions, and why? Consider the impact on memory usage and performance.",
+  "hints": [
+    "What data structure do you need to use for this problem?",
+    "Try using a Hash map, each table name will be the key, and the value will be an array of all rows."
+  ],
+  "metaData": "{\n  \"classname\": \"SQL\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"list<string>\",\n        \"name\": \"names\"\n      },\n      {\n        \"name\": \"columns\",\n        \"type\": \"list<integer>\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"string\",\n          \"name\": \"name\"\n        },\n        {\n          \"type\": \"list<string>\",\n          \"name\": \"row\"\n        }\n      ],\n      \"name\": \"ins\",\n      \"return\": {\n        \"type\": \"boolean\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"string\",\n          \"name\": \"name\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"rowId\"\n        }\n      ],\n      \"name\": \"rmv\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"string\",\n          \"name\": \"name\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"rowId\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"columnId\"\n        }\n      ],\n      \"name\": \"sel\",\n      \"return\": {\n        \"type\": \"string\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"string\",\n          \"name\": \"name\"\n        }\n      ],\n      \"name\": \"exp\",\n      \"return\": {\n        \"type\": \"list<string>\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"20.2K\", \"totalSubmission\": \"31.4K\", \"totalAcceptedRaw\": 20221, \"totalSubmissionRaw\": 31381, \"acRate\": \"64.4%\"}",
+  "likes": 81,
+  "dislikes": 106,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"SQL\",\"ins\",\"sel\",\"ins\",\"exp\",\"rmv\",\"sel\",\"exp\"]\n[[[\"one\",\"two\",\"three\"],[2,3,1]],[\"two\",[\"first\",\"second\",\"third\"]],[\"two\",1,3],[\"two\",[\"fourth\",\"fifth\",\"sixth\"]],[\"two\"],[\"two\",1],[\"two\",2,2],[\"two\"]]",
+    "[\"SQL\",\"ins\",\"sel\",\"rmv\",\"sel\",\"ins\",\"ins\"]\n[[[\"one\",\"two\",\"three\"],[2,3,1]],[\"two\",[\"first\",\"second\",\"third\"]],[\"two\",1,3],[\"two\",1],[\"two\",1,2],[\"two\",[\"fourth\",\"fifth\"]],[\"two\",[\"fourth\",\"fifth\",\"sixth\"]]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 23, \"slug\": \"openai\", \"name\": \"OpenAI\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class SQL {\npublic:\n    SQL(vector<string>& names, vector<int>& columns) {\n        \n    }\n    \n    bool ins(string name, vector<string> row) {\n        \n    }\n    \n    void rmv(string name, int rowId) {\n        \n    }\n    \n    string sel(string name, int rowId, int columnId) {\n        \n    }\n    \n    vector<string> exp(string name) {\n        \n    }\n};\n\n/**\n * Your SQL object will be instantiated and called as such:\n * SQL* obj = new SQL(names, columns);\n * bool param_1 = obj->ins(name,row);\n * obj->rmv(name,rowId);\n * string param_3 = obj->sel(name,rowId,columnId);\n * vector<string> param_4 = obj->exp(name);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class SQL {\n\n    public SQL(List<String> names, List<Integer> columns) {\n        \n    }\n    \n    public boolean ins(String name, List<String> row) {\n        \n    }\n    \n    public void rmv(String name, int rowId) {\n        \n    }\n    \n    public String sel(String name, int rowId, int columnId) {\n        \n    }\n    \n    public List<String> exp(String name) {\n        \n    }\n}\n\n/**\n * Your SQL object will be instantiated and called as such:\n * SQL obj = new SQL(names, columns);\n * boolean param_1 = obj.ins(name,row);\n * obj.rmv(name,rowId);\n * String param_3 = obj.sel(name,rowId,columnId);\n * List<String> param_4 = obj.exp(name);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class SQL:\n\n    def __init__(self, names: List[str], columns: List[int]):\n        \n\n    def ins(self, name: str, row: List[str]) -> bool:\n        \n\n    def rmv(self, name: str, rowId: int) -> None:\n        \n\n    def sel(self, name: str, rowId: int, columnId: int) -> str:\n        \n\n    def exp(self, name: str) -> List[str]:\n        \n\n\n# Your SQL object will be instantiated and called as such:\n# obj = SQL(names, columns)\n# param_1 = obj.ins(name,row)\n# obj.rmv(name,rowId)\n# param_3 = obj.sel(name,rowId,columnId)\n# param_4 = obj.exp(name)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class SQL(object):\n\n    def __init__(self, names, columns):\n        \"\"\"\n        :type names: List[str]\n        :type columns: List[int]\n        \"\"\"\n        \n\n    def ins(self, name, row):\n        \"\"\"\n        :type name: str\n        :type row: List[str]\n        :rtype: bool\n        \"\"\"\n        \n\n    def rmv(self, name, rowId):\n        \"\"\"\n        :type name: str\n        :type rowId: int\n        :rtype: None\n        \"\"\"\n        \n\n    def sel(self, name, rowId, columnId):\n        \"\"\"\n        :type name: str\n        :type rowId: int\n        :type columnId: int\n        :rtype: str\n        \"\"\"\n        \n\n    def exp(self, name):\n        \"\"\"\n        :type name: str\n        :rtype: List[str]\n        \"\"\"\n        \n\n\n# Your SQL object will be instantiated and called as such:\n# obj = SQL(names, columns)\n# param_1 = obj.ins(name,row)\n# obj.rmv(name,rowId)\n# param_3 = obj.sel(name,rowId,columnId)\n# param_4 = obj.exp(name)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} names\n * @param {number[]} columns\n */\nvar SQL = function(names, columns) {\n    \n};\n\n/** \n * @param {string} name \n * @param {string[]} row\n * @return {boolean}\n */\nSQL.prototype.ins = function(name, row) {\n    \n};\n\n/** \n * @param {string} name \n * @param {number} rowId\n * @return {void}\n */\nSQL.prototype.rmv = function(name, rowId) {\n    \n};\n\n/** \n * @param {string} name \n * @param {number} rowId \n * @param {number} columnId\n * @return {string}\n */\nSQL.prototype.sel = function(name, rowId, columnId) {\n    \n};\n\n/** \n * @param {string} name\n * @return {string[]}\n */\nSQL.prototype.exp = function(name) {\n    \n};\n\n/** \n * Your SQL object will be instantiated and called as such:\n * var obj = new SQL(names, columns)\n * var param_1 = obj.ins(name,row)\n * obj.rmv(name,rowId)\n * var param_3 = obj.sel(name,rowId,columnId)\n * var param_4 = obj.exp(name)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class SQL {\n    constructor(names: string[], columns: number[]) {\n        \n    }\n\n    ins(name: string, row: string[]): boolean {\n        \n    }\n\n    rmv(name: string, rowId: number): void {\n        \n    }\n\n    sel(name: string, rowId: number, columnId: number): string {\n        \n    }\n\n    exp(name: string): string[] {\n        \n    }\n}\n\n/**\n * Your SQL object will be instantiated and called as such:\n * var obj = new SQL(names, columns)\n * var param_1 = obj.ins(name,row)\n * obj.rmv(name,rowId)\n * var param_3 = obj.sel(name,rowId,columnId)\n * var param_4 = obj.exp(name)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class SQL {\n\n    public SQL(IList<string> names, IList<int> columns) {\n        \n    }\n    \n    public bool Ins(string name, IList<string> row) {\n        \n    }\n    \n    public void Rmv(string name, int rowId) {\n        \n    }\n    \n    public string Sel(string name, int rowId, int columnId) {\n        \n    }\n    \n    public IList<string> Exp(string name) {\n        \n    }\n}\n\n/**\n * Your SQL object will be instantiated and called as such:\n * SQL obj = new SQL(names, columns);\n * bool param_1 = obj.Ins(name,row);\n * obj.Rmv(name,rowId);\n * string param_3 = obj.Sel(name,rowId,columnId);\n * IList<string> param_4 = obj.Exp(name);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} SQL;\n\n\nSQL* sQLCreate(char** names, int namesSize, int* columns, int columnsSize) {\n    \n}\n\nbool sQLIns(SQL* obj, char* name, char** row, int rowSize) {\n    \n}\n\nvoid sQLRmv(SQL* obj, char* name, int rowId) {\n    \n}\n\nchar* sQLSel(SQL* obj, char* name, int rowId, int columnId) {\n    \n}\n\nchar** sQLExp(SQL* obj, char* name, int* retSize) {\n    \n}\n\nvoid sQLFree(SQL* obj) {\n    \n}\n\n/**\n * Your SQL struct will be instantiated and called as such:\n * SQL* obj = sQLCreate(names, namesSize, columns, columnsSize);\n * bool param_1 = sQLIns(obj, name, row, rowSize);\n \n * sQLRmv(obj, name, rowId);\n \n * char* param_3 = sQLSel(obj, name, rowId, columnId);\n \n * char** param_4 = sQLExp(obj, name, retSize);\n \n * sQLFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type SQL struct {\n    \n}\n\n\nfunc Constructor(names []string, columns []int) SQL {\n    \n}\n\n\nfunc (this *SQL) Ins(name string, row []string) bool {\n    \n}\n\n\nfunc (this *SQL) Rmv(name string, rowId int)  {\n    \n}\n\n\nfunc (this *SQL) Sel(name string, rowId int, columnId int) string {\n    \n}\n\n\nfunc (this *SQL) Exp(name string) []string {\n    \n}\n\n\n/**\n * Your SQL object will be instantiated and called as such:\n * obj := Constructor(names, columns);\n * param_1 := obj.Ins(name,row);\n * obj.Rmv(name,rowId);\n * param_3 := obj.Sel(name,rowId,columnId);\n * param_4 := obj.Exp(name);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class SQL(names: List<String>, columns: List<Int>) {\n\n    fun ins(name: String, row: List<String>): Boolean {\n        \n    }\n\n    fun rmv(name: String, rowId: Int) {\n        \n    }\n\n    fun sel(name: String, rowId: Int, columnId: Int): String {\n        \n    }\n\n    fun exp(name: String): List<String> {\n        \n    }\n\n}\n\n/**\n * Your SQL object will be instantiated and called as such:\n * var obj = SQL(names, columns)\n * var param_1 = obj.ins(name,row)\n * obj.rmv(name,rowId)\n * var param_3 = obj.sel(name,rowId,columnId)\n * var param_4 = obj.exp(name)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass SQL {\n\n    init(_ names: [String], _ columns: [Int]) {\n        \n    }\n    \n    func ins(_ name: String, _ row: [String]) -> Bool {\n        \n    }\n    \n    func rmv(_ name: String, _ rowId: Int) {\n        \n    }\n    \n    func sel(_ name: String, _ rowId: Int, _ columnId: Int) -> String {\n        \n    }\n    \n    func exp(_ name: String) -> [String] {\n        \n    }\n}\n\n/**\n * Your SQL object will be instantiated and called as such:\n * let obj = SQL(names, columns)\n * let ret_1: Bool = obj.ins(name, row)\n * obj.rmv(name, rowId)\n * let ret_3: String = obj.sel(name, rowId, columnId)\n * let ret_4: [String] = obj.exp(name)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct SQL {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl SQL {\n\n    fn new(names: Vec<String>, columns: Vec<i32>) -> Self {\n        \n    }\n    \n    fn ins(&self, name: String, row: Vec<String>) -> bool {\n        \n    }\n    \n    fn rmv(&self, name: String, row_id: i32) {\n        \n    }\n    \n    fn sel(&self, name: String, row_id: i32, column_id: i32) -> String {\n        \n    }\n    \n    fn exp(&self, name: String) -> Vec<String> {\n        \n    }\n}\n\n/**\n * Your SQL object will be instantiated and called as such:\n * let obj = SQL::new(names, columns);\n * let ret_1: bool = obj.ins(name, row);\n * obj.rmv(name, rowId);\n * let ret_3: String = obj.sel(name, rowId, columnId);\n * let ret_4: Vec<String> = obj.exp(name);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class SQL\n\n=begin\n    :type names: String[]\n    :type columns: Integer[]\n=end\n    def initialize(names, columns)\n        \n    end\n\n\n=begin\n    :type name: String\n    :type row: String[]\n    :rtype: Boolean\n=end\n    def ins(name, row)\n        \n    end\n\n\n=begin\n    :type name: String\n    :type row_id: Integer\n    :rtype: Void\n=end\n    def rmv(name, row_id)\n        \n    end\n\n\n=begin\n    :type name: String\n    :type row_id: Integer\n    :type column_id: Integer\n    :rtype: String\n=end\n    def sel(name, row_id, column_id)\n        \n    end\n\n\n=begin\n    :type name: String\n    :rtype: String[]\n=end\n    def exp(name)\n        \n    end\n\n\nend\n\n# Your SQL object will be instantiated and called as such:\n# obj = SQL.new(names, columns)\n# param_1 = obj.ins(name, row)\n# obj.rmv(name, row_id)\n# param_3 = obj.sel(name, row_id, column_id)\n# param_4 = obj.exp(name)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class SQL {\n    /**\n     * @param String[] $names\n     * @param Integer[] $columns\n     */\n    function __construct($names, $columns) {\n        \n    }\n  \n    /**\n     * @param String $name\n     * @param String[] $row\n     * @return Boolean\n     */\n    function ins($name, $row) {\n        \n    }\n  \n    /**\n     * @param String $name\n     * @param Integer $rowId\n     * @return NULL\n     */\n    function rmv($name, $rowId) {\n        \n    }\n  \n    /**\n     * @param String $name\n     * @param Integer $rowId\n     * @param Integer $columnId\n     * @return String\n     */\n    function sel($name, $rowId, $columnId) {\n        \n    }\n  \n    /**\n     * @param String $name\n     * @return String[]\n     */\n    function exp($name) {\n        \n    }\n}\n\n/**\n * Your SQL object will be instantiated and called as such:\n * $obj = SQL($names, $columns);\n * $ret_1 = $obj->ins($name, $row);\n * $obj->rmv($name, $rowId);\n * $ret_3 = $obj->sel($name, $rowId, $columnId);\n * $ret_4 = $obj->exp($name);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class SQL {\n\n  SQL(List<String> names, List<int> columns) {\n    \n  }\n  \n  bool ins(String name, List<String> row) {\n    \n  }\n  \n  void rmv(String name, int rowId) {\n    \n  }\n  \n  String sel(String name, int rowId, int columnId) {\n    \n  }\n  \n  List<String> exp(String name) {\n    \n  }\n}\n\n/**\n * Your SQL object will be instantiated and called as such:\n * SQL obj = SQL(names, columns);\n * bool param1 = obj.ins(name,row);\n * obj.rmv(name,rowId);\n * String param3 = obj.sel(name,rowId,columnId);\n * List<String> param4 = obj.exp(name);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class SQL(_names: List[String], _columns: List[Int]) {\n\n    def ins(name: String, row: List[String]): Boolean = {\n        \n    }\n\n    def rmv(name: String, rowId: Int): Unit = {\n        \n    }\n\n    def sel(name: String, rowId: Int, columnId: Int): String = {\n        \n    }\n\n    def exp(name: String): List[String] = {\n        \n    }\n\n}\n\n/**\n * Your SQL object will be instantiated and called as such:\n * val obj = new SQL(names, columns)\n * val param_1 = obj.ins(name,row)\n * obj.rmv(name,rowId)\n * val param_3 = obj.sel(name,rowId,columnId)\n * val param_4 = obj.exp(name)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule SQL do\n  @spec init_(names :: [String.t], columns :: [integer]) :: any\n  def init_(names, columns) do\n    \n  end\n\n  @spec ins(name :: String.t, row :: [String.t]) :: boolean\n  def ins(name, row) do\n    \n  end\n\n  @spec rmv(name :: String.t, row_id :: integer) :: any\n  def rmv(name, row_id) do\n    \n  end\n\n  @spec sel(name :: String.t, row_id :: integer, column_id :: integer) :: String.t\n  def sel(name, row_id, column_id) do\n    \n  end\n\n  @spec exp(name :: String.t) :: [String.t]\n  def exp(name) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# SQL.init_(names, columns)\n# param_1 = SQL.ins(name, row)\n# SQL.rmv(name, row_id)\n# param_3 = SQL.sel(name, row_id, column_id)\n# param_4 = SQL.exp(name)\n\n# SQL.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec sql_init_(Names :: [unicode:unicode_binary()], Columns :: [integer()]) -> any().\nsql_init_(Names, Columns) ->\n  .\n\n-spec sql_ins(Name :: unicode:unicode_binary(), Row :: [unicode:unicode_binary()]) -> boolean().\nsql_ins(Name, Row) ->\n  .\n\n-spec sql_rmv(Name :: unicode:unicode_binary(), RowId :: integer()) -> any().\nsql_rmv(Name, RowId) ->\n  .\n\n-spec sql_sel(Name :: unicode:unicode_binary(), RowId :: integer(), ColumnId :: integer()) -> unicode:unicode_binary().\nsql_sel(Name, RowId, ColumnId) ->\n  .\n\n-spec sql_exp(Name :: unicode:unicode_binary()) -> [unicode:unicode_binary()].\nsql_exp(Name) ->\n  .\n\n\n%% Your functions will be called as such:\n%% sql_init_(Names, Columns),\n%% Param_1 = sql_ins(Name, Row),\n%% sql_rmv(Name, RowId),\n%% Param_3 = sql_sel(Name, RowId, ColumnId),\n%% Param_4 = sql_exp(Name),\n\n%% sql_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define sql%\n  (class object%\n    (super-new)\n    \n    ; names : (listof string?)\n    ; columns : (listof exact-integer?)\n    (init-field\n      names\n      columns)\n    \n    ; ins : string? (listof string?) -> boolean?\n    (define/public (ins name row)\n      )\n    ; rmv : string? exact-integer? -> void?\n    (define/public (rmv name row-id)\n      )\n    ; sel : string? exact-integer? exact-integer? -> string?\n    (define/public (sel name row-id column-id)\n      )\n    ; exp : string? -> (listof string?)\n    (define/public (exp name)\n      )))\n\n;; Your sql% object will be instantiated and called as such:\n;; (define obj (new sql% [names names] [columns columns]))\n;; (define param_1 (send obj ins name row))\n;; (send obj rmv name row-id)\n;; (define param_3 (send obj sel name row-id column-id))\n;; (define param_4 (send obj exp name))"
+    }
+  ],
+  "solution": null
+}

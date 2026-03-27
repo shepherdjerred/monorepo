@@ -1,0 +1,140 @@
+{
+  "questionId": "2674",
+  "questionFrontendId": "2599",
+  "title": "Make the Prefix Sum Non-negative",
+  "titleSlug": "make-the-prefix-sum-non-negative",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> integer array <code>nums</code>. You can apply the following operation any number of times:</p>\n\n<ul>\n\t<li>Pick any element from <code>nums</code> and put it at the end of <code>nums</code>.</li>\n</ul>\n\n<p>The prefix sum array of <code>nums</code> is an array <code>prefix</code> of the same length as <code>nums</code> such that <code>prefix[i]</code> is the sum of all the integers <code>nums[j]</code> where <code>j</code> is in the inclusive range <code>[0, i]</code>.</p>\n\n<p>Return <em>the minimum number of operations such that the prefix sum array does not contain negative integers</em>. The test cases are generated such that it is always possible to make the prefix sum array non-negative.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2,3,-5,4]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> we do not need to do any operations.\nThe array is [2,3,-5,4]. The prefix sum array is [2, 5, 0, 4].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [3,-5,-2,6]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> we can do one operation on index 1.\nThe array after the operation is [3,-2,6,-5]. The prefix sum array is [3, 1, 7, 2].\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-10<sup>9</sup> &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "There will always be a way to make the prefix sum non-negative. How can we use that?",
+    "Loop over the array keeping the prefix sum. Whenever it goes negative, move the smallest number you have seen to the end."
+  ],
+  "metaData": "{\n  \"name\": \"makePrefSumNonNegative\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"8.4K\", \"totalSubmission\": \"16.2K\", \"totalAcceptedRaw\": 8412, \"totalSubmissionRaw\": 16205, \"acRate\": \"51.9%\"}",
+  "likes": 98,
+  "dislikes": 3,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Furthest Building You Can Reach\", \"titleSlug\": \"furthest-building-you-can-reach\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Transactions Without Negative Balance\", \"titleSlug\": \"maximum-transactions-without-negative-balance\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,3,-5,4]",
+    "[3,-5,-2,6]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int makePrefSumNonNegative(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int makePrefSumNonNegative(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def makePrefSumNonNegative(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def makePrefSumNonNegative(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar makePrefSumNonNegative = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function makePrefSumNonNegative(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MakePrefSumNonNegative(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int makePrefSumNonNegative(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func makePrefSumNonNegative(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun makePrefSumNonNegative(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func makePrefSumNonNegative(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn make_pref_sum_non_negative(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef make_pref_sum_non_negative(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function makePrefSumNonNegative($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int makePrefSumNonNegative(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def makePrefSumNonNegative(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec make_pref_sum_non_negative(nums :: [integer]) :: integer\n  def make_pref_sum_non_negative(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec make_pref_sum_non_negative(Nums :: [integer()]) -> integer().\nmake_pref_sum_non_negative(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (make-pref-sum-non-negative nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2673",
+    "content": "## Solution\n\n---\n\n### Overview\n\nTo put this problem in plain terms: our task is to determine how many operations need to be applied so that the running total of the numbers in `nums` is never negative. To modify `nums`, we are allowed to repeatedly take any element from the array and move it to the end.  \n\nLooking at the second example of the problem description, we can see that we get a negative number if we take the total of the first two numbers: `3 - 5`. After we have applied the allowed operation one time, the running total of the array is as follows: `3`, `1`, `7`, `2`, where each number represents the sum of all the numbers leading up to that point.  \n\nWe call this 'running total' of sums a prefix sum array. In other words, the prefix sum at index `i` is the sum of the first `i + 1` elements of the array:  \n\n$\\text{prefix\\_sum}[i] = \\sum_{j=0}^{i} \\text{nums}[j]$ \n\nA solution is **guaranteed to exist**, meaning that it is always possible to rearrange the array in a way that satisfies the condition.\n\n---\n\n### Approach: Greedy\n\n#### Intuition\n\nWe want to process the array `nums` while ensuring that a running sum (which we'll call `prefixSum`) never becomes negative. As we iterate through `nums` from left to right, we keep updating `prefixSum` by adding each element. If `prefixSum` remains non-negative throughout, we don’t need to perform any operations. However, if it becomes negative at some index `i`, we must take action to restore it to a non-negative state.\n\nAt this point, we know that some elements in the subarray `nums[0...i]` must be moved to the end of the array. But which elements should we move? A naive approach would be to simply move the current element `nums[i]`, since it is the one that directly caused `prefixSum` to go negative. However, this is not always optimal. There may be earlier elements that are smaller (more negative) than `nums[i]`, and moving one of those instead would result in a larger `prefixSum`, reducing the chances of needing further operations later.\n\nThis insight leads us to a more efficient strategy: as we traverse `nums`, we maintain a record of the most negative values encountered so far. When `prefixSum` turns negative, instead of blindly moving the latest element, we remove the most negative element seen so far, ensuring that we regain the maximum possible `prefixSum` with the fewest moves. \n\nTo efficiently retrieve the most negative element when needed, we use a **min-heap (priority queue)**. Please visit our [Explore Card](https://leetcode.com/explore/featured/card/heap/) to learn more about it. This data structure allows us to insert elements as we iterate and efficiently extract the smallest (most negative) element whenever `prefixSum` needs to be restored. Whenever `prefixSum` turns negative, we pop the most negative value from the heap and subtract it from `prefixSum`, effectively \"removing\" it from the prefix sum calculation. Each such removal counts as an operation, which we track using a counter.\n\nOne crucial observation is that once we complete the iteration, we don’t need to revisit the moved elements. The problem guarantees that a solution always exists, meaning that the total sum of `nums` is non-negative. This ensures that once we have restored `prefixSum` to a non-negative state, adding the remaining elements (including the moved ones) will not cause it to become negative again. Therefore, the number of operations we performed is our final answer.\n\n<details>\n  <summary>Proof by Induction</summary>\n\n  <h4>Base Case (n = 1):</h4>\n  <p>\n    For an array of size 1, the prefix sum is simply the single element. If the element is non-negative, no operations are needed. If the element is negative, it must be moved to the end of the array (which is itself), and the prefix sum becomes 0. This satisfies the condition, and the number of operations is 1. The base case holds.\n  </p>\n\n  <h4>Inductive Hypothesis:</h4>\n  <p>\n    Assume that for an array of size $k$, the algorithm correctly maintains a non-negative prefix sum by performing the minimal number of operations. That is, the algorithm ensures that the prefix sum is non-negative at every step, and the number of operations is minimized.\n  </p>\n\n  <h4>Inductive Step (n = k + 1):</h4>\n  <p>\n    Consider an array of size $k + 1$. Let the array be $nums = [a_1, a_2, \\dots, a_{k+1}]$. We need to show that the algorithm works correctly for this array.\n  </p>\n\n  <ol>\n    <li>\n      <strong>Prefix Sum Calculation:</strong>\n      <ul>\n        <li>As we iterate through the array, we maintain a running prefix sum $S$. At each step $i$, we add $a_i$ to $S$.</li>\n        <li>If $S$ remains non-negative, no operation is needed, and we proceed to the next element.</li>\n      </ul>\n    </li>\n    <li>\n      <strong>Handling Negative Prefix Sum:</strong>\n      <ul>\n        <li>If $S$ becomes negative at some step $i$, we need to move one or more elements from the subarray $nums[0..i]$ to the end of the array to make $S$ non-negative.</li>\n        <li>By the inductive hypothesis, the algorithm has already handled the first $k$ elements correctly, ensuring that the prefix sum up to $k$ is non-negative with the minimal number of operations.</li>\n      </ul>\n    </li>\n    <li>\n      <strong>Optimality of Moving the Most Negative Element:</strong>\n      <ul>\n        <li>When $S$ becomes negative at step $i = k + 1$, the algorithm uses a min-heap to identify the most negative element encountered so far. Moving this element to the end maximizes the prefix sum $S$ and minimizes the number of operations.</li>\n        <li>This is because moving a more negative element (rather than the current element $a_{k+1}$) results in a larger increase in $S$, reducing the likelihood of needing additional operations in the future.</li>\n      </ul>\n    </li>\n    <li>\n      <strong>Termination:</strong>\n      <ul>\n        <li>After processing all $k + 1$ elements, the algorithm ensures that the prefix sum is non-negative. Since the total sum of the array is non-negative (by the problem's guarantee), the elements moved to the end do not violate the non-negativity condition.</li>\n      </ul>\n    </li>\n    <li>\n      <strong>Minimal Operations:</strong>\n      <ul>\n        <li>By always moving the most negative element when necessary, we minimize the number of operations. This is because each operation contributes the maximum possible increase to the prefix sum, reducing the need for further operations.</li>\n      </ul>\n    </li>\n  </ol>\n\n  <h4>Conclusion:</h4>\n  <p>\n    By the principle of mathematical induction, the algorithm works correctly for arrays of any size $n$. It maintains a non-negative prefix sum at every step and performs the minimal number of operations to achieve this.\n  </p>\n\n</details>\n\n!?!../Documents/2599/2599_make_the_prefix_sum_non_negative.json:960,720!?! <br>\n\n#### Algorithm\n\n1. Initialize Variables:\n\n    - `operations = 0`: A Counter for the number of operations performed.\n    - `prefixSum = 0`: A Variable to track the running sum of elements in `nums`.\n    - `pq`: A priority queue (min-heap) to store negative numbers encountered in the array.\n\n2. Iterate through the array `nums`:\n\n    - For each element `num` in the array:\n        - If `num` is negative, add it to the priority queue `pq`.\n        - Add `num` to `prefixSum` to update the running sum.\n        - If `prefixSum` becomes negative:\n            -  Remove the smallest element (most negative) from the `pq`\n            -  Subtract the popped value from `prefixSum`.\n            - Increment `operations`\n\n3. After iterating through all elements, return `operations`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/RQZv9WfN/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"RQZv9WfN\"></iframe>\n\n#### Complexity Analysis\n\nHere, $N$ is the number of elements in the array `nums`.\n\n- Time complexity: $O(N \\log N)$\n\n  We traverse the array from left to right, adding negative integers to a priority queue. If at any point the `prefixSum` becomes negative, we remove an element from the queue to make it non-negative again. Each element can be pushed and popped only once from the queue and hence the total time complexity is equal to $O(N \\log N)$.\n\n- Space complexity: $O(N)$\n\n  The only space required apart from the variables is the priority queue whose size can be $O(N)$. Thus, the space complexity is equal to $O(N)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

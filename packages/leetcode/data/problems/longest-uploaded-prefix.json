@@ -1,0 +1,153 @@
+{
+  "questionId": "2512",
+  "questionFrontendId": "2424",
+  "title": "Longest Uploaded Prefix",
+  "titleSlug": "longest-uploaded-prefix",
+  "difficulty": "Medium",
+  "content": "<p>You are given a stream of <code>n</code> videos, each represented by a <strong>distinct</strong> number from <code>1</code> to <code>n</code> that you need to &quot;upload&quot; to a server. You need to implement a data structure that calculates the length of the <strong>longest uploaded prefix</strong> at various points in the upload process.</p>\n\n<p>We consider <code>i</code> to be an uploaded prefix if all videos in the range <code>1</code> to <code>i</code> (<strong>inclusive</strong>) have been uploaded to the server. The longest uploaded prefix is the <strong>maximum </strong>value of <code>i</code> that satisfies this definition.<br />\n<br />\nImplement the <code>LUPrefix </code>class:</p>\n\n<ul>\n\t<li><code>LUPrefix(int n)</code> Initializes the object for a stream of <code>n</code> videos.</li>\n\t<li><code>void upload(int video)</code> Uploads <code>video</code> to the server.</li>\n\t<li><code>int longest()</code> Returns the length of the <strong>longest uploaded prefix</strong> defined above.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;LUPrefix&quot;, &quot;upload&quot;, &quot;longest&quot;, &quot;upload&quot;, &quot;longest&quot;, &quot;upload&quot;, &quot;longest&quot;]\n[[4], [3], [], [1], [], [2], []]\n<strong>Output</strong>\n[null, null, 0, null, 1, null, 3]\n\n<strong>Explanation</strong>\nLUPrefix server = new LUPrefix(4);   // Initialize a stream of 4 videos.\nserver.upload(3);                    // Upload video 3.\nserver.longest();                    // Since video 1 has not been uploaded yet, there is no prefix.\n                                     // So, we return 0.\nserver.upload(1);                    // Upload video 1.\nserver.longest();                    // The prefix [1] is the longest uploaded prefix, so we return 1.\nserver.upload(2);                    // Upload video 2.\nserver.longest();                    // The prefix [1,2,3] is the longest uploaded prefix, so we return 3.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= video &lt;= n</code></li>\n\t<li>All values of <code>video</code> are <strong>distinct</strong>.</li>\n\t<li>At most <code>2 * 10<sup>5</sup></code> calls <strong>in total</strong> will be made to <code>upload</code> and <code>longest</code>.</li>\n\t<li>At least one call will be made to <code>longest</code>.</li>\n</ul>\n",
+  "hints": [
+    "Maintain an array keeping track of whether video “i” has been uploaded yet."
+  ],
+  "metaData": "{\n  \"classname\": \"LUPrefix\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer\",\n        \"name\": \"n\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"video\"\n        }\n      ],\n      \"name\": \"upload\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [],\n      \"return\": {\n        \"type\": \"integer\"\n      },\n      \"name\": \"longest\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"28.4K\", \"totalSubmission\": \"51.9K\", \"totalAcceptedRaw\": 28450, \"totalSubmissionRaw\": 51860, \"acRate\": \"54.9%\"}",
+  "likes": 386,
+  "dislikes": 32,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Design an Ordered Stream\", \"titleSlug\": \"design-an-ordered-stream\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find X Value of Array II\", \"titleSlug\": \"find-x-value-of-array-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"LUPrefix\",\"upload\",\"longest\",\"upload\",\"longest\",\"upload\",\"longest\"]\n[[4],[3],[],[1],[],[2],[]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Binary Indexed Tree",
+      "slug": "binary-indexed-tree"
+    },
+    {
+      "name": "Segment Tree",
+      "slug": "segment-tree"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class LUPrefix {\npublic:\n    LUPrefix(int n) {\n        \n    }\n    \n    void upload(int video) {\n        \n    }\n    \n    int longest() {\n        \n    }\n};\n\n/**\n * Your LUPrefix object will be instantiated and called as such:\n * LUPrefix* obj = new LUPrefix(n);\n * obj->upload(video);\n * int param_2 = obj->longest();\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class LUPrefix {\n\n    public LUPrefix(int n) {\n        \n    }\n    \n    public void upload(int video) {\n        \n    }\n    \n    public int longest() {\n        \n    }\n}\n\n/**\n * Your LUPrefix object will be instantiated and called as such:\n * LUPrefix obj = new LUPrefix(n);\n * obj.upload(video);\n * int param_2 = obj.longest();\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class LUPrefix:\n\n    def __init__(self, n: int):\n        \n\n    def upload(self, video: int) -> None:\n        \n\n    def longest(self) -> int:\n        \n\n\n# Your LUPrefix object will be instantiated and called as such:\n# obj = LUPrefix(n)\n# obj.upload(video)\n# param_2 = obj.longest()"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class LUPrefix(object):\n\n    def __init__(self, n):\n        \"\"\"\n        :type n: int\n        \"\"\"\n        \n\n    def upload(self, video):\n        \"\"\"\n        :type video: int\n        :rtype: None\n        \"\"\"\n        \n\n    def longest(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your LUPrefix object will be instantiated and called as such:\n# obj = LUPrefix(n)\n# obj.upload(video)\n# param_2 = obj.longest()"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n */\nvar LUPrefix = function(n) {\n    \n};\n\n/** \n * @param {number} video\n * @return {void}\n */\nLUPrefix.prototype.upload = function(video) {\n    \n};\n\n/**\n * @return {number}\n */\nLUPrefix.prototype.longest = function() {\n    \n};\n\n/** \n * Your LUPrefix object will be instantiated and called as such:\n * var obj = new LUPrefix(n)\n * obj.upload(video)\n * var param_2 = obj.longest()\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class LUPrefix {\n    constructor(n: number) {\n        \n    }\n\n    upload(video: number): void {\n        \n    }\n\n    longest(): number {\n        \n    }\n}\n\n/**\n * Your LUPrefix object will be instantiated and called as such:\n * var obj = new LUPrefix(n)\n * obj.upload(video)\n * var param_2 = obj.longest()\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class LUPrefix {\n\n    public LUPrefix(int n) {\n        \n    }\n    \n    public void Upload(int video) {\n        \n    }\n    \n    public int Longest() {\n        \n    }\n}\n\n/**\n * Your LUPrefix object will be instantiated and called as such:\n * LUPrefix obj = new LUPrefix(n);\n * obj.Upload(video);\n * int param_2 = obj.Longest();\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} LUPrefix;\n\n\nLUPrefix* lUPrefixCreate(int n) {\n    \n}\n\nvoid lUPrefixUpload(LUPrefix* obj, int video) {\n    \n}\n\nint lUPrefixLongest(LUPrefix* obj) {\n    \n}\n\nvoid lUPrefixFree(LUPrefix* obj) {\n    \n}\n\n/**\n * Your LUPrefix struct will be instantiated and called as such:\n * LUPrefix* obj = lUPrefixCreate(n);\n * lUPrefixUpload(obj, video);\n \n * int param_2 = lUPrefixLongest(obj);\n \n * lUPrefixFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type LUPrefix struct {\n    \n}\n\n\nfunc Constructor(n int) LUPrefix {\n    \n}\n\n\nfunc (this *LUPrefix) Upload(video int)  {\n    \n}\n\n\nfunc (this *LUPrefix) Longest() int {\n    \n}\n\n\n/**\n * Your LUPrefix object will be instantiated and called as such:\n * obj := Constructor(n);\n * obj.Upload(video);\n * param_2 := obj.Longest();\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class LUPrefix(n: Int) {\n\n    fun upload(video: Int) {\n        \n    }\n\n    fun longest(): Int {\n        \n    }\n\n}\n\n/**\n * Your LUPrefix object will be instantiated and called as such:\n * var obj = LUPrefix(n)\n * obj.upload(video)\n * var param_2 = obj.longest()\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass LUPrefix {\n\n    init(_ n: Int) {\n        \n    }\n    \n    func upload(_ video: Int) {\n        \n    }\n    \n    func longest() -> Int {\n        \n    }\n}\n\n/**\n * Your LUPrefix object will be instantiated and called as such:\n * let obj = LUPrefix(n)\n * obj.upload(video)\n * let ret_2: Int = obj.longest()\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct LUPrefix {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl LUPrefix {\n\n    fn new(n: i32) -> Self {\n        \n    }\n    \n    fn upload(&self, video: i32) {\n        \n    }\n    \n    fn longest(&self) -> i32 {\n        \n    }\n}\n\n/**\n * Your LUPrefix object will be instantiated and called as such:\n * let obj = LUPrefix::new(n);\n * obj.upload(video);\n * let ret_2: i32 = obj.longest();\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class LUPrefix\n\n=begin\n    :type n: Integer\n=end\n    def initialize(n)\n        \n    end\n\n\n=begin\n    :type video: Integer\n    :rtype: Void\n=end\n    def upload(video)\n        \n    end\n\n\n=begin\n    :rtype: Integer\n=end\n    def longest()\n        \n    end\n\n\nend\n\n# Your LUPrefix object will be instantiated and called as such:\n# obj = LUPrefix.new(n)\n# obj.upload(video)\n# param_2 = obj.longest()"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class LUPrefix {\n    /**\n     * @param Integer $n\n     */\n    function __construct($n) {\n        \n    }\n  \n    /**\n     * @param Integer $video\n     * @return NULL\n     */\n    function upload($video) {\n        \n    }\n  \n    /**\n     * @return Integer\n     */\n    function longest() {\n        \n    }\n}\n\n/**\n * Your LUPrefix object will be instantiated and called as such:\n * $obj = LUPrefix($n);\n * $obj->upload($video);\n * $ret_2 = $obj->longest();\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class LUPrefix {\n\n  LUPrefix(int n) {\n    \n  }\n  \n  void upload(int video) {\n    \n  }\n  \n  int longest() {\n    \n  }\n}\n\n/**\n * Your LUPrefix object will be instantiated and called as such:\n * LUPrefix obj = LUPrefix(n);\n * obj.upload(video);\n * int param2 = obj.longest();\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class LUPrefix(_n: Int) {\n\n    def upload(video: Int): Unit = {\n        \n    }\n\n    def longest(): Int = {\n        \n    }\n\n}\n\n/**\n * Your LUPrefix object will be instantiated and called as such:\n * val obj = new LUPrefix(n)\n * obj.upload(video)\n * val param_2 = obj.longest()\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule LUPrefix do\n  @spec init_(n :: integer) :: any\n  def init_(n) do\n    \n  end\n\n  @spec upload(video :: integer) :: any\n  def upload(video) do\n    \n  end\n\n  @spec longest() :: integer\n  def longest() do\n    \n  end\nend\n\n# Your functions will be called as such:\n# LUPrefix.init_(n)\n# LUPrefix.upload(video)\n# param_2 = LUPrefix.longest()\n\n# LUPrefix.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec lu_prefix_init_(N :: integer()) -> any().\nlu_prefix_init_(N) ->\n  .\n\n-spec lu_prefix_upload(Video :: integer()) -> any().\nlu_prefix_upload(Video) ->\n  .\n\n-spec lu_prefix_longest() -> integer().\nlu_prefix_longest() ->\n  .\n\n\n%% Your functions will be called as such:\n%% lu_prefix_init_(N),\n%% lu_prefix_upload(Video),\n%% Param_2 = lu_prefix_longest(),\n\n%% lu_prefix_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define lu-prefix%\n  (class object%\n    (super-new)\n    \n    ; n : exact-integer?\n    (init-field\n      n)\n    \n    ; upload : exact-integer? -> void?\n    (define/public (upload video)\n      )\n    ; longest : -> exact-integer?\n    (define/public (longest)\n      )))\n\n;; Your lu-prefix% object will be instantiated and called as such:\n;; (define obj (new lu-prefix% [n n]))\n;; (send obj upload video)\n;; (define param_2 (send obj longest))"
+    }
+  ],
+  "solution": null
+}

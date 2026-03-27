@@ -1,0 +1,140 @@
+{
+  "questionId": "2717",
+  "questionFrontendId": "2603",
+  "title": "Collect Coins in a Tree",
+  "titleSlug": "collect-coins-in-a-tree",
+  "difficulty": "Hard",
+  "content": "<p>There exists an undirected and unrooted tree with <code>n</code> nodes indexed from <code>0</code> to <code>n - 1</code>. You are given an integer <code>n</code> and a 2D integer array edges of length <code>n - 1</code>, where <code>edges[i] = [a<sub>i</sub>, b<sub>i</sub>]</code> indicates that there is an edge between nodes <code>a<sub>i</sub></code> and <code>b<sub>i</sub></code> in the tree. You are also given&nbsp;an array <code>coins</code> of size <code>n</code> where <code>coins[i]</code> can be either <code>0</code> or <code>1</code>, where <code>1</code> indicates the presence of a coin in the vertex <code>i</code>.</p>\n\n<p>Initially, you choose to start at any vertex in&nbsp;the tree.&nbsp;Then, you can perform&nbsp;the following operations any number of times:&nbsp;</p>\n\n<ul>\n\t<li>Collect all the coins that are at a distance of at most <code>2</code> from the current vertex, or</li>\n\t<li>Move to any adjacent vertex in the tree.</li>\n</ul>\n\n<p>Find <em>the minimum number of edges you need to go through to collect all the coins and go back to the initial vertex</em>.</p>\n\n<p>Note that if you pass an edge several times, you need to count it into the answer several times.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/03/01/graph-2.png\" style=\"width: 522px; height: 522px;\" />\n<pre>\n<strong>Input:</strong> coins = [1,0,0,0,0,1], edges = [[0,1],[1,2],[2,3],[3,4],[4,5]]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> Start at vertex 2, collect the coin at vertex 0, move to vertex 3, collect the coin at vertex 5 then move back to vertex 2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/03/02/graph-4.png\" style=\"width: 522px; height: 522px;\" />\n<pre>\n<strong>Input:</strong> coins = [0,0,0,1,1,0,0,1], edges = [[0,1],[0,2],[1,3],[1,4],[2,5],[5,6],[5,7]]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> Start at vertex 0, collect the coins at vertices 4 and 3, move to vertex 2,  collect the coin at vertex 7, then move back to vertex 0.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == coins.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 3 * 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= coins[i] &lt;= 1</code></li>\n\t<li><code>edges.length == n - 1</code></li>\n\t<li><code>edges[i].length == 2</code></li>\n\t<li><code>0 &lt;= a<sub>i</sub>, b<sub>i</sub> &lt; n</code></li>\n\t<li><code>a<sub>i</sub> != b<sub>i</sub></code></li>\n\t<li><code>edges</code> represents a valid tree.</li>\n</ul>\n",
+  "hints": [
+    "All leaves that do not have a coin are redundant and can be deleted from the tree.",
+    "Remove the leaves that do not have coins on them, so that the resulting tree will have a coin on every leaf.",
+    "In the remaining tree, remove each leaf node and its parent from the tree. The remaining nodes in the tree are the ones that must be visited. Hence, the answer is equal to (# remaining nodes -1) * 2"
+  ],
+  "metaData": "{\n  \"name\": \"collectTheCoins\",\n  \"params\": [\n    {\n      \"name\": \"coins\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"edges\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"16.9K\", \"totalSubmission\": \"42.3K\", \"totalAcceptedRaw\": 16855, \"totalSubmissionRaw\": 42347, \"acRate\": \"39.8%\"}",
+  "likes": 560,
+  "dislikes": 25,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Height Trees\", \"titleSlug\": \"minimum-height-trees\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Sum of Distances in Tree\", \"titleSlug\": \"sum-of-distances-in-tree\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Score After Applying Operations on a Tree\", \"titleSlug\": \"maximum-score-after-applying-operations-on-a-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Number of Coins to Place in Tree Nodes\", \"titleSlug\": \"find-number-of-coins-to-place-in-tree-nodes\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,0,0,0,0,1]\n[[0,1],[1,2],[2,3],[3,4],[4,5]]",
+    "[0,0,0,1,1,0,0,1]\n[[0,1],[0,2],[1,3],[1,4],[2,5],[5,6],[5,7]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}], \"more_than_six_months\": [{\"timesEncountered\": 39, \"slug\": \"cisco\", \"name\": \"Cisco\"}, {\"timesEncountered\": 6, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 3, \"slug\": \"millennium\", \"name\": \"Millennium\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"meesho\", \"name\": \"Meesho\"}, {\"timesEncountered\": 2, \"slug\": \"uipath\", \"name\": \"UiPath\"}, {\"timesEncountered\": 2, \"slug\": \"graviton\", \"name\": \"Graviton\"}, {\"timesEncountered\": 2, \"slug\": \"lucid\", \"name\": \"Lucid\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Topological Sort",
+      "slug": "topological-sort"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int collectTheCoins(vector<int>& coins, vector<vector<int>>& edges) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int collectTheCoins(int[] coins, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def collectTheCoins(self, coins: List[int], edges: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def collectTheCoins(self, coins, edges):\n        \"\"\"\n        :type coins: List[int]\n        :type edges: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} coins\n * @param {number[][]} edges\n * @return {number}\n */\nvar collectTheCoins = function(coins, edges) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function collectTheCoins(coins: number[], edges: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CollectTheCoins(int[] coins, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int collectTheCoins(int* coins, int coinsSize, int** edges, int edgesSize, int* edgesColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func collectTheCoins(coins []int, edges [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun collectTheCoins(coins: IntArray, edges: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func collectTheCoins(_ coins: [Int], _ edges: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn collect_the_coins(coins: Vec<i32>, edges: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} coins\n# @param {Integer[][]} edges\n# @return {Integer}\ndef collect_the_coins(coins, edges)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $coins\n     * @param Integer[][] $edges\n     * @return Integer\n     */\n    function collectTheCoins($coins, $edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int collectTheCoins(List<int> coins, List<List<int>> edges) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def collectTheCoins(coins: Array[Int], edges: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec collect_the_coins(coins :: [integer], edges :: [[integer]]) :: integer\n  def collect_the_coins(coins, edges) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec collect_the_coins(Coins :: [integer()], Edges :: [[integer()]]) -> integer().\ncollect_the_coins(Coins, Edges) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (collect-the-coins coins edges)\n  (-> (listof exact-integer?) (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

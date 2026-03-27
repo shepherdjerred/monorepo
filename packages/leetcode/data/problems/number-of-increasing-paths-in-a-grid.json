@@ -1,0 +1,160 @@
+{
+  "questionId": "2409",
+  "questionFrontendId": "2328",
+  "title": "Number of Increasing Paths in a Grid",
+  "titleSlug": "number-of-increasing-paths-in-a-grid",
+  "difficulty": "Hard",
+  "content": "<p>You are given an <code>m x n</code> integer matrix <code>grid</code>, where you can move from a cell to any adjacent cell in all <code>4</code> directions.</p>\n\n<p>Return <em>the number of <strong>strictly</strong> <strong>increasing</strong> paths in the grid such that you can start from <strong>any</strong> cell and end at <strong>any</strong> cell. </em>Since the answer may be very large, return it <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>Two paths are considered different if they do not have exactly the same sequence of visited cells.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/05/10/griddrawio-4.png\" style=\"width: 181px; height: 121px;\" />\n<pre>\n<strong>Input:</strong> grid = [[1,1],[3,4]]\n<strong>Output:</strong> 8\n<strong>Explanation:</strong> The strictly increasing paths are:\n- Paths with length 1: [1], [1], [3], [4].\n- Paths with length 2: [1 -&gt; 3], [1 -&gt; 4], [3 -&gt; 4].\n- Paths with length 3: [1 -&gt; 3 -&gt; 4].\nThe total number of paths is 4 + 3 + 1 = 8.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> grid = [[1],[2]]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The strictly increasing paths are:\n- Paths with length 1: [1], [2].\n- Paths with length 2: [1 -&gt; 2].\nThe total number of paths is 2 + 1 = 3.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == grid.length</code></li>\n\t<li><code>n == grid[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 1000</code></li>\n\t<li><code>1 &lt;= m * n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= grid[i][j] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "How can you calculate the number of increasing paths that start from a cell (i, j)? Think about dynamic programming.",
+    "Define f(i, j) as the number of increasing paths starting from cell (i, j). Try to find how f(i, j) is related to each of f(i, j+1), f(i, j-1), f(i+1, j) and f(i-1, j)."
+  ],
+  "metaData": "{\n  \"name\": \"countPaths\",\n  \"params\": [\n    {\n      \"name\": \"grid\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"82.4K\", \"totalSubmission\": \"143.6K\", \"totalAcceptedRaw\": 82406, \"totalSubmissionRaw\": 143581, \"acRate\": \"57.4%\"}",
+  "likes": 2113,
+  "dislikes": 45,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Longest Increasing Path in a Matrix\", \"titleSlug\": \"longest-increasing-path-in-a-matrix\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"All Paths From Source to Target\", \"titleSlug\": \"all-paths-from-source-to-target\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Strictly Increasing Cells in a Matrix\", \"titleSlug\": \"maximum-strictly-increasing-cells-in-a-matrix\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,1],[3,4]]",
+    "[[1],[2]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Topological Sort",
+      "slug": "topological-sort"
+    },
+    {
+      "name": "Memoization",
+      "slug": "memoization"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countPaths(vector<vector<int>>& grid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countPaths(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countPaths(self, grid: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countPaths(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} grid\n * @return {number}\n */\nvar countPaths = function(grid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countPaths(grid: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountPaths(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int countPaths(int** grid, int gridSize, int* gridColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countPaths(grid [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countPaths(grid: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countPaths(_ grid: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_paths(grid: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} grid\n# @return {Integer}\ndef count_paths(grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $grid\n     * @return Integer\n     */\n    function countPaths($grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countPaths(List<List<int>> grid) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countPaths(grid: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_paths(grid :: [[integer]]) :: integer\n  def count_paths(grid) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_paths(Grid :: [[integer()]]) -> integer().\ncount_paths(Grid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-paths grid)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1810",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nAs shown in the picture below, we have found 8 valid paths. Note that:\n- A cell itself is also a valid path, so each cell in the grid stands for a unique path.\n- The path must be **strictly** increasing, so the paths colored in red are invalid.\n\n![img](../Figures/2328/1.png)\n\n \n\n---\n\n### Approach 1: Sorting + DP.\n\n#### Intuition   \n\nLet's build an auxiliary array `dp` of the same size as `grid` to represent the number of paths that end at each cell. Initially, the value of each `dp[i][j]` cell is `1`, which stands for the path made by `grid[i][j]` cell itself.\n\n![img](../Figures/2328/2.png)\n\nThen, for each cell `grid[i][j]`, we need to look for its neighbor cells in 4 directions, if there exists a neighbor cell (let's say `grid[i + 1][j]`) that is larger than `grid[i][j]`, it means every path that ends at `grid[i][j]` can be extended to `grid[i + 1][j]`. Therefore, the number of paths ending at `grid[i + 1][j]` should be incremented by `grid[i][j]`.\n\n\nHowever, if we traverse all cells by arbitrary order, we might need many repeated updates, as described below.\n\n![img](../Figures/2328/wrong.png)\n\nIt implies that we should iterate over all cells by value. If we sort these cells by value, then traverse over them from the smallest. This ensures that the number of paths ending at each cell in `dp` is updated only once.\n\n\nPlease refer to the following slide for an example. \n\n!?!../Documents/2328/s1.json:601,301!?!\n\n\n\n<br>\n\n#### Algorithm\n\n1) Initialize `dp`, a 2-d array of the same size as `grid`, and set every value as `1`.\n2) Sort all cells by value and iterate over the sorted cells.\n3) For each cell `grid[i][j]`, check its 4-direction neighbor cells, if a neighbor cell `grid[curr_i][curr_j]` has a larger value, then increment `dp[curr_i][curr_j]` by `dp[i][j]`.\n4) Return the sum of all cells of `dp` when the iteration ends.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/SLTCPGT6/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"SLTCPGT6\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$m \\times n$$ be the size of the input array `grid`.\n\n* Time complexity: $$O(m\\cdot n \\cdot\\log(m\\cdot n))$$\n\n    - We sort all cells by value, it takes $$O(k\\log k)$$ to sort an array of size $$O(k)$$, so it takes $$O(m\\cdot n \\cdot\\log(m\\cdot n))$$ time.\n    - The iteration over sorted cells has $$O(m \\cdot n)$$ steps, each step consists of checking at most four neighbor cells, thus it takes $$O(m \\cdot n)$$ time.\n    - For initialization of `dp` and the calculation of `answer` we iterate over all the cells of the `dp` array, which also takes $$O(m \\cdot n)$$ time.\n    - To sum up, the overall time complexity is $$O(m\\cdot n \\cdot\\log(m\\cdot n))$$.\n\n* Space complexity: $$O(m\\cdot n)$$\n\n    - We used two arrays, `cellList` and `dp`, they both contain $$O(m \\cdot n)$$ elements.\n\n<br/>\n\n\n\n---\n\n### Approach 2: DFS with Memoization\n\n\n#### Intuition   \n\nIn the previous approach, we have to sort all cells first to avoid repeated computation. Here, we introduce a better method that doesn't need traversing by order.\n\nWe define a function `dfs(i, j)` to calculate the number of increasing paths ending at `grid[i][j]`. `dfs(i, j)` consists of **at most** 5 parts:\n\n\n- 1, the path consisting of `grid[i][j]` itself.\n- `dfs(i - 1, j)`, if `grid[i - 1][j]` exists and is smaller than `grid[i][j]`. \n- `dfs(i, j - 1)`, if `grid[i][j - 1]` exists and is smaller than `grid[i][j]`.\n- `dfs(i + 1, j)`, if `grid[i + 1][j]` exists and is smaller than `grid[i][j]`.\n- `dfs(i, j + 1)`, if `grid[i][j + 1]` exists and is smaller than `grid[i][j]`.\n\nIf a neighbor cell with a smaller value (For example, `grid[i + 1][j] < grid[i][j]`) exists, we can get the number of paths ending at this cell as `dfs(i + 1, j)`, and for all those paths we can extend the path with the current element, so we increment `dfs(i, j)` by `dfs(i + 1, j)`.\n\n\n![img](../Figures/2328/3.png)\n\nRemember to use the memoization method to avoid repeated computation. Similarly, we create an array `dp` of the same size as `grid`. Initially, each cell `dp[i][j]` is set to `-1`, which means **unvisited**. \n\n\n![img](../Figures/2328/4.png)\n\nOnce we get the number of paths ending at cell `grid[i][j]` and update `dp[i][j]`, it means the cell `grid[i][j]` is **visited** and the value of `dfs(i, j)` calculated for the first time. If we need `dfs(i, j)` in the further iteration, we don't bother repeating the DFS process to calculate `dfs(i, j)`, but return `dp[i][j]` since `dp[i][j] = dfs(i, j)`.\n\n<br>\n\nAs shown in the picture below, suppose we have visited `grid[0][0]` and updated `dp[0][0]`. Now we are visiting `grid[1][0]`, `grid[0][0]` is smaller than `grid[1][0]`, according to the previous definition, we need a step `dfs(1, 0) += dfs(0, 0)`. However, there is no need to recalculate `dfs(0, 0)`, we can just return `dp[0][0]` which will take constant time!\n\n![img](../Figures/2328/5.png)\n\nWe can tell that each cell in `dp[i][j]` is only calculated by once.\n\n<br>\n\n#### Algorithm\n\n1) Initialize `dp`, an auxiliary 2-d array of the same size as `grid`, and set every value as `-1`.\n2) Iterate over every cell `grid[i][j]` and get `dfs(i, j)`, the number of paths end at it:\n    - If `dp[i][j]` is non-zero, it means we have visited this cell, just return `dp[i][j]` and repeat step 2.\n    - Otherwise, set `dfs(i, j) = 1`, the path consisting of the cell itself.\n    - Check its 4-direction neighbor cells, if a neighbor cell `(prev_i, prev_j)` has a smaller value, increment `dfs(i, j)` by `dfs(prev_i, prev_j)`\n    - Update `dp[i][j]` as `dfs(i, j)`.\n3) Once the iteration ends, return the sum of `dp`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/CDEprm5d/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"CDEprm5d\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$m \\times n$$ be the size of the input array `grid`.\n\n* Time complexity: $$O(m\\cdot n)$$\n\n    - We used `dp` as memory to avoid repeated computation, so each cell is only visited and calculated once. \n    - Initialization of the `dp` array also takes $$O(m \\cdot n)$$ time.\n    \n\n* Space complexity: $$O(m\\cdot n)$$\n\n    - We build the auxiliary array `dp` of the same size as `grid`.\n    - The space complexity of recursive algorithm is proportional to the maximum depth of the recursion tree generated. There are at most $$m\\cdot n$$ recursive call of `dfs` in the stack simultaneously, thus the stack takes $$O(m\\cdot n)$$ space.\n    - To sum up, the space complexity is $$O(m\\cdot n)$$.\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

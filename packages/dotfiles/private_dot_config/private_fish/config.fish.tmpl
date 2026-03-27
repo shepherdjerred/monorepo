@@ -51,51 +51,14 @@ set -gx BUGSINK_URL 'https://bugsink.sjer.red'
 set -gx BUGSINK_TOKEN '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/76xqbj2znu6lkspwxhljuae554/credential" }}'
 set -gx ARGOCD_AUTH_TOKEN '{{ onepasswordRead "op://yx6je6mgj2oiss6z5bm42h3cxy/nfviaka4ibphb2aodeoeow46zq/ARGOCD_AUTH_TOKEN" }}'
 set -gx OPENAI_API_KEY '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/v2kd6fap7kzaaoqcbqqgz64y7m/credential" }}'
+set -gx ANTHROPIC_API_KEY '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/sksz6g6ds4ypujxkoqfvm26jsu/credential" }}'
+set -gx GEMINI_API_KEY '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/ysjsz6ndtzbvppylhcfdiacrwe/credential" }}'
 {{ else -}}
 # 1Password CLI (op) not available - secrets not loaded
 # Install op and run 'chezmoi apply' to load secrets
 set -gx GRAFANA_URL 'https://grafana.tailnet-1a49.ts.net'
 set -gx BUGSINK_URL 'https://bugsink.sjer.red'
 {{ end -}}
-
-# Setup Starship config for Coder environment
-function _setup_starship_config
-    # Check if we're in Coder
-    if test "$CODER" = "true"
-        set -l runtime_config "$HOME/.config/starship-runtime.toml"
-        set -l base_config "$HOME/.config/starship.toml"
-
-        # Create Coder-specific config by appending overrides to base config
-        if test -f "$base_config"
-            # Regenerate runtime config if it doesn't exist, is older than base, or doesn't have our marker
-            set -l needs_regen 0
-            if not test -f "$runtime_config"
-                set needs_regen 1
-            else if test "$base_config" -nt "$runtime_config"
-                set needs_regen 1
-            else if not string match -q "# Coder environment overrides" -- (cat "$runtime_config" 2>/dev/null)
-                set needs_regen 1
-            end
-
-            if test $needs_regen -eq 1
-                # Always regenerate cleanly to avoid duplicates
-                cat "$base_config" > "$runtime_config"
-                echo "" >> "$runtime_config"
-                echo "# Coder environment overrides" >> "$runtime_config"
-                echo "[hostname]" >> "$runtime_config"
-                echo "disabled = true" >> "$runtime_config"
-                echo "" >> "$runtime_config"
-                echo "[container]" >> "$runtime_config"
-                echo "disabled = true" >> "$runtime_config"
-            end
-
-            set -gx STARSHIP_CONFIG "$runtime_config"
-        end
-    end
-end
-
-_setup_starship_config
-
 if status is-interactive
   fish_vi_key_bindings
 

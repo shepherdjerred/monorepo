@@ -1,0 +1,145 @@
+{
+  "questionId": "2527",
+  "questionFrontendId": "2444",
+  "title": "Count Subarrays With Fixed Bounds",
+  "titleSlug": "count-subarrays-with-fixed-bounds",
+  "difficulty": "Hard",
+  "content": "<p>You are given an integer array <code>nums</code> and two integers <code>minK</code> and <code>maxK</code>.</p>\n\n<p>A <strong>fixed-bound subarray</strong> of <code>nums</code> is a subarray that satisfies the following conditions:</p>\n\n<ul>\n\t<li>The <strong>minimum</strong> value in the subarray is equal to <code>minK</code>.</li>\n\t<li>The <strong>maximum</strong> value in the subarray is equal to <code>maxK</code>.</li>\n</ul>\n\n<p>Return <em>the <strong>number</strong> of fixed-bound subarrays</em>.</p>\n\n<p>A <strong>subarray</strong> is a <strong>contiguous</strong> part of an array.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,3,5,2,7,5], minK = 1, maxK = 5\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The fixed-bound subarrays are [1,3,5] and [1,3,5,2].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,1,1,1], minK = 1, maxK = 1\n<strong>Output:</strong> 10\n<strong>Explanation:</strong> Every subarray of nums is a fixed-bound subarray. There are 10 possible subarrays.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i], minK, maxK &lt;= 10<sup>6</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Can you solve the problem if all the numbers in the array were between minK and maxK inclusive?",
+    "Think of the inclusion-exclusion principle.",
+    "Divide the array into multiple subarrays such that each number in each subarray is between minK and maxK inclusive, solve the previous problem for each subarray, and sum all the answers."
+  ],
+  "metaData": "{\n  \"name\": \"countSubarrays\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"minK\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"maxK\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"233.7K\", \"totalSubmission\": \"337.4K\", \"totalAcceptedRaw\": 233651, \"totalSubmissionRaw\": 337445, \"acRate\": \"69.2%\"}",
+  "likes": 3768,
+  "dislikes": 97,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count Number of Nice Subarrays\", \"titleSlug\": \"count-number-of-nice-subarrays\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Continuous Subarray With Absolute Diff Less Than or Equal to Limit\", \"titleSlug\": \"longest-continuous-subarray-with-absolute-diff-less-than-or-equal-to-limit\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Number of Subarrays Where Boundary Elements Are Maximum\", \"titleSlug\": \"find-the-number-of-subarrays-where-boundary-elements-are-maximum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,3,5,2,7,5]\n1\n5",
+    "[1,1,1,1]\n1\n1"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 17, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 8, \"slug\": \"mathworks\", \"name\": \"MathWorks\"}, {\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 6, \"slug\": \"morgan-stanley\", \"name\": \"Morgan Stanley\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"meesho\", \"name\": \"Meesho\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"okx\", \"name\": \"OKX\"}, {\"timesEncountered\": 2, \"slug\": \"chubb\", \"name\": \"Chubb\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Queue",
+      "slug": "queue"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Monotonic Queue",
+      "slug": "monotonic-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long countSubarrays(vector<int>& nums, int minK, int maxK) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long countSubarrays(int[] nums, int minK, int maxK) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countSubarrays(self, nums: List[int], minK: int, maxK: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countSubarrays(self, nums, minK, maxK):\n        \"\"\"\n        :type nums: List[int]\n        :type minK: int\n        :type maxK: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} minK\n * @param {number} maxK\n * @return {number}\n */\nvar countSubarrays = function(nums, minK, maxK) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countSubarrays(nums: number[], minK: number, maxK: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long CountSubarrays(int[] nums, int minK, int maxK) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long countSubarrays(int* nums, int numsSize, int minK, int maxK) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countSubarrays(nums []int, minK int, maxK int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countSubarrays(nums: IntArray, minK: Int, maxK: Int): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countSubarrays(_ nums: [Int], _ minK: Int, _ maxK: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_subarrays(nums: Vec<i32>, min_k: i32, max_k: i32) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} min_k\n# @param {Integer} max_k\n# @return {Integer}\ndef count_subarrays(nums, min_k, max_k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $minK\n     * @param Integer $maxK\n     * @return Integer\n     */\n    function countSubarrays($nums, $minK, $maxK) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countSubarrays(List<int> nums, int minK, int maxK) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countSubarrays(nums: Array[Int], minK: Int, maxK: Int): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_subarrays(nums :: [integer], min_k :: integer, max_k :: integer) :: integer\n  def count_subarrays(nums, min_k, max_k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_subarrays(Nums :: [integer()], MinK :: integer(), MaxK :: integer()) -> integer().\ncount_subarrays(Nums, MinK, MaxK) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-subarrays nums minK maxK)\n  (-> (listof exact-integer?) exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1788",
+    "content": "[TOC]\r\n\r\n## Solution\r\n\r\n--- \r\n\r\n### Overview\r\n\r\nIn this problem, we are given an array of integers, a **fixed-bound subarray** is defined as a subarray that has `minK` as its minimum value, and `maxK` as its maximum value. For convenience, we will also call it **valid** subarray.\r\n\r\nAs shown in the picture below, the first two subarrays are valid, but the third subarray has `7` as its maximum value, and the fourth subarray has `2` as its minimum value, so neither of them is valid.\r\n\r\n![img](../Figures/2444/1.png)\r\n\r\nOur task is to find the number of valid subarrays.\r\n\r\n\r\n---\r\n\r\n### Approach: Two Pointers\r\n\r\n\r\n#### Intuition   \r\n\r\nLet's start with the brute force solution: we can iterate over each subarray and check if its minimum value and maximum value are `minK` and `maxK`. However, according to the constraints given to us in the question, we can't afford to iterate over all subarrays as this approach is likely to exceed the time limit, so we shall look for a better way.\r\n\r\n\r\n<br>\r\n\r\nWe could focus on each index `i` and count **how many valid subarrays end at i**. Recall the conditions for a valid subarray, it must contain both `minK` and `maxK`, and must not contain any element out of the range `[minK, maxK]`. \r\n\r\n\r\n![img](../Figures/2444/2.png)\r\n\r\n\r\nTherefore, we also need to record three indexes:\r\n1. `leftBound`: the most recent value out of the range `[minK, maxK]`, \r\n2. `maxPosition`: the most recent index with value equal to `maxK`.\r\n\r\n3. `minPosition`: the most recent index with value equal to `minK`.\r\n\r\n\r\n*Why do we record the most recent value out of the range?*\r\n\r\n> Because we are fixing the right end of the subarray (by considering how many valid subarrays end at the current index), we need to know the farthest left we can start considering a subarray from.\r\n\r\n\r\n\r\n*Why do we record the most recent minK and maxK?*\r\n\r\n> Because a valid subarray needs to contain at least one `minK` and `maxK`, once we find the indexes of the most recent `minK` and `maxK`, we can take the smaller one (let's call it `smaller`), then the range `[smaller, i]` contains at least one `minK` and `maxK`.\r\n\r\n![img](../Figures/2444/3.png)\r\n\r\nLet `smaller = min(minPosition, maxPosition)`, so the range `[smaller, i]` contains at least one `minK` and one `maxK`. Now we try to extend the subarray `[smaller, i]` from the left side ([smaller - 1, i], [smaller - 2, i] etc.), which we can do as long as we haven't met a value out of the range.\r\n\r\n\r\n\r\n<br>\r\n\r\nAs shown in the picture below, the red cell `2` stands for the most recent value out of the range, the green cell `7` and the blue cell `8` stand for the most recent `maxK` and `minK` separately.\r\n\r\nHowever, we don't need to really extend the subarray but just record the index of the most recent value that is out of the range (`leftBound`), then the number of valid subarrays ending at `i` equals `smaller - leftBound = 7 - 2 = 5`.\r\n\r\n\r\n![img](../Figures/2444/4.png)\r\n\r\n<br>\r\n\r\nIf `leftBound` is to the right of `smaller`, `smaller - leftBound` brings a negative result, which means that there is no valid subarray, so we can just treat the result as `0` to avoid negative values. Therefore, the number of valid subarrays ending at `i` can be written generically as `max(0, min(minPosition, maxPosition) - leftBound)`.\r\n\r\n\r\n\r\n![img](../Figures/2444/13.png)\r\n\r\n<br>\r\n\r\nPlease refer to the following slides as an example, where `minK = 1` and `maxK = 5`:\r\n\r\n\r\n!?!../Documents/2444/s1.json:601,301!?!\r\n\r\n\r\n\r\n<br>\r\n\r\n#### Algorithm\r\n\r\n1) Initialize three indices `minPosition`, `maxPosition` and `leftBound` as `-1` and set `answer` as `0`.\r\n\r\n\r\n2) Iterate over `nums`, for each index `i`:\r\n\r\n    - If `nums[i]` is out of the range `[minK, maxK]`, update `leftBound = i`.\r\n    - If `nums[i]` equals `minK`, update `minPosition = i`.\r\n    - If `nums[i]` equals `maxK`, update `maxPosition = i`.\r\n\r\n    The number of valid subarrays ending at index `i` equals `min(minPosition, maxPosition) - leftBound`. If the result is negative, it means there is no valid subarray ending at `i`. Increment `answer` by the number of valid subarrays.\r\n\r\n\r\n4) Return `answer` once the iteration stops.\r\n\r\n\r\n#### Implementation\r\n\r\n<iframe src=\"https://leetcode.com/playground/6T87J6s6/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"6T87J6s6\"></iframe>\r\n\r\n\r\n#### Complexity Analysis\r\n\r\nLet $$n$$ be the length of the input array `nums`.\r\n\r\n* Time complexity: $$O(n)$$\r\n\r\n    - We need one iteration over `nums`, for each step during the iteration, we need to update some variables which take constant time.\r\n    - The overall time complexity is $$O(n)$$.\r\n    \r\n\r\n* Space complexity: $$O(1)$$\r\n\r\n    - We only need to maintain four integer variables, `minPosition`, `maxPosition`, `leftBound` and `answer`.\r\n\r\n\r\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

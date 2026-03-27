@@ -1,0 +1,135 @@
+{
+  "questionId": "2458",
+  "questionFrontendId": "2323",
+  "title": "Find Minimum Time to Finish All Jobs II",
+  "titleSlug": "find-minimum-time-to-finish-all-jobs-ii",
+  "difficulty": "Medium",
+  "content": "<p>You are given two <strong>0-indexed</strong> integer arrays <code>jobs</code> and <code>workers</code> of <strong>equal</strong> length, where <code>jobs[i]</code> is the amount of time needed to complete the <code>i<sup>th</sup></code> job, and <code>workers[j]</code> is the amount of time the <code>j<sup>th</sup></code> worker can work each day.</p>\n\n<p>Each job should be assigned to <strong>exactly</strong> one worker, such that each worker completes <strong>exactly</strong> one job.</p>\n\n<p>Return <em>the <strong>minimum</strong> number of days needed to complete all the jobs after assignment.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> jobs = [5,2,4], workers = [1,7,5]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong>\n- Assign the 2<sup>nd</sup> worker to the 0<sup>th</sup> job. It takes them 1 day to finish the job.\n- Assign the 0<sup>th</sup> worker to the 1<sup>st</sup> job. It takes them 2 days to finish the job.\n- Assign the 1<sup>st</sup> worker to the 2<sup>nd</sup> job. It takes them 1 day to finish the job.\nIt takes 2 days for all the jobs to be completed, so return 2.\nIt can be proven that 2 days is the minimum number of days needed.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> jobs = [3,18,15,9], workers = [6,5,1,3]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong>\n- Assign the 2<sup>nd</sup> worker to the 0<sup>th</sup> job. It takes them 3 days to finish the job.\n- Assign the 0<sup>th</sup> worker to the 1<sup>st</sup> job. It takes them 3 days to finish the job.\n- Assign the 1<sup>st</sup> worker to the 2<sup>nd</sup> job. It takes them 3 days to finish the job.\n- Assign the 3<sup>rd</sup> worker to the 3<sup>rd</sup> job. It takes them 3 days to finish the job.\nIt takes 3 days for all the jobs to be completed, so return 3.\nIt can be proven that 3 days is the minimum number of days needed.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == jobs.length == workers.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= jobs[i], workers[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "It is always optimal to pair the worker with the least amount of time with the job that requires the least amount of time.",
+    "Sort both arrays."
+  ],
+  "metaData": "{\n  \"name\": \"minimumTime\",\n  \"params\": [\n    {\n      \"name\": \"jobs\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"workers\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"12.6K\", \"totalSubmission\": \"19.1K\", \"totalAcceptedRaw\": 12613, \"totalSubmissionRaw\": 19099, \"acRate\": \"66.0%\"}",
+  "likes": 69,
+  "dislikes": 19,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Task Scheduler\", \"titleSlug\": \"task-scheduler\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Minimum Time to Finish All Jobs\", \"titleSlug\": \"find-minimum-time-to-finish-all-jobs\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Number of Work Sessions to Finish the Tasks\", \"titleSlug\": \"minimum-number-of-work-sessions-to-finish-the-tasks\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[5,2,4]\n[1,7,5]",
+    "[3,18,15,9]\n[6,5,1,3]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minimumTime(vector<int>& jobs, vector<int>& workers) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minimumTime(int[] jobs, int[] workers) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumTime(self, jobs: List[int], workers: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumTime(self, jobs, workers):\n        \"\"\"\n        :type jobs: List[int]\n        :type workers: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} jobs\n * @param {number[]} workers\n * @return {number}\n */\nvar minimumTime = function(jobs, workers) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumTime(jobs: number[], workers: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinimumTime(int[] jobs, int[] workers) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minimumTime(int* jobs, int jobsSize, int* workers, int workersSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumTime(jobs []int, workers []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumTime(jobs: IntArray, workers: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumTime(_ jobs: [Int], _ workers: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_time(jobs: Vec<i32>, workers: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} jobs\n# @param {Integer[]} workers\n# @return {Integer}\ndef minimum_time(jobs, workers)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $jobs\n     * @param Integer[] $workers\n     * @return Integer\n     */\n    function minimumTime($jobs, $workers) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimumTime(List<int> jobs, List<int> workers) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumTime(jobs: Array[Int], workers: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_time(jobs :: [integer], workers :: [integer]) :: integer\n  def minimum_time(jobs, workers) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_time(Jobs :: [integer()], Workers :: [integer()]) -> integer().\nminimum_time(Jobs, Workers) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-time jobs workers)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

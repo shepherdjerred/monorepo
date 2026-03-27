@@ -1,0 +1,144 @@
+{
+  "questionId": "2573",
+  "questionFrontendId": "2487",
+  "title": "Remove Nodes From Linked List",
+  "titleSlug": "remove-nodes-from-linked-list",
+  "difficulty": "Medium",
+  "content": "<p>You are given the <code>head</code> of a linked list.</p>\n\n<p>Remove every node which has a node with a greater value anywhere to the right side of it.</p>\n\n<p>Return <em>the </em><code>head</code><em> of the modified linked list.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/10/02/drawio.png\" style=\"width: 631px; height: 51px;\" />\n<pre>\n<strong>Input:</strong> head = [5,2,13,3,8]\n<strong>Output:</strong> [13,8]\n<strong>Explanation:</strong> The nodes that should be removed are 5, 2 and 3.\n- Node 13 is to the right of node 5.\n- Node 13 is to the right of node 2.\n- Node 8 is to the right of node 3.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> head = [1,1,1,1]\n<strong>Output:</strong> [1,1,1,1]\n<strong>Explanation:</strong> Every node has value 1, so no nodes are removed.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of the nodes in the given list is in the range <code>[1, 10<sup>5</sup>]</code>.</li>\n\t<li><code>1 &lt;= Node.val &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Iterate on nodes in reversed order.",
+    "When iterating in reversed order, save the maximum value that was passed before."
+  ],
+  "metaData": "{\n  \"name\": \"removeNodes\",\n  \"params\": [\n    {\n      \"name\": \"head\",\n      \"type\": \"ListNode\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"ListNode\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"267.1K\", \"totalSubmission\": \"356.8K\", \"totalAcceptedRaw\": 267075, \"totalSubmissionRaw\": 356776, \"acRate\": \"74.9%\"}",
+  "likes": 2412,
+  "dislikes": 88,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Reverse Linked List\", \"titleSlug\": \"reverse-linked-list\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Delete Node in a Linked List\", \"titleSlug\": \"delete-node-in-a-linked-list\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Next Greater Element I\", \"titleSlug\": \"next-greater-element-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Delete Nodes From Linked List Present in Array\", \"titleSlug\": \"delete-nodes-from-linked-list-present-in-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[5,2,13,3,8]",
+    "[1,1,1,1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Recursion",
+      "slug": "recursion"
+    },
+    {
+      "name": "Monotonic Stack",
+      "slug": "monotonic-stack"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    ListNode* removeNodes(ListNode* head) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode() {}\n *     ListNode(int val) { this.val = val; }\n *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n * }\n */\nclass Solution {\n    public ListNode removeNodes(ListNode head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution:\n    def removeNodes(self, head: Optional[ListNode]) -> Optional[ListNode]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for singly-linked list.\n# class ListNode(object):\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution(object):\n    def removeNodes(self, head):\n        \"\"\"\n        :type head: Optional[ListNode]\n        :rtype: Optional[ListNode]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for singly-linked list.\n * function ListNode(val, next) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.next = (next===undefined ? null : next)\n * }\n */\n/**\n * @param {ListNode} head\n * @return {ListNode}\n */\nvar removeNodes = function(head) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *     val: number\n *     next: ListNode | null\n *     constructor(val?: number, next?: ListNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.next = (next===undefined ? null : next)\n *     }\n * }\n */\n\nfunction removeNodes(head: ListNode | null): ListNode | null {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public int val;\n *     public ListNode next;\n *     public ListNode(int val=0, ListNode next=null) {\n *         this.val = val;\n *         this.next = next;\n *     }\n * }\n */\npublic class Solution {\n    public ListNode RemoveNodes(ListNode head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     struct ListNode *next;\n * };\n */\nstruct ListNode* removeNodes(struct ListNode* head) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for singly-linked list.\n * type ListNode struct {\n *     Val int\n *     Next *ListNode\n * }\n */\nfunc removeNodes(head *ListNode) *ListNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var li = ListNode(5)\n * var v = li.`val`\n * Definition for singly-linked list.\n * class ListNode(var `val`: Int) {\n *     var next: ListNode? = null\n * }\n */\nclass Solution {\n    fun removeNodes(head: ListNode?): ListNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public var val: Int\n *     public var next: ListNode?\n *     public init() { self.val = 0; self.next = nil; }\n *     public init(_ val: Int) { self.val = val; self.next = nil; }\n *     public init(_ val: Int, _ next: ListNode?) { self.val = val; self.next = next; }\n * }\n */\nclass Solution {\n    func removeNodes(_ head: ListNode?) -> ListNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for singly-linked list.\n// #[derive(PartialEq, Eq, Clone, Debug)]\n// pub struct ListNode {\n//   pub val: i32,\n//   pub next: Option<Box<ListNode>>\n// }\n// \n// impl ListNode {\n//   #[inline]\n//   fn new(val: i32) -> Self {\n//     ListNode {\n//       next: None,\n//       val\n//     }\n//   }\n// }\nimpl Solution {\n    pub fn remove_nodes(head: Option<Box<ListNode>>) -> Option<Box<ListNode>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for singly-linked list.\n# class ListNode\n#     attr_accessor :val, :next\n#     def initialize(val = 0, _next = nil)\n#         @val = val\n#         @next = _next\n#     end\n# end\n# @param {ListNode} head\n# @return {ListNode}\ndef remove_nodes(head)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a singly-linked list.\n * class ListNode {\n *     public $val = 0;\n *     public $next = null;\n *     function __construct($val = 0, $next = null) {\n *         $this->val = $val;\n *         $this->next = $next;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param ListNode $head\n     * @return ListNode\n     */\n    function removeNodes($head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *   int val;\n *   ListNode? next;\n *   ListNode([this.val = 0, this.next]);\n * }\n */\nclass Solution {\n  ListNode? removeNodes(ListNode? head) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode(_x: Int = 0, _next: ListNode = null) {\n *   var next: ListNode = _next\n *   var x: Int = _x\n * }\n */\nobject Solution {\n    def removeNodes(head: ListNode): ListNode = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for singly-linked list.\n#\n# defmodule ListNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           next: ListNode.t() | nil\n#         }\n#   defstruct val: 0, next: nil\n# end\n\ndefmodule Solution do\n  @spec remove_nodes(head :: ListNode.t | nil) :: ListNode.t | nil\n  def remove_nodes(head) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for singly-linked list.\n%%\n%% -record(list_node, {val = 0 :: integer(),\n%%                     next = null :: 'null' | #list_node{}}).\n\n-spec remove_nodes(Head :: #list_node{} | null) -> #list_node{} | null.\nremove_nodes(Head) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for singly-linked list:\n#|\n\n; val : integer?\n; next : (or/c list-node? #f)\n(struct list-node\n  (val next) #:mutable #:transparent)\n\n; constructor\n(define (make-list-node [val 0])\n  (list-node val #f))\n\n|#\n\n(define/contract (remove-nodes head)\n  (-> (or/c list-node? #f) (or/c list-node? #f))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2296",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nGiven the head of a linked list, the task is to remove every node that has a node with a greater value anywhere on its right side. This means that after processing the linked list, every node will only have nodes with smaller values to their right, or the linked list should be in decreasing order.\n\n**Key Observations**\n1. The nodes in the linked list have positive values.\n2. There may be duplicate values.\n3. We manipulate the list by deleting values, not by sorting it.\n\n---\n\n### Approach 1: Stack\n\n#### Intuition\n\nA challenge associated with this problem is that, for a given node, we need to not only delete the node directly to the right if it has a larger value but also delete all other nodes to the right that have larger values. The brute force approach involves iterating through the linked list using nested loops, comparing the value of each node with the nodes that follow it, and deleting any nodes whose values are smaller than the following nodes. However, this approach is inefficient, with a quadratic time complexity.\n\nThe resultant linked list should be in decreasing order. We can leverage this fact to develop a more efficient solution.\n\nA list in decreasing order, if reversed, is in increasing order.\n\nIf we reverse the list, the node values should be in increasing order after deleting nodes. We can delete any nodes whose values are smaller than the nodes before them. This strategy ensures efficient deletion of all nodes that have nodes with a greater value to their right (in the original order) without using nested loops.\n\nThe list we are given is a singly linked list, so we can't easily traverse it in reverse from tail to head.\n\nWhenever a problem requires reversing a sequence, it is worth considering using a stack. \n\nStacks are a First-In-Last-Out (FILO) data structure, meaning that the first items added to the stack are the last ones removed. Consequently, if you push a sequence of items into a stack and then remove them, the sequence will be reversed. Learn more about stacks by reading our [Stack Explore Card](https://leetcode.com/explore/learn/card/queue-stack/230/usage-stack/).\n\nWe start by adding all of the nodes to a stack.\n\nNext, we create a new linked list to store the result. We keep track of the maximum node value encountered so far using the variable `maximum`.\n\nThen, we pop each node from the stack. If the node's value is not smaller than the `maximum`, we create a new node with that value and add it to the `resultList`. Since the linked list is reversed, we build the `resultList` from back to front, continuously adding new nodes to the beginning.\n\n#### Algorithm\n\n1. Initialize an empty `stack` to be used for reversing the nodes.\n2. Set a pointer `current` to `head`.\n3. While `current` is not `Null`:\n    - Add `current` to the `stack`.\n    - Set `current` to `current.next`.\n4. Pop the node from the top of the `stack` and set `current` to that node.\n5. Initialize a variable `maximum` to `current.val`.\n6. Create a new ListNode `resultList` with `maximum` as its value.\n7. While the `stack` is not empty:\n    - Pop the node from the top of the `stack` and set `current` to that node.\n    - If `current.val` < `maximum`:\n        - Continue; this node does not need to be added to the `resultList`.\n    - Otherwise, add a new node to the front of the `resultList`:\n        - Create a new ListNode `newNode` with `current.val` as its value.\n        - Set `newNode.next` to `resultList`.\n        - Set `resultList` to `newNode`.\n        - Update `maximum` to `current.val`.\n8. Return `resultList`.\n\nThe algorithm is visualized below:\n\n!?!../Documents/2487/2487_slideshow2.json:960,540!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/2CTMtkxy/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"2CTMtkxy\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the original linked list.\n\n* Time complexity: $O(n)$\n\n    Adding the nodes from the original linked list to the stack takes $O(n)$.\n\n    Removing nodes from the stack and adding them to the result takes $O(n)$, as each node is popped from the stack exactly once.\n\n    Therefore, the time complexity is $O(2n)$, which simplifies to $O(n)$.\n\n* Space complexity: $O(n)$\n\n    We add each of the nodes from the original linked list to the `stack`, making its size $n$.\n    \n    We only use `resultList` to store the result, so it does not contribute to the space complexity.\n\n    Therefore, the space complexity is $O(n)$.\n\n---\n\n### Approach 2: Recursion\n\n#### Intuition\n\nThe nodes we retain in the linked list must meet the following criteria: Each node's value is not smaller than the values of the following nodes.\n\nLinked lists are often manipulated using recursion. This problem is an excellent candidate for recursion because it can be broken down into subproblems that collectively solve the main problem.\n\nConsider a node $B$ situated in the middle of the linked list, where all subsequent nodes have values less than or equal to $B$'s value. If node $B$ satisfies this criterion, its value is not smaller than the values of the following nodes. For the node $A$ directly preceding $B$, if $A$ is not smaller than $B$, then $A$ is also not smaller than any nodes following $B$. This holds due to the transitive property: if $a \\geq b$ and $b \\geq c$, then $a \\geq c$.\n\nThis means that if we've solved the subproblem for nodes to the right of a given node in the linked list, we can efficiently solve the problem for that node.\n\nLet`s begin by discussing the base cases:\n\n1. The linked list is empty:\n    - An empty list meets the criteria, so we return the `head`.\n\n2. The linked list has only one node:\n    - A list with one node also meets the criteria, because there are no following nodes. Again, we return the `head`.\n\nWe can develop a strategy for handling longer lists by thinking about handling a linked list with two nodes.\n\nFor a linked list with two nodes, there are two cases for the `head` node:\n\n1. The `head` node's value is the same size or larger than the next node's value.\n    - This linked list meets the criteria. Return the list.\n\n2. The `head` node's value is smaller than the next node's value.\n    - We need to delete `head`. Return the next node.\n\nFor linked lists with more than two nodes, the main adjustment we need to make is to check the rest of the linked list. \n\nThe challenge we face is ensuring that `head.next` is set to the correct next node. Does the next node also need to be deleted? Are there other nodes later in the linked list that have values that are greater than `head`?\n\nInstead of simply setting `head` to `head.next` to progress to the next node, we recursively call `removeNodes(head.next)`. This recursive function removes nodes with greater values anywhere to the right. This ensures that `head` is set to the correct node and that the rest of the linked list also meets the criteria.\n\n#### Algorithm\n\n1. Base Case: If `head` or `head.next` is `Null`, return `head`.\n2. Recursive Call: Set `nextNode` to `removeNodes(head.next)`.\n3. Comparison: If `head.val` is less than `nextNode.val`, we need to remove `head`. Return `nextNode`.\n4. Otherwise, set `head` to `head.next` and then return `head`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/L2EFsxaF/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"L2EFsxaF\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the original linked list.\n\n* Time complexity: $O(n)$\n\n    We call `removeNodes()` once for each node in the original linked list. The other operations inside the function all take constant time, so the time complexity is dominated by the recursive calls. Thus, the time complexity is $O(n)$.\n\n* Space complexity: $O(n)$\n\n    Since we make $n$ recursive calls to `removeNodes()`, the call stack can grow up to size $n$. Therefore, the space complexity is $O(n)$.\n\n---\n\n### Approach 3: Reverse Twice\n\n#### Intuition\n\nThe first approach used a stack to reverse the linked list, resulting in linear auxiliary space. However, instead of using a stack, we can write a function to reverse the nodes in place, avoiding the need for auxiliary space. This task is explored in the problem [Reverse Linked List](https://leetcode.com/problems/reverse-linked-list/description/). The basic idea is to set each node's next field to point to the previous node.\n\nAfter reversing the linked list, the node values will be in increasing order, allowing us to delete any nodes whose values are smaller than the nodes preceding them.\n\nTo facilitate this process, we maintain the maximum node value found so far using the variable `maximum`.\n\nWe traverse each node, `current`, in the reversed linked list and update the `maximum` value accordingly. If the value of the `current` node is smaller than the `maximum`, we delete `current`. Deleting nodes in place requires us to track the previous node so that we can correctly link it to the next node if we delete the `current` node.\n\nOnce we have traversed the linked list to delete the nodes, we have a linked list that is in increasing order.\n\nHowever, since the desired result should be in decreasing order, we reverse the modified linked list and then return it.\n\n> **Interview Tip: In-place Algorithms**\n>\n> This approach modifies the input. In-place algorithms overwrite the input to save space, but sometimes this can cause problems.\n>\n> Here are a couple of situations where an in-place algorithm might not be suitable.\n>\n> 1. The algorithm needs to run in a multi-threaded environment, without exclusive access to the array. Other threads might need to read the array too, and might not expect it to be modified.\n>\n> 2. Even if there is only a single thread, or the algorithm has exclusive access to the array while running, the array might need to be reused later or by another thread once the lock has been released.\n>\n> In an interview, you should always check whether the interviewer minds you overwriting the input. Be ready to explain the pros and cons of doing so if asked!\n\n#### Algorithm\n\n1. Define a function `reverseList` that takes the head of a linked list as input and reverses it, returning the new head.\n    - Initialize three pointers, `prev` to `null`, `current` to `head`, and `nextTemp` to `null`.\n    - While `current` is not `null`:\n        - Set `nextTemp` to `current.next`.\n        - Reverse the order of the nodes by setting `current.next` to `prev`.\n        - Progress both pointers by setting `prev` to `current` and `current` to `nextTemp`.\n    - Return `prev`.\n2. Reverse the original linked list using `reverseList(head)`. Set `head` to the reversed linked list.\n3. Initialize a variable `maximum` to `0`.\n4. Initialize two pointers, `prev` to `null` and `current` to `head`.\n5. Delete the nodes that are smaller than the node before them. While `current` is not `null`:\n    - Update `maximum` to the max between `maximum` and `current.val`.\n    - If `current.val` is less than `maximum`, delete `current`.\n        - Skip the current node by setting `prev.next` to `current.next`.\n        - Set a pointer `deleted` to `current`.\n        - Move `current` to `current.next` to progress to the next node.\n        - Set `deleted.next` to `null` to remove any additional pointers to the new `current` node.\n    - Otherwise, if `current.val` is not less than `maximum`, retain `current` and progress both pointers by setting `prev` to `current` and `current` to `current.next`.\n6. Reverse and return the modified linked list using `reverseList(head)`.\n\nThe algorithm is visualized below:\n\n!?!../Documents/2487/2487_slideshow3.json:960,540!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/aq46D8sp/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"aq46D8sp\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the original linked list.\n\n* Time complexity: $O(n)$\n\n    Reversing the original linked list takes $O(n)$.\n\n    Traversing the reversed original linked list and removing nodes takes $O(n)$.\n\n    Reversing the modified linked list takes an additional $O(n)$ time.\n\n    Therefore, the total time complexity is $O(3n)$, which simplifies to $O(n)$.\n\n* Space complexity: $O(1)$\n\n    We use a few variables and pointers that use constant extra space. Since we don't use any data structures that grow with input size, the space complexity remains $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,143 @@
+{
+  "questionId": "2502",
+  "questionFrontendId": "2418",
+  "title": "Sort the People",
+  "titleSlug": "sort-the-people",
+  "difficulty": "Easy",
+  "content": "<p>You are given an array of strings <code>names</code>, and an array <code>heights</code> that consists of <strong>distinct</strong> positive integers. Both arrays are of length <code>n</code>.</p>\n\n<p>For each index <code>i</code>, <code>names[i]</code> and <code>heights[i]</code> denote the name and height of the <code>i<sup>th</sup></code> person.</p>\n\n<p>Return <code>names</code><em> sorted in <strong>descending</strong> order by the people&#39;s heights</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> names = [&quot;Mary&quot;,&quot;John&quot;,&quot;Emma&quot;], heights = [180,165,170]\n<strong>Output:</strong> [&quot;Mary&quot;,&quot;Emma&quot;,&quot;John&quot;]\n<strong>Explanation:</strong> Mary is the tallest, followed by Emma and John.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> names = [&quot;Alice&quot;,&quot;Bob&quot;,&quot;Bob&quot;], heights = [155,185,150]\n<strong>Output:</strong> [&quot;Bob&quot;,&quot;Alice&quot;,&quot;Bob&quot;]\n<strong>Explanation:</strong> The first Bob is the tallest, followed by Alice and the second Bob.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == names.length == heights.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>3</sup></code></li>\n\t<li><code>1 &lt;= names[i].length &lt;= 20</code></li>\n\t<li><code>1 &lt;= heights[i] &lt;= 10<sup>5</sup></code></li>\n\t<li><code>names[i]</code> consists of lower and upper case English letters.</li>\n\t<li>All the values of <code>heights</code> are distinct.</li>\n</ul>\n",
+  "hints": [
+    "Find the tallest person and swap with the first person, then find the second tallest person and swap with the second person, etc. Repeat until you fix all n people."
+  ],
+  "metaData": "{\n  \"name\": \"sortPeople\",\n  \"params\": [\n    {\n      \"type\": \"string[]\",\n      \"name\": \"names\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"heights\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"379.8K\", \"totalSubmission\": \"447.8K\", \"totalAcceptedRaw\": 379849, \"totalSubmissionRaw\": 447839, \"acRate\": \"84.8%\"}",
+  "likes": 1864,
+  "dislikes": 41,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Sort Array by Increasing Frequency\", \"titleSlug\": \"sort-array-by-increasing-frequency\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sort the Students by Their Kth Score\", \"titleSlug\": \"sort-the-students-by-their-kth-score\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"Mary\",\"John\",\"Emma\"]\n[180,165,170]",
+    "[\"Alice\",\"Bob\",\"Bob\"]\n[155,185,150]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> sortPeople(vector<string>& names, vector<int>& heights) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String[] sortPeople(String[] names, int[] heights) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def sortPeople(self, names: List[str], heights: List[int]) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def sortPeople(self, names, heights):\n        \"\"\"\n        :type names: List[str]\n        :type heights: List[int]\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} names\n * @param {number[]} heights\n * @return {string[]}\n */\nvar sortPeople = function(names, heights) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function sortPeople(names: string[], heights: number[]): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string[] SortPeople(string[] names, int[] heights) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** sortPeople(char** names, int namesSize, int* heights, int heightsSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func sortPeople(names []string, heights []int) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun sortPeople(names: Array<String>, heights: IntArray): Array<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func sortPeople(_ names: [String], _ heights: [Int]) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn sort_people(names: Vec<String>, heights: Vec<i32>) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} names\n# @param {Integer[]} heights\n# @return {String[]}\ndef sort_people(names, heights)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $names\n     * @param Integer[] $heights\n     * @return String[]\n     */\n    function sortPeople($names, $heights) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> sortPeople(List<String> names, List<int> heights) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def sortPeople(names: Array[String], heights: Array[Int]): Array[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec sort_people(names :: [String.t], heights :: [integer]) :: [String.t]\n  def sort_people(names, heights) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec sort_people(Names :: [unicode:unicode_binary()], Heights :: [integer()]) -> [unicode:unicode_binary()].\nsort_people(Names, Heights) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (sort-people names heights)\n  (-> (listof string?) (listof exact-integer?) (listof string?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2377",
+    "content": "[TOC]\n\n## Solution\n \n---\n\n### Approach 1: Map\n\n#### Intuition\n\nThe main challenge in solving this problem arises from the fact that the names in the `names` array are not directly linked to the heights in the `heights` array, except through their common indices. Consequently, if we were to sort the `heights` array independently, we would lose the association between each height and its corresponding name.\n\nA more effective approach is to create a direct binding between each height and its corresponding name. For this purpose, we can utilize a data structure that allows us to store key-value pairs, where the key is the height and the value is the corresponding name. Hash tables are particularly well-suited for this task, offering efficient storage of key-value pairs and also allowing for constant-time insertion and querying of elements. If you're interested in learning more about hash tables and their applications, you might find the LeetCode [Explore Card](https://leetcode.com/explore/learn/card/hash-table/) on this topic informative.\n\nLet's create a hash table called `heightToNameMap` to associate each height with its corresponding name. Notice that, according to the problem constraints, all heights are distinct, so we don't need to worry about duplicate keys in our hash table.\n\nWith this mapping in place, we can now sort the heights array in decreasing order without losing any information. After sorting, we can construct our result by adding each name via `heightToNameMap` to a new array in the order dictated by the sorted heights array. This final array of names, now sorted by descending height, is our solution.\n\n#### Algorithm\n\n- Initialize `numberOfPeople` to the length of the `names` array, which is also the length of the `heights` array.\n- Initialize a map `heightToNameMap` to map each height with a name.\n- Add each height and their corresponding name to `heightToNameMap`.\n- Sort the `heights` array.\n- Initialize an array `sortedNames` to store the resultant sorted names.\n- Loop over each index `i` in `sortedNames` from the end. For index `numberOfPeople - i - 1`, add the name associated with `heights[i]` from `heightToNameMap`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/6S8H7vr8/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"6S8H7vr8\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the `names` array.\n\n- Time complexity: $O(n \\cdot \\log n)$.\n\n    The algorithm loops over all the names twice, once to populate the map and once to create the final list, both of which take linear time.\n\n    Sorting the `heights` array requires $O(n \\cdot \\log n)$ time.\n\n    Thus, the total time complexity of the algorithm is $2 \\cdot O(n) + O(n \\cdot \\log n)$, which is equivalent to $O(n \\cdot \\log n)$.\n\n- Space complexity: $O(n)$\n\n    The map `heightToNameMap` takes an additional $O(n)$ space to store the height-name pairs. \n\n    The space taken by the sorting algorithms vary depending on the language of implementation:\n\n    - Java's `Arrays.sort()` function implements a variation of the Quick Sort algorithm, which takes an additional $O(\\log n)$ space.\n    - Python3's `sorted()` function uses the Timsort algorithm, which is a hybrid sorting algorithm derived from merge sort and insertion sort. This takes $O(n)$ space.\n    - In C++, the `sort()` function implements a combination of Quick Sort, Heap Sort, and Insertion Sort. Its worst-case space complexity is $O(\\log n)$.\n  \n    Upon aggregation, the algorithm has a space complexity of $O(n)$.\n\n---\n\n### Approach 2: Sorted Map\n\n#### Intuition\n\nWe established that the two steps to solving this problem are:\n1. Establishing a mapping between the heights and the names.\n2. Sorting the heights.\n\nIs there a way to achieve this simultaneously? Enter sorted maps—a data structure similar to hash maps but with the added benefit of maintaining its entries in sorted order (ascending by default).\n\nWe use the `heights` as keys and the `names` as the values in the map. The map inherently arranges the keys in order based on `heights`. Finally, we can traverse the entries in the map and fill our resultant array from the back, obtaining the required `names` in descending order of `heights`.\n\n#### Algorithm\n \n- Initialize a variable `numberOfPeople` to the length of the `names` array.\n- Create a sorted map `heightToNameMap` to store height-name pairs.\n- Fill `heightToNameMap` with the height as the key and the name as the value for each entry.\n- Initialize an array `sortedNames`.\n- Initialize `currentIndex` to `numberOfPeople - 1`, since we intend to fill `sortedNames` from the back to ensure the names are in descending order of height.\n- Iterate over the keys of `heightToNameMap`. For each key `height`:\n  - Add the name corresponding to `height` to `sortedNames[currentIndex]`.\n  - Decrement `currentIndex` to move to the next position from the end towards the start.\n- Return `sortedNames` as our result.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/5VecicQm/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"5VecicQm\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the `names` array.\n\n* Time complexity: $O(n \\cdot \\log n)$\n\n    The algorithm iterates over the length of $n$ to insert each height-name pair in the sorted map. Each insertion in the sorted map requires $O(\\log n)$ time. Thus, the total complexity of this step is $O(n \\cdot \\log n)$.\n\n    To fill the `sortedNames` array, we iterate over all $n$ entries in the map. Each `get()` operation takes another $O(\\log n)$ time, making the time complexity of this step $O(n \\cdot \\log n)$.\n\n    Thus, the total time complexity of the algorithm is $2 \\cdot O(n \\cdot \\log n)$ or $O(n \\cdot \\log n)$.\n\n* Space complexity: $O(n)$\n\n    The only additional space used by the algorithm is a sorted map to store the height-name pairs, which takes $O(n)$ space.\n\n---\n\n### Approach 3: Sort Permutation\n\n#### Intuition\n\nIn an effort to maintain the relationship between the `heights` array and the `names` array, we have duplicated its contents in data structures that suit our needs. However, hash tables and custom objects consume significant space, making our approaches memory inefficient.\n\nUpon closer inspection, the key link between each height and its corresponding name is their index in the arrays. If we can determine the sequence of these indices after sorting the `heights` array, we can rearrange the `names` array accordingly to achieve our goal.\n\nTo achieve this, we create a list `sortedIndices` initialized with values from `0` to the length of the array, representing the initial order. The clever part involves sorting `sortedIndices` based on the values of `heights` using a custom comparator. For example, comparing indices `4` and `6` in `sortedIndices` sorts them according to the values in `heights[4]` and `heights[6]`.\n\nFinally, we rearrange the `names` array according to the order of indices in `sortedIndices` to obtain the names in descending order of heights.\n\nCheck out this slideshow to visualize the entire algorithm:\n\n!?!../Documents/2418/slideshow.json:1026,902!?!\n\n\n#### Algorithm\n \n- Initialize:\n  - a variable `numberOfPeople` to the length of the `names` array.\n  - A list `sortedIndices` to store the indices of the `heights` array.\n- Fill `sortedIndices` with values from `0` to `numberOfPeople - 1`. Each index corresponds to a person in the `names` and `heights` arrays.\n- Using a custom comparator, sort `sortedIndices` based on the values in the `heights` array in descending order.\n- Initialize an array `sortedNames` to store the names in their sorted order. \n- Iterate from `0` to `numberOfPeople - 1`. For each index `i`:\n  - Set `sortedNames[i]` to `names[sortedIndices[i]]` to assign the corresponding name from the `names` array to the appropriate position in `sortedNames`.\n- Return `sortedNames`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/5iJf2MUA/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"5iJf2MUA\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the `names` array.\n\n* Time complexity: $O(n \\cdot \\log n)$\n\n    The algorithm traverses over $n$ elements twice, once to populate the `sortedIndices` and then to fill the `sortedNames` array, both of which take linear time. \n\n    Sorting the `sortedIndices` array takes $O(n \\cdot \\log n)$ time.\n\n    Thus, the total time complexity is $2.O(n) + O(n \\cdot \\log n)$, which simplifies to $O(n \\cdot \\log n)$.\n\n* Space complexity: $O(n)$\n\n    The `sortedIndices` array takes $O(n)$ additional space. \n\n    As mentioned in the previous approaches, sorting the array requires some additional space dependent on the language of implementation. For Python3, this is $O(n)$, while for C++ and Java, it is $O(\\log n)$.\n\n    The overall space complexity is the summation of these two elements: $O(n)$.\n    \n---\n\n### Approach 4: Quick Sort\n\n#### Intuition\n\nSo far, we've leveraged the built-in sorting capabilities of programming languages to sort elements. However, this approach required us to allocate extra space to maintain the relationship between the `heights` and `names` arrays.\n\nTo further optimize our approach, we need to implement the sorting algorithm ourselves and sort the two arrays simultaneously. Let's start with the [Quick Sort](https://en.wikipedia.org/wiki/Quicksort) algorithm.\n\nQuick Sort is a divide-and-conquer algorithm that works by selecting a 'pivot' element from the array and partitioning the other elements into two sub-arrays based on whether they are less than or greater than the pivot. The sub-arrays are then sorted recursively. The major steps in the algorithm are:\n\n1. **Pivot Selection**: Choose an element as the pivot. In our implementation, we'll use the last element of the sub-array as the pivot, though other strategies (like choosing a random element or the median) can also be used. The pivot serves as the reference point for partitioning the array, dividing it into two sub-arrays: one with elements smaller than the pivot and another with elements larger than the pivot.\n2. **Partitioning**: Rearrange the sub-array so that all elements greater than or equal to the pivot are on its left, and all smaller elements are on its right (since we are sorting the array in descending order). Ensure that all changes made to the `heights` array are also applied to the `names` array simultaneously.\n3. **Recursion**: Recursively apply steps 1 and 2 to the sub-array of elements with smaller values and separately to the sub-array of elements with greater values.\n    - **Base Case**: The base case for the recursion is when a sub-array has one or zero elements, as these are already sorted.\n\nBy sorting the `heights` array and simultaneously applying the same changes to the `names` array, both arrays are sorted together. Once `heights` is sorted, we can return `names` as our answer.\n\n#### Algorithm\n\nMain method `sortPeople`:\n\n- Call `quickSort` passing `names`, `heights` and their full range.\n- Return the sorted `names` array.\n\nHelper method `quickSort`:\n\n- Define `quickSort` with parameters: `heights`, `names`, `start` and `end`.\n- Check if the sub-array has has more than one element (`start` < `end`). If so:\n  - Find `partitionIndex` by calling the `partition` method.\n  - Recursively call `quickSort` on the left sub-array (elements before the partition index).\n  - Recursively call `quickSort` on the right sub-array (elements after the partition index).\n\nHelper method `partition`:\n\n- Define `partition` with parameters: `heights`, `names`, `start` and `end`.\n- Set `pivot` as the last element.\n- Initialize `i` as one less than the `start` index.\n- Iterate `j` from `start` to `end-1`:\n  - If the current element `heights[j]` is greater than or equal to the pivot:\n    - Increment `i`.\n    - Swap elements at `i` and `j` in both arrays using the `swap` method.\n- Place the pivot in its correct position by swapping it with the element at `i+1`.\n- Return the partition index (`i+1`).\n\nHelper method `swap`:\n\n- Define `swap` with parameters: `heights`, `names`, `index1` and `index2`.\n- Assign `tempHeight` the value of `heights[index1]`.\n- Set `heights[index1]` to `heights[index2]`.\n- Set `heights[index2]` to `tempHeight`.\n- Repeat the above steps for the `names` array.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/4pHX3wBb/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"4pHX3wBb\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the `names` array.\n\n* Time complexity: $O(n^2)$\n\n    Quick Sort has an average or best-case time complexity of $O(n \\cdot \\log n)$. However, in the worst case (when the pivot is always the smallest or largest element), Quick Sort can degrade to $O(n^2)$.\n\n* Space complexity: $O(n)$\n\n    The space complexity is determined by the recursion stack of algorithm. In the average and best cases, the recursion depth is $\\log n$, resulting in $O(\\log n)$ space complexity. However, in the worst case (unbalanced partitions), it could go up to $n$, resulting in $O(n)$ space complexity.\n\n---\n\n### Approach 5: Merge Sort \n\n#### Intuition\n\nAnother efficient and popular sorting algorithm is [Merge Sort](https://en.wikipedia.org/wiki/Merge_sort), which has a better worst-case time complexity of $O(n \\cdot \\log n)$ compared to Quick Sort's $O(n^2)$. Let's implement Merge Sort to sort `heights` and `names` simultaneously.\n\nMerge Sort is a divide-and-conquer algorithm that recursively divides the input array into smaller sub-arrays, sorts them, and then merges these sorted sub-arrays to produce the final sorted array\n\n1. **Divide**: Recursively divide the input array into two halves until sub-arrays of size one or zero are reached. These base cases are naturally sorted.\n2. **Merge**: Start merging the smallest sub-arrays, progressing upwards. First, merge adjacent single-element arrays into sorted pairs, then merge pairs into four-element arrays, and so on. Use a temporary array to hold the merged result, comparing and placing elements from each sub-array until one is exhausted. Append remaining elements from the other sub-array to the temporary array. Copy the sorted elements back to the original array. Continue this process recursively until the entire array is sorted.\n\nThroughout the merge process, all changes to the `heights` array must also be applied to the `names` array. Once sorting is complete, the `names` array will be in the required order.\n\n#### Algorithm\n \nMain method `sortPeople`:\n\n- Call `mergeSort` passing `names`, `heights` and their full range.\n- Return the sorted `names` array.\n  \nHelper method `mergeSort`:\n\n- Define `mergeSort` with parameters: `names`, `heights`, `start` and `end`.\n- Set `mid` to the mid point between `start` and `end`.\n- Recursively call `mergeSort` on the left and right half of the sub-array.\n- Call `merge` to combine the sorted halves.\n\nHelper method `merge`:\n\n- Define `merge` with parameters: `names`, `heights`, `start`, `mid` and `end`.\n- Initialize:\n  - `leftSize` as the length of the left sub-array.\n  - `rightSize` as the length of the right sub-array.\n  - `leftHeights`, `rightHeights`, `leftNames` and `rightNames` as temporary arrays for heights and names of both sub-arrays.\n- Copy data from the original arrays to the temporary arrays.\n- Initialize variables `leftIndex` and `rightIndex` to `0` to point to the start of the temporary arrays.\n- Set `mergeIndex` to `start` to point to the start of the sub-array in the original array.\n- While the `leftIndex` and `rightIndex` is lesser than their respective temporary arrays:\n  - Compare elements from left and right sub-arrays:\n    - Place the larger height (and corresponding name) into the merged array.\n    - Increment the pointer of the sub-array from which the element was taken.\n  - Increment `mergeIndex`.\n- Copy remaining elements from the left sub-array, if any. \n- Copy remaining elements from the right sub-array, if any.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/7mgzoCTJ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"7mgzoCTJ\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the `names` array. \n\n* Time complexity: $O(n \\cdot \\log n)$\n\n    The algorithm divides the array into two halves recursively and then merges them.\n    \n    The dividing process takes $O(\\log n)$ time. At each level of recursion, the merge operation takes $O(n)$ time as it processes all elements once. This process happens at each level of the recursion tree, which has a depth of $\\log n$.\n\n    Thus, the time complexity of the algorithm is $O(n \\cdot \\log n)$.\n\n* Space complexity: $O(n)$\n\n    The recursion stack can extend up to $\\log n$ levels. Additionally, the temporary arrays created at each merge step occupy an extra $O(n)$ space. Thus, the total space complexity of the algorithm sums up to $O(\\log n) + O(n) = O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

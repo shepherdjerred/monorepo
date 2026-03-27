@@ -1,0 +1,140 @@
+{
+  "questionId": "2529",
+  "questionFrontendId": "2438",
+  "title": "Range Product Queries of Powers",
+  "titleSlug": "range-product-queries-of-powers",
+  "difficulty": "Medium",
+  "content": "<p>Given a positive integer <code>n</code>, there exists a <strong>0-indexed</strong> array called <code>powers</code>, composed of the <strong>minimum</strong> number of powers of <code>2</code> that sum to <code>n</code>. The array is sorted in <strong>non-decreasing</strong> order, and there is <strong>only one</strong> way to form the array.</p>\n\n<p>You are also given a <strong>0-indexed</strong> 2D integer array <code>queries</code>, where <code>queries[i] = [left<sub>i</sub>, right<sub>i</sub>]</code>. Each <code>queries[i]</code> represents a query where you have to find the product of all <code>powers[j]</code> with <code>left<sub>i</sub> &lt;= j &lt;= right<sub>i</sub></code>.</p>\n\n<p>Return<em> an array </em><code>answers</code><em>, equal in length to </em><code>queries</code><em>, where </em><code>answers[i]</code><em> is the answer to the </em><code>i<sup>th</sup></code><em> query</em>. Since the answer to the <code>i<sup>th</sup></code> query may be too large, each <code>answers[i]</code> should be returned <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 15, queries = [[0,1],[2,2],[0,3]]\n<strong>Output:</strong> [2,4,64]\n<strong>Explanation:</strong>\nFor n = 15, powers = [1,2,4,8]. It can be shown that powers cannot be a smaller size.\nAnswer to 1st query: powers[0] * powers[1] = 1 * 2 = 2.\nAnswer to 2nd query: powers[2] = 4.\nAnswer to 3rd query: powers[0] * powers[1] * powers[2] * powers[3] = 1 * 2 * 4 * 8 = 64.\nEach answer modulo 10<sup>9</sup> + 7 yields the same answer, so [2,4,64] is returned.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 2, queries = [[0,0]]\n<strong>Output:</strong> [2]\n<strong>Explanation:</strong>\nFor n = 2, powers = [2].\nThe answer to the only query is powers[0] = 2. The answer modulo 10<sup>9</sup> + 7 is the same, so [2] is returned.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= queries.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= start<sub>i</sub> &lt;= end<sub>i</sub> &lt; powers.length</code></li>\n</ul>\n",
+  "hints": [
+    "The <code>powers</code> array can be created using the binary representation of <code>n</code>.",
+    "Once <code>powers</code> is formed, the products can be taken using brute force."
+  ],
+  "metaData": "{\n  \"name\": \"productQueries\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"queries\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"118.3K\", \"totalSubmission\": \"192.6K\", \"totalAcceptedRaw\": 118311, \"totalSubmissionRaw\": 192599, \"acRate\": \"61.4%\"}",
+  "likes": 687,
+  "dislikes": 152,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "15\n[[0,1],[2,2],[0,3]]",
+    "2\n[[0,0]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"trilogy\", \"name\": \"Trilogy\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> productQueries(int n, vector<vector<int>>& queries) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] productQueries(int n, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def productQueries(self, n: int, queries: List[List[int]]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def productQueries(self, n, queries):\n        \"\"\"\n        :type n: int\n        :type queries: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} queries\n * @return {number[]}\n */\nvar productQueries = function(n, queries) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function productQueries(n: number, queries: number[][]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] ProductQueries(int n, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* productQueries(int n, int** queries, int queriesSize, int* queriesColSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func productQueries(n int, queries [][]int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun productQueries(n: Int, queries: Array<IntArray>): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func productQueries(_ n: Int, _ queries: [[Int]]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn product_queries(n: i32, queries: Vec<Vec<i32>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} queries\n# @return {Integer[]}\ndef product_queries(n, queries)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $queries\n     * @return Integer[]\n     */\n    function productQueries($n, $queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> productQueries(int n, List<List<int>> queries) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def productQueries(n: Int, queries: Array[Array[Int]]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec product_queries(n :: integer, queries :: [[integer]]) :: [integer]\n  def product_queries(n, queries) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec product_queries(N :: integer(), Queries :: [[integer()]]) -> [integer()].\nproduct_queries(N, Queries) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (product-queries n queries)\n  (-> exact-integer? (listof (listof exact-integer?)) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2811",
+    "content": "### Approach 1: Binary Decomposition + Direct Calculation\n\n#### Intuition\n\nAccording to the problem description, we need to decompose $n$ into the smallest number of powers of $2$, which suggests writing $n$ in binary form. If the $k$-th binary digit from low to high (where $k \\geq 0$) is $1$, then $2^k$ is included in the decomposition.\n\n> For example, when $n = 11$, its binary representation is $(1011)_2$, and the $0$th, $1$st, and $3$rd binary digits from low to high are $1$. So, it is decomposed as $[2^0, 2^1, 2^3] = [1, 2, 8]$.\n\nAfter obtaining the decomposition of $n$, and since the problem guarantees that $n \\geq 10^9 < 2^{30} - 1$, the decomposition array will contain at most $29$ elements. For each query $[\\textit{left}, \\textit{right}]$, we can directly traverse the corresponding elements in the decomposition array and compute the answer, with the time complexity of a single query being $O(\\log n)$.\n\nFurthermore, since the total number of different queries is at most $\\dfrac{29 \\times 28}{2} + 29 = 435$, we can also precompute the answer to each query in advance. This results in a preprocessing time complexity of $O(\\log^2 n)$, reducing the time complexity of each query to $O(1)$ thereafter.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/jmE6Txtp/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"jmE6Txtp\"></iframe>\n\n#### Complexity Analysis\n\nLet $q$ be the length of the array $\\textit{queries}$.\n\n- Time complexity: $O(q \\times \\log n)$\n  \n  For each query, we need to traverse the binary bits of $n$.\n\n- Space complexity: $O(\\log n)$\n  \n  This is the space required for the binary decomposition of $n$.\n  \n---\n\n### Approach 2: Binary Decomposition + Prefix Product Preprocessing\n\n#### Intuition\n\nAs in the previous approach, the key idea is to decompose the integer $n$ into a list of powers of $2$ based on its binary representation. If the $k$-th binary digit (starting from the least significant bit) is $1$, then the power $2^k$ contributes to the decomposition of $n$.\n> For example, for $n = 11$, we have the binary representation $(1011)_2$. The $0$th, $1$st, and $3$rd bits are $1$, so $n$ can be represented as $[2^0, 2^1, 2^3] = [1, 2, 8]$.\n\nNow, instead of calculating the product of elements in each query range on-the-fly like in Approach 1, we can optimize this using precomputation. Since the number of binary digits set to $1$ in $n$ is at most $29$, we can precompute the product of all subarrays of the decomposition array in advance.\n\nWe create a 2D array `results`, where `results[i][j]` stores the product of all powers of 2 from index $i$ to $j$ in the `bins` array. This way, once the precomputation is done, we can answer each query in constant time by directly reading from this table.\n\nThis gives us a trade-off:\n- Preprocessing takes $O(\\log^2 n)$ time, since for at most 29 elements we compute all $O(\\log^2 n)$ subarray products.\n- Each query takes $O(1)$ time afterward, since we just do a single lookup.\n\nThis is very efficient when the number of queries is large or the same queries are asked repeatedly.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/kdmWUa5S/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"kdmWUa5S\"></iframe>\n\n#### Complexity Analysis\n\nLet $q$ be the length of the array $\\textit{queries}$.\n\n- Time complexity: $O(\\log^2 n + q)$\n  \n  After preprocessing, we don't need to traverse every time when querying.\n\n- Space complexity: $O(\\log^2 n)$\n  \n  This is the space required to store the preprocessed results.\n  \n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

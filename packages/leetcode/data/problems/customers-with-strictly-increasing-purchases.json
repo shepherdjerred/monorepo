@@ -1,0 +1,53 @@
+{
+  "questionId": "2613",
+  "questionFrontendId": "2474",
+  "title": "Customers With Strictly Increasing Purchases",
+  "titleSlug": "customers-with-strictly-increasing-purchases",
+  "difficulty": "Hard",
+  "content": "<p>Table: <code>Orders</code></p>\n\n<pre>\n+--------------+------+\n| Column Name  | Type |\n+--------------+------+\n| order_id     | int  |\n| customer_id  | int  |\n| order_date   | date |\n| price        | int  |\n+--------------+------+\norder_id is the column with unique values for this table.\nEach row contains the id of an order, the id of customer that ordered it, the date of the order, and its price.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to report the IDs of the customers with the <strong>total purchases</strong> strictly increasing yearly.</p>\n\n<ul>\n\t<li>The <strong>total purchases</strong> of a customer in one year is the sum of the prices of their orders in that year. If for some year the customer did not make any order, we consider the total purchases <code>0</code>.</li>\n\t<li>The first year to consider for each customer is the year of their <strong>first order</strong>.</li>\n\t<li>The last year to consider for each customer is the year of their <strong>last order</strong>.</li>\n</ul>\n\n<p>Return the result table <strong>in any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nOrders table:\n+----------+-------------+------------+-------+\n| order_id | customer_id | order_date | price |\n+----------+-------------+------------+-------+\n| 1        | 1           | 2019-07-01 | 1100  |\n| 2        | 1           | 2019-11-01 | 1200  |\n| 3        | 1           | 2020-05-26 | 3000  |\n| 4        | 1           | 2021-08-31 | 3100  |\n| 5        | 1           | 2022-12-07 | 4700  |\n| 6        | 2           | 2015-01-01 | 700   |\n| 7        | 2           | 2017-11-07 | 1000  |\n| 8        | 3           | 2017-01-01 | 900   |\n| 9        | 3           | 2018-11-07 | 900   |\n+----------+-------------+------------+-------+\n<strong>Output:</strong> \n+-------------+\n| customer_id |\n+-------------+\n| 1           |\n+-------------+\n<strong>Explanation:</strong> \nCustomer 1: The first year is 2019 and the last year is 2022\n  - 2019: 1100 + 1200 = 2300\n  - 2020: 3000\n  - 2021: 3100\n  - 2022: 4700\n  We can see that the total purchases are strictly increasing yearly, so we include customer 1 in the answer.\n\nCustomer 2: The first year is 2015 and the last year is 2017\n  - 2015: 700\n  - 2016: 0\n  - 2017: 1000\n  We do not include customer 2 in the answer because the total purchases are not strictly increasing. Note that customer 2 did not make any purchases in 2016.\n\nCustomer 3: The first year is 2017, and the last year is 2018\n  - 2017: 900\n  - 2018: 900\n We do not include customer 3 in the answer because the total purchases are not strictly increasing.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Orders (order_id int, customer_id int, order_date date, price int)\"], \"mssql\": [\"Create table Orders (order_id int, customer_id int, order_date date, price int)\"], \"oraclesql\": [\"Create table Orders (order_id int, customer_id int, order_date date, price int)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"find_specific_customers\", \"pythondata\": [\"Orders = pd.DataFrame([], columns=['order_id', 'customer_id', 'order_date', 'price']).astype({'order_id':'Int64', 'customer_id':'Int64', 'order_date':'datetime64[ns]', 'price':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Orders (order_id int, customer_id int, order_date date, price int)\"], \"database_schema\": {\"Orders\": {\"order_id\": \"INT\", \"customer_id\": \"INT\", \"order_date\": \"DATE\", \"price\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"6K\", \"totalSubmission\": \"11.9K\", \"totalAcceptedRaw\": 5970, \"totalSubmissionRaw\": 11911, \"acRate\": \"50.1%\"}",
+  "likes": 46,
+  "dislikes": 6,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Report Contiguous Dates\", \"titleSlug\": \"report-contiguous-dates\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find the Start and End Number of Continuous Ranges\", \"titleSlug\": \"find-the-start-and-end-number-of-continuous-ranges\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Orders\": [\"order_id\", \"customer_id\", \"order_date\", \"price\"]}, \"rows\": {\"Orders\": [[1, 1, \"2019-07-01\", 1100], [2, 1, \"2019-11-01\", 1200], [3, 1, \"2020-05-26\", 3000], [4, 1, \"2021-08-31\", 3100], [5, 1, \"2022-12-07\", 4700], [6, 2, \"2015-01-01\", 700], [7, 2, \"2017-11-07\", 1000], [8, 3, \"2017-01-01\", 900], [9, 3, \"2018-11-07\", 900]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_specific_customers(orders: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

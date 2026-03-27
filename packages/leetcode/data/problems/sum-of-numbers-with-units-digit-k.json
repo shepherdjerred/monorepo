@@ -1,0 +1,140 @@
+{
+  "questionId": "1334",
+  "questionFrontendId": "2310",
+  "title": "Sum of Numbers With Units Digit K",
+  "titleSlug": "sum-of-numbers-with-units-digit-k",
+  "difficulty": "Medium",
+  "content": "<p>Given two integers <code>num</code> and <code>k</code>, consider a set of positive integers with the following properties:</p>\n\n<ul>\n\t<li>The units digit of each integer is <code>k</code>.</li>\n\t<li>The sum of the integers is <code>num</code>.</li>\n</ul>\n\n<p>Return <em>the <strong>minimum</strong> possible size of such a set, or </em><code>-1</code><em> if no such set exists.</em></p>\n\n<p>Note:</p>\n\n<ul>\n\t<li>The set can contain multiple instances of the same integer, and the sum of an empty set is considered <code>0</code>.</li>\n\t<li>The <strong>units digit</strong> of a number is the rightmost digit of the number.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = 58, k = 9\n<strong>Output:</strong> 2\n<strong>Explanation:</strong>\nOne valid set is [9,49], as the sum is 58 and each integer has a units digit of 9.\nAnother valid set is [19,39].\nIt can be shown that 2 is the minimum possible size of a valid set.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = 37, k = 2\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> It is not possible to obtain a sum of 37 using only integers that have a units digit of 2.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = 0, k = 7\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> The sum of an empty set is considered 0.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= num &lt;= 3000</code></li>\n\t<li><code>0 &lt;= k &lt;= 9</code></li>\n</ul>\n",
+  "hints": [
+    "Try solving this recursively.",
+    "Create a method that takes an integer x as a parameter. This method returns the minimum possible size of a set where each number has units digit k and the sum of the numbers in the set is x."
+  ],
+  "metaData": "{\n  \"name\": \"minimumNumbers\",\n  \"params\": [\n    {\n      \"name\": \"num\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"32.3K\", \"totalSubmission\": \"114.8K\", \"totalAcceptedRaw\": 32309, \"totalSubmissionRaw\": 114750, \"acRate\": \"28.2%\"}",
+  "likes": 428,
+  "dislikes": 338,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Digit Count in Range\", \"titleSlug\": \"digit-count-in-range\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count Integers With Even Digit Sum\", \"titleSlug\": \"count-integers-with-even-digit-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sum of Number and Its Reverse\", \"titleSlug\": \"sum-of-number-and-its-reverse\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "58\n9",
+    "37\n2",
+    "0\n7"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minimumNumbers(int num, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minimumNumbers(int num, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumNumbers(self, num: int, k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumNumbers(self, num, k):\n        \"\"\"\n        :type num: int\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} num\n * @param {number} k\n * @return {number}\n */\nvar minimumNumbers = function(num, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumNumbers(num: number, k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinimumNumbers(int num, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minimumNumbers(int num, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumNumbers(num int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumNumbers(num: Int, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumNumbers(_ num: Int, _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_numbers(num: i32, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} num\n# @param {Integer} k\n# @return {Integer}\ndef minimum_numbers(num, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $num\n     * @param Integer $k\n     * @return Integer\n     */\n    function minimumNumbers($num, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimumNumbers(int num, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumNumbers(num: Int, k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_numbers(num :: integer, k :: integer) :: integer\n  def minimum_numbers(num, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_numbers(Num :: integer(), K :: integer()) -> integer().\nminimum_numbers(Num, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-numbers num k)\n  (-> exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

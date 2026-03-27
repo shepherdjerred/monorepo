@@ -1,0 +1,142 @@
+{
+  "questionId": "2600",
+  "questionFrontendId": "2517",
+  "title": "Maximum Tastiness of Candy Basket",
+  "titleSlug": "maximum-tastiness-of-candy-basket",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array of positive integers <code>price</code> where <code>price[i]</code> denotes the price of the <code>i<sup>th</sup></code> candy and a positive integer <code>k</code>.</p>\n\n<p>The store sells baskets of <code>k</code> <strong>distinct</strong> candies. The <strong>tastiness</strong> of a candy basket is the smallest absolute difference of the <strong>prices</strong> of any two candies in the basket.</p>\n\n<p>Return <em>the <strong>maximum</strong> tastiness of a candy basket.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> price = [13,5,1,8,21,2], k = 3\n<strong>Output:</strong> 8\n<strong>Explanation:</strong> Choose the candies with the prices [13,5,21].\nThe tastiness of the candy basket is: min(|13 - 5|, |13 - 21|, |5 - 21|) = min(8, 8, 16) = 8.\nIt can be proven that 8 is the maximum tastiness that can be achieved.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> price = [1,3,1], k = 2\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> Choose the candies with the prices [1,3].\nThe tastiness of the candy basket is: min(|1 - 3|) = min(2) = 2.\nIt can be proven that 2 is the maximum tastiness that can be achieved.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> price = [7,7,7,7], k = 2\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> Choosing any two distinct candies from the candies we have will result in a tastiness of 0.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= k &lt;= price.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= price[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "The answer is binary searchable.",
+    "For some x, we can use a greedy strategy to check if it is possible to pick k distinct candies with tastiness being at least x.",
+    "Sort prices and iterate from left to right. For some price[i] check if the price difference between the last taken candy and price[i] is at least x. If so, add the candy i to the basket.",
+    "So, a candy basket with tastiness x can be achieved if the basket size is bigger than or equal to k."
+  ],
+  "metaData": "{\n  \"name\": \"maximumTastiness\",\n  \"params\": [\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"price\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"39.4K\", \"totalSubmission\": \"58K\", \"totalAcceptedRaw\": 39427, \"totalSubmissionRaw\": 57970, \"acRate\": \"68.0%\"}",
+  "likes": 1063,
+  "dislikes": 184,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Container With Most Water\", \"titleSlug\": \"container-with-most-water\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Sliding Window Maximum\", \"titleSlug\": \"sliding-window-maximum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[13,5,1,8,21,2]\n3",
+    "[1,3,1]\n2",
+    "[7,7,7,7]\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximumTastiness(vector<int>& price, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximumTastiness(int[] price, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumTastiness(self, price: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumTastiness(self, price, k):\n        \"\"\"\n        :type price: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} price\n * @param {number} k\n * @return {number}\n */\nvar maximumTastiness = function(price, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumTastiness(price: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaximumTastiness(int[] price, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maximumTastiness(int* price, int priceSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumTastiness(price []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumTastiness(price: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumTastiness(_ price: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_tastiness(price: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} price\n# @param {Integer} k\n# @return {Integer}\ndef maximum_tastiness(price, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $price\n     * @param Integer $k\n     * @return Integer\n     */\n    function maximumTastiness($price, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumTastiness(List<int> price, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumTastiness(price: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_tastiness(price :: [integer], k :: integer) :: integer\n  def maximum_tastiness(price, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_tastiness(Price :: [integer()], K :: integer()) -> integer().\nmaximum_tastiness(Price, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-tastiness price k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

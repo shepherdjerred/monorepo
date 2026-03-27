@@ -1,0 +1,131 @@
+{
+  "questionId": "2671",
+  "questionFrontendId": "2608",
+  "title": "Shortest Cycle in a Graph",
+  "titleSlug": "shortest-cycle-in-a-graph",
+  "difficulty": "Hard",
+  "content": "<p>There is a <strong>bi-directional </strong>graph with <code>n</code> vertices, where each vertex is labeled from <code>0</code> to <code>n - 1</code>. The edges in the graph are represented by a given 2D integer array <code>edges</code>, where <code>edges[i] = [u<sub>i</sub>, v<sub>i</sub>]</code> denotes an edge between vertex <code>u<sub>i</sub></code> and vertex <code>v<sub>i</sub></code>. Every vertex pair is connected by at most one edge, and no vertex has an edge to itself.</p>\n\n<p>Return <em>the length of the <strong>shortest </strong>cycle in the graph</em>. If no cycle exists, return <code>-1</code>.</p>\n\n<p>A cycle is a path that starts and ends at the same node, and each edge in the path is used only once.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/01/04/cropped.png\" style=\"width: 387px; height: 331px;\" />\n<pre>\n<strong>Input:</strong> n = 7, edges = [[0,1],[1,2],[2,0],[3,4],[4,5],[5,6],[6,3]]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The cycle with the smallest length is : 0 -&gt; 1 -&gt; 2 -&gt; 0 \n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/01/04/croppedagin.png\" style=\"width: 307px; height: 307px;\" />\n<pre>\n<strong>Input:</strong> n = 4, edges = [[0,1],[0,2]]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> There are no cycles in this graph.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 1000</code></li>\n\t<li><code>1 &lt;= edges.length &lt;= 1000</code></li>\n\t<li><code>edges[i].length == 2</code></li>\n\t<li><code>0 &lt;= u<sub>i</sub>, v<sub>i</sub> &lt; n</code></li>\n\t<li><code>u<sub>i</sub> != v<sub>i</sub></code></li>\n\t<li>There are no repeated edges.</li>\n</ul>\n",
+  "hints": [
+    "How can BFS be used?",
+    "For each vertex u, calculate the length of the shortest cycle that contains vertex u using BFS"
+  ],
+  "metaData": "{\n  \"name\": \"findShortestCycle\",\n  \"params\": [\n    {\n      \"type\": \"integer\",\n      \"name\": \"n\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"edges\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"30.4K\", \"totalSubmission\": \"77.3K\", \"totalAcceptedRaw\": 30410, \"totalSubmissionRaw\": 77286, \"acRate\": \"39.3%\"}",
+  "likes": 629,
+  "dislikes": 20,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Redundant Connection\", \"titleSlug\": \"redundant-connection\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Cycle in a Graph\", \"titleSlug\": \"longest-cycle-in-a-graph\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Divide Nodes Into the Maximum Number of Groups\", \"titleSlug\": \"divide-nodes-into-the-maximum-number-of-groups\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "7\n[[0,1],[1,2],[2,0],[3,4],[4,5],[5,6],[6,3]]",
+    "4\n[[0,1],[0,2]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 2, \"slug\": \"zomato\", \"name\": \"Zomato\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findShortestCycle(int n, vector<vector<int>>& edges) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findShortestCycle(int n, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findShortestCycle(self, n: int, edges: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findShortestCycle(self, n, edges):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} edges\n * @return {number}\n */\nvar findShortestCycle = function(n, edges) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findShortestCycle(n: number, edges: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindShortestCycle(int n, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findShortestCycle(int n, int** edges, int edgesSize, int* edgesColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findShortestCycle(n int, edges [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findShortestCycle(n: Int, edges: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findShortestCycle(_ n: Int, _ edges: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_shortest_cycle(n: i32, edges: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} edges\n# @return {Integer}\ndef find_shortest_cycle(n, edges)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $edges\n     * @return Integer\n     */\n    function findShortestCycle($n, $edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findShortestCycle(int n, List<List<int>> edges) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findShortestCycle(n: Int, edges: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_shortest_cycle(n :: integer, edges :: [[integer]]) :: integer\n  def find_shortest_cycle(n, edges) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_shortest_cycle(N :: integer(), Edges :: [[integer()]]) -> integer().\nfind_shortest_cycle(N, Edges) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-shortest-cycle n edges)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

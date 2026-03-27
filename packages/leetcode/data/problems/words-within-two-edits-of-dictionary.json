@@ -1,0 +1,136 @@
+{
+  "questionId": "2550",
+  "questionFrontendId": "2452",
+  "title": "Words Within Two Edits of Dictionary",
+  "titleSlug": "words-within-two-edits-of-dictionary",
+  "difficulty": "Medium",
+  "content": "<p>You are given two string arrays, <code>queries</code> and <code>dictionary</code>. All words in each array comprise of lowercase English letters and have the same length.</p>\n\n<p>In one <strong>edit</strong> you can take a word from <code>queries</code>, and change any letter in it to any other letter. Find all words from <code>queries</code> that, after a <strong>maximum</strong> of two edits, equal some word from <code>dictionary</code>.</p>\n\n<p>Return<em> a list of all words from </em><code>queries</code><em>, </em><em>that match with some word from </em><code>dictionary</code><em> after a maximum of <strong>two edits</strong></em>. Return the words in the <strong>same order</strong> they appear in <code>queries</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> queries = [&quot;word&quot;,&quot;note&quot;,&quot;ants&quot;,&quot;wood&quot;], dictionary = [&quot;wood&quot;,&quot;joke&quot;,&quot;moat&quot;]\n<strong>Output:</strong> [&quot;word&quot;,&quot;note&quot;,&quot;wood&quot;]\n<strong>Explanation:</strong>\n- Changing the &#39;r&#39; in &quot;word&quot; to &#39;o&#39; allows it to equal the dictionary word &quot;wood&quot;.\n- Changing the &#39;n&#39; to &#39;j&#39; and the &#39;t&#39; to &#39;k&#39; in &quot;note&quot; changes it to &quot;joke&quot;.\n- It would take more than 2 edits for &quot;ants&quot; to equal a dictionary word.\n- &quot;wood&quot; can remain unchanged (0 edits) and match the corresponding dictionary word.\nThus, we return [&quot;word&quot;,&quot;note&quot;,&quot;wood&quot;].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> queries = [&quot;yes&quot;], dictionary = [&quot;not&quot;]\n<strong>Output:</strong> []\n<strong>Explanation:</strong>\nApplying any two edits to &quot;yes&quot; cannot make it equal to &quot;not&quot;. Thus, we return an empty array.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= queries.length, dictionary.length &lt;= 100</code></li>\n\t<li><code>n == queries[i].length == dictionary[j].length</code></li>\n\t<li><code>1 &lt;= n &lt;= 100</code></li>\n\t<li>All <code>queries[i]</code> and <code>dictionary[j]</code> are composed of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Try brute-forcing the problem.",
+    "For each word in queries, try comparing to each word in dictionary.",
+    "If there is a maximum of two edit differences, the word should be present in answer."
+  ],
+  "metaData": "{\n  \"name\": \"twoEditWords\",\n  \"params\": [\n    {\n      \"name\": \"queries\",\n      \"type\": \"string[]\"\n    },\n    {\n      \"type\": \"string[]\",\n      \"name\": \"dictionary\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<string>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"29.3K\", \"totalSubmission\": \"47.4K\", \"totalAcceptedRaw\": 29271, \"totalSubmissionRaw\": 47356, \"acRate\": \"61.8%\"}",
+  "likes": 326,
+  "dislikes": 25,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Word Ladder\", \"titleSlug\": \"word-ladder\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"word\",\"note\",\"ants\",\"wood\"]\n[\"wood\",\"joke\",\"moat\"]",
+    "[\"yes\"]\n[\"not\"]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Trie",
+      "slug": "trie"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> twoEditWords(vector<string>& queries, vector<string>& dictionary) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<String> twoEditWords(String[] queries, String[] dictionary) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def twoEditWords(self, queries: List[str], dictionary: List[str]) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def twoEditWords(self, queries, dictionary):\n        \"\"\"\n        :type queries: List[str]\n        :type dictionary: List[str]\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} queries\n * @param {string[]} dictionary\n * @return {string[]}\n */\nvar twoEditWords = function(queries, dictionary) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function twoEditWords(queries: string[], dictionary: string[]): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<string> TwoEditWords(string[] queries, string[] dictionary) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** twoEditWords(char** queries, int queriesSize, char** dictionary, int dictionarySize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func twoEditWords(queries []string, dictionary []string) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun twoEditWords(queries: Array<String>, dictionary: Array<String>): List<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func twoEditWords(_ queries: [String], _ dictionary: [String]) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn two_edit_words(queries: Vec<String>, dictionary: Vec<String>) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} queries\n# @param {String[]} dictionary\n# @return {String[]}\ndef two_edit_words(queries, dictionary)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $queries\n     * @param String[] $dictionary\n     * @return String[]\n     */\n    function twoEditWords($queries, $dictionary) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> twoEditWords(List<String> queries, List<String> dictionary) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def twoEditWords(queries: Array[String], dictionary: Array[String]): List[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec two_edit_words(queries :: [String.t], dictionary :: [String.t]) :: [String.t]\n  def two_edit_words(queries, dictionary) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec two_edit_words(Queries :: [unicode:unicode_binary()], Dictionary :: [unicode:unicode_binary()]) -> [unicode:unicode_binary()].\ntwo_edit_words(Queries, Dictionary) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (two-edit-words queries dictionary)\n  (-> (listof string?) (listof string?) (listof string?))\n  )"
+    }
+  ],
+  "solution": null
+}

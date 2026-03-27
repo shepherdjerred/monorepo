@@ -1,0 +1,135 @@
+{
+  "questionId": "2532",
+  "questionFrontendId": "2423",
+  "title": "Remove Letter To Equalize Frequency",
+  "titleSlug": "remove-letter-to-equalize-frequency",
+  "difficulty": "Easy",
+  "content": "<p>You are given a <strong>0-indexed</strong> string <code>word</code>, consisting of lowercase English letters. You need to select <strong>one</strong> index and <strong>remove</strong> the letter at that index from <code>word</code> so that the <strong>frequency</strong> of every letter present in <code>word</code> is equal.</p>\n\n<p>Return<em> </em><code>true</code><em> if it is possible to remove one letter so that the frequency of all letters in </em><code>word</code><em> are equal, and </em><code>false</code><em> otherwise</em>.</p>\n\n<p><strong>Note:</strong></p>\n\n<ul>\n\t<li>The <b>frequency</b> of a letter <code>x</code> is the number of times it occurs in the string.</li>\n\t<li>You <strong>must</strong> remove exactly one letter and cannot choose to do nothing.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> word = &quot;abcc&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> Select index 3 and delete it: word becomes &quot;abc&quot; and each character has a frequency of 1.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> word = &quot;aazz&quot;\n<strong>Output:</strong> false\n<strong>Explanation:</strong> We must delete a character, so either the frequency of &quot;a&quot; is 1 and the frequency of &quot;z&quot; is 2, or vice versa. It is impossible to make all present letters have equal frequency.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= word.length &lt;= 100</code></li>\n\t<li><code>word</code> consists of lowercase English letters only.</li>\n</ul>\n",
+  "hints": [
+    "Brute force all letters that could be removed.",
+    "Use a frequency array of size 26."
+  ],
+  "metaData": "{\n  \"name\": \"equalFrequency\",\n  \"params\": [\n    {\n      \"name\": \"word\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"76K\", \"totalSubmission\": \"393.7K\", \"totalAcceptedRaw\": 75994, \"totalSubmissionRaw\": 393727, \"acRate\": \"19.3%\"}",
+  "likes": 798,
+  "dislikes": 1358,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Equal Frequency\", \"titleSlug\": \"maximum-equal-frequency\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Deletions to Make Character Frequencies Unique\", \"titleSlug\": \"minimum-deletions-to-make-character-frequencies-unique\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"abcc\"",
+    "\"aazz\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool equalFrequency(string word) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean equalFrequency(String word) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def equalFrequency(self, word: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def equalFrequency(self, word):\n        \"\"\"\n        :type word: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} word\n * @return {boolean}\n */\nvar equalFrequency = function(word) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function equalFrequency(word: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool EqualFrequency(string word) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool equalFrequency(char* word) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func equalFrequency(word string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun equalFrequency(word: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func equalFrequency(_ word: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn equal_frequency(word: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} word\n# @return {Boolean}\ndef equal_frequency(word)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $word\n     * @return Boolean\n     */\n    function equalFrequency($word) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool equalFrequency(String word) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def equalFrequency(word: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec equal_frequency(word :: String.t) :: boolean\n  def equal_frequency(word) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec equal_frequency(Word :: unicode:unicode_binary()) -> boolean().\nequal_frequency(Word) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (equal-frequency word)\n  (-> string? boolean?)\n  )"
+    }
+  ],
+  "solution": null
+}

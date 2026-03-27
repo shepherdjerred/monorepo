@@ -1,0 +1,129 @@
+{
+  "questionId": "2630",
+  "questionFrontendId": "2544",
+  "title": "Alternating Digit Sum",
+  "titleSlug": "alternating-digit-sum",
+  "difficulty": "Easy",
+  "content": "<p>You are given a positive integer <code>n</code>. Each digit of <code>n</code> has a sign according to the following rules:</p>\n\n<ul>\n\t<li>The <strong>most significant digit</strong> is assigned a <strong>positive</strong> sign.</li>\n\t<li>Each other digit has an opposite sign to its adjacent digits.</li>\n</ul>\n\n<p>Return <em>the sum of all digits with their corresponding sign</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 521\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> (+5) + (-2) + (+1) = 4.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 111\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> (+1) + (-1) + (+1) = 1.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 886996\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> (+8) + (-8) + (+6) + (-9) + (+9) + (-6) = 0.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>9</sup></code></li>\n</ul>\n\n<p>&nbsp;</p>\n<style type=\"text/css\">.spoilerbutton {display:block; border:dashed; padding: 0px 0px; margin:10px 0px; font-size:150%; font-weight: bold; color:#000000; background-color:cyan; outline:0; \n}\n.spoiler {overflow:hidden;}\n.spoiler > div {-webkit-transition: all 0s ease;-moz-transition: margin 0s ease;-o-transition: all 0s ease;transition: margin 0s ease;}\n.spoilerbutton[value=\"Show Message\"] + .spoiler > div {margin-top:-500%;}\n.spoilerbutton[value=\"Hide Message\"] + .spoiler {padding:5px;}\n</style>\n",
+  "hints": [
+    "The first step is to loop over the digits. We can convert the integer into a string, an array of digits, or just loop over its digits.",
+    "Keep a variable sign that initially equals 1 and a variable answer that initially equals 0.",
+    "Each time you loop over a digit i, add sign * i to answer, then multiply sign by -1."
+  ],
+  "metaData": "{\n  \"name\": \"alternateDigitSum\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"100.9K\", \"totalSubmission\": \"146.2K\", \"totalAcceptedRaw\": 100923, \"totalSubmissionRaw\": 146176, \"acRate\": \"69.0%\"}",
+  "likes": 482,
+  "dislikes": 23,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Add Digits\", \"titleSlug\": \"add-digits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum Sum of Four Digit Number After Splitting Digits\", \"titleSlug\": \"minimum-sum-of-four-digit-number-after-splitting-digits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Separate the Digits in an Array\", \"titleSlug\": \"separate-the-digits-in-an-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Compute Alternating Sum\", \"titleSlug\": \"compute-alternating-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "521",
+    "111",
+    "886996"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"visa\", \"name\": \"Visa\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"ebay\", \"name\": \"eBay\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"capital-one\", \"name\": \"Capital One\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int alternateDigitSum(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int alternateDigitSum(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def alternateDigitSum(self, n: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def alternateDigitSum(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {number}\n */\nvar alternateDigitSum = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function alternateDigitSum(n: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int AlternateDigitSum(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int alternateDigitSum(int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func alternateDigitSum(n int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun alternateDigitSum(n: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func alternateDigitSum(_ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn alternate_digit_sum(n: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Integer}\ndef alternate_digit_sum(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Integer\n     */\n    function alternateDigitSum($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int alternateDigitSum(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def alternateDigitSum(n: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec alternate_digit_sum(n :: integer) :: integer\n  def alternate_digit_sum(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec alternate_digit_sum(N :: integer()) -> integer().\nalternate_digit_sum(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (alternate-digit-sum n)\n  (-> exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

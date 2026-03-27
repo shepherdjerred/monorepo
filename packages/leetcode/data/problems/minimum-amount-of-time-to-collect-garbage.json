@@ -1,0 +1,140 @@
+{
+  "questionId": "2471",
+  "questionFrontendId": "2391",
+  "title": "Minimum Amount of Time to Collect Garbage",
+  "titleSlug": "minimum-amount-of-time-to-collect-garbage",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> array of strings <code>garbage</code> where <code>garbage[i]</code> represents the assortment of garbage at the <code>i<sup>th</sup></code> house. <code>garbage[i]</code> consists only of the characters <code>&#39;M&#39;</code>, <code>&#39;P&#39;</code> and <code>&#39;G&#39;</code> representing one unit of metal, paper and glass garbage respectively. Picking up <strong>one</strong> unit of any type of garbage takes <code>1</code> minute.</p>\n\n<p>You are also given a <strong>0-indexed</strong> integer array <code>travel</code> where <code>travel[i]</code> is the number of minutes needed to go from house <code>i</code> to house <code>i + 1</code>.</p>\n\n<p>There are three garbage trucks in the city, each responsible for picking up one type of garbage. Each garbage truck starts at house <code>0</code> and must visit each house <strong>in order</strong>; however, they do <strong>not</strong> need to visit every house.</p>\n\n<p>Only <strong>one</strong> garbage truck may be used at any given moment. While one truck is driving or picking up garbage, the other two trucks <strong>cannot</strong> do anything.</p>\n\n<p>Return<em> the <strong>minimum</strong> number of minutes needed to pick up all the garbage.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> garbage = [&quot;G&quot;,&quot;P&quot;,&quot;GP&quot;,&quot;GG&quot;], travel = [2,4,3]\n<strong>Output:</strong> 21\n<strong>Explanation:</strong>\nThe paper garbage truck:\n1. Travels from house 0 to house 1\n2. Collects the paper garbage at house 1\n3. Travels from house 1 to house 2\n4. Collects the paper garbage at house 2\nAltogether, it takes 8 minutes to pick up all the paper garbage.\nThe glass garbage truck:\n1. Collects the glass garbage at house 0\n2. Travels from house 0 to house 1\n3. Travels from house 1 to house 2\n4. Collects the glass garbage at house 2\n5. Travels from house 2 to house 3\n6. Collects the glass garbage at house 3\nAltogether, it takes 13 minutes to pick up all the glass garbage.\nSince there is no metal garbage, we do not need to consider the metal garbage truck.\nTherefore, it takes a total of 8 + 13 = 21 minutes to collect all the garbage.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> garbage = [&quot;MMM&quot;,&quot;PGM&quot;,&quot;GP&quot;], travel = [3,10]\n<strong>Output:</strong> 37\n<strong>Explanation:</strong>\nThe metal garbage truck takes 7 minutes to pick up all the metal garbage.\nThe paper garbage truck takes 15 minutes to pick up all the paper garbage.\nThe glass garbage truck takes 15 minutes to pick up all the glass garbage.\nIt takes a total of 7 + 15 + 15 = 37 minutes to collect all the garbage.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= garbage.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>garbage[i]</code> consists of only the letters <code>&#39;M&#39;</code>, <code>&#39;P&#39;</code>, and <code>&#39;G&#39;</code>.</li>\n\t<li><code>1 &lt;= garbage[i].length &lt;= 10</code></li>\n\t<li><code>travel.length == garbage.length - 1</code></li>\n\t<li><code>1 &lt;= travel[i] &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "Where can we save time? By not visiting all the houses.",
+    "For each type of garbage, find the house with the highest index that has at least 1 unit of this type of garbage."
+  ],
+  "metaData": "{\n  \"name\": \"garbageCollection\",\n  \"params\": [\n    {\n      \"name\": \"garbage\",\n      \"type\": \"string[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"travel\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"154.4K\", \"totalSubmission\": \"181.4K\", \"totalAcceptedRaw\": 154422, \"totalSubmissionRaw\": 181450, \"acRate\": \"85.1%\"}",
+  "likes": 1632,
+  "dislikes": 245,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"G\",\"P\",\"GP\",\"GG\"]\n[2,4,3]",
+    "[\"MMM\",\"PGM\",\"GP\"]\n[3,10]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int garbageCollection(vector<string>& garbage, vector<int>& travel) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int garbageCollection(String[] garbage, int[] travel) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def garbageCollection(self, garbage: List[str], travel: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def garbageCollection(self, garbage, travel):\n        \"\"\"\n        :type garbage: List[str]\n        :type travel: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} garbage\n * @param {number[]} travel\n * @return {number}\n */\nvar garbageCollection = function(garbage, travel) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function garbageCollection(garbage: string[], travel: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int GarbageCollection(string[] garbage, int[] travel) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int garbageCollection(char** garbage, int garbageSize, int* travel, int travelSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func garbageCollection(garbage []string, travel []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun garbageCollection(garbage: Array<String>, travel: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func garbageCollection(_ garbage: [String], _ travel: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn garbage_collection(garbage: Vec<String>, travel: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} garbage\n# @param {Integer[]} travel\n# @return {Integer}\ndef garbage_collection(garbage, travel)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $garbage\n     * @param Integer[] $travel\n     * @return Integer\n     */\n    function garbageCollection($garbage, $travel) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int garbageCollection(List<String> garbage, List<int> travel) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def garbageCollection(garbage: Array[String], travel: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec garbage_collection(garbage :: [String.t], travel :: [integer]) :: integer\n  def garbage_collection(garbage, travel) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec garbage_collection(Garbage :: [unicode:unicode_binary()], Travel :: [integer()]) -> integer().\ngarbage_collection(Garbage, Travel) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (garbage-collection garbage travel)\n  (-> (listof string?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2113",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: HashMap\n\n**Intuition**\n\nThe first observation we can make from the problem statement is that all three trucks will pick up only one type of garbage and hence they all will work independently. In other words, the order of different trucks will not matter. Now, let's try to find the minimum time required for a truck to collect a certain type of garbage (say type `M`). Since we need to collect all the garbage `M` and picking one unit of garbage `M` takes one unit of time, the count of garbage `M` in all the houses is the minimum amount of time required for the truck to collect this type of garbage.\n\nNow, we need to find the minimum time required for the truck to travel across the houses to reach all the `M` type garbage. Each truck will start from house `0`, but it doesn't have to go to each house. Also, the truck can only visit houses in order. So if there is no garbage of type `M` at the last house the truck doesn't have to go to the last house. This implies that the truck only needs to travel to the last house having that type of garbage. For example, if the truck needs to collect the `M` type garbage and the houses are `[\"G\",\"P\",\"MGP\",\"GG\"]`, then the truck only needs to travel from index `0` to `2`.\n\nTherefore, we will find the time required for each truck separately. For each type of garbage, we will find the total count in all the houses (say `x`) and also find the index of the last house having this garbage (say `i`). The time to collect this type of garbage will be `x + travel[0] + travel[1] + ... + travel[i - 1]`, this is because the truck will need to travel all houses from index `0` to index `i `, and `travel[i - 1]` is the time to travel from the house at index `i - 1` to `i`. To find the sum of the first `i` elements in the array `travel`, we will create a prefix sum array to fetch it in constant time. This array `prefixSum` will start from index one (`prefixSum[0]` will be `0`, since the truck starts from the house `0`). This way, when we need to find the total time to reach house `0`, we can find it in `prefixSum[0]`, and the total time to reach house `1` will be found in index `prefixSum[1]`, and so on.\n\n![fig](../Figures/2391-re/2391Afix.png)\n\n**Algorithm**\n\n1. Initialize an array `prefixSum` of the size  `travel.length + 1`, the `$i_{th}$` value in this array will store the sum of first `i - 1` elements in the array `travel`.\n2. Initialize an empty map `garbageLastPos` from character to integer, this map will store the last index of the house for the type of garbage equal to the key.\n3. Initialize an empty map `garbageCount` from character to integer, this map will store the count of the type of garbage represented by the key in all the houses.\n4. Iterate over the array `garbage` and iterate over each garbage for each house, increment the count in `garbageCount` and store the index in the map `garbageLastPos`.\n5. Iterate over each garbage type and for each type (say `c`) add the `garbageCount[c]` and `prefixSum[garbageLastPos[c]]` to the answer variable `ans`.\n6. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/5c5MypvC/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"5c5MypvC\"></iframe>\n\n**Complexity Analysis**\n\nHere, $N$ is the number of houses in the array `garbage`, and $K$ is the maximum length `garbage[i]`.\n\n* Time complexity $O(N * K)$\n\n  We first iterate over the array `travel` to create the `prefixSum`, the size of `travel` is $N$ and hence this will take $O(N)$ time. We then iterate over the `garbage` array and for each string in the array we iterate over each character to store info in the maps `garbageLastPos` and `garbageCount`, this operation will take $O(N * K)$ time. In the end, we just iterate over the three garbage types and add the corresponding answer to `ans`. Hence, the total time complexity is equal to $O(N * K)$\n\n\n* Space complexity $O(N)$\n\n  We have created an array `prefixSum` of size $N$. We also have the maps to store the last position and the count, however, the space required by these maps can be considered constant as the only keys we need are three (`M`, `P`, `G`). Therefore, the total space complexity can be written as $O(N)$.\n  <br/>\n\n---\n\n### Approach 2: HashMap and In-place Modification\n\n**Intuition**\n\n> Note: This approach requires altering of given input which is generally not recommended. This approach has been added for the sake of competition and should be discussed in an interview setting only if asked explicitly.\n\nLet's try to save some space in our previous approach. Due to the array `prefixSum` we have incurred $O(N)$ space in our previous approach. To save space here, we can store the prefix sums in the `travel` array itself instead of creating a new array. This will work because we only need the `travel` array for the prefix sums and not the individual values. Another optimization that can be done is for the map `garbageCount`,  where we store the count of each garbage type, however, instead of returning the time to collect each type of garbage, we only need to return the total time to collect all the garbage. Therefore, we can store the total count of all garbage in a variable instead of a map.\n\n**Algorithm**\n\n1. Create the prefix sum array `travel` by using the equation `travel[i] = travel[i - 1] + travel[i]`.\n2. Initialize an empty map `garbageLastPos` from character to integer, this map will store the last index of the house for the type of garbage equal to the key.\n4. Iterate over the array `garbage` and iterate over each garbage for each house, store the index in the map `garbageLastPos` and add the length of `garbage[i]` to the variable `ans`.\n5. Iterate over each garbage type and for each type (say `c`) add the `prefixSum[garbageLastPos[c] - 1]` to the answer variable `ans`.\n6. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/bLfbvtbN/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"bLfbvtbN\"></iframe>\n\n**Complexity Analysis**\n\nHere, $N$ is the number of houses in the array `garbage` and $K$ is the maximum length of garbage in the array `garbage`.\n\n* Time complexity $O(N * K)$\n\n  We first iterate over the array `travel` to create the `prefixSum`, the size of `travel` is $N$ and hence this will take $O(N)$ time. We then iterate over the `garbage` array and for each string in the array we iterate over each character to store info in the maps `garbageLastPos`, this operation will take $O(N * K)$ time. In the end, we just iterate over the three garbage types and add the corresponding answer to `ans`. Hence, the total time complexity is equal to $O(N * K)$\n\n\n* Space complexity $O(1)$\n\n  The only extra space we used is the map to store the last position, however, the space required by this map can be considered constant as the only keys that we need are three (`M`, `P`, `G`). Therefore, the total space complexity is constant.\n  <br/>\n\n---\n\n### Approach 3: Iterate in Reverse\n\n**Intuition**\n\nIn the previous approach, we have been traversing in a forward direction, which can lead to a small issue: we do not know if we will encounter a certain type of garbage in the future, and this result will determine whether we need to send a garbage truck for that specific type of garbage to this location.\n\nFor example, suppose we start from house `i = 1` and move to house `i = 1` without finding any type `M` garbage. However, at this point, we cannot guarantee that the `M` garbage truck does not need to travel from `i = 0` to `i = 1`. This is because if future houses at index `i = 2`, `i = 3`, etc, have garbage `M`, then we still need the garbage truck `M` to travel from house `i = 0` to house `i = 1`. We rely on a future value to determine whether to keep the current calculated value, hmm, it doesn't seem quite satisfactory.\n\nThis inspires us, what if we switch the order of traversal? This way, we can ensure that as long as we do not encounter a certain type of garbage during the reverse traversal process, it means that the garbage truck of that type will never need to travel these distances! This simplifies our calculations!\n\nFor example, when we traverse in reverse from `i = n - 1` to `i = 10`, and we haven't encountered any type `M` garbage, it means that garbage truck `M` doesn't need to visit these houses until we encounter the first house (in reverse order) that has type `M` garbage. At that point, we can immediately determine that garbage truck `M` will arrive there and finish its journey, that's it.\n\n\n**Algorithm**\n\n1. Initialize boolean (or int) variables `M`, `P`, and `G` to `false` (`0`) to represent the presence of specific type of garbages ('M', 'P', 'G') we have encountered so far.\n2. Initialize the variable `ans` to the length of the first garbage string in the array since we will collect them after all.\n3. Iterate through the `garbage` array in reverse order, starting from the last element (at index `garbage.length - 1`) and moving backwards to the second element (index `1`). For each step `i` inside the loop:\n    - Update variables `M`, `P`, and `G` based on whether the current `garbage[i]` contains the characters 'M', 'P', and 'G' respectively.\n    - Multiply `travel[i - 1]` by the sum of the equivalent integer values of `M`, `P`, and `G` (`1` if `true`, `0` if `false`). Add this value to `ans`.\n    - Add the length of `garbage[i]` to the `ans`.\n4. After the iteration ends, `ans` will hold the total amount of time. Return the final `ans` as the result.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/HZzkg5id/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"HZzkg5id\"></iframe>\n\n**Complexity Analysis**\n\nHere, $N$ is the number of houses in the array `garbage` and $K$ is the maximum length of garbage in the array `garbage`.\n\n* Time complexity $O(N * K)$\n\n  We iterate over the array `garbage` in reverse and for each string in the array, we iterate over each character to and do $O(1)$ work, thus this operation will take $O(N * K)$ time.\n\n\n* Space complexity $O(1)$\n\n  The only extra space we used is the three variables `M`, `P`, and `G`. Therefore, the total space complexity is constant.\n  <br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

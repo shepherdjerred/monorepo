@@ -1,0 +1,152 @@
+{
+  "questionId": "2488",
+  "questionFrontendId": "2406",
+  "title": "Divide Intervals Into Minimum Number of Groups",
+  "titleSlug": "divide-intervals-into-minimum-number-of-groups",
+  "difficulty": "Medium",
+  "content": "<p>You are given a 2D integer array <code>intervals</code> where <code>intervals[i] = [left<sub>i</sub>, right<sub>i</sub>]</code> represents the <strong>inclusive</strong> interval <code>[left<sub>i</sub>, right<sub>i</sub>]</code>.</p>\n\n<p>You have to divide the intervals into one or more <strong>groups</strong> such that each interval is in <strong>exactly</strong> one group, and no two intervals that are in the same group <strong>intersect</strong> each other.</p>\n\n<p>Return <em>the <strong>minimum</strong> number of groups you need to make</em>.</p>\n\n<p>Two intervals <strong>intersect</strong> if there is at least one common number between them. For example, the intervals <code>[1, 5]</code> and <code>[5, 8]</code> intersect.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> intervals = [[5,10],[6,8],[1,5],[2,3],[1,10]]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> We can divide the intervals into the following groups:\n- Group 1: [1, 5], [6, 8].\n- Group 2: [2, 3], [5, 10].\n- Group 3: [1, 10].\nIt can be proven that it is not possible to divide the intervals into fewer than 3 groups.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> intervals = [[1,3],[5,6],[8,10],[11,13]]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> None of the intervals overlap, so we can put all of them in one group.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= intervals.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>intervals[i].length == 2</code></li>\n\t<li><code>1 &lt;= left<sub>i</sub> &lt;= right<sub>i</sub> &lt;= 10<sup>6</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Can you find a different way to describe the question?",
+    "The minimum number of groups we need is equivalent to the maximum number of intervals that overlap at some point. How can you find that?"
+  ],
+  "metaData": "{\n  \"name\": \"minGroups\",\n  \"params\": [\n    {\n      \"name\": \"intervals\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"142.9K\", \"totalSubmission\": \"224.8K\", \"totalAcceptedRaw\": 142935, \"totalSubmissionRaw\": 224831, \"acRate\": \"63.6%\"}",
+  "likes": 1466,
+  "dislikes": 43,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Merge Intervals\", \"titleSlug\": \"merge-intervals\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Number of Frogs Croaking\", \"titleSlug\": \"minimum-number-of-frogs-croaking\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Average Height of Buildings in Each Segment\", \"titleSlug\": \"average-height-of-buildings-in-each-segment\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[5,10],[6,8],[1,5],[2,3],[1,10]]",
+    "[[1,3],[5,6],[8,10],[11,13]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 3, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 3, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minGroups(vector<vector<int>>& intervals) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minGroups(int[][] intervals) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minGroups(self, intervals: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minGroups(self, intervals):\n        \"\"\"\n        :type intervals: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} intervals\n * @return {number}\n */\nvar minGroups = function(intervals) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minGroups(intervals: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinGroups(int[][] intervals) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minGroups(int** intervals, int intervalsSize, int* intervalsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minGroups(intervals [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minGroups(intervals: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minGroups(_ intervals: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_groups(intervals: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} intervals\n# @return {Integer}\ndef min_groups(intervals)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $intervals\n     * @return Integer\n     */\n    function minGroups($intervals) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minGroups(List<List<int>> intervals) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minGroups(intervals: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_groups(intervals :: [[integer]]) :: integer\n  def min_groups(intervals) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_groups(Intervals :: [[integer()]]) -> integer().\nmin_groups(Intervals) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-groups intervals)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2461",
+    "content": "## Solution\n\n---\n\n### Approach 1: Sorting or Priority Queue\n\n#### Intuition\n\nThe problem is very similar to  [Meeting Rooms II](https://leetcode.com/problems/meeting-rooms-ii/solution/), and thus the solutions are alike. The problem provides $N$ intervals in the form `[start, end]`, where both start and end are inclusive. Our goal is to divide the intervals into multiple groups such that each interval belongs to exactly one group and no intervals within the same group overlap. We need to minimize the number of groups created.\n\nIntervals that share a common number must be placed in different groups. For example, given the intervals `[3, 7], [5, 6], and [1, 8]`, all of these intervals overlap between `5` and `6`. Therefore, they must be placed in separate groups. In this case, we would need three groups to ensure no two intervals in the same group overlap.\n\nWe can generalize this by stating that if there are $K$ overlapping intervals, we need at least $K$ groups to separate them. Some intervals may not overlap with one or more intervals within the $K$ overlapping ones, and they can be placed into any group where there is no conflict. For example, consider adding two more intervals, `[10, 12]` and `[2, 3]`, to the previous set. Despite having five intervals now, we still need only three groups. A valid grouping could be:\n\n- Group 1: `[1, 8], [10, 12]`\n- Group 2: `[3, 7]`\n- Group 3: `[5, 6], [2, 3]`\n\nThe core of the problem is determining the maximum number of overlapping intervals at any given point. These overlapping intervals define the minimum number of groups required. Once we find the number of intervals that overlap at the same point, we can allocate non-overlapping intervals into existing groups.\n\nTo find the maximum number of overlapping intervals, we need to determine how many intervals cover each point in the range. For each interval `[start, end]`, all numbers between start and end (inclusive) belong to that interval. Then by iterating over each number, we can find out the maximum number of intervals any number has. An interval `[start, end]` represents that there is an interval for each number between `start` and `end` inclusive. Similar to the [Meeting Rooms II](https://leetcode.com/problems/meeting-rooms-ii/solution/) solution, we will need to find the number of intervals at each number using the prefix sum. We will mark `1` at each `start` point denoting that an interval starts here and mark `-1` at each of the `end + 1` points denoting that an interval ends here (as `end` is inclusive).\n\nTo do this efficiently, we can use either a priority queue or a list with sorting. This approach uses the second one where we will create two events for each interval as `{start, 1}` and `{end + 1, -1}`  denoting the start and end of an interval. We can then sort this list in ascending order of the point and then by the value. The prefix sum of this list will provide the number of overlapping intervals in each point and we can also track the maximum sum we have achieved so far. This maximum sum can be returned as the minimum number of groups required.\n\n![fig](../Figures/2406/2406A.png)\n\n\n#### Algorithm\n\n1. Convert Intervals to Events:\n    - For each interval `[start, end]`, create two events:\n        - A start event at `start` with a value of `+1` (indicating an interval is starting).\n        - An end event at `end + 1` with a value of `-1` (indicating an interval is ending just after right).\n2. Sort Events:\n    - Sort the events based on the time (first element of the pair).\n    -  If two events occur at the same time, process them in the order of their values (+1 first, -1 second). This ensures correct overlap counting.\n3. Find the prefix sum:\n    - Initialize `concurrentIntervals` to 0. This will track the number of intervals active at any point in time.\n    - Traverse the sorted events:\n        - For each event, update `concurrentIntervals` by adding the value of the event (+1 for start, -1 for end).\n        - Track the maximum value of `concurrentIntervals` as `maxConcurrentIntervals` which represents the maximum number of overlapping intervals.\n4. Return `maxConcurrentIntervals`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/8Qwp7cnE/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"8Qwp7cnE\"></iframe>\n\n#### Complexity Analysis\n\nHere, $N$ is the number of intervals.\n\n- Time complexity: $O(N \\log N)$\n\n  We create two events for each interval, hence the number of events is $2 *N$. Then we sort these events, which will take $O(N \\log N)$. To find the prefix sum, we iterated over each event to find the maximum sum. Hence, the total time complexity is $O(N \\log N)$.\n\n- Space complexity: $O(N)$\n\n  We will store the `start` and `end` numbers along with an integer to denote the start or end of an interval. For $N$ intervals there will be $2* N$ events. Hence the total space complexity is equal to $O(N)$.\n\n---\n\n### Approach 2: Line Sweep Algorithm With Ordered Container\n\n#### Intuition\n\nThis approach is similar to the previous one but uses a method called the Line Sweep algorithm. It's useful for solving problems involving intervals.\n\nThe Line Sweep algorithm tracks when intervals start and end. For each interval `(start, end)`, we mark the start by increasing the count at `start` by `1` (indicating a new interval starts), and we mark the point `end + 1` by decreasing its count by `1` (indicating an interval ends). These changes are stored in a map, which keeps track of how many intervals start or end at each point.\n\nAfter processing all the intervals, we calculate a running total (prefix sum) over the map. This running total shows how many intervals are active at any given point. The highest value of this total tells us the minimum number of groups needed to avoid overlap.\n\n#### Algorithm\n\n1. Initialize an ordered map (`pointToCount`) to track the count of intervals starting or ending at a point.\n2. Populate the map:\n    - For each interval `[start, end]`, increment `pointToCount[start]` by `1`.\n    - Decrement `pointToCount[end + 1]` by `1`.\n3. Iterate over the sorted entries of the map (automatically sorted by key).\n    - Traverse the sorted map, and add the value to `concurrentIntervals`.\n    - Track the maximum number of overlapping intervals in `maxConcurrentIntervals`.\n4. Return `maxConcurrentIntervals`\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/h5VK4QoK/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"h5VK4QoK\"></iframe>\n\n#### Complexity Analysis\n\nHere, $N$ is the number of intervals.\n\n- Time complexity: $O(N \\log N)$\n\n  We insert the intervals into an ordered map in which insertion takes $O(\\log N)$ time, and hence for $N$ insertion the time required would be $O(N \\log N)$. Then we iterate over the $2* N$ entries in the map and find the value for `maxConcurrentIntervals`. Therefore the total time complexity is equal to  $O(N \\log N)$.\n\n- Space complexity: $O(N)$\n\n  We will store the `start` and `end` numbers along with an integer to denote the start or end of an interval in the map. For $N$ intervals there will be $2* N$ events. Hence the total space complexity is equal to $O(N)$.\n\n\n---\n\n### Approach 3: Line Sweep Algorithm Without Ordered Container\n\n#### Intuition\n\nThe core idea of this approach is the same as the previous one. However, instead of using an ordered map to keep track of interval start and end points, we employ a list or vector to store the counts of intervals starting or ending at each point. Once all intervals have been processed, we avoid sorting the list as done in the earlier approach. Instead, we apply a counting sort technique to efficiently compute the prefix sum.\n\nFirst, we determine the smallest starting point (`rangeStart`) and the largest ending point (`rangeEnd`) across all intervals. These values define the range for our counting sort. We then iterate from `rangeStart` to `rangeEnd`, updating the list by adding interval counts, similar to the previous approach, while keeping track of the maximum number of overlapping intervals at any point in the variable `maxConcurrentIntervals`.\n\nThis approach offers a potential advantage over the previous method, particularly in cases where the number of intervals is large but the range of those intervals is relatively small. The time complexity of this approach depends on the interval range rather than the number of intervals, making it more efficient when the value range of the intervals is limited.\n\n#### Algorithm\n\n1. Iterate through the intervals to determine the minimum (`rangeStart`) and maximum (`rangeEnd`) points.\n2. Create an array `pointToCount` of size `rangeEnd + 2` initialized to zero.\n3. Iterate over the intervals:\n    - For each interval `[start, end]`, increment `pointToCount[start`] to indicate the start of an interval.\n    - Decrement `pointToCount[end + 1]` to mark the point where the interval ends.\n4.  Loop from `rangeStart` to `rangeEnd` and maintain a running sum `concurrentIntervals` of active intervals. Track the maximum number of concurrent intervals as `maxConcurrentIntervals`\n5. Return `maxConcurrentIntervals`\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/N9ZPeQo4/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"N9ZPeQo4\"></iframe>\n\n#### Complexity Analysis\n\nHere, $N$ is the number of intervals, and $K$ are the numbers between `rangeStart` and `rangeEnd`\n\n- Time complexity: $O(N + K)$\n\n  We iterate over the $N$ intervals to find the value of `rangeStart` and `rangeEnd`. We again iterated over the intervals to mark the points in the list `pointToCount`. Then we iterate over the $K$ numbers between `rangeStart` and `rangeEnd` to find the `maxConcurrentIntervals`. Hence the total time complexity is equal to $O(N + K)$.\n\n- Space complexity: $O(K)$\n\n  The size of the array `pointToCount` is $O(K)$ which is the only space requirement. Hence the space complexity is equal to $O(K)$.\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

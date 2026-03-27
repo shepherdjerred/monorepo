@@ -1,0 +1,53 @@
+{
+  "questionId": "2453",
+  "questionFrontendId": "2339",
+  "title": "All the Matches of the League",
+  "titleSlug": "all-the-matches-of-the-league",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Teams</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| team_name   | varchar |\n+-------------+---------+\nteam_name is the column with unique values of this table.\nEach row of this table shows the name of a team.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to report&nbsp;all the possible matches of the league. Note that every two teams play two matches with each other, with one team being the <code>home_team</code> once and the other time being the <code>away_team</code>.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nTeams table:\n+-------------+\n| team_name   |\n+-------------+\n| Leetcode FC |\n| Ahly SC     |\n| Real Madrid |\n+-------------+\n<strong>Output:</strong> \n+-------------+-------------+\n| home_team   | away_team   |\n+-------------+-------------+\n| Real Madrid | Leetcode FC |\n| Real Madrid | Ahly SC     |\n| Leetcode FC | Real Madrid |\n| Leetcode FC | Ahly SC     |\n| Ahly SC     | Real Madrid |\n| Ahly SC     | Leetcode FC |\n+-------------+-------------+\n<strong>Explanation:</strong> All the matches of the league are shown in the table.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Teams (team_name varchar(50))\"], \"mssql\": [\"Create table Teams (team_name varchar(50))\"], \"oraclesql\": [\"Create table Teams (team_name varchar(50))\"], \"database\": true, \"name\": \"find_all_matches\", \"pythondata\": [\"Teams = pd.DataFrame([], columns=['team_name']).astype({'team_name':'object'})\"], \"postgresql\": [\"Create table If Not Exists Teams (team_name varchar(50))\"], \"database_schema\": {\"Teams\": {\"team_name\": \"VARCHAR(50)\"}}}",
+  "stats": "{\"totalAccepted\": \"11.5K\", \"totalSubmission\": \"13K\", \"totalAcceptedRaw\": 11500, \"totalSubmissionRaw\": 12983, \"acRate\": \"88.6%\"}",
+  "likes": 49,
+  "dislikes": 4,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Teams\": [\"team_name\"]}, \"rows\": {\"Teams\": [[\"Leetcode FC\"], [\"Ahly SC\"], [\"Real Madrid\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_all_matches(teams: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

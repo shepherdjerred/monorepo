@@ -1,0 +1,53 @@
+{
+  "questionId": "2622",
+  "questionFrontendId": "2480",
+  "title": "Form a Chemical Bond",
+  "titleSlug": "form-a-chemical-bond",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Elements</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| symbol      | varchar |\n| type        | enum    |\n| electrons   | int     |\n+-------------+---------+\nsymbol is the primary key (column with unique values) for this table.\nEach row of this table contains information of one element.\ntype is an ENUM (category) of type (&#39;Metal&#39;, &#39;Nonmetal&#39;, &#39;Noble&#39;)\n - If type is Noble, electrons is 0.\n - If type is Metal, electrons is the number of electrons that one atom of this element can give.\n - If type is Nonmetal, electrons is the number of electrons that one atom of this element needs.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Two elements can form a bond if one of them is <code>&#39;Metal&#39;</code> and the other is <code>&#39;Nonmetal&#39;</code>.</p>\n\n<p>Write a solution to find all the pairs of elements that can form a bond.</p>\n\n<p>Return the result table <strong>in any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nElements table:\n+--------+----------+-----------+\n| symbol | type     | electrons |\n+--------+----------+-----------+\n| He     | Noble    | 0         |\n| Na     | Metal    | 1         |\n| Ca     | Metal    | 2         |\n| La     | Metal    | 3         |\n| Cl     | Nonmetal | 1         |\n| O      | Nonmetal | 2         |\n| N      | Nonmetal | 3         |\n+--------+----------+-----------+\n<strong>Output:</strong> \n+-------+----------+\n| metal | nonmetal |\n+-------+----------+\n| La    | Cl       |\n| Ca    | Cl       |\n| Na    | Cl       |\n| La    | O        |\n| Ca    | O        |\n| Na    | O        |\n| La    | N        |\n| Ca    | N        |\n| Na    | N        |\n+-------+----------+\n<strong>Explanation:</strong> \nMetal elements are La, Ca, and Na.\nNonmeal elements are Cl, O, and N.\nEach Metal element pairs with a Nonmetal element in the output table.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Elements (symbol varchar(2), type ENUM('Metal','Nonmetal','Noble'), electrons int)\"], \"mssql\": [\"Create table Elements (symbol varchar(2), type varchar(8) not null check(type in ('Metal','Nonmetal','Noble')), electrons int)\\n\"], \"oraclesql\": [\"Create table Elements (symbol varchar(2), type varchar(8) not null check(type in ('Metal','Nonmetal','Noble')), electrons int)\\n\"], \"database\": true, \"name\": \"form_bond\", \"pythondata\": [\"Elements = pd.DataFrame([], columns=['symbol', 'type', 'electrons']).astype({'symbol':'object', 'type':'object', 'electrons':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Elements (symbol varchar(2), type VARCHAR(30) CHECK (type IN ('Metal','Nonmetal','Noble')), electrons int)\\n\"], \"database_schema\": {\"Elements\": {\"symbol\": \"VARCHAR(2)\", \"type\": \"ENUM('Metal', 'Nonmetal', 'Noble')\", \"electrons\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"7.3K\", \"totalSubmission\": \"9.2K\", \"totalAcceptedRaw\": 7330, \"totalSubmissionRaw\": 9159, \"acRate\": \"80.0%\"}",
+  "likes": 31,
+  "dislikes": 11,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Elements\": [\"symbol\", \"type\", \"electrons\"]}, \"rows\": {\"Elements\": [[\"He\", \"Noble\", 0], [\"Na\", \"Metal\", 1], [\"Ca\", \"Metal\", 2], [\"La\", \"Metal\", 3], [\"Cl\", \"Nonmetal\", 1], [\"O\", \"Nonmetal\", 2], [\"N\", \"Nonmetal\", 3]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef form_bond(elements: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,137 @@
+{
+  "questionId": "2414",
+  "questionFrontendId": "2337",
+  "title": "Move Pieces to Obtain a String",
+  "titleSlug": "move-pieces-to-obtain-a-string",
+  "difficulty": "Medium",
+  "content": "<p>You are given two strings <code>start</code> and <code>target</code>, both of length <code>n</code>. Each string consists <strong>only</strong> of the characters <code>&#39;L&#39;</code>, <code>&#39;R&#39;</code>, and <code>&#39;_&#39;</code> where:</p>\n\n<ul>\n\t<li>The characters <code>&#39;L&#39;</code> and <code>&#39;R&#39;</code> represent pieces, where a piece <code>&#39;L&#39;</code> can move to the <strong>left</strong> only if there is a <strong>blank</strong> space directly to its left, and a piece <code>&#39;R&#39;</code> can move to the <strong>right</strong> only if there is a <strong>blank</strong> space directly to its right.</li>\n\t<li>The character <code>&#39;_&#39;</code> represents a blank space that can be occupied by <strong>any</strong> of the <code>&#39;L&#39;</code> or <code>&#39;R&#39;</code> pieces.</li>\n</ul>\n\n<p>Return <code>true</code> <em>if it is possible to obtain the string</em> <code>target</code><em> by moving the pieces of the string </em><code>start</code><em> <strong>any</strong> number of times</em>. Otherwise, return <code>false</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> start = &quot;_L__R__R_&quot;, target = &quot;L______RR&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> We can obtain the string target from start by doing the following moves:\n- Move the first piece one step to the left, start becomes equal to &quot;<strong>L</strong>___R__R_&quot;.\n- Move the last piece one step to the right, start becomes equal to &quot;L___R___<strong>R</strong>&quot;.\n- Move the second piece three steps to the right, start becomes equal to &quot;L______<strong>R</strong>R&quot;.\nSince it is possible to get the string target from start, we return true.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> start = &quot;R_L_&quot;, target = &quot;__LR&quot;\n<strong>Output:</strong> false\n<strong>Explanation:</strong> The &#39;R&#39; piece in the string start can move one step to the right to obtain &quot;_<strong>R</strong>L_&quot;.\nAfter that, no pieces can move anymore, so it is impossible to obtain the string target from start.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> start = &quot;_R&quot;, target = &quot;R_&quot;\n<strong>Output:</strong> false\n<strong>Explanation:</strong> The piece in the string start can move only to the right, so it is impossible to obtain the string target from start.</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == start.length == target.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>start</code> and <code>target</code> consist of the characters <code>&#39;L&#39;</code>, <code>&#39;R&#39;</code>, and <code>&#39;_&#39;</code>.</li>\n</ul>\n",
+  "hints": [
+    "After some sequence of moves, can the order of the pieces change?",
+    "Try to match each piece in s with a piece in e."
+  ],
+  "metaData": "{\n  \"name\": \"canChange\",\n  \"params\": [\n    {\n      \"name\": \"start\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"target\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"148.8K\", \"totalSubmission\": \"262.6K\", \"totalAcceptedRaw\": 148830, \"totalSubmissionRaw\": 262617, \"acRate\": \"56.7%\"}",
+  "likes": 1464,
+  "dislikes": 86,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Valid Parentheses\", \"titleSlug\": \"valid-parentheses\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Swap Adjacent in LR String\", \"titleSlug\": \"swap-adjacent-in-lr-string\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"_L__R__R_\"\n\"L______RR\"",
+    "\"R_L_\"\n\"__LR\"",
+    "\"_R\"\n\"R_\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool canChange(string start, string target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean canChange(String start, String target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def canChange(self, start: str, target: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def canChange(self, start, target):\n        \"\"\"\n        :type start: str\n        :type target: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} start\n * @param {string} target\n * @return {boolean}\n */\nvar canChange = function(start, target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function canChange(start: string, target: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool CanChange(string start, string target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool canChange(char* start, char* target) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func canChange(start string, target string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun canChange(start: String, target: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func canChange(_ start: String, _ target: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn can_change(start: String, target: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} start\n# @param {String} target\n# @return {Boolean}\ndef can_change(start, target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $start\n     * @param String $target\n     * @return Boolean\n     */\n    function canChange($start, $target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool canChange(String start, String target) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def canChange(start: String, target: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec can_change(start :: String.t, target :: String.t) :: boolean\n  def can_change(start, target) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec can_change(Start :: unicode:unicode_binary(), Target :: unicode:unicode_binary()) -> boolean().\ncan_change(Start, Target) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (can-change start target)\n  (-> string? string? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2602",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given two strings, `start` and `target`, both of the same length $n$. These strings consist only of the characters `'L'`, `'R'`, and `'_'`.\n\nLet's look at an example with a `start` string of `\"R_L\"` and a `target` string of `\"L_R\"`. To achieve this transformation, `'L'` would need to move leftward and `'R'` would need to move rightward, but neither can \"jump over\" the other due to the step-by-step movement rules that only allow moves into adjacent blank spaces. This restriction inherently prevents characters from crossing each other, making the transformation impossible. Therefore, we return `false`.\n\n---\n\n### Approach 1: Brute Force (Memory Limit Exceeded)\n\n#### Intuition\n\nA natural first thought to solve this problem is to explore all possible ways to move the pieces. We generate all possible states of the `start` string by making valid moves and checking if any of these states match the `target` string.\n\nTo implement this logic, we start by initializing a queue to store the current states (`stateQueue`) of the `start` string. To avoid repetitive lookups for the same state, we use a set to keep track of visited states (`visitedStates`).\n\nOnce we have the `visitedStates` and `stateQueue` ready, we begin by pushing the initial `start` string into the queue. For each state, we check if it matches the `target` string. If it does, we return `true` because we have found a valid transformation sequence. If the current state does not match the `target`, we generate new states by moving `'L'` to the left and `'R'` to the right, ensuring that each move is valid according to the rules. We then push each new valid state into the queue and mark it as visited. If the queue is exhausted and we haven't found a matching state, we return `false` because no valid transformation sequence exists.\n\nDue to the worst-case scenario where all possible states (which can be up to $n^2$ unique states) need to be stored in the visited states set, this solution results in a memory limit exceeded error.\n\n<details>\n<summary>Explanation of the Total Number of Unique States (Click Here)</summary>\nThe total number of unique states depends on the number of blank spaces available, as more blank spaces allow for more possible movements. Consider a string of length $n$ with $n-2$ blank spaces, represented as: <code>_…_L_…_R_…_</code>.\n\n- The character <code>'L'</code> can move to any position <code>i</code> with $0 \\leq i < n - 1$.\n- For each position of <code>'L'</code>, the character <code>'R'</code> can move to $n - 1 - i$ positions (any position to the right of <code>'L'</code>).\n\nThis gives the total number of states as:\n\n$$\n\\begin{aligned}\n (n - 1) + (n - 2) + (n - 3) + \\ldots + (n - (n - 1)) = O(n^2)\n\\end{aligned}\n$$\n</details>\n\n#### Algorithm\n\n- Initialize an unordered set `visitedStates` to track states that have already been visited and avoid cycles.\n- Initialize a queue `stateQueue` and push the `start` state into the queue.\n\n- While `stateQueue` is not empty:\n  - Extract the front of the queue into `currentState`.\n  - If `currentState` matches `target`, return `true`.\n\n  - For each position in `currentState` from index `1` to the end:\n    - If `currentState[position]` is `'L'` and the position to its left is `'_'`:\n      - Swap `'L'` with `'_'` to simulate moving `'L'` left.\n      - If the new state has not been visited:\n        - Push the new state into the queue.\n        - Mark the state as visited by inserting it into `visitedStates`.\n      - Restore `currentState` to its original form by swapping back.\n    - If `currentState[position - 1]` is `'R'` and the position to its right is `'_'`:\n      - Swap `'R'` with `'_'` to simulate moving `'R'` right.\n      - If the new state has not been visited:\n        - Push the new state into the queue.\n        - Mark the state as visited by inserting it into `visitedStates`.\n      - Restore `currentState` to its original form by swapping back.\n\n- If the process completes without finding a valid transformation sequence, return `false`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/6CFw8vyq/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"6CFw8vyq\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `start` and `target` strings.\n\n- Time complexity: $O(n^2)$\n\n    The algorithm explores all possible states. In the worst case, each character in the string can be swapped with its adjacent character, leading to $n$ possible swaps per state. Since each state can generate up to $n$ new states, and the algorithm explores all possible states, the time complexity is $O(n^2)$.\n\n- Space complexity: $O(n^2)$\n\n    The space complexity is dominated by the space required to store the states in the `visitedStates` set and the `stateQueue`. In the worst case, all possible states (which can be up to $n^2$ unique states) need to be stored in the `visitedStates` set. The `stateQueue` can also grow to store up to $n$ states at any given time during the traversal.\n\n    Therefore, the space complexity is $O(n^2)$.\n\n---\n\n### Approach 2: Using Queue\n\n#### Intuition\n \nInstead of generating all possible moves, we can focus on the fundamental rules that govern whether a transformation is possible. The `'L'` pieces can only move left, and the `'R'` pieces can only move right. This means that for any valid transformation:\n\n1. The relative order of `'L'`s and `'R'`s must remain unchanged since they cannot pass through each other.\n2. An `'L'` in the `start` string must be at the same position or to the right of its target position.\n3. An `'R'` in the `start` string must be at the same position or to the left of its target position.\n\nThis observation allows us to drastically simplify our approach. Rather than trying different combinations of moves, we can simply extract the positions of all `'L'` and `'R'` pieces from both strings and compare them in order. By storing these positions in queues (one for the `start` string and one for the `target` string), we maintain the relative ordering of pieces while ignoring the underscores.\n\nThe actual implementation becomes a matter of comparing corresponding pieces from both queues. For each pair of pieces:\n\n1. First, verify they are the same type (both `'L'` or both `'R'`).\n2. Then, depending on the piece type, check if their positions satisfy our movement constraints:\n   - `'L'` pieces in the `start` must not be to the left of their target positions.\n   - `'R'` pieces must not be to the right of their target positions.\n\nTo implement this concept, start by creating two queues to store character-position pairs. Next, populate these queues by iterating through both the `start` and `target` strings, recording only the non-underscore characters along with their positions. Once the queues are populated, compare their sizes to ensure they match, as this confirms that both strings contain the same number of pieces. Then, process both queues simultaneously, comparing each pair of front characters to verify that they are of the same type (both `'L'` or both `'R'`) and that their positions allow for valid moves according to the rules. Specifically, for `'L'` pieces, ensure that the start position is not to the left of the target position, and for `'R'` pieces, ensure that the start position is not to the right of the target position.\n\nThis way we transform what would be a quadratic-complexity problem of move generation into a linear-time solution that simply validates position constraints.\n\n#### Algorithm\n\n- Initialize two queues, `startQueue` and `targetQueue`, to store the non-underscore characters and their indices from `start` and `target`.\n\n- Traverse the `start` and `target` strings:\n  - If a character in `start` is not an underscore (`'_'`), add it along with its index to `startQueue`.\n  - If a character in `target` is not an underscore, add it along with its index to `targetQueue`.\n\n- Check if the sizes of `startQueue` and `targetQueue` are different:\n  - If they are, return `false` because the number of movable pieces must match.\n\n- While `startQueue` is not empty:\n  - Dequeue the front element from both `startQueue` and `targetQueue`.\n  - Compare the character and movement rules:\n    - If the characters don't match, return `false`.\n    - If the character is `'L'` (must only move left), check if its index in `start` is less than its index in `target`. If so, return `false`.\n    - If the character is `'R'` (must only move right), check if its index in `start` is greater than its index in `target`. If so, return `false`.\n\n- Return `true` if all characters and their movement rules are valid, indicating that `start` can be transformed into `target`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/K38qd65e/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"K38qd65e\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `start` and `target` strings.\n\n- Time complexity: $O(n)$\n\n    The algorithm iterates through both strings once, which takes $O(n)$ time. Pushing elements into the queues and popping elements from the queues also take $O(n)$ time in total. Therefore, the overall time complexity is $O(n)$.\n\n- Space complexity: $O(n)$\n\n    The space complexity is determined by the space used by the two queues. In the worst case, if all characters in the strings are non-underscore, both queues will store $n$ elements each. Thus, the space complexity is $O(n)$.\n\n---\n\n### Approach 3: Two pointer\n\n#### Intuition\n\nInstead of using additional data structures like queues or generating possible states, we can directly compare both strings by scanning them simultaneously using two pointers. These pointers will help us compare the corresponding `'L'` and `'R'` pieces. When we encounter underscores, we can simply skip over them because they don't affect the validity of the transformation. \n\nWhat really matters is the relative positions of the `'L'` and `'R'` pieces and whether they can move to their target positions according to the movement rules. Each time we find an `'L'` or `'R'` in both strings (after skipping underscores), we can immediately check if the movement is possible based on their positions:\n\n- `'L'` pieces can only move left, so their position in the `start` string must be greater than or equal to their position in the `target` string.\n- `'R'` pieces can only move right, so their position in the `start` string must be less than or equal to their position in the `target` string.\n\nTo implement this, we use two pointers, `startIndex` and `targetIndex`, to traverse the `start` and `target` strings respectively. By making a single pass through the strings, we validate two key aspects:\n\n1. Character Matching: Ensure that the sequence of `'L'` and `'R'` pieces is identical in both strings.\n2. Position Constraints: Check that `'L'` pieces don't need to move right and `'R'` pieces don't need to move left.\n\nBy checking these conditions as we go, we can achieve the same validation as a more complex queue-based approach, but with constant space complexity and cleaner code.\n\nThe algorithm is visualized below:\n\n!?!../Documents/2337/2337_two_pointer.json:1045,445!?!\n\n> For a more comprehensive understanding of the two-pointer technique, check out the [Two Pointer Explore Card 🔗](https://leetcode.com/explore/learn/card/array-and-string/205/array-two-pointer-technique/). This resource provides an in-depth look at the two-pointer approach, explaining its key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n#### Algorithm\n\n- Initialize `startLength` as the length of the `start` string.\n- Initialize two pointers, `startIndex` and `targetIndex`, both set to `0`, to traverse the `start` and `target` strings.\n\n- While either `startIndex` or `targetIndex` is less than `startLength`:\n  - Skip underscores in the `start` string by incrementing `startIndex` until a non-underscore character is found or the end of the string is reached.\n  - Skip underscores in the `target` string by incrementing `targetIndex` until a non-underscore character is found or the end of the string is reached.\n  - If one string is fully traversed and the other is not, return `false` as both strings should be exhausted simultaneously.\n  - If the characters at `start[startIndex]` and `target[targetIndex]` do not match, return `false` as the transformations are invalid.\n  - If the character is `'L'` in `start`, ensure `startIndex >= targetIndex` (left pieces can only move left); otherwise, return `false`.\n  - If the character is `'R'` in `start`, ensure `startIndex <= targetIndex` (right pieces can only move right); otherwise, return `false`.\n\n- Increment both `startIndex` and `targetIndex` to move to the next characters.\n\n- If the loop ends without returning `false`,  all conditions for a valid transformation are satisfied; return `true`. \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/bZRzw8As/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"bZRzw8As\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `start` and `target` strings.\n\n- Time complexity: $O(n)$\n\n    The algorithm iterates through both strings once, skipping underscores and comparing characters. Each character is processed at most once, resulting in a linear time complexity.\n\n    - The inner `while` loops that skip underscores run in constant time for each character, so they do not increase the overall time complexity.\n    - The main `while` loop runs until both indices reach the end of the strings, which takes $O(n)$ time in the worst case.\n\n- Space complexity: $O(1)$\n\n    The space complexity is constant because the algorithm uses a fixed amount of extra space regardless of the input size.\n\n    - The only additional space used is for the indices `startIndex` and `targetIndex`, which are single integer variables.\n    - No additional data structures are used that grow with the input size.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "questionId": "2533",
+  "questionFrontendId": "2425",
+  "title": "Bitwise XOR of All Pairings",
+  "titleSlug": "bitwise-xor-of-all-pairings",
+  "difficulty": "Medium",
+  "content": "<p>You are given two <strong>0-indexed</strong> arrays, <code>nums1</code> and <code>nums2</code>, consisting of non-negative integers. Let there be another array, <code>nums3</code>, which contains the bitwise XOR of <strong>all pairings</strong> of integers between <code>nums1</code> and <code>nums2</code> (every integer in <code>nums1</code> is paired with every integer in <code>nums2</code> <strong>exactly once</strong>).</p>\n\n<p>Return<em> the <strong>bitwise XOR</strong> of all integers in </em><code>nums3</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [2,1,3], nums2 = [10,2,5,0]\n<strong>Output:</strong> 13\n<strong>Explanation:</strong>\nA possible nums3 array is [8,0,7,2,11,3,4,1,9,1,6,3].\nThe bitwise XOR of all these numbers is 13, so we return 13.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [1,2], nums2 = [3,4]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong>\nAll possible pairs of bitwise XORs are nums1[0] ^ nums2[0], nums1[0] ^ nums2[1], nums1[1] ^ nums2[0],\nand nums1[1] ^ nums2[1].\nThus, one possible nums3 array is [2,5,1,6].\n2 ^ 5 ^ 1 ^ 6 = 0, so we return 0.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums1.length, nums2.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= nums1[i], nums2[j] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Think how the count of each individual integer affects the final answer.",
+    "If the length of nums1 is m and the length of nums2 is n, then each number in nums1 is repeated n times and each number in nums2 is repeated m times."
+  ],
+  "metaData": "{\n  \"name\": \"xorAllNums\",\n  \"params\": [\n    {\n      \"name\": \"nums1\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"nums2\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"152.6K\", \"totalSubmission\": \"228K\", \"totalAcceptedRaw\": 152576, \"totalSubmissionRaw\": 227992, \"acRate\": \"66.9%\"}",
+  "likes": 921,
+  "dislikes": 59,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[2,1,3]\n[10,2,5,0]",
+    "[1,2]\n[3,4]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"trilogy\", \"name\": \"Trilogy\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Brainteaser",
+      "slug": "brainteaser"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int xorAllNums(vector<int>& nums1, vector<int>& nums2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int xorAllNums(int[] nums1, int[] nums2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def xorAllNums(self, nums1: List[int], nums2: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def xorAllNums(self, nums1, nums2):\n        \"\"\"\n        :type nums1: List[int]\n        :type nums2: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums1\n * @param {number[]} nums2\n * @return {number}\n */\nvar xorAllNums = function(nums1, nums2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function xorAllNums(nums1: number[], nums2: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int XorAllNums(int[] nums1, int[] nums2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int xorAllNums(int* nums1, int nums1Size, int* nums2, int nums2Size) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func xorAllNums(nums1 []int, nums2 []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun xorAllNums(nums1: IntArray, nums2: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func xorAllNums(_ nums1: [Int], _ nums2: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn xor_all_nums(nums1: Vec<i32>, nums2: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums1\n# @param {Integer[]} nums2\n# @return {Integer}\ndef xor_all_nums(nums1, nums2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums1\n     * @param Integer[] $nums2\n     * @return Integer\n     */\n    function xorAllNums($nums1, $nums2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int xorAllNums(List<int> nums1, List<int> nums2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def xorAllNums(nums1: Array[Int], nums2: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec xor_all_nums(nums1 :: [integer], nums2 :: [integer]) :: integer\n  def xor_all_nums(nums1, nums2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec xor_all_nums(Nums1 :: [integer()], Nums2 :: [integer()]) -> integer().\nxor_all_nums(Nums1, Nums2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (xor-all-nums nums1 nums2)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2639",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given two arrays, `nums1` and `nums2`, consisting of non-negative integers. From these arrays, we can imagine forming another array, `nums3`, where each element is the result of XORing an element from `nums1` with an element from `nums2`.\n\nFor example, if `nums1 = [a1, a2]` and `nums2 = [b1, b2]`, then:\n\n```\nnums3 = [a1 ^ b1, a1 ^ b2, a2 ^ b1, a2 ^ b2]\n```\n\nOur task is to calculate the XOR of all elements in `nums3`. This can be expressed as:\n\n```\nresult = (a1 ^ b1) ^ (a1 ^ b2) ^ (a2 ^ b1) ^ (a2 ^ b2)\n```\n\n---\n\n### Approach 1: Hash Map\n\n#### Intuition\n\nSuppose we are working with two arrays, `nums1` and `nums2`. When we compute the XOR between every element of `nums1` and every element of `nums2`, the result can be written as:\n```\n(a1 ^ b1) ^ (a1 ^ b2) ^ (a2 ^ b1) ^ (a2 ^ b2)\n```\n\nBecause XOR is commutative (the order of operations doesn’t matter), we can rearrange this to group elements together:\n\n```\nresult = (a1 ^ a1 ^ ... repeated n2 times) ^ (a2 ^ a2 ^ ... repeated n2 times) ^ \n         (b1 ^ b1 ^ ... repeated n1 times) ^ (b2 ^ b2 ^ ... repeated n1 times)\n```\n\nHere:\n- Each element of `nums1` appears `n2` times in the calculation (where `n2` is the size of `nums2`).\n- Each element of `nums2` appears `n1` times in the calculation (where `n1` is the size of `nums1`).\n\nTo simplify the computation, let’s recall two critical properties of XOR:\n\n1. XOR with itself results in 0: a ^ a = 0\n2. XOR with 0 results in the same number: a ^ 0 = a\n\n![](../Figures/2425/xor.png)\n\nUsing these properties, we can see that if an element is XOR'd with itself an even number of times, the result is 0. For example:\n`a ^ a ^ a ^ a = (a ^ a) ^ (a ^ a) = 0 ^ 0 = 0`\n\nHowever, if an element is XOR'd an odd number of times, the result is the element itself, since all pairs cancel out, leaving only one instance of the element. For example:\n`a ^ a ^ a = (a ^ a) ^ a = 0 ^ a = a`\n\nBased on these observations, the task now reduces to counting how many times each element appears in the XOR computation.\n\n- Elements appearing an even number of times contribute 0 to the final result.\n- Elements appearing an odd number of times retain their value in the final result.\n\nOne of the best data structures to count the frequency of an element is a hash map. We iterate through the elements of `nums1` and `nums2` and add their total occurrences to the map. Once the frequencies are determined, we initialize a variable `ans` to store the XOR result. For each key in the map, we XOR it with `ans` if its total occurrence is odd. The final value of `ans` is returned as our required answer.\n\n> For a more comprehensive understanding of hash maps, check out the [Hash Table Explore Card 🔗](https://leetcode.com/explore/learn/card/hash-table/). This resource provides an in-depth look at hash maps, explaining their key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n#### Algorithm\n \n- Initialize two variables `len1` and `len2` to store the lengths of the input arrays `nums1` and `nums2` respectively.\n- Initialize a hashmap `freq` to store the frequency of each number's appearances in the final XOR computations.\n- Iterate through each number in the first array `nums1`:\n  - For each number, add it to the frequency map with a count equal to `len2`.\n- Iterate through each number in the second array `nums2`:\n  - For each number, add it to the frequency map with a count equal to `len1`.\n- Initialize a variable `ans` to store the final result, starting with 0.\n- Iterate through the frequency map's keys:\n  - For each number, check if its frequency is odd.\n    - If odd, XOR the number with the current value of `ans`.\n- Return the final computed XOR value stored in `ans`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Um47G5GG/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Um47G5GG\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ and $m$ be the lengths of the arrays `nums1` and `nums2` respectively.\n\n- Time complexity: $O(n + m)$\n\n    The algorithm first iterates through `nums1` which takes $O(n)$ time. Then it iterates through `nums2` which takes $O(m)$ time. Finally, it iterates through the frequency map which can contain at most $(n + m)$ unique numbers. Therefore, the total time complexity is $O(n + m)$.\n\n- Space complexity: $O(n + m)$\n\n    The algorithm uses a hash map to store frequencies of numbers. In the worst case, if all numbers in both arrays are unique, the hash map will store $(n + m)$ key-value pairs. No other additional space is used that grows with input size. Therefore, the space complexity is $O(n + m)$.\n\n---\n\n### Approach 2: Space Optimized Bit Manipulation\n\n#### Intuition\n\nA key observation from the previous approach is that the contribution of any element from `nums1` or `nums2` to the final result depends on the length of the other array:\n\n- For an element `a1` in `nums1`, it is XOR'd with every element in `nums2`. So, its total contribution depends on the length of `nums2` (`n2`).\n- Similarly, for an element `b1` in `nums2`, its total contribution depends on the length of `nums1` (`n1`).\n\nLet’s simplify this further:\n\n1. If `n2` (length of `nums2`) is even, each element in `nums1` is XOR'd an even number of times. Using the property of XOR (a ^ a = 0), all such elements cancel out and contribute 0 to the result.\n2. If `n2` is odd, each element in `nums1` is XOR'd an odd number of times. Using the property that an odd number of XORs leaves the element unchanged, all elements in `nums1` retain their value in the result.\n\nThe same logic applies to `nums2` when considering the length of `nums1`.\n\nDepending on whether `n1` and `n2` are even or odd, there are four possible scenarios:\n\n1. Both `n1` and `n2` are even:\n- All elements in `nums1` and `nums2` contribute 0 to the result since their total occurrences are even.\n\n2. `n2` is odd, `n1` is even:\n- Elements in `nums1` occur an odd number of times and contribute to the result.\n- Elements in `nums2` occur an even number of times and contribute 0.\nThus the answer will be XOR of all elements in `nums1`.\n\n3. `n1` is odd, `n2` is even:\n- Elements in `nums2` occur an odd number of times and contribute to the result.\n- Elements in `nums1` occur an even number of times and contribute 0.\nThus the answer will be XOR of all elements in `nums2`.\n\n4. Both `n1` and `n2` are odd:\n- Elements in both `nums1` and `nums2` occur an odd number of times and retain their value in the result.\nThus the answer will be XOR of all elements in `nums1` XOR'd with XOR of all elements in `nums2`.\n\n> For a more comprehensive understanding of bit manipulation, check out the [Bit Manipulation Explore Card 🔗](https://leetcode.com/explore/learn/card/bit-manipulation/). This resource provides an in-depth look at bit-level operations, explaining their key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n#### Algorithm\n\n- Initialize two variables `xor1` and `xor2` to store the XOR results for the first and second arrays respectively, both starting at 0.\n- Initialize two variables `len1` and `len2` to store the lengths of the input arrays `nums1` and `nums2` respectively.\n- If the length of the second array `nums2` is odd:\n  - Iterate through each number in the first array `nums1`. For each number:\n    - Compute its XOR with the current value of `xor1`.\n- If the length of the first array `nums1` is odd:\n   - Iterate through each number in the second array `nums2`. For each number:\n     - Compute its XOR with the current value of `xor2`.\n- Compute and return the XOR of `xor1` and `xor2` as the final result.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/FDbejm2q/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"FDbejm2q\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ and $m$ be the lengths of the arrays `nums1` and `nums2` respectively.\n\n- Time complexity: $O(n + m)$\n\n    The algorithm performs two conditional iterations. If `len2` is odd, it iterates through `nums1` taking $O(n)$ time. If `len1` is odd, it iterates through `nums2` taking $O(m)$ time. In the worst case, both conditions are true, leading to a total time complexity of $O(n + m)$.\n\n- Space complexity: $O(1)$\n\n    The algorithm only uses four variables (`xor1`, `xor2`, `len1`, `len2`) regardless of the input size. These variables consume constant space and do not grow with the input size. Therefore, the space complexity is $O(1)$.  \n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "questionId": "2427",
+  "questionFrontendId": "2351",
+  "title": "First Letter to Appear Twice",
+  "titleSlug": "first-letter-to-appear-twice",
+  "difficulty": "Easy",
+  "content": "<p>Given a string <code>s</code> consisting of lowercase English letters, return <em>the first letter to appear <strong>twice</strong></em>.</p>\n\n<p><strong>Note</strong>:</p>\n\n<ul>\n\t<li>A letter <code>a</code> appears twice before another letter <code>b</code> if the <strong>second</strong> occurrence of <code>a</code> is before the <strong>second</strong> occurrence of <code>b</code>.</li>\n\t<li><code>s</code> will contain at least one letter that appears twice.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abccbaacz&quot;\n<strong>Output:</strong> &quot;c&quot;\n<strong>Explanation:</strong>\nThe letter &#39;a&#39; appears on the indexes 0, 5 and 6.\nThe letter &#39;b&#39; appears on the indexes 1 and 4.\nThe letter &#39;c&#39; appears on the indexes 2, 3 and 7.\nThe letter &#39;z&#39; appears on the index 8.\nThe letter &#39;c&#39; is the first letter to appear twice, because out of all the letters the index of its second occurrence is the smallest.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abcdd&quot;\n<strong>Output:</strong> &quot;d&quot;\n<strong>Explanation:</strong>\nThe only letter that appears twice is &#39;d&#39; so we return &#39;d&#39;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= s.length &lt;= 100</code></li>\n\t<li><code>s</code> consists of lowercase English letters.</li>\n\t<li><code>s</code> has at least one repeated letter.</li>\n</ul>\n",
+  "hints": [
+    "Iterate through the string from left to right. Keep track of the elements you have already seen in a set.",
+    "If the current element is already in the set, return that element."
+  ],
+  "metaData": "{\n  \"name\": \"repeatedCharacter\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"character\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"196.1K\", \"totalSubmission\": \"261.6K\", \"totalAcceptedRaw\": 196095, \"totalSubmissionRaw\": 261638, \"acRate\": \"74.9%\"}",
+  "likes": 1185,
+  "dislikes": 65,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Two Sum\", \"titleSlug\": \"two-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"First Unique Character in a String\", \"titleSlug\": \"first-unique-character-in-a-string\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"abccbaacz\"",
+    "\"abcdd\""
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    char repeatedCharacter(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public char repeatedCharacter(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def repeatedCharacter(self, s: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def repeatedCharacter(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {character}\n */\nvar repeatedCharacter = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function repeatedCharacter(s: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public char RepeatedCharacter(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char repeatedCharacter(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func repeatedCharacter(s string) byte {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun repeatedCharacter(s: String): Char {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func repeatedCharacter(_ s: String) -> Character {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn repeated_character(s: String) -> char {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Character}\ndef repeated_character(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return String\n     */\n    function repeatedCharacter($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String repeatedCharacter(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def repeatedCharacter(s: String): Char = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec repeated_character(s :: String.t) :: char\n  def repeated_character(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec repeated_character(S :: unicode:unicode_binary()) -> char().\nrepeated_character(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (repeated-character s)\n  (-> string? char?)\n  )"
+    }
+  ],
+  "solution": null
+}

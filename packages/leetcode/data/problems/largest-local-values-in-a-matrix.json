@@ -1,0 +1,136 @@
+{
+  "questionId": "2454",
+  "questionFrontendId": "2373",
+  "title": "Largest Local Values in a Matrix",
+  "titleSlug": "largest-local-values-in-a-matrix",
+  "difficulty": "Easy",
+  "content": "<p>You are given an <code>n x n</code> integer matrix <code>grid</code>.</p>\n\n<p>Generate an integer matrix <code>maxLocal</code> of size <code>(n - 2) x (n - 2)</code> such that:</p>\n\n<ul>\n\t<li><code>maxLocal[i][j]</code> is equal to the <strong>largest</strong> value of the <code>3 x 3</code> matrix in <code>grid</code> centered around row <code>i + 1</code> and column <code>j + 1</code>.</li>\n</ul>\n\n<p>In other words, we want to find the largest value in every contiguous <code>3 x 3</code> matrix in <code>grid</code>.</p>\n\n<p>Return <em>the generated matrix</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/06/21/ex1.png\" style=\"width: 371px; height: 210px;\" />\n<pre>\n<strong>Input:</strong> grid = [[9,9,8,1],[5,6,2,6],[8,2,6,4],[6,2,2,2]]\n<strong>Output:</strong> [[9,9],[8,6]]\n<strong>Explanation:</strong> The diagram above shows the original matrix and the generated matrix.\nNotice that each value in the generated matrix corresponds to the largest value of a contiguous 3 x 3 matrix in grid.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/07/02/ex2new2.png\" style=\"width: 436px; height: 240px;\" />\n<pre>\n<strong>Input:</strong> grid = [[1,1,1,1,1],[1,1,1,1,1],[1,1,2,1,1],[1,1,1,1,1],[1,1,1,1,1]]\n<strong>Output:</strong> [[2,2,2],[2,2,2],[2,2,2]]\n<strong>Explanation:</strong> Notice that the 2 is contained within every contiguous 3 x 3 matrix in grid.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == grid.length == grid[i].length</code></li>\n\t<li><code>3 &lt;= n &lt;= 100</code></li>\n\t<li><code>1 &lt;= grid[i][j] &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "Use nested loops to run through all possible 3 x 3 windows in the matrix.",
+    "For each 3 x 3 window, iterate through the values to get the maximum value within the window."
+  ],
+  "metaData": "{\n  \"name\": \"largestLocal\",\n  \"params\": [\n    {\n      \"name\": \"grid\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[][]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"199K\", \"totalSubmission\": \"226.9K\", \"totalAcceptedRaw\": 198983, \"totalSubmissionRaw\": 226874, \"acRate\": \"87.7%\"}",
+  "likes": 1327,
+  "dislikes": 183,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[9,9,8,1],[5,6,2,6],[8,2,6,4],[6,2,2,2]]",
+    "[[1,1,1,1,1],[1,1,1,1,1],[1,1,2,1,1],[1,1,1,1,1],[1,1,1,1,1]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"openai\", \"name\": \"OpenAI\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> largestLocal(vector<vector<int>>& grid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[][] largestLocal(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def largestLocal(self, grid: List[List[int]]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def largestLocal(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} grid\n * @return {number[][]}\n */\nvar largestLocal = function(grid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function largestLocal(grid: number[][]): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[][] LargestLocal(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** largestLocal(int** grid, int gridSize, int* gridColSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func largestLocal(grid [][]int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun largestLocal(grid: Array<IntArray>): Array<IntArray> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func largestLocal(_ grid: [[Int]]) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn largest_local(grid: Vec<Vec<i32>>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} grid\n# @return {Integer[][]}\ndef largest_local(grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $grid\n     * @return Integer[][]\n     */\n    function largestLocal($grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> largestLocal(List<List<int>> grid) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def largestLocal(grid: Array[Array[Int]]): Array[Array[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec largest_local(grid :: [[integer]]) :: [[integer]]\n  def largest_local(grid) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec largest_local(Grid :: [[integer()]]) -> [[integer()]].\nlargest_local(Grid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (largest-local grid)\n  (-> (listof (listof exact-integer?)) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2299",
+    "content": "## Solution\n\n---\n\n### Approach: Simulation\n\n#### Intuition\n\nWe are given an integer matrix `grid` of size $N \\cdot N$. For each element `(i, j)` in the `grid`, we need to find the maximum value in the $3 \\cdot 3$ matrix with the top left cell as `(i, j)`. The local maximums should be returned in a new matrix. Note that we need to add the value to the new matrix only for `(i, j)` values with a valid $3 \\cdot 3$ matrix. Therefore, the size of the new matrix is always $(N - 2) \\cdot (N - 2)$, and the last two rows and columns in the original matrix grid are left out.\n\nWe will follow the process given in the problem description to generate the new matrix. $3 \\cdot 3$ matrices cannot be created from the last two rows and last two columns as of `grid`, so we will iterate over the rows from `0` to `N - 2` and columns from `0` to `N - 2` in the `grid`. For each cell, we will iterate over the $3 \\cdot 3$ matrix and find the local maximum value. This value will be stored in the new matrix `maxLocal`.\n\nThe below figure demonstrates each step of the `maxLocal` grid creation. At each step, we iterate over the $3 \\cdot 3$ matrix and add the maximum value to the `maxLocal` grid.\n\n![fig](../Figures/2373/2373A.png)\n\n#### Algorithm\n\n1. Create an empty matrix `maxLocal` of size $(N - 2) \\cdot (N - 2)$, this will store the maximum values of all possible `3 x 3` matrices.\n2. Define the `findMax` function, which takes the `grid` and the coordinates `(x, y)` as parameters. This function finds the maximum value in the `3 x 3` section of the grid, where `(x, y)` is the top-left corner.\n    - Iterate over the `3 x 3` matrix starting with `(x, y)` as top-left cell.\n    - Find and return the maximum value as `maxElement`.\n3. Iterate over the `grid` rows `0` to `N - 2` and columns `0` to `N - 2`, and for each cell `(i, j)`:\n    - Use `findMax(grid, i, j)` to find the maximum local element and store it in the matrix `maxLocal` at position `(i, j)`.\n4. Return `maxLocal`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/hz258aNG/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"hz258aNG\"></iframe>\n\n#### Complexity Analysis\n\nHere, $N$ is the number of rows and columns in the matrix `grid`.\n\n* Time complexity: $O(N \\cdot N)$\n\n  We iterate over the matrix `grid` rows `0` to `N - 2` and columns `0` to `N - 2` using nested loops. In the inner loop, we call the `findMax` function, so it is called $(N - 2 )^2$ times. The `findMax` function iterates over the $3 \\cdot 3$ matrix to find the maximum value. Hence, the total number of operations will be $9 \\cdot (N -2)^2$. Therefore, the total time complexity is $O(N ^2)$.\n\n* Space complexity: $O(N \\cdot N)$\n\n  We need to create a new matrix `maxLocal` of size $(N -2)^2$; hence, the total space complexity is equal to $O(N^2)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

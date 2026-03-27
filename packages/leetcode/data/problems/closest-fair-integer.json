@@ -1,0 +1,131 @@
+{
+  "questionId": "2560",
+  "questionFrontendId": "2417",
+  "title": "Closest Fair Integer",
+  "titleSlug": "closest-fair-integer",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>positive</strong> integer <code>n</code>.</p>\n\n<p>We call an integer <code>k</code> fair if the number of <strong>even</strong> digits in <code>k</code> is equal to the number of <strong>odd</strong> digits in it.</p>\n\n<p>Return <em>the <strong>smallest</strong> fair integer that is <strong>greater than or equal</strong> to </em><code>n</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 2\n<strong>Output:</strong> 10\n<strong>Explanation:</strong> The smallest fair integer that is greater than or equal to 2 is 10.\n10 is fair because it has an equal number of even and odd digits (one odd digit and one even digit).</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 403\n<strong>Output:</strong> 1001\n<strong>Explanation:</strong> The smallest fair integer that is greater than or equal to 403 is 1001.\n1001 is fair because it has an equal number of even and odd digits (two odd digits and two even digits).\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Suppose that the number that we are looking for has the same number of digits as n, the answer, in this case, will not be very far from n, so you can do a simple brute force. Can you prove why this is true?",
+    "How do you handle the case when the resulting number has more digits than n?"
+  ],
+  "metaData": "{\n  \"name\": \"closestFair\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"1.4K\", \"totalSubmission\": \"3.2K\", \"totalAcceptedRaw\": 1415, \"totalSubmissionRaw\": 3195, \"acRate\": \"44.3%\"}",
+  "likes": 29,
+  "dislikes": 13,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "2",
+    "403"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int closestFair(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int closestFair(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def closestFair(self, n: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def closestFair(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {number}\n */\nvar closestFair = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function closestFair(n: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int ClosestFair(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int closestFair(int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func closestFair(n int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun closestFair(n: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func closestFair(_ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn closest_fair(n: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Integer}\ndef closest_fair(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Integer\n     */\n    function closestFair($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int closestFair(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def closestFair(n: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec closest_fair(n :: integer) :: integer\n  def closest_fair(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec closest_fair(N :: integer()) -> integer().\nclosest_fair(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (closest-fair n)\n  (-> exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

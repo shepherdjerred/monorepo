@@ -1,0 +1,131 @@
+{
+  "questionId": "2589",
+  "questionFrontendId": "2496",
+  "title": "Maximum Value of a String in an Array",
+  "titleSlug": "maximum-value-of-a-string-in-an-array",
+  "difficulty": "Easy",
+  "content": "<p>The <strong>value</strong> of an alphanumeric string can be defined as:</p>\n\n<ul>\n\t<li>The <strong>numeric</strong> representation of the string in base <code>10</code>, if it comprises of digits <strong>only</strong>.</li>\n\t<li>The <strong>length</strong> of the string, otherwise.</li>\n</ul>\n\n<p>Given an array <code>strs</code> of alphanumeric strings, return <em>the <strong>maximum value</strong> of any string in </em><code>strs</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> strs = [&quot;alic3&quot;,&quot;bob&quot;,&quot;3&quot;,&quot;4&quot;,&quot;00000&quot;]\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> \n- &quot;alic3&quot; consists of both letters and digits, so its value is its length, i.e. 5.\n- &quot;bob&quot; consists only of letters, so its value is also its length, i.e. 3.\n- &quot;3&quot; consists only of digits, so its value is its numeric equivalent, i.e. 3.\n- &quot;4&quot; also consists only of digits, so its value is 4.\n- &quot;00000&quot; consists only of digits, so its value is 0.\nHence, the maximum value is 5, of &quot;alic3&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> strs = [&quot;1&quot;,&quot;01&quot;,&quot;001&quot;,&quot;0001&quot;]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> \nEach string in the array has value 1. Hence, we return 1.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= strs.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= strs[i].length &lt;= 9</code></li>\n\t<li><code>strs[i]</code> consists of only lowercase English letters and digits.</li>\n</ul>\n",
+  "hints": [
+    "For strings comprising only of digits, convert them into integers.",
+    "For all other strings, calculate their length."
+  ],
+  "metaData": "{\n  \"name\": \"maximumValue\",\n  \"params\": [\n    {\n      \"name\": \"strs\",\n      \"type\": \"string[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"64.2K\", \"totalSubmission\": \"86.6K\", \"totalAcceptedRaw\": 64220, \"totalSubmissionRaw\": 86569, \"acRate\": \"74.2%\"}",
+  "likes": 436,
+  "dislikes": 24,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Subarray\", \"titleSlug\": \"maximum-subarray\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"alic3\",\"bob\",\"3\",\"4\",\"00000\"]",
+    "[\"1\",\"01\",\"001\",\"0001\"]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximumValue(vector<string>& strs) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximumValue(String[] strs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumValue(self, strs: List[str]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumValue(self, strs):\n        \"\"\"\n        :type strs: List[str]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} strs\n * @return {number}\n */\nvar maximumValue = function(strs) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumValue(strs: string[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaximumValue(string[] strs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maximumValue(char** strs, int strsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumValue(strs []string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumValue(strs: Array<String>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumValue(_ strs: [String]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_value(strs: Vec<String>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} strs\n# @return {Integer}\ndef maximum_value(strs)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $strs\n     * @return Integer\n     */\n    function maximumValue($strs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumValue(List<String> strs) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumValue(strs: Array[String]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_value(strs :: [String.t]) :: integer\n  def maximum_value(strs) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_value(Strs :: [unicode:unicode_binary()]) -> integer().\nmaximum_value(Strs) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-value strs)\n  (-> (listof string?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

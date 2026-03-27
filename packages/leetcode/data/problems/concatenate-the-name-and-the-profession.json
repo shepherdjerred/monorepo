@@ -1,0 +1,53 @@
+{
+  "questionId": "2643",
+  "questionFrontendId": "2504",
+  "title": "Concatenate the Name and the Profession",
+  "titleSlug": "concatenate-the-name-and-the-profession",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Person</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| person_id   | int     |\n| name        | varchar |\n| profession  | ENUM    |\n+-------------+---------+\nperson_id is the primary key (column with a unique value) for this table.\nEach row in this table contains a person&#39;s ID, name, and profession.\nThe profession column in an enum of the type (&#39;Doctor&#39;, &#39;Singer&#39;, &#39;Actor&#39;, &#39;Player&#39;, &#39;Engineer&#39;, or &#39;Lawyer&#39;)\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to report each person&#39;s name followed by the first letter of their profession enclosed in parentheses.</p>\n\n<p>Return the result table <strong>ordered</strong> by <code>person_id</code> in <strong>descending order</strong>.</p>\n\n<p>The result format is shown in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nPerson table:\n+-----------+-------+------------+\n| person_id | name  | profession |\n+-----------+-------+------------+\n| 1         | Alex  | Singer     |\n| 3         | Alice | Actor      |\n| 2         | Bob   | Player     |\n| 4         | Messi | Doctor     |\n| 6         | Tyson | Engineer   |\n| 5         | Meir  | Lawyer     |\n+-----------+-------+------------+\n<strong>Output:</strong> \n+-----------+----------+\n| person_id | name     |\n+-----------+----------+\n| 6         | Tyson(E) |\n| 5         | Meir(L)  |\n| 4         | Messi(D) |\n| 3         | Alice(A) |\n| 2         | Bob(P)   |\n| 1         | Alex(S)  |\n+-----------+----------+\n<strong>Explanation:</strong> Note that there should not be any white space between the name and the first letter of the profession.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Person (person_id int, name varchar(30), profession ENUM('Doctor','Singer','Actor','Player','Engineer','Lawyer'))\"], \"mssql\": [\"Create table Person (person_id int, name varchar(30), profession varchar(8) not null check(profession in ('Doctor','Singer','Actor','Player','Engineer','Lawyer')))\"], \"oraclesql\": [\"Create table Person (person_id int, name varchar(30), profession varchar(8) not null check(profession in ('Doctor','Singer','Actor','Player','Engineer','Lawyer')))\"], \"database\": true, \"name\": \"concatenate_info\", \"pythondata\": [\"Person = pd.DataFrame([], columns=['person_id', 'name', 'profession']).astype({'person_id':'Int64', 'name':'object', 'profession':'object'})\"], \"postgresql\": [\"Create table If Not Exists Person (person_id int, name varchar(30), profession VARCHAR(30) CHECK (profession IN ('Doctor','Singer','Actor','Player','Engineer','Lawyer')))\\n\"], \"database_schema\": {\"Person\": {\"person_id\": \"INT\", \"name\": \"VARCHAR(30)\", \"profession\": \"ENUM('Doctor', 'Singer', 'Actor', 'Player', 'Engineer', 'Lawyer')\"}}}",
+  "stats": "{\"totalAccepted\": \"7K\", \"totalSubmission\": \"8.8K\", \"totalAcceptedRaw\": 7050, \"totalSubmissionRaw\": 8787, \"acRate\": \"80.2%\"}",
+  "likes": 32,
+  "dislikes": 4,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Person\": [\"person_id\", \"name\", \"profession\"]}, \"rows\": {\"Person\": [[1, \"Alex\", \"Singer\"], [3, \"Alice\", \"Actor\"], [2, \"Bob\", \"Player\"], [4, \"Messi\", \"Doctor\"], [6, \"Tyson\", \"Engineer\"], [5, \"Meir\", \"Lawyer\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef concatenate_info(person: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

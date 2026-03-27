@@ -1,0 +1,143 @@
+{
+  "questionId": "2641",
+  "questionFrontendId": "2556",
+  "title": "Disconnect Path in a Binary Matrix by at Most One Flip",
+  "titleSlug": "disconnect-path-in-a-binary-matrix-by-at-most-one-flip",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> <code>m x n</code> <strong>binary</strong> matrix <code>grid</code>. You can move from a cell <code>(row, col)</code> to any of the cells <code>(row + 1, col)</code> or <code>(row, col + 1)</code> that has the value <code>1</code>.&nbsp;The matrix is <strong>disconnected</strong> if there is no path from <code>(0, 0)</code> to <code>(m - 1, n - 1)</code>.</p>\n\n<p>You can flip the value of <strong>at most one</strong> (possibly none) cell. You <strong>cannot flip</strong> the cells <code>(0, 0)</code> and <code>(m - 1, n - 1)</code>.</p>\n\n<p>Return <code>true</code> <em>if it is possible to make the matrix disconnect or </em><code>false</code><em> otherwise</em>.</p>\n\n<p><strong>Note</strong> that flipping a cell changes its value from <code>0</code> to <code>1</code> or from <code>1</code> to <code>0</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/12/07/yetgrid2drawio.png\" style=\"width: 441px; height: 151px;\" />\n<pre>\n<strong>Input:</strong> grid = [[1,1,1],[1,0,0],[1,1,1]]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> We can change the cell shown in the diagram above. There is no path from (0, 0) to (2, 2) in the resulting grid.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/12/07/yetgrid3drawio.png\" />\n<pre>\n<strong>Input:</strong> grid = [[1,1,1],[1,0,1],[1,1,1]]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> It is not possible to change at most one cell such that there is not path from (0, 0) to (2, 2).\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == grid.length</code></li>\n\t<li><code>n == grid[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 1000</code></li>\n\t<li><code>1 &lt;= m * n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>grid[i][j]</code> is either <code>0</code> or <code>1</code>.</li>\n\t<li><code>grid[0][0] == grid[m - 1][n - 1] == 1</code></li>\n</ul>\n",
+  "hints": [
+    "We can consider the grid a graph with edges between adjacent cells.",
+    "If you can find two non-intersecting paths from (0, 0) to (m - 1, n - 1) then the answer is false. Otherwise, it is always true."
+  ],
+  "metaData": "{\n  \"name\": \"isPossibleToCutPath\",\n  \"params\": [\n    {\n      \"name\": \"grid\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"18.8K\", \"totalSubmission\": \"67.7K\", \"totalAcceptedRaw\": 18810, \"totalSubmissionRaw\": 67662, \"acRate\": \"27.8%\"}",
+  "likes": 637,
+  "dislikes": 33,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Number of Submatrices That Sum to Target\", \"titleSlug\": \"number-of-submatrices-that-sum-to-target\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Cost to Make at Least One Valid Path in a Grid\", \"titleSlug\": \"minimum-cost-to-make-at-least-one-valid-path-in-a-grid\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Number of Days to Disconnect Island\", \"titleSlug\": \"minimum-number-of-days-to-disconnect-island\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Weighted Subgraph With the Required Paths\", \"titleSlug\": \"minimum-weighted-subgraph-with-the-required-paths\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,1,1],[1,0,0],[1,1,1]]",
+    "[[1,1,1],[1,0,1],[1,1,1]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool isPossibleToCutPath(vector<vector<int>>& grid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean isPossibleToCutPath(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def isPossibleToCutPath(self, grid: List[List[int]]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def isPossibleToCutPath(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} grid\n * @return {boolean}\n */\nvar isPossibleToCutPath = function(grid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function isPossibleToCutPath(grid: number[][]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool IsPossibleToCutPath(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool isPossibleToCutPath(int** grid, int gridSize, int* gridColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func isPossibleToCutPath(grid [][]int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun isPossibleToCutPath(grid: Array<IntArray>): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func isPossibleToCutPath(_ grid: [[Int]]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn is_possible_to_cut_path(grid: Vec<Vec<i32>>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} grid\n# @return {Boolean}\ndef is_possible_to_cut_path(grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $grid\n     * @return Boolean\n     */\n    function isPossibleToCutPath($grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool isPossibleToCutPath(List<List<int>> grid) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def isPossibleToCutPath(grid: Array[Array[Int]]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec is_possible_to_cut_path(grid :: [[integer]]) :: boolean\n  def is_possible_to_cut_path(grid) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec is_possible_to_cut_path(Grid :: [[integer()]]) -> boolean().\nis_possible_to_cut_path(Grid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (is-possible-to-cut-path grid)\n  (-> (listof (listof exact-integer?)) boolean?)\n  )"
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,53 @@
+{
+  "questionId": "2523",
+  "questionFrontendId": "2388",
+  "title": "Change Null Values in a Table to the Previous Value",
+  "titleSlug": "change-null-values-in-a-table-to-the-previous-value",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>CoffeeShop</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| id          | int     |\n| drink       | varchar |\n+-------------+---------+\nid is the primary key (column with unique values) for this table.\nEach row in this table shows the order id and the name of the drink ordered. Some drink rows are nulls.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to replace the <code>null</code> values of the drink with the name of the drink of the previous row that is not <code>null</code>. It is guaranteed that the drink on the first row of the table is not <code>null</code>.</p>\n\n<p>Return the result table <strong>in the same order as the input</strong>.</p>\n\n<p>The result format is shown in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nCoffeeShop table:\n+----+-------------------+\n| id | drink             |\n+----+-------------------+\n| 9  | Rum and Coke      |\n| 6  | null              |\n| 7  | null              |\n| 3  | St Germain Spritz |\n| 1  | Orange Margarita  |\n| 2  | null              |\n+----+-------------------+\n<strong>Output:</strong> \n+----+-------------------+\n| id | drink             |\n+----+-------------------+\n| 9  | Rum and Coke      |\n| 6  | Rum and Coke      |\n| 7  | Rum and Coke      |\n| 3  | St Germain Spritz |\n| 1  | Orange Margarita  |\n| 2  | Orange Margarita  |\n+----+-------------------+\n<strong>Explanation:</strong> \nFor ID 6, the previous value that is not null is from ID 9. We replace the null with &quot;Rum and Coke&quot;.\nFor ID 7, the previous value that is not null is from ID 9. We replace the null with &quot;Rum and Coke;.\nFor ID 2, the previous value that is not null is from ID 1. We replace the null with &quot;Orange Margarita&quot;.\nNote that the rows in the output are the same as in the input.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists CoffeeShop (id int, drink varchar(20))\"], \"mssql\": [\"Create table CoffeeShop (id int, drink varchar(20))\"], \"oraclesql\": [\"Create table CoffeeShop (id int, drink varchar(20))\"], \"database\": true, \"name\": \"change_null_values\", \"pythondata\": [\"CoffeeShop = pd.DataFrame([], columns=['id', 'drink']).astype({'id':'Int64', 'drink':'object'})\"], \"postgresql\": [\"Create table If Not Exists CoffeeShop (id int, drink varchar(20))\"], \"database_schema\": {\"CoffeeShop\": {\"id\": \"INT\", \"drink\": \"VARCHAR(20)\"}}}",
+  "stats": "{\"totalAccepted\": \"6.7K\", \"totalSubmission\": \"13.2K\", \"totalAcceptedRaw\": 6745, \"totalSubmissionRaw\": 13160, \"acRate\": \"51.3%\"}",
+  "likes": 94,
+  "dislikes": 31,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"CoffeeShop\": [\"id\", \"drink\"]}, \"rows\": {\"CoffeeShop\": [[9, \"Rum and Coke\"], [6, null], [7, null], [3, \"St Germain Spritz\"], [1, \"Orange Margarita\"], [2, null]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"deloitte\", \"name\": \"Deloitte\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef change_null_values(coffee_shop: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

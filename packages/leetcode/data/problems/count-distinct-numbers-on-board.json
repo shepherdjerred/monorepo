@@ -1,0 +1,140 @@
+{
+  "questionId": "2679",
+  "questionFrontendId": "2549",
+  "title": "Count Distinct Numbers on Board",
+  "titleSlug": "count-distinct-numbers-on-board",
+  "difficulty": "Easy",
+  "content": "<p>You are given a positive integer <code>n</code>, that is initially placed on a board. Every day, for <code>10<sup>9</sup></code> days, you perform the following procedure:</p>\n\n<ul>\n\t<li>For each number <code>x</code> present on the board, find all numbers <code>1 &lt;= i &lt;= n</code> such that <code>x % i == 1</code>.</li>\n\t<li>Then, place those numbers on the board.</li>\n</ul>\n\n<p>Return<em> the number of <strong>distinct</strong> integers present on the board after</em> <code>10<sup>9</sup></code> <em>days have elapsed</em>.</p>\n\n<p><strong>Note:</strong></p>\n\n<ul>\n\t<li>Once a number is placed on the board, it will remain on it until the end.</li>\n\t<li><code>%</code>&nbsp;stands&nbsp;for the modulo operation. For example,&nbsp;<code>14 % 3</code> is <code>2</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 5\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> Initially, 5 is present on the board. \nThe next day, 2 and 4 will be added since 5 % 2 == 1 and 5 % 4 == 1. \nAfter that day, 3 will be added to the board because 4 % 3 == 1. \nAt the end of a billion days, the distinct numbers on the board will be 2, 3, 4, and 5. \n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 3\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> \nSince 3 % 2 == 1, 2 will be added to the board. \nAfter a billion days, the only two distinct numbers on the board are 2 and 3. \n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "For n > 2, n % (n - 1) == 1 thus n - 1 will be added on the board the next day.",
+    "As the operations are performed for so long time, all the numbers lesser than n except 1 will be added to the board.",
+    "What will happen if n == 1?"
+  ],
+  "metaData": "{\n  \"name\": \"distinctIntegers\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"63.7K\", \"totalSubmission\": \"103.3K\", \"totalAcceptedRaw\": 63709, \"totalSubmissionRaw\": 103267, \"acRate\": \"61.7%\"}",
+  "likes": 319,
+  "dislikes": 293,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count of Matches in Tournament\", \"titleSlug\": \"count-of-matches-in-tournament\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "5",
+    "3"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int distinctIntegers(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int distinctIntegers(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def distinctIntegers(self, n: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def distinctIntegers(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {number}\n */\nvar distinctIntegers = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function distinctIntegers(n: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int DistinctIntegers(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int distinctIntegers(int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func distinctIntegers(n int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun distinctIntegers(n: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func distinctIntegers(_ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn distinct_integers(n: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Integer}\ndef distinct_integers(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Integer\n     */\n    function distinctIntegers($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int distinctIntegers(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def distinctIntegers(n: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec distinct_integers(n :: integer) :: integer\n  def distinct_integers(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec distinct_integers(N :: integer()) -> integer().\ndistinct_integers(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (distinct-integers n)\n  (-> exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

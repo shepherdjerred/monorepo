@@ -1,0 +1,154 @@
+{
+  "questionId": "2708",
+  "questionFrontendId": "2573",
+  "title": "Find the String with LCP",
+  "titleSlug": "find-the-string-with-lcp",
+  "difficulty": "Hard",
+  "content": "<p>We define the <code>lcp</code> matrix of any <strong>0-indexed</strong> string <code>word</code> of <code>n</code> lowercase English letters as an <code>n x n</code> grid such that:</p>\n\n<ul>\n\t<li><code>lcp[i][j]</code> is equal to the length of the <strong>longest common prefix</strong> between the substrings <code>word[i,n-1]</code> and <code>word[j,n-1]</code>.</li>\n</ul>\n\n<p>Given an&nbsp;<code>n x n</code> matrix <code>lcp</code>, return the alphabetically smallest string <code>word</code> that corresponds to <code>lcp</code>. If there is no such string, return an empty string.</p>\n\n<p>A string <code>a</code> is lexicographically smaller than a string <code>b</code> (of the same length) if in the first position where <code>a</code> and <code>b</code> differ, string <code>a</code> has a letter that appears earlier in the alphabet than the corresponding letter in <code>b</code>. For example, <code>&quot;aabd&quot;</code> is lexicographically smaller than <code>&quot;aaca&quot;</code> because the first position they differ is at the third letter, and <code>&#39;b&#39;</code> comes before <code>&#39;c&#39;</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> lcp = [[4,0,2,0],[0,3,0,1],[2,0,2,0],[0,1,0,1]]\n<strong>Output:</strong> &quot;abab&quot;\n<strong>Explanation:</strong> lcp corresponds to any 4 letter string with two alternating letters. The lexicographically smallest of them is &quot;abab&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> lcp = [[4,3,2,1],[3,3,2,1],[2,2,2,1],[1,1,1,1]]\n<strong>Output:</strong> &quot;aaaa&quot;\n<strong>Explanation:</strong> lcp corresponds to any 4 letter string with a single distinct letter. The lexicographically smallest of them is &quot;aaaa&quot;. \n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> lcp = [[4,3,2,1],[3,3,2,1],[2,2,2,1],[1,1,1,3]]\n<strong>Output:</strong> &quot;&quot;\n<strong>Explanation:</strong> lcp[3][3] cannot be equal to 3 since word[3,...,3] consists of only a single letter; Thus, no answer exists.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n ==&nbsp;</code><code>lcp.length == </code><code>lcp[i].length</code>&nbsp;<code>&lt;= 1000</code></li>\n\t<li><code><font face=\"monospace\">0 &lt;= lcp[i][j] &lt;= n</font></code></li>\n</ul>\n",
+  "hints": [
+    "Use the LCP array to determine which groups of elements must be equal.",
+    "Match the smallest letter to the group that contains the smallest unassigned index.",
+    "Build the LCP matrix of the resulting string then check if it is equal to the target LCP."
+  ],
+  "metaData": "{\n  \"name\": \"findTheString\",\n  \"params\": [\n    {\n      \"name\": \"lcp\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"7.3K\", \"totalSubmission\": \"22.2K\", \"totalAcceptedRaw\": 7323, \"totalSubmissionRaw\": 22179, \"acRate\": \"33.0%\"}",
+  "likes": 209,
+  "dislikes": 19,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[4,0,2,0],[0,3,0,1],[2,0,2,0],[0,1,0,1]]",
+    "[[4,3,2,1],[3,3,2,1],[2,2,2,1],[1,1,1,1]]",
+    "[[4,3,2,1],[3,3,2,1],[2,2,2,1],[1,1,1,3]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string findTheString(vector<vector<int>>& lcp) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String findTheString(int[][] lcp) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findTheString(self, lcp: List[List[int]]) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findTheString(self, lcp):\n        \"\"\"\n        :type lcp: List[List[int]]\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} lcp\n * @return {string}\n */\nvar findTheString = function(lcp) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findTheString(lcp: number[][]): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string FindTheString(int[][] lcp) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* findTheString(int** lcp, int lcpSize, int* lcpColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findTheString(lcp [][]int) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findTheString(lcp: Array<IntArray>): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findTheString(_ lcp: [[Int]]) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_the_string(lcp: Vec<Vec<i32>>) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} lcp\n# @return {String}\ndef find_the_string(lcp)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $lcp\n     * @return String\n     */\n    function findTheString($lcp) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String findTheString(List<List<int>> lcp) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findTheString(lcp: Array[Array[Int]]): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_the_string(lcp :: [[integer]]) :: String.t\n  def find_the_string(lcp) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_the_string(Lcp :: [[integer()]]) -> unicode:unicode_binary().\nfind_the_string(Lcp) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-the-string lcp)\n  (-> (listof (listof exact-integer?)) string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2947",
+    "content": "### Approach: Greedy Construction\n\n#### Intuition\n\nTo construct the lexicographically smallest string that satisfies the problem constraints, we build the string from left to right, always assigning the smallest possible character at each step. This ensures that the final string is lexicographically minimal. After constructing the string, we verify whether it satisfies the given $\\textit{lcp}$ matrix.\n\nAccording to the definition of $\\textit{lcp}$, $\\textit{lcp}[i][j]$ represents the length of the longest common prefix between the substrings $\\textit{word}[i \\cdots n-1]$ and $\\textit{word}[j \\cdots n-1]$. Therefore, if $\\textit{lcp}[i][j] > 0$, it must hold that $\\textit{word}[i] = \\textit{word}[j]$. We use this property to guide the construction of the string $\\textit{word}$.\n\nThe construction process is as follows:\n\n* We traverse the string from left to right. For each position $i$, if it has not yet been assigned a character, we assign it the current smallest character $\\textit{current}$. Then, for all positions $j > i$, if $\\textit{lcp}[i][j] > 0$, we assign $\\textit{word}[j] = \\textit{word}[i]$.\n\n* If at any point $\\textit{current}$ exceeds `'z'`, we return an empty string, since it is impossible to construct a valid string.\n\n* After filling all positions corresponding to the current character, we increment $\\textit{current}$ and continue.\n\nAt this stage, the constructed string is the only possible candidate that satisfies all equality constraints implied by $\\textit{lcp}$. Next, we verify whether it fully satisfies the $\\textit{lcp}$ matrix.\n\nThe $\\textit{lcp}$ matrix can be derived using dynamic programming with the following recurrence:\n\n$$\n\\begin{cases}\n\\textit{lcp}[i][j] = \\textit{lcp}[i+1][j+1] + 1 \\quad \\text{if } \\textit{word}[i] = \\textit{word}[j] \\\n\\textit{lcp}[i][j] = 0 \\quad \\text{if } \\textit{word}[i] \\ne \\textit{word}[j]\n\\end{cases}\n$$\n\nWe iterate over all pairs $(i, j)$ and verify that the constructed string satisfies the $\\textit{lcp}$ values using the following conditions:\n\n* If $\\textit{word}[i] = \\textit{word}[j]$, then $\\textit{lcp}[i][j] > 0$.\n\n  * If $i = n - 1$ or $j = n - 1$, then $\\textit{lcp}[i][j]$ must be $1$.\n  * Otherwise, it must satisfy\n    $\\textit{lcp}[i][j] = \\textit{lcp}[i+1][j+1] + 1$.\n\n* If $\\textit{word}[i] \\ne \\textit{word}[j]$, then $\\textit{lcp}[i][j]$ must be $0$.\n\nIf any of these conditions fail, we return an empty string. Otherwise, the constructed string $\\textit{word}$ is valid and is returned.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/6QPXPB4U/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"6QPXPB4U\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of rows and columns of the matrix $\\textit{lcp}$.\n\n- Time complexity: $O(n^2)$.\n  \n  Constructing the string takes $O(n^2)$ time in the worst case, and verifying the $\\textit{lcp}$ matrix also takes $O(n^2)$ time, resulting in an overall complexity of $O(n^2)$.\n\n- Space complexity: $O(1)$.\n  \n  No additional space is used apart from the output string.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

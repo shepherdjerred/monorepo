@@ -1,0 +1,152 @@
+{
+  "questionId": "2506",
+  "questionFrontendId": "2371",
+  "title": "Minimize Maximum Value in a Grid",
+  "titleSlug": "minimize-maximum-value-in-a-grid",
+  "difficulty": "Hard",
+  "content": "<p>You are given an <code>m x n</code> integer matrix <code>grid</code> containing <strong>distinct</strong> positive integers.</p>\n\n<p>You have to replace each integer in the matrix with a positive integer satisfying the following conditions:</p>\n\n<ul>\n\t<li>The <strong>relative</strong> order of every two elements that are in the same row or column should stay the <strong>same</strong> after the replacements.</li>\n\t<li>The <strong>maximum</strong> number in the matrix after the replacements should be as <strong>small</strong> as possible.</li>\n</ul>\n\n<p>The relative order stays the same if for all pairs of elements in the original matrix such that <code>grid[r<sub>1</sub>][c<sub>1</sub>] &gt; grid[r<sub>2</sub>][c<sub>2</sub>]</code> where either <code>r<sub>1</sub> == r<sub>2</sub></code> or <code>c<sub>1</sub> == c<sub>2</sub></code>, then it must be true that <code>grid[r<sub>1</sub>][c<sub>1</sub>] &gt; grid[r<sub>2</sub>][c<sub>2</sub>]</code> after the replacements.</p>\n\n<p>For example, if <code>grid = [[2, 4, 5], [7, 3, 9]]</code> then a good replacement could be either <code>grid = [[1, 2, 3], [2, 1, 4]]</code> or <code>grid = [[1, 2, 3], [3, 1, 4]]</code>.</p>\n\n<p>Return <em>the <strong>resulting</strong> matrix.</em> If there are multiple answers, return <strong>any</strong> of them.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/08/09/grid2drawio.png\" style=\"width: 371px; height: 121px;\" />\n<pre>\n<strong>Input:</strong> grid = [[3,1],[2,5]]\n<strong>Output:</strong> [[2,1],[1,2]]\n<strong>Explanation:</strong> The above diagram shows a valid replacement.\nThe maximum number in the matrix is 2. It can be shown that no smaller value can be obtained.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> grid = [[10]]\n<strong>Output:</strong> [[1]]\n<strong>Explanation:</strong> We replace the only number in the matrix with 1.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == grid.length</code></li>\n\t<li><code>n == grid[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 1000</code></li>\n\t<li><code>1 &lt;= m * n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= grid[i][j] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>grid</code> consists of distinct integers.</li>\n</ul>\n",
+  "hints": [
+    "Can you think of which element in the grid you should replace first?",
+    "Replace the elements in the matrix from the smallest number to the largest. Replace each element with the smallest possible number so far."
+  ],
+  "metaData": "{\n  \"name\": \"minScore\",\n  \"params\": [\n    {\n      \"name\": \"grid\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[][]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"7.4K\", \"totalSubmission\": \"10.6K\", \"totalAcceptedRaw\": 7422, \"totalSubmissionRaw\": 10587, \"acRate\": \"70.1%\"}",
+  "likes": 144,
+  "dislikes": 6,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Candy\", \"titleSlug\": \"candy\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[3,1],[2,5]]",
+    "[[10]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Topological Sort",
+      "slug": "topological-sort"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> minScore(vector<vector<int>>& grid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[][] minScore(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minScore(self, grid: List[List[int]]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minScore(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} grid\n * @return {number[][]}\n */\nvar minScore = function(grid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minScore(grid: number[][]): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[][] MinScore(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** minScore(int** grid, int gridSize, int* gridColSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minScore(grid [][]int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minScore(grid: Array<IntArray>): Array<IntArray> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minScore(_ grid: [[Int]]) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_score(grid: Vec<Vec<i32>>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} grid\n# @return {Integer[][]}\ndef min_score(grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $grid\n     * @return Integer[][]\n     */\n    function minScore($grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> minScore(List<List<int>> grid) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minScore(grid: Array[Array[Int]]): Array[Array[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_score(grid :: [[integer]]) :: [[integer]]\n  def min_score(grid) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_score(Grid :: [[integer()]]) -> [[integer()]].\nmin_score(Grid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-score grid)\n  (-> (listof (listof exact-integer?)) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2590",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nWe are given an integer grid with distinct positive integers and must replace each integer with a positive number such that the relative ordering of elements in each row and column remains the same. The goal is to minimize the maximum value in the modified grid.\n\nThese are some trivial observations before we start solving the problem:\n- Consecutive numbers starting from `1` should be assigned to the matrix values. For example, `3` cannot be assigned until `2` has been assigned to some cell.  \n- The smallest value in the matrix can always be assigned `1`, as no value in its row or column is smaller.\n\nIn other words, we need to replace every value in the matrix with its rank, starting from the smallest element.\n\n> This problem has a conceptual similarity to topological sort, as the values in the matrix are processed in a specific order (increasing order of values), and each cell’s rank depends on the ranks of previously processed cells in its row and column. \n>\n> However, unlike in the related problem [Rank Transform of a Matrix](https://leetcode.com/problems/rank-transform-of-a-matrix/description/), we do not need to explicitly use graph-based approaches like Disjoint Set Union (DSU) or adjacency lists. \n> This is because:\n> - All integers in the matrix are distinct, which eliminates the need to group equal elements or handle ties, a common use case for DSU in problems like \"Rank Transform of a Matrix.\"\n> - The condition that `grid[r1][c1] > grid[r2][c2]` in the original matrix (if both belong to the same row or column) naturally holds after processing, as the values are handled in sorted order. Sorting the matrix ensures that dependencies are resolved sequentially, much like the ordering in topological sort.\n> - Since there are no ties, ranks can be directly assigned during the traversal of the sorted list, avoiding the need for additional grouping or merging steps.\n\n---\n\n### Approach 1: Sorting\n\n#### Intuition   \n\nThe task is to assign values to matrix elements such that each value satisfies two constraints: it must preserve the relative ordering of values in rows and columns, and it must be as small as possible under these constraints. For example, the smallest element in the matrix can always be assigned the value `1`, but for the second-smallest element, its value depends on its position. If it shares the same row or column as the smallest element, it cannot also be assigned `1` and must instead take the value `2`. Similarly, the third-smallest element, if it is in the same row or column as the second-smallest, must be assigned a value no less than `3`.\n\nThis leads to a crucial observation that the smallest value that a matrix cell can be assigned is determined by the maximum value assigned in its row or column, plus one. To implement this idea, we start by sorting all matrix elements in ascending order. Then, for each element, we compute its value as `max(max rank in its row, max rank in its column) + 1`. This ensures that all constraints are satisfied while keeping the assigned values minimal.\n\nWe can prove the correctness of this approach using induction. First, consider the base case: the smallest element in the matrix. It can always be assigned the value `1` since no smaller value exists in its row or column, satisfying the constraints. \n\nNow assume as an inductive hypothesis that for the first `k` smallest elements, the algorithm assigns values such that the relative ordering of rows and columns is preserved and all values are minimal. For the `(k+1)`-th smallest element located at position `(i, j)`, the algorithm computes its value as `max(max rank in row i, max rank in column j) + 1`. This guarantees that the `(k+1)`-th element is assigned a value greater than all smaller elements in its row or column, preserving relative ordering.\n\nTo confirm this is optimal, assume by contradiction that a smaller value `v` could be assigned to the `(k+1)`-th element. For this to happen, all previously assigned values in row `i` and column `j` must be smaller than `v`. \n\nHowever, the algorithm ensures that there is always at least one value in the current row or column that is greater than or equal to `v`, which violates the relative ordering. Thus, assigning `v` would contradict the inductive hypothesis, proving that the algorithm assigns values optimally.\n\n#### Algorithm\n\n1. Determine the dimensions `row` (number of rows) and `col` (number of columns) of the `grid`.\n2. Initialize two lists:\n    - `rows` to store the minimum values for each row, initially set to 1 for each row.\n    - `cols` to store the minimum values for each column, initially set to 1 for each column.\n3. Create an empty list `nums` to store pairs of each cell's value along with its row and column indices.\n4. Loop through each cell in grid with indices `(i, j)`:\n    - Append a list `(grid[i][j], i, j)` to `nums`.\n5. Sort `nums` by the cell values in ascending order.\n6. Loop through each list `(value, i, j)` in `nums`:\n    - Calculate `val` as the maximum of `rows[i]` and `cols[j]`, which represents the maximum value assigned to that row and column so far.\n    - Update `grid[i][j]` with `val`.\n    - Update `rows[i]` and `cols[j]` to `val + 1`, increasing the minimum values for that row and column for future assignments.\n7. After processing all indices, return `grid`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/j7KBohAn/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"j7KBohAn\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ and $n$ be the number of rows and columns in the matrix `grid`.\n\n- Time Complexity: $O(m \\cdot n \\cdot log(m \\cdot n))$\n\n    The algorithm traverses the entire $m x n$ grid to populate the `nums` list, taking $O(m \\cdot n)$ time. Sorting the nums list of $m x n$ elements takes $O(m \\cdot n \\cdot log(m \\cdot n))$ time. \n    \n    Finally, iterating over `nums` to update `grid` and the `rows` and `cols` arrays takes $O(m \\cdot n)$ time. Thus, the overall time complexity is dominated by the sorting step, resulting in $O(m \\cdot n \\cdot log(m \\cdot n))$.\n\n- Space complexity: $O(m \\cdot n)$\n\n    The algorithm requires $O(m \\cdot n)$ space for the `nums` list, which stores tuples of each element's value and position. Additionally, the `rows` and `cols` arrays use $O(m + n)$ space, but this is dominated by $O(m \\cdot n)$. \n\n    Apart from this, the space complexity of the sorting algorithm depends on the programming language.\n    - In Python, the sort method sorts a list using the Timsort algorithm which is a combination of Merge Sort and  Insertion Sort and has $O(l)$ additional space, where `l` is the size of the list.\n    - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log l )$ for sorting two arrays.\n    - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worse-case space complexity of $O( \\log l )$.\n\n    Therefore, the total space complexity is given by $O(m \\cdot n)$.\n\n---\n\n### Approach 2: Min-heap\n\n#### Intuition   \n\nIn the previous approach, we iterated through the matrix values by sorting the array in increasing order. Alternatively, we can use a min-heap to process the elements of the matrix in ascending order. A min-heap is a binary heap data structure where the smallest element is always at the root, making it efficient for retrieving and removing the minimum element.\n\nTo implement this, we first push all the elements into a min-heap, where each element is stored alongside its position in the matrix. The min-heap ensures that the smallest element is always at the top. After inserting all elements into the heap, we can repeatedly pop the smallest element from the heap, maintaining the order of values in increasing sequence. As we pop each element, we can assign its value to the corresponding position in the result matrix.\n\n#### Algorithm\n\n1. Determine the dimensions `row` (number of rows) and `col` (number of columns) of the input `grid`.\n2. Initialize:\n    - `min_heap` as an empty min-heap to store tuples of cell values and their coordinates.\n    - `rows` to track the maximum values assigned to each row, initialized with `1` for each row.\n    - `cols` to track the maximum values assigned to each column, initialized with `1` for each column.\n3. Populate `min_heap` with tuples of the form `(grid[i][j], i, j)` for each cell `(i, j)` in `grid`.\n4. Process elements in ascending order of their values by repeatedly popping from `min_heap`:\n    - For each popped element `(value, i, j)`, calculate `val` as the maximum of `rows[i]` and `cols[j]`, which represents the smallest assignable value based on row and column constraints.\n    - Update `grid[i][j]` with `val`.\n    - Update `rows[i]` and `cols[j]` to `val + 1` to ensure the next value for each row and column is greater.\n5. After processing all elements, return the modified `grid`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Ym9swbFX/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Ym9swbFX\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $m$ and $n$ be the number of rows and columns in the matrix `grid`.\n\n- Time Complexity: $O(m \\cdot n \\cdot log(m \\cdot n))$\n\n    The algorithm traverses the entire `m×n` grid to populate the `nums` list, taking $O(m \\cdot n)$ time. Pushing all the elements of `grid` in priority queue takes $O(m \\cdot n \\cdot log(m \\cdot n))$ time. \n    \n    Finally, iterating over the priority queue to update `grid` and the `rows` and `cols` arrays takes $O(m \\cdot n \\cdot log(m \\cdot n))$ time. Therefore, the overall time complexity is given by $O(m \\cdot n \\cdot log(m \\cdot n))$.\n\n- Space complexity: $O(m \\cdot n)$\n\n    The algorithm requires $O(m \\cdot n)$ space for the `priority_queue` priority queue, which stores tuples of each element's value and position. Additionally, the `rows` and `cols` arrays use $O(m+n)$ space, but this is dominated by $O(m \\cdot n)$. Therefore, the overall space complexity is $O(m \\cdot n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

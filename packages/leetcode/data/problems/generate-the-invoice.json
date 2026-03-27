@@ -1,0 +1,53 @@
+{
+  "questionId": "2501",
+  "questionFrontendId": "2362",
+  "title": "Generate the Invoice",
+  "titleSlug": "generate-the-invoice",
+  "difficulty": "Hard",
+  "content": "<p>Table: <code>Products</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| product_id  | int  |\n| price       | int  |\n+-------------+------+\nproduct_id contains unique values.\nEach row in this table shows the ID of a product and the price of one unit.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Purchases</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| invoice_id  | int  |\n| product_id  | int  |\n| quantity    | int  |\n+-------------+------+\n(invoice_id, product_id) is the primary key (combination of columns with unique values) for this table.\nEach row in this table shows the quantity ordered from one product in an invoice. \n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to show the details of the invoice with the highest price. If two or more invoices have the same price, return the details of the one with the smallest <code>invoice_id</code>.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The&nbsp;result format is shown in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nProducts table:\n+------------+-------+\n| product_id | price |\n+------------+-------+\n| 1          | 100   |\n| 2          | 200   |\n+------------+-------+\nPurchases table:\n+------------+------------+----------+\n| invoice_id | product_id | quantity |\n+------------+------------+----------+\n| 1          | 1          | 2        |\n| 3          | 2          | 1        |\n| 2          | 2          | 3        |\n| 2          | 1          | 4        |\n| 4          | 1          | 10       |\n+------------+------------+----------+\n<strong>Output:</strong> \n+------------+----------+-------+\n| product_id | quantity | price |\n+------------+----------+-------+\n| 2          | 3        | 600   |\n| 1          | 4        | 400   |\n+------------+----------+-------+\n<strong>Explanation:</strong> \nInvoice 1: price = (2 * 100) = $200\nInvoice 2: price = (4 * 100) + (3 * 200) = $1000\nInvoice 3: price = (1 * 200) = $200\nInvoice 4: price = (10 * 100) = $1000\n\nThe highest price is $1000, and the invoices with the highest prices are 2 and 4. We return the details of the one with the smallest ID, which is invoice 2.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Products (product_id int, price int)\", \"Create table If Not Exists Purchases (invoice_id int, product_id int, quantity int)\"], \"mssql\": [\"Create table Products (product_id int, price int)\", \"Create table Purchases (invoice_id int, product_id int, quantity int)\"], \"oraclesql\": [\"Create table Products (product_id int, price int)\", \"Create table Purchases (invoice_id int, product_id int, quantity int)\"], \"database\": true, \"name\": \"generate_the_invoice\", \"pythondata\": [\"Products = pd.DataFrame([], columns=['product_id', 'price']).astype({'product_id':'Int64', 'price':'Int64'})\", \"Purchases = pd.DataFrame([], columns=['invoice_id', 'product_id', 'quantity']).astype({'invoice_id':'Int64', 'product_id':'Int64', 'quantity':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Products (product_id int, price int)\", \"Create table If Not Exists Purchases (invoice_id int, product_id int, quantity int)\"], \"database_schema\": {\"Products\": {\"product_id\": \"INT\", \"price\": \"INT\"}, \"Purchases\": {\"invoice_id\": \"INT\", \"product_id\": \"INT\", \"quantity\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"5.6K\", \"totalSubmission\": \"7.3K\", \"totalAcceptedRaw\": 5552, \"totalSubmissionRaw\": 7312, \"acRate\": \"75.9%\"}",
+  "likes": 35,
+  "dislikes": 30,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Products\":[\"product_id\",\"price\"],\"Purchases\":[\"invoice_id\",\"product_id\",\"quantity\"]},\"rows\":{\"Products\":[[1,100],[2,200]],\"Purchases\":[[1,1,2],[3,2,1],[2,2,3],[2,1,4],[4,1,10]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef generate_the_invoice(products: pd.DataFrame, purchases: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

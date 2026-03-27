@@ -1,0 +1,144 @@
+{
+  "questionId": "2439",
+  "questionFrontendId": "2360",
+  "title": "Longest Cycle in a Graph",
+  "titleSlug": "longest-cycle-in-a-graph",
+  "difficulty": "Hard",
+  "content": "<p>You are given a <strong>directed</strong> graph of <code>n</code> nodes numbered from <code>0</code> to <code>n - 1</code>, where each node has <strong>at most one</strong> outgoing edge.</p>\n\n<p>The graph is represented with a given <strong>0-indexed</strong> array <code>edges</code> of size <code>n</code>, indicating that there is a directed edge from node <code>i</code> to node <code>edges[i]</code>. If there is no outgoing edge from node <code>i</code>, then <code>edges[i] == -1</code>.</p>\n\n<p>Return <em>the length of the <strong>longest</strong> cycle in the graph</em>. If no cycle exists, return <code>-1</code>.</p>\n\n<p>A cycle is a path that starts and ends at the <strong>same</strong> node.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/06/08/graph4drawio-5.png\" style=\"width: 335px; height: 191px;\" />\n<pre>\n<strong>Input:</strong> edges = [3,3,4,2,3]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The longest cycle in the graph is the cycle: 2 -&gt; 4 -&gt; 3 -&gt; 2.\nThe length of this cycle is 3, so 3 is returned.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/06/07/graph4drawio-1.png\" style=\"width: 171px; height: 161px;\" />\n<pre>\n<strong>Input:</strong> edges = [2,-1,3,1]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> There are no cycles in this graph.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == edges.length</code></li>\n\t<li><code>2 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-1 &lt;= edges[i] &lt; n</code></li>\n\t<li><code>edges[i] != i</code></li>\n</ul>\n",
+  "hints": [
+    "How many cycles can each node at most be part of?",
+    "Each node can be part of at most one cycle. Start from each node and find the cycle that it is part of if there is any. Save the already visited nodes to not repeat visiting the same cycle multiple times."
+  ],
+  "metaData": "{\n  \"name\": \"longestCycle\",\n  \"params\": [\n    {\n      \"name\": \"edges\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"105.2K\", \"totalSubmission\": \"208.3K\", \"totalAcceptedRaw\": 105226, \"totalSubmissionRaw\": 208323, \"acRate\": \"50.5%\"}",
+  "likes": 2550,
+  "dislikes": 51,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Strange Printer II\", \"titleSlug\": \"strange-printer-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Number of Operations to Sort a Binary Tree by Level\", \"titleSlug\": \"minimum-number-of-operations-to-sort-a-binary-tree-by-level\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Shortest Cycle in a Graph\", \"titleSlug\": \"shortest-cycle-in-a-graph\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,3,4,2,3]",
+    "[2,-1,3,1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"juspay\", \"name\": \"Juspay\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Topological Sort",
+      "slug": "topological-sort"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int longestCycle(vector<int>& edges) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int longestCycle(int[] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def longestCycle(self, edges: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def longestCycle(self, edges):\n        \"\"\"\n        :type edges: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} edges\n * @return {number}\n */\nvar longestCycle = function(edges) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function longestCycle(edges: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int LongestCycle(int[] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int longestCycle(int* edges, int edgesSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func longestCycle(edges []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun longestCycle(edges: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func longestCycle(_ edges: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn longest_cycle(edges: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} edges\n# @return {Integer}\ndef longest_cycle(edges)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $edges\n     * @return Integer\n     */\n    function longestCycle($edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int longestCycle(List<int> edges) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def longestCycle(edges: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec longest_cycle(edges :: [integer]) :: integer\n  def longest_cycle(edges) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec longest_cycle(Edges :: [integer()]) -> integer().\nlongest_cycle(Edges) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (longest-cycle edges)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1695",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a directed graph with `n` nodes numbered from `0` to `n - 1`. Each node has at most one outgoing edge given by `edges`.\n\nOur task is to return the length of the longest cycle in the graph. If no cycle exists, we need to return `-1`.\n\n---\n\n### Approach 1: Depth First Search\n\n#### Intuition\n\nThe problem specifies that each node has no more than one outgoing edge. Let's see what kinds of graphs we can create with this.\n\nLet us consider a node `node` which belongs to a cycle. It would imply that the only outgoing edge of `node` would also be in this cycle. As a result, `node` cannot be a part of any other cycle because it only has one outgoing edge, which is consumed in this cycle. This demonstrates that in a graph with only one outgoing edge, a node cannot be a part of more than one cycle.\n\nWe would visit all the nodes in the cycle if we started a graph traversal from any node in the cycle. There is no point in revisiting the nodes in the cycle because they cannot be part of any other cycle.\n\nAlso, there is also no point in visiting the nodes that do not form a cycle again. We would have iterated over the only outgoing edge (if they have) during the first visit and there is no point in iterating over it again.\n\n**This implies that visiting each node only once is sufficient.**\n\nLet us now calculate the length of any formed cycle. We begin a depth-first search traversal (DFS) from an unvisited node, `node1`, and iterate over the outgoing edge to go to neighbor, from neighbor to its neighbor, and so on. During the traversal, we keep track of the distance from `node1` while visiting each node. To store the distances, we can use a hash map `dist`.\n\nAs we traverse the graph, suppose we need to return to `node2` from `node3` (there is an edge `node3 -> node2`) which has already been visited in this DFS traversal. It denotes the existence of a cycle. `dist[node3] - dist[node2]` would give us the number of edges from `node2` to `node3` because we kept track of distance from the starting node `node1`. We also need to add one for the `node3 -> node2` edge that completes the cycle. As a result, this cycle would be `dist[node3] - dist[node2] + 1` in length. This brings us to our solution.\n\nWe create a `answer` variable and initialize it to `-1`. We iterate over all the nodes and if the current node, `node`, is not visited, we start a DFS traversal. For each DFS traversal, we also create a new hash map `dist` and set `dist[node] = 0`.\n\nIn the DFS traversal, we check the `neighbor` of `node` using `neighbor = edges[node]`. If `neighbor` is not visited, we update `dist[neighbor] = dist[node] + 1` and recursively perform the DFS traversal starting with `neighbor`.\n\nIf `neighbor` is already visited, one of two things can happen. It is either a cycle formation or `neighbor` was visited in a previous DFS traversal and not the current DFS traversal. This can be verified if the `dist` map has the key `neighbor` in it (we create a new map for every traversal).\n\nIf `dist` contains `neighbor`, it means we visited `neighbor` during the current DFS traversal itself and it is a formation of cycle. We update `answer = max(answer, dist[node] - dist[neighbor] + 1` in this case.\n\nOtherwise, if `dist` does not contains `neighbor`, it means that `neighbor` was visited in a previous DFS traversal. As previously discussed, there is no point in returning to a node.\n\nWe would have our answer in `answer` after visiting all of the nodes.\n\n#### Algorithm\n\n1. Initialize an integer `answer = -1`. This would store the length of the longest cycle in the graph.\n2. Initialize another integer `n = edges.length` which stores the number of nodes in the graph.\n3. Create a `visit` array of length `n` to keep track of nodes that have been visited.\n4. Iterate through all of the nodes and for each node `i` check if it is visited or not. If node `i` is not visited, create a hash map `dist` where `dist.get(x)` would store the distance of node `x` from starting node `i`. Begin the DFS traversal:\n    - We use the `dfs` function to perform the traversal. For each call, pass `node`, `edges`, `dist` and `visit` as the parameters. We start with node `i`.\n    - Mark `node` as visited and get its neighbor `neighbor` using `edges[node]`.\n    - If `neighbor` exists and is not visited, we update `dist[neighbor] = dist[node] + 1` and recursively call `dfs` passing `neighbor` as the node.\n    - Otherwise, if `neighbor` exists and is already visited, we check if it is present in `dist`. If it is present, it is a formation of cycle. We perform `answer = max(answer, dist[node] - dist[neighbor] + 1)`. Otherwise, if it not present in `dist`, we ignore it as it was visited in a previous DFS traversal.\n5. Return `answer`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/7eVfo5qw/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"7eVfo5qw\"></iframe>\n\n#### Complexity Analysis\n\nHere $n$ is the number of nodes.\n\n* Time complexity: $O(n)$.\n    -  Initializing the `visit` array takes $O(n)$ time.\n    -  The `dfs` function visits each node once, which takes $O(n)$ time in total. Because we have directed edges, each edge will be iterated once, resulting in $O(n)$ operations in total while visiting all the nodes.\n    - Each operation on the `dist` map takes $O(1)$ time. Because we insert a distance for each node when it is visited, it will take $O(n)$ time to insert distances for all of the nodes. It is also used to check the formation of a cycle when a previously visited node is encountered again. Because there are $n$ nodes, it can be checked at most $n$ times. It would also take $O(n)$ time in that case.\n\n* Space complexity: $O(n)$.\n    - The `visit` array takes $O(n)$ space.\n    - The recursion call stack used by `dfs` can have no more than $n$ elements in the worst-case scenario. It would take up $O(n)$ space in that case.\n    - The `dist` map can also have no more than $n$ elements and hence it would take up $O(n)$ space as well.\n\n---\n\n### Approach 2: Kahn's Algorithm\n\n#### Intuition\n\nWe can also think to solve this problem using a topological sort strategy. A topological sort or topological ordering of a directed graph is a linear ordering of its vertices such that for every directed edge `u -> v` from vertex `u` to vertex `v`, `u` comes before `v` in the ordering.\n\nIn a directed acyclic graph, we can use Kahn's algorithm to get the topological ordering. Kahn’s algorithm works by keeping track of the number of incoming edges into each node (indegree). It works by repeatedly visiting the nodes with an indegree of zero and deleting all the edges associated with it leading to a decrement of indegree for the nodes whose incoming edges are deleted. This process continues until no element with zero indegree can be found.\n\n> If you are not familiar with Kahn's algorithm, we suggest you read our [Leetcode Explore Card](https://leetcode.com/explore/learn/card/graph/623/kahns-algorithm-for-topological-sorting/3886/).\n\nLet's perform Kahn's algorithm on directed graph having two cycle. Here's a visual step-by-step represenntation of how it would work:\n\n![img](../Figures/2360/2360-1.png)\n\nWe can see that if there is a cycle, there is no way of making the indegree of nodes in the cycle to `0` due to the cyclic dependency. We cannot visit nodes in the cycle.\n\nBecause each node can only have one outgoing edge, no node in the cycle can have an outgoing edge to a node that is not in the cycle. The only outoging edge of a node in the cycle would be consumed by the cycle itself. This means that there would be no other node that would not be visited because of the unvisited nodes in the cycle. As a result, all the nodes not in the cycle would be visited and only the nodes in the cycle would be not visited using this algorithm.\n\nAfter completing Kahn's algorithm, we iterate over all the unvisited nodes to determine the length of the longest cycle. For an unvisited node `node`, we begin by traversing from `node` to its neighbor using `edge[node]`, then to its neighbor, and so on, until we return to `node`. We keep track of the number of nodes in the cycle (the number of nodes in the cycle equals the length of the cycle) and mark all of the nodes in this cycle as visited so that we don't visit them again. From all the formed cycles, we chose the one with the longest cycle length.\n\nIf all of the nodes are visited during Kahn's algorithm, the graph has no cycle.\n\n#### Algorithm\n\n1. Initialize an integer `n = edges.length` which stores the number of nodes in the graph.\n2. Create an array `indegree` of length `n` where `indegree[X]` stores the number of edges with one end at node `X`.\n3. Create a `visit` array of length `n` to keep track of nodes that have been visited.\n4. Initialize a queue of integers `q` and start a BFS algorithm moving from the leaf nodes to the parent nodes. \n5. Begin the BFS traversal by pushing all of the leaf nodes (`indegree` equal to `0`) in the queue.\n6. While the queue is not empty;\n    - Dequeue the first `node` from the queue.\n    - Mark `node` as visited.\n    - Get the neighbor, `neighbor`, of `node` using `edges[node]`. If `neighbor != -1`, we decrement `indegree[neighbor]` by `1`.\n    - If `indegree[neighbor] == 0`, it means that `neighbor` behaves as a leaf node, so we push `neighbor` in the queue.\n7. Iterate over unvisited nodes and for an unvisited node `i`:\n    - Mark node `i` as visited.\n    - Fetch neighbor, `neighbor`, of `i` using `edge[i]` and create a variable `count` to count number of nodes in the cycle. Initialize `count = 1` to count node `i` itself.\n    - Keep moving forward in the cycle until we reach node `i` (`neighbor != i`). Mark `neighbor` as visited and move to next neighbor `neighbor = edges[neighbor]`. Also, increment `count` by `1` for each node that is being visited in the cycle.\n    - Update `answer = max(answer, count)`.\n8. Return `answer`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/84gsut9P/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"84gsut9P\"></iframe>\n            \n\n#### Complexity Analysis\n\nHere $n$ is the number of nodes.\n\n* Time complexity: $O(n)$.\n    - Initializing the `visit` and `indegree` arrays take $O(n)$ time each.\n    - Each queue operation takes $O(1)$ time, and a single node will be pushed once, leading to $O(n)$ operations for $n$ nodes. We iterate over the neighbor of each node that is popped out of the queue iterating over all the edges once. Since there are `n` edges at most, it would take $O(n)$ time in total.\n    - We iterate over all the nodes that are in the cycles. There cannot be more than $n$ nodes in all the cycles combined, so it would take $O(n)$ time.\n\n* Space complexity: $O(n)$.\n    - The `visit` and `indegree` arrays takes $O(n)$ space each.\n    - The queue can have no more than $n$ elements in the worst-case scenario. It would take up $O(n)$ space in that case.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

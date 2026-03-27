@@ -1,0 +1,132 @@
+{
+  "questionId": "2570",
+  "questionFrontendId": "2431",
+  "title": "Maximize Total Tastiness of Purchased Fruits",
+  "titleSlug": "maximize-total-tastiness-of-purchased-fruits",
+  "difficulty": "Medium",
+  "content": "<p>You are given two non-negative integer arrays <code>price</code> and <code>tastiness</code>, both arrays have the same length <code>n</code>. You are also given two non-negative integers <code>maxAmount</code> and <code>maxCoupons</code>.</p>\n\n<p>For every integer <code>i</code> in range <code>[0, n - 1]</code>:</p>\n\n<ul>\n\t<li><code>price[i]</code> describes the price of <code>i<sup>th</sup></code> fruit.</li>\n\t<li><code>tastiness[i]</code> describes the tastiness of <code>i<sup>th</sup></code> fruit.</li>\n</ul>\n\n<p>You want to purchase some fruits such that total tastiness is maximized and the total price does not exceed <code>maxAmount</code>.</p>\n\n<p>Additionally, you can use a coupon to purchase fruit for <strong>half of its price</strong> (rounded down to the closest integer). You can use at most <code>maxCoupons</code> of such coupons.</p>\n\n<p>Return <em>the maximum total tastiness that can be purchased</em>.</p>\n\n<p><strong>Note that:</strong></p>\n\n<ul>\n\t<li>You can purchase each fruit at most once.</li>\n\t<li>You can use coupons on some fruit at most once.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> price = [10,20,20], tastiness = [5,8,8], maxAmount = 20, maxCoupons = 1\n<strong>Output:</strong> 13\n<strong>Explanation:</strong> It is possible to make total tastiness 13 in following way:\n- Buy first fruit without coupon, so that total price = 0 + 10 and total tastiness = 0 + 5.\n- Buy second fruit with coupon, so that total price = 10 + 10 and total tastiness = 5 + 8.\n- Do not buy third fruit, so that total price = 20 and total tastiness = 13.\nIt can be proven that 13 is the maximum total tastiness that can be obtained.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> price = [10,15,7], tastiness = [5,8,20], maxAmount = 10, maxCoupons = 2\n<strong>Output:</strong> 28\n<strong>Explanation:</strong> It is possible to make total tastiness 20 in following way:\n- Do not buy first fruit, so that total price = 0 and total tastiness = 0.\n- Buy second fruit with coupon, so that total price = 0 + 7 and total tastiness = 0 + 8.\n- Buy third fruit with coupon, so that total price = 7 + 3 and total tastiness = 8 + 20.\nIt can be proven that 28 is the maximum total tastiness that can be obtained.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == price.length == tastiness.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 100</code></li>\n\t<li><code>0 &lt;= price[i], tastiness[i], maxAmount &lt;= 1000</code></li>\n\t<li><code>0 &lt;= maxCoupons &lt;= 5</code></li>\n</ul>\n",
+  "hints": [
+    "We have multiple options within the given budget. Trying all of them will take exponential time. How can we improve that?",
+    "We can use dynamic programming to speed up the algorithm.",
+    "We have three options for each fruit. To skip it, to buy it with a coupon, or to buy it without a coupon."
+  ],
+  "metaData": "{\n  \"name\": \"maxTastiness\",\n  \"params\": [\n    {\n      \"name\": \"price\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"tastiness\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"maxAmount\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"maxCoupons\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"4K\", \"totalSubmission\": \"6.2K\", \"totalAcceptedRaw\": 4007, \"totalSubmissionRaw\": 6204, \"acRate\": \"64.6%\"}",
+  "likes": 56,
+  "dislikes": 2,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[10,20,20]\n[5,8,8]\n20\n1",
+    "[10,15,7]\n[5,8,20]\n10\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxTastiness(vector<int>& price, vector<int>& tastiness, int maxAmount, int maxCoupons) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxTastiness(int[] price, int[] tastiness, int maxAmount, int maxCoupons) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxTastiness(self, price: List[int], tastiness: List[int], maxAmount: int, maxCoupons: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxTastiness(self, price, tastiness, maxAmount, maxCoupons):\n        \"\"\"\n        :type price: List[int]\n        :type tastiness: List[int]\n        :type maxAmount: int\n        :type maxCoupons: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} price\n * @param {number[]} tastiness\n * @param {number} maxAmount\n * @param {number} maxCoupons\n * @return {number}\n */\nvar maxTastiness = function(price, tastiness, maxAmount, maxCoupons) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxTastiness(price: number[], tastiness: number[], maxAmount: number, maxCoupons: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxTastiness(int[] price, int[] tastiness, int maxAmount, int maxCoupons) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxTastiness(int* price, int priceSize, int* tastiness, int tastinessSize, int maxAmount, int maxCoupons) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxTastiness(price []int, tastiness []int, maxAmount int, maxCoupons int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxTastiness(price: IntArray, tastiness: IntArray, maxAmount: Int, maxCoupons: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxTastiness(_ price: [Int], _ tastiness: [Int], _ maxAmount: Int, _ maxCoupons: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_tastiness(price: Vec<i32>, tastiness: Vec<i32>, max_amount: i32, max_coupons: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} price\n# @param {Integer[]} tastiness\n# @param {Integer} max_amount\n# @param {Integer} max_coupons\n# @return {Integer}\ndef max_tastiness(price, tastiness, max_amount, max_coupons)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $price\n     * @param Integer[] $tastiness\n     * @param Integer $maxAmount\n     * @param Integer $maxCoupons\n     * @return Integer\n     */\n    function maxTastiness($price, $tastiness, $maxAmount, $maxCoupons) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxTastiness(List<int> price, List<int> tastiness, int maxAmount, int maxCoupons) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxTastiness(price: Array[Int], tastiness: Array[Int], maxAmount: Int, maxCoupons: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_tastiness(price :: [integer], tastiness :: [integer], max_amount :: integer, max_coupons :: integer) :: integer\n  def max_tastiness(price, tastiness, max_amount, max_coupons) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_tastiness(Price :: [integer()], Tastiness :: [integer()], MaxAmount :: integer(), MaxCoupons :: integer()) -> integer().\nmax_tastiness(Price, Tastiness, MaxAmount, MaxCoupons) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-tastiness price tastiness maxAmount maxCoupons)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

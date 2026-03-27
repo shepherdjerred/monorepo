@@ -1,0 +1,144 @@
+{
+  "questionId": "2612",
+  "questionFrontendId": "2473",
+  "title": "Minimum Cost to Buy Apples",
+  "titleSlug": "minimum-cost-to-buy-apples",
+  "difficulty": "Medium",
+  "content": "<p>You are given a positive integer <code>n</code> representing <code>n</code> cities numbered from <code>1</code> to <code>n</code>. You are also given a <strong>2D</strong> array <code>roads</code>, where <code>roads[i] = [a<sub>i</sub>, b<sub>i</sub>, cost<sub>i</sub>]</code> indicates that there is a <strong>bidirectional </strong>road between cities <code>a<sub>i</sub></code> and <code>b<sub>i</sub></code> with a cost of traveling equal to <code>cost<sub>i</sub></code>.</p>\n\n<p>You can buy apples in <strong>any</strong> city you want, but some cities have different costs to buy apples. You are given the 1-based array <code>appleCost</code> where <code>appleCost[i]</code> is the cost of buying one apple from city <code>i</code>.</p>\n\n<p>You start at some city, traverse through various roads, and eventually buy <strong>exactly</strong> one apple from <strong>any</strong> city. After you buy that apple, you have to return back to the city you <strong>started</strong> at, but now the cost of all the roads will be <strong>multiplied</strong> by a given factor <code>k</code>.</p>\n\n<p>Given the integer <code>k</code>, return <em>a 1-based array </em><code>answer</code><em> of size </em><code>n</code><em> where </em><code>answer[i]</code><em> is the <strong>minimum</strong> total cost to buy an apple if you start at city </em><code>i</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/11/15/graph55.png\" style=\"width: 241px; height: 309px;\" />\n<pre>\n<strong>Input:</strong> n = 4, roads = [[1,2,4],[2,3,2],[2,4,5],[3,4,1],[1,3,4]], appleCost = [56,42,102,301], k = 2\n<strong>Output:</strong> [54,42,48,51]\n<strong>Explanation:</strong> The minimum cost for each starting city is the following:\n- Starting at city 1: You take the path 1 -&gt; 2, buy an apple at city 2, and finally take the path 2 -&gt; 1. The total cost is 4 + 42 + 4 * 2 = 54.\n- Starting at city 2: You directly buy an apple at city 2. The total cost is 42.\n- Starting at city 3: You take the path 3 -&gt; 2, buy an apple at city 2, and finally take the path 2 -&gt; 3. The total cost is 2 + 42 + 2 * 2 = 48.\n- Starting at city 4: You take the path 4 -&gt; 3 -&gt; 2 then you buy at city 2, and finally take the path 2 -&gt; 3 -&gt; 4. The total cost is 1 + 2 + 42 + 1 * 2 + 2 * 2 = 51.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/11/15/graph4.png\" style=\"width: 167px; height: 309px;\" />\n<pre>\n<strong>Input:</strong> n = 3, roads = [[1,2,5],[2,3,1],[3,1,2]], appleCost = [2,3,1], k = 3\n<strong>Output:</strong> [2,3,1]\n<strong>Explanation:</strong> It is always optimal to buy the apple in the starting city.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 1000</code></li>\n\t<li><code>1 &lt;= roads.length &lt;= 2000</code></li>\n\t<li><code>1 &lt;= a<sub>i</sub>, b<sub>i</sub> &lt;= n</code></li>\n\t<li><code>a<sub>i</sub> != b<sub>i</sub></code></li>\n\t<li><code>1 &lt;= cost<sub>i</sub> &lt;= 10<sup>5</sup></code></li>\n\t<li><code>appleCost.length == n</code></li>\n\t<li><code>1 &lt;= appleCost[i] &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= 100</code></li>\n\t<li>There are no repeated edges.</li>\n</ul>\n",
+  "hints": [
+    "Notice that the path you take to buy an apple will be the same path to return to the starting city.",
+    "Starting from each city, use Dijkstra’s algorithm to find the best city to travel to."
+  ],
+  "metaData": "{\n  \"name\": \"minCost\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"roads\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"appleCost\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"7.3K\", \"totalSubmission\": \"10.8K\", \"totalAcceptedRaw\": 7299, \"totalSubmissionRaw\": 10850, \"acRate\": \"67.3%\"}",
+  "likes": 117,
+  "dislikes": 27,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "4\n[[1,2,4],[2,3,2],[2,4,5],[3,4,1],[1,3,4]]\n[56,42,102,301]\n2",
+    "3\n[[1,2,5],[2,3,1],[3,1,2]]\n[2,3,1]\n3"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"medianet\", \"name\": \"Media.net\"}, {\"timesEncountered\": 2, \"slug\": \"directi\", \"name\": \"Directi\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Shortest Path",
+      "slug": "shortest-path"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<long long> minCost(int n, vector<vector<int>>& roads, vector<int>& appleCost, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long[] minCost(int n, int[][] roads, int[] appleCost, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minCost(self, n: int, roads: List[List[int]], appleCost: List[int], k: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minCost(self, n, roads, appleCost, k):\n        \"\"\"\n        :type n: int\n        :type roads: List[List[int]]\n        :type appleCost: List[int]\n        :type k: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} roads\n * @param {number[]} appleCost\n * @param {number} k\n * @return {number[]}\n */\nvar minCost = function(n, roads, appleCost, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minCost(n: number, roads: number[][], appleCost: number[], k: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long[] MinCost(int n, int[][] roads, int[] appleCost, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nlong long* minCost(int n, int** roads, int roadsSize, int* roadsColSize, int* appleCost, int appleCostSize, int k, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minCost(n int, roads [][]int, appleCost []int, k int) []int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minCost(n: Int, roads: Array<IntArray>, appleCost: IntArray, k: Int): LongArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minCost(_ n: Int, _ roads: [[Int]], _ appleCost: [Int], _ k: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_cost(n: i32, roads: Vec<Vec<i32>>, apple_cost: Vec<i32>, k: i32) -> Vec<i64> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} roads\n# @param {Integer[]} apple_cost\n# @param {Integer} k\n# @return {Integer[]}\ndef min_cost(n, roads, apple_cost, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $roads\n     * @param Integer[] $appleCost\n     * @param Integer $k\n     * @return Integer[]\n     */\n    function minCost($n, $roads, $appleCost, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> minCost(int n, List<List<int>> roads, List<int> appleCost, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minCost(n: Int, roads: Array[Array[Int]], appleCost: Array[Int], k: Int): Array[Long] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_cost(n :: integer, roads :: [[integer]], apple_cost :: [integer], k :: integer) :: [integer]\n  def min_cost(n, roads, apple_cost, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_cost(N :: integer(), Roads :: [[integer()]], AppleCost :: [integer()], K :: integer()) -> [integer()].\nmin_cost(N, Roads, AppleCost, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-cost n roads appleCost k)\n  (-> exact-integer? (listof (listof exact-integer?)) (listof exact-integer?) exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2302",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nFor each city, we need to find the minimum cost to buy one apple starting from that city.\n\nWe are given:\n- An integer `n` representing the cities `1` to `n`.\n- A **2D** array `roads` where <code class=\"\">roads[i] = [a<sub>i</sub>, b<sub>i</sub>, cost<sub>i</sub>]</code> gives the cost of traveling from city <code class=\"\">a<sub>i</sub></code> to <code class=\"\">b<sub>i</sub></code>.\n- An array `appleCost` where `appleCost[i]` is the cost of buying one apple in city `i`.\n- An integer `k`, which is the factor the road cost will be multiplied by each time the road is used.\n\nWe buy an apple by starting at a given city, traversing through roads, and then buying an apple at another city. After buying the apple, we return to the starting city.\n\n**Key Observations**\n1. Buying an apple starting from a given city is an isolated event. You can later use the same roads at their original cost to buy an apple starting from a different city.\n2. On the way back from buying an apple, you must take the same path that you took to get there, even if there are multiple paths between the cities.\n\n**Key Constraints**\n1. The length of `appleCost` is `n`, which means each city will have a cost for apples.\n2. All of the given values are positive.\n3. There are no repeated edges, i.e., multiple direct paths between the same two cities.\n4. There are no roads that lead from a city directly back to the same city.\n\nYou may wonder why we would travel to another city to buy an apple when we can purchase apples in our city, and travel is expensive. If apples are significantly cheaper in another city, such that an apple is still cheaper including the travel cost, it makes sense to travel to another city.\n\n---\n\n### Approach 1: Shortest Path\n\n#### Intuition\n\nWe can represent this problem using a graph, where the vertices are cities, and the roads are edges. The edges and vertices are weighted, with their weight being their cost.\n\nWe need to find the minimum cost to buy one apple starting from each city. The subtask is to find the minimum cost to buy one apple starting from a given city.\n\nThe minimum cost can be considered the shortest path in a weighted graph. Therefore, we can apply a modified Dijkstra’s algorithm to solve this problem. Dijkstra’s algorithm is used to find the shortest path from a source vertex to each of the other vertices in a weighted graph. It uses a priority queue (min-heap) to greedily determine which edges to take to find the shortest path to the other vertices. \n\n> If you are not familiar with Dijkstra’s algorithm, we suggest you read our relevant [Leetcode Explore Card](https://leetcode.com/explore/featured/card/graph/622/single-source-shortest-path-algorithm/3862/).\n\nWe begin by adding the cities and roads to a graph. The graph is a list of lists storing cities that each have an adjacency list containing neighboring `(city, cost)` pairs.\n\n> Example:\n> **Input:** n = 4, roads = [[1,2,4],[2,3,2],[2,4,5],[3,4,1],[1,3,4]], appleCost = [56,42,102,301], k = 2\n> **Graph:** \n> [[(1, 4), (2, 4)],\n>  [(0, 4), (2, 2), (3, 5)],\n>  [(1, 2), (3, 1), (0, 4)],\n>  [(1, 5), (2, 1)]]\n\n\nThen, we define a function `shortestPath` that finds the minimum cost to buy an apple starting from a given city.\n\nDijkstra's algorithm generally uses a data structure to store the shortest path to each vertex found so far. We can use an array `travelCosts` to store the cost of traveling to each city. We only need to visit a neighoring city if doing reduces the travel cost to that city. \n\nWe use a min-heap to store the travel cost of visiting a given city. We start by adding the start city to the heap, with the initial travel cost of `0`, because we do not need to travel to buy apples.\n\nThen, we enter a loop while the heap is not empty. \n\nWe remove the element with the lowest cost from the heap and store its city as `currCity` and its travel cost as `travelCost`. We update the `minCost` if the total cost to buy an apple in the current city is less than the current `minCost`. The total cost is the sum of the cost of buying apples in the current city and the roundtrip travel cost.\n\nFor each of the neighboring cities, we calculate the cost of traveling there next. If the cost of traveling to that neighbor is less than `travelCosts[neighbor]`, we add it to the heap.\n\nThe `shortestPath` function returns the `minCost` after visiting all of the cities.\n\nWe can calculate the minimum cost of buying an apple from each of the starting cities by iterating through the starting cities, calling `shortestPath` for each one, and saving the result in an array.\n\nFinally, we return the `result`.\n\nThe process of finding the minimum cost to buy an apple from one starting city is shown below:\n\n!?!../Documents/2473/2473_slideshow1.json:960,540!?!\n\n#### Algorithm\n\n1. Initialize a graph as a list of lists. Each row stores a city (vertex), and each column stores an adjacency list of road and cost (edge, weight) pairs.\n2. Add each road from `roads` to the graph as a bidirectional edge. The cities are numbered `1` through `n`, but arrays are 0-indexed, so store each city at `graph[city - 1]`. For the road at <code class=\"\">roads[i] = [a<sub>i</sub>, b<sub>i</sub>, cost<sub>i</sub>]</code>:\n    - Add the edge from city $A$ to city $B$ to city $A$'s adjacency list. \n    - Add the edge from city $B$ to city $A$ to city $B$'s adjacency list.\n3. Declare a function, `shortestPath`, that finds the minimum cost to buy an apple from a given start city within the graph.\n    - Declare an array `travelCosts` that stores the travel cost to reach each city starting from the start city. Initialize each index of this array to the largest integer, to represent that the cost is unknown before traversal. Set `travelCosts[startCity]` to `0`, because we do not need to travel to reach the start city.\n    - Initialize a heap (priority queue) that stores pairs consisting of the travel cost and the city. Add the first pair, with an initial travel cost of `0` and the starting city.\n    - Initialize a variable `minCost` to the largest integer so it can be later updated to the first cost found.\n    - While the `heap` is not empty:\n        - Remove the city `currCity` with the minimum travel cost from the top of the heap.\n        - Update the `minCost` if the current city has a lower total cost. The total cost is the sum of the cost of buying apples in that city and the roundtrip travel cost, which is calculated with `(k + 1) * travel_cost`.\n        - Add each neighboring city to the heap if the path through `currCity` is cheaper than the current path to the neighbor. For each `neighbor` city of the current city:\n        - Set a variable `nextCost` to `travelCost + cost`. This is the travel cost of traveling one way to the next city from the start city.\n            - If `nextCost` is less than `travelCosts[neighbor]`, update `travelCosts[neighbor]` to `nextCost` and add this `nextCost, neighbor` pair to the heap.\n    - Return `minCost`.\n4. Initialize an array `result` of size `n`.\n5. For each city, calculate the minimum cost to buy an apple using the `shortestPath` function and add it to the `result`.\n6. Return the `result`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/iPmEzA4t/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"iPmEzA4t\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of cities and $r$ be the number of roads.\n\n* Time complexity: $O(n \\cdot (n + r) \\log n )$\n\n    Adding each of the $r$ edges from the `road` array to the graph takes $O(r)$.\n\n    We push and pop up to $n + r$ vertices from the heap. Pushing and popping vertices takes $ \\log n$ time. So for $n$ vertices, the `shortestPath` function takes $O( (n + r) \\log n)$.\n\n    In the main program, we call `shortestPath` $n$ times, once for each city, so the time complexity of calculating the minimum cost to buy an apple for each city is $O(n \\cdot (n + r) \\log n)$. \n\n    Therefore, the total time complexity is $O(r + n \\cdot (n + r) \\log n )$, which we can simplify to $O( n \\cdot (n + r) \\log n )$.\n\n* Space complexity: $O(n + r)$\n\n    The list of lists of size $(n + 2r)$ stores the graph representation, the `travelCost` array of size $n$ stores the travel costs, and the heap can grow up to size $n$.\n\n    Therefore, the overall space complexity is $O(n + r)$.\n\n---\n\n### Approach 2: One Pass Shortest Path\n\n#### Intuition\n\nThe above solution calls the `shortestPath` function once for each starting city. While finding the shortest path for each city, we visit all of the nodes in the graph and find the travel cost to each city. We can develop a more efficient solution by saving information about all the cities when calculating the shortest path for a given city.\n\nAdditionally, we can make the following key observation: For at least one city, `minCity`, it is cheapest to buy apples in that `minCity` without traveling to other cities. This `minCity` has the lowest apple cost. Since all of the roads add positive costs, traveling would increase the cost of buying one apple. Note that there may be multiple cities where it is optimal to buy an apple without traveling, such as in Example 2 in the problem description.\n\nMoreover, if neighboring cities have higher apple costs, the minimum cost to buy an apple starting in those cities may involve visiting `minCity`.\n\nWe can calculate the minimum cost to buy an apple from cities with the smallest `appleCost` first. We could achieve this by sorting the cities. However, since the shortest path algorithm uses a min-heap, we can instead add all of the cities to a min-heap with their local apple cost.\n\nWe need a way to store information about any city visited during the shortest path algorithm, not just the starting city. We need to modify Dijkstra’s algorithm because we don't just need the shortest path, we need the minimum cost. The shortest path, just considering the roads, may not lead to the correct minimum cost to buy an apple. We can use the result array to do this. We initialize this array with the local cost to buy apples in each city, which is the cost before travel. As we complete the minimum cost search, we update the result array with the minimum cost to buy an apple starting from each city, including the cost of the apple and the travel cost.\n\nSimilar to the first solution, we create a graph from `roads`.\n\nTo find the minimum cost to buy an apple from each starting city, we use a `while` loop, removing one city from the heap with each iteration. Then, we repeat the following until the heap is empty. \n\nWe remove the element with the minimum cost from the heap and store the current city and total cost, which is the sum of the apple cost and roundtrip travel cost to that city from the start city. \n\nIf the previously calculated `result` for the current city is less than the total cost to visit that city, we skip the city.\n\nThen, we add each neighboring city to the heap if it is cheaper to travel to the current city to buy an apple than it is to buy an apple in the neighboring city. We also update the `result` array with the lower cost of buying an apple starting at the neighboring city.\n\nFinally, we return the result.\n\nThis allows us to find the minimum cost to buy an apple starting from each city using the shortest path algorithm once instead of $n$ times.\n\n#### Algorithm\n\n1. Initialize a graph using a list of lists. Each row stores a city (vertex), and each column stores an adjacency list of road and cost (edge, weight) pairs.\n2. Add each road from `roads` to the graph as a bidirectional edge. The cities are numbered `1` through `n`, but arrays are 0-indexed, so store each city at `graph[city - 1]`. For the road at <code class=\"\">roads[i] = [a<sub>i</sub>, b<sub>i</sub>, cost<sub>i</sub>]</code>:\n    - Add the edge from city $A$ to city $B$ to city $A$'s adjacency list. \n    - Add the edge from city $B$ to city $A$ to city $B$'s adjacency list.\n3. Store the cost to buy an apple in each city without traveling in the result. Initialize an array `result` with `result[startCity]` and `applecost[startCity]`.\n4. Initialize a heap (priority queue) with the local apple cost for each starting city. Each element of the heap is a pair with the cost and city.\n5. Find the minimum cost to buy an apple starting in each city. While the `heap` is not empty:\n    - Remove the city with the minimum total cost from the top of the heap.\n    - If we have already found a path to buy an apple for cheaper than the local apple cost, skip this city. If `result[currCity]` is less than `totalCost`, continue.\n    - Add each neighboring city to the heap if it is cheaper to travel to the current city and buy an apple than buy one in the neighboring city. For each `neighbor` city of the current city:\n         - If `result[neighbor]` is greater than the total cost to travel to the current city and buy an apple, update `result[neighbor]` to `nextCost`. Then, add this `nextCost, neighbor` pair to the heap. The total cost is the sum of the cost of traveling to and buying apples in the current city and the roundtrip travel cost of traveling to the neighboring city. The roundtrip travel cost is calculated as `(k + 1) * cost`.\n6. Return the `result`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/MYTr42QB/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"MYTr42QB\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of cities and $r$ be the number of roads. \n\n* Time complexity: $O((n + r) \\log (n + r))$\n\n    Adding each of the $r$ edges from the `road` array to the graph takes $O(r)$.\n\n    Adding the local cost to buy an apple in each city to the result array takes $O(n)$.\n\n    To initialize the heap, we insert $n$ cities into the heap. Pushing vertices to the heap takes $\\log n$ time, so this step takes $O(n \\log n)$\n\n    In the main loop, we push and pop up to $n + r$ pairs from the heap. Pushing and popping vertices from the heap takes $\\log n$ time where $n$ is the size of the heap. So for $n + r$ pairs, the `shortestPath` function takes $O((n + r) \\log (n + r))$.\n\n    Therefore, the total time complexity is $O(r + n + n \\log n + (n + r) \\log (n + r) )$, which we can simplify to $O((n + r) \\log (n + r) )$.\n\n* Space complexity: $O(n + r)$\n\n    We use a list of lists of size $n + 2r$ to store the graph.\n\n    The `result` array, which stores the minimum cost to buy an apple from each city, is of size $n$.\n\n    The heap, which stores the cities to be explored during the shortest path algorithm, can grow up to size $n + r$.\n\n    Therefore, the overall space complexity is $O(n + r)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

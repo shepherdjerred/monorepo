@@ -1,0 +1,136 @@
+{
+  "questionId": "2421",
+  "questionFrontendId": "2341",
+  "title": "Maximum Number of Pairs in Array",
+  "titleSlug": "maximum-number-of-pairs-in-array",
+  "difficulty": "Easy",
+  "content": "<p>You are given a <strong>0-indexed</strong> integer array <code>nums</code>. In one operation, you may do the following:</p>\n\n<ul>\n\t<li>Choose <strong>two</strong> integers in <code>nums</code> that are <strong>equal</strong>.</li>\n\t<li>Remove both integers from <code>nums</code>, forming a <strong>pair</strong>.</li>\n</ul>\n\n<p>The operation is done on <code>nums</code> as many times as possible.</p>\n\n<p>Return <em>a <strong>0-indexed</strong> integer array </em><code>answer</code><em> of size </em><code>2</code><em> where </em><code>answer[0]</code><em> is the number of pairs that are formed and </em><code>answer[1]</code><em> is the number of leftover integers in </em><code>nums</code><em> after doing the operation as many times as possible</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,3,2,1,3,2,2]\n<strong>Output:</strong> [3,1]\n<strong>Explanation:</strong>\nForm a pair with nums[0] and nums[3] and remove them from nums. Now, nums = [3,2,3,2,2].\nForm a pair with nums[0] and nums[2] and remove them from nums. Now, nums = [2,2,2].\nForm a pair with nums[0] and nums[1] and remove them from nums. Now, nums = [2].\nNo more pairs can be formed. A total of 3 pairs have been formed, and there is 1 number leftover in nums.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,1]\n<strong>Output:</strong> [1,0]\n<strong>Explanation:</strong> Form a pair with nums[0] and nums[1] and remove them from nums. Now, nums = [].\nNo more pairs can be formed. A total of 1 pair has been formed, and there are 0 numbers leftover in nums.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [0]\n<strong>Output:</strong> [0,1]\n<strong>Explanation:</strong> No pairs can be formed, and there is 1 number leftover in nums.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 100</code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "What do we need to know to find how many pairs we can make? We need to know the frequency of each integer.",
+    "When will there be a leftover number? When the frequency of an integer is an odd number."
+  ],
+  "metaData": "{\n  \"name\": \"numberOfPairs\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"91.4K\", \"totalSubmission\": \"120.2K\", \"totalAcceptedRaw\": 91422, \"totalSubmissionRaw\": 120241, \"acRate\": \"76.0%\"}",
+  "likes": 741,
+  "dislikes": 19,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Sort Characters By Frequency\", \"titleSlug\": \"sort-characters-by-frequency\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Top K Frequent Words\", \"titleSlug\": \"top-k-frequent-words\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Sort Array by Increasing Frequency\", \"titleSlug\": \"sort-array-by-increasing-frequency\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,3,2,1,3,2,2]",
+    "[1,1]",
+    "[0]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"altimetrik\", \"name\": \"Altimetrik\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> numberOfPairs(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] numberOfPairs(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numberOfPairs(self, nums: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numberOfPairs(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number[]}\n */\nvar numberOfPairs = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numberOfPairs(nums: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] NumberOfPairs(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* numberOfPairs(int* nums, int numsSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numberOfPairs(nums []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numberOfPairs(nums: IntArray): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numberOfPairs(_ nums: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn number_of_pairs(nums: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer[]}\ndef number_of_pairs(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer[]\n     */\n    function numberOfPairs($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> numberOfPairs(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numberOfPairs(nums: Array[Int]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec number_of_pairs(nums :: [integer]) :: [integer]\n  def number_of_pairs(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec number_of_pairs(Nums :: [integer()]) -> [integer()].\nnumber_of_pairs(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (number-of-pairs nums)\n  (-> (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": null
+}

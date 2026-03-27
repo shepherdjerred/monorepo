@@ -1,0 +1,140 @@
+{
+  "questionId": "2065",
+  "questionFrontendId": "2307",
+  "title": "Check for Contradictions in Equations",
+  "titleSlug": "check-for-contradictions-in-equations",
+  "difficulty": "Hard",
+  "content": "<p>You are given a 2D array of strings <code>equations</code> and an array of real numbers <code>values</code>, where <code>equations[i] = [A<sub>i</sub>, B<sub>i</sub>]</code> and <code>values[i]</code> means that <code>A<sub>i</sub> / B<sub>i</sub> = values[i]</code>.</p>\n\n<p>Determine if there exists a contradiction in the equations. Return <code>true</code><em> if there is a contradiction, or </em><code>false</code><em> otherwise</em>.</p>\n\n<p><strong>Note</strong>:</p>\n\n<ul>\n\t<li>When checking if two numbers are equal, check that their <strong>absolute difference</strong> is less than <code>10<sup>-5</sup></code>.</li>\n\t<li>The testcases are generated such that there are no cases targeting precision, i.e. using <code>double</code> is enough to solve the problem.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> equations = [[&quot;a&quot;,&quot;b&quot;],[&quot;b&quot;,&quot;c&quot;],[&quot;a&quot;,&quot;c&quot;]], values = [3,0.5,1.5]\n<strong>Output:</strong> false\n<strong>Explanation:\n</strong>The given equations are: a / b = 3, b / c = 0.5, a / c = 1.5\nThere are no contradictions in the equations. One possible assignment to satisfy all equations is:\na = 3, b = 1 and c = 2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> equations = [[&quot;le&quot;,&quot;et&quot;],[&quot;le&quot;,&quot;code&quot;],[&quot;code&quot;,&quot;et&quot;]], values = [2,5,0.5]\n<strong>Output:</strong> true\n<strong>Explanation:</strong>\nThe given equations are: le / et = 2, le / code = 5, code / et = 0.5\nBased on the first two equations, we get code / et = 0.4.\nSince the third equation is code / et = 0.5, we get a contradiction.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= equations.length &lt;= 100</code></li>\n\t<li><code>equations[i].length == 2</code></li>\n\t<li><code>1 &lt;= A<sub>i</sub>.length, B<sub>i</sub>.length &lt;= 5</code></li>\n\t<li><code>A<sub>i</sub></code>, <code>B<sub>i</sub></code> consist of lowercase English letters.</li>\n\t<li><code>equations.length == values.length</code></li>\n\t<li><code>0.0 &lt; values[i] &lt;= 10.0</code></li>\n\t<li><code>values[i]</code> has a maximum of 2 decimal places.</li>\n</ul>\n",
+  "hints": [
+    "Try treating this as a graph problem.",
+    "Each variable is a node, and each equation is an edge.",
+    "Try performing DFS multiple times to find contradictions."
+  ],
+  "metaData": "{\n  \"name\": \"checkContradictions\",\n  \"params\": [\n    {\n      \"name\": \"equations\",\n      \"type\": \"list<list<string>>\"\n    },\n    {\n      \"type\": \"double[]\",\n      \"name\": \"values\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"5.2K\", \"totalSubmission\": \"11.9K\", \"totalAcceptedRaw\": 5228, \"totalSubmissionRaw\": 11944, \"acRate\": \"43.8%\"}",
+  "likes": 68,
+  "dislikes": 27,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Evaluate Division\", \"titleSlug\": \"evaluate-division\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[\"a\",\"b\"],[\"b\",\"c\"],[\"a\",\"c\"]]\n[3,0.5,1.5]",
+    "[[\"le\",\"et\"],[\"le\",\"code\"],[\"code\",\"et\"]]\n[2,5,0.5]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool checkContradictions(vector<vector<string>>& equations, vector<double>& values) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean checkContradictions(List<List<String>> equations, double[] values) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def checkContradictions(self, equations: List[List[str]], values: List[float]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def checkContradictions(self, equations, values):\n        \"\"\"\n        :type equations: List[List[str]]\n        :type values: List[float]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[][]} equations\n * @param {number[]} values\n * @return {boolean}\n */\nvar checkContradictions = function(equations, values) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function checkContradictions(equations: string[][], values: number[]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool CheckContradictions(IList<IList<string>> equations, double[] values) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool checkContradictions(char*** equations, int equationsSize, int* equationsColSize, double* values, int valuesSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func checkContradictions(equations [][]string, values []float64) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun checkContradictions(equations: List<List<String>>, values: DoubleArray): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func checkContradictions(_ equations: [[String]], _ values: [Double]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn check_contradictions(equations: Vec<Vec<String>>, values: Vec<f64>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[][]} equations\n# @param {Float[]} values\n# @return {Boolean}\ndef check_contradictions(equations, values)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[][] $equations\n     * @param Float[] $values\n     * @return Boolean\n     */\n    function checkContradictions($equations, $values) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool checkContradictions(List<List<String>> equations, List<double> values) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def checkContradictions(equations: List[List[String]], values: Array[Double]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec check_contradictions(equations :: [[String.t]], values :: [float]) :: boolean\n  def check_contradictions(equations, values) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec check_contradictions(Equations :: [[unicode:unicode_binary()]], Values :: [float()]) -> boolean().\ncheck_contradictions(Equations, Values) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (check-contradictions equations values)\n  (-> (listof (listof string?)) (listof flonum?) boolean?)\n  )"
+    }
+  ],
+  "solution": null
+}

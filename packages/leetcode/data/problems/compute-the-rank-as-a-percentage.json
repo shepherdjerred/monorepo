@@ -1,0 +1,53 @@
+{
+  "questionId": "2484",
+  "questionFrontendId": "2346",
+  "title": "Compute the Rank as a Percentage",
+  "titleSlug": "compute-the-rank-as-a-percentage",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Students</code></p>\n\n<pre>\n+---------------+------+\n| Column Name   | Type |\n+---------------+------+\n| student_id    | int  |\n| department_id | int  |\n| mark          | int  |\n+---------------+------+\nstudent_id contains unique values.\nEach row of this table indicates a student&#39;s ID, the ID of the department in which the student enrolled, and their mark in the exam.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to report&nbsp;the rank of each student in their department as a percentage, where the rank as a percentage is computed using the following formula: <code>(student_rank_in_the_department - 1) * 100 / (the_number_of_students_in_the_department - 1)</code>. The <code>percentage</code> should be <strong>rounded to 2 decimal places</strong>. <code>student_rank_in_the_department</code> is determined by <strong>descending</strong><b> </b><code>mark</code>, such that the student with the highest <code>mark</code> is <code>rank 1</code>. If two students get the same mark, they also get the same rank.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nStudents table:\n+------------+---------------+------+\n| student_id | department_id | mark |\n+------------+---------------+------+\n| 2          | 2             | 650  |\n| 8          | 2             | 650  |\n| 7          | 1             | 920  |\n| 1          | 1             | 610  |\n| 3          | 1             | 530  |\n+------------+---------------+------+\n<strong>Output:</strong> \n+------------+---------------+------------+\n| student_id | department_id | percentage |\n+------------+---------------+------------+\n| 7          | 1             | 0.0        |\n| 1          | 1             | 50.0       |\n| 3          | 1             | 100.0      |\n| 2          | 2             | 0.0        |\n| 8          | 2             | 0.0        |\n+------------+---------------+------------+\n<strong>Explanation:</strong> \nFor Department 1:\n - Student 7: percentage = (1 - 1) * 100 / (3 - 1) = 0.0\n - Student 1: percentage = (2 - 1) * 100 / (3 - 1) = 50.0\n - Student 3: percentage = (3 - 1) * 100 / (3 - 1) = 100.0\nFor Department 2:\n - Student 2: percentage = (1 - 1) * 100 / (2 - 1) = 0.0\n - Student 8: percentage = (1 - 1) * 100 / (2 - 1) = 0.0\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mssql\": [\"Create table Students (student_id int, department_id int, mark int)\"], \"oraclesql\": [\"Create table Students (student_id int, department_id int, mark int)\"], \"database\": true, \"mysql\": [\"Create table If Not Exists Students (student_id int, department_id int, mark int)\"], \"name\": \"compute_rating\", \"pythondata\": [\"Students = pd.DataFrame([], columns=['student_id', 'department_id', 'mark']).astype({'student_id':'Int64', 'department_id':'Int64', 'mark':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Students (student_id int, department_id int, mark int)\"], \"database_schema\": {\"Students\": {\"student_id\": \"INT\", \"department_id\": \"INT\", \"mark\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"7.4K\", \"totalSubmission\": \"21.8K\", \"totalAcceptedRaw\": 7400, \"totalSubmissionRaw\": 21819, \"acRate\": \"33.9%\"}",
+  "likes": 31,
+  "dislikes": 79,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Students\": [\"student_id\", \"department_id\", \"mark\"]}, \"rows\": {\"Students\": [[2, 2, 650], [8, 2, 650], [7, 1, 920], [1, 1, 610], [3, 1, 530]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef compute_rating(students: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

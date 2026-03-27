@@ -1,0 +1,48 @@
+{
+  "questionId": "2637",
+  "questionFrontendId": "2494",
+  "title": "Merge Overlapping Events in the Same Hall",
+  "titleSlug": "merge-overlapping-events-in-the-same-hall",
+  "difficulty": "Hard",
+  "content": "<p>Table: <code>HallEvents</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| hall_id     | int  |\n| start_day   | date |\n| end_day     | date |\n+-------------+------+\nThis table may contain duplicates rows.\nEach row of this table indicates the start day and end day of an event and the hall in which the event is held.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to merge all the overlapping events that are held <strong>in the same hall</strong>. Two events overlap if they have <strong>at least one day</strong> in common.</p>\n\n<p>Return the result table <strong>in any order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nHallEvents table:\n+---------+------------+------------+\n| hall_id | start_day  | end_day    |\n+---------+------------+------------+\n| 1       | 2023-01-13 | 2023-01-14 |\n| 1       | 2023-01-14 | 2023-01-17 |\n| 1       | 2023-01-18 | 2023-01-25 |\n| 2       | 2022-12-09 | 2022-12-23 |\n| 2       | 2022-12-13 | 2022-12-17 |\n| 3       | 2022-12-01 | 2023-01-30 |\n+---------+------------+------------+\n<strong>Output:</strong> \n+---------+------------+------------+\n| hall_id | start_day  | end_day    |\n+---------+------------+------------+\n| 1       | 2023-01-13 | 2023-01-17 |\n| 1       | 2023-01-18 | 2023-01-25 |\n| 2       | 2022-12-09 | 2022-12-23 |\n| 3       | 2022-12-01 | 2023-01-30 |\n+---------+------------+------------+\n<strong>Explanation:</strong> There are three halls.\nHall 1:\n- The two events [&quot;2023-01-13&quot;, &quot;2023-01-14&quot;] and [&quot;2023-01-14&quot;, &quot;2023-01-17&quot;] overlap. We merge them in one event [&quot;2023-01-13&quot;, &quot;2023-01-17&quot;].\n- The event [&quot;2023-01-18&quot;, &quot;2023-01-25&quot;] does not overlap with any other event, so we leave it as it is.\nHall 2:\n- The two events [&quot;2022-12-09&quot;, &quot;2022-12-23&quot;] and [&quot;2022-12-13&quot;, &quot;2022-12-17&quot;] overlap. We merge them in one event [&quot;2022-12-09&quot;, &quot;2022-12-23&quot;].\nHall 3:\n- The hall has only one event, so we return it. Note that we only consider the events of each hall separately.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists HallEvents (hall_id int, start_day date, end_day date)\"], \"mssql\": [\"Create table HallEvents (hall_id int, start_day date, end_day date)\"], \"oraclesql\": [\"Create table HallEvents (hall_id int, start_day date, end_day date)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"merge_events\", \"pythondata\": [\"HallEvents = pd.DataFrame([], columns=['hall_id', 'start_day', 'end_day']).astype({'hall_id':'Int64', 'start_day':'datetime64[ns]', 'end_day':'datetime64[ns]'})\"], \"database_schema\": {\"HallEvents\": {\"hall_id\": \"INT\", \"start_day\": \"DATE\", \"end_day\": \"DATE\"}}}",
+  "stats": "{\"totalAccepted\": \"3.1K\", \"totalSubmission\": \"8.4K\", \"totalAcceptedRaw\": 3133, \"totalSubmissionRaw\": 8423, \"acRate\": \"37.2%\"}",
+  "likes": 55,
+  "dislikes": 8,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"HallEvents\": [\"hall_id\", \"start_day\", \"end_day\"]}, \"rows\": {\"HallEvents\": [[1, \"2023-01-13\", \"2023-01-14\"], [1, \"2023-01-14\", \"2023-01-17\"], [1, \"2023-01-18\", \"2023-01-25\"], [2, \"2022-12-09\", \"2022-12-23\"], [2, \"2022-12-13\", \"2022-12-17\"], [3, \"2022-12-01\", \"2023-01-30\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef merge_events(hall_events: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

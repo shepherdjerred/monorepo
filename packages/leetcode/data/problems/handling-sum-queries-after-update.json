@@ -1,0 +1,130 @@
+{
+  "questionId": "2703",
+  "questionFrontendId": "2569",
+  "title": "Handling Sum Queries After Update",
+  "titleSlug": "handling-sum-queries-after-update",
+  "difficulty": "Hard",
+  "content": "<p>You are given two <strong>0-indexed</strong> arrays <code>nums1</code> and <code>nums2</code> and a 2D array <code>queries</code> of queries. There are three types of queries:</p>\n\n<ol>\n\t<li>For a query of type 1, <code>queries[i]&nbsp;= [1, l, r]</code>. Flip the values from <code>0</code> to <code>1</code> and from <code>1</code> to <code>0</code> in <code>nums1</code>&nbsp;from index <code>l</code> to index <code>r</code>. Both <code>l</code> and <code>r</code> are <strong>0-indexed</strong>.</li>\n\t<li>For a query of type 2, <code>queries[i]&nbsp;= [2, p, 0]</code>. For every index <code>0 &lt;= i &lt; n</code>, set&nbsp;<code>nums2[i] =&nbsp;nums2[i]&nbsp;+ nums1[i]&nbsp;* p</code>.</li>\n\t<li>For a query of type 3, <code>queries[i]&nbsp;= [3, 0, 0]</code>. Find the sum of the elements in <code>nums2</code>.</li>\n</ol>\n\n<p>Return <em>an array containing all the answers to the third type&nbsp;queries.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [1,0,1], nums2 = [0,0,0], queries = [[1,1,1],[2,1,0],[3,0,0]]\n<strong>Output:</strong> [3]\n<strong>Explanation:</strong> After the first query nums1 becomes [1,1,1]. After the second query, nums2 becomes [1,1,1], so the answer to the third query is 3. Thus, [3] is returned.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [1], nums2 = [5], queries = [[2,0,0],[3,0,0]]\n<strong>Output:</strong> [5]\n<strong>Explanation:</strong> After the first query, nums2 remains [5], so the answer to the second query is 5. Thus, [5] is returned.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums1.length,nums2.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>nums1.length = nums2.length</code></li>\n\t<li><code>1 &lt;= queries.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code><font face=\"monospace\">queries[i].length = 3</font></code></li>\n\t<li><code><font face=\"monospace\">0 &lt;= l &lt;= r &lt;= nums1.length - 1</font></code></li>\n\t<li><code><font face=\"monospace\">0 &lt;= p &lt;= 10<sup>6</sup></font></code></li>\n\t<li><code>0 &lt;= nums1[i] &lt;= 1</code></li>\n\t<li><code>0 &lt;= nums2[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Use the Lazy Segment Tree to process the queries quickly."
+  ],
+  "metaData": "{\n  \"name\": \"handleQuery\",\n  \"params\": [\n    {\n      \"name\": \"nums1\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"nums2\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"queries\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"7.8K\", \"totalSubmission\": \"25.4K\", \"totalAcceptedRaw\": 7789, \"totalSubmissionRaw\": 25357, \"acRate\": \"30.7%\"}",
+  "likes": 199,
+  "dislikes": 25,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,0,1]\n[0,0,0]\n[[1,1,1],[2,1,0],[3,0,0]]",
+    "[1]\n[5]\n[[2,0,0],[3,0,0]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"trilogy\", \"name\": \"Trilogy\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Segment Tree",
+      "slug": "segment-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<long long> handleQuery(vector<int>& nums1, vector<int>& nums2, vector<vector<int>>& queries) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long[] handleQuery(int[] nums1, int[] nums2, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def handleQuery(self, nums1: List[int], nums2: List[int], queries: List[List[int]]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def handleQuery(self, nums1, nums2, queries):\n        \"\"\"\n        :type nums1: List[int]\n        :type nums2: List[int]\n        :type queries: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums1\n * @param {number[]} nums2\n * @param {number[][]} queries\n * @return {number[]}\n */\nvar handleQuery = function(nums1, nums2, queries) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function handleQuery(nums1: number[], nums2: number[], queries: number[][]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long[] HandleQuery(int[] nums1, int[] nums2, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nlong long* handleQuery(int* nums1, int nums1Size, int* nums2, int nums2Size, int** queries, int queriesSize, int* queriesColSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func handleQuery(nums1 []int, nums2 []int, queries [][]int) []int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun handleQuery(nums1: IntArray, nums2: IntArray, queries: Array<IntArray>): LongArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func handleQuery(_ nums1: [Int], _ nums2: [Int], _ queries: [[Int]]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn handle_query(nums1: Vec<i32>, nums2: Vec<i32>, queries: Vec<Vec<i32>>) -> Vec<i64> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums1\n# @param {Integer[]} nums2\n# @param {Integer[][]} queries\n# @return {Integer[]}\ndef handle_query(nums1, nums2, queries)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums1\n     * @param Integer[] $nums2\n     * @param Integer[][] $queries\n     * @return Integer[]\n     */\n    function handleQuery($nums1, $nums2, $queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> handleQuery(List<int> nums1, List<int> nums2, List<List<int>> queries) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def handleQuery(nums1: Array[Int], nums2: Array[Int], queries: Array[Array[Int]]): Array[Long] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec handle_query(nums1 :: [integer], nums2 :: [integer], queries :: [[integer]]) :: [integer]\n  def handle_query(nums1, nums2, queries) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec handle_query(Nums1 :: [integer()], Nums2 :: [integer()], Queries :: [[integer()]]) -> [integer()].\nhandle_query(Nums1, Nums2, Queries) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (handle-query nums1 nums2 queries)\n  (-> (listof exact-integer?) (listof exact-integer?) (listof (listof exact-integer?)) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": null
+}

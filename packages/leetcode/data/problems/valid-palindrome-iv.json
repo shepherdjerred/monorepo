@@ -1,0 +1,132 @@
+{
+  "questionId": "2468",
+  "questionFrontendId": "2330",
+  "title": "Valid Palindrome IV",
+  "titleSlug": "valid-palindrome-iv",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> string <code>s</code> consisting of only lowercase English letters. In one operation, you can change <strong>any</strong> character of <code>s</code> to any <strong>other</strong> character.</p>\n\n<p>Return <code>true</code><em> if you can make </em><code>s</code><em> a palindrome after performing <strong>exactly</strong> one or two operations, or return </em><code>false</code><em> otherwise.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abcdba&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> One way to make s a palindrome using 1 operation is:\n- Change s[2] to &#39;d&#39;. Now, s = &quot;abddba&quot;.\nOne operation could be performed to make s a palindrome so return true.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;aa&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> One way to make s a palindrome using 2 operations is:\n- Change s[0] to &#39;b&#39;. Now, s = &quot;ba&quot;.\n- Change s[1] to &#39;b&#39;. Now, s = &quot;bb&quot;.\nTwo operations could be performed to make s a palindrome so return true.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abcdef&quot;\n<strong>Output:</strong> false\n<strong>Explanation:</strong> It is not possible to make s a palindrome using one or two operations so return false.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s</code> consists only of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Count the number of pairs of characters that should be equal if s were a palindrome, but are not equal.",
+    "If the number of pairs is 0, then s is already palindrome. You can pick any pair of characters and change them both to a different character and s will stay a palindrome."
+  ],
+  "metaData": "{\n  \"name\": \"makePalindrome\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"20.9K\", \"totalSubmission\": \"27.6K\", \"totalAcceptedRaw\": 20893, \"totalSubmissionRaw\": 27613, \"acRate\": \"75.7%\"}",
+  "likes": 111,
+  "dislikes": 35,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Valid Palindrome\", \"titleSlug\": \"valid-palindrome\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Valid Palindrome II\", \"titleSlug\": \"valid-palindrome-ii\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Valid Palindrome III\", \"titleSlug\": \"valid-palindrome-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"abcdba\"",
+    "\"aa\"",
+    "\"abcdef\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool makePalindrome(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean makePalindrome(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def makePalindrome(self, s: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def makePalindrome(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {boolean}\n */\nvar makePalindrome = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function makePalindrome(s: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool MakePalindrome(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool makePalindrome(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func makePalindrome(s string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun makePalindrome(s: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func makePalindrome(_ s: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn make_palindrome(s: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Boolean}\ndef make_palindrome(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Boolean\n     */\n    function makePalindrome($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool makePalindrome(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def makePalindrome(s: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec make_palindrome(s :: String.t) :: boolean\n  def make_palindrome(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec make_palindrome(S :: unicode:unicode_binary()) -> boolean().\nmake_palindrome(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (make-palindrome s)\n  (-> string? boolean?)\n  )"
+    }
+  ],
+  "solution": null
+}

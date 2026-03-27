@@ -1,0 +1,137 @@
+{
+  "questionId": "2435",
+  "questionFrontendId": "2350",
+  "title": "Shortest Impossible Sequence of Rolls",
+  "titleSlug": "shortest-impossible-sequence-of-rolls",
+  "difficulty": "Hard",
+  "content": "<p>You are given an integer array <code>rolls</code> of length <code>n</code> and an integer <code>k</code>. You roll a <code>k</code> sided dice numbered from <code>1</code> to <code>k</code>, <code>n</code> times, where the result of the <code>i<sup>th</sup></code> roll is <code>rolls[i]</code>.</p>\n\n<p>Return<em> the length of the <strong>shortest</strong> sequence of rolls so that there&#39;s no such <span data-keyword=\"subsequence-array\">subsequence</span> in </em><code>rolls</code>.</p>\n\n<p>A <strong>sequence of rolls</strong> of length <code>len</code> is the result of rolling a <code>k</code> sided dice <code>len</code> times.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> rolls = [4,2,1,2,3,3,2,4,1], k = 4\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> Every sequence of rolls of length 1, [1], [2], [3], [4], can be taken from rolls.\nEvery sequence of rolls of length 2, [1, 1], [1, 2], ..., [4, 4], can be taken from rolls.\nThe sequence [1, 4, 2] cannot be taken from rolls, so we return 3.\nNote that there are other sequences that cannot be taken from rolls.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> rolls = [1,1,2,2], k = 2\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> Every sequence of rolls of length 1, [1], [2], can be taken from rolls.\nThe sequence [2, 1] cannot be taken from rolls, so we return 2.\nNote that there are other sequences that cannot be taken from rolls but [2, 1] is the shortest.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> rolls = [1,1,3,2,2,2,3,3], k = 4\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The sequence [4] cannot be taken from rolls, so we return 1.\nNote that there are other sequences that cannot be taken from rolls but [4] is the shortest.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == rolls.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= rolls[i] &lt;= k &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "How can you find the minimum index such that all sequences of length 1 can be formed from the start until that index?",
+    "Starting from the previous minimum index, what is the next index such that all sequences of length 2 can be formed?",
+    "Can you extend the idea to sequences of length 3 and more?"
+  ],
+  "metaData": "{\n  \"name\": \"shortestSequence\",\n  \"params\": [\n    {\n      \"name\": \"rolls\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"19K\", \"totalSubmission\": \"27.4K\", \"totalAcceptedRaw\": 18989, \"totalSubmissionRaw\": 27416, \"acRate\": \"69.3%\"}",
+  "likes": 670,
+  "dislikes": 51,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[4,2,1,2,3,3,2,4,1]\n4",
+    "[1,1,2,2]\n2",
+    "[1,1,3,2,2,2,3,3]\n4"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int shortestSequence(vector<int>& rolls, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int shortestSequence(int[] rolls, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def shortestSequence(self, rolls: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def shortestSequence(self, rolls, k):\n        \"\"\"\n        :type rolls: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} rolls\n * @param {number} k\n * @return {number}\n */\nvar shortestSequence = function(rolls, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function shortestSequence(rolls: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int ShortestSequence(int[] rolls, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int shortestSequence(int* rolls, int rollsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func shortestSequence(rolls []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun shortestSequence(rolls: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func shortestSequence(_ rolls: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn shortest_sequence(rolls: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} rolls\n# @param {Integer} k\n# @return {Integer}\ndef shortest_sequence(rolls, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $rolls\n     * @param Integer $k\n     * @return Integer\n     */\n    function shortestSequence($rolls, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int shortestSequence(List<int> rolls, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def shortestSequence(rolls: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec shortest_sequence(rolls :: [integer], k :: integer) :: integer\n  def shortest_sequence(rolls, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec shortest_sequence(Rolls :: [integer()], K :: integer()) -> integer().\nshortest_sequence(Rolls, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (shortest-sequence rolls k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

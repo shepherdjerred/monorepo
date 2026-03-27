@@ -1,0 +1,145 @@
+{
+  "questionId": "2415",
+  "questionFrontendId": "2338",
+  "title": "Count the Number of Ideal Arrays",
+  "titleSlug": "count-the-number-of-ideal-arrays",
+  "difficulty": "Hard",
+  "content": "<p>You are given two integers <code>n</code> and <code>maxValue</code>, which are used to describe an <strong>ideal</strong> array.</p>\n\n<p>A <strong>0-indexed</strong> integer array <code>arr</code> of length <code>n</code> is considered <strong>ideal</strong> if the following conditions hold:</p>\n\n<ul>\n\t<li>Every <code>arr[i]</code> is a value from <code>1</code> to <code>maxValue</code>, for <code>0 &lt;= i &lt; n</code>.</li>\n\t<li>Every <code>arr[i]</code> is divisible by <code>arr[i - 1]</code>, for <code>0 &lt; i &lt; n</code>.</li>\n</ul>\n\n<p>Return <em>the number of <strong>distinct</strong> ideal arrays of length </em><code>n</code>. Since the answer may be very large, return it modulo <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 2, maxValue = 5\n<strong>Output:</strong> 10\n<strong>Explanation:</strong> The following are the possible ideal arrays:\n- Arrays starting with the value 1 (5 arrays): [1,1], [1,2], [1,3], [1,4], [1,5]\n- Arrays starting with the value 2 (2 arrays): [2,2], [2,4]\n- Arrays starting with the value 3 (1 array): [3,3]\n- Arrays starting with the value 4 (1 array): [4,4]\n- Arrays starting with the value 5 (1 array): [5,5]\nThere are a total of 5 + 2 + 1 + 1 + 1 = 10 distinct ideal arrays.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 5, maxValue = 3\n<strong>Output:</strong> 11\n<strong>Explanation:</strong> The following are the possible ideal arrays:\n- Arrays starting with the value 1 (9 arrays): \n   - With no other distinct values (1 array): [1,1,1,1,1] \n   - With 2<sup>nd</sup> distinct value 2 (4 arrays): [1,1,1,1,2], [1,1,1,2,2], [1,1,2,2,2], [1,2,2,2,2]\n   - With 2<sup>nd</sup> distinct value 3 (4 arrays): [1,1,1,1,3], [1,1,1,3,3], [1,1,3,3,3], [1,3,3,3,3]\n- Arrays starting with the value 2 (1 array): [2,2,2,2,2]\n- Arrays starting with the value 3 (1 array): [3,3,3,3,3]\nThere are a total of 9 + 1 + 1 = 11 distinct ideal arrays.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= maxValue &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Notice that an ideal array is non-decreasing.",
+    "Consider an alternative problem: where an ideal array must also be strictly increasing. Can you use DP to solve it?",
+    "Will combinatorics help to get an answer from the alternative problem to the actual problem?"
+  ],
+  "metaData": "{\n  \"name\": \"idealArrays\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"maxValue\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"70.2K\", \"totalSubmission\": \"123.1K\", \"totalAcceptedRaw\": 70157, \"totalSubmissionRaw\": 123068, \"acRate\": \"57.0%\"}",
+  "likes": 850,
+  "dislikes": 133,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count Ways to Make Array With Product\", \"titleSlug\": \"count-ways-to-make-array-with-product\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count the Number of Beautiful Subarrays\", \"titleSlug\": \"count-the-number-of-beautiful-subarrays\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "2\n5",
+    "5\n3"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Combinatorics",
+      "slug": "combinatorics"
+    },
+    {
+      "name": "Number Theory",
+      "slug": "number-theory"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int idealArrays(int n, int maxValue) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int idealArrays(int n, int maxValue) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def idealArrays(self, n: int, maxValue: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def idealArrays(self, n, maxValue):\n        \"\"\"\n        :type n: int\n        :type maxValue: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number} maxValue\n * @return {number}\n */\nvar idealArrays = function(n, maxValue) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function idealArrays(n: number, maxValue: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int IdealArrays(int n, int maxValue) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int idealArrays(int n, int maxValue) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func idealArrays(n int, maxValue int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun idealArrays(n: Int, maxValue: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func idealArrays(_ n: Int, _ maxValue: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn ideal_arrays(n: i32, max_value: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer} max_value\n# @return {Integer}\ndef ideal_arrays(n, max_value)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer $maxValue\n     * @return Integer\n     */\n    function idealArrays($n, $maxValue) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int idealArrays(int n, int maxValue) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def idealArrays(n: Int, maxValue: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec ideal_arrays(n :: integer, max_value :: integer) :: integer\n  def ideal_arrays(n, max_value) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec ideal_arrays(N :: integer(), MaxValue :: integer()) -> integer().\nideal_arrays(N, MaxValue) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (ideal-arrays n maxValue)\n  (-> exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2737",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach: Combinatorial Mathematics\n\n#### Intuition\n\nWe're given an integer `n` and a maximum allowed value `maxValue`, and we want to count how many arrays `arr` of length `n` exist such that:\n\n* Each element of the array is between `1` and `maxValue`\n* Every element divides the next one, meaning $\\text{arr}[i-1] \\mid \\text{arr}[i]$ for all $i$ from `1` to `n - 1`\n\nTo approach this, let's fix the **last** element of the array to be some number $x$ (where $x \\in [1, \\text{maxValue}]$), and count how many valid arrays of length `n` can end with $x$. The key idea is that if each element divides the next, then the entire array is a chain of divisors ending in $x$.\n\nNow, we can represent each element in the array as a product of multiplicative steps. That is, we can write:\n\n$$\n\\text{arr}[0] = k_0,\\quad \\text{arr}[1] = k_0k_1,\\quad \\ldots,\\quad \\text{arr}[n-1] = k_0k_1\\cdots k_{n-1} = x\n$$\n\nSo we’re looking for sequences of $n$ natural numbers $k_0, k_1, \\dots, k_{n-1}$ whose product is exactly $x$.\n\nThis means: for a given $x$, how many ways can we split its prime factors across `n` multiplicative positions?\n\nLet’s say the prime factorization of $x$ is:\n\n$$\nx = p_1^{a_1} \\cdot p_2^{a_2} \\cdots p_m^{a_m}\n$$\n\nEach exponent $a_j$ needs to be split into $n$ parts — one for each slot in the sequence. This is a classic \"stars and bars\" problem in combinatorics, where we’re placing $a_j$ indistinguishable items into $n$ buckets:\n\n$$\n\\text{Number of ways} = \\binom{a_j + n - 1}{a_j}\n$$\n\nBecause different prime factors are independent, we multiply the counts for each:\n\n$$\n\\text{Total sequences ending in } x = \\prod_{j=1}^{m} \\binom{a_j + n - 1}{a_j}\n$$\n\nFinally, we go through all $x \\in [1, \\text{maxValue}]$, compute the number of valid arrays that end in each $x$, and add them all up.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/TzQHSph3/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"TzQHSph3\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ be the $\\textit{maxValue}$, and $n$ be the length of the $\\textit{arr}$ array. $\\omega(m)$ represents the number of distinct prime factors of $m$, and its average order in number theory is $\\log\\log m$. For more details, please refer to the [Prime omega function](https://en.wikipedia.org/wiki/Prime_omega_function#Average_order_and_summatory_functions).\n\n- Time complexity: $O((n+\\omega(m))\\cdot\\omega(m)+m\\omega(m))$.\n\nIn preprocessing, the minimum prime factor is sieved out with $O(n\\log\\log n)$, prime factorization requires $O(n\\log n)$, and the combination number calculation requires $O((n+\\omega(m))\\cdot\\omega(m))$. In the formal solution, the time complexity for finding the number of elements in an array is $O(m\\omega(m))=O(m\\log\\log m)$.\n\n- Space complexity: $O((n+\\log(m))\\cdot\\log(m))$.\n\nWe need to save the preprocessed results of the combination numbers and the prime factorizations needed for selecting $\\log(m)$ positions from $(n + \\log(m) - 1)$ positions. Since the code allocates an array of fixed length, the number of factors is taken as the maximum value rather than the average, so the space complexity factor is $\\log(m)$ rather than $\\omega(m)$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

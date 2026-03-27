@@ -1,0 +1,138 @@
+{
+  "questionId": "2587",
+  "questionFrontendId": "2502",
+  "title": "Design Memory Allocator",
+  "titleSlug": "design-memory-allocator",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer <code>n</code> representing the size of a <strong>0-indexed</strong> memory array. All memory units are initially free.</p>\n\n<p>You have a memory allocator with the following functionalities:</p>\n\n<ol>\n\t<li><strong>Allocate </strong>a block of <code>size</code> consecutive free memory units and assign it the id <code>mID</code>.</li>\n\t<li><strong>Free</strong> all memory units with the given id <code>mID</code>.</li>\n</ol>\n\n<p><strong>Note</strong> that:</p>\n\n<ul>\n\t<li>Multiple blocks can be allocated to the same <code>mID</code>.</li>\n\t<li>You should free all the memory units with <code>mID</code>, even if they were allocated in different blocks.</li>\n</ul>\n\n<p>Implement the <code>Allocator</code> class:</p>\n\n<ul>\n\t<li><code>Allocator(int n)</code> Initializes an <code>Allocator</code> object with a memory array of size <code>n</code>.</li>\n\t<li><code>int allocate(int size, int mID)</code> Find the <strong>leftmost</strong> block of <code>size</code> <strong>consecutive</strong> free memory units and allocate it with the id <code>mID</code>. Return the block&#39;s first index. If such a block does not exist, return <code>-1</code>.</li>\n\t<li><code>int freeMemory(int mID)</code> Free all memory units with the id <code>mID</code>. Return the number of memory units you have freed.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;Allocator&quot;, &quot;allocate&quot;, &quot;allocate&quot;, &quot;allocate&quot;, &quot;freeMemory&quot;, &quot;allocate&quot;, &quot;allocate&quot;, &quot;allocate&quot;, &quot;freeMemory&quot;, &quot;allocate&quot;, &quot;freeMemory&quot;]\n[[10], [1, 1], [1, 2], [1, 3], [2], [3, 4], [1, 1], [1, 1], [1], [10, 2], [7]]\n<strong>Output</strong>\n[null, 0, 1, 2, 1, 3, 1, 6, 3, -1, 0]\n\n<strong>Explanation</strong>\nAllocator loc = new Allocator(10); // Initialize a memory array of size 10. All memory units are initially free.\nloc.allocate(1, 1); // The leftmost block&#39;s first index is 0. The memory array becomes [<strong>1</strong>,_,_,_,_,_,_,_,_,_]. We return 0.\nloc.allocate(1, 2); // The leftmost block&#39;s first index is 1. The memory array becomes [1,<strong>2</strong>,_,_,_,_,_,_,_,_]. We return 1.\nloc.allocate(1, 3); // The leftmost block&#39;s first index is 2. The memory array becomes [1,2,<strong>3</strong>,_,_,_,_,_,_,_]. We return 2.\nloc.freeMemory(2); // Free all memory units with mID 2. The memory array becomes [1,_, 3,_,_,_,_,_,_,_]. We return 1 since there is only 1 unit with mID 2.\nloc.allocate(3, 4); // The leftmost block&#39;s first index is 3. The memory array becomes [1,_,3,<strong>4</strong>,<strong>4</strong>,<strong>4</strong>,_,_,_,_]. We return 3.\nloc.allocate(1, 1); // The leftmost block&#39;s first index is 1. The memory array becomes [1,<strong>1</strong>,3,4,4,4,_,_,_,_]. We return 1.\nloc.allocate(1, 1); // The leftmost block&#39;s first index is 6. The memory array becomes [1,1,3,4,4,4,<strong>1</strong>,_,_,_]. We return 6.\nloc.freeMemory(1); // Free all memory units with mID 1. The memory array becomes [_,_,3,4,4,4,_,_,_,_]. We return 3 since there are 3 units with mID 1.\nloc.allocate(10, 2); // We can not find any free block with 10 consecutive free memory units, so we return -1.\nloc.freeMemory(7); // Free all memory units with mID 7. The memory array remains the same since there is no memory unit with mID 7. We return 0.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n, size, mID &lt;= 1000</code></li>\n\t<li>At most <code>1000</code> calls will be made to <code>allocate</code> and <code>freeMemory</code>.</li>\n</ul>\n",
+  "hints": [
+    "Can you simulate the process?",
+    "Use brute force to find the leftmost free block and free each occupied memory unit"
+  ],
+  "metaData": "{\n  \"classname\": \"Allocator\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer\",\n        \"name\": \"n\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"size\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"mID\"\n        }\n      ],\n      \"name\": \"allocate\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"mID\"\n        }\n      ],\n      \"name\": \"freeMemory\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"45K\", \"totalSubmission\": \"90.3K\", \"totalAcceptedRaw\": 44984, \"totalSubmissionRaw\": 90260, \"acRate\": \"49.8%\"}",
+  "likes": 364,
+  "dislikes": 101,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"Allocator\",\"allocate\",\"allocate\",\"allocate\",\"freeMemory\",\"allocate\",\"allocate\",\"allocate\",\"freeMemory\",\"allocate\",\"freeMemory\"]\n[[10],[1,1],[1,2],[1,3],[2],[3,4],[1,1],[1,1],[1],[10,2],[7]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"capital-one\", \"name\": \"Capital One\"}, {\"timesEncountered\": 4, \"slug\": \"openai\", \"name\": \"OpenAI\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"visa\", \"name\": \"Visa\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bytedance\", \"name\": \"ByteDance\"}, {\"timesEncountered\": 3, \"slug\": \"two-sigma\", \"name\": \"Two Sigma\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"qualcomm\", \"name\": \"Qualcomm\"}, {\"timesEncountered\": 2, \"slug\": \"rubrik\", \"name\": \"Rubrik\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Allocator {\npublic:\n    Allocator(int n) {\n        \n    }\n    \n    int allocate(int size, int mID) {\n        \n    }\n    \n    int freeMemory(int mID) {\n        \n    }\n};\n\n/**\n * Your Allocator object will be instantiated and called as such:\n * Allocator* obj = new Allocator(n);\n * int param_1 = obj->allocate(size,mID);\n * int param_2 = obj->freeMemory(mID);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Allocator {\n\n    public Allocator(int n) {\n        \n    }\n    \n    public int allocate(int size, int mID) {\n        \n    }\n    \n    public int freeMemory(int mID) {\n        \n    }\n}\n\n/**\n * Your Allocator object will be instantiated and called as such:\n * Allocator obj = new Allocator(n);\n * int param_1 = obj.allocate(size,mID);\n * int param_2 = obj.freeMemory(mID);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Allocator:\n\n    def __init__(self, n: int):\n        \n\n    def allocate(self, size: int, mID: int) -> int:\n        \n\n    def freeMemory(self, mID: int) -> int:\n        \n\n\n# Your Allocator object will be instantiated and called as such:\n# obj = Allocator(n)\n# param_1 = obj.allocate(size,mID)\n# param_2 = obj.freeMemory(mID)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Allocator(object):\n\n    def __init__(self, n):\n        \"\"\"\n        :type n: int\n        \"\"\"\n        \n\n    def allocate(self, size, mID):\n        \"\"\"\n        :type size: int\n        :type mID: int\n        :rtype: int\n        \"\"\"\n        \n\n    def freeMemory(self, mID):\n        \"\"\"\n        :type mID: int\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your Allocator object will be instantiated and called as such:\n# obj = Allocator(n)\n# param_1 = obj.allocate(size,mID)\n# param_2 = obj.freeMemory(mID)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n */\nvar Allocator = function(n) {\n    \n};\n\n/** \n * @param {number} size \n * @param {number} mID\n * @return {number}\n */\nAllocator.prototype.allocate = function(size, mID) {\n    \n};\n\n/** \n * @param {number} mID\n * @return {number}\n */\nAllocator.prototype.freeMemory = function(mID) {\n    \n};\n\n/** \n * Your Allocator object will be instantiated and called as such:\n * var obj = new Allocator(n)\n * var param_1 = obj.allocate(size,mID)\n * var param_2 = obj.freeMemory(mID)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class Allocator {\n    constructor(n: number) {\n        \n    }\n\n    allocate(size: number, mID: number): number {\n        \n    }\n\n    freeMemory(mID: number): number {\n        \n    }\n}\n\n/**\n * Your Allocator object will be instantiated and called as such:\n * var obj = new Allocator(n)\n * var param_1 = obj.allocate(size,mID)\n * var param_2 = obj.freeMemory(mID)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Allocator {\n\n    public Allocator(int n) {\n        \n    }\n    \n    public int Allocate(int size, int mID) {\n        \n    }\n    \n    public int FreeMemory(int mID) {\n        \n    }\n}\n\n/**\n * Your Allocator object will be instantiated and called as such:\n * Allocator obj = new Allocator(n);\n * int param_1 = obj.Allocate(size,mID);\n * int param_2 = obj.FreeMemory(mID);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} Allocator;\n\n\nAllocator* allocatorCreate(int n) {\n    \n}\n\nint allocatorAllocate(Allocator* obj, int size, int mID) {\n    \n}\n\nint allocatorFreeMemory(Allocator* obj, int mID) {\n    \n}\n\nvoid allocatorFree(Allocator* obj) {\n    \n}\n\n/**\n * Your Allocator struct will be instantiated and called as such:\n * Allocator* obj = allocatorCreate(n);\n * int param_1 = allocatorAllocate(obj, size, mID);\n \n * int param_2 = allocatorFreeMemory(obj, mID);\n \n * allocatorFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type Allocator struct {\n    \n}\n\n\nfunc Constructor(n int) Allocator {\n    \n}\n\n\nfunc (this *Allocator) Allocate(size int, mID int) int {\n    \n}\n\n\nfunc (this *Allocator) FreeMemory(mID int) int {\n    \n}\n\n\n/**\n * Your Allocator object will be instantiated and called as such:\n * obj := Constructor(n);\n * param_1 := obj.Allocate(size,mID);\n * param_2 := obj.FreeMemory(mID);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Allocator(n: Int) {\n\n    fun allocate(size: Int, mID: Int): Int {\n        \n    }\n\n    fun freeMemory(mID: Int): Int {\n        \n    }\n\n}\n\n/**\n * Your Allocator object will be instantiated and called as such:\n * var obj = Allocator(n)\n * var param_1 = obj.allocate(size,mID)\n * var param_2 = obj.freeMemory(mID)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass Allocator {\n\n    init(_ n: Int) {\n        \n    }\n    \n    func allocate(_ size: Int, _ mID: Int) -> Int {\n        \n    }\n    \n    func freeMemory(_ mID: Int) -> Int {\n        \n    }\n}\n\n/**\n * Your Allocator object will be instantiated and called as such:\n * let obj = Allocator(n)\n * let ret_1: Int = obj.allocate(size, mID)\n * let ret_2: Int = obj.freeMemory(mID)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct Allocator {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl Allocator {\n\n    fn new(n: i32) -> Self {\n        \n    }\n    \n    fn allocate(&self, size: i32, m_id: i32) -> i32 {\n        \n    }\n    \n    fn free_memory(&self, m_id: i32) -> i32 {\n        \n    }\n}\n\n/**\n * Your Allocator object will be instantiated and called as such:\n * let obj = Allocator::new(n);\n * let ret_1: i32 = obj.allocate(size, mID);\n * let ret_2: i32 = obj.free_memory(mID);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class Allocator\n\n=begin\n    :type n: Integer\n=end\n    def initialize(n)\n        \n    end\n\n\n=begin\n    :type size: Integer\n    :type m_id: Integer\n    :rtype: Integer\n=end\n    def allocate(size, m_id)\n        \n    end\n\n\n=begin\n    :type m_id: Integer\n    :rtype: Integer\n=end\n    def free_memory(m_id)\n        \n    end\n\n\nend\n\n# Your Allocator object will be instantiated and called as such:\n# obj = Allocator.new(n)\n# param_1 = obj.allocate(size, m_id)\n# param_2 = obj.free_memory(m_id)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Allocator {\n    /**\n     * @param Integer $n\n     */\n    function __construct($n) {\n        \n    }\n  \n    /**\n     * @param Integer $size\n     * @param Integer $mID\n     * @return Integer\n     */\n    function allocate($size, $mID) {\n        \n    }\n  \n    /**\n     * @param Integer $mID\n     * @return Integer\n     */\n    function freeMemory($mID) {\n        \n    }\n}\n\n/**\n * Your Allocator object will be instantiated and called as such:\n * $obj = Allocator($n);\n * $ret_1 = $obj->allocate($size, $mID);\n * $ret_2 = $obj->freeMemory($mID);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Allocator {\n\n  Allocator(int n) {\n    \n  }\n  \n  int allocate(int size, int mID) {\n    \n  }\n  \n  int freeMemory(int mID) {\n    \n  }\n}\n\n/**\n * Your Allocator object will be instantiated and called as such:\n * Allocator obj = Allocator(n);\n * int param1 = obj.allocate(size,mID);\n * int param2 = obj.freeMemory(mID);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class Allocator(_n: Int) {\n\n    def allocate(size: Int, mID: Int): Int = {\n        \n    }\n\n    def freeMemory(mID: Int): Int = {\n        \n    }\n\n}\n\n/**\n * Your Allocator object will be instantiated and called as such:\n * val obj = new Allocator(n)\n * val param_1 = obj.allocate(size,mID)\n * val param_2 = obj.freeMemory(mID)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Allocator do\n  @spec init_(n :: integer) :: any\n  def init_(n) do\n    \n  end\n\n  @spec allocate(size :: integer, m_id :: integer) :: integer\n  def allocate(size, m_id) do\n    \n  end\n\n  @spec free_memory(m_id :: integer) :: integer\n  def free_memory(m_id) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# Allocator.init_(n)\n# param_1 = Allocator.allocate(size, m_id)\n# param_2 = Allocator.free_memory(m_id)\n\n# Allocator.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec allocator_init_(N :: integer()) -> any().\nallocator_init_(N) ->\n  .\n\n-spec allocator_allocate(Size :: integer(), MID :: integer()) -> integer().\nallocator_allocate(Size, MID) ->\n  .\n\n-spec allocator_free_memory(MID :: integer()) -> integer().\nallocator_free_memory(MID) ->\n  .\n\n\n%% Your functions will be called as such:\n%% allocator_init_(N),\n%% Param_1 = allocator_allocate(Size, MID),\n%% Param_2 = allocator_free_memory(MID),\n\n%% allocator_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define allocator%\n  (class object%\n    (super-new)\n    \n    ; n : exact-integer?\n    (init-field\n      n)\n    \n    ; allocate : exact-integer? exact-integer? -> exact-integer?\n    (define/public (allocate size m-id)\n      )\n    ; free-memory : exact-integer? -> exact-integer?\n    (define/public (free-memory m-id)\n      )))\n\n;; Your allocator% object will be instantiated and called as such:\n;; (define obj (new allocator% [n n]))\n;; (define param_1 (send obj allocate size m-id))\n;; (define param_2 (send obj free-memory m-id))"
+    }
+  ],
+  "solution": null
+}

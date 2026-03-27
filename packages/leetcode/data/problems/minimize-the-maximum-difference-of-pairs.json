@@ -1,0 +1,148 @@
+{
+  "questionId": "2720",
+  "questionFrontendId": "2616",
+  "title": "Minimize the Maximum Difference of Pairs",
+  "titleSlug": "minimize-the-maximum-difference-of-pairs",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> integer array <code>nums</code> and an integer <code>p</code>. Find <code>p</code> pairs of indices of <code>nums</code> such that the <strong>maximum</strong> difference amongst all the pairs is <strong>minimized</strong>. Also, ensure no index appears more than once amongst the <code>p</code> pairs.</p>\n\n<p>Note that for a pair of elements at the index <code>i</code> and <code>j</code>, the difference of this pair is <code>|nums[i] - nums[j]|</code>, where <code>|x|</code> represents the <strong>absolute</strong> <strong>value</strong> of <code>x</code>.</p>\n\n<p>Return <em>the <strong>minimum</strong> <strong>maximum</strong> difference among all </em><code>p</code> <em>pairs.</em> We define the maximum of an empty set to be zero.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [10,1,2,7,1,3], p = 2\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The first pair is formed from the indices 1 and 4, and the second pair is formed from the indices 2 and 5. \nThe maximum difference is max(|nums[1] - nums[4]|, |nums[2] - nums[5]|) = max(0, 1) = 1. Therefore, we return 1.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [4,2,1,2], p = 1\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> Let the indices 1 and 3 form a pair. The difference of that pair is |2 - 2| = 0, which is the minimum we can attain.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>0 &lt;= p &lt;= (nums.length)/2</code></li>\n</ul>\n",
+  "hints": [
+    "To minimize the answer, the array should be sorted first.",
+    "Can we use binary search here?"
+  ],
+  "metaData": "{\n  \"name\": \"minimizeMax\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"p\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"169.2K\", \"totalSubmission\": \"332.5K\", \"totalAcceptedRaw\": 169199, \"totalSubmissionRaw\": 332497, \"acRate\": \"50.9%\"}",
+  "likes": 2929,
+  "dislikes": 329,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Absolute Difference\", \"titleSlug\": \"minimum-absolute-difference\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum Difference Between Largest and Smallest Value in Three Moves\", \"titleSlug\": \"minimum-difference-between-largest-and-smallest-value-in-three-moves\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[10,1,2,7,1,3]\n2",
+    "[4,2,1,2]\n1"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"zeta\", \"name\": \"Zeta\"}, {\"timesEncountered\": 2, \"slug\": \"navi\", \"name\": \"Navi\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minimizeMax(vector<int>& nums, int p) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minimizeMax(int[] nums, int p) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimizeMax(self, nums: List[int], p: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimizeMax(self, nums, p):\n        \"\"\"\n        :type nums: List[int]\n        :type p: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} p\n * @return {number}\n */\nvar minimizeMax = function(nums, p) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimizeMax(nums: number[], p: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinimizeMax(int[] nums, int p) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minimizeMax(int* nums, int numsSize, int p) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimizeMax(nums []int, p int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimizeMax(nums: IntArray, p: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimizeMax(_ nums: [Int], _ p: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimize_max(nums: Vec<i32>, p: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} p\n# @return {Integer}\ndef minimize_max(nums, p)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $p\n     * @return Integer\n     */\n    function minimizeMax($nums, $p) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimizeMax(List<int> nums, int p) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimizeMax(nums: Array[Int], p: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimize_max(nums :: [integer], p :: integer) :: integer\n  def minimize_max(nums, p) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimize_max(Nums :: [integer()], P :: integer()) -> integer().\nminimize_max(Nums, P) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimize-max nums p)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2005",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nSince this problem involves minimizing the \"maximum difference,\" it is necessary to sort the array beforehand. This way, we can narrow down the selection of pairs to only adjacent numbers, and avoid wasting time on incorrect choices.\n\n![img](../Figures/2616/1.png)\n\nAs shown in the diagram below, without sorting, we might inadvertently select pairs with larger differences. By sorting the array, we eliminate such scenarios.\n\n![img](../Figures/2616/2.png)\n\n---\n\n### Approach: Greedy + Binary Search \n\n#### Intuition   \n\n> If you are not familiar with binary search, please refer to our explore cards [Binary Search Explore Card](https://leetcode.com/explore/learn/card/binary-search/). We will focus on the usage in this article and not the underlying principles or implementation details.\n\nSince we are looking to **minimize** the maximum difference, one brute force approach is to start from a **threshold** (a maximum difference) of `0` and incrementally try all possible thresholds: \n\n\n- try to find `p` pairs with a difference less than or equal to `0`.\n\n\n- if not possible, try to find `p` pairs with a difference less than or equal to `1`.\n\n\n- and so on, until we find a threshold that succeeds.\n\n\n![img](../Figures/2616/5.png)\n\nHowever, as you may have noticed, this approach requires trying a linear number of thresholds, which is inefficient. \n\n\nWe observe that:\n\n- If we can find `p` pairs with a threshold of `x`, then we can certainly find `p` pairs with a threshold of `x + 1`. A trivial example would be to just use the exact same `p` pairs. As their differences are less than `x`, they must also be less than `x + 1`.\n\n- If we cannot find `p` pairs with a threshold of `x`, then we certainly cannot find `p` pairs with a threshold of `x - 1`.\n\n\nThis splits the number line into two sections: one section where the task is possible, and one where the task is impossible. Therefore, we can use binary search to quickly narrow down the search space until we find the dividing point, which is the minimum threshold.\n\n\n<br>\n\nNow let's address the second question: given `threshold`, how do we determine if there exist at least `p` valid pairs? \n\nWe can solve this using a greedy approach, by iterating through the sorted `nums` and checking the difference between `nums[i]` and `nums[i + 1]`. If the difference is less than or equal to the threshold, it means that `nums[i]` and `nums[i + 1]` form a valid pair, and we can directly move to `i + 2` to find the next pair.\n\nHowever, you might wonder why the greedy approach works. Is there a possibility that the greedy approach fails while another approach succeeds?\n\n![img](../Figures/2616/3.png)\n\n**The answer is No! Greedy approach always brings the most number of valid pairs.**\n\nHere we provide a brief explanation: Recall that in the greedy approach, we traverse the array in ascending order. Suppose there is another alternative approach that yields more valid pairs compared to the greedy approach. We can align the arrays of these two approaches side by side and traverse them together in ascending order until the first point of divergence. \n\nSince the greedy approach always selects the \"leftmost\" pair, when a divergence occurs, the pair from the alternative approach must be \"to the right.\" Let's assume these pairs as `(i - 1, i)` and `(i, i + 1)` respectively. As shown in the picture above.\n\nSo far, both approaches have selected an equal number of valid pairs in subarrays `nums[0 ~ i]` and `nums[0 ~ i + 1]`, respectively. However, the remaining subarray of the greedy approach (`nums[i+1 ~ n-1]`) is longer, providing more choices. Thus the valid pairs (if exist) selected from this remaining subarray are guaranteed to be greater than or equal to the pairs from the remaining portion of the alternative approach (`nums[i+2 ~ n-1]`).\n\n\n![img](../Figures/2616/4.png)\n\nThis implies that even if we do not use the greedy approach, the number of valid pairs we can select will not exceed the number of pairs selected using the greedy approach. **The greedy approach will always yield the maximum number of valid pairs.**\n\n\n<br>\n\n#### Algorithm\n\n> Note: the typical way to calculate mid is (left + right) / 2. However, a safer way is left + (right - left) / 2. The two equations are equivalent, but the second one is safer because it guarantees no number larger than right is ever stored. In the first equation, if left + right is huge, then it could end up overflowing.\n\n\n1) Define `countValidPairs(threshold)` to find the number of pairs having a threshold of `threshold` in `nums`. Let `n` be the size of `nums`.\n    - Set `count = 0`.\n    - Iterate over `nums` from `index = 0` to `index = n - 2`. If `nums[index + 1] - nums[index] <= threshold`, increment `count` by `1`, and skip both indices. Otherwise, skip the current index.\n    - Return `count`.\n\n2) Sort `nums`.\n\n3) Initialize the searching space as `left = 0` and `right = nums[n - 1] - nums[0]`, the maximum difference in the array. \n\n\n4) While `left < right`, do the following:\n\n\n5) Get the middle value as `mid = left + (right - left) // 2`.\n\n6) Calculate the number of valid pairs with a threshold of `mid` using `countValidPairs(mid)`.\n\n7) If `countValidPairs(mid) >= p`, continue with the left half by setting `right = mid`. Otherwise, continue with the right half by setting `left = mid - 1`. Repeat from step 4.\n\n\n8) Return `left` when the binary search is complete.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/J7Y3jEWR/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"J7Y3jEWR\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the size of `nums` and `V` be the maximum value in `nums`.\n\n* Time complexity: $$O(n \\cdot\\log V + n \\cdot\\log n)$$\n\n    - Sorting `nums` takes $$O(n \\cdot\\log n)$$ time.\n    - The right boundary of the searching space is defined as `nums[n - 1] - nums[0]`, the maximum value minus the minimum value, which is $O(V)$. Thus the binary search takes $O(\\log V)$ steps. \n    - At each step, we need to iterate over `nums` to determine if there are at least `p` pairs, which takes $O(n)$ time. Therefore the binary search takes $$O(n \\cdot\\log V)$$ time.\n\n\n* Space complexity: $$O(n)$$\n    \n    - We only need to update several parameters, `left`, `right`, `index`, and `count`, which takes $O(1)$ space.\n    - Some extra space is used when we sort $$\\text{nums}$$ in place. The space complexity of the sorting algorithm depends on the programming language.\n        - In python, the `sort` method sorts a list using the Timsort algorithm, which is a combination of Merge Sort and Insertion Sort and uses $$O(n)$$ additional space.\n        - In C++, the sort() function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with worst-case space complexity of $$O(\\log n)$$.\n        - In Java, Arrays.sort() is implemented using a variant of the Quick Sort algorithm which has a space complexity of $$O(\\log n)$$.\n    - To sum up, the overall space complexity is $$O(n)$$ for Python and $$O(\\log n)$$ for C++ and Java.\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

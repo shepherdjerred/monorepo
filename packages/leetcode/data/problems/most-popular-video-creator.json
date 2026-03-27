@@ -1,0 +1,143 @@
+{
+  "questionId": "2543",
+  "questionFrontendId": "2456",
+  "title": "Most Popular Video Creator",
+  "titleSlug": "most-popular-video-creator",
+  "difficulty": "Medium",
+  "content": "<p>You are given two string arrays <code>creators</code> and <code>ids</code>, and an integer array <code>views</code>, all of length <code>n</code>. The <code>i<sup>th</sup></code> video on a platform was created by <code>creators[i]</code>, has an id of <code>ids[i]</code>, and has <code>views[i]</code> views.</p>\n\n<p>The <strong>popularity</strong> of a creator is the <strong>sum</strong> of the number of views on <strong>all</strong> of the creator&#39;s videos. Find the creator with the <strong>highest</strong> popularity and the id of their <strong>most</strong> viewed video.</p>\n\n<ul>\n\t<li>If multiple creators have the highest popularity, find all of them.</li>\n\t<li>If multiple videos have the highest view count for a creator, find the lexicographically <strong>smallest</strong> id.</li>\n</ul>\n\n<p>Note: It is possible for different videos to have the same <code>id</code>, meaning that <code>id</code>s do not uniquely identify a video. For example, two videos with the same ID are considered as distinct videos with their own viewcount.</p>\n\n<p>Return<em> </em>a <strong>2D array</strong> of <strong>strings</strong> <code>answer</code> where <code>answer[i] = [creators<sub>i</sub>, id<sub>i</sub>]</code> means that <code>creators<sub>i</sub></code> has the <strong>highest</strong> popularity and <code>id<sub>i</sub></code> is the <strong>id</strong> of their most <strong>popular</strong> video. The answer can be returned in any order.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">creators = [&quot;alice&quot;,&quot;bob&quot;,&quot;alice&quot;,&quot;chris&quot;], ids = [&quot;one&quot;,&quot;two&quot;,&quot;three&quot;,&quot;four&quot;], views = [5,10,5,4]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[[&quot;alice&quot;,&quot;one&quot;],[&quot;bob&quot;,&quot;two&quot;]]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The popularity of alice is 5 + 5 = 10.<br />\nThe popularity of bob is 10.<br />\nThe popularity of chris is 4.<br />\nalice and bob are the most popular creators.<br />\nFor bob, the video with the highest view count is &quot;two&quot;.<br />\nFor alice, the videos with the highest view count are &quot;one&quot; and &quot;three&quot;. Since &quot;one&quot; is lexicographically smaller than &quot;three&quot;, it is included in the answer.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">creators = [&quot;alice&quot;,&quot;alice&quot;,&quot;alice&quot;], ids = [&quot;a&quot;,&quot;b&quot;,&quot;c&quot;], views = [1,2,2]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[[&quot;alice&quot;,&quot;b&quot;]]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The videos with id &quot;b&quot; and &quot;c&quot; have the highest view count.<br />\nSince &quot;b&quot; is lexicographically smaller than &quot;c&quot;, it is included in the answer.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == creators.length == ids.length == views.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= creators[i].length, ids[i].length &lt;= 5</code></li>\n\t<li><code>creators[i]</code> and <code>ids[i]</code> consist only of lowercase English letters.</li>\n\t<li><code>0 &lt;= views[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Use a hash table to store and categorize videos based on their creator.",
+    "For each creator, iterate through all their videos and use three variables to keep track of their popularity, their most popular video, and the id of their most popular video."
+  ],
+  "metaData": "{\n  \"name\": \"mostPopularCreator\",\n  \"params\": [\n    {\n      \"name\": \"creators\",\n      \"type\": \"string[]\"\n    },\n    {\n      \"type\": \"string[]\",\n      \"name\": \"ids\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"views\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<list<string>>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"28.3K\", \"totalSubmission\": \"62.6K\", \"totalAcceptedRaw\": 28346, \"totalSubmissionRaw\": 62606, \"acRate\": \"45.3%\"}",
+  "likes": 309,
+  "dislikes": 386,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Design Video Sharing Platform\", \"titleSlug\": \"design-video-sharing-platform\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Design a Food Rating System\", \"titleSlug\": \"design-a-food-rating-system\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"alice\",\"bob\",\"alice\",\"chris\"]\n[\"one\",\"two\",\"three\",\"four\"]\n[5,10,5,4]",
+    "[\"alice\",\"alice\",\"alice\"]\n[\"a\",\"b\",\"c\"]\n[1,2,2]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<string>> mostPopularCreator(vector<string>& creators, vector<string>& ids, vector<int>& views) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<List<String>> mostPopularCreator(String[] creators, String[] ids, int[] views) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def mostPopularCreator(self, creators: List[str], ids: List[str], views: List[int]) -> List[List[str]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def mostPopularCreator(self, creators, ids, views):\n        \"\"\"\n        :type creators: List[str]\n        :type ids: List[str]\n        :type views: List[int]\n        :rtype: List[List[str]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} creators\n * @param {string[]} ids\n * @param {number[]} views\n * @return {string[][]}\n */\nvar mostPopularCreator = function(creators, ids, views) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function mostPopularCreator(creators: string[], ids: string[], views: number[]): string[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<IList<string>> MostPopularCreator(string[] creators, string[] ids, int[] views) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nchar*** mostPopularCreator(char** creators, int creatorsSize, char** ids, int idsSize, int* views, int viewsSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func mostPopularCreator(creators []string, ids []string, views []int) [][]string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun mostPopularCreator(creators: Array<String>, ids: Array<String>, views: IntArray): List<List<String>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func mostPopularCreator(_ creators: [String], _ ids: [String], _ views: [Int]) -> [[String]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn most_popular_creator(creators: Vec<String>, ids: Vec<String>, views: Vec<i32>) -> Vec<Vec<String>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} creators\n# @param {String[]} ids\n# @param {Integer[]} views\n# @return {String[][]}\ndef most_popular_creator(creators, ids, views)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $creators\n     * @param String[] $ids\n     * @param Integer[] $views\n     * @return String[][]\n     */\n    function mostPopularCreator($creators, $ids, $views) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<String>> mostPopularCreator(List<String> creators, List<String> ids, List<int> views) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def mostPopularCreator(creators: Array[String], ids: Array[String], views: Array[Int]): List[List[String]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec most_popular_creator(creators :: [String.t], ids :: [String.t], views :: [integer]) :: [[String.t]]\n  def most_popular_creator(creators, ids, views) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec most_popular_creator(Creators :: [unicode:unicode_binary()], Ids :: [unicode:unicode_binary()], Views :: [integer()]) -> [[unicode:unicode_binary()]].\nmost_popular_creator(Creators, Ids, Views) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (most-popular-creator creators ids views)\n  (-> (listof string?) (listof string?) (listof exact-integer?) (listof (listof string?)))\n  )"
+    }
+  ],
+  "solution": null
+}

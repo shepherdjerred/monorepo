@@ -1,0 +1,145 @@
+{
+  "questionId": "2582",
+  "questionFrontendId": "2492",
+  "title": "Minimum Score of a Path Between Two Cities",
+  "titleSlug": "minimum-score-of-a-path-between-two-cities",
+  "difficulty": "Medium",
+  "content": "<p>You are given a positive integer <code>n</code> representing <code>n</code> cities numbered from <code>1</code> to <code>n</code>. You are also given a <strong>2D</strong> array <code>roads</code> where <code>roads[i] = [a<sub>i</sub>, b<sub>i</sub>, distance<sub>i</sub>]</code> indicates that there is a <strong>bidirectional </strong>road between cities <code>a<sub>i</sub></code> and <code>b<sub>i</sub></code> with a distance equal to <code>distance<sub>i</sub></code>. The cities graph is not necessarily connected.</p>\n\n<p>The <strong>score</strong> of a path between two cities is defined as the <strong>minimum </strong>distance of a road in this path.</p>\n\n<p>Return <em>the <strong>minimum </strong>possible score of a path between cities </em><code>1</code><em> and </em><code>n</code>.</p>\n\n<p><strong>Note</strong>:</p>\n\n<ul>\n\t<li>A path is a sequence of roads between two cities.</li>\n\t<li>It is allowed for a path to contain the same road <strong>multiple</strong> times, and you can visit cities <code>1</code> and <code>n</code> multiple times along the path.</li>\n\t<li>The test cases are generated such that there is <strong>at least</strong> one path between <code>1</code> and <code>n</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/10/12/graph11.png\" style=\"width: 190px; height: 231px;\" />\n<pre>\n<strong>Input:</strong> n = 4, roads = [[1,2,9],[2,3,6],[2,4,5],[1,4,7]]\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> The path from city 1 to 4 with the minimum score is: 1 -&gt; 2 -&gt; 4. The score of this path is min(9,5) = 5.\nIt can be shown that no other path has less score.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/10/12/graph22.png\" style=\"width: 190px; height: 231px;\" />\n<pre>\n<strong>Input:</strong> n = 4, roads = [[1,2,2],[1,3,4],[3,4,7]]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The path from city 1 to 4 with the minimum score is: 1 -&gt; 2 -&gt; 1 -&gt; 3 -&gt; 4. The score of this path is min(2,2,4,7) = 2.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= roads.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>roads[i].length == 3</code></li>\n\t<li><code>1 &lt;= a<sub>i</sub>, b<sub>i</sub> &lt;= n</code></li>\n\t<li><code>a<sub>i</sub> != b<sub>i</sub></code></li>\n\t<li><code>1 &lt;= distance<sub>i</sub> &lt;= 10<sup>4</sup></code></li>\n\t<li>There are no repeated edges.</li>\n\t<li>There is at least one path between <code>1</code> and <code>n</code>.</li>\n</ul>\n",
+  "hints": [
+    "Can you solve the problem if the whole graph is connected?",
+    "Notice that if the graph is connected, you can always use any edge of the graph in your path.",
+    "How to solve the general problem in a similar way? Remove all the nodes that are not connected to 1 and n, then apply the previous solution in the new graph."
+  ],
+  "metaData": "{\n  \"name\": \"minScore\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"roads\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"109.3K\", \"totalSubmission\": \"186.3K\", \"totalAcceptedRaw\": 109303, \"totalSubmissionRaw\": 186325, \"acRate\": \"58.7%\"}",
+  "likes": 1909,
+  "dislikes": 323,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Checking Existence of Edge Length Limited Paths\", \"titleSlug\": \"checking-existence-of-edge-length-limited-paths\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Checking Existence of Edge Length Limited Paths II\", \"titleSlug\": \"checking-existence-of-edge-length-limited-paths-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "4\n[[1,2,9],[2,3,6],[2,4,5],[1,4,7]]",
+    "4\n[[1,2,2],[1,3,4],[3,4,7]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"unbxd\", \"name\": \"Unbxd\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minScore(int n, vector<vector<int>>& roads) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minScore(int n, int[][] roads) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minScore(self, n: int, roads: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minScore(self, n, roads):\n        \"\"\"\n        :type n: int\n        :type roads: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} roads\n * @return {number}\n */\nvar minScore = function(n, roads) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minScore(n: number, roads: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinScore(int n, int[][] roads) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minScore(int n, int** roads, int roadsSize, int* roadsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minScore(n int, roads [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minScore(n: Int, roads: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minScore(_ n: Int, _ roads: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_score(n: i32, roads: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} roads\n# @return {Integer}\ndef min_score(n, roads)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $roads\n     * @return Integer\n     */\n    function minScore($n, $roads) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minScore(int n, List<List<int>> roads) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minScore(n: Int, roads: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_score(n :: integer, roads :: [[integer]]) :: integer\n  def min_score(n, roads) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_score(N :: integer(), Roads :: [[integer()]]) -> integer().\nmin_score(N, Roads) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-score n roads)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1693",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given an undirected graph with `n` nodes which are referred to as cities from `1` to `n`. The graph has weighted edges referred to as roads in the description.\n\nThe score of a path between two nodes is defined as the minimum weight edge in this path.\n\nOur task is to return the minimum possible score of a path from `1` to `n`. It is also given that we can visit any edge or node multiple times in a path.\n\n---\n\n### Approach 1: Breadth First Search\n\n#### Intuition\n\nAccording to the problem statement, the given graph may or may not be connected, and it may have multiple connected components. It is also stated that there is at least one path connecting node `1` to node `n`. It means that these nodes `1` and `n` are part of the same component. We also know that in a connected component of an undirected graph, we can reach any node from any other node.\n\nConsider the following examples, where the highlighted red color edge is the minimum weight edge in the component containing nodes `1` and `n`. Now the path with the minimum score will be any path from node `1` to `n` that includes this red edge.\n\n![img](../Figures/2492/2492-1.png)\n\nIn both of these examples, we see that we begin at node `1`, proceed to cover the red color edge, and then proceed to node `n`. The answer is the weight of the red edge. It demonstrates that we can go to the red edge wherever it is in the component. The path definition in the problem statements allows us to visit any node or edge multiple times, allowing us to always traverse over the red edge.\n\n**So this suggests that our task is to find the edge with the lowest weight among all the edges in the component containing nodes `1` and `n`.**\n\nTo figure it out, we can use a breadth-first search (BFS) traversal algorithm. BFS is an algorithm for traversing or searching a graph. It traverses in a level-wise manner, i.e., all the nodes at the present level (say `l`) are explored before moving on to the nodes at the next level (`l + 1`), where a level's number is the distance from a starting node. BFS is implemented with a queue.\n\nIf you are not familiar with BFS traversal, we suggest you read our [Leetcode Explore Card](https://leetcode.com/explore/featured/card/graph/620/breadth-first-search-in-graph/).\n\nWe begin a BFS traversal from node `1` and visit all the nodes and edges in node `1`'s component. We create the `answer` variable and initialize it with `infinity`.\n\nWe update `answer` as the minimum of `answer` or the edge weight while iterating over all the edges.\n\nWe obtain the minimum weight edge in `answer` after completing the traversal.\n\n#### Algorithm\n\n1. Create an adjacency list `adj` that contains a list of pairs of integers such that `adj[node]` contains all of node's neighbors in the form of `(neighbor, weight)` where `neighbor` is the neighboring node of `node` and `weight` denotes the weights of the edge that connects `node` and `neighbor`.\n2. Return `bfs(n, adj)`, which works as following:\n    - Create a `visit` array to keep track of visited nodes. We also create an integer queue `q` and a variable `answer` set to the maximum integer value.\n    - We begin by pushing node `1` and marking it as visited.\n    - We now loop until the queue is empty. The queue's first element, `node`, is popped out. We iterate over all the edges connected to `node` and for each `edge`, update `answer` to the minimum of `answer` and `edge` weight. We also check whether or not the node connected to the other end of the `edge` is visited. If it has not been visited, we visit it and add it to the queue.\n    - In the end, we return the weight of the lowest weight edge `answer`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ZYFbYQoc/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ZYFbYQoc\"></iframe>\n\n#### Complexity Analysis\n\nHere $n$ is the number of nodes and $e$ is the total number edges.\n\n* Time complexity: $O(n + e)$.\n    - Each queue operation in the BFS algorithm takes $O(1)$ time, and a single node can only be pushed once, leading to $O(n)$ operations for $n$ nodes. We iterate over all the neighbors of each node that is popped out of the queue, so for an undirected edge, a given edge could be iterated at most twice (by nodes at both ends), resulting in $O(e)$ operations total for all the nodes.\n    - We also need $O(e)$ time to initialize the adjacency list and $O(n)$ to initialize the `visit` array.\n    - As a result, the total time required is $O(n + e)$.\n\n* Space complexity: $O(n + e)$.\n    - Building the adjacency list takes $O(e)$ space. \n    - The BFS queue takes $O(n)$ because each node is added at most once.\n    - The `visit` array takes $O(n)$ space as well.\n\n---\n\n### Approach 2: Depth First Search\n\n#### Intuition\n\nAs we just have to find the minimum weight edge in our component containing node `1`, another method is to use a depth-first search (DFS).\n\nIn DFS, we use a recursive function to explore nodes as far as possible along each branch. Upon reaching the end of a branch, we backtrack to the previous node and continue exploring the next branches.\n\nOnce we encounter an unvisited node, we will take one of its neighbor nodes (if exists) as the next node on this branch. Recursively call the function to take the next node as the 'starting node' and solve the subproblem.\n\nIf you are new to Depth First Search, please see our [Leetcode Explore Card](https://leetcode.com/explore/featured/card/graph/619/depth-first-search-in-graph/3882/) for more information on it!\n\n#### Algorithm\n\n1. Create an adjacency list `adj` that contains a list of pairs of integers such that `adj[node]` contains all of node's neighbors in the form of `(neighbor, weight)` where `neighbor` is the neighboring node of `node` and `weight` denotes the weights of the edge that connects `node` and `neighbor`.\n2. Create a `visit` array to keep track of visited nodes. We also set the `answer` set to the maximum integer value.\n3. Use `dfs(node, adj, visit, answer)` to perform a DFS traversal starting with `node`. We begin with `dfs(1, adj, visit, answer)`:\n    - Mark the `node` as visited.\n    - Use `adj[node]` to iterate over the neighboring nodes and edges. For each `edge`, update the `answer` to the minimum of `answer` and `edge` weight. If the node at the other end of the `edge` is not visited, we call `dfs` with that node recursively.\n4. Return `answer`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/JSjeohp2/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"JSjeohp2\"></iframe>\n\n#### Complexity Analysis\n\nHere $n$ is the number of nodes and $e$ is the total number edges.\n\n* Time complexity: $O(n + e)$.\n    - The `dfs` function visits each node once, which takes $O(n)$ time in total. Because we have undirected edges, each edge can only be iterated twice (by nodes at the end), resulting in $O(e)$ operations total while visiting all nodes.\n    - We also need $O(e)$ time to initialize the adjacency list and $O(n)$ to initialize the `visit` array.\n    - As a result, the total time required is $O(n + e)$.\n\n* Space complexity: $O(n + e)$.\n    - Building the adjacency list takes $O(e)$ space. \n    - The recursion call stack used by `dfs` can have no more than $n$ elements in the worst-case scenario. It would take up $O(n)$ space in that case. \n    - The `visit` array takes $O(n)$ space.\n\n---\n\n### Approach 3: Union-find\n\n#### Intuition\n\nAnother approach to solving questions based on graph connectivity is the union-find data structure. It can optimally determine which connected component a node or an edge belongs to. We can use the union-find data structure to solve the problem because our task is to find the minimum weight edge in our component containing node `1`.\n\nA disjoint-set data structure also called a union–find data structure or merge–find set, is a data structure that stores a collection of disjoint (non-overlapping) sets. Equivalently, it stores a partition of a set into disjoint subsets. It provides operations for adding new sets, merging sets (replacing them by their union), and finding a representative member of a set. It implements two useful operations:\n\n1. `Find`: Determine which subset a particular element is in. This can be used to determine if two elements are in the same subset.\n2. `Union`: Join two subsets into a single subset.\n\nIf you are new to Union-Find, we suggest you read our [Leetcode Explore Card](https://leetcode.com/explore/learn/card/graph/618/disjoint-set/3881/). We will not talk about implementation details in this article, but only about the interface to the data structure.\n\nWe iterate through all of the edges, taking the `union` of the two nodes connected by the edge. This generates a graph by inserting all nodes into the components to which they belong.\n\nAs we know, our task is to find the minimum weight edge in the component containing nodes `1` and `n`. We iterate over all the edges again and for each edge that connects two nodes, say `a` and `b`, we check whether node `a` (or `b`) belongs to the same component as node `1` (or `n`). We don't need to check for node `b` separately because `a` and `b` are connected by an edge and thus both belong to the same component. The `find` operation can be used to inspect a node's component.\n\nIf node `a` belongs to the same component as node `1`, we update our `answer` to the minimum of the `answer` till now and the weight of the edge connecting `a` and`b`. Otherwise, if node `a` does not belong to the same component as node `1`, it is ignored.\n\n#### Algorithm\n\n1. Create an instance of `UnionFind` of size `n + 1`. In addition, create the `answer` variable set to the maximum integer value.\n2. Iterate over all of the graph's edges, or `roads`, and perform a `union` of both nodes connected by an edge.\n3. Iterate over all the edges again and for each `road`: \n    - Determine whether a component of node `1` is the same as one of the ends of `road`. If both nodes belong to the same component, update `answer` to the minimum of `answer` up to this point and the weight of `road`. Otherwise, ignore edge `road`.\n4. Return `answer`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/28JYbUdS/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"28JYbUdS\"></iframe>\n\n#### Complexity Analysis\n\nHere $n$ is the number of nodes and $e$ is the total number edges.\n\n* Time complexity: $O(n + e)$.\n    - For $T$ operations, the amortized time complexity of the union-find algorithm (using path compression with union by rank) is $O(alpha(T))$. Here, $\\alpha(T)$ is the inverse Ackermann function that grows so slowly, that it doesn't exceed $4$ for all reasonable $T$ (approximately $ T < 10^{600}$). You can read more about the complexity of union-find [here](https://en.wikipedia.org/wiki/Disjoint-set_data_structure#Time_complexity).  Because the function grows so slowly, we consider it to be $O(1)$.\n    - Initializing `UnionFind` takes $O(n)$ time beacuse we are initializing the `parent` and `rank` arrays of size `n + 1` each.\n    - We iterate through every edge and perform `union` of the nodes connected by the edge which takes $O(1)$ time per operation. It takes $O(e)$ time for $e$ edges.\n    - We again iterate through every edge and use `find` operation to find the component of node `1` and a node having one end in the edge. It also takes $O(1)$ per operation and takes $O(e)$ time for all the $e$ edges.\n    - As a result, the total time required is $O(n + e)$.\n\n* Space complexity: $O(n)$.\n    - We are using the `parent` and `rank` arrays, both of which require $O(n)$ space each.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

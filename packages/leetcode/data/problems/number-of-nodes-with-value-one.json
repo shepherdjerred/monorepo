@@ -1,0 +1,144 @@
+{
+  "questionId": "2584",
+  "questionFrontendId": "2445",
+  "title": "Number of Nodes With Value One",
+  "titleSlug": "number-of-nodes-with-value-one",
+  "difficulty": "Medium",
+  "content": "<p>There is an <strong>undirected</strong> connected tree with <code>n</code> nodes labeled from <code>1</code> to <code>n</code> and <code>n - 1</code> edges. You are given the integer <code>n</code>. The parent node of a node with a label <code>v</code> is the node with the label <code>floor (v / 2)</code>. The root of the tree is the node with the label <code>1</code>.</p>\n\n<ul>\n\t<li>For example, if <code>n = 7</code>, then the node with the label <code>3</code> has the node with the label <code>floor(3 / 2) = 1</code> as its parent, and the node with the label <code>7</code> has the node with the label <code>floor(7 / 2) = 3</code> as its parent.</li>\n</ul>\n\n<p>You are also given an integer array <code>queries</code>. Initially, every node has a value <code>0</code> on it. For each query <code>queries[i]</code>, you should flip all values in the subtree of the node with the label <code>queries[i]</code>.</p>\n\n<p>Return <em>the total number of nodes with the value </em><code>1</code><em> <strong>after processing all the queries</strong></em>.</p>\n\n<p><strong>Note</strong> that:</p>\n\n<ul>\n\t<li>Flipping the value of a node means that the node with the value <code>0</code> becomes <code>1</code> and vice versa.</li>\n\t<li><code>floor(x)</code> is equivalent to rounding <code>x</code> down to the nearest integer.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/10/19/ex1.jpg\" style=\"width: 600px; height: 297px;\" />\n<pre>\n<strong>Input:</strong> n = 5 , queries = [1,2,5]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The diagram above shows the tree structure and its status after performing the queries. The blue node represents the value 0, and the red node represents the value 1.\nAfter processing the queries, there are three red nodes (nodes with value 1): 1, 3, and 5.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/10/19/ex2.jpg\" style=\"width: 650px; height: 88px;\" />\n<pre>\n<strong>Input:</strong> n = 3, queries = [2,3,3]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The diagram above shows the tree structure and its status after performing the queries. The blue node represents the value 0, and the red node represents the value 1.\nAfter processing the queries, there are one red node (node with value 1): 2.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= queries.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= queries[i] &lt;= n</code></li>\n</ul>\n",
+  "hints": [
+    "The relative order of processing queries does not matter.",
+    "If we know that for some node v, its parent was updated some number of times, then we know that node v was also updated that number of times.",
+    "Iterate on nodes from highest to lowest and count the number of times the query was performed on that node and the number of times this node was updated from its parent (direct or indirect). The parity of that number is the answer."
+  ],
+  "metaData": "{\n  \"name\": \"numberOfNodes\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"queries\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"2.9K\", \"totalSubmission\": \"4.4K\", \"totalAcceptedRaw\": 2898, \"totalSubmissionRaw\": 4367, \"acRate\": \"66.4%\"}",
+  "likes": 81,
+  "dislikes": 10,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "5\n[1,2,5]",
+    "3\n[2,3,3]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numberOfNodes(int n, vector<int>& queries) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numberOfNodes(int n, int[] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numberOfNodes(self, n: int, queries: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numberOfNodes(self, n, queries):\n        \"\"\"\n        :type n: int\n        :type queries: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[]} queries\n * @return {number}\n */\nvar numberOfNodes = function(n, queries) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numberOfNodes(n: number, queries: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumberOfNodes(int n, int[] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numberOfNodes(int n, int* queries, int queriesSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numberOfNodes(n int, queries []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numberOfNodes(n: Int, queries: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numberOfNodes(_ n: Int, _ queries: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn number_of_nodes(n: i32, queries: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[]} queries\n# @return {Integer}\ndef number_of_nodes(n, queries)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[] $queries\n     * @return Integer\n     */\n    function numberOfNodes($n, $queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numberOfNodes(int n, List<int> queries) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numberOfNodes(n: Int, queries: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec number_of_nodes(n :: integer, queries :: [integer]) :: integer\n  def number_of_nodes(n, queries) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec number_of_nodes(N :: integer(), Queries :: [integer()]) -> integer().\nnumber_of_nodes(N, Queries) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (number-of-nodes n queries)\n  (-> exact-integer? (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

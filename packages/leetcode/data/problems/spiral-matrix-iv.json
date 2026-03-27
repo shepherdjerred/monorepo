@@ -1,0 +1,145 @@
+{
+  "questionId": "2411",
+  "questionFrontendId": "2326",
+  "title": "Spiral Matrix IV",
+  "titleSlug": "spiral-matrix-iv",
+  "difficulty": "Medium",
+  "content": "<p>You are given two integers <code>m</code> and <code>n</code>, which represent the dimensions of a matrix.</p>\n\n<p>You are also given the <code>head</code> of a linked list of integers.</p>\n\n<p>Generate an <code>m x n</code> matrix that contains the integers in the linked list presented in <strong>spiral</strong> order <strong>(clockwise)</strong>, starting from the <strong>top-left</strong> of the matrix. If there are remaining empty spaces, fill them with <code>-1</code>.</p>\n\n<p>Return <em>the generated matrix</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/05/09/ex1new.jpg\" style=\"width: 240px; height: 150px;\" />\n<pre>\n<strong>Input:</strong> m = 3, n = 5, head = [3,0,2,6,8,1,7,9,4,2,5,5,0]\n<strong>Output:</strong> [[3,0,2,6,8],[5,0,-1,-1,1],[5,2,4,9,7]]\n<strong>Explanation:</strong> The diagram above shows how the values are printed in the matrix.\nNote that the remaining spaces in the matrix are filled with -1.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/05/11/ex2.jpg\" style=\"width: 221px; height: 60px;\" />\n<pre>\n<strong>Input:</strong> m = 1, n = 4, head = [0,1,2]\n<strong>Output:</strong> [[0,1,2,-1]]\n<strong>Explanation:</strong> The diagram above shows how the values are printed from left to right in the matrix.\nThe last space in the matrix is set to -1.</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= m, n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= m * n &lt;= 10<sup>5</sup></code></li>\n\t<li>The number of nodes in the list is in the range <code>[1, m * n]</code>.</li>\n\t<li><code>0 &lt;= Node.val &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [
+    "First, generate an m x n matrix filled with -1s.",
+    "Navigate within the matrix at (i, j) with the help of a direction vector ⟨di, dj⟩. At (i, j), you need to decide if you can keep going in the current direction.",
+    "If you cannot keep going, rotate the direction vector clockwise by 90 degrees."
+  ],
+  "metaData": "{\n  \"name\": \"spiralMatrix\",\n  \"params\": [\n    {\n      \"name\": \"m\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"n\"\n    },\n    {\n      \"type\": \"ListNode\",\n      \"name\": \"head\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[][]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"182.2K\", \"totalSubmission\": \"221.4K\", \"totalAcceptedRaw\": 182153, \"totalSubmissionRaw\": 221372, \"acRate\": \"82.3%\"}",
+  "likes": 1314,
+  "dislikes": 56,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Spiral Matrix\", \"titleSlug\": \"spiral-matrix\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Spiral Matrix II\", \"titleSlug\": \"spiral-matrix-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Spiral Matrix III\", \"titleSlug\": \"spiral-matrix-iii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "3\n5\n[3,0,2,6,8,1,7,9,4,2,5,5,0]",
+    "1\n4\n[0,1,2]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    vector<vector<int>> spiralMatrix(int m, int n, ListNode* head) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode() {}\n *     ListNode(int val) { this.val = val; }\n *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n * }\n */\nclass Solution {\n    public int[][] spiralMatrix(int m, int n, ListNode head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution:\n    def spiralMatrix(self, m: int, n: int, head: Optional[ListNode]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for singly-linked list.\n# class ListNode(object):\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution(object):\n    def spiralMatrix(self, m, n, head):\n        \"\"\"\n        :type m: int\n        :type n: int\n        :type head: Optional[ListNode]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for singly-linked list.\n * function ListNode(val, next) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.next = (next===undefined ? null : next)\n * }\n */\n/**\n * @param {number} m\n * @param {number} n\n * @param {ListNode} head\n * @return {number[][]}\n */\nvar spiralMatrix = function(m, n, head) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *     val: number\n *     next: ListNode | null\n *     constructor(val?: number, next?: ListNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.next = (next===undefined ? null : next)\n *     }\n * }\n */\n\nfunction spiralMatrix(m: number, n: number, head: ListNode | null): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public int val;\n *     public ListNode next;\n *     public ListNode(int val=0, ListNode next=null) {\n *         this.val = val;\n *         this.next = next;\n *     }\n * }\n */\npublic class Solution {\n    public int[][] SpiralMatrix(int m, int n, ListNode head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     struct ListNode *next;\n * };\n */\n/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** spiralMatrix(int m, int n, struct ListNode* head, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for singly-linked list.\n * type ListNode struct {\n *     Val int\n *     Next *ListNode\n * }\n */\nfunc spiralMatrix(m int, n int, head *ListNode) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var li = ListNode(5)\n * var v = li.`val`\n * Definition for singly-linked list.\n * class ListNode(var `val`: Int) {\n *     var next: ListNode? = null\n * }\n */\nclass Solution {\n    fun spiralMatrix(m: Int, n: Int, head: ListNode?): Array<IntArray> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public var val: Int\n *     public var next: ListNode?\n *     public init() { self.val = 0; self.next = nil; }\n *     public init(_ val: Int) { self.val = val; self.next = nil; }\n *     public init(_ val: Int, _ next: ListNode?) { self.val = val; self.next = next; }\n * }\n */\nclass Solution {\n    func spiralMatrix(_ m: Int, _ n: Int, _ head: ListNode?) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for singly-linked list.\n// #[derive(PartialEq, Eq, Clone, Debug)]\n// pub struct ListNode {\n//   pub val: i32,\n//   pub next: Option<Box<ListNode>>\n// }\n// \n// impl ListNode {\n//   #[inline]\n//   fn new(val: i32) -> Self {\n//     ListNode {\n//       next: None,\n//       val\n//     }\n//   }\n// }\nimpl Solution {\n    pub fn spiral_matrix(m: i32, n: i32, head: Option<Box<ListNode>>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for singly-linked list.\n# class ListNode\n#     attr_accessor :val, :next\n#     def initialize(val = 0, _next = nil)\n#         @val = val\n#         @next = _next\n#     end\n# end\n# @param {Integer} m\n# @param {Integer} n\n# @param {ListNode} head\n# @return {Integer[][]}\ndef spiral_matrix(m, n, head)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a singly-linked list.\n * class ListNode {\n *     public $val = 0;\n *     public $next = null;\n *     function __construct($val = 0, $next = null) {\n *         $this->val = $val;\n *         $this->next = $next;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param Integer $m\n     * @param Integer $n\n     * @param ListNode $head\n     * @return Integer[][]\n     */\n    function spiralMatrix($m, $n, $head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *   int val;\n *   ListNode? next;\n *   ListNode([this.val = 0, this.next]);\n * }\n */\nclass Solution {\n  List<List<int>> spiralMatrix(int m, int n, ListNode? head) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode(_x: Int = 0, _next: ListNode = null) {\n *   var next: ListNode = _next\n *   var x: Int = _x\n * }\n */\nobject Solution {\n    def spiralMatrix(m: Int, n: Int, head: ListNode): Array[Array[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for singly-linked list.\n#\n# defmodule ListNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           next: ListNode.t() | nil\n#         }\n#   defstruct val: 0, next: nil\n# end\n\ndefmodule Solution do\n  @spec spiral_matrix(m :: integer, n :: integer, head :: ListNode.t | nil) :: [[integer]]\n  def spiral_matrix(m, n, head) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for singly-linked list.\n%%\n%% -record(list_node, {val = 0 :: integer(),\n%%                     next = null :: 'null' | #list_node{}}).\n\n-spec spiral_matrix(M :: integer(), N :: integer(), Head :: #list_node{} | null) -> [[integer()]].\nspiral_matrix(M, N, Head) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for singly-linked list:\n#|\n\n; val : integer?\n; next : (or/c list-node? #f)\n(struct list-node\n  (val next) #:mutable #:transparent)\n\n; constructor\n(define (make-list-node [val 0])\n  (list-node val #f))\n\n|#\n\n(define/contract (spiral-matrix m n head)\n  (-> exact-integer? exact-integer? (or/c list-node? #f) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2430",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach: Simulation\n\n#### Intuition\n\nWe have two integers, `m` and `n`, representing the dimensions of a matrix. We are also given the `head` of a linked list containing the elements of the matrix in spiral order. Our task is to reconstruct the original matrix.\n\nWe can simulate the spiral movement by following these steps:\n\n- Start by moving to the right until reaching the boundary.\n- Then move downwards until reaching the boundary.\n- Next, move to the left until reaching the boundary.\n- Finally, move upwards until reaching the boundary.\n- Repeat these steps until all elements are placed in the matrix.\n\nThe movement pattern repeats in the order of right, down, left, and up. We can store these directional movements in an array. For example, moving right corresponds to `(x+0, y+1)` and moving down to `(x+1, y+0)`. We simulate the process by following each direction until we reach the matrix boundary, then switch to the next direction, continuing until all nodes in the linked list are used.\n\n#### Algorithm\n\n1. Set `i` (row index) to 0, `j` (column index) to 0, and `cur_d` (current direction) to 0.\n2. Define a `movement` matrix that stores the directions for east, south, west, and north movements:\n    - `East: (0, 1)`\n    - `South: (1, 0)`\n    - `West: (0, -1)`\n    - `North: (-1, 0)`\n3. Initialize a 2D matrix `res` with dimensions `m x n`, filled with -1.\n4. Iterate over the linked list until you reach the end (`head` is not `nullptr`):\n    - Assign the current node's value `head->val` to the matrix at position `res[i][j]`.\n    - Calculate the next position `newi` and `newj` using the current direction from the movement matrix.\n    - If the next position `newi, newj` is out of the matrix bounds (less than 0 or greater than/equal to m or n), or is already filled (`res[newi][newj]` is not -1):\n        - Then, change the direction by incrementing `cur_d` (`modulus 4` to keep within the bounds of the direction matrix).\n    - Update the current position `i, j` using the updated direction.\n5. Once the linked list is fully traversed and the matrix is filled, return the resulting matrix `res`.\n\n!?!../Documents/2326/slideshow.json:960,540!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/o2rpHqJ2/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"o2rpHqJ2\"></iframe>\n\n#### Complexity Analysis\n\nLet $k$ be the size of the linked list with the first node `head`.\n\n- Time complexity: $O(n \\cdot m)$\n\n    We start by creating a matrix of size `n * m` and fill it with `-1`, which takes $O(n \\cdot m)$ time. After that, we loop through the linked list once. In the worst case, the list has `k` nodes, which can go up to `n * m`. So, the overall time complexity is $O(n \\cdot m)$.\n\n- Space complexity: $O(1)$\n\n    No additional space is used proportional to the list size `k`. Therefore, the space complexity is given by $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

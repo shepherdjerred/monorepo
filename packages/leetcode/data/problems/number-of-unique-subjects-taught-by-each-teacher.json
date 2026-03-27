@@ -1,0 +1,58 @@
+{
+  "questionId": "2495",
+  "questionFrontendId": "2356",
+  "title": "Number of Unique Subjects Taught by Each Teacher",
+  "titleSlug": "number-of-unique-subjects-taught-by-each-teacher",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Teacher</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| teacher_id  | int  |\n| subject_id  | int  |\n| dept_id     | int  |\n+-------------+------+\n(subject_id, dept_id) is the primary key (combinations of columns with unique values) of this table.\nEach row in this table indicates that the teacher with teacher_id teaches the subject subject_id in the department dept_id.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to calculate&nbsp;the number of unique subjects each teacher teaches in the university.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The&nbsp;result format is shown in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nTeacher table:\n+------------+------------+---------+\n| teacher_id | subject_id | dept_id |\n+------------+------------+---------+\n| 1          | 2          | 3       |\n| 1          | 2          | 4       |\n| 1          | 3          | 3       |\n| 2          | 1          | 1       |\n| 2          | 2          | 1       |\n| 2          | 3          | 1       |\n| 2          | 4          | 1       |\n+------------+------------+---------+\n<strong>Output:</strong>  \n+------------+-----+\n| teacher_id | cnt |\n+------------+-----+\n| 1          | 2   |\n| 2          | 4   |\n+------------+-----+\n<strong>Explanation:</strong> \nTeacher 1:\n  - They teach subject 2 in departments 3 and 4.\n  - They teach subject 3 in department 3.\nTeacher 2:\n  - They teach subject 1 in department 1.\n  - They teach subject 2 in department 1.\n  - They teach subject 3 in department 1.\n  - They teach subject 4 in department 1.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Teacher (teacher_id int, subject_id int, dept_id int)\"], \"mssql\": [\"Create table Teacher (teacher_id int, subject_id int, dept_id int)\"], \"oraclesql\": [\"Create table Teacher (teacher_id int, subject_id int, dept_id int)\"], \"database\": true, \"name\": \"count_unique_subjects\", \"pythondata\": [\"Teacher = pd.DataFrame([], columns=['teacher_id', 'subject_id', 'dept_id']).astype({'teacher_id':'Int64', 'subject_id':'Int64', 'dept_id':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Teacher (teacher_id int, subject_id int, dept_id int)\"], \"database_schema\": {\"Teacher\": {\"teacher_id\": \"INT\", \"subject_id\": \"INT\", \"dept_id\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"508.5K\", \"totalSubmission\": \"570K\", \"totalAcceptedRaw\": 508523, \"totalSubmissionRaw\": 569964, \"acRate\": \"89.2%\"}",
+  "likes": 741,
+  "dislikes": 57,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Teacher\":[\"teacher_id\",\"subject_id\",\"dept_id\"]},\"rows\":{\"Teacher\":[[1,2,3],[1,2,4],[1,3,3],[2,1,1],[2,2,1],[2,3,1],[2,4,1]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"capgemini\", \"name\": \"Capgemini\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef count_unique_subjects(teacher: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "2014",
+    "content": "<!-- Don't delete this -->\n[TOC]\n\n# Solution\n\n---\n\n## pandas\n\n### Approach: Group By and Count Distinct\n\n#### Intuition\n\nIn pandas, we can use the groupby function on the `'teacher_id'` column and then count the unique `'subject_id'` per teacher using the `.nunique()` function.\n\n#### Algorithm\n\nTo calculate the number of unique subjects each teacher teaches in the university, we first need to group by `'teacher_id'` and then count the number of unique `'subject_id'`. The renaming of the column is done for the output to match the required format (similar to the `AS` keyword in SQL). \nNote that we need to specify `axis=1` for it, as we are renaming a column and not a row.\n\nHere is an example to help solidify the intuition behind the algorithm:\n\nThe original table `teacher`:\n\n<table>\n    <tr>\n        <th>teacher_id</th>\n        <th>subject_id</th>\n        <th>dept_id</th>\n    </tr>\n    <tr>\n        <td>1</td>\n        <td>2</td>\n        <td>3</td>\n    </tr>\n    <tr>\n        <td>1</td>\n        <td>2</td>\n        <td>4</td>\n    </tr>\n    <tr>\n        <td>1</td>\n        <td>3</td>\n        <td>3</td>\n    </tr>\n    <tr>\n        <td>2</td>\n        <td>1</td>\n        <td>1</td>\n    </tr>\n    <tr>\n        <td>2</td>\n        <td>2</td>\n        <td>1</td>\n    </tr>\n    <tr>\n        <td>2</td>\n        <td>3</td>\n        <td>1</td>\n    </tr>\n    <tr>\n        <td>2</td>\n        <td>4</td>\n        <td>1</td>\n    </tr>\n</table>\n\n<br>\n\nThe table after grouping by `teacher_id` and counting distinct `subject_id`:\n\n<table>\n    <tr>\n        <th>teacher_id</th>\n        <th>cnt</th>\n    </tr>\n    <tr>\n        <td>1</td>\n        <td>2</td>\n    </tr>\n    <tr>\n        <td>2</td>\n        <td>4</td>\n    </tr>\n</table>\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/8MZLnhcp/shared\" frameBorder=\"0\" width=\"100%\" height=\"157\" name=\"8MZLnhcp\"></iframe>\n\n<br>\n\n---\n\n## Database\n\n### Approach: Group By and Count Distinct\n\n#### Intuition\n\nIn SQL, the query to count the number of unique subjects each teacher teaches involves grouping by the `teacher_id` and then counting the distinct `subject_id`.\n\n#### Algorithm\n\nThis task requires counting the number of unique subjects each teacher teaches in the university. This implies that we have to group by the teacher_id and then count the distinct subject_id.\n\nHere is an example to help solidify the intuition behind the algorithm:\n\nThe original table `teacher`:\n\n<table>\n    <tr>\n        <th>teacher_id</th>\n        <th>subject_id</th>\n        <th>dept_id</th>\n    </tr>\n    <tr>\n        <td>1</td>\n        <td>2</td>\n        <td>3</td>\n    </tr>\n    <tr>\n        <td>1</td>\n        <td>2</td>\n        <td>4</td>\n    </tr>\n    <tr>\n        <td>1</td>\n        <td>3</td>\n        <td>3</td>\n    </tr>\n    <tr>\n        <td>2</td>\n        <td>1</td>\n        <td>1</td>\n    </tr>\n    <tr>\n        <td>2</td>\n        <td>2</td>\n        <td>1</td>\n    </tr>\n    <tr>\n        <td>2</td>\n        <td>3</td>\n        <td>1</td>\n    </tr>\n    <tr>\n        <td>2</td>\n        <td>4</td>\n        <td>1</td>\n    </tr>\n</table>\n\n<br>\n\nThe table after grouping by `teacher_id` and counting distinct `subject_id`:\n\n<table>\n    <tr>\n        <th>teacher_id</th>\n        <th>cnt</th>\n    </tr>\n    <tr>\n        <td>1</td>\n        <td>2</td>\n    </tr>\n    <tr>\n        <td>2</td>\n        <td>4</td>\n    </tr>\n</table>\n\n#### Implementation\n\n```sql\nSELECT teacher_id, COUNT(DISTINCT subject_id) AS cnt\nFROM Teacher\nGROUP BY teacher_id;\n```",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

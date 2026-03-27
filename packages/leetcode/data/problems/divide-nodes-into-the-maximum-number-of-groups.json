@@ -1,0 +1,145 @@
+{
+  "questionId": "2583",
+  "questionFrontendId": "2493",
+  "title": "Divide Nodes Into the Maximum Number of Groups",
+  "titleSlug": "divide-nodes-into-the-maximum-number-of-groups",
+  "difficulty": "Hard",
+  "content": "<p>You are given a positive integer <code>n</code> representing the number of nodes in an <strong>undirected</strong> graph. The nodes are labeled from <code>1</code> to <code>n</code>.</p>\n\n<p>You are also given a 2D integer array <code>edges</code>, where <code>edges[i] = [a<sub>i, </sub>b<sub>i</sub>]</code> indicates that there is a <strong>bidirectional</strong> edge between nodes <code>a<sub>i</sub></code> and <code>b<sub>i</sub></code>. <strong>Notice</strong> that the given graph may be disconnected.</p>\n\n<p>Divide the nodes of the graph into <code>m</code> groups (<strong>1-indexed</strong>) such that:</p>\n\n<ul>\n\t<li>Each node in the graph belongs to exactly one group.</li>\n\t<li>For every pair of nodes in the graph that are connected by an edge <code>[a<sub>i, </sub>b<sub>i</sub>]</code>, if <code>a<sub>i</sub></code> belongs to the group with index <code>x</code>, and <code>b<sub>i</sub></code> belongs to the group with index <code>y</code>, then <code>|y - x| = 1</code>.</li>\n</ul>\n\n<p>Return <em>the maximum number of groups (i.e., maximum </em><code>m</code><em>) into which you can divide the nodes</em>. Return <code>-1</code> <em>if it is impossible to group the nodes with the given conditions</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/10/13/example1.png\" style=\"width: 352px; height: 201px;\" />\n<pre>\n<strong>Input:</strong> n = 6, edges = [[1,2],[1,4],[1,5],[2,6],[2,3],[4,6]]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> As shown in the image we:\n- Add node 5 to the first group.\n- Add node 1 to the second group.\n- Add nodes 2 and 4 to the third group.\n- Add nodes 3 and 6 to the fourth group.\nWe can see that every edge is satisfied.\nIt can be shown that that if we create a fifth group and move any node from the third or fourth group to it, at least on of the edges will not be satisfied.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 3, edges = [[1,2],[2,3],[3,1]]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> If we add node 1 to the first group, node 2 to the second group, and node 3 to the third group to satisfy the first two edges, we can see that the third edge will not be satisfied.\nIt can be shown that no grouping is possible.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 500</code></li>\n\t<li><code>1 &lt;= edges.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>edges[i].length == 2</code></li>\n\t<li><code>1 &lt;= a<sub>i</sub>, b<sub>i</sub> &lt;= n</code></li>\n\t<li><code>a<sub>i</sub> != b<sub>i</sub></code></li>\n\t<li>There is at most one edge between any pair of vertices.</li>\n</ul>\n",
+  "hints": [
+    "If the graph is not bipartite, it is not possible to group the nodes.",
+    "Notice that we can solve the problem for each connected component independently, and the final answer will be just the sum of the maximum number of groups in each component.",
+    "Finally, to solve the problem for each connected component, we can notice that if for some node v we fix its position to be in the leftmost group, then we can also evaluate the position of every other node. That position is the depth of the node in a bfs tree after rooting at node v."
+  ],
+  "metaData": "{\n  \"name\": \"magnificentSets\",\n  \"params\": [\n    {\n      \"type\": \"integer\",\n      \"name\": \"n\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"edges\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"86.3K\", \"totalSubmission\": \"128.8K\", \"totalAcceptedRaw\": 86297, \"totalSubmissionRaw\": 128800, \"acRate\": \"67.0%\"}",
+  "likes": 988,
+  "dislikes": 74,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Binary Tree Level Order Traversal\", \"titleSlug\": \"binary-tree-level-order-traversal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Is Graph Bipartite?\", \"titleSlug\": \"is-graph-bipartite\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Shortest Cycle in a Graph\", \"titleSlug\": \"shortest-cycle-in-a-graph\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "6\n[[1,2],[1,4],[1,5],[2,6],[2,3],[4,6]]",
+    "3\n[[1,2],[2,3],[3,1]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"accenture\", \"name\": \"Accenture\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int magnificentSets(int n, vector<vector<int>>& edges) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int magnificentSets(int n, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def magnificentSets(self, n: int, edges: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def magnificentSets(self, n, edges):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} edges\n * @return {number}\n */\nvar magnificentSets = function(n, edges) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function magnificentSets(n: number, edges: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MagnificentSets(int n, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int magnificentSets(int n, int** edges, int edgesSize, int* edgesColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func magnificentSets(n int, edges [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun magnificentSets(n: Int, edges: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func magnificentSets(_ n: Int, _ edges: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn magnificent_sets(n: i32, edges: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} edges\n# @return {Integer}\ndef magnificent_sets(n, edges)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $edges\n     * @return Integer\n     */\n    function magnificentSets($n, $edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int magnificentSets(int n, List<List<int>> edges) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def magnificentSets(n: Int, edges: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec magnificent_sets(n :: integer, edges :: [[integer]]) :: integer\n  def magnificent_sets(n, edges) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec magnificent_sets(N :: integer(), Edges :: [[integer()]]) -> integer().\nmagnificent_sets(N, Edges) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (magnificent-sets n edges)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2657",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a graph with `n` nodes, represented by a 2D array edges, where `edges[i] = [u, v]` means there is a bidirectional edge between nodes `u` and `v`. Our task is to divide the nodes into the largest number of numbered groups (1, 2, 3, ...) such that:\n\n-   Each node belongs to exactly one group.\n-   If there is an edge `[u, v]`, and `u` is in group `x`, then `v` must be in either group `x - 1` or `x + 1`.\n\nSometimes, this kind of split is not possible. For example, consider this graph:\n\n![Impossible Split](../Figures/2493/2493_impossible_split.png)\n\nHere, no valid split exists. In such cases, we return `-1`.\n\nA key observation is that if it’s possible to divide the nodes into `x` groups (`x > 2`), we can also divide them into `x - 1` groups. Intuitively, this works because the nodes in the first and third groups can’t be directly connected, but they must all connect to nodes in the second group. By combining groups `1` and `3`, we get a valid split with `x - 1` groups.\n\n![Combining Node Groups to Get A Valid Split With One Less Group](../Figures/2493/2493_combine_node_groups.png)\n\nSo, to check if a valid split is possible, we just need to see if the graph can be split into two groups—in other words, whether it is *bipartite*.\n\n> A graph is **bipartite** when we can divide its nodes into two distinct sets where:\n>   - All edges connect vertices from one set to vertices in the other set.\n>   - No edges exist between vertices within the same set.\n\nAnother key detail to consider is that the given graph is not always connected. In this case, we calculate the largest number of groups for each connected part of the graph, and then take the sum of these numbers.\n\nTo sum up, the problem boils down to these two steps:\n\n1. Check if the graph is bipartite to see if a valid split exists.\n2. For each connected part of the graph, find the largest number of groups we can divide the nodes into and return their sum.\n\n---\n\n### Approach 1: Graph Coloring + Longest Shortest Path\n\n#### Intuition\n\nTo solve the first part of the problem, note that once we assign a single node to one of the two groups, the rest of the assignments are automatically determined. Nodes directly connected to the first node must go in the second group, their neighbors must return to the first group, and so on.\n\nTo check if the graph is bipartite, we \"color\" the nodes using two colors (one for each group), ensuring that any two connected nodes have different colors. If this coloring fails, the graph is not bipartite, and we can immediately return `-1`. \n\n![Impossible Graph Coloring](../Figures/2493/2493_graph_coloring.png)\n\nIf the graph is bipartite, we calculate the maximum number of groups we can divide the nodes into for each connected component separately. Intuitively, to achieve the largest number of groups, we spread the nodes as far apart as possible. This means that instead of simply assigning a neighboring node to the same group as the one it was previously associated with, we always try to assign it to a new group.\n\nAn important observation here is that the maximum number of groups in a component is determined by the longest shortest path between any pair of nodes in that component. This is similar to finding the \"height\" of the component if it were structured like a tree, with different nodes as potential roots. The longest shortest path essentially tells us how many layers or groups can be created based on the distances between the nodes.\n\nFinally, we repeat this for all connected components in the graph and sum up the results to get the answer.\n\n#### Algorithm\n\n##### `isBipartite(adjList, node, colors)` function\n-   Iterate over the neighbors of `node` and attempt to assign them the opposite color of `node`:\n    -   If `neighbor` already has the same color as `node` (i.e., `colors[neighbor] == colors[node]`), return `false`.\n    -   If `neighbor` has already been assigned a color (i.e., `colors[neighbor] != -1`), skip to the next `neighbor`.\n    -   Assign `colors[neighbor] = (colors[node] + 1) % 2`.\n    -   Recursively call `isBipartite(adjList, neighbor, colors)` and return `false` if the call returns `false`.\n-   If all neighbors are successfully assigned the opposite color without conflicts, return `true`.\n\n##### `getLongestShortestPath(adjList, srcNode, n)` function\n-   Initialize a queue, `nodesQueue` and a `visited` array of size `n`.\n-   Push`srcNode` into the queue and mark it as visited.\n-   Initialize `distance` to `0`.\n-   While the `nodesQueue` is not empty:\n    -   Initialize `numOfNodesInLayer` to the size of the queue.\n    -   Process all nodes in the current layer, i.e. for `i` from `0` to `numOfNodesInLayer - 1`:\n        -   Pop out the first element from the queue as `currentNode`.\n        -   For each `neighbor` of `currentNode`:\n        -   If the `neighbor` is visited, skip it.\n        -   Otherwise, mark it as visited and push it into the `nodesQueue`.\n    -   Increment `distance` by `1`.\n-   Return `distance`.\n\n##### `getNumberOfGroupsForComponent(adjList, node, distances, visited)` function\n-   Initialize `maxNumberOfGroups` to `distances[node]`.\n-   Mark the current node as visited.\n-   Explore the rest of the nodes in the component, i.e. for each `neighbor` of `node`:\n    -   If the `neighbor` is visited, skip it.\n    -   Otherwise, set `maxNumberOfGroups` to the maximum of its current value and `getNumberOfComponentsInGroup(adjList, neighbor, distances, visited)`.\n-   Return `maxNumberOfGroups`.\n\n##### In the main `magnificentSets(n, edges)` function:\n-   Create the `adjList` of the graph.\n-   Create a `colors` array of size `n` with all elements initially set to `-1`.\n-   For each `node` of the graph:\n    -   If the `node` have not been assigned a color, i.e. (`colors[node] == -1`):\n        -   Fix the color of the first node of the component, i.e. set `colors[node] = 0`.\n        -   Call `isBipartite(adjList, node, colors)` to determine if the current component is bipartite. If not, return `-1`.\n-   Initialize an array `distances` to store the length of the longest shortest path from any node to any other. \n-   Fill the `distances` array using the `getLongestShortestPath` function.\n-   Initialize `maxNumberOfGroups` to `0` and a `visited` array with all elements set to `false`.\n-   For each `node` of the graph:\n    -   If `node` has not been visited:\n        -   Get the number of groups for its component and add it to the total number of groups, i.e. `maxNumberOfGroups += getNumberOfGroupsForComponent(adjList, node, distances, visited)`.\n-   Return `maxNumberOfGroups`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/BbpVEPXV/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"BbpVEPXV\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the graph and $m$ the size of the `edges` array.\n\n-   Time complexity: $O(n \\times (n + m))$\n\n    To check whether the graph is bipartite, we perform a DFS traversal, assigning a color to each node exactly once and visiting each edge exactly once. Thus, this step has a time complexity of $O(n + m)$.\n\n    Next, calculating the longest shortest path for each node involves $n$ BFS traversals (one for each node as the source), resulting in a time complexity of $O(n \\times (n + m))$.\n\n    Finally, another DFS is performed to compute the sum of the longest shortest paths across all components, which adds an additional $O(n + m)$ to the total.\n\n    Overall, the total time complexity is $O(n + m) + O(n \\times (n + m)) + O(n + m) = O(n \\times (n + m))$.\n\n-   Space complexity: $O(n + m)$\n\n    Constructing the adjacency list from the list of edges requires $O(n + m)$ space, which is an additional space requirement rather than part of the input itself. Therefore, the total auxiliary space complexity is determined by both the adjacency list and the additional data structures (`visited`, `nodesQueue`, `colors`), all of which take $O(n)$ space. As a result, the overall space complexity is $O(n + m)$.\n\n---\n\n### Approach 2: BFS + Union-Find\n\n#### Intuition\n\nIn this approach, instead of checking bipartiteness to find if there is a valid split, we attempt to directly maximize the number of groups the graph can be partitioned into. Let's first consider the strategy for a single component:\n\nWe begin by assigning each node in the component to the first group. From there, we attempt to propagate this group assignment to the neighboring nodes, creating a new group for each \"layer\" of neighbors. This means that nodes at the same distance from the starting node would belong to the same group, while nodes at different distances would belong to different groups.\n\nHowever, if we ever come across a neighbor that has already been assigned the same group as the current node, it means that it's not possible to partition the graph in the way we're attempting. In that case, the graph is not partitionable, and we return `-1`.\n\nOnce we explore all possible groups for the component by starting the process at each node in the component, we find the maximum number of groups that can be formed. This maximum value will be the largest number of groups we can use to partition the nodes of that particular component.\n\nFinally, to compute the answer for the entire graph, we repeat this process for each connected component, summing the maximum number of groups from all components. To efficiently track the connected nodes and perform the necessary computations, we use the Union-Find data structure, which helps us manage and combine the connected components as we progress through the graph.\n\n> For a more comprehensive understanding of Union-Find / Disjoint Set, check out the [Union-Find/Disjoint Set Explore Card](https://leetcode.com/explore/learn/card/graph/618/disjoint-set/). This resource provides an in-depth look at union-find, explaining its key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n#### Algorithm\n\n#### `getNumberOfGroups(adjList, srcNode, n)`\n-   Initialize a queue, `nodesQueue`, and an array, `layerSeen` of size `n` with all values set to `-1`.\n-   Push`srcNode` into the queue and set `layerSeen[srcNode]` to `0`.\n-   Initialize `deepestLayer` to `0`.\n-   While the `nodesQueue` is not empty:\n    -   Initialize `numOfNodesInLayer` to the size of the queue.\n    -   Process all nodes in the current layer, i.e. for `i` from `0` to `numOfNodesInLayer - 1`:\n        -   Pop out the first element from the queue as `currentNode`.\n        -   For each `neighbor` of `currentNode`:\n            -   If the `neighbor` is not visited, i.e. `layerSeen[neighbor] == -1`:\n                -   Set `layerSeen[neighbor] = deepestLayer + 1`.\n                -   Push `neighbor` into the queue.\n            -   Otherwise:\n                -   If the `neighbor` is seen in the current layer (`deepestLayer`), then the split is invalid; return `-1`.\n    -   Increment `deepestLayer` by `1`.\n-   Return `deepestLayer`.\n\n##### `find(node, parent)` function\n-   While `node` is not the root of its subtree, i.e. `parent[node] != -1`:\n    -   Set `node = parent[node]`. \n-   Return `node`.\n\n##### `Union(node1, node2, parent, depth)` function\n-   Replace `node1` and `node2` by the roots of their subtrees, by setting `node1 = find(node1, parent)` and `node2 = find(node2, parent)`.\n-   If `node1 == node2`, the two nodes already belong in the same set, so simply return.\n-   If `node1` has a smaller depth than `node2`, swap the two nodes.\n-   Set `node1` to be the parent of `node2`.\n-   If the depths of the two nodes are equal, increment `depth[node1]` by `1`.\n\n##### In the main `magnificentSets(n, edges)` function:\n-   Create a 2D array, `adjList`.\n-   Initialize two arrays of size `n`, `parent`, and `depth` for the Union-Find. Set the parent of each node to `-1` and its depth to `0`.\n-   For each `edge = [node1, node2]` in `edges`:\n    -   Push `node1 - 1` to `adjList[node2 - 1]` (transitioning to 0-index).\n    -   Push `node2 - 1` to `adjList[node1 - 1]`.\n    -   Call `Union(node1 - 1, node2 - 1, parent, depth)`.\n-   Initialize a map, `numOfGroupsForComponent` to store the greatest number of groups that can be achieved for each component of the graph.\n-   For each `node` of the graph:\n    -   Calculate the number of groups the nodes of its component will be split into, if we assign `node` to the first group: `numberOfGroups = getNumberOfGroups(adjList, node, n)`.\n    -   If `numberOfGroups = -1`, then a split is impossible for that component, so return `-1`.\n    -   Find the `rootNode` of `node`s component, `root = find(node, parent)`.\n    -   Update the greatest number of groups that can be achieved for this component (`numOfGroupsForComponent[rootNode]`) to the maximum of its current value and `numberOfGroups`.\n-   Initialize `totalNumberOfGroups` to `0`.\n-   For every `[rootNode, numberOfGroups]` in `numOfGroupsForComponent`:\n    -   Add `numberOfGroups` to `totalNumberOfGroups`.\n-   Return `totalNumberOfGroups`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/7q5R733V/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"7q5R733V\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the graph and $m$ the size of the `edges` array.\n\n-   Time complexity: $O(n \\times (n + m))$\n\n    We use the Union-Find method to detect the connected components of the graph. Each call to the find function traverses the nodes in the component of the given node until it reaches the root. By using the `depth` array, we maintain balanced sets, ensuring that the find operation has a time complexity of $O(\\log n)$. As a result, the process of identifying the connected components takes $O(n \\log n)$ time.\n\n    Next, we perform a BFS traversal starting from each node. Since the time complexity of BFS is $O(m + n)$, the total time for this operation is $O(n \\times (m + n))$.\n\n    Since $n \\log n = O(n \\times (m + n))$, the overall time complexity is dominated by the BFS traversals, giving us a final time complexity of $O(n \\times (n + m))$.\n\n-   Space complexity: $O(n + m)$\n\n    As in the previous approach, representing the graph using an adjacency list requires $O(n + m)$ space. This is an additional space requirement rather than part of the input itself. The auxiliary space complexity is determined by both the adjacency list and the additional data structures used (`parent`, `depth`, `numberOfGroupsForComponent`), which can grow up to $O(n)$ in size. Therefore, the overall space complexity is $O(n + m)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

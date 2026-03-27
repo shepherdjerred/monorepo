@@ -1,0 +1,132 @@
+{
+  "questionId": "1382",
+  "questionFrontendId": "2303",
+  "title": "Calculate Amount Paid in Taxes",
+  "titleSlug": "calculate-amount-paid-in-taxes",
+  "difficulty": "Easy",
+  "content": "<p>You are given a <strong>0-indexed</strong> 2D integer array <code>brackets</code> where <code>brackets[i] = [upper<sub>i</sub>, percent<sub>i</sub>]</code> means that the <code>i<sup>th</sup></code> tax bracket has an upper bound of <code>upper<sub>i</sub></code> and is taxed at a rate of <code>percent<sub>i</sub></code>. The brackets are <strong>sorted</strong> by upper bound (i.e. <code>upper<sub>i-1</sub> &lt; upper<sub>i</sub></code> for <code>0 &lt; i &lt; brackets.length</code>).</p>\n\n<p>Tax is calculated as follows:</p>\n\n<ul>\n\t<li>The first <code>upper<sub>0</sub></code> dollars earned are taxed at a rate of <code>percent<sub>0</sub></code>.</li>\n\t<li>The next <code>upper<sub>1</sub> - upper<sub>0</sub></code> dollars earned are taxed at a rate of <code>percent<sub>1</sub></code>.</li>\n\t<li>The next <code>upper<sub>2</sub> - upper<sub>1</sub></code> dollars earned are taxed at a rate of <code>percent<sub>2</sub></code>.</li>\n\t<li>And so on.</li>\n</ul>\n\n<p>You are given an integer <code>income</code> representing the amount of money you earned. Return <em>the amount of money that you have to pay in taxes.</em> Answers within <code>10<sup>-5</sup></code> of the actual answer will be accepted.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> brackets = [[3,50],[7,10],[12,25]], income = 10\n<strong>Output:</strong> 2.65000\n<strong>Explanation:</strong>\nBased on your income, you have 3 dollars in the 1<sup>st</sup> tax bracket, 4 dollars in the 2<sup>nd</sup> tax bracket, and 3 dollars in the 3<sup>rd</sup> tax bracket.\nThe tax rate for the three tax brackets is 50%, 10%, and 25%, respectively.\nIn total, you pay $3 * 50% + $4 * 10% + $3 * 25% = $2.65 in taxes.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> brackets = [[1,0],[4,25],[5,50]], income = 2\n<strong>Output:</strong> 0.25000\n<strong>Explanation:</strong>\nBased on your income, you have 1 dollar in the 1<sup>st</sup> tax bracket and 1 dollar in the 2<sup>nd</sup> tax bracket.\nThe tax rate for the two tax brackets is 0% and 25%, respectively.\nIn total, you pay $1 * 0% + $1 * 25% = $0.25 in taxes.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> brackets = [[2,50]], income = 0\n<strong>Output:</strong> 0.00000\n<strong>Explanation:</strong>\nYou have no income to tax, so you have to pay a total of $0 in taxes.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= brackets.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= upper<sub>i</sub> &lt;= 1000</code></li>\n\t<li><code>0 &lt;= percent<sub>i</sub> &lt;= 100</code></li>\n\t<li><code>0 &lt;= income &lt;= 1000</code></li>\n\t<li><code>upper<sub>i</sub></code> is sorted in ascending order.</li>\n\t<li>All the values of <code>upper<sub>i</sub></code> are <strong>unique</strong>.</li>\n\t<li>The upper bound of the last tax bracket is greater than or equal to <code>income</code>.</li>\n</ul>\n",
+  "hints": [
+    "As you iterate through the tax brackets, keep track of the previous tax bracket’s upper bound in a variable called prev. If there is no previous tax bracket, use 0 instead.",
+    "The amount of money in the ith tax bracket is min(income, upperi) - prev."
+  ],
+  "metaData": "{\n  \"name\": \"calculateTax\",\n  \"params\": [\n    {\n      \"name\": \"brackets\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"income\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"double\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"56.7K\", \"totalSubmission\": \"82K\", \"totalAcceptedRaw\": 56689, \"totalSubmissionRaw\": 82026, \"acRate\": \"69.1%\"}",
+  "likes": 286,
+  "dislikes": 297,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[3,50],[7,10],[12,25]]\n10",
+    "[[1,0],[4,25],[5,50]]\n2",
+    "[[2,50]]\n0"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 6, \"slug\": \"stripe\", \"name\": \"Stripe\"}], \"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"interactive-brokers\", \"name\": \"Interactive Brokers\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    double calculateTax(vector<vector<int>>& brackets, int income) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public double calculateTax(int[][] brackets, int income) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def calculateTax(self, brackets: List[List[int]], income: int) -> float:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def calculateTax(self, brackets, income):\n        \"\"\"\n        :type brackets: List[List[int]]\n        :type income: int\n        :rtype: float\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} brackets\n * @param {number} income\n * @return {number}\n */\nvar calculateTax = function(brackets, income) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function calculateTax(brackets: number[][], income: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public double CalculateTax(int[][] brackets, int income) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "double calculateTax(int** brackets, int bracketsSize, int* bracketsColSize, int income) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func calculateTax(brackets [][]int, income int) float64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun calculateTax(brackets: Array<IntArray>, income: Int): Double {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func calculateTax(_ brackets: [[Int]], _ income: Int) -> Double {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn calculate_tax(brackets: Vec<Vec<i32>>, income: i32) -> f64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} brackets\n# @param {Integer} income\n# @return {Float}\ndef calculate_tax(brackets, income)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $brackets\n     * @param Integer $income\n     * @return Float\n     */\n    function calculateTax($brackets, $income) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  double calculateTax(List<List<int>> brackets, int income) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def calculateTax(brackets: Array[Array[Int]], income: Int): Double = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec calculate_tax(brackets :: [[integer]], income :: integer) :: float\n  def calculate_tax(brackets, income) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec calculate_tax(Brackets :: [[integer()]], Income :: integer()) -> float().\ncalculate_tax(Brackets, Income) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (calculate-tax brackets income)\n  (-> (listof (listof exact-integer?)) exact-integer? flonum?)\n  )"
+    }
+  ],
+  "solution": null
+}

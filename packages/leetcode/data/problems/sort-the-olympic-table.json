@@ -1,0 +1,53 @@
+{
+  "questionId": "2516",
+  "questionFrontendId": "2377",
+  "title": "Sort the Olympic Table",
+  "titleSlug": "sort-the-olympic-table",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Olympic</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| country       | varchar |\n| gold_medals   | int     |\n| silver_medals | int     |\n| bronze_medals | int     |\n+---------------+---------+\nIn SQL, country is the primary key for this table.\nEach row in this table shows a country name and the number of gold, silver, and bronze medals it won in the Olympic games.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>The Olympic table is sorted according to the following rules:</p>\n\n<ul>\n\t<li>The country with more gold medals comes first.</li>\n\t<li>If there is a tie in the gold medals, the country with more silver medals comes first.</li>\n\t<li>If there is a tie in the silver medals, the country with more bronze medals comes first.</li>\n\t<li>If there is a tie in the bronze medals, the countries with the tie are sorted in ascending order lexicographically.</li>\n</ul>\n\n<p>Write a solution to sort the Olympic table.</p>\n\n<p>The result format is shown in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nOlympic table:\n+-------------+-------------+---------------+---------------+\n| country     | gold_medals | silver_medals | bronze_medals |\n+-------------+-------------+---------------+---------------+\n| China       | 10          | 10            | 20            |\n| South Sudan | 0           | 0             | 1             |\n| USA         | 10          | 10            | 20            |\n| Israel      | 2           | 2             | 3             |\n| Egypt       | 2           | 2             | 2             |\n+-------------+-------------+---------------+---------------+\n<strong>Output:</strong> \n+-------------+-------------+---------------+---------------+\n| country     | gold_medals | silver_medals | bronze_medals |\n+-------------+-------------+---------------+---------------+\n| China       | 10          | 10            | 20            |\n| USA         | 10          | 10            | 20            |\n| Israel      | 2           | 2             | 3             |\n| Egypt       | 2           | 2             | 2             |\n| South Sudan | 0           | 0             | 1             |\n+-------------+-------------+---------------+---------------+\n<strong>Explanation:</strong> \nThe tie between China and USA is broken by their lexicographical names. Since &quot;China&quot; is lexicographically smaller than &quot;USA&quot;, it comes first.\nIsrael comes before Egypt because it has more bronze medals.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Olympic (country varchar(50), gold_medals int, silver_medals int, bronze_medals int)\"], \"mssql\": [\"Create table Olympic (country varchar(50), gold_medals int, silver_medals int, bronze_medals int)\"], \"oraclesql\": [\"Create table Olympic (country varchar(50), gold_medals int, silver_medals int, bronze_medals int)\"], \"database\": true, \"name\": \"sort_table\", \"pythondata\": [\"Olympic = pd.DataFrame([], columns=['country', 'gold_medals', 'silver_medals', 'bronze_medals']).astype({'country':'object', 'gold_medals':'Int64', 'silver_medals':'Int64', 'bronze_medals':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Olympic (country varchar(50), gold_medals int, silver_medals int, bronze_medals int)\"], \"database_schema\": {\"Olympic\": {\"country\": \"VARCHAR(50)\", \"gold_medals\": \"INT\", \"silver_medals\": \"INT\", \"bronze_medals\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"8.9K\", \"totalSubmission\": \"11.3K\", \"totalAcceptedRaw\": 8942, \"totalSubmissionRaw\": 11251, \"acRate\": \"79.5%\"}",
+  "likes": 40,
+  "dislikes": 4,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Olympic\":[\"country\",\"gold_medals\",\"silver_medals\",\"bronze_medals\"]},\"rows\":{\"Olympic\":[[\"China\",10,10,20],[\"South Sudan\",0,0,1],[\"USA\",10,10,20],[\"Israel\",2,2,3],[\"Egypt\",2,2,2]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef sort_table(olympic: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

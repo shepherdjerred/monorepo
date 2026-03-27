@@ -1,0 +1,139 @@
+{
+  "questionId": "2688",
+  "questionFrontendId": "2590",
+  "title": "Design a Todo List",
+  "titleSlug": "design-a-todo-list",
+  "difficulty": "Medium",
+  "content": "<p>Design a Todo List Where users can add <strong>tasks</strong>, mark them as <strong>complete</strong>, or get a list of pending tasks. Users can also add <strong>tags</strong> to tasks and can filter the tasks by certain tags.</p>\n\n<p>Implement the <code>TodoList</code> class:</p>\n\n<ul>\n\t<li><code>TodoList()</code> Initializes the object.</li>\n\t<li><code>int addTask(int userId, String taskDescription, int dueDate, List&lt;String&gt; tags)</code> Adds a task for the user with the ID <code>userId</code> with a due date equal to <code>dueDate</code> and a list of tags attached to the task. The return value is the ID of the task. This ID starts at <code>1</code> and is <strong>sequentially</strong> increasing. That is, the first task&#39;s id should be <code>1</code>, the second task&#39;s id should be <code>2</code>, and so on.</li>\n\t<li><code>List&lt;String&gt; getAllTasks(int userId)</code> Returns a list of all the tasks not marked as complete for the user with ID <code>userId</code>, ordered by the due date. You should return an empty list if the user has no uncompleted tasks.</li>\n\t<li><code>List&lt;String&gt; getTasksForTag(int userId, String tag)</code> Returns a list of all the tasks that are not marked as complete for the user with the ID <code>userId</code> and have <code>tag</code> as one of their tags, ordered by their due date. Return an empty list if no such task exists.</li>\n\t<li><code>void completeTask(int userId, int taskId)</code> Marks the task with the ID <code>taskId</code> as completed only if the task exists and the user with the ID <code>userId</code> has this task, and it is uncompleted.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;TodoList&quot;, &quot;addTask&quot;, &quot;addTask&quot;, &quot;getAllTasks&quot;, &quot;getAllTasks&quot;, &quot;addTask&quot;, &quot;getTasksForTag&quot;, &quot;completeTask&quot;, &quot;completeTask&quot;, &quot;getTasksForTag&quot;, &quot;getAllTasks&quot;]\n[[], [1, &quot;Task1&quot;, 50, []], [1, &quot;Task2&quot;, 100, [&quot;P1&quot;]], [1], [5], [1, &quot;Task3&quot;, 30, [&quot;P1&quot;]], [1, &quot;P1&quot;], [5, 1], [1, 2], [1, &quot;P1&quot;], [1]]\n<strong>Output</strong>\n[null, 1, 2, [&quot;Task1&quot;, &quot;Task2&quot;], [], 3, [&quot;Task3&quot;, &quot;Task2&quot;], null, null, [&quot;Task3&quot;], [&quot;Task3&quot;, &quot;Task1&quot;]]\n\n<strong>Explanation</strong>\nTodoList todoList = new TodoList();\ntodoList.addTask(1, &quot;Task1&quot;, 50, []); // return 1. This adds a new task for the user with id 1.\ntodoList.addTask(1, &quot;Task2&quot;, 100, [&quot;P1&quot;]); // return 2. This adds another task for the user with id 1.\ntodoList.getAllTasks(1); // return [&quot;Task1&quot;, &quot;Task2&quot;]. User 1 has two uncompleted tasks so far.\ntodoList.getAllTasks(5); // return []. User 5 does not have any tasks so far.\ntodoList.addTask(1, &quot;Task3&quot;, 30, [&quot;P1&quot;]); // return 3. This adds another task for the user with id 1.\ntodoList.getTasksForTag(1, &quot;P1&quot;); // return [&quot;Task3&quot;, &quot;Task2&quot;]. This returns the uncompleted tasks that have the tag &quot;P1&quot; for the user with id 1.\ntodoList.completeTask(5, 1); // This does nothing, since task 1 does not belong to user 5.\ntodoList.completeTask(1, 2); // This marks task 2 as completed.\ntodoList.getTasksForTag(1, &quot;P1&quot;); // return [&quot;Task3&quot;]. This returns the uncompleted tasks that have the tag &quot;P1&quot; for the user with id 1.\n                                  // Notice that we did not include &quot;Task2&quot; because it is completed now.\ntodoList.getAllTasks(1); // return [&quot;Task3&quot;, &quot;Task1&quot;]. User 1 now has 2 uncompleted tasks.\n\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= userId, taskId, dueDate &lt;= 100</code></li>\n\t<li><code>0 &lt;= tags.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= taskDescription.length &lt;= 50</code></li>\n\t<li><code>1 &lt;= tags[i].length, tag.length &lt;= 20</code></li>\n\t<li>All <code>dueDate</code> values are unique.</li>\n\t<li>All the strings consist of lowercase and uppercase English letters and digits.</li>\n\t<li>At most <code>100</code> calls will be made for each method.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"classname\": \"TodoList\",\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"userId\"\n        },\n        {\n          \"type\": \"string\",\n          \"name\": \"taskDescription\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"dueDate\"\n        },\n        {\n          \"type\": \"list<string>\",\n          \"name\": \"tags\"\n        }\n      ],\n      \"name\": \"addTask\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"userId\"\n        }\n      ],\n      \"name\": \"getAllTasks\",\n      \"return\": {\n        \"type\": \"list<string>\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"userId\"\n        },\n        {\n          \"type\": \"string\",\n          \"name\": \"tag\"\n        }\n      ],\n      \"name\": \"getTasksForTag\",\n      \"return\": {\n        \"type\": \"list<string>\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"userId\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"taskId\"\n        }\n      ],\n      \"name\": \"completeTask\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"4.2K\", \"totalSubmission\": \"7.1K\", \"totalAcceptedRaw\": 4238, \"totalSubmissionRaw\": 7090, \"acRate\": \"59.8%\"}",
+  "likes": 48,
+  "dislikes": 15,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"TodoList\",\"addTask\",\"addTask\",\"getAllTasks\",\"getAllTasks\",\"addTask\",\"getTasksForTag\",\"completeTask\",\"completeTask\",\"getTasksForTag\",\"getAllTasks\"]\n[[],[1,\"Task1\",50,[]],[1,\"Task2\",100,[\"P1\"]],[1],[5],[1,\"Task3\",30,[\"P1\"]],[1,\"P1\"],[5,1],[1,2],[1,\"P1\"],[1]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class TodoList {\npublic:\n    TodoList() {\n        \n    }\n    \n    int addTask(int userId, string taskDescription, int dueDate, vector<string> tags) {\n        \n    }\n    \n    vector<string> getAllTasks(int userId) {\n        \n    }\n    \n    vector<string> getTasksForTag(int userId, string tag) {\n        \n    }\n    \n    void completeTask(int userId, int taskId) {\n        \n    }\n};\n\n/**\n * Your TodoList object will be instantiated and called as such:\n * TodoList* obj = new TodoList();\n * int param_1 = obj->addTask(userId,taskDescription,dueDate,tags);\n * vector<string> param_2 = obj->getAllTasks(userId);\n * vector<string> param_3 = obj->getTasksForTag(userId,tag);\n * obj->completeTask(userId,taskId);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class TodoList {\n\n    public TodoList() {\n        \n    }\n    \n    public int addTask(int userId, String taskDescription, int dueDate, List<String> tags) {\n        \n    }\n    \n    public List<String> getAllTasks(int userId) {\n        \n    }\n    \n    public List<String> getTasksForTag(int userId, String tag) {\n        \n    }\n    \n    public void completeTask(int userId, int taskId) {\n        \n    }\n}\n\n/**\n * Your TodoList object will be instantiated and called as such:\n * TodoList obj = new TodoList();\n * int param_1 = obj.addTask(userId,taskDescription,dueDate,tags);\n * List<String> param_2 = obj.getAllTasks(userId);\n * List<String> param_3 = obj.getTasksForTag(userId,tag);\n * obj.completeTask(userId,taskId);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class TodoList:\n\n    def __init__(self):\n        \n\n    def addTask(self, userId: int, taskDescription: str, dueDate: int, tags: List[str]) -> int:\n        \n\n    def getAllTasks(self, userId: int) -> List[str]:\n        \n\n    def getTasksForTag(self, userId: int, tag: str) -> List[str]:\n        \n\n    def completeTask(self, userId: int, taskId: int) -> None:\n        \n\n\n# Your TodoList object will be instantiated and called as such:\n# obj = TodoList()\n# param_1 = obj.addTask(userId,taskDescription,dueDate,tags)\n# param_2 = obj.getAllTasks(userId)\n# param_3 = obj.getTasksForTag(userId,tag)\n# obj.completeTask(userId,taskId)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class TodoList(object):\n\n    def __init__(self):\n        \n\n    def addTask(self, userId, taskDescription, dueDate, tags):\n        \"\"\"\n        :type userId: int\n        :type taskDescription: str\n        :type dueDate: int\n        :type tags: List[str]\n        :rtype: int\n        \"\"\"\n        \n\n    def getAllTasks(self, userId):\n        \"\"\"\n        :type userId: int\n        :rtype: List[str]\n        \"\"\"\n        \n\n    def getTasksForTag(self, userId, tag):\n        \"\"\"\n        :type userId: int\n        :type tag: str\n        :rtype: List[str]\n        \"\"\"\n        \n\n    def completeTask(self, userId, taskId):\n        \"\"\"\n        :type userId: int\n        :type taskId: int\n        :rtype: None\n        \"\"\"\n        \n\n\n# Your TodoList object will be instantiated and called as such:\n# obj = TodoList()\n# param_1 = obj.addTask(userId,taskDescription,dueDate,tags)\n# param_2 = obj.getAllTasks(userId)\n# param_3 = obj.getTasksForTag(userId,tag)\n# obj.completeTask(userId,taskId)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar TodoList = function() {\n    \n};\n\n/** \n * @param {number} userId \n * @param {string} taskDescription \n * @param {number} dueDate \n * @param {string[]} tags\n * @return {number}\n */\nTodoList.prototype.addTask = function(userId, taskDescription, dueDate, tags) {\n    \n};\n\n/** \n * @param {number} userId\n * @return {string[]}\n */\nTodoList.prototype.getAllTasks = function(userId) {\n    \n};\n\n/** \n * @param {number} userId \n * @param {string} tag\n * @return {string[]}\n */\nTodoList.prototype.getTasksForTag = function(userId, tag) {\n    \n};\n\n/** \n * @param {number} userId \n * @param {number} taskId\n * @return {void}\n */\nTodoList.prototype.completeTask = function(userId, taskId) {\n    \n};\n\n/** \n * Your TodoList object will be instantiated and called as such:\n * var obj = new TodoList()\n * var param_1 = obj.addTask(userId,taskDescription,dueDate,tags)\n * var param_2 = obj.getAllTasks(userId)\n * var param_3 = obj.getTasksForTag(userId,tag)\n * obj.completeTask(userId,taskId)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class TodoList {\n    constructor() {\n        \n    }\n\n    addTask(userId: number, taskDescription: string, dueDate: number, tags: string[]): number {\n        \n    }\n\n    getAllTasks(userId: number): string[] {\n        \n    }\n\n    getTasksForTag(userId: number, tag: string): string[] {\n        \n    }\n\n    completeTask(userId: number, taskId: number): void {\n        \n    }\n}\n\n/**\n * Your TodoList object will be instantiated and called as such:\n * var obj = new TodoList()\n * var param_1 = obj.addTask(userId,taskDescription,dueDate,tags)\n * var param_2 = obj.getAllTasks(userId)\n * var param_3 = obj.getTasksForTag(userId,tag)\n * obj.completeTask(userId,taskId)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class TodoList {\n\n    public TodoList() {\n        \n    }\n    \n    public int AddTask(int userId, string taskDescription, int dueDate, IList<string> tags) {\n        \n    }\n    \n    public IList<string> GetAllTasks(int userId) {\n        \n    }\n    \n    public IList<string> GetTasksForTag(int userId, string tag) {\n        \n    }\n    \n    public void CompleteTask(int userId, int taskId) {\n        \n    }\n}\n\n/**\n * Your TodoList object will be instantiated and called as such:\n * TodoList obj = new TodoList();\n * int param_1 = obj.AddTask(userId,taskDescription,dueDate,tags);\n * IList<string> param_2 = obj.GetAllTasks(userId);\n * IList<string> param_3 = obj.GetTasksForTag(userId,tag);\n * obj.CompleteTask(userId,taskId);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} TodoList;\n\n\nTodoList* todoListCreate() {\n    \n}\n\nint todoListAddTask(TodoList* obj, int userId, char* taskDescription, int dueDate, char** tags, int tagsSize) {\n    \n}\n\nchar** todoListGetAllTasks(TodoList* obj, int userId, int* retSize) {\n    \n}\n\nchar** todoListGetTasksForTag(TodoList* obj, int userId, char* tag, int* retSize) {\n    \n}\n\nvoid todoListCompleteTask(TodoList* obj, int userId, int taskId) {\n    \n}\n\nvoid todoListFree(TodoList* obj) {\n    \n}\n\n/**\n * Your TodoList struct will be instantiated and called as such:\n * TodoList* obj = todoListCreate();\n * int param_1 = todoListAddTask(obj, userId, taskDescription, dueDate, tags, tagsSize);\n \n * char** param_2 = todoListGetAllTasks(obj, userId, retSize);\n \n * char** param_3 = todoListGetTasksForTag(obj, userId, tag, retSize);\n \n * todoListCompleteTask(obj, userId, taskId);\n \n * todoListFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type TodoList struct {\n    \n}\n\n\nfunc Constructor() TodoList {\n    \n}\n\n\nfunc (this *TodoList) AddTask(userId int, taskDescription string, dueDate int, tags []string) int {\n    \n}\n\n\nfunc (this *TodoList) GetAllTasks(userId int) []string {\n    \n}\n\n\nfunc (this *TodoList) GetTasksForTag(userId int, tag string) []string {\n    \n}\n\n\nfunc (this *TodoList) CompleteTask(userId int, taskId int)  {\n    \n}\n\n\n/**\n * Your TodoList object will be instantiated and called as such:\n * obj := Constructor();\n * param_1 := obj.AddTask(userId,taskDescription,dueDate,tags);\n * param_2 := obj.GetAllTasks(userId);\n * param_3 := obj.GetTasksForTag(userId,tag);\n * obj.CompleteTask(userId,taskId);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class TodoList() {\n\n    fun addTask(userId: Int, taskDescription: String, dueDate: Int, tags: List<String>): Int {\n        \n    }\n\n    fun getAllTasks(userId: Int): List<String> {\n        \n    }\n\n    fun getTasksForTag(userId: Int, tag: String): List<String> {\n        \n    }\n\n    fun completeTask(userId: Int, taskId: Int) {\n        \n    }\n\n}\n\n/**\n * Your TodoList object will be instantiated and called as such:\n * var obj = TodoList()\n * var param_1 = obj.addTask(userId,taskDescription,dueDate,tags)\n * var param_2 = obj.getAllTasks(userId)\n * var param_3 = obj.getTasksForTag(userId,tag)\n * obj.completeTask(userId,taskId)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass TodoList {\n\n    init() {\n        \n    }\n    \n    func addTask(_ userId: Int, _ taskDescription: String, _ dueDate: Int, _ tags: [String]) -> Int {\n        \n    }\n    \n    func getAllTasks(_ userId: Int) -> [String] {\n        \n    }\n    \n    func getTasksForTag(_ userId: Int, _ tag: String) -> [String] {\n        \n    }\n    \n    func completeTask(_ userId: Int, _ taskId: Int) {\n        \n    }\n}\n\n/**\n * Your TodoList object will be instantiated and called as such:\n * let obj = TodoList()\n * let ret_1: Int = obj.addTask(userId, taskDescription, dueDate, tags)\n * let ret_2: [String] = obj.getAllTasks(userId)\n * let ret_3: [String] = obj.getTasksForTag(userId, tag)\n * obj.completeTask(userId, taskId)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct TodoList {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl TodoList {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn add_task(&self, user_id: i32, task_description: String, due_date: i32, tags: Vec<String>) -> i32 {\n        \n    }\n    \n    fn get_all_tasks(&self, user_id: i32) -> Vec<String> {\n        \n    }\n    \n    fn get_tasks_for_tag(&self, user_id: i32, tag: String) -> Vec<String> {\n        \n    }\n    \n    fn complete_task(&self, user_id: i32, task_id: i32) {\n        \n    }\n}\n\n/**\n * Your TodoList object will be instantiated and called as such:\n * let obj = TodoList::new();\n * let ret_1: i32 = obj.add_task(userId, taskDescription, dueDate, tags);\n * let ret_2: Vec<String> = obj.get_all_tasks(userId);\n * let ret_3: Vec<String> = obj.get_tasks_for_tag(userId, tag);\n * obj.complete_task(userId, taskId);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class TodoList\n    def initialize()\n        \n    end\n\n\n=begin\n    :type user_id: Integer\n    :type task_description: String\n    :type due_date: Integer\n    :type tags: String[]\n    :rtype: Integer\n=end\n    def add_task(user_id, task_description, due_date, tags)\n        \n    end\n\n\n=begin\n    :type user_id: Integer\n    :rtype: String[]\n=end\n    def get_all_tasks(user_id)\n        \n    end\n\n\n=begin\n    :type user_id: Integer\n    :type tag: String\n    :rtype: String[]\n=end\n    def get_tasks_for_tag(user_id, tag)\n        \n    end\n\n\n=begin\n    :type user_id: Integer\n    :type task_id: Integer\n    :rtype: Void\n=end\n    def complete_task(user_id, task_id)\n        \n    end\n\n\nend\n\n# Your TodoList object will be instantiated and called as such:\n# obj = TodoList.new()\n# param_1 = obj.add_task(user_id, task_description, due_date, tags)\n# param_2 = obj.get_all_tasks(user_id)\n# param_3 = obj.get_tasks_for_tag(user_id, tag)\n# obj.complete_task(user_id, task_id)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class TodoList {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param Integer $userId\n     * @param String $taskDescription\n     * @param Integer $dueDate\n     * @param String[] $tags\n     * @return Integer\n     */\n    function addTask($userId, $taskDescription, $dueDate, $tags) {\n        \n    }\n  \n    /**\n     * @param Integer $userId\n     * @return String[]\n     */\n    function getAllTasks($userId) {\n        \n    }\n  \n    /**\n     * @param Integer $userId\n     * @param String $tag\n     * @return String[]\n     */\n    function getTasksForTag($userId, $tag) {\n        \n    }\n  \n    /**\n     * @param Integer $userId\n     * @param Integer $taskId\n     * @return NULL\n     */\n    function completeTask($userId, $taskId) {\n        \n    }\n}\n\n/**\n * Your TodoList object will be instantiated and called as such:\n * $obj = TodoList();\n * $ret_1 = $obj->addTask($userId, $taskDescription, $dueDate, $tags);\n * $ret_2 = $obj->getAllTasks($userId);\n * $ret_3 = $obj->getTasksForTag($userId, $tag);\n * $obj->completeTask($userId, $taskId);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class TodoList {\n\n  TodoList() {\n    \n  }\n  \n  int addTask(int userId, String taskDescription, int dueDate, List<String> tags) {\n    \n  }\n  \n  List<String> getAllTasks(int userId) {\n    \n  }\n  \n  List<String> getTasksForTag(int userId, String tag) {\n    \n  }\n  \n  void completeTask(int userId, int taskId) {\n    \n  }\n}\n\n/**\n * Your TodoList object will be instantiated and called as such:\n * TodoList obj = TodoList();\n * int param1 = obj.addTask(userId,taskDescription,dueDate,tags);\n * List<String> param2 = obj.getAllTasks(userId);\n * List<String> param3 = obj.getTasksForTag(userId,tag);\n * obj.completeTask(userId,taskId);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class TodoList() {\n\n    def addTask(userId: Int, taskDescription: String, dueDate: Int, tags: List[String]): Int = {\n        \n    }\n\n    def getAllTasks(userId: Int): List[String] = {\n        \n    }\n\n    def getTasksForTag(userId: Int, tag: String): List[String] = {\n        \n    }\n\n    def completeTask(userId: Int, taskId: Int): Unit = {\n        \n    }\n\n}\n\n/**\n * Your TodoList object will be instantiated and called as such:\n * val obj = new TodoList()\n * val param_1 = obj.addTask(userId,taskDescription,dueDate,tags)\n * val param_2 = obj.getAllTasks(userId)\n * val param_3 = obj.getTasksForTag(userId,tag)\n * obj.completeTask(userId,taskId)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule TodoList do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec add_task(user_id :: integer, task_description :: String.t, due_date :: integer, tags :: [String.t]) :: integer\n  def add_task(user_id, task_description, due_date, tags) do\n    \n  end\n\n  @spec get_all_tasks(user_id :: integer) :: [String.t]\n  def get_all_tasks(user_id) do\n    \n  end\n\n  @spec get_tasks_for_tag(user_id :: integer, tag :: String.t) :: [String.t]\n  def get_tasks_for_tag(user_id, tag) do\n    \n  end\n\n  @spec complete_task(user_id :: integer, task_id :: integer) :: any\n  def complete_task(user_id, task_id) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# TodoList.init_()\n# param_1 = TodoList.add_task(user_id, task_description, due_date, tags)\n# param_2 = TodoList.get_all_tasks(user_id)\n# param_3 = TodoList.get_tasks_for_tag(user_id, tag)\n# TodoList.complete_task(user_id, task_id)\n\n# TodoList.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec todo_list_init_() -> any().\ntodo_list_init_() ->\n  .\n\n-spec todo_list_add_task(UserId :: integer(), TaskDescription :: unicode:unicode_binary(), DueDate :: integer(), Tags :: [unicode:unicode_binary()]) -> integer().\ntodo_list_add_task(UserId, TaskDescription, DueDate, Tags) ->\n  .\n\n-spec todo_list_get_all_tasks(UserId :: integer()) -> [unicode:unicode_binary()].\ntodo_list_get_all_tasks(UserId) ->\n  .\n\n-spec todo_list_get_tasks_for_tag(UserId :: integer(), Tag :: unicode:unicode_binary()) -> [unicode:unicode_binary()].\ntodo_list_get_tasks_for_tag(UserId, Tag) ->\n  .\n\n-spec todo_list_complete_task(UserId :: integer(), TaskId :: integer()) -> any().\ntodo_list_complete_task(UserId, TaskId) ->\n  .\n\n\n%% Your functions will be called as such:\n%% todo_list_init_(),\n%% Param_1 = todo_list_add_task(UserId, TaskDescription, DueDate, Tags),\n%% Param_2 = todo_list_get_all_tasks(UserId),\n%% Param_3 = todo_list_get_tasks_for_tag(UserId, Tag),\n%% todo_list_complete_task(UserId, TaskId),\n\n%% todo_list_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define todo-list%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; add-task : exact-integer? string? exact-integer? (listof string?) -> exact-integer?\n    (define/public (add-task user-id task-description due-date tags)\n      )\n    ; get-all-tasks : exact-integer? -> (listof string?)\n    (define/public (get-all-tasks user-id)\n      )\n    ; get-tasks-for-tag : exact-integer? string? -> (listof string?)\n    (define/public (get-tasks-for-tag user-id tag)\n      )\n    ; complete-task : exact-integer? exact-integer? -> void?\n    (define/public (complete-task user-id task-id)\n      )))\n\n;; Your todo-list% object will be instantiated and called as such:\n;; (define obj (new todo-list%))\n;; (define param_1 (send obj add-task user-id task-description due-date tags))\n;; (define param_2 (send obj get-all-tasks user-id))\n;; (define param_3 (send obj get-tasks-for-tag user-id tag))\n;; (send obj complete-task user-id task-id)"
+    }
+  ],
+  "solution": null
+}

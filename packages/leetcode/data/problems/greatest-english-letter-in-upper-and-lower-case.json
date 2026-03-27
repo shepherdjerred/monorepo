@@ -1,0 +1,136 @@
+{
+  "questionId": "1363",
+  "questionFrontendId": "2309",
+  "title": "Greatest English Letter in Upper and Lower Case",
+  "titleSlug": "greatest-english-letter-in-upper-and-lower-case",
+  "difficulty": "Easy",
+  "content": "<p>Given a string of English letters <code>s</code>, return <em>the <strong>greatest </strong>English letter which occurs as <strong>both</strong> a lowercase and uppercase letter in</em> <code>s</code>. The returned letter should be in <strong>uppercase</strong>. If no such letter exists, return <em>an empty string</em>.</p>\n\n<p>An English letter <code>b</code> is <strong>greater</strong> than another letter <code>a</code> if <code>b</code> appears <strong>after</strong> <code>a</code> in the English alphabet.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;l<strong><u>Ee</u></strong>TcOd<u><strong>E</strong></u>&quot;\n<strong>Output:</strong> &quot;E&quot;\n<strong>Explanation:</strong>\nThe letter &#39;E&#39; is the only letter to appear in both lower and upper case.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;a<strong><u>rR</u></strong>AzFif&quot;\n<strong>Output:</strong> &quot;R&quot;\n<strong>Explanation:</strong>\nThe letter &#39;R&#39; is the greatest letter to appear in both lower and upper case.\nNote that &#39;A&#39; and &#39;F&#39; also appear in both lower and upper case, but &#39;R&#39; is greater than &#39;F&#39; or &#39;A&#39;.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;AbCdEfGhIjK&quot;\n<strong>Output:</strong> &quot;&quot;\n<strong>Explanation:</strong>\nThere is no letter that appears in both lower and upper case.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 1000</code></li>\n\t<li><code>s</code> consists of lowercase and uppercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Consider iterating through the string and storing each unique character that occurs in a set.",
+    "From Z to A, check whether both the uppercase and lowercase version occur in the set."
+  ],
+  "metaData": "{\n  \"name\": \"greatestLetter\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"72.6K\", \"totalSubmission\": \"100.9K\", \"totalAcceptedRaw\": 72641, \"totalSubmissionRaw\": 100938, \"acRate\": \"72.0%\"}",
+  "likes": 525,
+  "dislikes": 33,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count the Number of Special Characters II\", \"titleSlug\": \"count-the-number-of-special-characters-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count the Number of Special Characters I\", \"titleSlug\": \"count-the-number-of-special-characters-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"lEeTcOdE\"",
+    "\"arRAzFif\"",
+    "\"AbCdEfGhIjK\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string greatestLetter(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String greatestLetter(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def greatestLetter(self, s: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def greatestLetter(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {string}\n */\nvar greatestLetter = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function greatestLetter(s: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string GreatestLetter(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* greatestLetter(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func greatestLetter(s string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun greatestLetter(s: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func greatestLetter(_ s: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn greatest_letter(s: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {String}\ndef greatest_letter(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return String\n     */\n    function greatestLetter($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String greatestLetter(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def greatestLetter(s: String): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec greatest_letter(s :: String.t) :: String.t\n  def greatest_letter(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec greatest_letter(S :: unicode:unicode_binary()) -> unicode:unicode_binary().\ngreatest_letter(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (greatest-letter s)\n  (-> string? string?)\n  )"
+    }
+  ],
+  "solution": null
+}

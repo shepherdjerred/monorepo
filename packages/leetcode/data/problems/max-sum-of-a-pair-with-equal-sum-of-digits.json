@@ -1,0 +1,144 @@
+{
+  "questionId": "2473",
+  "questionFrontendId": "2342",
+  "title": "Max Sum of a Pair With Equal Sum of Digits",
+  "titleSlug": "max-sum-of-a-pair-with-equal-sum-of-digits",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> array <code>nums</code> consisting of <strong>positive</strong> integers. You can choose two indices <code>i</code> and <code>j</code>, such that <code>i != j</code>, and the sum of digits of the number <code>nums[i]</code> is equal to that of <code>nums[j]</code>.</p>\n\n<p>Return the <strong>maximum</strong> value of<em> </em><code>nums[i] + nums[j]</code><em> </em>that you can obtain over all possible indices <code>i</code> and <code>j</code> that satisfy the conditions. If no such pair of indices exists, return -1.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [18,43,36,13,7]\n<strong>Output:</strong> 54\n<strong>Explanation:</strong> The pairs (i, j) that satisfy the conditions are:\n- (0, 2), both numbers have a sum of digits equal to 9, and their sum is 18 + 36 = 54.\n- (1, 4), both numbers have a sum of digits equal to 7, and their sum is 43 + 7 = 50.\nSo the maximum sum that we can obtain is 54.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [10,12,19,14]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> There are no two numbers that satisfy the conditions, so we return -1.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "What is the largest possible sum of digits a number can have?",
+    "Group the array elements by the sum of their digits, and find the largest two elements of each group."
+  ],
+  "metaData": "{\n  \"name\": \"maximumSum\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"249.4K\", \"totalSubmission\": \"378.1K\", \"totalAcceptedRaw\": 249366, \"totalSubmissionRaw\": 378127, \"acRate\": \"65.9%\"}",
+  "likes": 1409,
+  "dislikes": 46,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[18,43,36,13,7]",
+    "[10,12,19,14]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 7, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximumSum(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximumSum(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumSum(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumSum(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar maximumSum = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumSum(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaximumSum(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maximumSum(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumSum(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumSum(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumSum(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_sum(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef maximum_sum(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function maximumSum($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumSum(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumSum(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_sum(nums :: [integer]) :: integer\n  def maximum_sum(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_sum(Nums :: [integer()]) -> integer().\nmaximum_sum(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-sum nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2676",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Sorting\n\n#### Intuition\n\nWe are given an array `nums` of positive integers. Our goal is to find the largest possible sum of two distinct elements, `nums[i]` and `nums[j]`, where both numbers have the same digit sum. If no such pair exists, we return `-1`.\n\nObserve that we can divide the numbers into groups, where all numbers with the same digit sum belong to the same group. The two largest numbers in each group will always form the pair with the greatest sum for that group.\n\nSo, what is the first technique that comes to mind when we need to select the largest values from a set? Most likely, it's sorting the values and picking the largest ones. However, in this case, we can't directly sort the elements. Instead, we need to map each number to its digit sum and then sort the numbers within each group that shares the same digit sum.\n\nFor example, given the array `nums = [36, 60, 45, 18, 33, 24]`, the digit sums of the elements are: `[9, 6, 9, 9, 6, 6]`.\n\nNow, the elements with digit sum of 9 are `[36, 45, 18]` and those with digit sum of 6 are `[24, 33, 60]`. When we sort the elements in these groups, we get `[18, 36, 45]` and `[24, 33, 60]`. The two largest values in each group would create the largest sum for that digit sum. Therefore, for digit sum 9, the largest sum is `45 + 36 = 81`, and for digit sum 6, it is `33 + 60 = 93`.\n\nWe can implement this using an array of pairs where each element is of the form `{digitSum, value}`. Then, we sort the array based on the `digitSum` values. If two elements have the same digit sum, we sort them based on their values. This way, all elements with the same digit sum will be grouped together in non-decreasing order. Finally, we'll update our result with the largest sum of two consecutive elements within each group, which is the sum of the two last elements of the group.\n\n#### Algorithm\n\nHelper Function - `calculateDigitSum(int num)`:\n\n- Initialize `digitSum` to 0.\n- While `num` is greater than 0:\n    - Add `num % 10` to `digitSum`.\n    - Divide `num` by 10.\n- Return `digitSum`.\n\nMain Function:\n\n- Iterate through the elements of `nums`:\n    - Compute the digit sum for each element using `calculateDigitSum(number)`.\n    - Store each number and its digit sum as a pair in the array `digitSumPairs`.\n- Sort the vector `digitSumPairs` based on digit sums. If two elements have the same digit sum, sort by their values.\n- Initialize `maxPairSum` as `-1`.\n- Iterate through the sorted array starting from index 1:\n   - Compare the current element's digit sum with the previous element's digit sum.\n   - If they are the same, calculate the sum of their values.\n   - Update `maxPairSum` with the larger value between `maxPairSum` and the calculated sum.\n- Return `maxPairSum`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ABr3rk7y/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ABr3rk7y\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of `nums`.\n\n- Time Complexity: $O(n \\cdot \\log n)$\n\n    The algorithm iterates through the `nums` array to compute the digit sum of each element. Each call to the `calculateDigitSum` function takes $O(m)$ time, where $m$ is the number of digits of the input integer. Therefore, constructing the `digitSumPairs` array requires $O(n \\cdot m)$ time, which is approximately $O(n)$ since $m <= 10$ for all elements of the array. \n    \n    Sorting the digit-sum pairs requires $O(n \\log{n})$ time. The final traversal to find the maximum pair sum takes $O(n)$, as it involves only constant-time operations for each element, such as array accesses and comparisons. \n    \n    Therefore, the overall time complexity is $O(n \\log{n})$.\n\n- Space Complexity: $O(n)$\n\n    The algorithm uses extra space to store `digitSumPairs`, which consists of $n$ elements. Additional space is required for a few variables, but this usage is constant. Therefore, the overall space complexity is $O(n)$.\n\n---\n\n### Approach 2: Priority Queue\n\n#### Intuition\n\nIn the previous approach, we stored all the elements with a particular digit sum. However, we only need the two largest elements for each case. Therefore, instead of using an array for each digit sum, we can use a priority queue (based on a heap) of size 2 to track the two greatest elements we have seen so far with the given digit sum. Refer to [Leetcode Explore card on Heaps](https://leetcode.com/explore/featured/card/heap/) to learn more about the topic.\n\nThe first two elements with a specific digit sum are pushed directly into the heap for that digit sum. Now, what should we do when we come across a new element with the same digit sum? We can add it to the heap and then remove the smallest element to ensure that we keep only the two largest elements seen so far. Since we want to remove the smallest element whenever the heap size exceeds two, we use a min-heap for this purpose.\n\nFor example, for the array `nums = [36, 60, 45, 18, 33, 24]`, the digit sums of all elements are: `[9, 6, 9, 9, 6, 6]`.\n\nFor the priority queue for digit sum 9, we'd push the first element, 36. Therefore, the priority queue would be `[36]`.\n\nFor the priority queue for digit sum 6, we'd push the second element, 60. Therefore, the priority queue would be `[60]`.\n\nFor the priority queue for digit sum 9, we'd push the third element, 45. Therefore, the priority queue would be `[36, 45]`.\n\nFor the priority queue for digit sum 9, we'd push the fourth element, 18. Therefore, the priority queue would be `[18, 36, 45]`. Since the priority queue size has exceeded 2, we'll pop the smallest element from the queue. The final priority queue would be `[36, 45]`.\n\nSimilarly, for digit sum 6, the final priority queue would be `[33, 60]`. We'll calculate the larger pair sum for both the priority queues and return the greater sum.\n\nAlso, observe that we need to create a priority queue for each possible digit sum. The greatest digit sum for the given constraints (`nums[i] <= 10^9`) occurs for the integer `999999999`, which gives a sum of `81`. Therefore, we must initialize 81 priority queues, with each queue holding at most 2 elements in the worst case.\n\n#### Algorithm\n\nHelper Function - `calculateDigitSum(int num)`:\n\n- Initialize `digitSum` to `0`.\n- While `num` is greater than `0`:\n    - Add `num % 10` to `digitSum`.\n    - Divide `num` by `10`.\n- Return `digitSum`.\n\nMain Function:\n\n- Initialize an array `digitSumGroups` with `82` priority queues (one for each possible digit sum from 0 to 81). Each priority queue will be a min-heap that stores at most `2` elements.\n- Initialize `maxPairSum` as `-1`.\n- Iterate through the elements of `nums`:\n    - Compute the digit sum for each element using `calculateDigitSum(number)`.\n    - Add the number to the corresponding min-heap in `digitSumGroups`.\n    - If the size of the heap exceeds `2`, pop the smallest element to keep only the two largest numbers.\n- Traverse through `digitSumGroups` to find the maximum pair sum for each group:\n   - If a heap contains exactly two numbers, calculate their sum.\n   - Update `maxPairSum` with the larger value between `maxPairSum` and the calculated sum.\n- Return `maxPairSum`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/nuFvNmMU/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"nuFvNmMU\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of `nums`, and let `m` be the maximum number in `nums`.\n\n- Time Complexity: $O(n \\log m)$\n\n    The time complexity of this approach is primarily determined by the operations performed on the input array `nums` and the computation of digit sums. The `calculateDigitSum` function computes the sum of digits for a given number, which takes $O(\\log m)$ time. This is because the number of digits in a number is proportional to $\\log_{10} m$. \n\n    Also, the push and pop operations on a priority queue (min heap) take $O(1)$ time because the heap size is limited to $2$, resulting in an overall time complexity of $O(n \\log m)$.\n\n    Finally, the second loop iterates over the `digitSumGroups` array, which has a size proportional to the maximum digit sum, $O(\\log m)$. For each heap of size 2, it performs two pop operations and a sum computation, each taking $O(1)$ time. This loop adds $O(\\log m)$ to the time complexity. Combining all these, the overall time complexity is $O(n \\log m)$.\n\n- Space Complexity: $O(\\log m)$\n\n    The `digitSumGroups` array stores priority queues (min-heaps) for each possible digit sum. Since the maximum digit sum is proportional to $\\log m$, the size of this array is $O(\\log m)$. Each heap in this array can store at most 2 elements, so the total space used is $O(\\log m)$.\n\n---\n\n### Approach 3: Store Maximum Value\n\n#### Intuition\n\nIn the previous approach, we optimized our initial approach further by storing the two greatest elements in the priority queue for each digit sum. Can we optimize this further? Instead of storing two elements for each digit sum, we can store only the greatest element we've encountered so far for each digit sum in an array `digitMapping` of size 82, corresponding to the 82 possible digit sums. Then, for each new element, we create a pair with the current element and the greatest element found so far for the same digit sum.\n\nUsing this approach, it is guaranteed that we will always encounter a pair with two greatest integers for a digit-sum. The proof is given below:\n\nLet's say the array `nums` is given by: `{nums[0], nums[1], ...., largest value with digit-sum n, ...., second largest value with digit-sum n, ..., nums[nums.size - 1]}`. In other words, the largest value occurs before the second-largest value with the same digit-sum. In this case, as soon as we reach the largest value, it would replace the value in `digitMapping[n]`. Now, when we reach the second largest value, the pair sum would be given as `second largest value + digitMapping[n]`, which would give us the largest pair-sum for the given digit-sum.\n\nSimilarly, let's say the array `nums` is given by: `{nums[0], nums[1], ...., second largest value with digit-sum n, ...., largest value with digit-sum n..., nums[nums.size - 1]}`. In this case, as soon as we reach the second largest value, it would replace the value in `digitMapping[n]`. Now, when we reach the largest value, the pair sum would be given as `largest value + digitMapping[n]`, which would give us the largest pair-sum for the given digit-sum. After this, the largest value would replace the value in `digitMapping[n]`.\n\n#### Algorithm\n\n- Initialize an array `digitMapping` of size 82 to store the maximum number for each digit sum (0 to 81). Initialize `result` as `-1`.\n- Iterate through the elements of `nums`:\n    - Compute the digit sum for each element:\n        - Initialize `digitSum` as 0.\n        - For each element, repeatedly extract the last digit (using `element % 10`) and add it to `digitSum`.\n        - Update `element` by dividing it by 10.\n    - If `digitMapping[digitSum]` is greater than 0 (indicating that a number with the same digit sum has been seen before), calculate the sum of the current number and the stored number with the same digit sum. \n    - Update `result` with the maximum of `result` and the calculated sum.\n    - Update `digitMapping[digitSum]` with the maximum value between `digitMapping[digitSum]` and the current element.\n- Return `result`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/h6VLgQs4/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"h6VLgQs4\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of `nums`, and let `m` be the maximum number in `nums`.\n\n- Time Complexity: $O(n \\log m)$\n\n    The time complexity of this approach is primarily determined by the operations performed on the input array `nums` and the computation of digit sums. The `calculateDigitSum` function computes the sum of digits for a given number, which takes $O(\\log m)$ time. This is because the number of digits in a number is proportional to $\\log_{10} m$. The loop iterates over all $n$ elements in `nums` and computes their digit sums, resulting in a total time of $O(n \\log m)$.\n\n    Then, for each element in `nums`, we update the `digitMapping` for it's `digitSum`. This operation takes $O(1)$ time.\n  \n    Combining all these, the overall time complexity is $O(n \\log m)$.\n\n- Space Complexity: $O(\\log m)$\n\n    The `digitMapping` array stores the greatest value for each `digitSum`. Since the maximum digit sum is proportional to $\\log m$, the size of this array is $O(\\log m)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

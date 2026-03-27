@@ -1,0 +1,53 @@
+{
+  "questionId": "2441",
+  "questionFrontendId": "2308",
+  "title": "Arrange Table by Gender",
+  "titleSlug": "arrange-table-by-gender",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Genders</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| user_id     | int     |\n| gender      | varchar |\n+-------------+---------+\nuser_id is the primary key (column with unique values) for this table.\ngender is ENUM (category) of type &#39;female&#39;, &#39;male&#39;, or &#39;other&#39;.\nEach row in this table contains the ID of a user and their gender.\nThe table has an equal number of &#39;female&#39;, &#39;male&#39;, and &#39;other&#39;.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution&nbsp;to rearrange the <code>Genders</code> table such that the rows alternate between <code>&#39;female&#39;</code>, <code>&#39;other&#39;</code>, and <code>&#39;male&#39;</code> in order. The table should be rearranged such that the IDs of each gender are sorted in ascending order.</p>\n\n<p>Return the result table in <strong>the mentioned order</strong>.</p>\n\n<p>The&nbsp;result format is shown in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nGenders table:\n+---------+--------+\n| user_id | gender |\n+---------+--------+\n| 4       | male   |\n| 7       | female |\n| 2       | other  |\n| 5       | male   |\n| 3       | female |\n| 8       | male   |\n| 6       | other  |\n| 1       | other  |\n| 9       | female |\n+---------+--------+\n<strong>Output:</strong> \n+---------+--------+\n| user_id | gender |\n+---------+--------+\n| 3       | female |\n| 1       | other  |\n| 4       | male   |\n| 7       | female |\n| 2       | other  |\n| 5       | male   |\n| 9       | female |\n| 6       | other  |\n| 8       | male   |\n+---------+--------+\n<strong>Explanation:</strong> \nFemale gender: IDs 3, 7, and 9.\nOther gender: IDs 1, 2, and 6.\nMale gender: IDs 4, 5, and 8.\nWe arrange the table alternating between &#39;female&#39;, &#39;other&#39;, and &#39;male&#39;.\nNote that the IDs of each gender are sorted in ascending order.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Genders (user_id int, gender ENUM('female', 'other', 'male'))\"], \"mssql\": [\"Create table Genders (user_id int, gender VARCHAR(6) NOT NULL CHECK (gender IN ('female', 'other', 'male')))\"], \"oraclesql\": [\"Create table Genders (user_id int, gender VARCHAR(6) NOT NULL CHECK (gender IN ('female', 'other', 'male')))\"], \"database\": true, \"name\": \"arrange_table\", \"pythondata\": [\"Genders = pd.DataFrame([], columns=['user_id', 'gender']).astype({'user_id':'Int64', 'gender':'object'})\"], \"postgresql\": [\"Create table If Not Exists Genders (user_id int, gender VARCHAR(30) CHECK (gender IN ('female', 'other', 'male')))\\n\"], \"database_schema\": {\"Genders\": {\"user_id\": \"INT\", \"gender\": \"ENUM('female', 'other', 'male')\"}}}",
+  "stats": "{\"totalAccepted\": \"8.5K\", \"totalSubmission\": \"12K\", \"totalAcceptedRaw\": 8533, \"totalSubmissionRaw\": 12045, \"acRate\": \"70.8%\"}",
+  "likes": 90,
+  "dislikes": 15,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Genders\": [\"user_id\", \"gender\"]}, \"rows\": {\"Genders\": [[4, \"male\"], [7, \"female\"], [2, \"other\"], [5, \"male\"], [3, \"female\"], [8, \"male\"], [6, \"other\"], [1, \"other\"], [9, \"female\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef arrange_table(genders: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

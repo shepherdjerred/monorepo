@@ -1,0 +1,142 @@
+{
+  "questionId": "2521",
+  "questionFrontendId": "2435",
+  "title": "Paths in Matrix Whose Sum Is Divisible by K",
+  "titleSlug": "paths-in-matrix-whose-sum-is-divisible-by-k",
+  "difficulty": "Hard",
+  "content": "<p>You are given a <strong>0-indexed</strong> <code>m x n</code> integer matrix <code>grid</code> and an integer <code>k</code>. You are currently at position <code>(0, 0)</code> and you want to reach position <code>(m - 1, n - 1)</code> moving only <strong>down</strong> or <strong>right</strong>.</p>\n\n<p>Return<em> the number of paths where the sum of the elements on the path is divisible by </em><code>k</code>. Since the answer may be very large, return it <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img src=\"https://assets.leetcode.com/uploads/2022/08/13/image-20220813183124-1.png\" style=\"width: 437px; height: 200px;\" />\n<pre>\n<strong>Input:</strong> grid = [[5,2,4],[3,0,5],[0,7,2]], k = 3\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> There are two paths where the sum of the elements on the path is divisible by k.\nThe first path highlighted in red has a sum of 5 + 2 + 4 + 5 + 2 = 18 which is divisible by 3.\nThe second path highlighted in blue has a sum of 5 + 3 + 0 + 5 + 2 = 15 which is divisible by 3.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img src=\"https://assets.leetcode.com/uploads/2022/08/17/image-20220817112930-3.png\" style=\"height: 85px; width: 132px;\" />\n<pre>\n<strong>Input:</strong> grid = [[0,0]], k = 5\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The path highlighted in red has a sum of 0 + 0 = 0 which is divisible by 5.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img src=\"https://assets.leetcode.com/uploads/2022/08/12/image-20220812224605-3.png\" style=\"width: 257px; height: 200px;\" />\n<pre>\n<strong>Input:</strong> grid = [[7,3,4,9],[2,3,6,2],[2,3,7,0]], k = 1\n<strong>Output:</strong> 10\n<strong>Explanation:</strong> Every integer is divisible by 1 so the sum of the elements on every possible path is divisible by k.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == grid.length</code></li>\n\t<li><code>n == grid[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= m * n &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= grid[i][j] &lt;= 100</code></li>\n\t<li><code>1 &lt;= k &lt;= 50</code></li>\n</ul>\n",
+  "hints": [
+    "The actual numbers in grid do not matter. What matters are the remainders you get when you divide the numbers by k.",
+    "We can use dynamic programming to solve this problem. What can we use as states?",
+    "Let dp[i][j][value] represent the number of paths where the sum of the elements on the path has a remainder of value when divided by k."
+  ],
+  "metaData": "{\n  \"name\": \"numberOfPaths\",\n  \"params\": [\n    {\n      \"name\": \"grid\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"103.5K\", \"totalSubmission\": \"176.2K\", \"totalAcceptedRaw\": 103461, \"totalSubmissionRaw\": 176169, \"acRate\": \"58.7%\"}",
+  "likes": 1343,
+  "dislikes": 46,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Unique Paths\", \"titleSlug\": \"unique-paths\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Unique Paths II\", \"titleSlug\": \"unique-paths-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Path Sum\", \"titleSlug\": \"minimum-path-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Dungeon Game\", \"titleSlug\": \"dungeon-game\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Cherry Pickup\", \"titleSlug\": \"cherry-pickup\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Shortest Path in Binary Matrix\", \"titleSlug\": \"shortest-path-in-binary-matrix\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Cost Homecoming of a Robot in a Grid\", \"titleSlug\": \"minimum-cost-homecoming-of-a-robot-in-a-grid\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Check if There is a Path With Equal Number of 0's And 1's\", \"titleSlug\": \"check-if-there-is-a-path-with-equal-number-of-0s-and-1s\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[5,2,4],[3,0,5],[0,7,2]]\n3",
+    "[[0,0]]\n5",
+    "[[7,3,4,9],[2,3,6,2],[2,3,7,0]]\n1"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numberOfPaths(vector<vector<int>>& grid, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numberOfPaths(int[][] grid, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numberOfPaths(self, grid: List[List[int]], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numberOfPaths(self, grid, k):\n        \"\"\"\n        :type grid: List[List[int]]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} grid\n * @param {number} k\n * @return {number}\n */\nvar numberOfPaths = function(grid, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numberOfPaths(grid: number[][], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumberOfPaths(int[][] grid, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numberOfPaths(int** grid, int gridSize, int* gridColSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numberOfPaths(grid [][]int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numberOfPaths(grid: Array<IntArray>, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numberOfPaths(_ grid: [[Int]], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn number_of_paths(grid: Vec<Vec<i32>>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} grid\n# @param {Integer} k\n# @return {Integer}\ndef number_of_paths(grid, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $grid\n     * @param Integer $k\n     * @return Integer\n     */\n    function numberOfPaths($grid, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numberOfPaths(List<List<int>> grid, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numberOfPaths(grid: Array[Array[Int]], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec number_of_paths(grid :: [[integer]], k :: integer) :: integer\n  def number_of_paths(grid, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec number_of_paths(Grid :: [[integer()]], K :: integer()) -> integer().\nnumber_of_paths(Grid, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (number-of-paths grid k)\n  (-> (listof (listof exact-integer?)) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2879",
+    "content": "### Approach: Dynamic Programming\n\n#### Intuition\n\nIt can be seen that this is a typical counting problem, which is generally solved using dynamic programming algorithms.\n\nConsidering the scale of $k$ is $1 \\le k \\le 50$, let the state $\\textit{dp}(i,\\, j,\\, \\textit{r})$ represent the number of ways to have a path sum with remainder $r$ when divided by $k$ at position $(i,\\, j)$ in the matrix. Then, the initial state is:\n\n$$\n\\begin{aligned}\n\n\\textit{dp}(i,\\, j,\\, \\textit{r}) =\n    \\begin{cases}\n    1, & (i,\\, j,\\, r) = (0,\\, 0,\\, \\textit{grid}_{0,0} \\bmod k)\\\\\n    0, & (i,\\, j,\\, r) \\ne (0,\\, 0,\\, \\textit{grid}_{0,0} \\bmod k)\n    \\end{cases}\n\n\\end{aligned}\n$$\n\nThen consider the state transition. $dp(i,\\, j,\\, r)$ can be derived from the states above and to the left, that is:\n\n$$\n\\begin{aligned}\n\n\\textit{dp}(i,\\, j,\\, r) =\n\n    \\begin{cases}\n    \\textit{dp}(i - 1,\\, j,\\, \\textit{prevMod}), & i \\gt 0, & j = 0\\\\\n    \\textit{dp}(i,\\, j - 1,\\, \\textit{prevMod}), & i = 0, & j \\gt 0\\\\\n    \\textit{dp}(i - 1,\\, j,\\, \\textit{prevMod}) + dp(i,\\, j - 1,\\, \\textit{prevMod}), & i \\gt 0, & j \\gt 0\n    \\end{cases}\n\n\\end{aligned}\n$$\n\nThe key is $\\textit{prevMod}$, which represents the remainder component of the previous state. Considering the relationship between $\\textit{prevMod}$ and $r$, we have:\n\n$$\n\\begin{aligned}\n\\textit{prevMod} + \\textit{grid}_{i,j} \\equiv r \\pmod k\n\\end{aligned}\n$$\n\nThat is:\n\n$$\n\\begin{aligned}\n\\textit{prevMod} \\equiv r - \\textit{grid}_{i,j} \\pmod k\n\\end{aligned}\n$$\n\nExpand it according to the rules of congruence, finally getting:\n\n$$\n\\begin{aligned}\n\\textit{prevMod} = (r - \\textit{grid}_{i,j} + k) \\bmod k\n\\end{aligned}\n$$\n\nThis is a typical counting problem that is well suited to a dynamic programming approach.\n\nGiven that $1 \\le k \\le 50$, let the state $\\textit{dp}(i, j, r)$ represent the number of ways to obtain a path sum whose remainder modulo $k$ is $r$ at position $(i, j)$ in the matrix. The initial state is:\n\n$$\n\\begin{aligned}\n\n\\textit{dp}(i, j, r) =\n\\begin{cases}\n1, & (i, j, r) = (0, 0,, \\textit{grid}_{0,0} \\bmod k)\\\n0, & \\text{otherwise}\n\\end{cases}\n\n\\end{aligned}\n$$\n\nFor the transition, $\\textit{dp}(i, j, r)$ can be derived from the cell above or the cell to the left:\n\n$$\n\\begin{aligned}\n\n\\textit{dp}(i, j, r) =\n\\begin{cases}\n\\textit{dp}(i - 1, j, \\textit{prevMod}), & i > 0,, j = 0\\\n\\textit{dp}(i, j - 1, \\textit{prevMod}), & i = 0,, j > 0\\\n\\textit{dp}(i - 1, j, \\textit{prevMod}) + \\textit{dp}(i, j - 1, \\textit{prevMod}), & i > 0,, j > 0\n\\end{cases}\n\n\\end{aligned}\n$$\n\nThe term $\\textit{prevMod}$ is the remainder needed from the preceding state. From the congruence relation\n\n$$\n\\begin{aligned}\n\\textit{prevMod} + \\textit{grid}_{i,j} \\equiv r \\pmod{k}\n\\end{aligned}\n$$\n\nwe obtain\n\n$$\n\\begin{aligned}\n\\textit{prevMod} = (r - \\textit{grid}_{i,j} + k) \\bmod k\n\\end{aligned}\n$$\n\nUsing this recurrence, compute the dp table and apply the modulus $10^9 + 7$ as required. After filling the table, $\\textit{dp}(n, m, 0)$ is the final result.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/cHM7q6Dh/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"cHM7q6Dh\"></iframe>\n\n#### Complexity Analysis\n\n- Time complexity: $O(m \\times n \\times k)$.\n\n- Space complexity: $O(m \\times n \\times k)$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

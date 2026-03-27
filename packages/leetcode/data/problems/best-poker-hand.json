@@ -1,0 +1,135 @@
+{
+  "questionId": "2433",
+  "questionFrontendId": "2347",
+  "title": "Best Poker Hand",
+  "titleSlug": "best-poker-hand",
+  "difficulty": "Easy",
+  "content": "<p>You are given an integer array <code>ranks</code> and a character array <code>suits</code>. You have <code>5</code> cards where the <code>i<sup>th</sup></code> card has a rank of <code>ranks[i]</code> and a suit of <code>suits[i]</code>.</p>\n\n<p>The following are the types of <strong>poker hands</strong> you can make from best to worst:</p>\n\n<ol>\n\t<li><code>&quot;Flush&quot;</code>: Five cards of the same suit.</li>\n\t<li><code>&quot;Three of a Kind&quot;</code>: Three cards of the same rank.</li>\n\t<li><code>&quot;Pair&quot;</code>: Two cards of the same rank.</li>\n\t<li><code>&quot;High Card&quot;</code>: Any single card.</li>\n</ol>\n\n<p>Return <em>a string representing the <strong>best</strong> type of <strong>poker hand</strong> you can make with the given cards.</em></p>\n\n<p><strong>Note</strong> that the return values are <strong>case-sensitive</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> ranks = [13,2,3,1,9], suits = [&quot;a&quot;,&quot;a&quot;,&quot;a&quot;,&quot;a&quot;,&quot;a&quot;]\n<strong>Output:</strong> &quot;Flush&quot;\n<strong>Explanation:</strong> The hand with all the cards consists of 5 cards with the same suit, so we have a &quot;Flush&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> ranks = [4,4,2,4,4], suits = [&quot;d&quot;,&quot;a&quot;,&quot;a&quot;,&quot;b&quot;,&quot;c&quot;]\n<strong>Output:</strong> &quot;Three of a Kind&quot;\n<strong>Explanation:</strong> The hand with the first, second, and fourth card consists of 3 cards with the same rank, so we have a &quot;Three of a Kind&quot;.\nNote that we could also make a &quot;Pair&quot; hand but &quot;Three of a Kind&quot; is a better hand.\nAlso note that other cards could be used to make the &quot;Three of a Kind&quot; hand.</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> ranks = [10,10,2,12,9], suits = [&quot;a&quot;,&quot;b&quot;,&quot;c&quot;,&quot;a&quot;,&quot;d&quot;]\n<strong>Output:</strong> &quot;Pair&quot;\n<strong>Explanation:</strong> The hand with the first and second card consists of 2 cards with the same rank, so we have a &quot;Pair&quot;.\nNote that we cannot make a &quot;Flush&quot; or a &quot;Three of a Kind&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>ranks.length == suits.length == 5</code></li>\n\t<li><code>1 &lt;= ranks[i] &lt;= 13</code></li>\n\t<li><code>&#39;a&#39; &lt;= suits[i] &lt;= &#39;d&#39;</code></li>\n\t<li>No two cards have the same rank and suit.</li>\n</ul>\n",
+  "hints": [
+    "Sequentially check the conditions 1 through 4, and return the outcome corresponding to the first met condition."
+  ],
+  "metaData": "{\n  \"name\": \"bestHand\",\n  \"params\": [\n    {\n      \"name\": \"ranks\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"character[]\",\n      \"name\": \"suits\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"53.8K\", \"totalSubmission\": \"87.2K\", \"totalAcceptedRaw\": 53782, \"totalSubmissionRaw\": 87222, \"acRate\": \"61.7%\"}",
+  "likes": 404,
+  "dislikes": 44,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Categorize Box According to Criteria\", \"titleSlug\": \"categorize-box-according-to-criteria\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[13,2,3,1,9]\n[\"a\",\"a\",\"a\",\"a\",\"a\"]",
+    "[4,4,2,4,4]\n[\"d\",\"a\",\"a\",\"b\",\"c\"]",
+    "[10,10,2,12,9]\n[\"a\",\"b\",\"c\",\"a\",\"d\"]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string bestHand(vector<int>& ranks, vector<char>& suits) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String bestHand(int[] ranks, char[] suits) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def bestHand(self, ranks: List[int], suits: List[str]) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def bestHand(self, ranks, suits):\n        \"\"\"\n        :type ranks: List[int]\n        :type suits: List[str]\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} ranks\n * @param {character[]} suits\n * @return {string}\n */\nvar bestHand = function(ranks, suits) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function bestHand(ranks: number[], suits: string[]): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string BestHand(int[] ranks, char[] suits) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* bestHand(int* ranks, int ranksSize, char* suits, int suitsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func bestHand(ranks []int, suits []byte) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun bestHand(ranks: IntArray, suits: CharArray): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func bestHand(_ ranks: [Int], _ suits: [Character]) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn best_hand(ranks: Vec<i32>, suits: Vec<char>) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} ranks\n# @param {Character[]} suits\n# @return {String}\ndef best_hand(ranks, suits)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $ranks\n     * @param String[] $suits\n     * @return String\n     */\n    function bestHand($ranks, $suits) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String bestHand(List<int> ranks, List<String> suits) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def bestHand(ranks: Array[Int], suits: Array[Char]): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec best_hand(ranks :: [integer], suits :: [char]) :: String.t\n  def best_hand(ranks, suits) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec best_hand(Ranks :: [integer()], Suits :: [char()]) -> unicode:unicode_binary().\nbest_hand(Ranks, Suits) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (best-hand ranks suits)\n  (-> (listof exact-integer?) (listof char?) string?)\n  )"
+    }
+  ],
+  "solution": null
+}

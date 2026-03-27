@@ -1,0 +1,148 @@
+{
+  "questionId": "2461",
+  "questionFrontendId": "2385",
+  "title": "Amount of Time for Binary Tree to Be Infected",
+  "titleSlug": "amount-of-time-for-binary-tree-to-be-infected",
+  "difficulty": "Medium",
+  "content": "<p>You are given the <code>root</code> of a binary tree with <strong>unique</strong> values, and an integer <code>start</code>. At minute <code>0</code>, an <strong>infection</strong> starts from the node with value <code>start</code>.</p>\n\n<p>Each minute, a node becomes infected if:</p>\n\n<ul>\n\t<li>The node is currently uninfected.</li>\n\t<li>The node is adjacent to an infected node.</li>\n</ul>\n\n<p>Return <em>the number of minutes needed for the entire tree to be infected.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/06/25/image-20220625231744-1.png\" style=\"width: 400px; height: 306px;\" />\n<pre>\n<strong>Input:</strong> root = [1,5,3,null,4,10,6,9,2], start = 3\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The following nodes are infected during:\n- Minute 0: Node 3\n- Minute 1: Nodes 1, 10 and 6\n- Minute 2: Node 5\n- Minute 3: Node 4\n- Minute 4: Nodes 9 and 2\nIt takes 4 minutes for the whole tree to be infected so we return 4.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/06/25/image-20220625231812-2.png\" style=\"width: 75px; height: 66px;\" />\n<pre>\n<strong>Input:</strong> root = [1], start = 1\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> At minute 0, the only node in the tree is infected so we return 0.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[1, 10<sup>5</sup>]</code>.</li>\n\t<li><code>1 &lt;= Node.val &lt;= 10<sup>5</sup></code></li>\n\t<li>Each node has a <strong>unique</strong> value.</li>\n\t<li>A node with a value of <code>start</code> exists in the tree.</li>\n</ul>\n",
+  "hints": [
+    "Convert the tree to an undirected graph to make it easier to handle.",
+    "Use BFS starting at the start node to find the distance between each node and the start node. The answer is the maximum distance."
+  ],
+  "metaData": "{\n  \"name\": \"amountOfTime\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"TreeNode\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"start\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"203.5K\", \"totalSubmission\": \"311.8K\", \"totalAcceptedRaw\": 203462, \"totalSubmissionRaw\": 311822, \"acRate\": \"65.2%\"}",
+  "likes": 3244,
+  "dislikes": 70,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Depth of Binary Tree\", \"titleSlug\": \"maximum-depth-of-binary-tree\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Shortest Path to Get Food\", \"titleSlug\": \"shortest-path-to-get-food\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"All Nodes Distance K in Binary Tree\", \"titleSlug\": \"all-nodes-distance-k-in-binary-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count the Number of Infection Sequences\", \"titleSlug\": \"count-the-number-of-infection-sequences\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,5,3,null,4,10,6,9,2]\n3",
+    "[1]\n1"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"servicenow\", \"name\": \"ServiceNow\"}, {\"timesEncountered\": 2, \"slug\": \"sharechat\", \"name\": \"ShareChat\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    int amountOfTime(TreeNode* root, int start) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public int amountOfTime(TreeNode root, int start) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def amountOfTime(self, root: Optional[TreeNode], start: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def amountOfTime(self, root, start):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :type start: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @param {number} start\n * @return {number}\n */\nvar amountOfTime = function(root, start) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction amountOfTime(root: TreeNode | null, start: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public int AmountOfTime(TreeNode root, int start) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nint amountOfTime(struct TreeNode* root, int start) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc amountOfTime(root *TreeNode, start int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun amountOfTime(root: TreeNode?, start: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func amountOfTime(_ root: TreeNode?, _ start: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn amount_of_time(root: Option<Rc<RefCell<TreeNode>>>, start: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @param {Integer} start\n# @return {Integer}\ndef amount_of_time(root, start)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @param Integer $start\n     * @return Integer\n     */\n    function amountOfTime($root, $start) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  int amountOfTime(TreeNode? root, int start) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def amountOfTime(root: TreeNode, start: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec amount_of_time(root :: TreeNode.t | nil, start :: integer) :: integer\n  def amount_of_time(root, start) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec amount_of_time(Root :: #tree_node{} | null, Start :: integer()) -> integer().\namount_of_time(Root, Start) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (amount-of-time root start)\n  (-> (or/c tree-node? #f) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2216",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Overview\n\nOur objective is to find the number of minutes needed for the entire tree to become infected. A node one level away from the start node takes 1 minute to become infected. All nodes on that level take the same amount of time to become infected. A node two levels away from the start node takes two minutes to become infected. We can reason that the distance of any given node from the start node will be the number of minutes it takes to infect the whole tree. Therefore, our solution will be the maximum distance from the start node.\n\n---\n\n\n### Approach 1: Convert to Graph and Breadth-First Search\n\n#### Intuition\n\nBefore we can approach finding the maximum distance from the start node, we must note that the start node is not necessarily the root node. This means the infection may spread from child to root, which would include traversal from child to parent. The ordinary definition of a binary tree does not support this kind of traversal, so we need to convert the binary tree to a structure that represents the original but allows traversal from child to parent. In this scenario, a child is a neighbor of a parent and vice-versa. An undirected graph will work for this.\n\n##### 1. Convert the binary tree to an undirected graph\n\nA tree is a special kind of graph with a root and subtrees. We want to search the graph from any node, not just the root, and be able to traverse to all neighbors, including parents and children. An undirected graph is a set of vertices with edges that connect them. We will use a map to represent our graph, made up of integer vertices, and an adjacency list to record the edges. \n\nWe can define a function that converts our binary tree to an undirected graph by traversing the tree and creating a graph. The parameters are the current node and its parent. We traverse the tree with a preorder traversal, visiting first the root, then the left and right child, so we can log the parent of each node and make a connection to it. When we encounter a new right or left child, we add them to the adjacency list. \n\nThe algorithm for this recursive `convert` function is defined as follows:\n\n1. If `current == null`, return.\n2. If the root has a new value, we add it to the map and create a new adjacency list to store the adjacent vertices\n3. Retrieve the adjacency list of the current vertex.\n3. If `current` is not the root, add its parent to the adjacency list.\n4. If `current` a left child, add the child to its adjacency list.\n5. If `current` has a right child, add the child to its adjacency list.\n6. Recursively call convert on `current.left` with current as the parent.\n7. Recursively call convert on `current.right` with current as the parent.\n\n<iframe src=\"https://leetcode.com/playground/R2LABaZY/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"R2LABaZY\"></iframe>\n\n##### 2. Conduct a Breath First Search (BFS) to find the maximum distance between the start and other vertices.\n\nWe can find the maximum distance between the vertex with the value `start` and the rest of the vertices in our graph by using a BFS starting with the `start`.\n\n\n###### Standard Breadth-First Search\n1. Add the first node to the queue\n2. While the queue is not empty:\n    - Remove the front node of the queue and mark it as visited.\n    - Check whether all adjacent nodes have been visited. If they have not, add them to the queue\n\nIf you are not familiar with BFS traversal, we suggest you read our relevant [LeetCode Explore Card](https://leetcode.com/explore/learn/card/queue-stack/231/practical-application-queue/1376/).\n\n\nTo determine the amount of time it takes to infect all of the vertices, we specifically need to determine the maximum distance from the start vertex. We use the variable `minute` to store the distance from the start vertex. We will make a few tweaks to BFS to update `minute` accurately.\n\nFor our implementation of BFS, we will use a queue to store the vertices that we need to visit. We will create a set to store the nodes we have already visited so we don't visit them multiple times. We add `start` to the queue and the visited set and then iterate through the vertices in the queue until it is empty.  We set the variable `levelSize` to the size of the queue so we can keep track of how many vertices are in the current level. We `poll()` a vertex `current` from the queue. We iterate through each of the values in its adjacency list checking whether each one has been visited. If they have not been visited, we add them to the queue and the visited set. After adding all of the adjacent vertices, we decrement `levelSize`. When there are no more vertices in the current level, we will move to the next level, so we increment the variable `minute`. When the queue is empty, we return `minute - 1`, because we have incremented `minute` for each level, but the time taken by the first node to infect neighbors is zero.\n\n\n#### Algorithm\n\n1. Declare a hash map `map` to store vertices and their adjacency list for edges.\n2. Implement a function `convert` that creates an undirected graph of the tree and stores it in `map` as explained above. \n3. Call `convert(root, 0, map)` as the root has no parent.\n4. Set `minute`, the distance from the start vertex to 0.\n5. Initialize a `queue` and add `start`.\n6. Initialize a set `visited` to store the visited vertexes and add `start`.\n7. While `queue` is not empty:\n    - Set `levelSize`, the number of vertices in this level, to the size of `queue`.\n    - While  `levelSize` is greater than 0:\n        - Remove a vertex `current` from the `queue `.\n        - For each edge in the adjacency list:\n            - Check whether the edge has been visited. If not, add it to `queue` and `visited`.     \n        - Decrement `levelSize`.\n    - Increment `minute` as the distance from `startNode` has increased.\n8. After the BFS, return `minute - 1`.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/gWBgxCJ9/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"gWBgxCJ9\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the tree.\n\n- Time complexity: $$O(n)$$\n\n    Converting the tree to a graph using a preorder traversal costs $$O(n)$$. We then perform BFS, which also costs $$O(n)$$ because we don't visit a node more than once.\n\n\n- Space complexity: $$O(n)$$\n\n    When converting the tree to a graph, we require $$O(n)$$ extra space for the map. We also require $$O(n)$$ space for the queue and $$O(n)$$ space for the visited set during the BFS.\n\n---\n\n### Approach 2: One-Pass Depth-First Search\n\n#### Intuition\n\nThe above solution passed over each node twice, once to create an undirected graph, and again to complete the breath first search. Is there a way to find the maximum distance from the start node with only one pass?\n\nIf the node with the value start happened to be the root, the maximum distance from the start node would be equivalent to the maximum height of the tree. We can also reason that there are certain test cases where the maximum height of the start node's sub-tree would be the maximum distance from the start node. An example case where this is true is `[1, 2, null, 3, null, 4, null]` where the start node is 2. In this case, all nodes have only one child.\n\nIs there a way to calculate the maximum distance from the start node using subtree depths, even when the start node is not the root? This would help us solve the problem in just one pass.\n\nThe first question we need to solve is \"Can we determine the max distance of the start node using the depths of sub-trees?\" We use the image below to demonstrate a method for determining the max distance using sub-tree depths.\n\n![Tree with Highlighted Nodes](../Documents/2385/2385.drawio.svg)\n\nIn the image above the start node is the red node, 5.\nsubDepth = 2 // red subtree's depth (Nodes below the start node)\ndepth = 1 // red node's depth (the start node)\notherDepth = 2 // green subtree depth (nodes above the start node)\ndistance = depth + other_depth = 3 // distance of any node above the start node from the start node \nmaxDistance = max(distance, sub_depth) = 3\n\nKnowing that we can calculate the maximum distance from the start node using subtree height, we can attempt a one-pass method of solving this problem. We can base our algorithm on a calculation of max depth using a depth-first search. \n\nHere is the basic recursive algorithm for finding the maximum depth, which we will adjust to our needs.\n\n1. If `root = null` return 0.\n2. Make a recursive call with root.right and save as `rightDepth`. \n3. Make a recursive call with root.left and save as `leftDepth`. \n4. Return max(rightDepth, leftDepth) + 1.\n\nOne challenge to this task is identifying whether we have encountered the start node during the traversal. We can return a negative depth when we encounter the start node. This will flag that we have found the start node, and as we traverse the tree, whenever we encounter a negative depth, we know the subtree contains the start node.\n\nAdditionally, as we traverse the tree, we might find the start node before we have calculated the max depth of each part of the tree. Therefore, we need to be able to save the max distance and continue calculating it while traversing the rest of the tree. \n\nThere are four main cases:\n\n1. If `root` is null, return 0.\n2. `root.val = start`. If so, we return `depth = -1` to signify this is the start node. In this way, in subsequent recursive calls, the parent node of the start node will know whether its child nodes contain the start node. Here we are also able to calculate the `maxDistance` of any node in the start node's subtree by finding the max of the left and right depth.\n3.  The left and right depth are both non-negative. If they are, we know the start node is not in this subtree, and we can set `depth = max(leftDepth, rightDepth)` just like with the basic max depth.\n4. The final case is when the `root` is not the start node, but its subtree contains the start node. In this case, we will set `depth = min(leftDepth, rightDepth) - 1`, which will give us a negative number, the absolute value of which represents the distance of the start node to the root node. To calculate the distance from the start node to the furthest node in the other subtree, we will add the absolute value of the negative depth of the subtree that contains the start node, and the positive depth of the other subtree, for convenience, we can directly take the absolute value of two values. Then, we update `maxDistance` with `distance` if it is larger.\n\n\n#### Algorithm\n1. Declare a variable `maxDistance` to store maximum distance from the start node.\n2. Define a function `traverse` that performs a depth-first search of the tree that returns depth and calculates and saves `maxDistance`.  \n    - For each call to `traverse`, we have a new root and declare a variable `depth = 0`.\n    - If `root == null` set `depth = 0` and return.\n    - Recursively call `traverse` with `root.right` and save in the variable `rightDepth`.\n    - Recursively call `traverse` with `root.left` and save in the variable `leftDepth`.\n    - If `root = start` the root is the start node:\n        - Set `maxDistance = max(leftDepth, rightDepth)`  to calcualte the start node's max depth.\n        - Set `depth = -1` to signify this is the start node.\n    - If the `leftDepth` and `rightDepth` are both greater than or equal to `0`, the start node is not in this subtree:\n        - Set `depth = max(leftDepth, rightDepth) + 1` to calculate the current root's max depth.\n    - Else, the current root's subtree contains the start node:\n        - Define a variable `distance` as the sum of `abs(leftDepth)` and `abs(rightDepth)`, which is the distance of the furthest node in the other subtree.\n        - Set `maxDistance = max(maxDistance,  distance)` to update `maxDistance` if `distance` is larger.\n        - Set `depth = min(leftDepth, rightDepth) - 1` to calculate a negative number that signifies the subtree contains the start node and represents the distance of the start node from the root.\n    - return `depth`.\n3. Call `traverse(root, start)`.\n4. Return `maxDistance`.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/gWL2KH7K/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"gWL2KH7K\"></iframe>\n\n\n#### Complexity\n\nLet $n$ be the number of nodes in the tree.\n\n- Time complexity: $$O(n)$$\n\n    Traversing the tree with a DFS costs $$O(n)$$ as we visit each node exactly once.\n\n\n- Space complexity: $$O(n)$$\n\n    The space complexity of DFS is determined by the maximum depth of the call stack, which corresponds to the height of the tree (or the graph in our case). In the worst case, if the tree is completely unbalanced (e.g., a linked list), the call stack can grow as deep as the number of nodes, resulting in a space complexity of $O(n)$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "questionId": "2536",
+  "questionFrontendId": "2446",
+  "title": "Determine if Two Events Have Conflict",
+  "titleSlug": "determine-if-two-events-have-conflict",
+  "difficulty": "Easy",
+  "content": "<p>You are given two arrays of strings that represent two inclusive events that happened <strong>on the same day</strong>, <code>event1</code> and <code>event2</code>, where:</p>\n\n<ul>\n\t<li><code>event1 = [startTime<sub>1</sub>, endTime<sub>1</sub>]</code> and</li>\n\t<li><code>event2 = [startTime<sub>2</sub>, endTime<sub>2</sub>]</code>.</li>\n</ul>\n\n<p>Event times are valid 24 hours format in the form of <code>HH:MM</code>.</p>\n\n<p>A <strong>conflict</strong> happens when two events have some non-empty intersection (i.e., some moment is common to both events).</p>\n\n<p>Return <code>true</code><em> if there is a conflict between two events. Otherwise, return </em><code>false</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> event1 = [&quot;01:15&quot;,&quot;02:00&quot;], event2 = [&quot;02:00&quot;,&quot;03:00&quot;]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> The two events intersect at time 2:00.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> event1 = [&quot;01:00&quot;,&quot;02:00&quot;], event2 = [&quot;01:20&quot;,&quot;03:00&quot;]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> The two events intersect starting from 01:20 to 02:00.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> event1 = [&quot;10:00&quot;,&quot;11:00&quot;], event2 = [&quot;14:00&quot;,&quot;15:00&quot;]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> The two events do not intersect.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>event1.length == event2.length == 2</code></li>\n\t<li><code>event1[i].length == event2[i].length == 5</code></li>\n\t<li><code>startTime<sub>1</sub> &lt;= endTime<sub>1</sub></code></li>\n\t<li><code>startTime<sub>2</sub> &lt;= endTime<sub>2</sub></code></li>\n\t<li>All the event times follow the <code>HH:MM</code> format.</li>\n</ul>\n",
+  "hints": [
+    "Parse time format to some integer interval first",
+    "How would you determine if two intervals overlap?"
+  ],
+  "metaData": "{\n  \"name\": \"haveConflict\",\n  \"params\": [\n    {\n      \"name\": \"event1\",\n      \"type\": \"string[]\"\n    },\n    {\n      \"type\": \"string[]\",\n      \"name\": \"event2\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"64K\", \"totalSubmission\": \"120.5K\", \"totalAcceptedRaw\": 64028, \"totalSubmissionRaw\": 120500, \"acRate\": \"53.1%\"}",
+  "likes": 535,
+  "dislikes": 72,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Merge Intervals\", \"titleSlug\": \"merge-intervals\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Non-overlapping Intervals\", \"titleSlug\": \"non-overlapping-intervals\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"My Calendar I\", \"titleSlug\": \"my-calendar-i\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"01:15\",\"02:00\"]\n[\"02:00\",\"03:00\"]",
+    "[\"01:00\",\"02:00\"]\n[\"01:20\",\"03:00\"]",
+    "[\"10:00\",\"11:00\"]\n[\"14:00\",\"15:00\"]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool haveConflict(vector<string>& event1, vector<string>& event2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean haveConflict(String[] event1, String[] event2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def haveConflict(self, event1: List[str], event2: List[str]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def haveConflict(self, event1, event2):\n        \"\"\"\n        :type event1: List[str]\n        :type event2: List[str]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} event1\n * @param {string[]} event2\n * @return {boolean}\n */\nvar haveConflict = function(event1, event2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function haveConflict(event1: string[], event2: string[]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool HaveConflict(string[] event1, string[] event2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool haveConflict(char** event1, int event1Size, char** event2, int event2Size) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func haveConflict(event1 []string, event2 []string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun haveConflict(event1: Array<String>, event2: Array<String>): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func haveConflict(_ event1: [String], _ event2: [String]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn have_conflict(event1: Vec<String>, event2: Vec<String>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} event1\n# @param {String[]} event2\n# @return {Boolean}\ndef have_conflict(event1, event2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $event1\n     * @param String[] $event2\n     * @return Boolean\n     */\n    function haveConflict($event1, $event2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool haveConflict(List<String> event1, List<String> event2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def haveConflict(event1: Array[String], event2: Array[String]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec have_conflict(event1 :: [String.t], event2 :: [String.t]) :: boolean\n  def have_conflict(event1, event2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec have_conflict(Event1 :: [unicode:unicode_binary()], Event2 :: [unicode:unicode_binary()]) -> boolean().\nhave_conflict(Event1, Event2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (have-conflict event1 event2)\n  (-> (listof string?) (listof string?) boolean?)\n  )"
+    }
+  ],
+  "solution": null
+}

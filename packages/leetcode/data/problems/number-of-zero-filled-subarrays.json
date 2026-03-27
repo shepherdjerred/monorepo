@@ -1,0 +1,137 @@
+{
+  "questionId": "2432",
+  "questionFrontendId": "2348",
+  "title": "Number of Zero-Filled Subarrays",
+  "titleSlug": "number-of-zero-filled-subarrays",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code>, return <em>the number of <strong>subarrays</strong> filled with </em><code>0</code>.</p>\n\n<p>A <strong>subarray</strong> is a contiguous non-empty sequence of elements within an array.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,3,0,0,2,0,0,4]\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> \nThere are 4 occurrences of [0] as a subarray.\nThere are 2 occurrences of [0,0] as a subarray.\nThere is no occurrence of a subarray with a size more than 2 filled with 0. Therefore, we return 6.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [0,0,0,2,0,0]\n<strong>Output:</strong> 9\n<strong>Explanation:\n</strong>There are 5 occurrences of [0] as a subarray.\nThere are 3 occurrences of [0,0] as a subarray.\nThere is 1 occurrence of [0,0,0] as a subarray.\nThere is no occurrence of a subarray with a size more than 3 filled with 0. Therefore, we return 9.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2,10,2019]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> There is no subarray filled with 0. Therefore, we return 0.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-10<sup>9</sup> &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "For each zero, you can calculate the number of zero-filled subarrays that end on that index, which is the number of consecutive zeros behind the current element + 1.",
+    "Maintain the number of consecutive zeros behind the current element, count the number of zero-filled subarrays that end on each index, sum it up to get the answer."
+  ],
+  "metaData": "{\n  \"name\": \"zeroFilledSubarray\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"307.4K\", \"totalSubmission\": \"438.5K\", \"totalAcceptedRaw\": 307372, \"totalSubmissionRaw\": 438460, \"acRate\": \"70.1%\"}",
+  "likes": 2790,
+  "dislikes": 95,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Arithmetic Slices\", \"titleSlug\": \"arithmetic-slices\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Smooth Descent Periods of a Stock\", \"titleSlug\": \"number-of-smooth-descent-periods-of-a-stock\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Length of the Longest Alphabetical Continuous Substring\", \"titleSlug\": \"length-of-the-longest-alphabetical-continuous-substring\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Consecutive Integers from a Data Stream\", \"titleSlug\": \"find-consecutive-integers-from-a-data-stream\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,3,0,0,2,0,0,4]",
+    "[0,0,0,2,0,0]",
+    "[2,10,2019]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long zeroFilledSubarray(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long zeroFilledSubarray(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def zeroFilledSubarray(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def zeroFilledSubarray(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar zeroFilledSubarray = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function zeroFilledSubarray(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long ZeroFilledSubarray(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long zeroFilledSubarray(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func zeroFilledSubarray(nums []int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun zeroFilledSubarray(nums: IntArray): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func zeroFilledSubarray(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn zero_filled_subarray(nums: Vec<i32>) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef zero_filled_subarray(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function zeroFilledSubarray($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int zeroFilledSubarray(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def zeroFilledSubarray(nums: Array[Int]): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec zero_filled_subarray(nums :: [integer]) :: integer\n  def zero_filled_subarray(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec zero_filled_subarray(Nums :: [integer()]) -> integer().\nzero_filled_subarray(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (zero-filled-subarray nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1575",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nIn this problem, we are given an array of integers `nums` and the task is to find the number of zero-filled subarrays.\n\nA zero-filled subarray only contains `0`, as shown in the picture below.\n\n![img](../Figures/2348/2348-1.png)\n\n---\n\n### Approach: Count the number of consecutive 0's.\n\n#### Intuition   \n\nSince every subarray ends with a number in the array, let's check that for each number `num`, how many subarrays end with it? \n\n![img](../Figures/2348/2348-2.png)\n\nIf `num != 0`, there will not be any subarray ends with it. Otherwise, it depends on how many zero-filled subarrays end with the **previous** number. Suppose there are `k` subarrays end with the previous number, we can append `num` to them to make `k` longer subarrays that end with this number! Plus `num` itself is a zero-filled subarray, we have `k + 1` zero-filled subarrays end with `num`. Note that the first number doesn't have a previous number, which equals `k = 0`.\n\nTherefore, we can iterate over `nums` and update two variables, `ans` for the total number of zero-filled subarrays, and `subArray` for the number of zero-filled subarrays end with the current number `num`. As shown in the picture below.\n\n![img](../Figures/2348/2348-2_4.png)\n\n\n<br>\n\n#### Algorithm\n\n1) Initialize `ans = 0`, `numSubarray = 0`.\n2) Iterate over `nums`, for each number `num`:\n    - If `num = 0`, increment `numSubarray` by 1.\n    - Otherwise, set `numSubarray = 0`.\n\n    Then increment `ans` by `numSubarray`.\n3) Return `ans` at the end of the iteration.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/MQ8ZyhQc/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"MQ8ZyhQc\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of the input array `nums`.\n\n* Time complexity: $$O(n)$$\n\n    - We need to iterate over `nums`. \n    - At each step, we update two variables `num_subarray` and `ans`, which take constant time.\n    - The overall time complexity is $$O(n)$$.\n\n* Space complexity: $$O(1)$$\n\n    - We only need record two variables `num_subarray` and `ans`, which require constant space.\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

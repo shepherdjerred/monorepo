@@ -45,8 +45,7 @@
       "Bash(docker system prune*)",
       "Bash(docker volume prune*)",
       "Bash(docker volume rm*)",
-      "Bash(velero backup delete*)",
-      "Bash(coder delete*)"
+      "Bash(velero backup delete*)"
     ],
     "ask": [
       "Bash(git push --force*)",
@@ -101,8 +100,6 @@
       "Bash(aws s3 cp*)",
       "Bash(aws s3 mv*)",
       "Bash(aws s3 sync*)",
-      "Bash(coder create*)",
-      "Bash(coder stop*)",
       "Bash(tailscale down*)"
     ]
   },

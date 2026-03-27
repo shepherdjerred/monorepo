@@ -1,0 +1,135 @@
+{
+  "questionId": "2547",
+  "questionFrontendId": "2451",
+  "title": "Odd String Difference",
+  "titleSlug": "odd-string-difference",
+  "difficulty": "Easy",
+  "content": "<p>You are given an array of equal-length strings <code>words</code>. Assume that the length of each string is <code>n</code>.</p>\n\n<p>Each string <code>words[i]</code> can be converted into a <strong>difference integer array</strong> <code>difference[i]</code> of length <code>n - 1</code> where <code>difference[i][j] = words[i][j+1] - words[i][j]</code> where <code>0 &lt;= j &lt;= n - 2</code>. Note that the difference between two letters is the difference between their <strong>positions</strong> in the alphabet i.e.&nbsp;the position of <code>&#39;a&#39;</code> is <code>0</code>, <code>&#39;b&#39;</code> is <code>1</code>, and <code>&#39;z&#39;</code> is <code>25</code>.</p>\n\n<ul>\n\t<li>For example, for the string <code>&quot;acb&quot;</code>, the difference integer array is <code>[2 - 0, 1 - 2] = [2, -1]</code>.</li>\n</ul>\n\n<p>All the strings in words have the same difference integer array, <strong>except one</strong>. You should find that string.</p>\n\n<p>Return<em> the string in </em><code>words</code><em> that has different <strong>difference integer array</strong>.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;adc&quot;,&quot;wzy&quot;,&quot;abc&quot;]\n<strong>Output:</strong> &quot;abc&quot;\n<strong>Explanation:</strong> \n- The difference integer array of &quot;adc&quot; is [3 - 0, 2 - 3] = [3, -1].\n- The difference integer array of &quot;wzy&quot; is [25 - 22, 24 - 25]= [3, -1].\n- The difference integer array of &quot;abc&quot; is [1 - 0, 2 - 1] = [1, 1]. \nThe odd array out is [1, 1], so we return the corresponding string, &quot;abc&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;aaa&quot;,&quot;bob&quot;,&quot;ccc&quot;,&quot;ddd&quot;]\n<strong>Output:</strong> &quot;bob&quot;\n<strong>Explanation:</strong> All the integer arrays are [0, 0] except for &quot;bob&quot;, which corresponds to [13, -13].\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>3 &lt;= words.length &lt;= 100</code></li>\n\t<li><code>n == words[i].length</code></li>\n\t<li><code>2 &lt;= n &lt;= 20</code></li>\n\t<li><code>words[i]</code> consists of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Find the difference integer array for each string.",
+    "Compare them to find the odd one out."
+  ],
+  "metaData": "{\n  \"name\": \"oddString\",\n  \"params\": [\n    {\n      \"name\": \"words\",\n      \"type\": \"string[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"44.1K\", \"totalSubmission\": \"71.2K\", \"totalAcceptedRaw\": 44055, \"totalSubmissionRaw\": 71154, \"acRate\": \"61.9%\"}",
+  "likes": 432,
+  "dislikes": 123,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Rounds to Complete All Tasks\", \"titleSlug\": \"minimum-rounds-to-complete-all-tasks\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"adc\",\"wzy\",\"abc\"]",
+    "[\"aaa\",\"bob\",\"ccc\",\"ddd\"]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 3, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"visa\", \"name\": \"Visa\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string oddString(vector<string>& words) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String oddString(String[] words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def oddString(self, words: List[str]) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def oddString(self, words):\n        \"\"\"\n        :type words: List[str]\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} words\n * @return {string}\n */\nvar oddString = function(words) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function oddString(words: string[]): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string OddString(string[] words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* oddString(char** words, int wordsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func oddString(words []string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun oddString(words: Array<String>): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func oddString(_ words: [String]) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn odd_string(words: Vec<String>) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} words\n# @return {String}\ndef odd_string(words)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $words\n     * @return String\n     */\n    function oddString($words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String oddString(List<String> words) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def oddString(words: Array[String]): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec odd_string(words :: [String.t]) :: String.t\n  def odd_string(words) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec odd_string(Words :: [unicode:unicode_binary()]) -> unicode:unicode_binary().\nodd_string(Words) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (odd-string words)\n  (-> (listof string?) string?)\n  )"
+    }
+  ],
+  "solution": null
+}

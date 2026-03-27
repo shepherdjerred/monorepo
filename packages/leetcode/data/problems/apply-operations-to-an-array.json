@@ -1,0 +1,139 @@
+{
+  "questionId": "2551",
+  "questionFrontendId": "2460",
+  "title": "Apply Operations to an Array",
+  "titleSlug": "apply-operations-to-an-array",
+  "difficulty": "Easy",
+  "content": "<p>You are given a <strong>0-indexed</strong> array <code>nums</code> of size <code>n</code> consisting of <strong>non-negative</strong> integers.</p>\n\n<p>You need to apply <code>n - 1</code> operations to this array where, in the <code>i<sup>th</sup></code> operation (<strong>0-indexed</strong>), you will apply the following on the <code>i<sup>th</sup></code> element of <code>nums</code>:</p>\n\n<ul>\n\t<li>If <code>nums[i] == nums[i + 1]</code>, then multiply <code>nums[i]</code> by <code>2</code> and set <code>nums[i + 1]</code> to <code>0</code>. Otherwise, you skip this operation.</li>\n</ul>\n\n<p>After performing <strong>all</strong> the operations, <strong>shift</strong> all the <code>0</code>&#39;s to the <strong>end</strong> of the array.</p>\n\n<ul>\n\t<li>For example, the array <code>[1,0,2,0,0,1]</code> after shifting all its <code>0</code>&#39;s to the end, is <code>[1,2,1,0,0,0]</code>.</li>\n</ul>\n\n<p>Return <em>the resulting array</em>.</p>\n\n<p><strong>Note</strong> that the operations are applied <strong>sequentially</strong>, not all at once.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,2,1,1,0]\n<strong>Output:</strong> [1,4,2,0,0,0]\n<strong>Explanation:</strong> We do the following operations:\n- i = 0: nums[0] and nums[1] are not equal, so we skip this operation.\n- i = 1: nums[1] and nums[2] are equal, we multiply nums[1] by 2 and change nums[2] to 0. The array becomes [1,<strong><u>4</u></strong>,<strong><u>0</u></strong>,1,1,0].\n- i = 2: nums[2] and nums[3] are not equal, so we skip this operation.\n- i = 3: nums[3] and nums[4] are equal, we multiply nums[3] by 2 and change nums[4] to 0. The array becomes [1,4,0,<strong><u>2</u></strong>,<strong><u>0</u></strong>,0].\n- i = 4: nums[4] and nums[5] are equal, we multiply nums[4] by 2 and change nums[5] to 0. The array becomes [1,4,0,2,<strong><u>0</u></strong>,<strong><u>0</u></strong>].\nAfter that, we shift the 0&#39;s to the end, which gives the array [1,4,2,0,0,0].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [0,1]\n<strong>Output:</strong> [1,0]\n<strong>Explanation:</strong> No operation can be applied, we just shift the 0 to the end.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= nums.length &lt;= 2000</code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [
+    "Iterate over the array and simulate the described process."
+  ],
+  "metaData": "{\n  \"name\": \"applyOperations\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"272.3K\", \"totalSubmission\": \"364.4K\", \"totalAcceptedRaw\": 272341, \"totalSubmissionRaw\": 364448, \"acRate\": \"74.7%\"}",
+  "likes": 1141,
+  "dislikes": 66,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Remove Duplicates from Sorted Array\", \"titleSlug\": \"remove-duplicates-from-sorted-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Move Zeroes\", \"titleSlug\": \"move-zeroes\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,2,1,1,0]",
+    "[0,1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> applyOperations(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] applyOperations(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def applyOperations(self, nums: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def applyOperations(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number[]}\n */\nvar applyOperations = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function applyOperations(nums: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] ApplyOperations(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* applyOperations(int* nums, int numsSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func applyOperations(nums []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun applyOperations(nums: IntArray): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func applyOperations(_ nums: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn apply_operations(nums: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer[]}\ndef apply_operations(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer[]\n     */\n    function applyOperations($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> applyOperations(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def applyOperations(nums: Array[Int]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec apply_operations(nums :: [integer]) :: [integer]\n  def apply_operations(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec apply_operations(Nums :: [integer()]) -> [integer()].\napply_operations(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (apply-operations nums)\n  (-> (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2695",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given an integer array `nums` consisting of `n` non-negative integers. We must iterate through the array, one step at a time, checking each pair of adjacent numbers starting from the first element:\n\n- If two neighboring numbers are the same, we double the first number and turn the second one into 0.\n- If they are different, we leave them as they are.\n\nWe repeat this process from left to right, one pair at a time. Finally, we must move all `0`s to the end of the array while preserving the order of non-zero elements and return the resulting array.\n\nBecause of the smaller constraints on the size of `nums` (`n ≤ 2000`), we can start from a brute force approach that simulates the rules mentioned in the problem and then think of further optimizing the approach.\n\n---\n\n### Approach 1: Brute Force Simulation\n\n#### Intuition\n\nA simple way to approach this problem is to iterate through the array in pairs and apply the given set of rules. Once we finish processing the entire array, we must rearrange it so that all non-zero elements appear first, preserving their order, while pushing all zeros to the end.\n\nLet's break this down with an example. Consider the array `nums = [1, 1, 2, 2, 2]`.  \n\n- We start at index `0` and examine the pair `{nums[0], nums[1]}`. Since both values are equal (`1 == 1`), we replace `nums[0]` with `2 * nums[0] = 2` and set `nums[1]` to `0`. The array now looks like `[2, 0, 2, 2, 2]`.  \n- Moving to index `1`, the pair `{nums[1], nums[2]}` is `{0, 2}`. Since the values are different, we skip this step.  \n- At index `2`, the pair `{nums[2], nums[3]}` is `{2, 2}`. Both values are equal, so we double `nums[2]` to `4` and set `nums[3]` to `0`. The array updates to `[2, 0, 4, 0, 2]`.  \n- Finally, at index `3`, the pair `{nums[3], nums[4]}` is `{0, 2}`. Since they are not equal, we make no changes.  \n\nAt this stage, the array is `[2, 0, 4, 0, 2]`. However, zeros are scattered throughout, and we need to move them to the end while maintaining the order of non-zero elements.  \n\nTo achieve this, we move all non-zero values to the beginning of the array. We can create a new array `modifiedNums` and append all non-zero values to it. The total number of zeros in the array is given by `number of zeros = n - number of non-zero values`. We then append zeros to `modifiedNums` until its size matches `nums`.  \n\n#### Algorithm\n\n1. Initialize `n` as the size of the `nums` array.\n2. Create an array`modifiedNums` to store the processed values.\n3. Apply operations on the array:\n   - Iterate through the array from `index = 0` to `n - 2`:\n     - If `nums[index]` is equal to `nums[index + 1]` and is non-zero:\n       - Update `nums[index]` to `nums[index] * 2`.\n       - Set `nums[index + 1]` to `0`.\n4. Move non-zero elements to the front:\n   - Iterate through `nums`, and for each non-zero element, push it into `modifiedNums`.\n5. Append zeros to maintain the original size:\n   - While `modifiedNums` has fewer elements than `n`, append `0` to it.\n6. Return `modifiedNums` as the final modified array.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/jwvjGyyB/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"jwvjGyyB\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the given array `nums`.\n\n- Time Complexity: $O(n)$\n\n    The algorithm iterates through the array twice:  \n    1. The first loop processes the array, performing at most `n-1` operations.  \n    2. The second loop collects non-zero elements, which takes $O(n)$.  \n    3. The third loop appends zeros to maintain the original size, which also takes $O(n)$.  \n\n    Since each operation runs in $O(n)$, the overall time complexity is $O(n)$.  \n\n- Space Complexity: $O(1)$\n\n    The algorithm uses an additional `modifiedNums` array to store the processed values. However, since this is the expected output, it is not counted in auxiliary space. Apart from this, the algorithm does not use any extra data structures that scale with `n`, making the auxiliary space complexity $O(1)$.\n\n---\n\n### Approach 2: Memory Optimization\n\n#### Intuition\n\nIn the previous approach, we created a separate array to rearrange the elements and push all zeros to the end. However, this extra space usage can be avoided if we directly modify the given array while iterating through it. The key observation here is that all non-zero elements should appear at the beginning of the array while maintaining their original order. We achieve this by shifting non-zero elements in-place instead of using a new array.\n\nTo accomplish this, we introduce two indices: `nonZeroIndex` and `iterateIndex`. The `iterateIndex` moves through the array, scanning each element one by one. Whenever it encounters a non-zero value, we place it at `nonZeroIndex`, ensuring that all non-zero values are stored in their correct positions as we iterate. After processing all elements, any leftover positions in the array are filled with zeros.\n\nNow, let's go through an example to understand how this works. Consider the array `nums = [1, 0, 2]`.  \n\n- We start with `nonZeroIndex = 0`, which keeps track of where the next non-zero value should be placed. `iterateIndex = 0` begins scanning the array.  \n- At `iterateIndex = 0`, we find `nums[0] = 1`, which is non-zero. Since it is already at the correct position (`nonZeroIndex = 0`), we simply move `nonZeroIndex` to the next available position (`nonZeroIndex = 1`).  \n- At `iterateIndex = 1`, `nums[1] = 0`, which we ignore, as zeros will be handled later.  \n- At `iterateIndex = 2`, `nums[2] = 2`, which is non-zero. We place it at `nums[nonZeroIndex]`, which is `nums[1]`. The array updates to `[1, 2, 2]`, and we move `nonZeroIndex` forward (`nonZeroIndex = 2`).  \n\nAt this point, all non-zero elements are correctly positioned. Now, we overwrite the remaining elements with zeros. Since `nonZeroIndex = 2`, we set `nums[2] = 0`, resulting in the final array `[1, 2, 0]`.  \n\nThe crucial part of this approach is that we never overwrite a necessary value during the shifting process. Any value that might be replaced was either a duplicate or a zero, ensuring that the transformation happens in-place while preserving order.\n\n#### Algorithm\n\n1. Initialize Variables:  \n   - `n` to store the size of the `nums` array.  \n\n2. Apply Operations on the Array:  \n   - Iterate through the array from index `0` to `n - 2`:  \n     - If `nums[index]` is equal to `nums[index + 1]` and not `0`:  \n       - Double `nums[index]` (`nums[index] *= 2`).  \n       - Set `nums[index + 1]` to `0`.  \n\n3. Shift Non-Zero Elements to the Beginning:  \n   - Initialize `nonZeroIndex = 0` to track where the next non-zero element should be placed.  \n   - Iterate through the array using `iterateIndex`:  \n     - If `nums[iterateIndex]` is not `0`:  \n       - Assign `nums[iterateIndex]` to `nums[nonZeroIndex]`.  \n       - Increment `nonZeroIndex`.  \n\n4. Fill Remaining Positions with Zeros:  \n   - Iterate from `nonZeroIndex` to `n`:  \n     - Set `nums[nonZeroIndex]` to `0` and increment `nonZeroIndex`.  \n\n5. Return the modified `nums` array.  \n\n#### Implementation\n\n> **Interview Tip: In-Place Algorithms**  \n> \n> In-place algorithms overwrite the input to save space, but sometimes this can cause problems. Here are a couple of situations where an in-place algorithm might not be suitable:  \n> 1. The algorithm needs to run in a multi-threaded environment without exclusive access to the array. Other threads might need to read the array as well and may not expect it to be modified.  \n> 2. Even if there is only a single thread or the algorithm has exclusive access to the array while running, the array might need to be reused later or by another thread once the lock has been released.  \n> \n> In an interview, always check whether the interviewer is okay with you overwriting the input. Be prepared to explain the pros and cons of doing so if asked!  \n\n<iframe src=\"https://leetcode.com/playground/gkv4shGw/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"gkv4shGw\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `nums` array.  \n\n- Time Complexity: $O(n)$  \n\n    The first loop iterates through the array once to apply operations, which takes $O(n)$. The second loop iterates through the array to shift non-zero elements, which takes $O(n)$. The third loop fills the remaining positions with zeros, which also takes $O(n)$.  \n    \n    Since all operations are linear, the overall time complexity is $O(n)$.  \n\n- Space Complexity: $O(1)$  \n\n    The algorithm modifies the input array in place without using extra space. Only a few integer variables are used, which take constant space. \n\n    Therefore, the overall space complexity is $O(1)$. \n\n---\n\n### Approach 3: One Pass\n\n#### Intuition\n\nIn this approach, we process the array in a single pass. The key idea is to first merge adjacent equal elements and then shift all non-zero elements to the front while maintaining their relative order.  \n\nWe iterate through the array using `index`, checking whether consecutive elements are equal and non-zero. If they are, we double the current element and set the next element to zero.\n\nAs we continue iterating, we also keep track of `writeIndex`, which represents the position where the next non-zero element should be placed. Whenever we encounter a non-zero element, we swap it with the element at `writeIndex`, effectively shifting all non-zero values forward while preserving order. This ensures that zeros naturally accumulate at the end of the array without requiring an explicit second pass to move them.\n\nFor example, given `nums = [2, 2, 0, 4, 4]`, we start processing from the first element. The first two elements are equal (`2` and `2`), so we double the first (`nums[0] = 4`) and set the second to zero (`nums[1] = 0`). As we continue iterating, we encounter a zero, which is skipped, and then a `4`, which is moved forward. The same process happens with the second pair of `4`s, resulting in the final modified array `[4, 8, 0, 0, 0]`.  \n\n#### Algorithm\n\n- Get the length of `nums` as `n`.\n- Initialize `writeIndex` to track the position for non-zero elements.\n\n- Iterate through `nums`:\n  - If `index` is within bounds and `nums[index]` is equal to `nums[index + 1]` (both non-zero), merge:\n    - Double `nums[index]`.\n    - Set `nums[index + 1]` to zero.\n  - If `nums[index]` is non-zero, move it to `writeIndex`:\n    - Swap `nums[index]` and `nums[writeIndex]` if needed.\n    - Increment `writeIndex`.\n\n- Return the modified `nums`.\n\n#### Implementation\n\n> **Interview Tip: In-Place Algorithms**  \n> \n> In-place algorithms overwrite the input to save space, but sometimes this can cause problems. Here are a couple of situations where an in-place algorithm might not be suitable:  \n> 1. The algorithm needs to run in a multi-threaded environment without exclusive access to the array. Other threads might need to read the array as well and may not expect it to be modified.  \n> 2. Even if there is only a single thread or the algorithm has exclusive access to the array while running, the array might need to be reused later or by another thread once the lock has been released.  \n> \n> In an interview, always check whether the interviewer is okay with you overwriting the input. Be prepared to explain the pros and cons of doing so if asked!  \n\n\n<iframe src=\"https://leetcode.com/playground/STvY8w9w/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"STvY8w9w\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `nums` array.  \n\n- Time Complexity: $O(n)$  \n\n    We iterate through the array only once, performing constant-time operations for each element. The merging operation modifies elements in-place, and the shifting of non-zero values is handled dynamically as we iterate, ensuring that no additional passes are required. Since every operation is handled in a single pass, the overall complexity remains linear.\n\n- Space Complexity: $O(1)$  \n\n    The algorithm modifies the input array in place without using extra space. Only a few integer variables are used, which take constant space. Therefore, the overall space complexity is $O(1)$. \n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

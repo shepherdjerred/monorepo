@@ -1,0 +1,142 @@
+{
+  "questionId": "2633",
+  "questionFrontendId": "2547",
+  "title": "Minimum Cost to Split an Array",
+  "titleSlug": "minimum-cost-to-split-an-array",
+  "difficulty": "Hard",
+  "content": "<p>You are given an integer array <code>nums</code> and an integer <code>k</code>.</p>\n\n<p>Split the array into some number of non-empty subarrays. The <strong>cost</strong> of a split is the sum of the <strong>importance value</strong> of each subarray in the split.</p>\n\n<p>Let <code>trimmed(subarray)</code> be the version of the subarray where all numbers which appear only once are removed.</p>\n\n<ul>\n\t<li>For example, <code>trimmed([3,1,2,4,3,4]) = [3,4,3,4].</code></li>\n</ul>\n\n<p>The <strong>importance value</strong> of a subarray is <code>k + trimmed(subarray).length</code>.</p>\n\n<ul>\n\t<li>For example, if a subarray is <code>[1,2,3,3,3,4,4]</code>, then <font face=\"monospace\">trimmed(</font><code>[1,2,3,3,3,4,4]) = [3,3,3,4,4].</code>The importance value of this subarray will be <code>k + 5</code>.</li>\n</ul>\n\n<p>Return <em>the minimum possible cost of a split of </em><code>nums</code>.</p>\n\n<p>A <strong>subarray</strong> is a contiguous <strong>non-empty</strong> sequence of elements within an array.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,1,2,1,3,3], k = 2\n<strong>Output:</strong> 8\n<strong>Explanation:</strong> We split nums to have two subarrays: [1,2], [1,2,1,3,3].\nThe importance value of [1,2] is 2 + (0) = 2.\nThe importance value of [1,2,1,3,3] is 2 + (2 + 2) = 6.\nThe cost of the split is 2 + 6 = 8. It can be shown that this is the minimum possible cost among all the possible splits.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,1,2,1], k = 2\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> We split nums to have two subarrays: [1,2], [1,2,1].\nThe importance value of [1,2] is 2 + (0) = 2.\nThe importance value of [1,2,1] is 2 + (2) = 4.\nThe cost of the split is 2 + 4 = 6. It can be shown that this is the minimum possible cost among all the possible splits.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,1,2,1], k = 5\n<strong>Output:</strong> 10\n<strong>Explanation:</strong> We split nums to have one subarray: [1,2,1,2,1].\nThe importance value of [1,2,1,2,1] is 5 + (3 + 2) = 10.\nThe cost of the split is 10. It can be shown that this is the minimum possible cost among all the possible splits.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 1000</code></li>\n\t<li><code>0 &lt;= nums[i] &lt; nums.length</code></li>\n\t<li><code>1 &lt;= k &lt;= 10<sup>9</sup></code></li>\n</ul>\n\n<p>&nbsp;</p>\n<style type=\"text/css\">.spoilerbutton {display:block; border:dashed; padding: 0px 0px; margin:10px 0px; font-size:150%; font-weight: bold; color:#000000; background-color:cyan; outline:0; \n}\n.spoiler {overflow:hidden;}\n.spoiler > div {-webkit-transition: all 0s ease;-moz-transition: margin 0s ease;-o-transition: all 0s ease;transition: margin 0s ease;}\n.spoilerbutton[value=\"Show Message\"] + .spoiler > div {margin-top:-500%;}\n.spoilerbutton[value=\"Hide Message\"] + .spoiler {padding:5px;}\n</style>\n",
+  "hints": [
+    "Let's denote dp[r] = minimum cost to partition the first r elements of nums. What would be the transitions of such dynamic programming?",
+    "dp[r] = min(dp[l] + importance(nums[l..r])) over all 0 <= l < r. This already gives us an O(n^3) approach, as importance can be calculated in linear time, and there are a total of O(n^2) transitions.",
+    "Can you think of a way to compute multiple importance values of related subarrays faster?",
+    "importance(nums[l-1..r]) is either importance(nums[l..r]) if a new unique element is added, importance(nums[l..r]) + 1 if an old element that appeared at least twice is added, or importance(nums[l..r]) + 2, if a previously unique element is duplicated. This allows us to compute importance(nums[l..r]) for all 0 <= l < r in O(n) by keeping a frequency table and decreasing l from r-1 down to 0."
+  ],
+  "metaData": "{\n  \"name\": \"minCost\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"16.5K\", \"totalSubmission\": \"37.4K\", \"totalAcceptedRaw\": 16523, \"totalSubmissionRaw\": 37385, \"acRate\": \"44.2%\"}",
+  "likes": 467,
+  "dislikes": 31,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Coin Change\", \"titleSlug\": \"coin-change\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Split Array Largest Sum\", \"titleSlug\": \"split-array-largest-sum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Divide an Array Into Subarrays With Minimum Cost II\", \"titleSlug\": \"divide-an-array-into-subarrays-with-minimum-cost-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Sum of Values by Dividing Array\", \"titleSlug\": \"minimum-sum-of-values-by-dividing-array\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Cost to Divide Array Into Subarrays\", \"titleSlug\": \"minimum-cost-to-divide-array-into-subarrays\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,1,2,1,3,3]\n2",
+    "[1,2,1,2,1]\n2",
+    "[1,2,1,2,1]\n5"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"indeed\", \"name\": \"Indeed\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minCost(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minCost(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minCost(self, nums: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minCost(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number}\n */\nvar minCost = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minCost(nums: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinCost(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minCost(int* nums, int numsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minCost(nums []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minCost(nums: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minCost(_ nums: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_cost(nums: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Integer}\ndef min_cost(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Integer\n     */\n    function minCost($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minCost(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minCost(nums: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_cost(nums :: [integer], k :: integer) :: integer\n  def min_cost(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_cost(Nums :: [integer()], K :: integer()) -> integer().\nmin_cost(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-cost nums k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

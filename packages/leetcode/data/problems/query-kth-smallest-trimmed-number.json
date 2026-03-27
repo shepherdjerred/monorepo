@@ -1,0 +1,150 @@
+{
+  "questionId": "2422",
+  "questionFrontendId": "2343",
+  "title": "Query Kth Smallest Trimmed Number",
+  "titleSlug": "query-kth-smallest-trimmed-number",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> array of strings <code>nums</code>, where each string is of <strong>equal length</strong> and consists of only digits.</p>\n\n<p>You are also given a <strong>0-indexed</strong> 2D integer array <code>queries</code> where <code>queries[i] = [k<sub>i</sub>, trim<sub>i</sub>]</code>. For each <code>queries[i]</code>, you need to:</p>\n\n<ul>\n\t<li><strong>Trim</strong> each number in <code>nums</code> to its <strong>rightmost</strong> <code>trim<sub>i</sub></code> digits.</li>\n\t<li>Determine the <strong>index</strong> of the <code>k<sub>i</sub><sup>th</sup></code> smallest trimmed number in <code>nums</code>. If two trimmed numbers are equal, the number with the <strong>lower</strong> index is considered to be smaller.</li>\n\t<li>Reset each number in <code>nums</code> to its original length.</li>\n</ul>\n\n<p>Return <em>an array </em><code>answer</code><em> of the same length as </em><code>queries</code>,<em> where </em><code>answer[i]</code><em> is the answer to the </em><code>i<sup>th</sup></code><em> query.</em></p>\n\n<p><strong>Note</strong>:</p>\n\n<ul>\n\t<li>To trim to the rightmost <code>x</code> digits means to keep removing the leftmost digit, until only <code>x</code> digits remain.</li>\n\t<li>Strings in <code>nums</code> may contain leading zeros.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [&quot;102&quot;,&quot;473&quot;,&quot;251&quot;,&quot;814&quot;], queries = [[1,1],[2,3],[4,2],[1,2]]\n<strong>Output:</strong> [2,2,1,0]\n<strong>Explanation:</strong>\n1. After trimming to the last digit, nums = [&quot;2&quot;,&quot;3&quot;,&quot;1&quot;,&quot;4&quot;]. The smallest number is 1 at index 2.\n2. Trimmed to the last 3 digits, nums is unchanged. The 2<sup>nd</sup> smallest number is 251 at index 2.\n3. Trimmed to the last 2 digits, nums = [&quot;02&quot;,&quot;73&quot;,&quot;51&quot;,&quot;14&quot;]. The 4<sup>th</sup> smallest number is 73.\n4. Trimmed to the last 2 digits, the smallest number is 2 at index 0.\n   Note that the trimmed number &quot;02&quot; is evaluated as 2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [&quot;24&quot;,&quot;37&quot;,&quot;96&quot;,&quot;04&quot;], queries = [[2,1],[2,2]]\n<strong>Output:</strong> [3,0]\n<strong>Explanation:</strong>\n1. Trimmed to the last digit, nums = [&quot;4&quot;,&quot;7&quot;,&quot;6&quot;,&quot;4&quot;]. The 2<sup>nd</sup> smallest number is 4 at index 3.\n   There are two occurrences of 4, but the one at index 0 is considered smaller than the one at index 3.\n2. Trimmed to the last 2 digits, nums is unchanged. The 2<sup>nd</sup> smallest number is 24.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= nums[i].length &lt;= 100</code></li>\n\t<li><code>nums[i]</code> consists of only digits.</li>\n\t<li>All <code>nums[i].length</code> are <strong>equal</strong>.</li>\n\t<li><code>1 &lt;= queries.length &lt;= 100</code></li>\n\t<li><code>queries[i].length == 2</code></li>\n\t<li><code>1 &lt;= k<sub>i</sub> &lt;= nums.length</code></li>\n\t<li><code>1 &lt;= trim<sub>i</sub> &lt;= nums[i].length</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> Could you use the <strong>Radix Sort Algorithm</strong> to solve this problem? What will be the complexity of that solution?</p>\n",
+  "hints": [
+    "Run a simulation to follow the requirement of each query."
+  ],
+  "metaData": "{\n  \"name\": \"smallestTrimmedNumbers\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"string[]\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"queries\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"40.2K\", \"totalSubmission\": \"85K\", \"totalAcceptedRaw\": 40196, \"totalSubmissionRaw\": 84995, \"acRate\": \"47.3%\"}",
+  "likes": 347,
+  "dislikes": 444,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"102\",\"473\",\"251\",\"814\"]\n[[1,1],[2,3],[4,2],[1,2]]",
+    "[\"24\",\"37\",\"96\",\"04\"]\n[[2,1],[2,2]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Divide and Conquer",
+      "slug": "divide-and-conquer"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Radix Sort",
+      "slug": "radix-sort"
+    },
+    {
+      "name": "Quickselect",
+      "slug": "quickselect"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> smallestTrimmedNumbers(vector<string>& nums, vector<vector<int>>& queries) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] smallestTrimmedNumbers(String[] nums, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def smallestTrimmedNumbers(self, nums: List[str], queries: List[List[int]]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def smallestTrimmedNumbers(self, nums, queries):\n        \"\"\"\n        :type nums: List[str]\n        :type queries: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} nums\n * @param {number[][]} queries\n * @return {number[]}\n */\nvar smallestTrimmedNumbers = function(nums, queries) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function smallestTrimmedNumbers(nums: string[], queries: number[][]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] SmallestTrimmedNumbers(string[] nums, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* smallestTrimmedNumbers(char** nums, int numsSize, int** queries, int queriesSize, int* queriesColSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func smallestTrimmedNumbers(nums []string, queries [][]int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun smallestTrimmedNumbers(nums: Array<String>, queries: Array<IntArray>): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func smallestTrimmedNumbers(_ nums: [String], _ queries: [[Int]]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn smallest_trimmed_numbers(nums: Vec<String>, queries: Vec<Vec<i32>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} nums\n# @param {Integer[][]} queries\n# @return {Integer[]}\ndef smallest_trimmed_numbers(nums, queries)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $nums\n     * @param Integer[][] $queries\n     * @return Integer[]\n     */\n    function smallestTrimmedNumbers($nums, $queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> smallestTrimmedNumbers(List<String> nums, List<List<int>> queries) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def smallestTrimmedNumbers(nums: Array[String], queries: Array[Array[Int]]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec smallest_trimmed_numbers(nums :: [String.t], queries :: [[integer]]) :: [integer]\n  def smallest_trimmed_numbers(nums, queries) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec smallest_trimmed_numbers(Nums :: [unicode:unicode_binary()], Queries :: [[integer()]]) -> [integer()].\nsmallest_trimmed_numbers(Nums, Queries) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (smallest-trimmed-numbers nums queries)\n  (-> (listof string?) (listof (listof exact-integer?)) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": null
+}

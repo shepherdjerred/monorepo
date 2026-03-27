@@ -1,0 +1,53 @@
+{
+  "questionId": "2534",
+  "questionFrontendId": "2394",
+  "title": "Employees With Deductions",
+  "titleSlug": "employees-with-deductions",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Employees</code></p>\n\n<pre>\n+--------------+------+\n| Column Name  | Type |\n+--------------+------+\n| employee_id  | int  |\n| needed_hours | int  |\n+--------------+------+\nemployee_id is column with unique values for this table.\nEach row contains the id of an employee and the minimum number of hours needed for them to work to get their salary.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Logs</code></p>\n\n<pre>\n+-------------+----------+\n| Column Name | Type     |\n+-------------+----------+\n| employee_id | int      |\n| in_time     | datetime |\n| out_time    | datetime |\n+-------------+----------+\n(employee_id, in_time, out_time) is the primary key (combination of columns with unique values) for this table.\nEach row of this table shows the time stamps for an employee. in_time is the time the employee started to work, and out_time is the time the employee ended work.\nAll the times are in October 2022. out_time can be one day after in_time which means the employee worked after the midnight.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>In a company, each employee must work a certain number of hours every month. Employees work in sessions. The number of hours an employee worked can be calculated from the sum of the number of minutes the employee worked in all of their sessions. The number of minutes in each session is rounded up.</p>\n\n<ul>\n\t<li>For example, if the employee worked for <code>51</code> minutes and <code>2</code> seconds in a session, we consider it <code>52</code> minutes.</li>\n</ul>\n\n<p>Write a solution to report the IDs of the employees that will be deducted. In other words, report the IDs of the employees that did not work the needed hours.</p>\n\n<p>Return the result table <strong>in any order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nEmployees table:\n+-------------+--------------+\n| employee_id | needed_hours |\n+-------------+--------------+\n| 1           | 20           |\n| 2           | 12           |\n| 3           | 2            |\n+-------------+--------------+\nLogs table:\n+-------------+---------------------+---------------------+\n| employee_id | in_time             | out_time            |\n+-------------+---------------------+---------------------+\n| 1           | 2022-10-01 09:00:00 | 2022-10-01 17:00:00 |\n| 1           | 2022-10-06 09:05:04 | 2022-10-06 17:09:03 |\n| 1           | 2022-10-12 23:00:00 | 2022-10-13 03:00:01 |\n| 2           | 2022-10-29 12:00:00 | 2022-10-29 23:58:58 |\n+-------------+---------------------+---------------------+\n<strong>Output:</strong> \n+-------------+\n| employee_id |\n+-------------+\n| 2           |\n| 3           |\n+-------------+\n<strong>Explanation:</strong> \nEmployee 1:\n - Worked for three sessions:\n    - On 2022-10-01, they worked for 8 hours.\n    - On 2022-10-06, they worked for 8 hours and 4 minutes.\n    - On 2022-10-12, they worked for 4 hours and 1 minute. Note that they worked through midnight.\n - Employee 1 worked a total of 20 hours and 5 minutes across sessions and will not be deducted.\nEmployee 2:\n - Worked for one session:\n    - On 2022-10-29, they worked for 11 hours and 59 minutes.\n - Employee 2 did not work their hours and will be deducted.\nEmployee 3:\n - Did not work any session.\n - Employee 3 did not work their hours and will be deducted.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Employees (employee_id int, needed_hours int)\", \"Create table If Not Exists Logs (employee_id int, in_time datetime, out_time datetime)\"], \"mssql\": [\"Create table Employees (employee_id int, needed_hours int)\", \"Create table Logs (employee_id int, in_time datetime, out_time datetime)\"], \"oraclesql\": [\"Create table Employees (employee_id int, needed_hours int)\", \"Create table Logs (employee_id int, in_time date, out_time date)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD HH24:MI:SS'\"], \"database\": true, \"name\": \"employees_with_deductions\", \"pythondata\": [\"Employees = pd.DataFrame([], columns=['employee_id', 'needed_hours']).astype({'employee_id':'Int64', 'needed_hours':'Int64'})\", \"Logs = pd.DataFrame([], columns=['employee_id', 'in_time', 'out_time']).astype({'employee_id':'Int64', 'in_time':'datetime64[ns]', 'out_time':'datetime64[ns]'})\"], \"postgresql\": [\"Create table If Not Exists Employees (employee_id int, needed_hours int)\\n\", \"Create table If Not Exists Logs (employee_id int, in_time timestamp, out_time timestamp)\\n\"], \"database_schema\": {\"Employees\": {\"employee_id\": \"INT\", \"needed_hours\": \"INT\"}, \"Logs\": {\"employee_id\": \"INT\", \"in_time\": \"DATETIME\", \"out_time\": \"DATETIME\"}}}",
+  "stats": "{\"totalAccepted\": \"7.3K\", \"totalSubmission\": \"17.2K\", \"totalAcceptedRaw\": 7348, \"totalSubmissionRaw\": 17245, \"acRate\": \"42.6%\"}",
+  "likes": 31,
+  "dislikes": 39,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Employees\": [\"employee_id\", \"needed_hours\"], \"Logs\": [\"employee_id\", \"in_time\", \"out_time\"]}, \"rows\": {\"Employees\": [[1, 20], [2, 12], [3, 2]], \"Logs\": [[1, \"2022-10-01 09:00:00\", \"2022-10-01 17:00:00\"],[1, \"2022-10-06 09:05:04\", \"2022-10-06 17:09:03\"], [1, \"2022-10-12 23:00:00\", \"2022-10-13 03:00:01\"], [2, \"2022-10-29 12:00:00\", \"2022-10-29 23:58:58\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef employees_with_deductions(employees: pd.DataFrame, logs: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

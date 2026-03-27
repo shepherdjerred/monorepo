@@ -1,0 +1,143 @@
+{
+  "questionId": "2413",
+  "questionFrontendId": "2336",
+  "title": "Smallest Number in Infinite Set",
+  "titleSlug": "smallest-number-in-infinite-set",
+  "difficulty": "Medium",
+  "content": "<p>You have a set which contains all positive integers <code>[1, 2, 3, 4, 5, ...]</code>.</p>\n\n<p>Implement the <code>SmallestInfiniteSet</code> class:</p>\n\n<ul>\n\t<li><code>SmallestInfiniteSet()</code> Initializes the <strong>SmallestInfiniteSet</strong> object to contain <strong>all</strong> positive integers.</li>\n\t<li><code>int popSmallest()</code> <strong>Removes</strong> and returns the smallest integer contained in the infinite set.</li>\n\t<li><code>void addBack(int num)</code> <strong>Adds</strong> a positive integer <code>num</code> back into the infinite set, if it is <strong>not</strong> already in the infinite set.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;SmallestInfiniteSet&quot;, &quot;addBack&quot;, &quot;popSmallest&quot;, &quot;popSmallest&quot;, &quot;popSmallest&quot;, &quot;addBack&quot;, &quot;popSmallest&quot;, &quot;popSmallest&quot;, &quot;popSmallest&quot;]\n[[], [2], [], [], [], [1], [], [], []]\n<strong>Output</strong>\n[null, null, 1, 2, 3, null, 1, 4, 5]\n\n<strong>Explanation</strong>\nSmallestInfiniteSet smallestInfiniteSet = new SmallestInfiniteSet();\nsmallestInfiniteSet.addBack(2);    // 2 is already in the set, so no change is made.\nsmallestInfiniteSet.popSmallest(); // return 1, since 1 is the smallest number, and remove it from the set.\nsmallestInfiniteSet.popSmallest(); // return 2, and remove it from the set.\nsmallestInfiniteSet.popSmallest(); // return 3, and remove it from the set.\nsmallestInfiniteSet.addBack(1);    // 1 is added back to the set.\nsmallestInfiniteSet.popSmallest(); // return 1, since 1 was added back to the set and\n                                   // is the smallest number, and remove it from the set.\nsmallestInfiniteSet.popSmallest(); // return 4, and remove it from the set.\nsmallestInfiniteSet.popSmallest(); // return 5, and remove it from the set.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= num &lt;= 1000</code></li>\n\t<li>At most <code>1000</code> calls will be made <strong>in total</strong> to <code>popSmallest</code> and <code>addBack</code>.</li>\n</ul>\n",
+  "hints": [
+    "Based on the constraints, what is the maximum element that can possibly be popped?",
+    "Maintain whether elements are in or not in the set. How many elements do we consider?"
+  ],
+  "metaData": "{\n  \"classname\": \"SmallestInfiniteSet\",\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"params\": [],\n      \"name\": \"popSmallest\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"num\"\n        }\n      ],\n      \"name\": \"addBack\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"229.8K\", \"totalSubmission\": \"325.5K\", \"totalAcceptedRaw\": 229787, \"totalSubmissionRaw\": 325528, \"acRate\": \"70.6%\"}",
+  "likes": 1846,
+  "dislikes": 233,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"First Missing Positive\", \"titleSlug\": \"first-missing-positive\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"SmallestInfiniteSet\",\"addBack\",\"popSmallest\",\"popSmallest\",\"popSmallest\",\"addBack\",\"popSmallest\",\"popSmallest\",\"popSmallest\"]\n[[],[2],[],[],[],[1],[],[],[]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class SmallestInfiniteSet {\npublic:\n    SmallestInfiniteSet() {\n        \n    }\n    \n    int popSmallest() {\n        \n    }\n    \n    void addBack(int num) {\n        \n    }\n};\n\n/**\n * Your SmallestInfiniteSet object will be instantiated and called as such:\n * SmallestInfiniteSet* obj = new SmallestInfiniteSet();\n * int param_1 = obj->popSmallest();\n * obj->addBack(num);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class SmallestInfiniteSet {\n\n    public SmallestInfiniteSet() {\n        \n    }\n    \n    public int popSmallest() {\n        \n    }\n    \n    public void addBack(int num) {\n        \n    }\n}\n\n/**\n * Your SmallestInfiniteSet object will be instantiated and called as such:\n * SmallestInfiniteSet obj = new SmallestInfiniteSet();\n * int param_1 = obj.popSmallest();\n * obj.addBack(num);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class SmallestInfiniteSet:\n\n    def __init__(self):\n        \n\n    def popSmallest(self) -> int:\n        \n\n    def addBack(self, num: int) -> None:\n        \n\n\n# Your SmallestInfiniteSet object will be instantiated and called as such:\n# obj = SmallestInfiniteSet()\n# param_1 = obj.popSmallest()\n# obj.addBack(num)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class SmallestInfiniteSet(object):\n\n    def __init__(self):\n        \n\n    def popSmallest(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n    def addBack(self, num):\n        \"\"\"\n        :type num: int\n        :rtype: None\n        \"\"\"\n        \n\n\n# Your SmallestInfiniteSet object will be instantiated and called as such:\n# obj = SmallestInfiniteSet()\n# param_1 = obj.popSmallest()\n# obj.addBack(num)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar SmallestInfiniteSet = function() {\n    \n};\n\n/**\n * @return {number}\n */\nSmallestInfiniteSet.prototype.popSmallest = function() {\n    \n};\n\n/** \n * @param {number} num\n * @return {void}\n */\nSmallestInfiniteSet.prototype.addBack = function(num) {\n    \n};\n\n/** \n * Your SmallestInfiniteSet object will be instantiated and called as such:\n * var obj = new SmallestInfiniteSet()\n * var param_1 = obj.popSmallest()\n * obj.addBack(num)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class SmallestInfiniteSet {\n    constructor() {\n        \n    }\n\n    popSmallest(): number {\n        \n    }\n\n    addBack(num: number): void {\n        \n    }\n}\n\n/**\n * Your SmallestInfiniteSet object will be instantiated and called as such:\n * var obj = new SmallestInfiniteSet()\n * var param_1 = obj.popSmallest()\n * obj.addBack(num)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class SmallestInfiniteSet {\n\n    public SmallestInfiniteSet() {\n        \n    }\n    \n    public int PopSmallest() {\n        \n    }\n    \n    public void AddBack(int num) {\n        \n    }\n}\n\n/**\n * Your SmallestInfiniteSet object will be instantiated and called as such:\n * SmallestInfiniteSet obj = new SmallestInfiniteSet();\n * int param_1 = obj.PopSmallest();\n * obj.AddBack(num);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} SmallestInfiniteSet;\n\n\nSmallestInfiniteSet* smallestInfiniteSetCreate() {\n    \n}\n\nint smallestInfiniteSetPopSmallest(SmallestInfiniteSet* obj) {\n    \n}\n\nvoid smallestInfiniteSetAddBack(SmallestInfiniteSet* obj, int num) {\n    \n}\n\nvoid smallestInfiniteSetFree(SmallestInfiniteSet* obj) {\n    \n}\n\n/**\n * Your SmallestInfiniteSet struct will be instantiated and called as such:\n * SmallestInfiniteSet* obj = smallestInfiniteSetCreate();\n * int param_1 = smallestInfiniteSetPopSmallest(obj);\n \n * smallestInfiniteSetAddBack(obj, num);\n \n * smallestInfiniteSetFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type SmallestInfiniteSet struct {\n    \n}\n\n\nfunc Constructor() SmallestInfiniteSet {\n    \n}\n\n\nfunc (this *SmallestInfiniteSet) PopSmallest() int {\n    \n}\n\n\nfunc (this *SmallestInfiniteSet) AddBack(num int)  {\n    \n}\n\n\n/**\n * Your SmallestInfiniteSet object will be instantiated and called as such:\n * obj := Constructor();\n * param_1 := obj.PopSmallest();\n * obj.AddBack(num);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class SmallestInfiniteSet() {\n\n    fun popSmallest(): Int {\n        \n    }\n\n    fun addBack(num: Int) {\n        \n    }\n\n}\n\n/**\n * Your SmallestInfiniteSet object will be instantiated and called as such:\n * var obj = SmallestInfiniteSet()\n * var param_1 = obj.popSmallest()\n * obj.addBack(num)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass SmallestInfiniteSet {\n\n    init() {\n        \n    }\n    \n    func popSmallest() -> Int {\n        \n    }\n    \n    func addBack(_ num: Int) {\n        \n    }\n}\n\n/**\n * Your SmallestInfiniteSet object will be instantiated and called as such:\n * let obj = SmallestInfiniteSet()\n * let ret_1: Int = obj.popSmallest()\n * obj.addBack(num)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct SmallestInfiniteSet {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl SmallestInfiniteSet {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn pop_smallest(&self) -> i32 {\n        \n    }\n    \n    fn add_back(&self, num: i32) {\n        \n    }\n}\n\n/**\n * Your SmallestInfiniteSet object will be instantiated and called as such:\n * let obj = SmallestInfiniteSet::new();\n * let ret_1: i32 = obj.pop_smallest();\n * obj.add_back(num);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class SmallestInfiniteSet\n    def initialize()\n        \n    end\n\n\n=begin\n    :rtype: Integer\n=end\n    def pop_smallest()\n        \n    end\n\n\n=begin\n    :type num: Integer\n    :rtype: Void\n=end\n    def add_back(num)\n        \n    end\n\n\nend\n\n# Your SmallestInfiniteSet object will be instantiated and called as such:\n# obj = SmallestInfiniteSet.new()\n# param_1 = obj.pop_smallest()\n# obj.add_back(num)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class SmallestInfiniteSet {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @return Integer\n     */\n    function popSmallest() {\n        \n    }\n  \n    /**\n     * @param Integer $num\n     * @return NULL\n     */\n    function addBack($num) {\n        \n    }\n}\n\n/**\n * Your SmallestInfiniteSet object will be instantiated and called as such:\n * $obj = SmallestInfiniteSet();\n * $ret_1 = $obj->popSmallest();\n * $obj->addBack($num);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class SmallestInfiniteSet {\n\n  SmallestInfiniteSet() {\n    \n  }\n  \n  int popSmallest() {\n    \n  }\n  \n  void addBack(int num) {\n    \n  }\n}\n\n/**\n * Your SmallestInfiniteSet object will be instantiated and called as such:\n * SmallestInfiniteSet obj = SmallestInfiniteSet();\n * int param1 = obj.popSmallest();\n * obj.addBack(num);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class SmallestInfiniteSet() {\n\n    def popSmallest(): Int = {\n        \n    }\n\n    def addBack(num: Int): Unit = {\n        \n    }\n\n}\n\n/**\n * Your SmallestInfiniteSet object will be instantiated and called as such:\n * val obj = new SmallestInfiniteSet()\n * val param_1 = obj.popSmallest()\n * obj.addBack(num)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule SmallestInfiniteSet do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec pop_smallest() :: integer\n  def pop_smallest() do\n    \n  end\n\n  @spec add_back(num :: integer) :: any\n  def add_back(num) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# SmallestInfiniteSet.init_()\n# param_1 = SmallestInfiniteSet.pop_smallest()\n# SmallestInfiniteSet.add_back(num)\n\n# SmallestInfiniteSet.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec smallest_infinite_set_init_() -> any().\nsmallest_infinite_set_init_() ->\n  .\n\n-spec smallest_infinite_set_pop_smallest() -> integer().\nsmallest_infinite_set_pop_smallest() ->\n  .\n\n-spec smallest_infinite_set_add_back(Num :: integer()) -> any().\nsmallest_infinite_set_add_back(Num) ->\n  .\n\n\n%% Your functions will be called as such:\n%% smallest_infinite_set_init_(),\n%% Param_1 = smallest_infinite_set_pop_smallest(),\n%% smallest_infinite_set_add_back(Num),\n\n%% smallest_infinite_set_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define smallest-infinite-set%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; pop-smallest : -> exact-integer?\n    (define/public (pop-smallest)\n      )\n    ; add-back : exact-integer? -> void?\n    (define/public (add-back num)\n      )))\n\n;; Your smallest-infinite-set% object will be instantiated and called as such:\n;; (define obj (new smallest-infinite-set%))\n;; (define param_1 (send obj pop-smallest))\n;; (send obj add-back num)"
+    }
+  ],
+  "solution": {
+    "id": "1802",
+    "content": "[TOC]\n\n## Solution\n--- \n\n### Approach 1: Hashset + Heap\n\n#### Intuition\n\nWe have a set of all positive integers (a set will always contain unique elements). Now say this problem statement had only one method `popSmallest()`, then, we could have just kept one data structure (an array) and inserted `1000` numbers from `1 - 1000` in it in increasing order, and while calling this method we will just move our index pointer from left to right by `1`.  \n\nBut we know that the lowest positive integer is `1` and with each pop we move to the next positive integer which will be one larger than the previous, thus instead of using an additional array we can use one integer variable `currentInteger` initialized to `1` (denoting the smallest positive integer), and with each method call, we will return the current smallest integer and increment `currentInteger` by `1` (we move to the next greater positive integer).\n\n![slide1](../Figures/2336/Slide1.PNG)\n\nBut here we are also given one more method `addBack(num)`, which will insert an integer back into our set  (if the integer `num` is already present in our set then it won't do anything).    \n\nWe can keep a separate space (another data structure) for re-added integers. We only need to keep only integers smaller than `currentInteger` in this data structure. That way, if the data structure is not empty, then the smallest available integer will surely be in it.\n\nWe need to insert some numbers and always keep track of the smallest number among them, we could use an array and sort it again and again after each insert, but it will be very inefficient. Instead, we can use a min-heap data structure here.\n\n> A min-heap is a specialized tree-based data structure that is used to efficiently maintain and retrieve the minimum element from a collection of elements. A heap is typically implemented as a binary tree, where each node in the tree represents an element in the collection.\n\nIf you are new to this data structure then we recommend you visit our [Heap Explore Card](https://leetcode.com/explore/featured/card/heap/643/heap/4018/) for a better understanding.\n\nBut our heap will not support insertions of only unique elements (for example, if `addBack` is called with the same number multiple times in a row), thus we will need an additional data structure to check already inserted elements and not insert them again in the heap. We can use a hash set for this.\n\n!?!../Documents/2336/slideshow.json:1200,700!?!\n\nTo summarize, we will use an integer variable `currentInteger ` which tracks the largest integer if we do not have `addBack`, and a min-heap `addedInteger` plus a hash set `isPresent` to handle numbers that get added back.\n\n#### Algorithm\n\n1. Initialize some variables:\n    - `isPresent`, a hash set to store the removed numbers added again.\n    - `addedIntegers`, a min-heap priority queue to store the minimum of all added numbers on the top.\n    - `currentInteger`, an integer variable initialized to `1`, used to denote the current minimum value number in the set of all positive numbers.\n\n2. In the `popSmallest()` method:\n    - If we have any element present in the min-heap `addedIntegers`, then the minimum number present in it is the `answer`. We remove it from the min-heap and the hash set `isPresent`. \n    - Otherwise, the number denoted by `currentInteger` is our `answer`, and then we increment `currentInteger` by `1` which denotes we removed the previous number and moved to the next number in our set of all positive numbers. \n    - In the end, we return `answer`.\n\n3. In the `addBack(num)` method:\n    - If the 'num' is already present in our set, then we do nothing and return. This is the case if `currentInteger <= num` or `num` is in `isPresent`.\n    - Otherwise, we push it into min-heap `addedIntegers` and hash set `isPresent`.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/UPp4tzrm/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"UPp4tzrm\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $n$ is the number `addBack(num)` and $m$ is the number of `popSmallest()` method calls.\n\n* Time complexity: $O((m + n) \\cdot \\log n)$          \n  - In each `popSmallest()` method call, in the worst case, we will need to remove a number from the hash set which will take $O(1)$ time, and the top of the min-heap which will take $O(\\log n)$ time. Thus, for $m$ calls it will take $O(m \\cdot \\log n)$ time.\n\n  - In each `addBack(num)` method call, we might push `num` in the hash set which will take $O(1)$ time and min-heap which will take $O(\\log n)$ time. Thus, for $n$ calls it will take $O(n \\cdot \\log n)$ time.\n\n* Space complexity: $O(n)$    \n  - In the worst case, we might add $n$ elements in the hash set and the min-heap. Thus, it will take $O(n)$ space.\n \n <br />\n \n ---\n\n### Approach 2: Sorted Set\n\n#### Intuition\n\nAs we discussed in the previous approach, we used a min-heap to keep track of the smallest added-back number and a hash set to insert only unique elements. We can combine the functionality of these two with an ordered set (also known as a sorted set) for this task.\n\n> A sorted set contains only unique elements with maintaining a balanced binary search tree like structure to keep the elements in sorted order. The exact implementation might differ in each language.\n\n#### Algorithm\n\n1. Initialize some variables:\n    - `addedIntegers`, a sorted set to store added numbers in increasing order.\n    - `currentInteger`, an integer variable initialized to `1`, used to denote the current minimum value number in the set of all positive numbers.\n\n2. In the `popSmallest()` method:\n    - If we have any element present in the sorted-set `addedIntegers`, then the minimum number present in it is the `answer`. We remove it from the set.\n    - Otherwise, the number denoted by `currentInteger` is our `answer`, and then we increment `currentInteger` by `1` which denotes we removed the previous number and moved to the next number in our set of all positive numbers. \n    - In the end, we return `answer`.\n\n3. In the `addBack(num)` method:\n    - If the 'num' is already present in our set, then we return.\n    - Otherwise, we push it in the sorted-set `addedIntegers`.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/A8cHgF6F/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"A8cHgF6F\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $n$ is the number `addBack(num)` and $m$ is the number of `popSmallest()` method calls.\n\n* Time complexity: $O((m + n) \\cdot \\log n)$          \n  - In each `popSmallest()` method call, in the worst case, we will need to remove the first element of the sorted set which will take $O(\\log n)$ time. Thus, for $m$ calls it will take $O(m \\cdot \\log n)$ time.\n\n  - In each `addBack(num)` method call, we might push `num` into the sorted set which will take $O(\\log n)$ time. Thus, for $n$ calls it will take $O(n \\cdot \\log n)$ time.\n\n* Space complexity: $O(n)$    \n  - In the worst case, we might add $n$ elements in the sorted set. Thus, it will take $O(n)$ space.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}
