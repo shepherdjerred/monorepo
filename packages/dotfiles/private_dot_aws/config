@@ -1,0 +1,12 @@
+
+[default]
+login_session = arn:aws:iam::926367030076:root
+region = us-east-1
+
+[profile r2]
+endpoint_url = https://48948ed6cd40d73e34d27f0cc10e595f.r2.cloudflarestorage.com
+region = auto
+
+[profile seaweedfs]
+endpoint_url = https://seaweedfs.sjer.red
+region = us-east-1

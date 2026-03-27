@@ -1,7 +1,0 @@
-#!/bin/bash
-DESIRED='{{ includeTemplate "claude-mcp-servers.json.tmpl" . | fromJson | dict "mcpServers" | toPrettyJson }}'
-if [ -s /dev/stdin ]; then
-  printf '%s' "$(jq -s '.[0] * .[1]' /dev/stdin <(echo "$DESIRED"))"
-else
-  printf '%s' "$(echo "$DESIRED" | jq .)"
-fi

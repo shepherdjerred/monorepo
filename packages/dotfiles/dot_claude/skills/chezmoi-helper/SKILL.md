@@ -183,10 +183,8 @@ This repository demonstrates several chezmoi patterns:
 - **OS-conditional ignoring:** `.chezmoiignore` uses templates to ignore Windows-only paths on non-Windows, and macOS-only paths on non-macOS
 - **OS-conditional Brewfile:** `dot_Brewfile.tmpl` includes OS-specific Brewfile using `{{ include ".Brewfile_darwin" }}`
 - **1Password integration:** `config.fish.tmpl` uses `{{ onepasswordRead "op://..." }}` with `{{ if lookPath "op" }}` guard
-- **Modify scripts:** `modify_private_dot_claude.json.tmpl` reads existing JSON via stdin, merges template data, outputs modified JSON
 - **Onchange scripts:** `run_onchange_after_launchagent.sh.tmpl` uses `{{ include ... | sha256sum }}` in a comment to trigger re-run when the included file changes
 - **After scripts:** `run_after_sync-theme.sh.tmpl` and `run_after_generate-themes.sh.tmpl` run theme sync after every apply, guarded by OS check
-- **Reusable templates:** `.chezmoitemplates/claude-mcp-servers.json.tmpl` shared across multiple config files
 
 ## Special Files and Directories
 

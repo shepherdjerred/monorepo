@@ -1,0 +1,19 @@
+model = "gpt-5.1-codex-max"
+model_reasoning_effort = "high"
+
+[mcp_servers]
+  [mcp_servers.playwright]
+    args = ["-y", "@playwright/mcp"]
+    command = "/Users/jerred/.local/share/mise/shims/bunx"
+
+[notice]
+  [notice.model_migrations]
+    "gpt-5.1-codex-max" = "gpt-5.4"
+
+[projects]
+  [projects."/Users/jerred/git"]
+    trust_level = "trusted"
+  [projects."/Users/jerred/git/monorepo"]
+    trust_level = "trusted"
+  [projects."/Users/jerred/git/scout-for-lol"]
+    trust_level = "trusted"

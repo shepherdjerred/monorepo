@@ -1,0 +1,14 @@
+{
+  "name": "@shepherdjerred/leetcode",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "scrape:list": "bun run src/scrape-list.ts",
+    "scrape:details": "bun run src/scrape-details.ts",
+    "build:db": "bun run src/build-db.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.11"
+  }
+}

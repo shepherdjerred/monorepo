@@ -275,6 +275,20 @@ model StoredSound {
   @@index([sourceUrl])
 }
 
+model GuildInstall {
+  id                Int       @id @default(autoincrement())
+  serverId          String    @unique
+  serverName        String
+  ownerDiscordId    String
+  addedByDiscordId  String // Installer (from audit log), fallback to ownerId
+  memberCount       Int
+  installedAt       DateTime
+  outreach3dSentAt  DateTime? // null = not yet sent
+  outreach14dSentAt DateTime? // null = not yet sent
+
+  @@index([installedAt])
+}
+
 model BotState {
   id                   Int       @id @default(1)
   lastSuccessfulPollAt DateTime?

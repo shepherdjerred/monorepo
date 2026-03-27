@@ -11,7 +11,9 @@
     "version": "",
     "binary": "",
     "extraFlags": "",
-    "extensionPaths": []
+    "extensionPaths": [
+      "/Users/jerred/Library/Application Support/pinchtab/extensions/ublock-origin/uBlock0.chromium"
+    ]
   },
   "instanceDefaults": {
     "mode": "headed",
@@ -24,17 +26,18 @@
     "maxParallelTabs": null,
     "userAgent": "",
     "noAnimations": null,
-    "stealthLevel": "",
+    "stealthLevel": "full",
     "tabEvictionPolicy": ""
   },
   "security": {
-    "allowEvaluate": null,
+    "allowEvaluate": true,
     "allowMacro": null,
     "allowScreencast": null,
     "allowDownload": null,
     "downloadAllowedDomains": [],
     "downloadMaxBytes": null,
     "allowUpload": null,
+    "allowClipboard": false,
     "uploadMaxRequestBytes": null,
     "uploadMaxFiles": null,
     "uploadMaxFileBytes": null,
@@ -46,11 +49,13 @@
       "allowSchemes": []
     },
     "idpi": {
-      "enabled": false,
-      "allowedDomains": [],
-      "strictMode": false,
-      "scanContent": false,
-      "wrapContent": false,
+      "enabled": true,
+      "allowedDomains": [
+        "*"
+      ],
+      "strictMode": true,
+      "scanContent": true,
+      "wrapContent": true,
       "customPatterns": [],
       "scanTimeoutSec": 0
     }

@@ -2,6 +2,7 @@
 bun = "latest"
 go = "latest"
 java = "lts"
+maven = "3.9.14"
 node = "lts"
 python = "latest"
 rust = "nightly"

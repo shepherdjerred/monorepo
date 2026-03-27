@@ -288,65 +288,6 @@ chezmoi state delete-bucket --bucket=entryState
 
 In `--dry-run` mode, scripts are NOT executed. Use `--verbose` to see script contents that would run.
 
-## Modify Scripts
-
-Modify scripts receive the existing target file contents on stdin and write the new contents to stdout. Name them with `modify_` prefix.
-
-### Python Modify Script
-
-```python
-#!/usr/bin/env python3
-import sys, json
-
-# Read existing file
-data = json.load(sys.stdin)
-
-# Modify
-data["settings"]["theme"] = "dark"
-
-# Write back
-json.dump(data, sys.stdout, indent=2)
-```
-
-### Shell Modify Script
-
-```bash
-#!/bin/bash
-# Read existing content, append a line
-cat
-echo "# Added by chezmoi"
-```
-
-### Templated Modify Script
-
-Modify scripts can be templates (`.tmpl` suffix). The existing file content is available via stdin, not template variables:
-
-```python
-#!/usr/bin/env python3
-import sys, json
-data = json.load(sys.stdin)
-data["mcpServers"] = {{ template "mcp-servers.json.tmpl" . }}
-json.dump(data, sys.stdout, indent=2)
-```
-
-### Native Modify Template (Preferred for JSON)
-
-Use `chezmoi:modify-template` to modify JSON files without Python. The file must **not** have a `.tmpl` extension. Existing content is available via `.chezmoi.stdin`. Go's `toPrettyJson` sorts keys alphabetically, preventing key-ordering diffs.
-
-```
-{{- /* chezmoi:modify-template */ -}}
-{{- $data := dict -}}
-{{- if ne .chezmoi.stdin "" -}}
-{{-   $data = fromJson .chezmoi.stdin -}}
-{{- end -}}
-{{ $data |
-  setValueAtPath "ui.theme" "dark" |
-  setValueAtPath "mcpServers" (includeTemplate "mcp-servers.json.tmpl" . | fromJson) |
-  toPrettyJson -}}
-```
-
-`setValueAtPath` with dot-paths (e.g. `"mcpServers.playwright.command"`) sets only that nested key, preserving sibling keys — equivalent to deep merge.
-
 ## Multi-Machine Management
 
 ### OS Detection Patterns
