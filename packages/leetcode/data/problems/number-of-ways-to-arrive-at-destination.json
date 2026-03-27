@@ -1,0 +1,144 @@
+{
+  "questionId": "2090",
+  "questionFrontendId": "1976",
+  "title": "Number of Ways to Arrive at Destination",
+  "titleSlug": "number-of-ways-to-arrive-at-destination",
+  "difficulty": "Medium",
+  "content": "<p>You are in a city that consists of <code>n</code> intersections numbered from <code>0</code> to <code>n - 1</code> with <strong>bi-directional</strong> roads between some intersections. The inputs are generated such that you can reach any intersection from any other intersection and that there is at most one road between any two intersections.</p>\n\n<p>You are given an integer <code>n</code> and a 2D integer array <code>roads</code> where <code>roads[i] = [u<sub>i</sub>, v<sub>i</sub>, time<sub>i</sub>]</code> means that there is a road between intersections <code>u<sub>i</sub></code> and <code>v<sub>i</sub></code> that takes <code>time<sub>i</sub></code> minutes to travel. You want to know in how many ways you can travel from intersection <code>0</code> to intersection <code>n - 1</code> in the <strong>shortest amount of time</strong>.</p>\n\n<p>Return <em>the <strong>number of ways</strong> you can arrive at your destination in the <strong>shortest amount of time</strong></em>. Since the answer may be large, return it <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2025/02/14/1976_corrected.png\" style=\"width: 255px; height: 400px;\" />\n<pre>\n<strong>Input:</strong> n = 7, roads = [[0,6,7],[0,1,2],[1,2,3],[1,3,3],[6,3,3],[3,5,1],[6,5,1],[2,5,1],[0,4,5],[4,6,2]]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The shortest amount of time it takes to go from intersection 0 to intersection 6 is 7 minutes.\nThe four ways to get there in 7 minutes are:\n- 0 ➝ 6\n- 0 ➝ 4 ➝ 6\n- 0 ➝ 1 ➝ 2 ➝ 5 ➝ 6\n- 0 ➝ 1 ➝ 3 ➝ 5 ➝ 6\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 2, roads = [[1,0,10]]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> There is only one way to go from intersection 0 to intersection 1, and it takes 10 minutes.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 200</code></li>\n\t<li><code>n - 1 &lt;= roads.length &lt;= n * (n - 1) / 2</code></li>\n\t<li><code>roads[i].length == 3</code></li>\n\t<li><code>0 &lt;= u<sub>i</sub>, v<sub>i</sub> &lt;= n - 1</code></li>\n\t<li><code>1 &lt;= time<sub>i</sub> &lt;= 10<sup>9</sup></code></li>\n\t<li><code>u<sub>i </sub>!= v<sub>i</sub></code></li>\n\t<li>There is at most one road connecting any two intersections.</li>\n\t<li>You can reach any intersection from any other intersection.</li>\n</ul>\n",
+  "hints": [
+    "First use any shortest path algorithm to get edges where dist[u] + weight = dist[v], here dist[x] is the shortest distance between node 0 and x",
+    "Using those edges only the graph turns into a dag now we just need to know the number of ways to get from node 0 to node n - 1 on a dag using dp"
+  ],
+  "metaData": "{\n  \"name\": \"countPaths\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"roads\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"251.7K\", \"totalSubmission\": \"673.3K\", \"totalAcceptedRaw\": 251697, \"totalSubmissionRaw\": 673272, \"acRate\": \"37.4%\"}",
+  "likes": 3876,
+  "dislikes": 225,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"All Paths From Source to Target\", \"titleSlug\": \"all-paths-from-source-to-target\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Path with Maximum Probability\", \"titleSlug\": \"path-with-maximum-probability\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Second Minimum Time to Reach Destination\", \"titleSlug\": \"second-minimum-time-to-reach-destination\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "7\n[[0,6,7],[0,1,2],[1,2,3],[1,3,3],[6,3,3],[3,5,1],[6,5,1],[2,5,1],[0,4,5],[4,6,2]]",
+    "2\n[[1,0,10]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Topological Sort",
+      "slug": "topological-sort"
+    },
+    {
+      "name": "Shortest Path",
+      "slug": "shortest-path"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countPaths(int n, vector<vector<int>>& roads) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countPaths(int n, int[][] roads) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countPaths(self, n: int, roads: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countPaths(self, n, roads):\n        \"\"\"\n        :type n: int\n        :type roads: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} roads\n * @return {number}\n */\nvar countPaths = function(n, roads) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countPaths(n: number, roads: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountPaths(int n, int[][] roads) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int countPaths(int n, int** roads, int roadsSize, int* roadsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countPaths(n int, roads [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countPaths(n: Int, roads: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countPaths(_ n: Int, _ roads: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_paths(n: i32, roads: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} roads\n# @return {Integer}\ndef count_paths(n, roads)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $roads\n     * @return Integer\n     */\n    function countPaths($n, $roads) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countPaths(int n, List<List<int>> roads) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countPaths(n: Int, roads: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_paths(n :: integer, roads :: [[integer]]) :: integer\n  def count_paths(n, roads) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_paths(N :: integer(), Roads :: [[integer()]]) -> integer().\ncount_paths(N, Roads) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-paths n roads)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2719",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe have `n` intersections in a city, represented as nodes in a fully connected graph with bidirectional roads as edges. Each road has a given travel time. Our goal is to determine the number of distinct ways to travel from intersection `0` to intersection `n - 1` while taking the shortest possible time. The problem guarantees that every intersection is reachable from any other intersection, ensuring that the graph is fully connected. Additionally, there is at most one road between any two intersections, so we do not have to consider duplicate edges.\n\nOne important detail is that the number of ways can be large, so the answer must be returned modulo $10^9 + 7$. A common mistake is assuming that all roads have unique travel times, but the problem does not impose this restriction. Multiple roads may contribute to the shortest path calculation, and all must be considered. Since the roads are bidirectional, each one can be traversed in either direction. However, backtracking is unnecessary here, meaning we can ignore paths that visit the same road twice, as they will definitely take more time to reach the destination.\n\nFor instance, in the first example of the problem description, the shortest time to travel from intersection `0` to intersection `6` is `7` minutes. There are four distinct paths that achieve this travel time, each taking different routes but resulting in the same minimum duration.\n\nOur approach will be based on two fundamental concepts: graph theory and Dijkstra’s shortest path algorithm. Since these topics are crucial to understanding the solution, we recommend having some prior knowledge of them. However, we will also provide a thorough explanation to ensure clarity.  \n\n1. **Graph Theory** – Understanding graphs, nodes, edges, and different types of graph representations (adjacency list, adjacency matrix).  \n   - [Graph Theory - LeetCode Explore Card](https://leetcode.com/explore/learn/card/graph/)\n   \n2. **Dijkstra’s Algorithm** – A fundamental shortest path algorithm that efficiently finds the minimum distance from a source node to all other nodes in a weighted graph.  \n   - [Dijkstra’s Algorithm - LeetCode Explore Card](https://leetcode.com/explore/learn/card/graph/622/single-source-shortest-path-algorithm/3885/)\n\n---\n\n### Approach 1: Dijkstra's Algorithm\n\n#### Intuition\n\nDijkstra’s algorithm is the best fit for this problem because it efficiently finds the shortest path from a single source node to all other nodes in a graph with edges that have non-negative weights. The core principle of Dijkstra’s algorithm is that it always expands the currently known shortest path first, ensuring that when we reach a node, we do so in the minimum time possible.  \n\nOther approaches, such as Breadth-First Search (BFS), Depth-First Search (DFS), or the Bellman-Ford algorithm, would not be efficient. BFS does not work for weighted graphs unless modified with a priority queue, which ultimately turns it into Dijkstra’s algorithm. DFS would be highly inefficient because it would explore all possible paths, many of which would be unnecessary since they do not guarantee the shortest travel time. The brute-force approach of checking all paths using DFS would have an exponential time complexity and would be infeasible for large inputs.  \n\nDijkstra’s algorithm is a greedy algorithm that uses a min-heap (priority queue) to process nodes in increasing order of their shortest known distance. The algorithm starts from the source node, which is node `0`, and initializes its distance to `0` while setting the distance for all other nodes to infinity. The priority queue ensures that the node with the shortest known distance is always processed first.  \n\nFor each node that is extracted from the priority queue, its neighbors are checked. If traveling through the current node provides a shorter path to a neighboring node, the shortest time to that node is updated, and the neighbor is added to the priority queue for further processing. This continues until all nodes have been processed, at which point the shortest time to each node is known.  \n\nThe reason Dijkstra’s algorithm works correctly is that once a node is extracted from the priority queue, we are guaranteed that we have found the shortest possible path to that node. Any future attempts to update its distance will fail. This is because any other node that could have led to a shorter path already has a greater cost (otherwise, we would have extracted it first from the heap). Additionally, since all edges have a positive weight, any further paths to that node will only add a positive value to the total cost, increasing it further.\n \nThe standard implementation of Dijkstra’s algorithm only finds the shortest distance to each node. However, this problem also requires us to count how many different ways exist to reach the last node (`n - 1`) using the shortest possible time.  \n\nTo achieve this, we introduce an additional array, `pathCount`, where `pathCount[i]` keeps track of the number of ways to reach node `i` in the shortest time possible. This modification allows us to not only compute the shortest travel time but also count all valid paths that follow this time constraint.  \n\nInitially, `pathCount[0] = 1`, since there is exactly one way to start at node `0`. When we find a new shorter path to a node, we reset its path count to be the same as the number of ways we could reach the previous node, since we have discovered a new optimal route.  \n\nIf we encounter another way to reach a node with the same shortest time, we do not reset the path count. Instead, we add the number of ways we could reach the previous node to the current node’s path count. Since the number of ways can be large, we take the result modulo $10^9 + 7$ to prevent integer overflow.  \n\nThis problem is notorious for its edge cases, which often cause issues when submitted. A common mistake is using `INT_MAX` (or similar equivalent in the language of your choice) as the initial value, assuming it is large enough to represent an unreachable node. However, for this problem, using `INT_MAX` causes incorrect results or even integer overflow in certain test cases.  \n\nTo understand why, we need to analyze the constraints. The number of nodes (`n`) is at most $200$, and the edge weights (`time[i]`) can be as large as $10^9$. The worst-case scenario occurs when the shortest path to a node involves traversing `199` edges, forming a nearly linear path. In such a case, the total shortest path value can reach:\n\n$199 \\times 10^9 = 1.99 \\times 10^{11}$\n\nThis is far greater than `INT_MAX` (which is $2.1 × 10^9$). If we initialize our distances with `INT_MAX`, adding even a single edge weight ($10^9$) could exceed this limit, causing integer overflow. As a result, the algorithm may produce incorrect results when comparing distances, leading to failures in large test cases like test case 53.\n\nTo avoid this issue, we should initialize the `shortestTime` array with `LLONG_MAX`, which is $9.2 × 10^18$, or use a sufficiently large constant like `1e12`. Both options ensure that our algorithm can correctly compute distances without encountering overflow. This small but crucial adjustment is necessary to handle the problem’s constraints correctly.\n\nThe algorithm is visualized below:\n\n!?!../Documents/1976/dijikstra.json:690,608!?!\n\n#### Algorithm\n\n- Define `MOD = 1e9 + 7` for modular arithmetic.\n- Build an adjacency list `graph` where `graph[i]` stores `{neighbor, travelTime}` pairs.\n\n- Initialize a min-heap (`minHeap`) for Dijkstra's algorithm.\n- Create `shortestTime` array to store the shortest time to each node, initialized to `LLONG_MAX` (or its equivalent in other preferred languages).\n- Create `pathCount` array to store the number of shortest paths to each node, initialized to `0`.\n- Set `shortestTime[0] = 0` and `pathCount[0] = 1` (starting node has distance `0` and one valid path).\n- Push `{0, 0}` into `minHeap` to start processing.\n\n- While `minHeap` is not empty:\n  - Extract the node `currNode` with the current shortest known time `currTime`.\n  - If `currTime > shortestTime[currNode]`, skip outdated distances.\n  - Iterate over neighbors of `currNode`:\n    - If a new shortest path is found:\n      - Update `shortestTime[neighborNode]`.\n      - Reset `pathCount[neighborNode]` to match `pathCount[currNode]`.\n      - Push `{shortestTime[neighborNode], neighborNode}` into `minHeap`.\n    - If an equally short path is found:\n      - Add `pathCount[currNode]` to `pathCount[neighborNode]`, modulo `MOD`.\n\n- Return `pathCount[n - 1]`, the number of shortest paths to the last node.\n\n#### Implementation\n\n> Time-saving coding tip:\n> \n> Whenever a problem involves calculating distances or counting paths, it's a good idea to use long long (or an equivalent large integer type) and apply the modulo operator when required. This helps prevent integer overflow and ensures accurate results, especially in graph and dynamic programming problems.\n\n<iframe src=\"https://leetcode.com/playground/faYwk3KQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"faYwk3KQ\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the number of nodes in the graph and $E$ be the number of edges in the given road connections.\n\n- Time Complexity: $O(N + E \\log E)$\n\n    Building the adjacency list takes $O(E)$ time, since we iterate over all the edges once.\n\n    The main part of the algorithm is Dijkstra’s algorithm using a min-heap. In this implementation, a node can be added to the heap multiple times (if a shorter path to it is found later). For each edge, we may perform a heap insertion, and the heap can grow up to size $O(E)$ in the worst case. Each insertion or extraction from the heap takes $O(\\log E)$ time. Thus, the total time spent on heap operations is $O(E \\log E)$.\n\n    Combining both parts, the overall time complexity is: $O(E) + O(E \\log E) = O(N + E \\log E)$.\n\n- Space complexity: $O(N + E)$\n\n    The adjacency list stores $O(2 \\cdot E)$ edges, but it requires $O(N + 2E) \\approx O(N + E)$ space in total, as it also includes the $N$ nodes in the outer list. The priority queue stores at most $O(N)$ elements at any time. Additionally, the `shortestTime` and `pathCount` arrays require $O(N)$ space. Since the total space used is dominated by $O(N + E)$ for storing the graph, the overall space complexity is $O(N + E)$.\n\n    Other auxiliary variables, such as integers and loop variables, contribute $O(1)$ space, which is negligible compared to $O(N + E)$. Therefore, the dominant space complexity remains $O(N + E)$.\n\n---\n\n### Approach 2: Floyd-Warshall algorithm\n\n#### Intuition\n\nAn alternate acceptable approach is to use the concept of Floyd-Warshall algorithm. The core idea of this algorithm is to check whether using an intermediate node `mid` can create a shorter path between `src` and `dest`. Instead of expanding outward from a single source like Dijkstra’s algorithm, Floyd-Warshall updates the shortest path between all pairs of nodes at the same time. This guarantees that once the algorithm completes, every possible shortest path has been counted. However, the Floyd-Warshall algorithm runs in $O(n^3)$ time complexity, which makes it impractical for very large graphs.\n\nTo implement this, we define a three-dimensional dynamic programming table `dp[src][dest][x]`. The first value, `dp[src][dest][0]`, stores the shortest time required to travel from `src` to `dest`, while `dp[src][dest][1]` keeps track of how many different ways this shortest time can be achieved. At the beginning, the shortest time between any two distinct nodes is set to a very large value, representing that they are initially unreachable. The number of ways is set to `0` because no path has been established yet. The only exception is when `src` and `dest` are the same, in which case the shortest time is `0` and the number of ways is `1`, as staying at the node is trivially possible in exactly one way.\n\nOnce the table is initialized, we update it with the given roads. If there is a direct connection between `startNode` and `endNode` with a given travel time, then the shortest time between these nodes is simply that travel time, and there is exactly one way to travel along this road. Since the roads are bidirectional, the same update applies in both directions.\n\nOnce all direct edges are accounted for, we use Floyd-Warshall to iteratively improve our shortest paths by considering each node `mid` as a possible bridge between every pair of nodes `(src, dest)`. For every such pair, we check whether traveling through `mid` results in a smaller total travel time than the best-known value stored in `dp[src][dest][0]`. If a strictly shorter path is found, we update `dp[src][dest][0]` to reflect this new shortest time and reset `dp[src][dest][1]` to be the product of `dp[src][mid][1]` and `dp[mid][dest][1]`, which accounts for all possible ways to reach `mid` from `src` and then travel from `mid` to `dest`. If the new path through `mid` results in the same shortest time that was already recorded, we do not update `dp[src][dest][0]`, but we add the newly found paths to `dp[src][dest][1]`, since they provide additional routes that achieve the minimum distance.\n\nOnce we have iterated through all possible intermediate nodes, `dp[n - 1][0][1]` contains the number of ways to travel between nodes `n - 1` and `0` in either direction, using the shortest possible time. This value represents our final answer.\n\n#### Algorithm\n\n- Initialize a 3D DP table `dp[n][n][2]` where:  \n  - `dp[src][dest][0]` stores the minimum time to reach `dest` from `src`.  \n  - `dp[src][dest][1]` stores the number of ways to achieve the minimum time.  \n- Initialize the DP table:  \n  - Set the time needed to travel from a node to itself to `0` and the number of ways to `1`.  \n  - Set the time needed to travel between any two different nodes to a large value (`1e12`) and the number of ways to `0`.  \n- Populate the DP table with direct roads (`[u, v, time]`) from the input:  \n  - Update the time needed to travel between `u` and `v` to `time` in both directions, and set the number of ways to `1`.\n- Apply the Floyd-Warshall algorithm to compute shortest paths:  \n  - For each intermediate node `mid`:  \n    - For each starting node `src`:  \n      - For each destination node `dest`:  \n        - If `src != mid` and `dest != mid`:  \n          - Calculate `newTime` as `dp[src][mid][0] + dp[mid][dest][0]`.  \n          - If `newTime < dp[src][dest][0]` (current time):  \n            - Update `dp[src][dest][0]` to `newTime`.\n            - Update the number of ways `dp[src][dest][1]` to the number of ways to reach `mid` from `src` (`dp[src][mid][1]`) multiplied by the number of ways to reach `dest` from `mid` (`dp[mid][dest][1]`).\n          - If `newTime == dp[src][dest][0]` (current time):  \n            - Increment the number of ways `dp[src][dest][1]` by the number of ways to reach `mid` from `src` (`dp[src][mid][1]`) multiplied by the number of ways to reach `dest` from `mid` (`dp[mid][dest][1]`).\n- Return the number of shortest paths from node `n - 1` to node `0` stored in `dp[n - 1][0][1]`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/H2DorSwM/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"H2DorSwM\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the number of nodes in the graph and $E$ be the number of edges in the given road connections.\n\n- Time complexity: $O(N^3)$\n\n    The time complexity is dominated by the Floyd-Warshall algorithm. The algorithm involves three nested loops, each iterating over all nodes (from `0` to `N - 1`). Therefore, the time complexity is $O(N^3)$.\n\n    Additionally, the initialization of the `dp` table takes $O(N^2)$ time, and the initialization of the roads (edges) takes $O(E)$ time. However, these are dominated by the $O(N^3)$ complexity of the Floyd-Warshall algorithm.\n\n- Space complexity: $O(N^2)$\n\n    The space complexity is determined by the size of the `dp` table, which is a 3D array of size $N \\times N \\times 2$. This results in a space complexity of $O(N^2)$, as the third dimension is a constant factor (`2`).\n\n    The input roads (edges) are stored in an array, which takes $O(E)$ space, but this is negligible compared to the $O(N^2)$ space used by the `dp` table. Therefore, the overall space complexity is $O(N^2)$.\n \n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

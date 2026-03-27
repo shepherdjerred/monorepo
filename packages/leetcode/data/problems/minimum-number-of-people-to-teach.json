@@ -1,0 +1,140 @@
+{
+  "questionId": "1834",
+  "questionFrontendId": "1733",
+  "title": "Minimum Number of People to Teach",
+  "titleSlug": "minimum-number-of-people-to-teach",
+  "difficulty": "Medium",
+  "content": "<p>On a social network consisting of <code>m</code> users and some friendships between users, two users can communicate with each other if they know a common language.</p>\n\n<p>You are given an integer <code>n</code>, an array <code>languages</code>, and an array <code>friendships</code> where:</p>\n\n<ul>\n\t<li>There are <code>n</code> languages numbered <code>1</code> through <code>n</code>,</li>\n\t<li><code>languages[i]</code> is the set of languages the <code>i<sup>​​​​​​th</sup></code>​​​​ user knows, and</li>\n\t<li><code>friendships[i] = [u<sub>​​​​​​i</sub>​​​, v<sub>​​​​​​i</sub>]</code> denotes a friendship between the users <code>u<sup>​​​​​</sup><sub>​​​​​​i</sub></code>​​​​​ and <code>v<sub>i</sub></code>.</li>\n</ul>\n\n<p>You can choose <strong>one</strong> language and teach it to some users so that all friends can communicate with each other. Return <i data-stringify-type=\"italic\">the</i> <i><strong>minimum</strong> </i><i data-stringify-type=\"italic\">number of users you need to teach.</i></p>\nNote that friendships are not transitive, meaning if <code>x</code> is a friend of <code>y</code> and <code>y</code> is a friend of <code>z</code>, this doesn&#39;t guarantee that <code>x</code> is a friend of <code>z</code>.\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 2, languages = [[1],[2],[1,2]], friendships = [[1,2],[1,3],[2,3]]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> You can either teach user 1 the second language or user 2 the first language.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 3, languages = [[2],[1,3],[1,2],[3]], friendships = [[1,4],[1,2],[3,4],[2,3]]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> Teach the third language to users 1 and 3, yielding two users to teach.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 500</code></li>\n\t<li><code>languages.length == m</code></li>\n\t<li><code>1 &lt;= m &lt;= 500</code></li>\n\t<li><code>1 &lt;= languages[i].length &lt;= n</code></li>\n\t<li><code>1 &lt;= languages[i][j] &lt;= n</code></li>\n\t<li><code>1 &lt;= u<sub>​​​​​​i</sub> &lt; v<sub>​​​​​​i</sub> &lt;= languages.length</code></li>\n\t<li><code>1 &lt;= friendships.length &lt;= 500</code></li>\n\t<li>All tuples <code>(u<sub>​​​​​i, </sub>v<sub>​​​​​​i</sub>)</code> are unique</li>\n\t<li><code>languages[i]</code> contains only unique values</li>\n</ul>\n",
+  "hints": [
+    "You can just use brute force and find out for each language the number of users you need to teach",
+    "Note that a user can appear in multiple friendships but you need to teach that user only once"
+  ],
+  "metaData": "{\n  \"name\": \"minimumTeachings\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"languages\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"friendships\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"99.1K\", \"totalSubmission\": \"146.5K\", \"totalAcceptedRaw\": 99116, \"totalSubmissionRaw\": 146500, \"acRate\": \"67.7%\"}",
+  "likes": 716,
+  "dislikes": 560,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "2\n[[1],[2],[1,2]]\n[[1,2],[1,3],[2,3]]",
+    "3\n[[2],[1,3],[1,2],[3]]\n[[1,4],[1,2],[3,4],[2,3]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"duolingo\", \"name\": \"Duolingo\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minimumTeachings(int n, vector<vector<int>>& languages, vector<vector<int>>& friendships) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minimumTeachings(int n, int[][] languages, int[][] friendships) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumTeachings(self, n: int, languages: List[List[int]], friendships: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumTeachings(self, n, languages, friendships):\n        \"\"\"\n        :type n: int\n        :type languages: List[List[int]]\n        :type friendships: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} languages\n * @param {number[][]} friendships\n * @return {number}\n */\nvar minimumTeachings = function(n, languages, friendships) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumTeachings(n: number, languages: number[][], friendships: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinimumTeachings(int n, int[][] languages, int[][] friendships) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minimumTeachings(int n, int** languages, int languagesSize, int* languagesColSize, int** friendships, int friendshipsSize, int* friendshipsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumTeachings(n int, languages [][]int, friendships [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumTeachings(n: Int, languages: Array<IntArray>, friendships: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumTeachings(_ n: Int, _ languages: [[Int]], _ friendships: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_teachings(n: i32, languages: Vec<Vec<i32>>, friendships: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} languages\n# @param {Integer[][]} friendships\n# @return {Integer}\ndef minimum_teachings(n, languages, friendships)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $languages\n     * @param Integer[][] $friendships\n     * @return Integer\n     */\n    function minimumTeachings($n, $languages, $friendships) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimumTeachings(int n, List<List<int>> languages, List<List<int>> friendships) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumTeachings(n: Int, languages: Array[Array[Int]], friendships: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_teachings(n :: integer, languages :: [[integer]], friendships :: [[integer]]) :: integer\n  def minimum_teachings(n, languages, friendships) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_teachings(N :: integer(), Languages :: [[integer()]], Friendships :: [[integer()]]) -> integer().\nminimum_teachings(N, Languages, Friendships) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-teachings n languages friendships)\n  (-> exact-integer? (listof (listof exact-integer?)) (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2830",
+    "content": "### Approach: Greedy\n\n#### Intuition\n\nThe task requires us to choose a language so that all friends can communicate with each other. Between any two friends, there are two possible situations:\n\n1. If their sets of languages intersect, they can communicate with each other.\n2. If their sets of languages do not intersect, they cannot communicate with each other.\n\nIn the first case, we do not need to do anything, since the friends can already communicate. In the second case, we need to choose a language that both friends can learn, which will allow them to communicate.\n\nOur goal is to find the minimum number of people who need to be taught a language. To do this, we first identify all friends who cannot currently communicate with each other.\n\nNext, we need to find a language that all of these friends could potentially learn. If they all share this language, then communication becomes possible.\n\nHow do we select such a language? We count how many of the non-communicating friends already know each language, and then greedily choose the language known by the largest number of them. This minimizes the number of additional people who need to learn it. It can be proven that choosing any other language would result in teaching at least as many, if not more, people. Therefore, this greedy strategy is correct.\n\nFor the implementation, we use a hash table $\\textit{mp}$ to check whether each pair of friends can already communicate. We then use a set $\\textit{cncon}$ to store all friends who cannot communicate. We also maintain an array $\\textit{cnt}$ of length $n$ to count how many of these friends know each language. Finally, we find the maximum value $\\textit{max_cnt}$ in this array. The minimum number of people to teach is then given by the size of the $\\textit{cncon}$ set minus $\\textit{max_cnt}$.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/VgFhxAap/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"VgFhxAap\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ be the number of friendship pairs and $n$ be the number of available languages.\n\n- Time complexity: $O(m \\times n)$.\n  \n  For each friendship pair in $\\textit{friendships}$, we may need to check all the languages spoken by both people. Since there are $m$ pairs and up to $n$ languages, the overall time complexity is $O(m \\times n)$.\n\n- Space complexity: $O(m + n)$.\n  \n  We use $O(m)$ space for the $\\textit{cncon}$ set, which stores the friends who cannot communicate, and $O(n)$ space for the $\\textit{cnt}$ array, which counts how many people know each language. Thus, the total space complexity is $O(m + n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

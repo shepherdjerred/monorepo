@@ -1,0 +1,141 @@
+{
+  "questionId": "1313",
+  "questionFrontendId": "1916",
+  "title": "Count Ways to Build Rooms in an Ant Colony",
+  "titleSlug": "count-ways-to-build-rooms-in-an-ant-colony",
+  "difficulty": "Hard",
+  "content": "<p>You are an ant tasked with adding <code>n</code> new rooms numbered <code>0</code> to <code>n-1</code> to your colony. You are given the expansion plan as a <strong>0-indexed</strong> integer array of length <code>n</code>, <code>prevRoom</code>, where <code>prevRoom[i]</code> indicates that you must build room <code>prevRoom[i]</code> before building room <code>i</code>, and these two rooms must be connected <strong>directly</strong>. Room <code>0</code> is already built, so <code>prevRoom[0] = -1</code>. The expansion&nbsp;plan is given such that once all the rooms are built, every room will be reachable from room <code>0</code>.</p>\r\n\r\n<p>You can only build <strong>one room</strong> at a time, and you can travel freely between rooms you have <strong>already built</strong> only if they are <strong>connected</strong>.&nbsp;You can choose to build <strong>any room</strong> as long as its <strong>previous room</strong>&nbsp;is already built.</p>\r\n\r\n<p>Return <em>the <strong>number of different orders</strong> you can build all the rooms in</em>. Since the answer may be large, return it <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong class=\"example\">Example 1:</strong></p>\r\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/06/19/d1.JPG\" style=\"width: 200px; height: 212px;\" />\r\n<pre>\r\n<strong>Input:</strong> prevRoom = [-1,0,1]\r\n<strong>Output:</strong> 1\r\n<strong>Explanation:</strong>&nbsp;There is only one way to build the additional rooms: 0 &rarr; 1 &rarr; 2\r\n</pre>\r\n\r\n<p><strong class=\"example\">Example 2:</strong></p>\r\n<strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/06/19/d2.JPG\" style=\"width: 200px; height: 239px;\" /></strong>\r\n\r\n<pre>\r\n<strong>Input:</strong> prevRoom = [-1,0,0,1,2]\r\n<strong>Output:</strong> 6\r\n<strong>Explanation:\r\n</strong>The 6 ways are:\r\n0 &rarr; 1 &rarr; 3 &rarr; 2 &rarr; 4\r\n0 &rarr; 2 &rarr; 4 &rarr; 1 &rarr; 3\r\n0 &rarr; 1 &rarr; 2 &rarr; 3 &rarr; 4\r\n0 &rarr; 1 &rarr; 2 &rarr; 4 &rarr; 3\r\n0 &rarr; 2 &rarr; 1 &rarr; 3 &rarr; 4\r\n0 &rarr; 2 &rarr; 1 &rarr; 4 &rarr; 3\r\n</pre>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong>Constraints:</strong></p>\r\n\r\n<ul>\r\n\t<li><code>n == prevRoom.length</code></li>\r\n\t<li><code>2 &lt;= n &lt;= 10<sup>5</sup></code></li>\r\n\t<li><code>prevRoom[0] == -1</code></li>\r\n\t<li><code>0 &lt;= prevRoom[i] &lt; n</code> for all <code>1 &lt;= i &lt; n</code></li>\r\n\t<li>Every room is reachable from room <code>0</code> once all the rooms are built.</li>\r\n</ul>",
+  "hints": [
+    "Use dynamic programming.",
+    "Let dp[i] be the number of ways to solve the problem for the subtree of node i.",
+    "Imagine you are trying to fill an array with the order of traversal, dp[i] equals the multiplications of the number of ways to distribute the subtrees of the children of i on the array using combinatorics, multiplied bu their dp values."
+  ],
+  "metaData": "{\n  \"name\": \"waysToBuildRooms\",\n  \"params\": [\n    {\n      \"name\": \"prevRoom\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"11K\", \"totalSubmission\": \"21.5K\", \"totalAcceptedRaw\": 11011, \"totalSubmissionRaw\": 21536, \"acRate\": \"51.1%\"}",
+  "likes": 525,
+  "dislikes": 57,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count Anagrams\", \"titleSlug\": \"count-anagrams\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count the Number of Good Subsequences\", \"titleSlug\": \"count-the-number-of-good-subsequences\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[-1,0,1]",
+    "[-1,0,0,1,2]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Topological Sort",
+      "slug": "topological-sort"
+    },
+    {
+      "name": "Combinatorics",
+      "slug": "combinatorics"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\r\npublic:\r\n    int waysToBuildRooms(vector<int>& prevRoom) {\r\n        \r\n    }\r\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\r\n    public int waysToBuildRooms(int[] prevRoom) {\r\n        \r\n    }\r\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\r\n    def waysToBuildRooms(self, prevRoom: List[int]) -> int:"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\r\n    def waysToBuildRooms(self, prevRoom):\r\n        \"\"\"\r\n        :type prevRoom: List[int]\r\n        :rtype: int\r\n        \"\"\""
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\r\n * @param {number[]} prevRoom\r\n * @return {number}\r\n */\r\nvar waysToBuildRooms = function(prevRoom) {\r\n    \r\n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function waysToBuildRooms(prevRoom: number[]): number {\r\n\r\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\r\n    public int WaysToBuildRooms(int[] prevRoom) {\r\n        \r\n    }\r\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int waysToBuildRooms(int* prevRoom, int prevRoomSize){\r\n\r\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func waysToBuildRooms(prevRoom []int) int {\r\n    \r\n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\r\n    fun waysToBuildRooms(prevRoom: IntArray): Int {\r\n        \r\n    }\r\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\r\n    func waysToBuildRooms(_ prevRoom: [Int]) -> Int {\r\n        \r\n    }\r\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\r\n    pub fn ways_to_build_rooms(prev_room: Vec<i32>) -> i32 {\r\n        \r\n    }\r\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} prev_room\r\n# @return {Integer}\r\ndef ways_to_build_rooms(prev_room)\r\n    \r\nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\r\n\r\n    /**\r\n     * @param Integer[] $prevRoom\r\n     * @return Integer\r\n     */\r\n    function waysToBuildRooms($prevRoom) {\r\n        \r\n    }\r\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\r\n    def waysToBuildRooms(prevRoom: Array[Int]): Int = {\r\n        \r\n    }\r\n}"
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (ways-to-build-rooms prevRoom)\r\n  (-> (listof exact-integer?) exact-integer?)\r\n\r\n  )"
+    }
+  ],
+  "solution": null
+}

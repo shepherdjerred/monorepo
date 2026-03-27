@@ -1,0 +1,145 @@
+{
+  "questionId": "1851",
+  "questionFrontendId": "1751",
+  "title": "Maximum Number of Events That Can Be Attended II",
+  "titleSlug": "maximum-number-of-events-that-can-be-attended-ii",
+  "difficulty": "Hard",
+  "content": "<p>You are given an array of <code>events</code> where <code>events[i] = [startDay<sub>i</sub>, endDay<sub>i</sub>, value<sub>i</sub>]</code>. The <code>i<sup>th</sup></code> event starts at <code>startDay<sub>i</sub></code><sub> </sub>and ends at <code>endDay<sub>i</sub></code>, and if you attend this event, you will receive a value of <code>value<sub>i</sub></code>. You are also given an integer <code>k</code> which represents the maximum number of events you can attend.</p>\n\n<p>You can only attend one event at a time. If you choose to attend an event, you must attend the <strong>entire</strong> event. Note that the end day is <strong>inclusive</strong>: that is, you cannot attend two events where one of them starts and the other ends on the same day.</p>\n\n<p>Return <em>the <strong>maximum sum</strong> of values that you can receive by attending events.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/01/10/screenshot-2021-01-11-at-60048-pm.png\" style=\"width: 400px; height: 103px;\" /></p>\n\n<pre>\n<strong>Input:</strong> events = [[1,2,4],[3,4,3],[2,3,1]], k = 2\n<strong>Output:</strong> 7\n<strong>Explanation: </strong>Choose the green events, 0 and 1 (0-indexed) for a total value of 4 + 3 = 7.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/01/10/screenshot-2021-01-11-at-60150-pm.png\" style=\"width: 400px; height: 103px;\" /></p>\n\n<pre>\n<strong>Input:</strong> events = [[1,2,4],[3,4,3],[2,3,10]], k = 2\n<strong>Output:</strong> 10\n<strong>Explanation:</strong> Choose event 2 for a total value of 10.\nNotice that you cannot attend any other event as they overlap, and that you do <strong>not</strong> have to attend k events.</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/01/10/screenshot-2021-01-11-at-60703-pm.png\" style=\"width: 400px; height: 126px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> events = [[1,1,1],[2,2,2],[3,3,3],[4,4,4]], k = 3\n<strong>Output:</strong> 9\n<strong>Explanation:</strong> Although the events do not overlap, you can only attend 3 events. Pick the highest valued three.</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= k &lt;= events.length</code></li>\n\t<li><code>1 &lt;= k * events.length &lt;= 10<sup>6</sup></code></li>\n\t<li><code>1 &lt;= startDay<sub>i</sub> &lt;= endDay<sub>i</sub> &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= value<sub>i</sub> &lt;= 10<sup>6</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Sort the events by its startTime.",
+    "For every event, you can either choose it and consider the next event available, or you can ignore it. You can efficiently find the next event that is available using binary search."
+  ],
+  "metaData": "{\n  \"name\": \"maxValue\",\n  \"params\": [\n    {\n      \"name\": \"events\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"162.9K\", \"totalSubmission\": \"256.2K\", \"totalAcceptedRaw\": 162942, \"totalSubmissionRaw\": 256231, \"acRate\": \"63.6%\"}",
+  "likes": 2552,
+  "dislikes": 54,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Number of Events That Can Be Attended\", \"titleSlug\": \"maximum-number-of-events-that-can-be-attended\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Earnings From Taxi\", \"titleSlug\": \"maximum-earnings-from-taxi\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Two Best Non-Overlapping Events\", \"titleSlug\": \"two-best-non-overlapping-events\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Meeting Rooms III\", \"titleSlug\": \"meeting-rooms-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,2,4],[3,4,3],[2,3,1]]\n2",
+    "[[1,2,4],[3,4,3],[2,3,10]]\n2",
+    "[[1,1,1],[2,2,2],[3,3,3],[4,4,4]]\n3"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 2, \"slug\": \"general-electric\", \"name\": \"General Electric\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxValue(vector<vector<int>>& events, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxValue(int[][] events, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxValue(self, events: List[List[int]], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxValue(self, events, k):\n        \"\"\"\n        :type events: List[List[int]]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} events\n * @param {number} k\n * @return {number}\n */\nvar maxValue = function(events, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxValue(events: number[][], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxValue(int[][] events, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxValue(int** events, int eventsSize, int* eventsColSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxValue(events [][]int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxValue(events: Array<IntArray>, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxValue(_ events: [[Int]], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_value(events: Vec<Vec<i32>>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} events\n# @param {Integer} k\n# @return {Integer}\ndef max_value(events, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $events\n     * @param Integer $k\n     * @return Integer\n     */\n    function maxValue($events, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxValue(List<List<int>> events, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxValue(events: Array[Array[Int]], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_value(events :: [[integer]], k :: integer) :: integer\n  def max_value(events, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_value(Events :: [[integer()]], K :: integer()) -> integer().\nmax_value(Events, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-value events k)\n  (-> (listof (listof exact-integer?)) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1885",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nWe can only attend an event if the start day of it is greater than the end day of the previously attended event. This implies that we should sort events by their start time. As shown in the following figure, we sort `events = [[1,2,4],[3,4,3],[2,3,1],[4,6,5],[2,4,8]]` according to the start time of each event. \n\n![img](../Figures/1751/b1.png)\n\n\nAll subsequent solutions are based on the sorted `events`.\n\n\n---\n\n### Approach 1: Top-down Dynamic Programming + Binary Search\n\n#### Intuition   \n\n> If you are not familiar with dynamic programming, please refer to our explore cards [Dynamic Programming Explore Card](https://leetcode.com/explore/featured/card/dynamic-programming/). We will focus on the usage in this article and not the underlying principles or implementation details.\n\nLet `dfs(cur_index)` represent the maximum value obtained by attending events optimally in the range `events[cur_index ~ n - 1]`\n\nFor event `cur_index`, we have two options:\n\n\n- attend the current event and gain a value of `events[cur_index][2]`. Then we need to find the nearest event that we can attend after event `cur_index`. Recall that we have sorted `events` by start time. We can apply binary search to find the index where we should insert the end time of the current event `cur_index` in the sorted list of start times. Let's say the nearest one is event `next_index`. Thus `dfs(cur_index)` is the larger value between the two options:\n\n- attend the current event and obtain a value of `events[cur_index][2] + dfs(next_index)`.\n\n- skip the current event, move on to the next event, and gain a value of `dfs(cur_index + 1)`.\n\nwhich is denoted as `dfs(cur_index) = max(dfs(cur_index + 1), dfs(next_index) + events[cur_index][2])`.\n\n<br>\n\nAs shown in the picture below, we find the insertion index is `3`, which indicates that the nearest available event after event 0 is event 3.\n\n\n![img](../Figures/1751/b2.png)\n\nTherefore, we can update `dfs(0)` as the larger value obtained by attending or skipping event 0. \n\n- attend event 0 and get a value of `events[0][2] + dfs(3)`.\n- skip event 0 and get a value of `dfs(1)`.\n\n![img](../Figures/1751/b3.png)\n\nGiven the restriction that we can attend a maximum of `k` events, we also need to keep track of `count`, the number of events we have attended so far. Therefore, we will redefine this function as `dfs(cur_index, count)`.\n\n\nAdditionally, we use memoization to store the maximum value obtained by each state `(cur_index, count)`. This helps us avoid re-solving the same subproblems multiple times and significantly reduces the time complexity of the algorithm.\n\n<br>\n\n#### Algorithm\n\n1) Sort `events` by start time.\n\n2) Build a 2D array `dp` of size $$(k + 1) \\times n$$ as memory.\n\n3) Define `dfs(cur_index, count)` as the maximum value obtained by attending a maximum of `count` events in the range `events[cur_index ~ n - 1]`.\n\n    - If `(count, cur_index)` is already stored in `dp`, return `dp[count][cur_index]`.\n    - Return 0 if `count = 0` or `cur_index = n`.\n    - Skip this event and get the value of `dfs(cur_index + 1, count)`.\n    - Find the index of the nearest available event `next_index` after the current event `cur_index` with binary search.\n\n    - Attend this event and get the value of `dfs(next_index, count - 1)` plus the value of this event `events[cur_index][2]`.\n    - Store the larger one of the two values above in `dp[count][cur_index]` and return `dp[count][cur_index]`.\n\n4) Return `dfs(0, k)`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/4j5UJQEv/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"4j5UJQEv\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of the input string `s`.\n\n* Time complexity: $$O(n \\cdot k \\cdot\\log n)$$\n    - Sorting `events` takes $$O(n \\log n)$$ time.\n    - We build `dp`, a 2D array of size $$O(n \\times k)$$ as memory, equal to the number of possible states. Each state is computed with a binary search over all start times, which takes $$O(\\log n)$$.\n\n\n* Space complexity: $$O(n \\cdot k)$$\n    \n    - We build a 2D array of size $$O(n \\times k)$$ as memory.\n    - In the Python solution, we also create an array with length `n`, which takes $$O(n)$$ space.\n    - The space complexity of a recursive call depends on the maximum depth of the recursive call stack, which is $$n + k$$. As each recursive call either increments `cur_index` by 1 and/or decrements `count` by 1. Therefore, at most $$O(n + k)$$ levels of recursion will be created, and each level consumes a constant amount of space.   \n\n\n<br/>\n\n\n\n---\n\n### Approach 2: Bottom-up Dynamic Programming + Binary Search\n\n#### Intuition   \n\nIn the previous approach, we start with the original problem `dfs(0, k)` and recursively break it down into smaller subproblems. We can also use bottom-up DP that starts with the smallest subproblems and works its way up to the original problem. \n\nWe can build a 2D array `dp` and let `dp[count][cur_index]` represent the maximum value we obtain by attending at most `count` events in the range `events[cur_index ~ n - 1]` (equivalent to `dfs(cur_index, count)` in the previous approach). We first solve the smallest subproblems, then use their solutions to solve slightly larger subproblems, and so on until we solve the original problem `dp[0][k]`.\n\n\n\nFor the current state `dp[count][cur_index]`, we have two options:\n\n- attend event `cur_index` and gain a value of `events[cur_index][2]`. Then we need to find the nearest events that we can attend after this event. Recall that we have sorted `events` according to the start times, so we can apply a binary search to find `next_index`, the inserting index of `events[cur_index][1]`, the end time of this event, on the sorted start times. Thus the value we obtain is `events[cur_index][2] + dp[count - 1][next_index]`.\n\n- skip the event `cur_index` and move on to the next event, thus the value is equal to `dp[count][cur_index + 1]`.\n\nTherefore, we have the recurrence relation as `dp[count][cur_index] = max(dp[count][cur_index + 1], dp[count - 1][next_index] + events[cur_index][2])`.\n\n\n<br>\n\n#### Algorithm\n\n1) Sort `events` by start time.\n\n2) Define a dynamic programming table `dp` of size $$(k + 1) \\cdot (n + 1)$$.\n\n3) Iterate starting from the base cases. Iterate over `events` backward from `n - 1` to `0`. For each event, iterate over the number of events that can be attended from `1` to `k`.\n\n\n4) Locate `nextIndex`, the index of the first event whose starting time is greater than the end time of the current event `curIndex` using binary search.\n\n5) Update `dp[count][curIndex]` as `max(dp[count][curIndex + 1], dp[count + 1][nextIndex] + events[curIndex][2])`.\n\n6) Return `dp[k][0]` when the iteration is complete.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/i8tmNFhq/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"i8tmNFhq\"></iframe>\n\n\n#### Complexity Analysis\n\n\nLet $$n$$ be the length of the input string `s`.\n\n* Time complexity: $$O(n \\cdot k \\cdot\\log n)$$\n    - Sorting `events` takes $$O(n \\log n)$$ time.\n    - We build a 2D array of size $$O(n \\times k)$$ as memory, equal to the number of possible states. Each state is computed with a binary search over all start times, which takes $$O(\\log n)$$.\n\n* Space complexity: $$O(n \\cdot k)$$\n\n    - `dp` takes $$O(n \\times k)$$ space.\n    - In the Python solution, we create a array `starts` with length `n` which takes $$O(n)$$ space.\n\n<br/>\n\n\n\n\n---\n\n### Approach 3: Top-down Dynamic Programming + Cached Binary Search\n\n\n#### Intuition   \n\nIn the previous approaches, we perform the binary search in each of the $$O(n \\cdot k)$$ states.\n\n\nHowever, we observed that the same binary search was being repeated. In fact, there are at most `n` different results. Therefore, we can precompute the results of all possible binary searches of `events[cur_index][0]` over the array of start times `starts`, and store the results in an array called `next_indices`. As shown in the figure below:.\n\n![img](../Figures/1751/b4.png)\n\nIn the following recursion, we can obtain the insertion index of `events[cur_index][1]` as `next_indices[cur_index]`.\n\n\n<br>\n\n#### Algorithm\n\n1) Sort `events` by start time.\n\n2) Build a 2D array `dp` of size $$(k + 1) \\times n$$ as memory.\n\n3) Create an array `next_indices` to collect the nearest available event `nextIndex` for every event `curIndex`.\n\n3) Define `dfs(cur_index, count)` as the maximum value obtained by attending a maximum of `count` events in the range `events[cur_index ~ n - 1]`.\n    - If `(count, cur_index)` is already stored in `dp`, return `dp[count][cur_index]`.\n    - Return 0 if `count = 0` or `cur_index = n`.\n    - Skip this event and get the value of `dfs(cur_index + 1, count)`.\n    - Get the index of the nearest available event `next_index` after the current event `cur_index` as `next_indices[cur_index]`.\n    - Attend this event and get the value of `dfs(next_index, count - 1)` plus the value of this event `events[cur_index][2]`.\n\n    - Assign the larger value between the two options mentioned above `dp[count][cur_index]` and return `dp[count][cur_index]`.\n\n4) Return `dfs(0, k)`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/miFTMHR3/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"miFTMHR3\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of the input array `events`.\n\n* Time complexity: $$O(n \\cdot (k + \\log n))$$\n    - Sorting `events` takes $$O(n \\log n)$$ time.\n    - We build a 2D array of size $$O(n \\times k)$$ as memory. Each value is computed in $$O(1)$$ time. \n    - The pre-computed table `next_indices` requires $$n$$ binary search over the start time in `events`, each binary search takes $$O(\\log n)$$ time. Therefore the total time it requires is $$O(n \\cdot\\log n)$$.\n\n* Space complexity: $$O(n \\cdot k)$$\n    - `dp` takes $$O(n \\times k)$$ space.\n    - `next_indices` takes $$O(n)$$ space.\n    - In the Python solution, we create an array with length `n` which takes $$O(n)$$ space.\n\n\n<br/>\n\n\n\n---\n\n### Approach 4: Bottom-up Dynamic Programming + Optimized Binary Search\n\n#### Intuition   \n\nWe can also minimize the number of binary searches in approach 2. As all the binary searches in the inner loop search for the same insertion index of event `cur_index`, we can perform this binary search beforehand, before executing the inner loop.\n\n<br>\n\n#### Algorithm\n\n1) Sort `events` by their start time.\n\n2) Define a dynamic programming table `dp` of size $$(k + 1) \\cdot (n + 1)$$.\n\n3) Iterate from the base cases. Iterate over `events` backward from `n - 1` to `0`. For each event, find `next_index`, the index of the nearest event whose start time is greater the end time of the current event `cur_index` using binary search.\n\n\n4) Iterate over the number of events that can be attended from `1` to `k`.\n\n5) Update `dp[count][cur_index]` as `max(dp[count][cur_index + 1], dp[count + 1][next_index] + events[cur_index][2])`.\n\n6) Return `dp[k][0]` when the iteration is complete.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/UdWh3htP/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"UdWh3htP\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of the input array `events`.\n\n* Time complexity: $$O(n \\cdot (k + \\log n))$$\n    - Sorting `events` takes $$O(n \\log n)$$ time.\n    - The nested iterations takes $$n \\cdot k$$ steps, each step requires $$O(1)$$ time. \n    - Instead of applying binary search in each step, we only have $$n$$ binary searches, which take $$n \\cdot\\log n$$ time.\n\n* Space complexity: $$O(n \\cdot k)$$\n\n    - `dp` takes $$O(n \\times k)$$ space.\n    - In the Python solution, we create a array `starts` with length `n`, which takes $$O(n)$$ space.\n\n<br/>\n\n\n\n---\n\n### Approach 5: Top-down Dynamic Programming Without Binary Search (Time Limit Exceed)\n\n\n#### Intuition   \n\nThe reason for using binary search in previous approaches, such as approach 1, is to ensure that the current `dfs(cur_index, count)` is always valid by finding the nearest event `next_index` and ensuring that the start time of this following event is strictly greater than the end time of the current event. This is done by finding the insertion position of `events[cur_index][1]` using binary search. We could avoid using binary search, but we would need to modify the function. \n\n\nLet's start with the original `dfs(cur_index = 0, count = 0)`, as shown in the figure, we have two options for event 0: \n- attend it and gain a value of `events[0][2]`. As we are not using binary search to locate the nearest available event, we would attempt attending the next event and gain a value of `dfs(1, 1)`. Therefore, the total value gained would be `events[0][2] + dfs(1, 1)`.\n- skip it and gain a value of `dfs(1, 0)` \n\n![img](../Figures/1751/1.png)\n\nHowever, `dfs(0, 0) = max(events[0][2] + dfs(1, 1), dfs(1, 0))` creates a problem, as we mentioned earlier: the start time of event 1 is not greater than the end time of event 0, so we cannot attend event 1 after attending event 0. However, the algorithm does not verify this condition and will continue to recursively calculate `dfs(1, 1)`, `dfs(2, 2)`, and so on, leading to incorrect answers.\n\n![img](../Figures/1751/2.png)\n\nTherefore, we need to modify the `dfs(cur_index, count)` function by adding an extra parameter called `prev_ending_time`, which represents the end time of the previous event we attended. \n\n![img](../Figures/1751/3.png)\n\nWith the added parameter `prev_ending_time`, the function `dfs(cur_index = 1, count, prev_ending_time = 2)` ensures that we only consider valid events that can be attended after the previous event ends. This is accomplished by checking if `prev_ending_time` is smaller than the start time of the next event. If it is not, we skip the calculation of `dfs(cur_index + 1, count + 1, events[cur_index][1])` and only consider the option of skipping the current event.\n\n![img](../Figures/1751/4.png)\n\n> Let's define the complete function `dfs(cur_index, count, prev_ending_time)` as the maximum value obtained by attending a maximum of `count` events in the range `events[cur_index ~ n - 1]`, where the previously attended event ends at `prev_ending_time`.\n\nAdditionally, We use memoization to store the maximum value obtained by each state `(cur_index, count)` to avoid re-solving the same subproblems multiple times, which significantly reduces the time complexity.\n\n![img](../Figures/1751/5.png)\n\n<br>\n\n#### Algorithm\n\n1) Sort `events` by the start time.\n\n2) Build a 2D array `dp` of size $$(k + 1) \\times n$$ as memory.\n\n3) Define `dfs(cur_index, count, prev_ending_time)` as the maximum value obtained by attending `count` events in the range `events[cur_index ~ n - 1]`, if the previous attending meeting ends at `prev_ending_time`.\n    - Return 0 if `count = 0` or `cur_index = n`.\n    - If `events[cur_index][0] <= pre_ending_time`, we must skip this event and get a value of `dfs(cur_index + 1, count, prev_ending_time)`.\n    - If `(count, cur_index)` is already stored in `dp`, return `dp[count][cur_index]`.\n    - Otherwise, we can also attend this event and get a value of `dfs(cur_index + 1, count - 1, events[cur_index][2])` plus a value of this event `events[cur_index][2]`.\n    - Assign the larger value between the two options mentioned above to `dp[count][cur_index]` and return `dp[count][cur_index]`.\n\n4) Return `dfs(0, k, -1)`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ieNUNXmb/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ieNUNXmb\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of the input array `events`.\n\n* Time complexity: $$O(n \\cdot (n\\cdot k + \\log n))$$\n    - Sorting the array `events` takes $$O(n \\log n)$$ time.\n    - We build a 2D array `dp` of size $$O(n \\times k)$$ as memory. The extra parameter `prev_ending_time` creates many more states, the value of each state in the `dp` array is computed once but is visited at most $$O(n)$$ times.\n\n\n* Space complexity: $$O(n \\cdot k)$$\n\n    - `dp` takes $$O(n \\times k)$$ space.\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

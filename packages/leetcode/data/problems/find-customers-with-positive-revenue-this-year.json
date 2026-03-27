@@ -1,0 +1,53 @@
+{
+  "questionId": "1974",
+  "questionFrontendId": "1821",
+  "title": "Find Customers With Positive Revenue this Year",
+  "titleSlug": "find-customers-with-positive-revenue-this-year",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Customers</code></p>\n\n<pre>\n+--------------+------+\n| Column Name  | Type |\n+--------------+------+\n| customer_id  | int  |\n| year         | int  |\n| revenue      | int  |\n+--------------+------+\n(customer_id, year) is the primary key (combination of columns with unique values) for this table.\nThis table contains the customer ID and the revenue of customers in different years.\nNote that this revenue can be negative.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to report the customers with <strong>postive revenue</strong> in the year 2021.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nCustomers table:\n+-------------+------+---------+\n| customer_id | year | revenue |\n+-------------+------+---------+\n| 1           | 2018 | 50      |\n| 1           | 2021 | 30      |\n| 1           | 2020 | 70      |\n| 2           | 2021 | -50     |\n| 3           | 2018 | 10      |\n| 3           | 2016 | 50      |\n| 4           | 2021 | 20      |\n+-------------+------+---------+\n<strong>Output:</strong> \n+-------------+\n| customer_id |\n+-------------+\n| 1           |\n| 4           |\n+-------------+\n<strong>Explanation:</strong> \nCustomer 1 has revenue equal to 30 in the year 2021.\nCustomer 2 has revenue equal to -50 in the year 2021.\nCustomer 3 has no revenue in the year 2021.\nCustomer 4 has revenue equal to 20 in the year 2021.\nThus only customers 1 and 4 have positive revenue in the year 2021.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Customers (customer_id int, year int, revenue int)\"], \"mssql\": [\"Create table Customers (customer_id int, year int, revenue int)\"], \"oraclesql\": [\"Create table Customers (customer_id int, year int, revenue int)\"], \"database\": true, \"name\": \"find_customers\", \"pythondata\": [\"Customers = pd.DataFrame([], columns=['customer_id', 'year', 'revenue']).astype({'customer_id':'Int64', 'year':'Int64', 'revenue':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Customers (customer_id int, year int, revenue int)\"], \"database_schema\": {\"Customers\": {\"customer_id\": \"INT\", \"year\": \"INT\", \"revenue\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"36.9K\", \"totalSubmission\": \"42.1K\", \"totalAcceptedRaw\": 36905, \"totalSubmissionRaw\": 42067, \"acRate\": \"87.7%\"}",
+  "likes": 66,
+  "dislikes": 26,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Customers\":[\"customer_id\",\"year\",\"revenue\"]},\"rows\":{\"Customers\":[[\"1\",\"2018\",\"50\"],[\"1\",\"2021\",\"30\"],[\"1\",\"2020\",\"70\"],[\"2\",\"2021\",\"-50\"],[\"3\",\"2018\",\"10\"],[\"3\",\"2016\",\"50\"],[\"4\",\"2021\",\"20\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_customers(customers: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

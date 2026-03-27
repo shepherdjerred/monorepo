@@ -1,0 +1,120 @@
+{
+  "questionId": "1907",
+  "questionFrontendId": "1803",
+  "title": "Count Pairs With XOR in a Range",
+  "titleSlug": "count-pairs-with-xor-in-a-range",
+  "difficulty": "Hard",
+  "content": "<p>Given a <strong>(0-indexed)</strong> integer array <code>nums</code> and two integers <code>low</code> and <code>high</code>, return <em>the number of <strong>nice pairs</strong></em>.</p>\r\n\r\n<p>A <strong>nice pair</strong> is a pair <code>(i, j)</code> where <code>0 &lt;= i &lt; j &lt; nums.length</code> and <code>low &lt;= (nums[i] XOR nums[j]) &lt;= high</code>.</p>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong class=\"example\">Example 1:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> nums = [1,4,2,7], low = 2, high = 6\r\n<strong>Output:</strong> 6\r\n<strong>Explanation:</strong> All nice pairs (i, j) are as follows:\r\n    - (0, 1): nums[0] XOR nums[1] = 5 \r\n    - (0, 2): nums[0] XOR nums[2] = 3\r\n    - (0, 3): nums[0] XOR nums[3] = 6\r\n    - (1, 2): nums[1] XOR nums[2] = 6\r\n    - (1, 3): nums[1] XOR nums[3] = 3\r\n    - (2, 3): nums[2] XOR nums[3] = 5\r\n</pre>\r\n\r\n<p><strong class=\"example\">Example 2:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> nums = [9,8,4,2,1], low = 5, high = 14\r\n<strong>Output:</strong> 8\r\n<strong>Explanation:</strong> All nice pairs (i, j) are as follows:\r\n​​​​​    - (0, 2): nums[0] XOR nums[2] = 13\r\n&nbsp;   - (0, 3): nums[0] XOR nums[3] = 11\r\n&nbsp;   - (0, 4): nums[0] XOR nums[4] = 8\r\n&nbsp;   - (1, 2): nums[1] XOR nums[2] = 12\r\n&nbsp;   - (1, 3): nums[1] XOR nums[3] = 10\r\n&nbsp;   - (1, 4): nums[1] XOR nums[4] = 9\r\n&nbsp;   - (2, 3): nums[2] XOR nums[3] = 6\r\n&nbsp;   - (2, 4): nums[2] XOR nums[4] = 5</pre>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong>Constraints:</strong></p>\r\n\r\n<ul>\r\n\t<li><code>1 &lt;= nums.length &lt;= 2 * 10<sup>4</sup></code></li>\r\n\t<li><code>1 &lt;= nums[i] &lt;= 2 * 10<sup>4</sup></code></li>\r\n\t<li><code>1 &lt;= low &lt;= high &lt;= 2 * 10<sup>4</sup></code></li>\r\n</ul>",
+  "hints": [
+    "Let's note that we can count all pairs with XOR ≤ K, so the answer would be to subtract the number of pairs withs XOR < low from the number of pairs with XOR ≤ high.",
+    "For each value, find out the number of values when you XOR it with the result is  ≤ K using a trie."
+  ],
+  "metaData": "{\n  \"name\": \"countPairs\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"low\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"high\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"12.2K\", \"totalSubmission\": \"26.3K\", \"totalAcceptedRaw\": 12162, \"totalSubmissionRaw\": 26253, \"acRate\": \"46.3%\"}",
+  "likes": 553,
+  "dislikes": 24,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count Paths With the Given XOR Value\", \"titleSlug\": \"count-paths-with-the-given-xor-value\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,4,2,7]\n2\n6",
+    "[9,8,4,2,1]\n5\n14"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"vimeo\", \"name\": \"Vimeo\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Trie",
+      "slug": "trie"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countPairs(vector<int>& nums, int low, int high) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countPairs(int[] nums, int low, int high) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countPairs(self, nums: List[int], low: int, high: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countPairs(self, nums, low, high):\n        \"\"\"\n        :type nums: List[int]\n        :type low: int\n        :type high: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} low\n * @param {number} high\n * @return {number}\n */\nvar countPairs = function(nums, low, high) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countPairs(nums: number[], low: number, high: number): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountPairs(int[] nums, int low, int high) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\nint countPairs(int* nums, int numsSize, int low, int high){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countPairs(nums []int, low int, high int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countPairs(nums: IntArray, low: Int, high: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countPairs(_ nums: [Int], _ low: Int, _ high: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_pairs(nums: Vec<i32>, low: i32, high: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} low\n# @param {Integer} high\n# @return {Integer}\ndef count_pairs(nums, low, high)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $low\n     * @param Integer $high\n     * @return Integer\n     */\n    function countPairs($nums, $low, $high) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countPairs(nums: Array[Int], low: Int, high: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-pairs nums low high)\n  (-> (listof exact-integer?) exact-integer? exact-integer? exact-integer?)\n\n  )"
+    }
+  ],
+  "solution": null
+}

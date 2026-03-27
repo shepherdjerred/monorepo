@@ -1,0 +1,137 @@
+{
+  "questionId": "2000",
+  "questionFrontendId": "1870",
+  "title": "Minimum Speed to Arrive on Time",
+  "titleSlug": "minimum-speed-to-arrive-on-time",
+  "difficulty": "Medium",
+  "content": "<p>You are given a floating-point number <code>hour</code>, representing the amount of time you have to reach the office. To commute to the office, you must take <code>n</code> trains in sequential order. You are also given an integer array <code>dist</code> of length <code>n</code>, where <code>dist[i]</code> describes the distance (in kilometers) of the <code>i<sup>th</sup></code> train ride.</p>\n\n<p>Each train can only depart at an integer hour, so you may need to wait in between each train ride.</p>\n\n<ul>\n\t<li>For example, if the <code>1<sup>st</sup></code> train ride takes <code>1.5</code> hours, you must wait for an additional <code>0.5</code> hours before you can depart on the <code>2<sup>nd</sup></code> train ride at the 2 hour mark.</li>\n</ul>\n\n<p>Return <em>the <strong>minimum positive integer</strong> speed <strong>(in kilometers per hour)</strong> that all the trains must travel at for you to reach the office on time, or </em><code>-1</code><em> if it is impossible to be on time</em>.</p>\n\n<p>Tests are generated such that the answer will not exceed <code>10<sup>7</sup></code> and <code>hour</code> will have <strong>at most two digits after the decimal point</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> dist = [1,3,2], hour = 6\n<strong>Output:</strong> 1\n<strong>Explanation: </strong>At speed 1:\n- The first train ride takes 1/1 = 1 hour.\n- Since we are already at an integer hour, we depart immediately at the 1 hour mark. The second train takes 3/1 = 3 hours.\n- Since we are already at an integer hour, we depart immediately at the 4 hour mark. The third train takes 2/1 = 2 hours.\n- You will arrive at exactly the 6 hour mark.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> dist = [1,3,2], hour = 2.7\n<strong>Output:</strong> 3\n<strong>Explanation: </strong>At speed 3:\n- The first train ride takes 1/3 = 0.33333 hours.\n- Since we are not at an integer hour, we wait until the 1 hour mark to depart. The second train ride takes 3/3 = 1 hour.\n- Since we are already at an integer hour, we depart immediately at the 2 hour mark. The third train takes 2/3 = 0.66667 hours.\n- You will arrive at the 2.66667 hour mark.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> dist = [1,3,2], hour = 1.9\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> It is impossible because the earliest the third train can depart is at the 2 hour mark.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == dist.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= dist[i] &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= hour &lt;= 10<sup>9</sup></code></li>\n\t<li>There will be at most two digits after the decimal point in <code>hour</code>.</li>\n</ul>\n",
+  "hints": [
+    "Given the speed the trains are traveling at, can you find the total time it takes for you to arrive?",
+    "Is there a cutoff where any speeds larger will always allow you to arrive on time?"
+  ],
+  "metaData": "{\n  \"name\": \"minSpeedOnTime\",\n  \"params\": [\n    {\n      \"name\": \"dist\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"double\",\n      \"name\": \"hour\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"126.4K\", \"totalSubmission\": \"264.8K\", \"totalAcceptedRaw\": 126410, \"totalSubmissionRaw\": 264838, \"acRate\": \"47.7%\"}",
+  "likes": 2451,
+  "dislikes": 292,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Candies Allocated to K Children\", \"titleSlug\": \"maximum-candies-allocated-to-k-children\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Skips to Arrive at Meeting On Time\", \"titleSlug\": \"minimum-skips-to-arrive-at-meeting-on-time\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Time to Complete Trips\", \"titleSlug\": \"minimum-time-to-complete-trips\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"The Latest Time to Catch a Bus\", \"titleSlug\": \"the-latest-time-to-catch-a-bus\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimize Maximum of Array\", \"titleSlug\": \"minimize-maximum-of-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,3,2]\n6",
+    "[1,3,2]\n2.7",
+    "[1,3,2]\n1.9"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minSpeedOnTime(vector<int>& dist, double hour) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minSpeedOnTime(int[] dist, double hour) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minSpeedOnTime(self, dist: List[int], hour: float) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minSpeedOnTime(self, dist, hour):\n        \"\"\"\n        :type dist: List[int]\n        :type hour: float\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} dist\n * @param {number} hour\n * @return {number}\n */\nvar minSpeedOnTime = function(dist, hour) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minSpeedOnTime(dist: number[], hour: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinSpeedOnTime(int[] dist, double hour) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minSpeedOnTime(int* dist, int distSize, double hour) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minSpeedOnTime(dist []int, hour float64) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minSpeedOnTime(dist: IntArray, hour: Double): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minSpeedOnTime(_ dist: [Int], _ hour: Double) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_speed_on_time(dist: Vec<i32>, hour: f64) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} dist\n# @param {Float} hour\n# @return {Integer}\ndef min_speed_on_time(dist, hour)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $dist\n     * @param Float $hour\n     * @return Integer\n     */\n    function minSpeedOnTime($dist, $hour) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minSpeedOnTime(List<int> dist, double hour) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minSpeedOnTime(dist: Array[Int], hour: Double): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_speed_on_time(dist :: [integer], hour :: float) :: integer\n  def min_speed_on_time(dist, hour) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_speed_on_time(Dist :: [integer()], Hour :: float()) -> integer().\nmin_speed_on_time(Dist, Hour) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-speed-on-time dist hour)\n  (-> (listof exact-integer?) flonum? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1913",
+    "content": "[TOC]\n\n## Solution\n\n### Approach: Binary Search\n\n**Intuition**\n\nThere are $N$ trains that we need to take in order; the $i^{th}$ train will ride for `dist[i]` distance. We need to complete this journey, i.e. ride all these trains within `hour` time; `hour` is a decimal number representing the amount of time we have. We need to return the minimum positive speed integer that is required. One more constraint we have is that each train will depart at an integer hour, so if we completed our $1^{st}$ ride at, say `2.4` hours, then we can only start riding the next train at $3^{rd}$ hour.\n\nOne hint in the problem description is that the answer speed will not exceed $10^7$. The first naive approach we can apply is to do an exhaustive search over all the possible speeds we have. We can iterate from $1$ to $10^7$, and the first number that can lead us to complete the journey within `hour` will be our answer. But how can we find out if some speed can make us complete the journey within the constraint time? We can easily find the time required for individual rides for each train, and then summing them up will give us the total time required. If this total time is less than `hour` then it could be a possible answer; otherwise, not. This approach, as we can observe, is not efficient; we need to iterate over the whole search space and then iterate over every train to find the total time.\n\nCan we somehow reduce our search space? Let's say the time required with speed `s` is `t`; then it can be easily proved that the time required with a speed greater than `s` will always be less than or equal to `t`. In other words, a higher speed will always require less or equal time. This implies that if for a speed `s` the time required is less than the time needed `hour`, then we don't need to look for the speeds greater than `s` as we need the smallest speed possible, in this case, our search space should reduce down to left side of `s`, i.e. speeds less than `s`.\n\n![fig](../Figures/1870/1870A.png)\n\nThis theory leads us to think of binary search. We will check for the speed in the middle of our search space, and if that is within `hour` time, our search is reduced to the left half of the current space, and if the time is more than `hour`, then the search space will change to the right half of the current space. This way, we will always be able to reduce our search space by half at every iteration.\n\n**Algorithm**\n\n1. Initialize three variables `left`, `right` and `minSpeed`.\n\n   i. `left` is the left end of our initial search space; hence it should be initialized to `1`.\n\n   ii `right` is the right end of our initial search space; hence initialize it to $10^7$.\n\n   iii. `minSpeed` is the minimum speed required; this is the answer to our problem. Initialize it to `-1`.\n\n2. Do the following while `left <= right`:\n\n   i. Find the middle of the current search space as `mid`.\n\n   ii. Find the time required with speed `mid`. Add all the individual time for each train ride; note that for all the rides except the last one, we need to round off the decimal to the next integer as we can start the next train only at an integer hour. The last ride, however, can end at a decimal.\n\n   iii. If the time required is less than or equal to `hour`, it implies the `mid` could be our answer. Hence store it in the variable `minSpeed` and shift the search space to the left of `mid`.\n\n   iv. If the time required is more than `hour`, then `mid` as well as the integers left of it cannot be the answer. Hence shift the search space to the right of `mid`.\n\n3. Return `minSpeed`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/LCnYRCiT/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"LCnYRCiT\"></iframe>\n\n\n**Complexity Analysis**\n\nHere, $N$ is the number of rides, and $K$ is the size of the search space. For this problem, $K$ is equal to $10^7$.\n\n* Time complexity: $O(N \\log K)$\n\n  After each iteration, the search space gets reduced to half; hence the while loop will take $\\log K$ operations. For each such operation, we need to call the `timeRequired` function, which takes $O(N)$ time. Therefore, the total time complexity equals $O(N \\log K)$.\n\n* Space complexity: $O(1)$\n\n  No extra space is required other than the three variables. Hence the space complexity is constant.\n  <br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

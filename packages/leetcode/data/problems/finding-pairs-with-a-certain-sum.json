@@ -1,0 +1,139 @@
+{
+  "questionId": "1995",
+  "questionFrontendId": "1865",
+  "title": "Finding Pairs With a Certain Sum",
+  "titleSlug": "finding-pairs-with-a-certain-sum",
+  "difficulty": "Medium",
+  "content": "<p>You are given two integer arrays <code>nums1</code> and <code>nums2</code>. You are tasked to implement a data structure that supports queries of two types:</p>\n\n<ol>\n\t<li><strong>Add</strong> a positive integer to an element of a given index in the array <code>nums2</code>.</li>\n\t<li><strong>Count</strong> the number of pairs <code>(i, j)</code> such that <code>nums1[i] + nums2[j]</code> equals a given value (<code>0 &lt;= i &lt; nums1.length</code> and <code>0 &lt;= j &lt; nums2.length</code>).</li>\n</ol>\n\n<p>Implement the <code>FindSumPairs</code> class:</p>\n\n<ul>\n\t<li><code>FindSumPairs(int[] nums1, int[] nums2)</code> Initializes the <code>FindSumPairs</code> object with two integer arrays <code>nums1</code> and <code>nums2</code>.</li>\n\t<li><code>void add(int index, int val)</code> Adds <code>val</code> to <code>nums2[index]</code>, i.e., apply <code>nums2[index] += val</code>.</li>\n\t<li><code>int count(int tot)</code> Returns the number of pairs <code>(i, j)</code> such that <code>nums1[i] + nums2[j] == tot</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;FindSumPairs&quot;, &quot;count&quot;, &quot;add&quot;, &quot;count&quot;, &quot;count&quot;, &quot;add&quot;, &quot;add&quot;, &quot;count&quot;]\n[[[1, 1, 2, 2, 2, 3], [1, 4, 5, 2, 5, 4]], [7], [3, 2], [8], [4], [0, 1], [1, 1], [7]]\n<strong>Output</strong>\n[null, 8, null, 2, 1, null, null, 11]\n\n<strong>Explanation</strong>\nFindSumPairs findSumPairs = new FindSumPairs([1, 1, 2, 2, 2, 3], [1, 4, 5, 2, 5, 4]);\nfindSumPairs.count(7);  // return 8; pairs (2,2), (3,2), (4,2), (2,4), (3,4), (4,4) make 2 + 5 and pairs (5,1), (5,5) make 3 + 4\nfindSumPairs.add(3, 2); // now nums2 = [1,4,5,<strong><u>4</u></strong><code>,5,4</code>]\nfindSumPairs.count(8);  // return 2; pairs (5,2), (5,4) make 3 + 5\nfindSumPairs.count(4);  // return 1; pair (5,0) makes 3 + 1\nfindSumPairs.add(0, 1); // now nums2 = [<strong><u><code>2</code></u></strong>,4,5,4<code>,5,4</code>]\nfindSumPairs.add(1, 1); // now nums2 = [<code>2</code>,<strong><u>5</u></strong>,5,4<code>,5,4</code>]\nfindSumPairs.count(7);  // return 11; pairs (2,1), (2,2), (2,4), (3,1), (3,2), (3,4), (4,1), (4,2), (4,4) make 2 + 5 and pairs (5,3), (5,5) make 3 + 4\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums1.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= nums2.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums1[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= nums2[i] &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= index &lt; nums2.length</code></li>\n\t<li><code>1 &lt;= val &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= tot &lt;= 10<sup>9</sup></code></li>\n\t<li>At most <code>1000</code> calls are made to <code>add</code> and <code>count</code> <strong>each</strong>.</li>\n</ul>\n",
+  "hints": [
+    "The length of nums1 is small in comparison to that of nums2",
+    "If we iterate over elements of nums1 we just need to find the count of tot - element for all elements in nums1"
+  ],
+  "metaData": "{\n  \"classname\": \"FindSumPairs\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer[]\",\n        \"name\": \"nums1\"\n      },\n      {\n        \"name\": \"nums2\",\n        \"type\": \"integer[]\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"index\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"val\"\n        }\n      ],\n      \"name\": \"add\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"tot\"\n        }\n      ],\n      \"name\": \"count\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"144.4K\", \"totalSubmission\": \"234.5K\", \"totalAcceptedRaw\": 144416, \"totalSubmissionRaw\": 234524, \"acRate\": \"61.6%\"}",
+  "likes": 1038,
+  "dislikes": 145,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count Number of Pairs With Absolute Difference K\", \"titleSlug\": \"count-number-of-pairs-with-absolute-difference-k\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Number of Distinct Averages\", \"titleSlug\": \"number-of-distinct-averages\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Count the Number of Fair Pairs\", \"titleSlug\": \"count-the-number-of-fair-pairs\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"FindSumPairs\",\"count\",\"add\",\"count\",\"count\",\"add\",\"add\",\"count\"]\n[[[1,1,2,2,2,3],[1,4,5,2,5,4]],[7],[3,2],[8],[4],[0,1],[1,1],[7]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"databricks\", \"name\": \"Databricks\"}, {\"timesEncountered\": 2, \"slug\": \"quora\", \"name\": \"Quora\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class FindSumPairs {\npublic:\n    FindSumPairs(vector<int>& nums1, vector<int>& nums2) {\n        \n    }\n    \n    void add(int index, int val) {\n        \n    }\n    \n    int count(int tot) {\n        \n    }\n};\n\n/**\n * Your FindSumPairs object will be instantiated and called as such:\n * FindSumPairs* obj = new FindSumPairs(nums1, nums2);\n * obj->add(index,val);\n * int param_2 = obj->count(tot);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class FindSumPairs {\n\n    public FindSumPairs(int[] nums1, int[] nums2) {\n        \n    }\n    \n    public void add(int index, int val) {\n        \n    }\n    \n    public int count(int tot) {\n        \n    }\n}\n\n/**\n * Your FindSumPairs object will be instantiated and called as such:\n * FindSumPairs obj = new FindSumPairs(nums1, nums2);\n * obj.add(index,val);\n * int param_2 = obj.count(tot);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class FindSumPairs:\n\n    def __init__(self, nums1: List[int], nums2: List[int]):\n        \n\n    def add(self, index: int, val: int) -> None:\n        \n\n    def count(self, tot: int) -> int:\n        \n\n\n# Your FindSumPairs object will be instantiated and called as such:\n# obj = FindSumPairs(nums1, nums2)\n# obj.add(index,val)\n# param_2 = obj.count(tot)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class FindSumPairs(object):\n\n    def __init__(self, nums1, nums2):\n        \"\"\"\n        :type nums1: List[int]\n        :type nums2: List[int]\n        \"\"\"\n        \n\n    def add(self, index, val):\n        \"\"\"\n        :type index: int\n        :type val: int\n        :rtype: None\n        \"\"\"\n        \n\n    def count(self, tot):\n        \"\"\"\n        :type tot: int\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your FindSumPairs object will be instantiated and called as such:\n# obj = FindSumPairs(nums1, nums2)\n# obj.add(index,val)\n# param_2 = obj.count(tot)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums1\n * @param {number[]} nums2\n */\nvar FindSumPairs = function(nums1, nums2) {\n    \n};\n\n/** \n * @param {number} index \n * @param {number} val\n * @return {void}\n */\nFindSumPairs.prototype.add = function(index, val) {\n    \n};\n\n/** \n * @param {number} tot\n * @return {number}\n */\nFindSumPairs.prototype.count = function(tot) {\n    \n};\n\n/** \n * Your FindSumPairs object will be instantiated and called as such:\n * var obj = new FindSumPairs(nums1, nums2)\n * obj.add(index,val)\n * var param_2 = obj.count(tot)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class FindSumPairs {\n    constructor(nums1: number[], nums2: number[]) {\n        \n    }\n\n    add(index: number, val: number): void {\n        \n    }\n\n    count(tot: number): number {\n        \n    }\n}\n\n/**\n * Your FindSumPairs object will be instantiated and called as such:\n * var obj = new FindSumPairs(nums1, nums2)\n * obj.add(index,val)\n * var param_2 = obj.count(tot)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class FindSumPairs {\n\n    public FindSumPairs(int[] nums1, int[] nums2) {\n        \n    }\n    \n    public void Add(int index, int val) {\n        \n    }\n    \n    public int Count(int tot) {\n        \n    }\n}\n\n/**\n * Your FindSumPairs object will be instantiated and called as such:\n * FindSumPairs obj = new FindSumPairs(nums1, nums2);\n * obj.Add(index,val);\n * int param_2 = obj.Count(tot);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} FindSumPairs;\n\n\nFindSumPairs* findSumPairsCreate(int* nums1, int nums1Size, int* nums2, int nums2Size) {\n    \n}\n\nvoid findSumPairsAdd(FindSumPairs* obj, int index, int val) {\n    \n}\n\nint findSumPairsCount(FindSumPairs* obj, int tot) {\n    \n}\n\nvoid findSumPairsFree(FindSumPairs* obj) {\n    \n}\n\n/**\n * Your FindSumPairs struct will be instantiated and called as such:\n * FindSumPairs* obj = findSumPairsCreate(nums1, nums1Size, nums2, nums2Size);\n * findSumPairsAdd(obj, index, val);\n \n * int param_2 = findSumPairsCount(obj, tot);\n \n * findSumPairsFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type FindSumPairs struct {\n    \n}\n\n\nfunc Constructor(nums1 []int, nums2 []int) FindSumPairs {\n    \n}\n\n\nfunc (this *FindSumPairs) Add(index int, val int)  {\n    \n}\n\n\nfunc (this *FindSumPairs) Count(tot int) int {\n    \n}\n\n\n/**\n * Your FindSumPairs object will be instantiated and called as such:\n * obj := Constructor(nums1, nums2);\n * obj.Add(index,val);\n * param_2 := obj.Count(tot);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class FindSumPairs(nums1: IntArray, nums2: IntArray) {\n\n    fun add(index: Int, `val`: Int) {\n        \n    }\n\n    fun count(tot: Int): Int {\n        \n    }\n\n}\n\n/**\n * Your FindSumPairs object will be instantiated and called as such:\n * var obj = FindSumPairs(nums1, nums2)\n * obj.add(index,`val`)\n * var param_2 = obj.count(tot)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass FindSumPairs {\n\n    init(_ nums1: [Int], _ nums2: [Int]) {\n        \n    }\n    \n    func add(_ index: Int, _ val: Int) {\n        \n    }\n    \n    func count(_ tot: Int) -> Int {\n        \n    }\n}\n\n/**\n * Your FindSumPairs object will be instantiated and called as such:\n * let obj = FindSumPairs(nums1, nums2)\n * obj.add(index, val)\n * let ret_2: Int = obj.count(tot)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct FindSumPairs {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl FindSumPairs {\n\n    fn new(nums1: Vec<i32>, nums2: Vec<i32>) -> Self {\n        \n    }\n    \n    fn add(&self, index: i32, val: i32) {\n        \n    }\n    \n    fn count(&self, tot: i32) -> i32 {\n        \n    }\n}\n\n/**\n * Your FindSumPairs object will be instantiated and called as such:\n * let obj = FindSumPairs::new(nums1, nums2);\n * obj.add(index, val);\n * let ret_2: i32 = obj.count(tot);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class FindSumPairs\n\n=begin\n    :type nums1: Integer[]\n    :type nums2: Integer[]\n=end\n    def initialize(nums1, nums2)\n        \n    end\n\n\n=begin\n    :type index: Integer\n    :type val: Integer\n    :rtype: Void\n=end\n    def add(index, val)\n        \n    end\n\n\n=begin\n    :type tot: Integer\n    :rtype: Integer\n=end\n    def count(tot)\n        \n    end\n\n\nend\n\n# Your FindSumPairs object will be instantiated and called as such:\n# obj = FindSumPairs.new(nums1, nums2)\n# obj.add(index, val)\n# param_2 = obj.count(tot)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class FindSumPairs {\n    /**\n     * @param Integer[] $nums1\n     * @param Integer[] $nums2\n     */\n    function __construct($nums1, $nums2) {\n        \n    }\n  \n    /**\n     * @param Integer $index\n     * @param Integer $val\n     * @return NULL\n     */\n    function add($index, $val) {\n        \n    }\n  \n    /**\n     * @param Integer $tot\n     * @return Integer\n     */\n    function count($tot) {\n        \n    }\n}\n\n/**\n * Your FindSumPairs object will be instantiated and called as such:\n * $obj = FindSumPairs($nums1, $nums2);\n * $obj->add($index, $val);\n * $ret_2 = $obj->count($tot);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class FindSumPairs {\n\n  FindSumPairs(List<int> nums1, List<int> nums2) {\n    \n  }\n  \n  void add(int index, int val) {\n    \n  }\n  \n  int count(int tot) {\n    \n  }\n}\n\n/**\n * Your FindSumPairs object will be instantiated and called as such:\n * FindSumPairs obj = FindSumPairs(nums1, nums2);\n * obj.add(index,val);\n * int param2 = obj.count(tot);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class FindSumPairs(_nums1: Array[Int], _nums2: Array[Int]) {\n\n    def add(index: Int, `val`: Int): Unit = {\n        \n    }\n\n    def count(tot: Int): Int = {\n        \n    }\n\n}\n\n/**\n * Your FindSumPairs object will be instantiated and called as such:\n * val obj = new FindSumPairs(nums1, nums2)\n * obj.add(index,`val`)\n * val param_2 = obj.count(tot)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule FindSumPairs do\n  @spec init_(nums1 :: [integer], nums2 :: [integer]) :: any\n  def init_(nums1, nums2) do\n    \n  end\n\n  @spec add(index :: integer, val :: integer) :: any\n  def add(index, val) do\n    \n  end\n\n  @spec count(tot :: integer) :: integer\n  def count(tot) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# FindSumPairs.init_(nums1, nums2)\n# FindSumPairs.add(index, val)\n# param_2 = FindSumPairs.count(tot)\n\n# FindSumPairs.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_sum_pairs_init_(Nums1 :: [integer()], Nums2 :: [integer()]) -> any().\nfind_sum_pairs_init_(Nums1, Nums2) ->\n  .\n\n-spec find_sum_pairs_add(Index :: integer(), Val :: integer()) -> any().\nfind_sum_pairs_add(Index, Val) ->\n  .\n\n-spec find_sum_pairs_count(Tot :: integer()) -> integer().\nfind_sum_pairs_count(Tot) ->\n  .\n\n\n%% Your functions will be called as such:\n%% find_sum_pairs_init_(Nums1, Nums2),\n%% find_sum_pairs_add(Index, Val),\n%% Param_2 = find_sum_pairs_count(Tot),\n\n%% find_sum_pairs_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define find-sum-pairs%\n  (class object%\n    (super-new)\n    \n    ; nums1 : (listof exact-integer?)\n    ; nums2 : (listof exact-integer?)\n    (init-field\n      nums1\n      nums2)\n    \n    ; add : exact-integer? exact-integer? -> void?\n    (define/public (add index val)\n      )\n    ; count : exact-integer? -> exact-integer?\n    (define/public (count tot)\n      )))\n\n;; Your find-sum-pairs% object will be instantiated and called as such:\n;; (define obj (new find-sum-pairs% [nums1 nums1] [nums2 nums2]))\n;; (send obj add index val)\n;; (define param_2 (send obj count tot))"
+    }
+  ],
+  "solution": {
+    "id": "2790",
+    "content": "### Approach: Hash table\n\n#### Intuition\n\nSince the length of the array $\\textit{nums}_1$ is less than or equal to that of $\\textit{nums}_2$, for the $\\texttt{getPairs(tot)}$ operation, we can store the elements of $\\textit{nums}_2$ in a hash map. Then, we enumerate each element $\\textit{num}$ in $\\textit{nums}_1$ and look up the value corresponding to the key $\\textit{tot} - \\textit{num}$ in the hash map. The sum of these values gives us the answer.\n\nWe store the arrays $\\textit{nums}_1$ and $\\textit{nums}_2$, and also maintain a hash map $\\textit{cnt}$ to keep track of the frequencies of elements in $\\textit{nums}_2$.\n\nFor the $\\texttt{add(index, val)}$ operation, we decrement $\\textit{cnt}[\\textit{nums}_2[\\textit{index}]]$, add $\\textit{val}$ to $\\textit{nums}_2[\\textit{index}]$, and then increment the updated $\\textit{cnt}[\\textit{nums}_2[\\textit{index}]]$.\n\nFor the $\\texttt{getPairs(tot)}$ operation, we enumerate each element $\\textit{num}$ in $\\textit{nums}_1$, add $\\textit{cnt}[\\textit{tot} - \\textit{num}]$ to the result, and return the final sum.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/2vEoLGrz/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"2vEoLGrz\"></iframe>\n\n#### Complexity analysis\n\nLet $n$ and $m$ be the lengths of the arrays $\\textit{nums}_1$ and $\\textit{nums}_2$, respectively, and let $q_1$ and $q_2$ be the number of times the operations $\\texttt{add(index, val)}$ and $\\texttt{getPairs(tot)}$ are called.\n\n- Time complexity: $O(n + m + q_1 + q_2 \\cdot n)$.\n  \n    The initialization takes $O(n + m)$ time to store the two arrays and build the frequency map for $\\textit{nums}_2$.\n    \n    Each add(index, val) operation takes $O(1)$ time, so $q_1$ calls take $O(q_1)$ in total.\n    \n    Each getPairs(tot) operation iterates over all elements in $\\textit{nums}_1$ and performs a hash map lookup for each, resulting in $O(n)$ per call. So $q_2$ calls take $O(q_2 \\cdot n)$ in total.\n\n- Space complexity: $O(n + m)$.\n  \n  Storing the arrays $\\textit{nums}_1$ and $\\textit{nums}_2$ takes $O(n)$ and $O(m)$ space, respectively.\n  \n  The hash map stores the frequency of elements in $\\textit{nums}_2$, which takes $O(m)$ space.\n  \n  Each `add` operation does not allocate additional memory beyond constant space, assuming we overwrite the values in-place.\n\n> Note: If we choose to delete keys from the hash map when their frequency becomes zero, the map’s space usage remains bounded by $O(m)$, independent of the number of `add` operations.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

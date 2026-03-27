@@ -1,0 +1,53 @@
+{
+  "questionId": "1914",
+  "questionFrontendId": "1767",
+  "title": "Find the Subtasks That Did Not Execute",
+  "titleSlug": "find-the-subtasks-that-did-not-execute",
+  "difficulty": "Hard",
+  "content": "<p>Table: <code>Tasks</code></p>\n\n<pre>\n+----------------+---------+\n| Column Name    | Type    |\n+----------------+---------+\n| task_id        | int     |\n| subtasks_count | int     |\n+----------------+---------+\ntask_id is the column with unique values for this table.\nEach row in this table indicates that task_id was divided into subtasks_count subtasks labeled from 1 to subtasks_count.\nIt is guaranteed that 2 &lt;= subtasks_count &lt;= 20.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Executed</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| task_id       | int     |\n| subtask_id    | int     |\n+---------------+---------+\n(task_id, subtask_id) is the combination of columns with unique values for this table.\nEach row in this table indicates that for the task task_id, the subtask with ID subtask_id was executed successfully.\nIt is <strong>guaranteed</strong> that subtask_id &lt;= subtasks_count for each task_id.</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution&nbsp;to report the IDs of the missing subtasks for each <code>task_id</code>.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nTasks table:\n+---------+----------------+\n| task_id | subtasks_count |\n+---------+----------------+\n| 1       | 3              |\n| 2       | 2              |\n| 3       | 4              |\n+---------+----------------+\nExecuted table:\n+---------+------------+\n| task_id | subtask_id |\n+---------+------------+\n| 1       | 2          |\n| 3       | 1          |\n| 3       | 2          |\n| 3       | 3          |\n| 3       | 4          |\n+---------+------------+\n<strong>Output:</strong> \n+---------+------------+\n| task_id | subtask_id |\n+---------+------------+\n| 1       | 1          |\n| 1       | 3          |\n| 2       | 1          |\n| 2       | 2          |\n+---------+------------+\n<strong>Explanation:</strong> \nTask 1 was divided into 3 subtasks (1, 2, 3). Only subtask 2 was executed successfully, so we include (1, 1) and (1, 3) in the answer.\nTask 2 was divided into 2 subtasks (1, 2). No subtask was executed successfully, so we include (2, 1) and (2, 2) in the answer.\nTask 3 was divided into 4 subtasks (1, 2, 3, 4). All of the subtasks were executed successfully.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Tasks (task_id int, subtasks_count int)\", \"Create table If Not Exists Executed (task_id int, subtask_id int)\"], \"mssql\": [\"Create table Tasks (task_id int, subtasks_count int)\", \"Create table Executed (task_id int, subtask_id int)\"], \"oraclesql\": [\"Create table Tasks (task_id int, subtasks_count int)\", \"Create table Executed (task_id int, subtask_id int)\"], \"database\": true, \"name\": \"find_subtasks\", \"pythondata\": [\"Tasks = pd.DataFrame([], columns=['task_id', 'subtasks_count']).astype({'task_id':'Int64', 'subtasks_count':'Int64'})\", \"Executed = pd.DataFrame([], columns=['task_id', 'subtask_id']).astype({'task_id':'Int64', 'subtask_id':'Int64'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Tasks (task_id int, subtasks_count int)\\n\", \"Create table If Not Exists Executed (task_id int, subtask_id int)\"], \"database_schema\": {\"Tasks\": {\"task_id\": \"INT\", \"subtasks_count\": \"INT\"}, \"Executed\": {\"task_id\": \"INT\", \"subtask_id\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"19.6K\", \"totalSubmission\": \"25K\", \"totalAcceptedRaw\": 19556, \"totalSubmissionRaw\": 24999, \"acRate\": \"78.2%\"}",
+  "likes": 189,
+  "dislikes": 15,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Tasks\": [\"task_id\", \"subtasks_count\"], \"Executed\": [\"task_id\", \"subtask_id\"]}, \"rows\": {\"Tasks\": [[1, 3], [2, 2], [3, 4]], \"Executed\": [[1, 2], [3, 1], [3, 2], [3, 3], [3, 4]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_subtasks(tasks: pd.DataFrame, executed: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,138 @@
+{
+  "questionId": "1849",
+  "questionFrontendId": "1749",
+  "title": "Maximum Absolute Sum of Any Subarray",
+  "titleSlug": "maximum-absolute-sum-of-any-subarray",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>nums</code>. The <strong>absolute sum</strong> of a subarray <code>[nums<sub>l</sub>, nums<sub>l+1</sub>, ..., nums<sub>r-1</sub>, nums<sub>r</sub>]</code> is <code>abs(nums<sub>l</sub> + nums<sub>l+1</sub> + ... + nums<sub>r-1</sub> + nums<sub>r</sub>)</code>.</p>\n\n<p>Return <em>the <strong>maximum</strong> absolute sum of any <strong>(possibly empty)</strong> subarray of </em><code>nums</code>.</p>\n\n<p>Note that <code>abs(x)</code> is defined as follows:</p>\n\n<ul>\n\t<li>If <code>x</code> is a negative integer, then <code>abs(x) = -x</code>.</li>\n\t<li>If <code>x</code> is a non-negative integer, then <code>abs(x) = x</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,-3,2,3,-4]\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> The subarray [2,3] has absolute sum = abs(2+3) = abs(5) = 5.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2,-5,1,-4,3,-2]\n<strong>Output:</strong> 8\n<strong>Explanation:</strong> The subarray [-5,1,-4] has absolute sum = abs(-5+1-4) = abs(-8) = 8.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-10<sup>4</sup> &lt;= nums[i] &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [
+    "What if we asked for maximum sum, not absolute sum?",
+    "It's a standard problem that can be solved by Kadane's algorithm.",
+    "The key idea is the max absolute sum will be either the max sum or the min sum.",
+    "So just run kadane twice, once calculating the max sum and once calculating the min sum."
+  ],
+  "metaData": "{\n  \"name\": \"maxAbsoluteSum\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"188.5K\", \"totalSubmission\": \"265K\", \"totalAcceptedRaw\": 188497, \"totalSubmissionRaw\": 265030, \"acRate\": \"71.1%\"}",
+  "likes": 1995,
+  "dislikes": 50,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Subarray\", \"titleSlug\": \"maximum-subarray\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,-3,2,3,-4]",
+    "[2,-5,1,-4,3,-2]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxAbsoluteSum(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxAbsoluteSum(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxAbsoluteSum(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxAbsoluteSum(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar maxAbsoluteSum = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxAbsoluteSum(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxAbsoluteSum(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxAbsoluteSum(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxAbsoluteSum(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxAbsoluteSum(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxAbsoluteSum(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_absolute_sum(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef max_absolute_sum(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function maxAbsoluteSum($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxAbsoluteSum(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxAbsoluteSum(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_absolute_sum(nums :: [integer]) :: integer\n  def max_absolute_sum(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_absolute_sum(Nums :: [integer()]) -> integer().\nmax_absolute_sum(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-absolute-sum nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2682",
+    "content": "## Solution\n\n---\n\n### Overview\n\nWe need to find the maximum absolute sum of any subarray within the given integer array `nums`. A **subarray** is a contiguous segment of the array, and the **absolute sum** of a subarray is simply the absolute value of the sum of its elements.  \n\nFormally, for a subarray `[nums[l], nums[l + 1], ..., nums[r]]`, its absolute sum is:  \n$\\left| \\sum_{i=l}^{r} \\text{nums}[i] \\right| $ \n\nWe need to find the subarray whose sum, when taken in absolute value, is the highest among all possible subarrays (including the possibility of choosing an empty subarray, which has a sum of `0`).  \n\nMathematically, we are looking for:  \n$\\max \\left( \\max_{l \\leq r} | \\sum_{i=l}^{r} \\text{nums}[i] | \\right)$\nwhere `l` and `r` define the boundaries of a valid subarray.  \n\nA common pitfall in this problem is overlooking that both a subarray with a large positive sum and a subarray with a large negative sum contribute to the answer, as we take the absolute value.\n\n---\n\n### Approach 1: Greedy - Prefix Sum\n\n#### Intuition\n\nA brute-force approach to solving this problem involves considering all possible subarrays of the given array and comparing their sums to find the one with the maximum absolute value. While this brute-force approach works, it requires repeatedly summing subarrays, making it computationally expensive. Instead of recalculating sums every time, we can optimize the process using prefix sums, a common technique for handling subarray problems efficiently.\n\nThe idea behind prefix sums is that if we precompute cumulative sums up to each index, we can quickly determine the sum of any subarray. The prefix sum at index `i` represents the total sum of elements from the beginning of the array up to `i`. This allows us to determine the sum of any subarray between indices `l` and `r` by taking the difference `prefixSum[r] - prefixSum[l-1]`, eliminating the need for repeated summation.\n\nWe can apply this idea in the current problem by considering each index in the array nums as the endpoint of a potential subarray. One way to approach this is by checking the prefix sum at each index before it and determining the maximum sum. However, we can optimize this further using a greedy approach.\n\n- If the prefix sum at index `i`, denoted as `prefixSum[i]`, is positive, we need to find the minimum prefix sum encountered so far. This is because we will maximize the sum of our subarray with a right endpoint at `i` by finding the minimum prefix sum.\n\n- Conversely, if `prefixSum[i]` is negative, we need to find the maximum prefix sum encountered so far. This is because when the prefix sum is negative, subtracting a positive value (the maximum prefix sum) will result in a larger negative difference, which will maximize our absolute sum.\n\nWith this in mind, we iterate through the array while maintaining a running prefix sum. As we process each element, we update the prefix sum by adding the current number. To find the maximum possible positive subarray sum, we compute the difference between the current prefix sum and the smallest prefix sum seen so far. To find the maximum possible negative subarray sum, we compute the absolute difference between the current prefix sum and the largest prefix sum seen so far. Additionally, since a subarray can start at the very beginning of the array, we also compare the absolute value of the prefix sum itself against our current maximum absolute sum.\n\nAt each step, we update the smallest and largest prefix sums encountered so far to ensure that they always store the minimum and maximum values up to the current index. By doing this, we guarantee that each index is processed only once.\n\n#### Algorithm\n\n1. Initialize variables:\n    - `minPrefixSum` to the maximum possible integer (`INT_MAX`) — tracks the smallest prefix sum encountered so far.\n    - `maxPrefixSum` to the minimum possible integer (`INT_MIN`) — tracks the largest prefix sum encountered so far.\n    - `prefixSum` to `0` — stores the cumulative sum of the elements as we iterate through the array.\n    - `maxAbsSum` to `0` — stores the maximum absolute difference of prefix sums found so far.\n\n2. Iterate through the array and for each element `nums[i]` in the array:\n    - Add `nums[i]` to the `prefixSum` to calculate the cumulative sum up to the current index.\n    - Update `minPrefixSum` to the smaller of its current value and `prefixSum`.\n    - Update `maxPrefixSum` to the larger of its current value and `prefixSum`.\n\n3. Calculate maximum absolute sum:\n    - If the `prefixSum` is positive, update `maxAbsSum` with the larger of its current value or  `prefixSum - minPrefixSum` or `prefixSum`.\n    - If the `prefixSum` is negative, update `maxAbsSum` with the larger of its current value or the `abs(prefixSum - maxPrefixSum)` or `prefixSum`.\n\n4. Return `maxAbsSum`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/PVPEcMAq/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"PVPEcMAq\"></iframe>\n\n#### Complexity Analysis\n\nHere, $N$ is the number of elements in the array `nums`.\n\n- Time complexity: $O(N)$\n\n  We iterate over the array `nums` to find the running `prefixSum` and find the `minPrefixSum` and `maxPrefixSum`. All these operations in the for loop are constant time and hence the total time complexity is equal to $O(N)$.\n\n- Space complexity: $O(1)$\n\n  No extra space is required other than the few variables to store the prefix sum and the minimum/maximum sums and hence the space complexity is constant.\n  \n---\n\n### Approach 2: Greedy - Prefix Sum - Shorter\n\n#### Intuition\n\nThis approach is similar to the previous one where we utilized a prefix sum array to calculate the sum of any subarray between two indices. In the earlier method, we considered each index as the endpoint of a subarray and computed the maximum possible sum by tracking the minimum and maximum prefix sums encountered up to that point.\n\nTo maximize the absolute subarray sum, we need to find two prefix sums — one that is as large as possible and another that is as small as possible. This is because the sum of any subarray between indices `i` and `j` can be expressed as `prefixSum[j] - prefixSum[i]`. The greater the difference between `prefixSum[j]` and `prefixSum[i]`, the larger the absolute sum of the subarray. Thus, to maximize this difference, `prefixSum[j]` should be as large as possible, while `prefixSum[i]` should be as small as possible.\n\nWith this observation, we iterate through the array while keeping track of two values: `minPrefixSum`, which stores the smallest prefix sum encountered so far, and `maxPrefixSum`, which stores the largest prefix sum. As we process each element, we update these values accordingly. Once we have finished iterating, the absolute difference between `maxPrefixSum` and `minPrefixSum` gives us the maximum absolute subarray sum.\n\nOne important note is that, instead of initializing `maxPrefixSum` to `INT_MIN` as is commonly done, we initialize it to `0`. This is because the empty subarray, which has a sum of `0`, is a valid subarray. In cases where all elements in the array are negative, initializing `maxPrefixSum` to `0` ensures that it correctly reflects the scenario where no positive subarray sum exists.\n\n![alt text](../Figures/1749_fix/1749A_fix.png)\n\n#### Algorithm\n\n1. Initialize variables:\n\n    - `minPrefixSum` and `maxPrefixSum` are initialized to `0`. These will track the minimum and maximum prefix sums encountered during the iteration.\n    - `prefixSum` is initialized to `0`. This will store the cumulative sum as we iterate through the array.\n\n2. Loop through each element of the array nums:\n\n    -  Add the current element `nums[i]` to `prefixSum`\n    - Update `minPrefixSum` to be the smaller of its current value and the current `prefixSum`\n    - Update `maxPrefixSum` to be the larger of its current value and the current `prefixSum`\n\n3. Return the value of `maxPrefixSum - minPrefixSum`\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/nt22iLLj/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"nt22iLLj\"></iframe>\n\n#### Complexity Analysis\n\nHere, $N$ is the number of elements in the array `nums`.\n\n- Time complexity: $O(N)$\n\n  We iterate over the array `nums` to find the running `prefixSum` and find the `minPrefixSum` and `maxPrefixSum`. All these operations in the for loop are constant time and hence the total time complexity is equal to $O(N)$\n\n- Space complexity: $O(1)$\n\n  No extra space is required other than the few variables to store the prefix sum and the minimum/maximum sums and hence the space complexity is constant.\n\n---\n\n### Approach 3: Bidirectional Kadane's Algorithm\n\n#### Intuition\n\nFrom our previous observations, we know that a subarray can contribute to the answer in two ways: either by having a large positive sum or by having a large negative sum. This suggests that instead of tracking just one sum, we should track both the maximum positive subarray sum and the minimum (most negative) subarray sum.  \n\nWe start with an initial sum of zero and iterate through the array, maintaining two running sums: one that accumulates positive contributions and one that accumulates negative contributions. If adding an element increases our positive sum, we keep it; otherwise, we reset it to zero to start fresh. Similarly, if adding an element makes our negative sum more negative, we keep it; otherwise, we reset it to zero. By continuously updating our answer with the maximum absolute value of these sums, we ensure that we capture the most extreme subarray sum, whether positive or negative. Since a subarray sum can be either positive or negative, taking the absolute value ensures that we capture the largest magnitude.\n\n#### Algorithm\n\n- Initialize `positiveSum`, `negativeSum`, and `ans` to `0`.\n- Iterate over `nums`:\n  - Update `positiveSum` by adding `num`, ensuring it remains non-negative.\n  - Update `negativeSum` by adding `num`, ensuring it remains non-positive.\n  - Update `ans` with the maximum of `ans`, `positiveSum`, and the absolute value of `negativeSum`.\n- Return `ans`, representing the maximum absolute sum of any subarray.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/JjeUaufD/shared\" frameBorder=\"0\" width=\"100%\" height=\"259\" name=\"JjeUaufD\"></iframe>\n\n#### Complexity Analysis\n\nHere, $N$ is the number of elements in the array `nums`.\n\n- Time complexity: $O(N)$\n\n    The algorithm iterates through the array `nums` once, performing $O(1)$ operations (like `max`, `min`, and arithmetic) for each element. Thus, the time complexity is linear, $O(N)$.\n \n- Space complexity: $O(1)$\n\n    No extra space is required other than the few variables to store the positive sum and negative sum and hence the space complexity is constant.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

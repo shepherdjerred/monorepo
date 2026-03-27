@@ -1,0 +1,139 @@
+{
+  "questionId": "1775",
+  "questionFrontendId": "1656",
+  "title": "Design an Ordered Stream",
+  "titleSlug": "design-an-ordered-stream",
+  "difficulty": "Easy",
+  "content": "<p>There is a stream of <code>n</code> <code>(idKey, value)</code> pairs arriving in an <strong>arbitrary</strong> order, where <code>idKey</code> is an integer between <code>1</code> and <code>n</code> and <code>value</code> is a string. No two pairs have the same <code>id</code>.</p>\n\n<p>Design a stream that returns the values in <strong>increasing order of their IDs</strong> by returning a <strong>chunk</strong> (list) of values after each insertion. The concatenation of all the <strong>chunks</strong> should result in a list of the sorted values.</p>\n\n<p>Implement the <code>OrderedStream</code> class:</p>\n\n<ul>\n\t<li><code>OrderedStream(int n)</code> Constructs the stream to take <code>n</code> values.</li>\n\t<li><code>String[] insert(int idKey, String value)</code> Inserts the pair <code>(idKey, value)</code> into the stream, then returns the <strong>largest possible chunk</strong> of currently inserted values that appear next in the order.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/11/10/q1.gif\" style=\"width: 682px; height: 240px;\" /></strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;OrderedStream&quot;, &quot;insert&quot;, &quot;insert&quot;, &quot;insert&quot;, &quot;insert&quot;, &quot;insert&quot;]\n[[5], [3, &quot;ccccc&quot;], [1, &quot;aaaaa&quot;], [2, &quot;bbbbb&quot;], [5, &quot;eeeee&quot;], [4, &quot;ddddd&quot;]]\n<strong>Output</strong>\n[null, [], [&quot;aaaaa&quot;], [&quot;bbbbb&quot;, &quot;ccccc&quot;], [], [&quot;ddddd&quot;, &quot;eeeee&quot;]]\n\n<strong>Explanation</strong>\n// Note that the values ordered by ID is [&quot;aaaaa&quot;, &quot;bbbbb&quot;, &quot;ccccc&quot;, &quot;ddddd&quot;, &quot;eeeee&quot;].\nOrderedStream os = new OrderedStream(5);\nos.insert(3, &quot;ccccc&quot;); // Inserts (3, &quot;ccccc&quot;), returns [].\nos.insert(1, &quot;aaaaa&quot;); // Inserts (1, &quot;aaaaa&quot;), returns [&quot;aaaaa&quot;].\nos.insert(2, &quot;bbbbb&quot;); // Inserts (2, &quot;bbbbb&quot;), returns [&quot;bbbbb&quot;, &quot;ccccc&quot;].\nos.insert(5, &quot;eeeee&quot;); // Inserts (5, &quot;eeeee&quot;), returns [].\nos.insert(4, &quot;ddddd&quot;); // Inserts (4, &quot;ddddd&quot;), returns [&quot;ddddd&quot;, &quot;eeeee&quot;].\n// Concatentating all the chunks returned:\n// [] + [&quot;aaaaa&quot;] + [&quot;bbbbb&quot;, &quot;ccccc&quot;] + [] + [&quot;ddddd&quot;, &quot;eeeee&quot;] = [&quot;aaaaa&quot;, &quot;bbbbb&quot;, &quot;ccccc&quot;, &quot;ddddd&quot;, &quot;eeeee&quot;]\n// The resulting order is the same as the order above.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 1000</code></li>\n\t<li><code>1 &lt;= id &lt;= n</code></li>\n\t<li><code>value.length == 5</code></li>\n\t<li><code>value</code>&nbsp;consists only of lowercase letters.</li>\n\t<li>Each call to <code>insert</code>&nbsp;will have a unique <code>id.</code></li>\n\t<li>Exactly <code>n</code> calls will be made to <code>insert</code>.</li>\n</ul>\n",
+  "hints": [
+    "Maintain the next id that should be outputted.",
+    "Maintain the ids that were inserted in the stream.",
+    "Per each insert, make a loop where you check if the id that has the turn has been inserted, and if so increment the id that has the turn and continue the loop, else break."
+  ],
+  "metaData": "{\n  \"classname\": \"OrderedStream\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer\",\n        \"name\": \"n\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"idKey\"\n        },\n        {\n          \"type\": \"string\",\n          \"name\": \"value\"\n        }\n      ],\n      \"name\": \"insert\",\n      \"return\": {\n        \"type\": \"list<string>\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"109.5K\", \"totalSubmission\": \"132.5K\", \"totalAcceptedRaw\": 109462, \"totalSubmissionRaw\": 132509, \"acRate\": \"82.6%\"}",
+  "likes": 572,
+  "dislikes": 3637,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Longest Uploaded Prefix\", \"titleSlug\": \"longest-uploaded-prefix\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"OrderedStream\",\"insert\",\"insert\",\"insert\",\"insert\",\"insert\"]\n[[5],[3,\"ccccc\"],[1,\"aaaaa\"],[2,\"bbbbb\"],[5,\"eeeee\"],[4,\"ddddd\"]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 8, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"yandex\", \"name\": \"Yandex\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Data Stream",
+      "slug": "data-stream"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class OrderedStream {\npublic:\n    OrderedStream(int n) {\n        \n    }\n    \n    vector<string> insert(int idKey, string value) {\n        \n    }\n};\n\n/**\n * Your OrderedStream object will be instantiated and called as such:\n * OrderedStream* obj = new OrderedStream(n);\n * vector<string> param_1 = obj->insert(idKey,value);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class OrderedStream {\n\n    public OrderedStream(int n) {\n        \n    }\n    \n    public List<String> insert(int idKey, String value) {\n        \n    }\n}\n\n/**\n * Your OrderedStream object will be instantiated and called as such:\n * OrderedStream obj = new OrderedStream(n);\n * List<String> param_1 = obj.insert(idKey,value);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class OrderedStream:\n\n    def __init__(self, n: int):\n        \n\n    def insert(self, idKey: int, value: str) -> List[str]:\n        \n\n\n# Your OrderedStream object will be instantiated and called as such:\n# obj = OrderedStream(n)\n# param_1 = obj.insert(idKey,value)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class OrderedStream(object):\n\n    def __init__(self, n):\n        \"\"\"\n        :type n: int\n        \"\"\"\n        \n\n    def insert(self, idKey, value):\n        \"\"\"\n        :type idKey: int\n        :type value: str\n        :rtype: List[str]\n        \"\"\"\n        \n\n\n# Your OrderedStream object will be instantiated and called as such:\n# obj = OrderedStream(n)\n# param_1 = obj.insert(idKey,value)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n */\nvar OrderedStream = function(n) {\n    \n};\n\n/** \n * @param {number} idKey \n * @param {string} value\n * @return {string[]}\n */\nOrderedStream.prototype.insert = function(idKey, value) {\n    \n};\n\n/** \n * Your OrderedStream object will be instantiated and called as such:\n * var obj = new OrderedStream(n)\n * var param_1 = obj.insert(idKey,value)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class OrderedStream {\n    constructor(n: number) {\n        \n    }\n\n    insert(idKey: number, value: string): string[] {\n        \n    }\n}\n\n/**\n * Your OrderedStream object will be instantiated and called as such:\n * var obj = new OrderedStream(n)\n * var param_1 = obj.insert(idKey,value)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class OrderedStream {\n\n    public OrderedStream(int n) {\n        \n    }\n    \n    public IList<string> Insert(int idKey, string value) {\n        \n    }\n}\n\n/**\n * Your OrderedStream object will be instantiated and called as such:\n * OrderedStream obj = new OrderedStream(n);\n * IList<string> param_1 = obj.Insert(idKey,value);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} OrderedStream;\n\n\nOrderedStream* orderedStreamCreate(int n) {\n    \n}\n\nchar** orderedStreamInsert(OrderedStream* obj, int idKey, char* value, int* retSize) {\n    \n}\n\nvoid orderedStreamFree(OrderedStream* obj) {\n    \n}\n\n/**\n * Your OrderedStream struct will be instantiated and called as such:\n * OrderedStream* obj = orderedStreamCreate(n);\n * char** param_1 = orderedStreamInsert(obj, idKey, value, retSize);\n \n * orderedStreamFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type OrderedStream struct {\n    \n}\n\n\nfunc Constructor(n int) OrderedStream {\n    \n}\n\n\nfunc (this *OrderedStream) Insert(idKey int, value string) []string {\n    \n}\n\n\n/**\n * Your OrderedStream object will be instantiated and called as such:\n * obj := Constructor(n);\n * param_1 := obj.Insert(idKey,value);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class OrderedStream(n: Int) {\n\n    fun insert(idKey: Int, value: String): List<String> {\n        \n    }\n\n}\n\n/**\n * Your OrderedStream object will be instantiated and called as such:\n * var obj = OrderedStream(n)\n * var param_1 = obj.insert(idKey,value)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass OrderedStream {\n\n    init(_ n: Int) {\n        \n    }\n    \n    func insert(_ idKey: Int, _ value: String) -> [String] {\n        \n    }\n}\n\n/**\n * Your OrderedStream object will be instantiated and called as such:\n * let obj = OrderedStream(n)\n * let ret_1: [String] = obj.insert(idKey, value)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct OrderedStream {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl OrderedStream {\n\n    fn new(n: i32) -> Self {\n        \n    }\n    \n    fn insert(&self, id_key: i32, value: String) -> Vec<String> {\n        \n    }\n}\n\n/**\n * Your OrderedStream object will be instantiated and called as such:\n * let obj = OrderedStream::new(n);\n * let ret_1: Vec<String> = obj.insert(idKey, value);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class OrderedStream\n\n=begin\n    :type n: Integer\n=end\n    def initialize(n)\n        \n    end\n\n\n=begin\n    :type id_key: Integer\n    :type value: String\n    :rtype: String[]\n=end\n    def insert(id_key, value)\n        \n    end\n\n\nend\n\n# Your OrderedStream object will be instantiated and called as such:\n# obj = OrderedStream.new(n)\n# param_1 = obj.insert(id_key, value)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class OrderedStream {\n    /**\n     * @param Integer $n\n     */\n    function __construct($n) {\n        \n    }\n  \n    /**\n     * @param Integer $idKey\n     * @param String $value\n     * @return String[]\n     */\n    function insert($idKey, $value) {\n        \n    }\n}\n\n/**\n * Your OrderedStream object will be instantiated and called as such:\n * $obj = OrderedStream($n);\n * $ret_1 = $obj->insert($idKey, $value);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class OrderedStream {\n\n  OrderedStream(int n) {\n    \n  }\n  \n  List<String> insert(int idKey, String value) {\n    \n  }\n}\n\n/**\n * Your OrderedStream object will be instantiated and called as such:\n * OrderedStream obj = OrderedStream(n);\n * List<String> param1 = obj.insert(idKey,value);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class OrderedStream(_n: Int) {\n\n    def insert(idKey: Int, value: String): List[String] = {\n        \n    }\n\n}\n\n/**\n * Your OrderedStream object will be instantiated and called as such:\n * val obj = new OrderedStream(n)\n * val param_1 = obj.insert(idKey,value)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule OrderedStream do\n  @spec init_(n :: integer) :: any\n  def init_(n) do\n    \n  end\n\n  @spec insert(id_key :: integer, value :: String.t) :: [String.t]\n  def insert(id_key, value) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# OrderedStream.init_(n)\n# param_1 = OrderedStream.insert(id_key, value)\n\n# OrderedStream.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec ordered_stream_init_(N :: integer()) -> any().\nordered_stream_init_(N) ->\n  .\n\n-spec ordered_stream_insert(IdKey :: integer(), Value :: unicode:unicode_binary()) -> [unicode:unicode_binary()].\nordered_stream_insert(IdKey, Value) ->\n  .\n\n\n%% Your functions will be called as such:\n%% ordered_stream_init_(N),\n%% Param_1 = ordered_stream_insert(IdKey, Value),\n\n%% ordered_stream_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define ordered-stream%\n  (class object%\n    (super-new)\n    \n    ; n : exact-integer?\n    (init-field\n      n)\n    \n    ; insert : exact-integer? string? -> (listof string?)\n    (define/public (insert id-key value)\n      )))\n\n;; Your ordered-stream% object will be instantiated and called as such:\n;; (define obj (new ordered-stream% [n n]))\n;; (define param_1 (send obj insert id-key value))"
+    }
+  ],
+  "solution": null
+}

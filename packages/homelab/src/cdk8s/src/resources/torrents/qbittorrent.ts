@@ -157,7 +157,7 @@ export function createQBitTorrentDeployment(
             "qbittorrent-password",
             qBitTorrentItem.name,
           ),
-          key: "PASSWORD",
+          key: "password",
         }),
         EXPORTER_PORT: EnvValue.fromValue("17871"),
         EXPORTER_LOG_LEVEL: EnvValue.fromValue("INFO"),

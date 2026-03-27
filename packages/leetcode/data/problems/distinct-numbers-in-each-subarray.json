@@ -1,0 +1,126 @@
+{
+  "questionId": "2003",
+  "questionFrontendId": "1852",
+  "title": "Distinct Numbers in Each Subarray",
+  "titleSlug": "distinct-numbers-in-each-subarray",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>nums</code> of length <code>n</code> and an integer <code>k</code>. Your task is to find the number of <strong>distinct</strong> elements in <strong>every</strong> subarray of size <code>k</code> within <code>nums</code>.</p>\n\n<p>Return an array <code>ans</code> such that <code>ans[i]</code> is the count of distinct elements in <code>nums[i..(i + k - 1)]</code> for each index <code>0 &lt;= i &lt; n - k</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,2,2,1,3], k = 3\n<strong>Output:</strong> [3,2,2,2,3]\n<strong>Explanation: </strong>The number of distinct elements in each subarray goes as follows:\n- nums[0..2] = [1,2,3] so ans[0] = 3\n- nums[1..3] = [2,3,2] so ans[1] = 2\n- nums[2..4] = [3,2,2] so ans[2] = 2\n- nums[3..5] = [2,2,1] so ans[3] = 2\n- nums[4..6] = [2,1,3] so ans[4] = 3\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,1,1,1,2,3,4], k = 4\n<strong>Output:</strong> [1,2,3,4]\n<strong>Explanation: </strong>The number of distinct elements in each subarray goes as follows:\n- nums[0..3] = [1,1,1,1] so ans[0] = 1\n- nums[1..4] = [1,1,1,2] so ans[1] = 2\n- nums[2..5] = [1,1,2,3] so ans[2] = 3\n- nums[3..6] = [1,2,3,4] so ans[3] = 4\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= k &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Keep a frequency map of the elements in each window.",
+    "When the frequency of the element is 0, remove it from the map.",
+    "The answer to each window is the size of the map."
+  ],
+  "metaData": "{\n  \"name\": \"distinctNumbers\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"16.8K\", \"totalSubmission\": \"21.7K\", \"totalAcceptedRaw\": 16789, \"totalSubmissionRaw\": 21710, \"acRate\": \"77.3%\"}",
+  "likes": 157,
+  "dislikes": 10,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,2,3,2,2,1,3]\n3",
+    "[1,1,1,1,2,3,4]\n4"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> distinctNumbers(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] distinctNumbers(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def distinctNumbers(self, nums: List[int], k: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def distinctNumbers(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number[]}\n */\nvar distinctNumbers = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function distinctNumbers(nums: number[], k: number): number[] {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] DistinctNumbers(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* distinctNumbers(int* nums, int numsSize, int k, int* returnSize){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func distinctNumbers(nums []int, k int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun distinctNumbers(nums: IntArray, k: Int): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func distinctNumbers(_ nums: [Int], _ k: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn distinct_numbers(nums: Vec<i32>, k: i32) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Integer[]}\ndef distinct_numbers(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Integer[]\n     */\n    function distinctNumbers($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def distinctNumbers(nums: Array[Int], k: Int): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (distinct-numbers nums k)\n  (-> (listof exact-integer?) exact-integer? (listof exact-integer?))\n\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2666",
+    "content": "[TOC]\n\n## Solution\n    \n---\n\n### Approach 1: Hash Map\n\n#### Intuition\n\nWe are asked to find the number of distinct numbers in every `k`-size subarray of the input array `nums`. This problem can be broken down into two main challenges we have to optimally solve:\n1. Find each subarray efficiently.\n2. Gather all the distinct numbers in the subarray.\n\nLet's focus on the first one. Notice that each subarray is actually a fixed-size window in the array, which keeps moving. For example, the first subarray contains elements from index `0` to `k - 1`. When we slide this window one position right, we get the second subarray, which spans from index `1` to `k`. This technique is called the fixed-size [sliding window](https://leetcode.com/explore/learn/card/array-and-string/204/sliding-window/) approach. It's efficient because getting the next subarray only requires removing the leftmost element and adding one new element, instead of creating entirely new subarrays.\n\nNow that we can efficiently identify each subarray, how do we count all distinct numbers in it? Imagine assigning a bucket to each number we encounter, grouping all instances of the same number into their respective buckets. After grouping the numbers in a subarray, the total number of distinct elements equals the number of buckets. Moving to the next subarray is now straightforward: remove the number that leaves the window from its bucket and add the new number in the window to its bucket. If a bucket becomes empty during this process, we can simply discard it.\n\nThe slideshow below demonstrates this idea:\n\n!?!../Documents/1852/slideshow.json:1082,812!?!\n\nWe can simulate this process using a hash map to keep track of the frequency of each element in the current subarray. First, we initialize the hash map by counting the frequency of elements in the initial window of `k` elements. For each subsequent window, we perform two operations:\n1. We decrement the count of the number leaving the window (the leftmost element) from the hash map. If its count drops to zero, we remove it from the hash map, since it no longer contributes to the distinct count.\n2. We increment the count of the number entering the window (the rightmost element) in the hash map. If this number wasn’t already in the hash map, we add it with a count of `1`.\n\nAs we slide this window across the array, the size of our hash map at each step tells us how many distinct elements are in that window. We store these counts in our `answer` array and return it when we're done.\n\n> For a more comprehensive understanding of hash maps, check out the [Hash Table Explore Card 🔗](https://leetcode.com/explore/learn/card/hash-table/). This resource provides an in-depth look at hash maps, explaining their key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n#### Algorithm\n\n- Initialize:\n  - a variable `len` to store the length of the input array `nums`.\n  - an `answer` array of size `len - k + 1` to store the results for each window.\n  - a frequency map `freqMap` to store the count of each number in the current window.\n- Process the first window by iterating from position (`pos`) `0` to `k - 1`:\n   - For each number, increment its count in `freqMap` or initialize it to `1` if not present.\n- Store the size of the frequency map at index `0` of the `answer` array, representing the count of distinct numbers in the first window.\n- Process the remaining windows by iterating from position `k` to `len - 1`:\n  - Get the leftmost number from the previous window, i.e. `nums[pos - k]`.\n  - Decrement its count in the frequency map.\n  - If its count becomes `0`, remove the number from the frequency map.\n  - Get the rightmost number of the current window, i.e. `nums[pos]`.\n  - Increment its count in the frequency map, initializing to `1` if not present.\n  - Store the size of the frequency map at the appropriate index in the `answer` array.\n- Return the `answer` array containing the count of distinct numbers for each window.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/WaGT6tbR/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"WaGT6tbR\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input array `nums`.\n\n- Time complexity: $O(n)$\n\n    The algorithm processes each element exactly once. For the first window, we process `k` elements to build the initial frequency map, which takes $O(k)$ time. For subsequent windows, we process the remaining $(n - k)$ elements, performing constant time operations (map updates and size checks) for each. Thus, the total time complexity is $O(k + (n - k)) = O(n)$.\n\n- Space complexity: $O(\\text{maxValue})$\n\n    The space complexity is determined by the frequency dictionary `freq`, which stores the count of unique elements in the current window. The size of this dictionary depends on the maximum value in the input (`maxValue`), as the keys in the dictionary are the distinct values from `nums`. In the worst case, if all elements in the window are unique, the dictionary will store up to $k$ key-value pairs. However, since the values in `nums` can range up to `maxValue`, the space required for the frequency dictionary is $O(\\text{maxValue})$.\n\n    Note that the output list `answer` is not counted in the space complexity, as it is part of the required output and not auxiliary space. Therefore, the overall space complexity is $O(\\text{maxValue})$.\n\n---\n\n### Approach 2: Frequency Array\n\n#### Intuition\n\nWhile we typically think of hash map operations as taking constant time, this isn't always true. In reality, these operations are amortized $O(1)$, meaning they usually take constant time but can sometimes slow down to $O(n)$, especially with large datasets. Hash maps also carry extra overhead due to their hash functions and pointer management.\n\nThis is why sometimes it's better to use a frequency array instead of a hash map. A frequency array works similarly to a map, with the index of the array serving as the key and the element stored at that index as the value. In this problem, using such an array is possible, as the largest value in `nums` is relatively small ($nums[i] <= 10^5$). Overall, this approach is more time-efficient because array operations are guaranteed to take constant time and don't have the extra overhead that hash maps do.\n\nWe create a frequency array called `freq` to track how often each number appears. As we slide our window across the array `nums`, we update these frequencies just like we did with the hash map approach.\n\nHowever, since we can't simply check the size of our data structure to count distinct elements anymore, we need a new strategy. We'll use a variable called `distinctCount` to keep track of how many different numbers we have. When we add a new number and its frequency becomes `1`, we increase `distinctCount` because we've found a new unique number. Similarly, when we remove a number and its frequency drops to `0`, we decrease `distinctCount` because we've lost a unique number.\n\nAfter each window moves, we store the current value of `distinctCount` in our answer array. Once we've checked all windows, we return this array as our final answer.\n\n#### Algorithm\n\n- Find the maximum value in the input array `nums` and store it in `maxValue`.\n- Initialize:\n  - an array `freq` of size `maxValue + 1` to store the frequency of each number.\n  - a variable `distinctCount` to `0` to track the count of distinct numbers in the current window.\n  - an `answer` array of size `nums.length - k + 1` to store the results for each window.\n- Iterate through the input array from index `0` to `nums.length - 1`:\n  - Increment the frequency of the current number in the `freq` array.\n  - If the frequency becomes `1`, increment `distinctCount` as we found a new distinct number.\n  - If the current position is greater than or equal to `k`:\n    - Decrement the frequency of the number that's leaving the window.\n    - If its frequency becomes `0`, decrement `distinctCount` as we lost a distinct number.\n  - If the current position plus 1 is greater than or equal to `k`:\n    - Store the current `distinctCount` in the answer array.\n- Return the `answer` array containing the count of distinct numbers for each window.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/QkxoeMGG/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"QkxoeMGG\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input array `nums`.\n\n- Time complexity: $O(n)$\n\n    The algorithm processes each element in the array exactly once in a single pass. For each element, we perform constant time operations: incrementing/decrementing frequencies, updating `distinctCount`, and storing results in the `answer` array.\n    \n    Therefore, the time complexity is linear with respect to the input size, $O(n)$.\n\n- Space complexity: $O(\\text{maxValue})$\n\n    The space complexity is determined by the frequency array `freq`, which has a size of $\\text{maxValue} + 1$. This array is used to store the count of each unique value in the current window. Since the size of this array depends on the maximum value in `nums` and not on the size of the input list `nums`, the space complexity is $O(\\text{maxValue})$.\n\n    Note that the output list `answer` is not counted in the space complexity, as it is part of the required output and not auxiliary space. Therefore, the overall space complexity is $O(\\text{maxValue})$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

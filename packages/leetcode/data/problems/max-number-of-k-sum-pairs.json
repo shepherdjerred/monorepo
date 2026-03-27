@@ -1,0 +1,125 @@
+{
+  "questionId": "1798",
+  "questionFrontendId": "1679",
+  "title": "Max Number of K-Sum Pairs",
+  "titleSlug": "max-number-of-k-sum-pairs",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>nums</code> and an integer <code>k</code>.</p>\n\n<p>In one operation, you can pick two numbers from the array whose sum equals <code>k</code> and remove them from the array.</p>\n\n<p>Return <em>the maximum number of operations you can perform on the array</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,4], k = 5\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> Starting with nums = [1,2,3,4]:\n- Remove numbers 1 and 4, then nums = [2,3]\n- Remove numbers 2 and 3, then nums = []\nThere are no more pairs that sum up to 5, hence a total of 2 operations.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [3,1,3,4,3], k = 6\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> Starting with nums = [3,1,3,4,3]:\n- Remove the first two 3&#39;s, then nums = [1,4,3]\nThere are no more pairs that sum up to 6, hence a total of 1 operation.</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "The abstract problem asks to count the number of disjoint pairs with a given sum k.",
+    "For each possible value x, it can be paired up with k - x.",
+    "The number of such pairs equals to  min(count(x), count(k-x)), unless that x = k / 2, where the number of such pairs will be floor(count(x) / 2)."
+  ],
+  "metaData": "{\n  \"name\": \"maxOperations\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"592.6K\", \"totalSubmission\": \"1M\", \"totalAcceptedRaw\": 592649, \"totalSubmissionRaw\": 1040896, \"acRate\": \"56.9%\"}",
+  "likes": 3545,
+  "dislikes": 122,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Two Sum\", \"titleSlug\": \"two-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Count Good Meals\", \"titleSlug\": \"count-good-meals\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Divide Players Into Teams of Equal Skill\", \"titleSlug\": \"divide-players-into-teams-of-equal-skill\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,4]\n5",
+    "[3,1,3,4,3]\n6"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"yandex\", \"name\": \"Yandex\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxOperations(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxOperations(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxOperations(self, nums: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxOperations(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number}\n */\nvar maxOperations = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxOperations(nums: number[], k: number): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxOperations(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\nint maxOperations(int* nums, int numsSize, int k){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxOperations(nums []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxOperations(nums: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxOperations(_ nums: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_operations(nums: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Integer}\ndef max_operations(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Integer\n     */\n    function maxOperations($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxOperations(nums: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "1070",
+    "content": "[TOC]\n\n## Solution\n---\n\n#### Overview ####\n\nThe problem is to find the number of pairs in a given array `nums` such that the sum of each pair is `k`. Every element can be paired with any other element only once. For example, if `nums = [3,4,3]` and `k = 7`, we have to choose a pair in array `nums` with sum equal to `7`. Now if we pair element $$4$$ with element $$3$$ at $$0^{th}$$ index to form sum $$7$$, then we cannot again pair the same element $$4$$ with element $$3$$ at $$2^{nd}$$ index.\n\nThis problem is similar to one of the popular array problem [Two Sum](https://leetcode.com/problems/two-sum). The difference is that instead of finding _indexes_ of the first pair with sum equal to a given value, we have to find the count of all the pairs with sum equal to a given value. Since we don't have to retain the original indexes of elements, it could be an advantage for us. We could reorder or shuffle the array elements and try to solve the problem more efficiently. (In _Approach 4, we are going to sort the array in increasing order).\n\nThis is an interesting problem that can be implemented in various ways. Let's look at the different approaches in detail.\n\n---\n\n#### Approach 1: Brute Force\n\n**Intuition**\n\nThe naive solution we could think of would be to pick an element from the array `nums`, then try to pair it with all the other elements in the array such that the sum of the pair formed is equal to `k`.\n\nOnce we find a matching pair, we could remove both elements from the array. However, removing the elements from an array could be costly, since an array stores element in a contiguous form, we could simply mark the array element to $$0$$ value. Thus, in our case $$0$$ value denotes that the element is already taken up or paired up with some other element.\n\nWe could begin by picking up the first element at the $$0^{th}$$ index and find it's pair by iterating over all the elements beginning from the element at $$1^{st}$$ index until we reach the end of the array. Thus, we could repeat the process until all the elements in the array are picked.\n\n**Algorithm**\n\n-  To implement the intuition, we would use a nested _for loop_. The outer loop would choose the first element of the pair using a pointer `first` and iterate from the $$0^{th}$$ index to the end of the array. The inner loop would choose the second element of the pair using a pointer `second` and iterate from the `first+1` index to the end of the array.\n\n- We would also need to maintain a variable `count` which would be incremented every time we find a pair with sum equal to `k`.\n\n-  Now, that we have 2 elements to form a pair, pointed by `first` and `second` pointers, we would check if the value of each pair sums up to `k`. If the sum is `k`, we need to do 2 things,\n    * Increment the variable `count` to count the current pair found.\n   * Update the value of array positions pointed by `first` and `second` pointer to $$0$$. This is used to indicate that these elements are already taken up to form a pair.\n - The process would continue until all the elements are traversed.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/FBpDRoL6/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"FBpDRoL6\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity : $$\\mathcal{O}(n^{2})$$, where $$n$$ is the length of array `nums`. We are using a nested for loop and pairing up every single element with every other element in the array. Thus, the time complexity of this approach would be $$\\mathcal{O}(n^{2})$$.\n\n   _This approach is exhaustive and results in Time Limit Exceeded (TLE)_\n\n- Space Complexity: $$\\mathcal{O}(1)$$, as we are using constant extra space to store the variable `count` and maintain pointers, `first` and `second`.\n\n---\n\n#### Approach 2: Using Hashmap - Two Pass\n\n**Intuition**\n\nIn the previous approach, for every element in the array, we had to find it's pair. Let's the first element of the pair be `x`. Now, we have to find the second element, say `y`, such that the sum of `x` and `y` is `k`. Instead of traversing the entire array to find a suitable pair `y` for every element `x`, can we do it in optimal time?\n\n> Hint: We can try to find if the  _Complement_ of current element `x` with respect to `k` is present in the array or not in constant time.\n\nIf the first element in the pair is `x`, we know that the other element `y` must be equal to `k - x` such that their sum is `k`. `(x + k - x =  k)`. In other words, if the current element has the value `x`, we want to know if there is an element in the array with the value `k - x`.\n\nThe first data structure that comes to our mind is a _Set_. We could maintain a _Hash Set_ that contains all the elements in the array and we could search if there is an element with a particular value (i.e `k - x`) in a _Hash Set_ in constant time.\n\nBut, the input array may contain duplicates as well. Since there could be more than one element with a particular value, we must also store the count of the number of times each value is present in the array. We could build a _HashMap_ for that with key-value pair. The key would the element present in the array and its value would the number of times the value occurs in the array.\n\nNow that we have a hash map that stores the elements present in the array with its count, we could simply traverse the given array `nums`. For every element `x` we could query hashmap to know if `k  - x` exists or not.\n\n> It must be noted that, once we find a pair with sum equal to `k`, we must decrement the count of occurrence of those 2 elements from the map so that they aren't used again.\n\nBased on the insight, let's implement the algorithm.\n\n**Algorithm**\n\n- Build a hashmap `map` where the key is the value of elements in the array and value is the count of the number of times that value is present in the array.\n\n- Iterate over every element in the array `nums`. Let `current` be the element currently being traversed. Find the complement of the current element with respect to `k`, `complement` = `current - k`. The `complement` is a pair of `current` element that we are trying to find.\n\n- However, it is possible that the `current` element is also taken before and paired with some other element. Hence, we check if both elements of the pair, `current` and `complement` are present in the map. If yes, we form the pair and remove those elements from the map.\n\n> Instead of removing the elements from the map, we could simply decrement its count by $$1$$. An element with a count of $$0$$ is as good as being non-existent in the map.\n\n > Is there any other case where our algorithm may fail?\n\n- If the value of the `current` element and `complement` element is the same, we need at least $$2$$ occurrences of that element to be present in the array, otherwise, we cannot form a pair.\n\n   For example, if `k = 6` and the value of the `current` element is `3`, the complement must be `3` as well. In this case, there must be $$2$$ elements in the array with the value `3` to form a pair.\n\n- Every time we find a suitable pair of 2 elements with sum equal to `k`, increment the variable `count`. At the end, return the total number of pairs, `count` found in the array.\n\nThe following animation illustrates the idea with `nums = [3, 1, 3, 4, 3, 2, 4]` and `k = 6`.\n\n!?!../Documents/5618/LIS.json:1358,858!?!\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/JK3BivW5/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"JK3BivW5\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity : $$\\mathcal{O}(n)$$, where $$n$$ is the length of array `nums`. We iterate over an element in the array twice which takes $$\\mathcal{O}(n)$$ time. First, to build a map from the array. Second, to find a pair for every element in the array. Also, to add or update an element in a hashmap takes constant time. This gives us total time complexity as $$\\mathcal{O}(n)$$.\n\n- Space Complexity: $$\\mathcal{O}(n)$$, where $$n$$ is the length of array `nums`. We use an unordered map to store the values of the array with their count of occurrence. In the worst case, if every element in the array is unique, the maximum size of the map would grow up to $$n$$.\n\n---\n\n#### Approach 3: Using Hashmap - Single Pass\n\n**Intuition**\n\nIn the previous approach, we iterated over the array twice. In the first pass, we were just building the hashmap. In the second pass, we found a pair for every element. Can we do the same in a single pass?\n\nFor every element `current`, we must first try to find if it's pair,`complement` exists in the map. If it does, there is no need to add the `current` element to the map and we could simply remove the `complement` element from the map.\nIf the `complement` element does not exist in the map, we could add the `current` element to the map.\n\n> In this approach, the hashmap would only hold those array elements for which we have not yet found a suitable pair so far with sum equal to `k`. As and when the elements are paired up, we remove them from the map.\n\nThus, in a single pass, we can build the map as well as find the matching pair of every element. Let's look at the algorithm in detail.\n\n**Algorithm**\n\n- Initialize a hashmap `map` to store the elements that are traversed till now and not paired up with any element so far.\n\n- A variable `count` would be initialized to $$0$$ and store the total number of pairs we find in the array.\n\n- Iterate over each element in the array `nums`. For every traversed element `current`, calculate the `complement` value with respect to `k`. `complement = k - current`. Now check if the `complement` value exists in the map.\n\n   * If the `complement` value exists in the map, simply remove it from the map. Note that, we would not add the `current` element in the map here, since it is already paired with `complement`.\n  * Otherwise, add the `current` element to the map, so that it can be paired with some other array element in the future.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/PB9YgVnN/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"PB9YgVnN\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity : $$\\mathcal{O}(n)$$, where $$n$$ is the length of array `nums`. We iterate over every element only once. Besides, checking or updating the value of a particular key element in the hashmap takes constant time. This gives us total time complexity as $$\\mathcal{O}(n)$$.\n\n- Space Complexity: $$\\mathcal{O}(n)$$, where $$n$$ is the length of array `nums`. We use an unordered map to store the values of the array with their count of occurrence. In the worst case, if we do not find a `complement` pair of any `current` element, we would end up adding all the elements in the map and the maximum size of the map would grow up to $$n$$.\n\n---\n\n#### Approach 4: Two Pointer Approach Using Sort\n\n**Intuition**\n\nThere is another approach to solve the problem. What if we sort the elements in an array in increasing order? Can we take advantage of this sorted order to find the pairs quickly?\n\nIn sorted array, we know that for every $$i^{th}$$ element, the value of $$(i+1)^{th}$$ element would always be greater than or equal it's own value. Similarly, the value of $$(i-1)^{th}$$ element would be less than or equal to its value.\n\nWe can use $$2$$ pointers, the first pointer `left`, is positioned at $$0^{th}$$ index of the array, and the second pointer `right` is positioned at $$n^{th}$$ index of the array. (where n is the size of array `nums`). Let's add the values of elements pointed by `left` and `right`, given by `sum`.\n\nThe value of the variable `sum` can be used to determine where a possible pair could lie,\n\n- If the value of `sum` is less than the value of `k`, we know that we want a larger value. We also know that `left` is pointing to the smallest value in the array, hence we can increment the `left` pointer by $$1$$ to get a little larger value.\n\n- Similarly, if the value of `sum` is greater than the value of `k`, we know that we want a smaller value. We also know that `right` is pointing to the largest value in the array, hence we can decrement the `right` pointer by $$1$$ to get a little smaller value.\n\n- Otherwise, the value of `sum` must be equal to `k` and we have found one pair of elements pointed by `left` and `right` pointers respectively. We can increment the `left` pointer and decrement `right` pointer to find the next pair.\n\n> In other words, we could say that, if the `left` pointer is pointing to the current element, we must adjust the `right` pointer to point to its `complement` and vice versa.\n\nThe following example illustrates the idea with `nums = [3, 1, 9, 3, 2, 2, 4]` and `k = 6`.\n\n![img](../Documents/5618/twoPointer_example.svg)\n\nLet's look at the algorithm in detail.\n\n**Algorithm**\n\n- Sort the `nums` array in increasing i.e ascending order. We can use the built-in sort function.\n\n- Initialize the `left` pointer to point at the $$0^{th}$$ index and the `right` pointer to point to the last index of the `nums` array. We could say that the `left` pointer points to the smallest element in the array, and the `right` points to the largest element.\n\n- Add the values of array elements pointed by `left` and `right` pointer given by `sum`.\n    * If the value of `sum` is less than `k`, increment `left` pointer.\n    * If the value of `sum` is greater than `k`, increment the `right` pointer.\n    * Otherwise, we have found one pair with a sum equal to `k`. Increment `left` pointer and decrement `right` pointer so that we can go ahead and find another pair.\n\n- The process would continue until the `left` pointer is less than the `right` pointer. Once the `left` and `right` pointer cross each other, we know that we have traversed all the elements and cannot find any other pair. Hence, we stop at that point.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/Z67FBiED/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"Z67FBiED\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity : $$\\mathcal{O}(n \\log n)$$, where $$n$$ is the length of array `nums`.\n\n  The sort operation on the array takes $$\\mathcal{O}(n \\log n)$$ time.\n\n   Each element is traversed only once, either by the `left` pointer or by the `right` pointer, depending on the fact that which pointer reaches that element first. Thus, traversing array takes $$\\mathcal{O}(n)$$ time.\n\n  This gives us total time complexity as $$\\mathcal{O}(n \\log n)$$ + $$\\mathcal{O}(n)$$ = $$\\mathcal{O}(n \\log n)$$.\n\n- Space Complexity: $$\\mathcal{O}(1)$$. We use constant extra space to track the `count` variable and maintain `left`,`right` pointers.\n\n* Space complexity : $$\\mathcal{O}(N)$$ or $$\\mathcal{O}(\\log{N})$$\n\n  - The space complexity of the sorting algorithm depends on the implementation of each program language.\n\n  - For instance, the `std::sort()` function in C++ is implemented with the [Introsort](https://en.wikipedia.org/wiki/Introsort) algorithm whose space complexity is $$\\mathcal{O}(N)$$.\n\n  - In Java, the [Arrays.sort()](https://docs.oracle.com/javase/8/docs/api/java/util/Arrays.html#sort-byte:A-) is implemented as a variant of quicksort algorithm whose space complexity is $$\\mathcal{O}(\\log{N})$$.\n\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

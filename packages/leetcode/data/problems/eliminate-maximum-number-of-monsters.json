@@ -1,0 +1,141 @@
+{
+  "questionId": "2049",
+  "questionFrontendId": "1921",
+  "title": "Eliminate Maximum Number of Monsters",
+  "titleSlug": "eliminate-maximum-number-of-monsters",
+  "difficulty": "Medium",
+  "content": "<p>You are playing a video game where you are defending your city from a group of <code>n</code> monsters. You are given a <strong>0-indexed</strong> integer array <code>dist</code> of size <code>n</code>, where <code>dist[i]</code> is the <strong>initial distance</strong> in kilometers of the <code>i<sup>th</sup></code> monster from the city.</p>\n\n<p>The monsters walk toward the city at a <strong>constant</strong> speed. The speed of each monster is given to you in an integer array <code>speed</code> of size <code>n</code>, where <code>speed[i]</code> is the speed of the <code>i<sup>th</sup></code> monster in kilometers per minute.</p>\n\n<p>You have a weapon that, once fully charged, can eliminate a <strong>single</strong> monster. However, the weapon takes <strong>one minute</strong> to charge. The weapon is fully charged at the very start.</p>\n\n<p>You lose when any monster reaches your city. If a monster reaches the city at the exact moment the weapon is fully charged, it counts as a <strong>loss</strong>, and the game ends before you can use your weapon.</p>\n\n<p>Return <em>the <strong>maximum</strong> number of monsters that you can eliminate before you lose, or </em><code>n</code><em> if you can eliminate all the monsters before they reach the city.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> dist = [1,3,4], speed = [1,1,1]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong>\nIn the beginning, the distances of the monsters are [1,3,4]. You eliminate the first monster.\nAfter a minute, the distances of the monsters are [X,2,3]. You eliminate the second monster.\nAfter a minute, the distances of the monsters are [X,X,2]. You eliminate the third monster.\nAll 3 monsters can be eliminated.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> dist = [1,1,2,3], speed = [1,1,1,1]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong>\nIn the beginning, the distances of the monsters are [1,1,2,3]. You eliminate the first monster.\nAfter a minute, the distances of the monsters are [X,0,1,2], so you lose.\nYou can only eliminate 1 monster.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> dist = [3,2,4], speed = [5,3,2]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong>\nIn the beginning, the distances of the monsters are [3,2,4]. You eliminate the first monster.\nAfter a minute, the distances of the monsters are [X,0,2], so you lose.\nYou can only eliminate 1 monster.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == dist.length == speed.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= dist[i], speed[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Find the amount of time it takes each monster to arrive.",
+    "Find the order in which the monsters will arrive."
+  ],
+  "metaData": "{\n  \"name\": \"eliminateMaximum\",\n  \"params\": [\n    {\n      \"name\": \"dist\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"speed\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"123K\", \"totalSubmission\": \"241K\", \"totalAcceptedRaw\": 123050, \"totalSubmissionRaw\": 241009, \"acRate\": \"51.1%\"}",
+  "likes": 1582,
+  "dislikes": 238,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Health to Beat Game\", \"titleSlug\": \"minimum-health-to-beat-game\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Time to Kill All Monsters\", \"titleSlug\": \"minimum-time-to-kill-all-monsters\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,3,4]\n[1,1,1]",
+    "[1,1,2,3]\n[1,1,1,1]",
+    "[3,2,4]\n[5,3,2]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 6, \"slug\": \"agoda\", \"name\": \"Agoda\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int eliminateMaximum(vector<int>& dist, vector<int>& speed) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int eliminateMaximum(int[] dist, int[] speed) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def eliminateMaximum(self, dist: List[int], speed: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def eliminateMaximum(self, dist, speed):\n        \"\"\"\n        :type dist: List[int]\n        :type speed: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} dist\n * @param {number[]} speed\n * @return {number}\n */\nvar eliminateMaximum = function(dist, speed) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function eliminateMaximum(dist: number[], speed: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int EliminateMaximum(int[] dist, int[] speed) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int eliminateMaximum(int* dist, int distSize, int* speed, int speedSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func eliminateMaximum(dist []int, speed []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun eliminateMaximum(dist: IntArray, speed: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func eliminateMaximum(_ dist: [Int], _ speed: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn eliminate_maximum(dist: Vec<i32>, speed: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} dist\n# @param {Integer[]} speed\n# @return {Integer}\ndef eliminate_maximum(dist, speed)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $dist\n     * @param Integer[] $speed\n     * @return Integer\n     */\n    function eliminateMaximum($dist, $speed) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int eliminateMaximum(List<int> dist, List<int> speed) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def eliminateMaximum(dist: Array[Int], speed: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec eliminate_maximum(dist :: [integer], speed :: [integer]) :: integer\n  def eliminate_maximum(dist, speed) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec eliminate_maximum(Dist :: [integer()], Speed :: [integer()]) -> integer().\neliminate_maximum(Dist, Speed) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (eliminate-maximum dist speed)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2168",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Sort By Arrival Time\n\n**Intuition**\n\nWe can calculate when each monster will arrive at our city. The $$i^{th}$$ monster will arrive at time `dist[i] / speed[i]`. Which monsters should we shoot? We should shoot the monsters that will arrive the earliest. If a monster `A` arrives before a monster `B`, there is no benefit in shooting `B` before `A`, because `A` would end the game before `B` possibly could.\n\nLet's put all arrival times in a list `arrival`, then sort `arrival` ascending. We will then iterate over `arrival` and shoot the monsters in the order that they will arrive.\n\nWhen does the game end? Our weapon starts loaded and requires 1 minute to reload. The problem description states that \"if a monster reaches the city at the exact moment the weapon is fully charged, it counts as a loss, and the game ends before you can use your weapon\".\n\nSince the first monster takes at least some time `arrival[0]` to arrive, we can be sure to eliminate it at time `0`. However, the weapon needs 1 minute to reload, meaning we can eliminate the second monster at time `1`. Thus, if the second monster arrives at any time less than or equal to `1`, we lose. Similarly, if the third monster arrives at any time less than or equal to `2`, we lose, and so on.\n\nTherefore, for each index `i`, we check if `arrival[i] <= i` holds true. If this condition is met, it means that the $$i^{th}$$ monster (by arrival time) will reach the city and the game ends. Thus, we will break out of our loop. Otherwise, for every monster we kill, we will increment our answer.\n\n**Algorithm**\n\n1. Create an array `arrival` that holds all values of `dist[i] / speed[i]`.\n2. Sort `arrival` in ascending order.\n3. Initialize the answer `ans = 0`.\n4. Iterate `i` over the indices of `arrival`:\n    - If `arrival[i] <= i`, break from the loop.\n    - Increment `ans`.\n5. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/hb2JiywL/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"hb2JiywL\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `dist` and `speed`,\n\n* Time complexity: $$O(n \\cdot \\log{}n)$$\n\n    Creating `arrival` costs $$O(n)$$. Then, we sort it which costs $$O(n \\cdot \\log{}n)$$. Finally, we iterate up to $$n$$ times.\n\n* Space complexity: $$O(n)$$\n\n    `arrival` has a size of $$O(n)$$. Note that we could instead modify one of the input arrays and use that as `arrival`. However, it is generally considered bad practice to modify the input, especially when it is something passed by reference like an array. Also, many people will argue that if you modify the input, you must include it as part of the space complexity anyway.\n    \n<br/>\n\n---\n\n### Approach 2: Heap\n\n**Intuition**\n\nAnother way to iterate over the monsters by their arrival time would be to use a min-heap. We calculate all arrival times and push them onto a min-heap. Then, we pop from the min-heap one by one to get the order in which the monsters arrive.\n\nOnce we have the `heap`, we will use the same process as in the previous approach. Initialize `ans = 0` and iterate until a monster reaches the city or we have killed them all. At each iteration, we pop an arrival time from `heap` and compare it to `ans`. Note that in each iteration, the element we pop from the heap would be equal to `arrival[i]` and `ans` would be equal to `i` from the previous approach. If the time is less than or equal to `ans`, this monster will end the game. Otherwise, we increment `ans` and move on.\n\n**Algorithm**\n\n1. Create a min `heap` from the arrival times of the monsters.\n2. Initialize `ans = 0`.\n3. While `heap` is not empty:\n    - Pop from `heap`. If the element is less than or equal to `ans`, break from the loop.\n    - Increment `ans`.\n4. Return `ans`.\n\n**Implementation**\n\n> In Python, we use the [heapq](https://docs.python.org/3/library/heapq.html) module.\n\n<iframe src=\"https://leetcode.com/playground/Eyw3eNz9/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"Eyw3eNz9\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `dist` and `speed`,\n\n* Time complexity: $$O(n \\cdot \\log{}n)$$\n\n    The heap operations will cost $$O(\\log{}n)$$. If all monsters can be killed, then we will perform $$O(n)$$ iterations and thus use $$O(n \\cdot \\log{}n)$$ time.\n\n    Note: an array can be converted to a heap in linear time. In fact, Python's `heapq.heapify` does this, as does C++ `std::priority_queue` constructor. Without linear time heapify, we always use $$O(n \\cdot \\log{}n)$$ time since we need to build the heap. However, if we have linear time heapify and a monster reaches our city early, then this algorithm will have a better theoretical performance, since not many $$O(\\log{}n)$$ operations will occur.\n\n* Space complexity: $$O(n)$$\n\n    `heap` uses $$O(n)$$ space.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

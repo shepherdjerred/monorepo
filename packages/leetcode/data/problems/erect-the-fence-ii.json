@@ -1,0 +1,135 @@
+{
+  "questionId": "2074",
+  "questionFrontendId": "1924",
+  "title": "Erect the Fence II",
+  "titleSlug": "erect-the-fence-ii",
+  "difficulty": "Hard",
+  "content": "<p>You are given a 2D integer array <code>trees</code> where <code>trees[i] = [x<sub>i</sub>, y<sub>i</sub>]</code> represents the location of the <code>i<sup>th</sup></code> tree in the garden.</p>\n\n<p>You are asked to fence the entire garden using the minimum length of rope possible. The garden is well-fenced only if <strong>all the trees are enclosed</strong> and the rope used <strong>forms a perfect circle</strong>. A tree is considered enclosed if it is inside or on the border of the circle.</p>\n\n<p>More formally, you must form a circle using the rope with a center <code>(x, y)</code> and radius <code>r</code> where all trees lie inside or on the circle and <code>r</code> is <strong>minimum</strong>.</p>\n\n<p>Return <em>the center and radius of the circle as a length 3 array </em><code>[x, y, r]</code><em>.</em>&nbsp;Answers within <code>10<sup>-5</sup></code> of the actual answer will be accepted.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/07/06/trees1.png\" style=\"width: 510px; height: 501px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> trees = [[1,1],[2,2],[2,0],[2,4],[3,3],[4,2]]\n<strong>Output:</strong> [2.00000,2.00000,2.00000]\n<strong>Explanation:</strong> The fence will have center = (2, 2) and radius = 2\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/07/06/trees2.png\" style=\"width: 510px; height: 501px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> trees = [[1,2],[2,2],[4,2]]\n<strong>Output:</strong> [2.50000,2.00000,1.50000]\n<strong>Explanation:</strong> The fence will have center = (2.5, 2) and radius = 1.5\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= trees.length &lt;= 3000</code></li>\n\t<li><code>trees[i].length == 2</code></li>\n\t<li><code>0 &lt;= x<sub>i</sub>, y<sub>i</sub> &lt;= 3000</code></li>\n</ul>\n",
+  "hints": [
+    "First, we need to note that this is a classic problem given n points you need to find the minimum enclosing circle to bind them",
+    "Second, we need to apply a well known algorithm called welzls algorithm to help us find the minimum enclosing circle"
+  ],
+  "metaData": "{\n  \"name\": \"outerTrees\",\n  \"params\": [\n    {\n      \"name\": \"trees\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"double[]\"\n  },\n  \"manual\": false\n}",
+  "stats": "{\"totalAccepted\": \"991\", \"totalSubmission\": \"1.9K\", \"totalAcceptedRaw\": 991, \"totalSubmissionRaw\": 1922, \"acRate\": \"51.6%\"}",
+  "likes": 15,
+  "dislikes": 44,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Erect the Fence\", \"titleSlug\": \"erect-the-fence\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,1],[2,2],[2,0],[2,4],[3,3],[4,2]]",
+    "[[1,2],[2,2],[4,2]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Geometry",
+      "slug": "geometry"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<double> outerTrees(vector<vector<int>>& trees) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public double[] outerTrees(int[][] trees) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def outerTrees(self, trees: List[List[int]]) -> List[float]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def outerTrees(self, trees):\n        \"\"\"\n        :type trees: List[List[int]]\n        :rtype: List[float]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} trees\n * @return {number[]}\n */\nvar outerTrees = function(trees) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function outerTrees(trees: number[][]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public double[] OuterTrees(int[][] trees) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\ndouble* outerTrees(int** trees, int treesSize, int* treesColSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func outerTrees(trees [][]int) []float64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun outerTrees(trees: Array<IntArray>): DoubleArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func outerTrees(_ trees: [[Int]]) -> [Double] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn outer_trees(trees: Vec<Vec<i32>>) -> Vec<f64> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} trees\n# @return {Float[]}\ndef outer_trees(trees)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $trees\n     * @return Float[]\n     */\n    function outerTrees($trees) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<double> outerTrees(List<List<int>> trees) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def outerTrees(trees: Array[Array[Int]]): Array[Double] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec outer_trees(trees :: [[integer]]) :: [float]\n  def outer_trees(trees) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec outer_trees(Trees :: [[integer()]]) -> [float()].\nouter_trees(Trees) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (outer-trees trees)\n  (-> (listof (listof exact-integer?)) (listof flonum?))\n  )"
+    }
+  ],
+  "solution": null
+}

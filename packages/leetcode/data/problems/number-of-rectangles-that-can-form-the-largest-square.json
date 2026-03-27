@@ -1,0 +1,108 @@
+{
+  "questionId": "1843",
+  "questionFrontendId": "1725",
+  "title": "Number Of Rectangles That Can Form The Largest Square",
+  "titleSlug": "number-of-rectangles-that-can-form-the-largest-square",
+  "difficulty": "Easy",
+  "content": "<p>You are given an array <code>rectangles</code> where <code>rectangles[i] = [l<sub>i</sub>, w<sub>i</sub>]</code> represents the <code>i<sup>th</sup></code> rectangle of length <code>l<sub>i</sub></code> and width <code>w<sub>i</sub></code>.</p>\r\n\r\n<p>You can cut the <code>i<sup>th</sup></code> rectangle to form a square with a side length of <code>k</code> if both <code>k &lt;= l<sub>i</sub></code> and <code>k &lt;= w<sub>i</sub></code>. For example, if you have a rectangle <code>[4,6]</code>, you can cut it to get a square with a side length of at most <code>4</code>.</p>\r\n\r\n<p>Let <code>maxLen</code> be the side length of the <strong>largest</strong> square you can obtain from any of the given rectangles.</p>\r\n\r\n<p>Return <em>the <strong>number</strong> of rectangles that can make a square with a side length of </em><code>maxLen</code>.</p>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong class=\"example\">Example 1:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> rectangles = [[5,8],[3,9],[5,12],[16,5]]\r\n<strong>Output:</strong> 3\r\n<strong>Explanation:</strong> The largest squares you can get from each rectangle are of lengths [5,3,5,5].\r\nThe largest possible square is of length 5, and you can get it out of 3 rectangles.\r\n</pre>\r\n\r\n<p><strong class=\"example\">Example 2:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> rectangles = [[2,3],[3,7],[4,3],[3,7]]\r\n<strong>Output:</strong> 3\r\n</pre>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong>Constraints:</strong></p>\r\n\r\n<ul>\r\n\t<li><code>1 &lt;= rectangles.length &lt;= 1000</code></li>\r\n\t<li><code>rectangles[i].length == 2</code></li>\r\n\t<li><code>1 &lt;= l<sub>i</sub>, w<sub>i</sub> &lt;= 10<sup>9</sup></code></li>\r\n\t<li><code>l<sub>i</sub> != w<sub>i</sub></code></li>\r\n</ul>",
+  "hints": [
+    "What is the length of the largest square the can be cut out of some rectangle? It'll be equal to min(rectangle.length, rectangle.width). Replace each rectangle with this value.",
+    "Calculate maxSize by iterating over the given rectangles and maximizing the answer with their values denoted in the first hint.",
+    "Then iterate again on the rectangles and calculate the number whose values = maxSize."
+  ],
+  "metaData": "{\n  \"name\": \"countGoodRectangles\",\n  \"params\": [\n    {\n      \"name\": \"rectangles\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"86.3K\", \"totalSubmission\": \"108.7K\", \"totalAcceptedRaw\": 86282, \"totalSubmissionRaw\": 108736, \"acRate\": \"79.3%\"}",
+  "likes": 625,
+  "dislikes": 75,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[5,8],[3,9],[5,12],[16,5]]",
+    "[[2,3],[3,7],[4,3],[3,7]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"allincall\", \"name\": \"AllinCall\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countGoodRectangles(vector<vector<int>>& rectangles) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countGoodRectangles(int[][] rectangles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countGoodRectangles(self, rectangles: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countGoodRectangles(self, rectangles):\n        \"\"\"\n        :type rectangles: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} rectangles\n * @return {number}\n */\nvar countGoodRectangles = function(rectangles) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countGoodRectangles(rectangles: number[][]): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountGoodRectangles(int[][] rectangles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\nint countGoodRectangles(int** rectangles, int rectanglesSize, int* rectanglesColSize){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countGoodRectangles(rectangles [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countGoodRectangles(rectangles: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countGoodRectangles(_ rectangles: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_good_rectangles(rectangles: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} rectangles\n# @return {Integer}\ndef count_good_rectangles(rectangles)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $rectangles\n     * @return Integer\n     */\n    function countGoodRectangles($rectangles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countGoodRectangles(rectangles: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    }
+  ],
+  "solution": null
+}

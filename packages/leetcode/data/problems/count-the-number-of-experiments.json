@@ -1,0 +1,53 @@
+{
+  "questionId": "2143",
+  "questionFrontendId": "1990",
+  "title": "Count the Number of Experiments",
+  "titleSlug": "count-the-number-of-experiments",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Experiments</code></p>\n\n<pre>\n+-----------------+------+\n| Column Name     | Type |\n+-----------------+------+\n| experiment_id   | int  |\n| platform        | enum |\n| experiment_name | enum |\n+-----------------+------+\nexperiment_id is the column with unique values for this table.\nplatform is an enum (category) type of values (&#39;Android&#39;, &#39;IOS&#39;, &#39;Web&#39;).\nexperiment_name is an enum (category) type of values (&#39;Reading&#39;, &#39;Sports&#39;, &#39;Programming&#39;).\nThis table contains information about the ID of an experiment done with a random person, the platform used to do the experiment, and the name of the experiment.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to report the <strong>number of experiments</strong> done on each of the three platforms for each of the three given experiments. Notice that all the pairs of (platform, experiment) should be included in the output <strong>including</strong> the pairs with <strong>zero experiments</strong>.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong>\nExperiments table:\n+---------------+----------+-----------------+\n| experiment_id | platform | experiment_name |\n+---------------+----------+-----------------+\n| 4             | IOS      | Programming     |\n| 13            | IOS      | Sports          |\n| 14            | Android  | Reading         |\n| 8             | Web      | Reading         |\n| 12            | Web      | Reading         |\n| 18            | Web      | Programming     |\n+---------------+----------+-----------------+\n<strong>Output:</strong> \n+----------+-----------------+-----------------+\n| platform | experiment_name | num_experiments |\n+----------+-----------------+-----------------+\n| Android  | Reading         | 1               |\n| Android  | Sports          | 0               |\n| Android  | Programming     | 0               |\n| IOS      | Reading         | 0               |\n| IOS      | Sports          | 1               |\n| IOS      | Programming     | 1               |\n| Web      | Reading         | 2               |\n| Web      | Sports          | 0               |\n| Web      | Programming     | 1               |\n+----------+-----------------+-----------------+\n<strong>Explanation:</strong> \nOn the platform &quot;Android&quot;, we had only one &quot;Reading&quot; experiment.\nOn the platform &quot;IOS&quot;, we had one &quot;Sports&quot; experiment and one &quot;Programming&quot; experiment.\nOn the platform &quot;Web&quot;, we had two &quot;Reading&quot; experiments and one &quot;Programming&quot; experiment.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Experiments (experiment_id int, platform ENUM('Android', 'IOS', 'Web'), experiment_name ENUM('Reading', 'Sports', 'Programming'))\"], \"mssql\": [\"Create table Experiments (experiment_id int, platform VARCHAR(7) NOT NULL CHECK (platform IN ('Android', 'IOS', 'Web')), experiment_name VARCHAR(11) NOT NULL CHECK (experiment_name IN ('Reading', 'Sports', 'Programming')))\"], \"oraclesql\": [\"Create table Experiments (experiment_id int, platform VARCHAR(7) NOT NULL CHECK (platform IN ('Android', 'IOS', 'Web')), experiment_name VARCHAR(11) NOT NULL CHECK (experiment_name IN ('Reading', 'Sports', 'Programming')))\"], \"database\": true, \"name\": \"count_experiments\", \"pythondata\": [\"Experiments = pd.DataFrame([], columns=['experiment_id', 'platform', 'experiment_name']).astype({'experiment_id':'Int64', 'platform':'object', 'experiment_name':'object'})\"], \"postgresql\": [\"Create table If Not Exists Experiments (experiment_id int, platform VARCHAR(30) CHECK (platform IN ('Android', 'IOS', 'Web')), experiment_name VARCHAR(30) CHECK (experiment_name IN ('Reading', 'Sports', 'Programming')))\\n\"], \"database_schema\": {\"Experiments\": {\"experiment_id\": \"INT\", \"platform\": \"ENUM('Android', 'IOS', 'Web')\", \"experiment_name\": \"ENUM('Reading', 'Sports', 'Programming')\"}}}",
+  "stats": "{\"totalAccepted\": \"9.8K\", \"totalSubmission\": \"20.1K\", \"totalAcceptedRaw\": 9814, \"totalSubmissionRaw\": 20112, \"acRate\": \"48.8%\"}",
+  "likes": 27,
+  "dislikes": 203,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Experiments\":[\"experiment_id\",\"platform\",\"experiment_name\"]},\"rows\":{\"Experiments\":[[4,\"IOS\",\"Programming\"],[13,\"IOS\",\"Sports\"],[14,\"Android\",\"Reading\"],[8,\"Web\",\"Reading\"],[12,\"Web\",\"Reading\"],[18,\"Web\",\"Programming\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"strava\", \"name\": \"Strava\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef count_experiments(experiments: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,131 @@
+{
+  "questionId": "1945",
+  "questionFrontendId": "1817",
+  "title": "Finding the Users Active Minutes",
+  "titleSlug": "finding-the-users-active-minutes",
+  "difficulty": "Medium",
+  "content": "<p>You are given the logs for users&#39; actions on LeetCode, and an integer <code>k</code>. The logs are represented by a 2D integer array <code>logs</code> where each <code>logs[i] = [ID<sub>i</sub>, time<sub>i</sub>]</code> indicates that the user with <code>ID<sub>i</sub></code> performed an action at the minute <code>time<sub>i</sub></code>.</p>\n\n<p><strong>Multiple users</strong> can perform actions simultaneously, and a single user can perform <strong>multiple actions</strong> in the same minute.</p>\n\n<p>The <strong>user active minutes (UAM)</strong> for a given user is defined as the <strong>number of unique minutes</strong> in which the user performed an action on LeetCode. A minute can only be counted once, even if multiple actions occur during it.</p>\n\n<p>You are to calculate a <strong>1-indexed</strong> array <code>answer</code> of size <code>k</code> such that, for each <code>j</code> (<code>1 &lt;= j &lt;= k</code>), <code>answer[j]</code> is the <strong>number of users</strong> whose <strong>UAM</strong> equals <code>j</code>.</p>\n\n<p>Return <i>the array </i><code>answer</code><i> as described above</i>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> logs = [[0,5],[1,2],[0,2],[0,5],[1,3]], k = 5\n<strong>Output:</strong> [0,2,0,0,0]\n<strong>Explanation:</strong>\nThe user with ID=0 performed actions at minutes 5, 2, and 5 again. Hence, they have a UAM of 2 (minute 5 is only counted once).\nThe user with ID=1 performed actions at minutes 2 and 3. Hence, they have a UAM of 2.\nSince both users have a UAM of 2, answer[2] is 2, and the remaining answer[j] values are 0.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> logs = [[1,1],[2,2],[2,3]], k = 4\n<strong>Output:</strong> [1,1,0,0]\n<strong>Explanation:</strong>\nThe user with ID=1 performed a single action at minute 1. Hence, they have a UAM of 1.\nThe user with ID=2 performed actions at minutes 2 and 3. Hence, they have a UAM of 2.\nThere is one user with a UAM of 1 and one with a UAM of 2.\nHence, answer[1] = 1, answer[2] = 1, and the remaining values are 0.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= logs.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= ID<sub>i</sub> &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= time<sub>i</sub> &lt;= 10<sup>5</sup></code></li>\n\t<li><code>k</code> is in the range <code>[The maximum <strong>UAM</strong> for a user, 10<sup>5</sup>]</code>.</li>\n</ul>\n",
+  "hints": [
+    "Try to find the number of different minutes when action happened for each user.",
+    "For each user increase the value of the answer array index which matches the UAM for this user."
+  ],
+  "metaData": "{\n  \"name\": \"findingUsersActiveMinutes\",\n  \"params\": [\n    {\n      \"name\": \"logs\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"70.2K\", \"totalSubmission\": \"86.8K\", \"totalAcceptedRaw\": 70200, \"totalSubmissionRaw\": 86838, \"acRate\": \"80.8%\"}",
+  "likes": 864,
+  "dislikes": 319,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[0,5],[1,2],[0,2],[0,5],[1,3]]\n5",
+    "[[1,1],[2,2],[2,3]]\n4"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"twitter\", \"name\": \"X\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> findingUsersActiveMinutes(vector<vector<int>>& logs, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] findingUsersActiveMinutes(int[][] logs, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findingUsersActiveMinutes(self, logs: List[List[int]], k: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findingUsersActiveMinutes(self, logs, k):\n        \"\"\"\n        :type logs: List[List[int]]\n        :type k: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} logs\n * @param {number} k\n * @return {number[]}\n */\nvar findingUsersActiveMinutes = function(logs, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findingUsersActiveMinutes(logs: number[][], k: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] FindingUsersActiveMinutes(int[][] logs, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* findingUsersActiveMinutes(int** logs, int logsSize, int* logsColSize, int k, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findingUsersActiveMinutes(logs [][]int, k int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findingUsersActiveMinutes(logs: Array<IntArray>, k: Int): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findingUsersActiveMinutes(_ logs: [[Int]], _ k: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn finding_users_active_minutes(logs: Vec<Vec<i32>>, k: i32) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} logs\n# @param {Integer} k\n# @return {Integer[]}\ndef finding_users_active_minutes(logs, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $logs\n     * @param Integer $k\n     * @return Integer[]\n     */\n    function findingUsersActiveMinutes($logs, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> findingUsersActiveMinutes(List<List<int>> logs, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findingUsersActiveMinutes(logs: Array[Array[Int]], k: Int): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec finding_users_active_minutes(logs :: [[integer]], k :: integer) :: [integer]\n  def finding_users_active_minutes(logs, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec finding_users_active_minutes(Logs :: [[integer()]], K :: integer()) -> [integer()].\nfinding_users_active_minutes(Logs, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (finding-users-active-minutes logs k)\n  (-> (listof (listof exact-integer?)) exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": null
+}

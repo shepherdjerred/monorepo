@@ -1,0 +1,140 @@
+{
+  "questionId": "1876",
+  "questionFrontendId": "1765",
+  "title": "Map of Highest Peak",
+  "titleSlug": "map-of-highest-peak",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer matrix <code>isWater</code> of size <code>m x n</code> that represents a map of <strong>land</strong> and <strong>water</strong> cells.</p>\n\n<ul>\n\t<li>If <code>isWater[i][j] == 0</code>, cell <code>(i, j)</code> is a <strong>land</strong> cell.</li>\n\t<li>If <code>isWater[i][j] == 1</code>, cell <code>(i, j)</code> is a <strong>water</strong> cell.</li>\n</ul>\n\n<p>You must assign each cell a height in a way that follows these rules:</p>\n\n<ul>\n\t<li>The height of each cell must be non-negative.</li>\n\t<li>If the cell is a <strong>water</strong> cell, its height must be <code>0</code>.</li>\n\t<li>Any two adjacent cells must have an absolute height difference of <strong>at most</strong> <code>1</code>. A cell is adjacent to another cell if the former is directly north, east, south, or west of the latter (i.e., their sides are touching).</li>\n</ul>\n\n<p>Find an assignment of heights such that the maximum height in the matrix is <strong>maximized</strong>.</p>\n\n<p>Return <em>an integer matrix </em><code>height</code><em> of size </em><code>m x n</code><em> where </em><code>height[i][j]</code><em> is cell </em><code>(i, j)</code><em>&#39;s height. If there are multiple solutions, return <strong>any</strong> of them</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/01/10/screenshot-2021-01-11-at-82045-am.png\" style=\"width: 220px; height: 219px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> isWater = [[0,1],[0,0]]\n<strong>Output:</strong> [[1,0],[2,1]]\n<strong>Explanation:</strong> The image shows the assigned heights of each cell.\nThe blue cell is the water cell, and the green cells are the land cells.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/01/10/screenshot-2021-01-11-at-82050-am.png\" style=\"width: 300px; height: 296px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> isWater = [[0,0,1],[1,0,0],[0,0,0]]\n<strong>Output:</strong> [[1,1,0],[0,1,1],[1,2,2]]\n<strong>Explanation:</strong> A height of 2 is the maximum possible height of any assignment.\nAny height assignment that has a maximum height of 2 while still meeting the rules will also be accepted.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == isWater.length</code></li>\n\t<li><code>n == isWater[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 1000</code></li>\n\t<li><code>isWater[i][j]</code> is <code>0</code> or <code>1</code>.</li>\n\t<li>There is at least <strong>one</strong> water cell.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Note:</strong> This question is the same as 542: <a href=\"https://leetcode.com/problems/01-matrix/description/\" target=\"_blank\">https://leetcode.com/problems/01-matrix/</a></p>\n",
+  "hints": [
+    "Set each water cell to be 0. The height of each cell is limited by its closest water cell.",
+    "Perform a multi-source BFS with all the water cells as sources."
+  ],
+  "metaData": "{\n  \"name\": \"highestPeak\",\n  \"params\": [\n    {\n      \"name\": \"isWater\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[][]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"160K\", \"totalSubmission\": \"211.2K\", \"totalAcceptedRaw\": 159994, \"totalSubmissionRaw\": 211250, \"acRate\": \"75.7%\"}",
+  "likes": 1555,
+  "dislikes": 114,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[0,1],[0,0]]",
+    "[[0,0,1],[1,0,0],[0,0,0]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> highestPeak(vector<vector<int>>& isWater) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[][] highestPeak(int[][] isWater) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def highestPeak(self, isWater: List[List[int]]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def highestPeak(self, isWater):\n        \"\"\"\n        :type isWater: List[List[int]]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} isWater\n * @return {number[][]}\n */\nvar highestPeak = function(isWater) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function highestPeak(isWater: number[][]): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[][] HighestPeak(int[][] isWater) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** highestPeak(int** isWater, int isWaterSize, int* isWaterColSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func highestPeak(isWater [][]int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun highestPeak(isWater: Array<IntArray>): Array<IntArray> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func highestPeak(_ isWater: [[Int]]) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn highest_peak(is_water: Vec<Vec<i32>>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} is_water\n# @return {Integer[][]}\ndef highest_peak(is_water)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $isWater\n     * @return Integer[][]\n     */\n    function highestPeak($isWater) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> highestPeak(List<List<int>> isWater) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def highestPeak(isWater: Array[Array[Int]]): Array[Array[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec highest_peak(is_water :: [[integer]]) :: [[integer]]\n  def highest_peak(is_water) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec highest_peak(IsWater :: [[integer()]]) -> [[integer()]].\nhighest_peak(IsWater) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (highest-peak isWater)\n  (-> (listof (listof exact-integer?)) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2645",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a 2D matrix `isWater` of dimensions `m x n`, which represents a map consisting of land and water cells. Specifically:\n\n-   If `isWater[i][j] = 0`, the cell `(i, j)` represents land.\n-   If `isWater[i][j] = 1`, the cell `(i, j)` represents water.\n\nThe goal is to assign a height to each cell such that the highest peak on the map (i.e., the greatest height of any cell) is as high as possible. This assignment must follow these rules:\n\n1. The height of each cell must be non-negative.\n2. The height of all water cells is fixed at 0. These cells have fixed heights and cannot be changed.\n3. The height difference between two adjacent cells (cells that share a side) must not be greater than one. For example, if the height of cell `(2, 3)` is `4`, then the heights of its adjacent cells—`(1, 3)`, `(3, 3)`, `(2, 4)`, and `(2, 2)`—must be either `3`, `4` or `5`.\n\n---\n\n### Approach 1: Breadth-First Search\n\n#### Intuition\n\nLet’s first break the problem down into a simpler, one-dimensional version.\n\nImagine a row of cells with only one water cell. Intuitively, as we move away from the water cell, the heights of the land cells should gradually increase. The height of each land cell can naturally be determined by its distance from the water cell.\n\n![One-dimensional version of the problem with a single water cell](../Figures/1765/1765_approach1a.png)\n\nNow, let’s add a second water cell to the row. The idea stays the same, but now each land cell’s height is determined by its smallest distance to any water cell. This ensures a smooth increase in height as we move away from both water cells.\n\n![One-dimensional version of the problem with two water cells](../Figures/1765/1765_approach1b.png)\n\nWhen we extend this logic to two dimensions, the concept is identical. For every cell in the grid, we calculate its smallest distance to any water cell and assign that value as its height.\n- Heights increase smoothly from water cells, ensuring the highest peak is at the farthest distance from all water cells.\nThis can be visualized as a \"ripple effect\" where water cells propagate their distances outward, assigning heights to nearby land cells.\n\n![Two-dimensional version](../Figures/1765/1765_approach1c.png)\n\nThis approach works intuitively for two reasons:\n\n-   It follows the rule that the height difference between two adjacent cells is at most one. This is because the minimum distance to water for any two neighboring cells cannot differ by more than one.\n-   It’s optimal because it ensures that the height of the cells increases consistently as we move farther from water cells, maximizing the highest peak on the map.\n\nTo find the shortest distance from any cell to a water cell, we use Breadth-First Search (BFS) starting from all water cells. When a land cell is reached for the first time, its shortest distance to a water cell is set.\n\n> For a more comprehensive understanding of breadth-first search, check out the [BFS Explore Card 🔗](https://leetcode.com/explore/featured/card/graph/620/breadth-first-search-in-graph/). This resource provides an in-depth look at BFS, explaining its key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n#### Algorithm\n\n-   Define two arrays of size `4`: `dx = [0, 0, 1, -1]` and `dy = [1, -1, 0, 0]`. Each pair `(dx[d], dy[d])` represents one of the four possible directions to an adjacent cell.\n-   Initialize a 2D matrix, named `cellHeights`, of the same dimension as `isWater`. Set all of its cells to an invalid value, i.e. `-1`.\n-   Initialize an empty queue of pairs, `cellQueue`.\n-   Iterate over the `isWater` matrix:\n    -   Push every water cell into the `cellQueue`.\n    -   Set the height of each water cell to be `0`.\n-   Initialize `heightOfNextLayer` to `1` - that is the height of the neighbors of the cells currently in queue.\n-   While the `cellQueue` is not empty:\n    -   Set `layerSize` to the size of the queue.\n    -   For each cell in the current layer, i.e. for `i` from `0` to `layerSize - 1`:\n        -   Pop the top cell `currentCell` out of the queue.\n        -   For each direction, i.e. for `d` from `0` to `3`:\n            -   Find the neighbor of the current cell to that direction, `neighborCell = (currentCell.x + dx[d], currentCell.y + dy[d])`.\n            -   If `neighbor` is a valid cell (i.e. it is not out of the bounds of the matrix) and it is not already visited (i.e. `cellHeights[neighbor.x][neighbor.y] == -1`):\n                -   Set `cellHeights[neighbor.x][neighbor.y]` to `heightOfNextLayer`.\n                -  Push `neighbor` into the `cellQueue`.\n    -   Increment `heightOfNextLayer` by `1`.\n-   Return `cellHeights`.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/AbkNMEXz/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"AbkNMEXz\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ be the number of rows and $n$ the number of columns in the `isWater` matrix.\n\n-   Time Complexity: $O(m \\times n)$\n    We perform a single multi-source BFS traversal over the cells of the matrix. The time complexity of BFS is $O(V + E)$, where $V$ is the number of vertices (cells in the grid, $m \\times n$) and $E$ is the number of edges (connections between neighboring cells).\n    \n    In a grid, each cell has at most 4 neighbors, resulting in at most $4 \\cdot m \\times n$ edges. Since $E$ is proportional to $V$ in a grid, the total time complexity simplifies to $O(m \\times n)$.\n\n-   Space Complexity: $O(m \\times n)$\n    We use a 2D matrix `cellHeights` of size $m \\times n$ to store the calculated heights. Additionally, the BFS queue can hold up to $m \\times n$ cells in the worst case. Therefore, the overall space complexity is $O(m \\times n)$.\n\n---\n\n### Approach 2: Dynamic Programming\n\n#### Intuition\n\nIn this approach, we build on the idea that the height of each cell should be the smallest distance to any water cell. From there, we observe that once we know the smallest distances of a cell’s neighboring cells, calculating the distance for the current cell becomes straightforward — it’s just the smallest of the neighbors’ distances plus one. The core idea is to use dynamic programming to compute these distances efficiently.\n\nDynamic programming works well here because:\n1. Each cell's height can be derived from the heights of its neighboring cells.\n2. By iterating over the grid in a specific order, we can ensure that all necessary states are computed before being used.\n\nHowever, the challenge is figuring out the correct order to compute these states. In DP terms, we need to ensure all necessary states are computed before using them.\n\nLet’s simplify by imagining we can only move down or right. In that case, the top-left corner has no choices — it’s either a water cell or not reachable. Similarly, for the first row and column, we only have options from neighboring cells directly below or to the right.\n\nUsing this, we can fill the DP table row by row and column by column, in common order.\n\nFinally, we perform a second pass, moving upward or left, to correct any distances that were overestimated during the first pass, which only considered partial directions (top and left).\n\n#### Algorithm\n\n-   Initialize `rows` to the number of rows and `columns` to the number of columns of the `isWater` matrix.\n-   Initialize a 2D matrix, named `cellHeights`, of the same dimension as `isWater`. Set all of its cells to a large value, i.e. `INF`.\n-   Iterate over the `cellHeights` matrix and set the height of all water cells to `0`.\n-   Loop with `row` from `0` to `rows - 1`:\n    -   Loop with `col` from `0` to `columns - 1`:\n        -   Initialize `minNeighborDistance` to `INF`.\n        -   Find the neighbor above the current cell, i.e. `neighborRow = row - 1, neighborCol = col`.\n        -   If the neighbor is valid, i.e. if it is not out of the bounds of the grid:\n            -   Set `minNeighborDistance` to the minimum of itself and `cellHeights[neighborRow][neighborCol]`.\n        -   Find the neighbor to the left of the current cell, i.e. `neighborRow = row, neighborCol = col - 1`.\n        -   If the neighbor is valid:\n            -   Set `minNeighborDistance` to the minimum of itself and `cellHeights[neighborRow][neighborCol]`.\n        -   Set the height of the current cell to the minimum of its current value `minNeighborDistance + 1`.\n-   Perform the second pass over `cellHeights` moving in the opposite directions:\n-   Loop with `row` from `rows - 1` to `0`:\n    -   Loop with `col` from `columns - 1` to `0`:\n        -   Initialize `minNeighborDistance` to `INF`.\n        -   Find the neighbor below the current cell, i.e. `neighborRow = row + 1, neighborCol = col`.\n        -   If the neighbor is valid:\n            -   Set `minNeighborDistance` to the minimum of itself and `cellHeights[neighborRow][neighborCol]`.\n        -   Find the neighbor to the right of the current cell, i.e. `neighborRow = row, neighborCol = col + 1`.\n        -   If the neighbor is valid:\n            -   Set `minNeighborDistance` to the minimum of itself and `cellHeights[neighborRow][neighborCol]`.\n        -   Set the height of the current cell to the minimum of its current value `minNeighborDistance + 1`.\n-   Return `cellHeights`.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/oYC2r7oo/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"oYC2r7oo\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ be the number of rows and $n$ the number of columns in the `isWater` matrix.\n\n-   Time Complexity: $O(m \\times n)$\n    We iterate over the cells of the matrix 3 times and perform constant-time operations, including comparisons and assignments, on each iteration. Therefore, the time complexity of the algorithm is $O(m \\times n)$.\n\n-   Space Complexity: $O(m \\times n)$\n    We use a 2D matrix `cellHeights` of size $m \\times n$ to store the calculated heights resulting in a space complexity of $O(m \\times n)$. Unlike the previous approach that used a queue as an additional data structure, this method only relies on the input grid and the resulting matrix, keeping the space complexity factor lower.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

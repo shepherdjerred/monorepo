@@ -1,0 +1,122 @@
+{
+  "questionId": "1893",
+  "questionFrontendId": "1746",
+  "title": "Maximum Subarray Sum After One Operation",
+  "titleSlug": "maximum-subarray-sum-after-one-operation",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>nums</code>. You must perform <strong>exactly one</strong> operation&nbsp;where you can <strong>replace</strong> one&nbsp;element <code>nums[i]</code> with <code>nums[i] * nums[i]</code>.&nbsp;</p>\r\n\r\n<p>Return <em>the <strong>maximum</strong> possible subarray sum after <strong>exactly&nbsp;one</strong> operation</em>. The subarray must be non-empty.</p>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong class=\"example\">Example 1:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> nums = [2,-1,-4,-3]\r\n<strong>Output:</strong> 17\r\n<strong>Explanation:</strong> You can perform the operation on index 2 (0-indexed) to make nums = [2,-1,<strong>16</strong>,-3]. Now, the maximum subarray sum is 2 + -1 + 16 = 17.</pre>\r\n\r\n<p><strong class=\"example\">Example 2:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> nums = [1,-1,1,1,-1,-1,1]\r\n<strong>Output:</strong> 4\r\n<strong>Explanation:</strong> You can perform the operation on index 1 (0-indexed) to make nums = [1,<strong>1</strong>,1,1,-1,-1,1]. Now, the maximum subarray sum is 1 + 1 + 1 + 1 = 4.</pre>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong>Constraints:</strong></p>\r\n\r\n<ul>\r\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\r\n\t<li><code>-10<sup>4</sup>&nbsp;&lt;= nums[i] &lt;= 10<sup>4</sup></code></li>\r\n</ul>",
+  "hints": [
+    "Think about dynamic programming",
+    "Define an array dp[nums.length][2], where dp[i][0] is the max subarray sum including nums[i] and without squaring any element.",
+    "dp[i][1] is the max subarray sum including nums[i] and having only one element squared."
+  ],
+  "metaData": "{\n  \"name\": \"maxSumAfterOperation\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"13.9K\", \"totalSubmission\": \"21.3K\", \"totalAcceptedRaw\": 13911, \"totalSubmissionRaw\": 21340, \"acRate\": \"65.2%\"}",
+  "likes": 312,
+  "dislikes": 10,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Maximum Subarray\", \"titleSlug\": \"maximum-subarray\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,-1,-4,-3]",
+    "[1,-1,1,1,-1,-1,1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"sprinklr\", \"name\": \"Sprinklr\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxSumAfterOperation(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxSumAfterOperation(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxSumAfterOperation(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxSumAfterOperation(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar maxSumAfterOperation = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxSumAfterOperation(nums: number[]): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxSumAfterOperation(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\nint maxSumAfterOperation(int* nums, int numsSize){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxSumAfterOperation(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxSumAfterOperation(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxSumAfterOperation(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_sum_after_operation(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef max_sum_after_operation(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function maxSumAfterOperation($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxSumAfterOperation(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-sum-after-operation nums)\n  (-> (listof exact-integer?) exact-integer?)\n\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2631",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nGiven an array `nums`, we can replace exactly one element `nums[i]` with its square, `nums[i] * nums[i]`. Our goal is to find the maximum possible sum of any subarray after making this replacement. \n\nA straightforward approach to this problem would be to square each element at a time and calculate the maximum subarray sum for the resulting array. However, this method has a time complexity of $O(n^2)$, which would lead to a TLE (Time Limit Exceeded) error for the problem's constraints.\n\nTo build a better understanding of the concept, you might want to start with a simpler version of the problem: finding the maximum subarray sum for a fixed array. You can try it here:  [53. Maximum Subarray](https://leetcode.com/problems/maximum-subarray/description/).\n\n---\n\n### Approach 1: MaxLeft and MaxRight\n\n#### Intuition\n\nFirst, it's important to see that squaring an element outside the final maximum-sum subarray doesn't help. Squaring increases the value of an element, so it makes sense only to square an element that is part of the subarray contributing to the maximum sum.\n\nThis means the result subarray will look like this:\n-   A prefix of unchanged elements from `nums` (possibly empty).\n-   A single squared element `nums[i] * nums[i]`.\n-   A suffix of unchanged elements from `nums` (possibly empty).\n\nTherefore, we calculate for each index `i`, the maximum sum of a subarray ending just before the index `i` and the maximum sum of a subarray starting just after the index `i`. By combining these two subarrays with the squared element `nums[i] * nums[i]` and taking the greatest total sum, we get the answer.\n\n#### Algorithm\n\n-   Initialize `n` to the size of the `nums` array.\n-   Initialize two arrays of `n` elements, named `maxLeft` and `maxRight`, to store the maximum sum of the subarrays ending just before and starting just after each element.\n-   Set `maxLeft[0]` to `0`; no subarray ends before the first element.\n- Iterate through the array from left to right to compute `maxLeft`:\n  - For each `i` from 1 to `n - 1`:\n    - Calculate `maxLeft[i]` as the maximum of:\n      - The sum of the current subarray ending at `i - 1`.\n      - 0 (indicating no subarray).\n-   Set `maxRight[n - 1]` to `0`; no subarray starts after the last element.\n- Iterate through the array from right to left to compute `maxRight`:\n  - For each `i` from `n - 2` to 0:\n    - Calculate `maxRight[i]` as the maximum of:\n      - The sum of the current subarray starting at `i + 1`.\n      - 0 (indicating no subarray).\n-   Initialize `maxSum` to `0`.\n- Iterate through each element in the array to compute the result:\n  - For each `i` from 0 to `n - 1`:\n    - Compute the sum of:\n      - The maximum sum of subarrays ending before `i` (`maxLeft[i]`).\n      - The square of `nums[i]` (representing the modified value).\n      - The maximum sum of subarrays starting after `i` (`maxRight[i]`).\n    - Update `maxSum` to the maximum of its current value and the computed sum.\n-   Return `maxSum`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/TVMJzV7a/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"TVMJzV7a\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the array.\n\n- Time complexity: $O(n)$\n\n    We loop over the array three times and perform constant-time operations on each iteration. Therefore, the time complexity of the algorithm is $O(n)$.\n\n- Space complexity: $O(n)$\n\n    We are creating two arrays `maxLeft` and `maxRight`, each of size $n$ to store the maximum sum of a subarray ending just before and starting exactly after each index. That's why the algorithm requires $O(n)$ extra space.\n\n---\n\n### Approach 2: Top-Down Dynamic Programming\n\n#### Intuition\n\nFor each element in the array, we have two main options:\n\n1. **Option 1: Do not square the element**\n\nWhen we choose not to square the element, it contributes its original value as it is. We recursively calculate the maximum sum we can get from the subarray starting at the next index:\n\n-   If this sum is positive, we add it to the value of the current element. \n\n-   If not, the remaining subarray does not help increase the maximum subarray sum. In this case, we take the current element alone as the best option, meaning we stop expanding the subarray to the right and just return the current element's value.\n\n2. **Option 2: Square the element**\n\nWe can only choose this option if none of the previous elements has been squared. When this holds, we can either get the square of the current element alone or incremented by the greatest sum of a subarray starting from the next index (only if it is positive).\n\nSince for each element, we are exploring two options (square the element or not), the approach results in a time complexity of $O(2^n)$ due to the recursive branching. However, this complexity can be reduced to polynomial time using dynamic programming and storing previously computed results in a memoization table to prevent redundant calculations.\n\n> For a more comprehensive understanding of dynamic programming, check out the [Dynamic Programming Explore Card 🔗](https://leetcode.com/explore/learn/card/dynamic-programming/). This resource provides an in-depth look at dynamic programming, explaining its key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n\n#### Algorithm\n\n- Initialize `n` to the size of `nums` and create a DP table `dp` of size `n x 2` with initial values set to `-1`.\n\n- Initialize `maxSum` to 0 to keep track of the maximum sum found during recursion.\n\n- Call the recursive helper function `getMaxSumHelper(0, nums, true, dp, maxSum)` to start processing from the first element with the option to square it.\n\n- `getMaxSumHelper` function:\n  - If `index` is equal to the size of `nums`, return `0` (base case: end of the array).\n  \n  - If the result for the current state (`dp[index][canSquare]`) is already computed, return it.\n\n  - **Case 1: Skip squaring the current element**:\n    - Recursively call `getMaxSumHelper(index + 1, nums, canSquare, dp, maxSum)` to get the sum for the next element without squaring the current element.\n    - Set `maxSumWithoutSquare` to the value of `nums[index]` if we don't square it, adding the result of the next sum if positive.\n\n  - **Case 2: Square the current element if allowed**:\n    - If `canSquare` is true, square `nums[index]` and set `maxSumWithSquare` to the squared value.\n    - Recursively call `getMaxSumHelper(index + 1, nums, false, dp, maxSum)` to calculate the sum for the next element without the option to square further.\n    - Add the result of the next sum if positive.\n\n  - Update `maxSum` if either of the two cases provides a better sum.\n\n  - Store the result for the current state (`dp[index][canSquare]`) and return the maximum of the two options (`maxSumWithSquare` and `maxSumWithoutSquare`).\n\n- Return the value of `maxSum` after processing all elements.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Go8KhqPr/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Go8KhqPr\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the array.\n\n- Time complexity: $O(n)$\n\n    We call the `getMaxSumHelper` function for each element twice, one when we are allowed to square it and one when we are not. Since on each separate call, the function performs constant-time operations, the time complexity of the algorithm is $O(n)$.\n\n- Space complexity: $O(n)$\n\n    We are creating an array `dp` of size $2n$ to store the results after each call. Additionally, the recursion depth can grow up to $O(n)$ in size, contributing to the space complexity. Therefore, the solution requires $O(n)$ extra space.\n\n---\n\n### Approach 3: Bottom-Up Dynamic Programming\n\n#### Intuition\n\nAfter exploring different options using a recursive approach, switching to an iterative dynamic approach becomes much easier. The key step is replacing the recursive function with a table, ensuring that all required states are computed before using them.\n\nLet’s define a 2D table `dp[n][2]`, where:\n\n- `dp[index][0]` represents the maximum sum of a subarray ending at `index` with no squared elements.\n- `dp[index][1]` represents the maximum sum of a subarray ending at `index` with exactly one squared element.\n\nTo calculate `dp[index][0]` (subarray with no squared elements), we have two options:\n\n- Start a new subarray with just the current element.\n- Continue the maximum subarray sum from the previous index, without squaring the element.\n\nSo, we choose the maximum of these two options:  \n`dp[index][0] = max(dp[index - 1][0] + nums[index], nums[index])`.\n\nFor `dp[index][1]` (subarray with exactly one squared element), we have three choices:\n\n- Square the current element by itself: `nums[index] * nums[index]`.\n- Continue the previous subarray (without a squared element) but square the current element: `dp[index - 1][0] + nums[index] * nums[index]`.\n- Continue the previous subarray that already had one squared element, adding the current element as-is: `dp[index - 1][1] + nums[index]`.\n\nAgain, we set `dp[index][1]` to the maximum of these three choices.\n\nThe final answer is the maximum of all `dp[index][1]` values, since we want exactly one squared element in our subarray.\n\n#### Algorithm\n\n- Initialize `n` to the size of the `nums` array.\n- Initialize `maxSumWithoutSquare` and `maxSumWithSquare` to store the maximum sums:\n  - `maxSumWithoutSquare` starts with the first element of `nums`.\n  - `maxSumWithSquare` starts with the square of the first element of `nums`.\n  - Initialize `maxSum` as `maxSumWithSquare` (to keep track of the overall maximum sum).\n- Iterate through the array starting from index 1:\n  - For each element, compute three possible options for the maximum sum with squaring:\n    - Option 1: Square the current element.\n    - Option 2: Square the current element and add it to the previous `maxSumWithoutSquare`.\n    - Option 3: Add the current element to `maxSumWithSquare`.\n    - Update `maxSumWithSquare` to the maximum of these options.\n  - Compute two options for the maximum sum without squaring:\n    - Option 1: Start a new subarray with the current element.\n    - Option 2: Continue the previous subarray by adding the current element to `maxSumWithoutSquare`.\n    - Update `maxSumWithoutSquare` to the maximum of these two options.\n  - Update `maxSum` to the maximum of the current `maxSum` and `maxSumWithSquare`.\n- Return `maxSum`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/miZLErEd/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"miZLErEd\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the array.\n\n- Time complexity: $O(n)$\n\n    We iterate over the array once to fill the values of the `dp` table. Therefore, the algorithm runs in $O(n)$ time.\n\n- Space complexity: $O(n)$\n\n    Just like in the previous approach, we are creating an array, `dp`, of size $2n$ to store the greatest sums up to each index with and without squaring an element. This results in a $O(n)$ space complexity.\n\n---\n\n### Approach 4: Space-optimized Dynamic Programming\n\n#### Intuition\n\nLooking back at our earlier approach, we can see that `dp[index][0]` and `dp[index][1]` only depend on the values from the previous index, `index - 1`. This means that once we calculate `dp[index]`, we no longer need the values for earlier indices. Therefore, keeping them in memory is unnecessary and wastes space. \nSo, instead of creating an entire array, we can use just two variables, `maxSumWithoutSquare` and `maxSumWithSquare`, to represent `dp[index][0]` and `dp[index][1]`. These variables are updated in each iteration.\n\n#### Algorithm\n\n- Initialize `n` to the size of the `nums` array.\n- Initialize `maxSumWithoutSquare` and `maxSumWithSquare` to store the maximum sums:\n  - `maxSumWithoutSquare` starts with the first element of `nums`.\n  - `maxSumWithSquare` starts with the square of the first element of `nums`.\n  - Initialize `maxSum` as `maxSumWithSquare` (to keep track of the overall maximum sum).\n\n- Iterate through the array starting from index 1:\n  - For each element, compute three possible options for the maximum sum with squaring:\n    - Option 1: Square the current element.\n    - Option 2: Square the current element and add it to the previous `maxSumWithoutSquare`.\n    - Option 3: Add the current element to `maxSumWithSquare`.\n    - Update `maxSumWithSquare` to the maximum of these options.\n\n  - Compute two options for the maximum sum without squaring:\n    - Option 1: Start a new subarray with the current element.\n    - Option 2: Continue the previous subarray by adding the current element to `maxSumWithoutSquare`.\n    - Update `maxSumWithoutSquare` to the maximum of these two options.\n\n  - Update `maxSum` to the maximum of the current `maxSum` and `maxSumWithSquare`.\n\n- Return `maxSum`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/DS4q8MfP/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"DS4q8MfP\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the array.\n\n- Time complexity: $O(n)$\n\n    We iterate over the array once and on each iteration we perform some constant-time operations (additions and comparisons) to update the `maxSumWithSquare` and `maxSumWithoutSquare` variables. Therefore, the time complexity is $O(n)$.\n\n- Space complexity: $O(1)$\n\n    We only define a fixed number of variables which does not depend on the input size.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

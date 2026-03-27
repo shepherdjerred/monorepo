@@ -1,0 +1,53 @@
+{
+  "questionId": "2030",
+  "questionFrontendId": "1875",
+  "title": "Group Employees of the Same Salary",
+  "titleSlug": "group-employees-of-the-same-salary",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Employees</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| employee_id | int     |\n| name        | varchar |\n| salary      | int     |\n+-------------+---------+\nemployee_id is the column with unique values for this table.\nEach row of this table indicates the employee ID, employee name, and salary.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>A company wants to divide the employees into teams such that all the members on each team have the <strong>same salary</strong>. The teams should follow these criteria:</p>\n\n<ul>\n\t<li>Each team should consist of <strong>at least two</strong> employees.</li>\n\t<li>All the employees on a team should have the <strong>same salary</strong>.</li>\n\t<li>All the employees of the same salary should be assigned to the same team.</li>\n\t<li>If the salary of an employee is unique, we <strong>do not</strong> assign this employee to any team.</li>\n\t<li>A team&#39;s ID is assigned based on the <strong>rank of the team&#39;s salary</strong> relative to the other teams&#39; salaries, where the team with the <strong>lowest</strong> salary has <code>team_id = 1</code>. Note that the salaries for employees not on a team are <strong>not included</strong> in this ranking.</li>\n</ul>\n\n<p>Write a solution to get the <code>team_id</code> of each employee that is in a team.</p>\n\n<p>Return the result table ordered by <code>team_id</code> <strong>in ascending order</strong>. In case of a tie, order it by <code>employee_id</code> in <strong>ascending order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nEmployees table:\n+-------------+---------+--------+\n| employee_id | name    | salary |\n+-------------+---------+--------+\n| 2           | Meir    | 3000   |\n| 3           | Michael | 3000   |\n| 7           | Addilyn | 7400   |\n| 8           | Juan    | 6100   |\n| 9           | Kannon  | 7400   |\n+-------------+---------+--------+\n<strong>Output:</strong> \n+-------------+---------+--------+---------+\n| employee_id | name    | salary | team_id |\n+-------------+---------+--------+---------+\n| 2           | Meir    | 3000   | 1       |\n| 3           | Michael | 3000   | 1       |\n| 7           | Addilyn | 7400   | 2       |\n| 9           | Kannon  | 7400   | 2       |\n+-------------+---------+--------+---------+\n<strong>Explanation:</strong> \nMeir (employee_id=2) and Michael (employee_id=3) are in the same team because they have the same salary of 3000.\nAddilyn (employee_id=7) and Kannon (employee_id=9) are in the same team because they have the same salary of 7400.\nJuan (employee_id=8) is not included in any team because their salary of 6100 is unique (i.e. no other employee has the same salary).\nThe team IDs are assigned as follows (based on salary ranking, lowest first):\n- team_id=1: Meir and Michael, a salary of 3000\n- team_id=2: Addilyn and Kannon, a salary of 7400\nJuan&#39;s salary of 6100 is not included in the ranking because they are not on a team.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Employees (employee_id int, name varchar(30), salary int)\"], \"mssql\": [\"Create table Employees (employee_id int, name varchar(30), salary int)\"], \"oraclesql\": [\"Create table Employees (employee_id int, name varchar(30), salary int)\"], \"database\": true, \"name\": \"employees_of_same_salary\", \"pythondata\": [\"Employees = pd.DataFrame([], columns=['employee_id', 'name', 'salary']).astype({'employee_id':'Int64', 'name':'object', 'salary':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Employees (employee_id int, name varchar(30), salary int)\"], \"database_schema\": {\"Employees\": {\"employee_id\": \"INT\", \"name\": \"VARCHAR(30)\", \"salary\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"15.3K\", \"totalSubmission\": \"23.4K\", \"totalAcceptedRaw\": 15321, \"totalSubmissionRaw\": 23423, \"acRate\": \"65.4%\"}",
+  "likes": 78,
+  "dislikes": 6,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Employees\":[\"employee_id\",\"name\",\"salary\"]},\"rows\":{\"Employees\":[[2,\"Meir\",3000],[3,\"Michael\",3000],[7,\"Addilyn\",7400],[8,\"Juan\",6100],[9,\"Kannon\",7400]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"clari\", \"name\": \"Clari\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef employees_of_same_salary(employees: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

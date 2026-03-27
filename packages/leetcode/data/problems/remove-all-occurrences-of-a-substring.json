@@ -1,0 +1,140 @@
+{
+  "questionId": "2021",
+  "questionFrontendId": "1910",
+  "title": "Remove All Occurrences of a Substring",
+  "titleSlug": "remove-all-occurrences-of-a-substring",
+  "difficulty": "Medium",
+  "content": "<p>Given two strings <code>s</code> and <code>part</code>, perform the following operation on <code>s</code> until <strong>all</strong> occurrences of the substring <code>part</code> are removed:</p>\n\n<ul>\n\t<li>Find the <strong>leftmost</strong> occurrence of the substring <code>part</code> and <strong>remove</strong> it from <code>s</code>.</li>\n</ul>\n\n<p>Return <code>s</code><em> after removing all occurrences of </em><code>part</code>.</p>\n\n<p>A <strong>substring</strong> is a contiguous sequence of characters in a string.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;daabcbaabcbc&quot;, part = &quot;abc&quot;\n<strong>Output:</strong> &quot;dab&quot;\n<strong>Explanation</strong>: The following operations are done:\n- s = &quot;da<strong><u>abc</u></strong>baabcbc&quot;, remove &quot;abc&quot; starting at index 2, so s = &quot;dabaabcbc&quot;.\n- s = &quot;daba<strong><u>abc</u></strong>bc&quot;, remove &quot;abc&quot; starting at index 4, so s = &quot;dababc&quot;.\n- s = &quot;dab<strong><u>abc</u></strong>&quot;, remove &quot;abc&quot; starting at index 3, so s = &quot;dab&quot;.\nNow s has no occurrences of &quot;abc&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;axxxxyyyyb&quot;, part = &quot;xy&quot;\n<strong>Output:</strong> &quot;ab&quot;\n<strong>Explanation</strong>: The following operations are done:\n- s = &quot;axxx<strong><u>xy</u></strong>yyyb&quot;, remove &quot;xy&quot; starting at index 4 so s = &quot;axxxyyyb&quot;.\n- s = &quot;axx<strong><u>xy</u></strong>yyb&quot;, remove &quot;xy&quot; starting at index 3 so s = &quot;axxyyb&quot;.\n- s = &quot;ax<strong><u>xy</u></strong>yb&quot;, remove &quot;xy&quot; starting at index 2 so s = &quot;axyb&quot;.\n- s = &quot;a<strong><u>xy</u></strong>b&quot;, remove &quot;xy&quot; starting at index 1 so s = &quot;ab&quot;.\nNow s has no occurrences of &quot;xy&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= part.length &lt;= 1000</code></li>\n\t<li><code>s</code>​​​​​​ and <code>part</code> consists of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Note that a new occurrence of pattern can appear if you remove an old one, For example, s = \"ababcc\" and pattern = \"abc\".",
+    "You can maintain a stack of characters and if the last character of the pattern size in the stack match the pattern remove them"
+  ],
+  "metaData": "{\n  \"name\": \"removeOccurrences\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"part\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"396.4K\", \"totalSubmission\": \"505.3K\", \"totalAcceptedRaw\": 396416, \"totalSubmissionRaw\": 505274, \"acRate\": \"78.5%\"}",
+  "likes": 2612,
+  "dislikes": 90,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Deletions on a String\", \"titleSlug\": \"maximum-deletions-on-a-string\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"daabcbaabcbc\"\n\"abc\"",
+    "\"axxxxyyyyb\"\n\"xy\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string removeOccurrences(string s, string part) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String removeOccurrences(String s, String part) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def removeOccurrences(self, s: str, part: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def removeOccurrences(self, s, part):\n        \"\"\"\n        :type s: str\n        :type part: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {string} part\n * @return {string}\n */\nvar removeOccurrences = function(s, part) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function removeOccurrences(s: string, part: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string RemoveOccurrences(string s, string part) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* removeOccurrences(char* s, char* part) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func removeOccurrences(s string, part string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun removeOccurrences(s: String, part: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func removeOccurrences(_ s: String, _ part: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn remove_occurrences(s: String, part: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {String} part\n# @return {String}\ndef remove_occurrences(s, part)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param String $part\n     * @return String\n     */\n    function removeOccurrences($s, $part) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String removeOccurrences(String s, String part) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def removeOccurrences(s: String, part: String): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec remove_occurrences(s :: String.t, part :: String.t) :: String.t\n  def remove_occurrences(s, part) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec remove_occurrences(S :: unicode:unicode_binary(), Part :: unicode:unicode_binary()) -> unicode:unicode_binary().\nremove_occurrences(S, Part) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (remove-occurrences s part)\n  (-> string? string? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2674",
+    "content": "[TOC]\n\n## Solution \n    \n---\n\n### Approach 1: Iteration\n\n#### Intuition\n\nWe are given a string `s` and a substring `part`, and we need to repeatedly remove the first occurrence of `part` from `s` until it no longer appears. Since the constraints are relatively small (`s.length <= 1000` and `part.length <= 1000`), we can try a brute force approach.\n\nWe can use a simple iterative approach which loops through `s` as long as `part` is present in it. Each time we find `part`, we need to remove its first occurrence. To do this, we first locate the leftmost occurrence of `part` in `s`. Once we know where it starts, we can break `s` into three sections: the part of the string before the occurrence of `part`, the occurrence of `part` itself, and the part of the string after `part`. By combining the first and third sections (effectively leaving out the middle section), we remove that occurrence of `part` from `s`.\n\nWhen the loop finishes, `s` will no longer contain any occurrences of `part`, so we return it as the result.\n\n> It’s worth noting that we can simplify this process by utilizing built-in string methods provided by the programming language. \n> For instance, in Java, the `String.replaceFirst` method can be used to replace the first occurrence of a substring, in Python3 we can use `str.replace`, and in C++ we can use a combination of `std::string::erase` and `std::string::find`.\n> Most of the time, it is beneficial to use these built-in functions since they are heavily optimized and tested, and will almost always perform better than our own implementations.\n\n#### Algorithm\n\n- Run a `while` loop to repeatedly check if the string `s` contains the substring `part`.\n  - Find the index of the leftmost occurrence of `part` in `s` and store it in a variable `partStartIndex`.\n  - Use the substring method to extract the portion of `s` before `part` (`s.substring(0, partStartIndex)`) and the portion after `part` (`s.substring(partStartIndex + part.length())`).\n  - Concatenate the first and last portions and assign it back to `s`.\n- Return the updated string `s`, which no longer contains any occurrences of `part`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/mrwKgtYj/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"mrwKgtYj\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the string $s$ and $m$ be the length of the substring `part`.\n\n- Time complexity: $O(n^2)$\n\n    The algorithm uses a `while` loop to repeatedly remove the leftmost occurrence of `part` from `s`. Each iteration of the loop involves finding the index of `part`, which takes $O(n \\cdot m)$ time, and then creating a new string by concatenating the segments before and after `part`, which takes $O(n)$ time. In the worst case, there are $O(n/m)$ such iterations (e.g., when `part` is non-overlapping and removed sequentially). The total time across all iterations is $O((n \\cdot m) \\cdot (n/m)) = O(n^2)$.\n\n- Space complexity: $O(n)$\n\n    Although the algorithm does not explicitly use additional data structures, each iteration creates a new string by concatenating the segments before and after part. This results in the creation of intermediate strings, each of size up to $O(n)$. The space required to store these intermediate strings dominates the space complexity, leading to $O(n)$ space usage.\n\n---\n\n### Approach 2: Stack\n\n#### Intuition\n\nIn the first approach, we relied on built-in methods to find and remove substrings. Let’s explore how to implement this functionality entirely on our own.\n\nOne issue with repeatedly removing substrings from a string is that it requires recreating the entire string every time. We need a way such that removing the substring characters from a string at any point is as close to constant time as possible.\n\nWe can simulate this using a stack. A stack allows us to remove its topmost element in constant time. So, if we incrementally put the characters of `s` in the stack, the moment we find out that the last part of the stack forms `part`, we simply pop the entire substring out. This means we needed to only loop over the length of `part`, rather than the entire string `s`.\n\nTo implement this, we can loop over each character of `s` and add it to the stack. As we add characters, we constantly check if the most recent portion of the stack matches the substring `part`. If it does, we remove those characters from the stack. This approach avoids scanning the entire string repeatedly and only focuses on the portions of `s` that could potentially contain `part`.\n\nHowever, if at any point the characters don’t match, it means that the stack doesn’t contain `part` at the top. In that case, any intermediate pops made during the check need to be undone, so the characters are pushed back onto the stack in the correct order. The process continues for the rest of the string.\n\nWhen we finish processing all the characters in `s`, the stack will contain the modified version of `s` with all occurrences of `part` removed. At this point, the stack’s contents are reversed compared to the original string, so we reverse them back to produce the final result, which is then returned.\n\n> For a more comprehensive understanding of stacks, check out the [Stack Explore Card 🔗](https://leetcode.com/explore/learn/card/queue-stack/). This resource provides an in-depth look at stacks, explaining their key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n#### Algorithm\n\n- Initialize a stack of characters `stk` to store the characters of the string as they are processed.\n- Calculate the lengths of the input string `s` and the substring `part`, storing them in `strLength` and `partLength`, respectively.\n- Use a `for` loop to iterate through each character in the string `s`, starting from index `0` and ending at `strLength - 1`.\n  - Push the current character of the string onto the stack.\n  - Check if the size of the stack is greater than or equal to `partLength`. If so:\n    - Use the helper method `checkMatch` to check if the top of the stack matches `part`:\n      - If a match is found, pop the top `partLength` characters from the stack.\n- After processing the entire string, initialize a string `result` to construct the resulting string.\n- While the stack is not empty, pop each character from the stack and append it to the `result`.\n- Reverse the order of `result` to correct the sequence of characters and return it.\n\nHelper method `checkMatch(stk, part, partLength)`:\n\n- Initialize a temporary stack `temp` and copy all characters from the original stack `stk` into `temp`.\n- Use a `for` loop to iterate over `part` in reverse order, starting from index `partLength - 1` and ending at `0`. For each character:\n  - Compare the current character of `part` with the top character of `temp`:\n    - If they do not match, return `false`.\n    - Else, remove the top character from `temp`.\n- If all characters of `part` match the top characters of the stack in reverse order, return `true`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/HL2DXsSB/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"HL2DXsSB\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the string `s`, and $m$ be the length of the substring `part`.  \n\n- Time complexity: $O(n \\cdot m)$  \n\n    The algorithm iterates through each character of the string `s`, contributing $O(n)$ to the complexity. For each character pushed onto the stack, the algorithm checks if the top $m$ characters of the stack match `part`. This involves an $O(m)$ comparison for potential matches. Since this check can occur for each character in `s`, the worst-case time complexity is $O(n \\cdot m)$.  \n\n- Space complexity: $O(n + m)$  \n\n    The stack stores up to $O(n)$ characters in the worst case (e.g., when no `part` substrings are removed). The temporary stack `temp` in the `checkMatch` function also requires $O(n)$ space. Additionally, the `potentialMatch` string temporarily stores up to $O(m)$ characters during each iteration. So, the total space complexity is $O(n)$ (stacks) + $O(m)$ (temporary `potentialMatch`), which simplifies to $O(n + m)$.\n\n---\n\n### Approach 3: Knuth-Morris-Pratt (KMP) Algorithm\n\n#### Intuition\n\nSo far, we have relied on a naive approach for pattern matching, where we slide the pattern (`part`) over the string (`s`) one character at a time and check for a match. For example, if `s = \"ABABDABACDABABCABAB\"` and `part = \"ABABCABAB\"`, the naive approach compares `part` with every substring of `s` of the same length, often rechecking characters unnecessarily. Consider the scenario where the first four characters, `\"ABAB\"`, match, but a mismatch occurs with the fifth character. In the naive approach, the pattern is shifted by just one character, and the comparison restarts from the beginning of `part`, rechecking `\"BAB\"` again. This results in redundant comparisons and inefficiency.\n\nThe Knuth-Morris-Pratt (KMP) algorithm optimizes this by using a longest prefix-suffix (LPS) array for the pattern. The LPS array helps determine how much of the pattern has been matched so far, allowing the algorithm to skip redundant comparisons. When a mismatch happens, instead of starting over from the beginning, we use the LPS array to shift the pattern by an appropriate amount.\n\nFor example, if we’ve matched `\"ABABC\"` but encounter a mismatch at the 6th character, the LPS value for `\"ABABC\"` is 1. We then shift the pattern by 4 characters (5 – 1) and continue matching. This avoids rechecking parts of the pattern we’ve already matched.\n\nFor example, consider the pattern `part = \"ABABCABAB\"`. Let's see how we build up the LPS array in the slideshow below:\n\n!?!../Documents/1910/p_slideshow.json:848,766!?!\n\nThe LPS array allows the KMP algorithm to skip unnecessary comparisons when a mismatch occurs. When a mismatch happens, instead of starting over from the beginning of the pattern, the algorithm uses the LPS array to determine how much of the pattern has already been matched. It then shifts the pattern by an appropriate amount and continues matching.\n\nFor example, let’s say we’re matching `part = \"ABABCABAB\"` against `s = \"ABABDABACDABABCABAB\"`. Suppose we’ve matched the first 4 characters (`\"ABAB\"`) but encounter a mismatch at the 5th character. The LPS value for the prefix `\"ABAB\"` is `2`, so we know that the first 2 characters of the pattern are already matched. Instead of starting over, we shift the pattern by 2 characters (length of the matched prefix minus the LPS value: `4 - 2 = 2`) and continue matching. This skipping of unnecessary comparisons makes the KMP algorithm much more efficient.\n\nThe LPS array is built using a linear iterative approach. We initialize two pointers: `current` (to traverse `part`) and `prefixLength` (to track the length of the matching prefix-suffix). We then iterate through the pattern:\n- If the characters at current and `prefixLength` match, we increment both pointers and set `lps[current] = prefixLength`.\n- If they don’t match and `prefixLength` is not zero, we backtrack `prefixLength` to `lps[prefixLength - 1]`.\n- If they don’t match and `prefixLength` is zero, we set `lps[current] = 0` and increment `current`.\n\nHere's a slideshow to visualize this process better:\n\n!?!../Documents/1910/slideshow.json:762,826!?!\n\nFinally, we process each character of `s` while using the LPS array to track how much of `part` has been matched. We iterate over `s` and when a complete match is found, we remove the matched substring from the stack. If a mismatch occurs, we use the LPS array to backtrack and continue matching.\n\nAfter processing all characters of `s`, the stack contains the characters of `s` with all occurrences of part removed. We convert the stack into a string by popping characters and reversing the `result` (since stacks are last-in-first-out). We return this `result` as our answer.\n\n#### Algorithm\n\n- Call the helper method `computeLongestPrefixSuffix` with the substring `part` to calculate the Longest Prefix Suffix (LPS) array.\n- Create a stack `charStack` to store characters of the string `s` as they are processed.\n- Declare an array `patternIndexes` of size `s.length() + 1` to keep track of the pattern index for each character in the stack.\n- Use a `for` loop to iterate through each character in the string `s`. Also, maintain a variable `patternIndex` to track the current position in the substring `part`.\n  - Push the current character onto the stack.\n  - If the current character matches the character at `patternIndex` in `part`:\n      - Increment `patternIndex` and store it in `patternIndexes[charStack.size()]`.\n      - If `patternIndex` equals the length of `part`, the pattern is fully matched:\n        - Pop `part.length()` characters from the stack to remove the matched pattern.\n        - Reset `patternIndex` to `patternIndexes[charStack.size()]` if the stack is not empty, otherwise set it to `0`.\n  - If the current character does not match the character at `patternIndex` in `part`:\n      - If `patternIndex` is not 0, backtrack by setting `patternIndex` to `lps[patternIndex - 1]` and decrement `strIndex` to reprocess the current character.\n      - If `patternIndex` is 0, set `patternIndexes[charStack.size()]` to `0`.\n- Initialize `result` to construct the result string from the remaining characters in the stack.\n- Reverse the constructed string and return it as the output.\n\nHelper method `computeLongestPrefixSuffix(pattern)`\n\n- Create an array `lps` of size equal to the length of the pattern `part` to store the lengths of the longest proper prefix which is also a suffix.\n- Use a `for` loop to traverse the pattern `part` starting from index `1`. Maintain a variable `prefixLength` to track the length of the longest prefix-suffix.\n  - If the character at the current position matches the character at `prefixLength`:\n    - Increment `prefixLength` and store it in `lps[current]`.\n    - Proceed to the next character.\n  - Else if the characters do not match and `prefixLength` is non-zero:\n    - Backtrack to the previous longest prefix-suffix using the LPS array.\n  - If no match is found and `prefixLength` is zero, set `lps[current]` to zero and proceed to the next character.\n- Return the fully constructed `lps` array.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/GsYagfpK/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"GsYagfpK\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the string `s`, and $m$ be the length of the substring `part`.  \n\n- Time complexity: $O(n + m)$ for Java and Python3, $O(n^2 + m)$ for C++  \n\n    The algorithm consists of two main components: the preprocessing step to compute the KMP longest prefix-suffix (`lps`) array and the traversal of the string `s`. \n    \n    The preprocessing step takes $O(m)$ time, as the `lps` array is computed for the pattern `part`. \n    \n    The traversal of `s` uses a stack and performs efficient pattern matching with the help of the `lps` array. Each character in `s` is processed once, and backtracking in the pattern matching is guided by the `lps` array, ensuring that each character is examined only a constant number of times. Thus, the traversal takes $O(n)$ time. \n    \n    Combining these two components, the overall time complexity is $O(n + m)$.  \n\n    However, the result construction step in the C++ solution has a time complexity of $O(n^2)$ due to repeated string modifications. As a result, the overall time complexity of the C++ solution becomes $O(n^2 + m)$.\n\n- Space complexity: $O(n + m)$  \n\n    The primary space usage comes from the stack, which can store up to $n$ characters in the worst case if no matches are removed. Additionally, the pattern matching indices array requires $O(n)$ space, and the `lps` array used for KMP preprocessing requires $O(m)$ space. These components together result in a total space complexity of $O(n + m)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

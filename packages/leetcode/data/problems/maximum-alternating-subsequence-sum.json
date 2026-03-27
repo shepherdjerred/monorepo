@@ -1,0 +1,117 @@
+{
+  "questionId": "2022",
+  "questionFrontendId": "1911",
+  "title": "Maximum Alternating Subsequence Sum",
+  "titleSlug": "maximum-alternating-subsequence-sum",
+  "difficulty": "Medium",
+  "content": "<p>The <strong>alternating sum</strong> of a <strong>0-indexed</strong> array is defined as the <strong>sum</strong> of the elements at <strong>even</strong> indices <strong>minus</strong> the <strong>sum</strong> of the elements at <strong>odd</strong> indices.</p>\r\n\r\n<ul>\r\n\t<li>For example, the alternating sum of <code>[4,2,5,3]</code> is <code>(4 + 5) - (2 + 3) = 4</code>.</li>\r\n</ul>\r\n\r\n<p>Given an array <code>nums</code>, return <em>the <strong>maximum alternating sum</strong> of any subsequence of </em><code>nums</code><em> (after <strong>reindexing</strong> the elements of the subsequence)</em>.</p>\r\n\r\n<ul>\r\n</ul>\r\n\r\n<p>A <strong>subsequence</strong> of an array is a new array generated from the original array by deleting some elements (possibly none) without changing the remaining elements&#39; relative order. For example, <code>[2,7,4]</code> is a subsequence of <code>[4,<u>2</u>,3,<u>7</u>,2,1,<u>4</u>]</code> (the underlined elements), while <code>[2,4,2]</code> is not.</p>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong class=\"example\">Example 1:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> nums = [<u>4</u>,<u>2</u>,<u>5</u>,3]\r\n<strong>Output:</strong> 7\r\n<strong>Explanation:</strong> It is optimal to choose the subsequence [4,2,5] with alternating sum (4 + 5) - 2 = 7.\r\n</pre>\r\n\r\n<p><strong class=\"example\">Example 2:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> nums = [5,6,7,<u>8</u>]\r\n<strong>Output:</strong> 8\r\n<strong>Explanation:</strong> It is optimal to choose the subsequence [8] with alternating sum 8.\r\n</pre>\r\n\r\n<p><strong class=\"example\">Example 3:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> nums = [<u>6</u>,2,<u>1</u>,2,4,<u>5</u>]\r\n<strong>Output:</strong> 10\r\n<strong>Explanation:</strong> It is optimal to choose the subsequence [6,1,5] with alternating sum (6 + 5) - 1 = 10.\r\n</pre>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong>Constraints:</strong></p>\r\n\r\n<ul>\r\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\r\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>5</sup></code></li>\r\n</ul>",
+  "hints": [
+    "Is only tracking a single sum enough to solve the problem?",
+    "How does tracking an odd sum and an even sum reduce the number of states?"
+  ],
+  "metaData": "{\n  \"name\": \"maxAlternatingSum\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"63.9K\", \"totalSubmission\": \"108.1K\", \"totalAcceptedRaw\": 63857, \"totalSubmissionRaw\": 108125, \"acRate\": \"59.1%\"}",
+  "likes": 1434,
+  "dislikes": 33,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Alternating Subarray Sum\", \"titleSlug\": \"maximum-alternating-subarray-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Element-Sum of a Complete Subset of Indices\", \"titleSlug\": \"maximum-element-sum-of-a-complete-subset-of-indices\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Product of Subsequences With an Alternating Sum Equal to K\", \"titleSlug\": \"maximum-product-of-subsequences-with-an-alternating-sum-equal-to-k\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[4,2,5,3]",
+    "[5,6,7,8]",
+    "[6,2,1,2,4,5]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"quince\", \"name\": \"Quince\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\r\npublic:\r\n    long long maxAlternatingSum(vector<int>& nums) {\r\n        \r\n    }\r\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\r\n    public long maxAlternatingSum(int[] nums) {\r\n        \r\n    }\r\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\r\n    def maxAlternatingSum(self, nums: List[int]) -> int:"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\r\n    def maxAlternatingSum(self, nums):\r\n        \"\"\"\r\n        :type nums: List[int]\r\n        :rtype: int\r\n        \"\"\""
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\r\n * @param {number[]} nums\r\n * @return {number}\r\n */\r\nvar maxAlternatingSum = function(nums) {\r\n    \r\n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxAlternatingSum(nums: number[]): number {\r\n\r\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\r\n    public long MaxAlternatingSum(int[] nums) {\r\n        \r\n    }\r\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long maxAlternatingSum(int* nums, int numsSize){\r\n\r\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxAlternatingSum(nums []int) int64 {\r\n    \r\n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\r\n    fun maxAlternatingSum(nums: IntArray): Long {\r\n        \r\n    }\r\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\r\n    func maxAlternatingSum(_ nums: [Int]) -> Int {\r\n        \r\n    }\r\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\r\n    pub fn max_alternating_sum(nums: Vec<i32>) -> i64 {\r\n        \r\n    }\r\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\r\n# @return {Integer}\r\ndef max_alternating_sum(nums)\r\n    \r\nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\r\n\r\n    /**\r\n     * @param Integer[] $nums\r\n     * @return Integer\r\n     */\r\n    function maxAlternatingSum($nums) {\r\n        \r\n    }\r\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\r\n    def maxAlternatingSum(nums: Array[Int]): Long = {\r\n        \r\n    }\r\n}"
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-alternating-sum nums)\r\n  (-> (listof exact-integer?) exact-integer?)\r\n\r\n  )"
+    }
+  ],
+  "solution": null
+}

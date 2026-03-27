@@ -1,0 +1,140 @@
+{
+  "questionId": "1813",
+  "questionFrontendId": "1695",
+  "title": "Maximum Erasure Value",
+  "titleSlug": "maximum-erasure-value",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array of positive integers <code>nums</code> and want to erase a subarray containing&nbsp;<strong>unique elements</strong>. The <strong>score</strong> you get by erasing the subarray is equal to the <strong>sum</strong> of its elements.</p>\n\n<p>Return <em>the <strong>maximum score</strong> you can get by erasing <strong>exactly one</strong> subarray.</em></p>\n\n<p>An array <code>b</code> is called to be a <span class=\"tex-font-style-it\">subarray</span> of <code>a</code> if it forms a contiguous subsequence of <code>a</code>, that is, if it is equal to <code>a[l],a[l+1],...,a[r]</code> for some <code>(l,r)</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [4,2,4,5,6]\n<strong>Output:</strong> 17\n<strong>Explanation:</strong> The optimal subarray here is [2,4,5,6].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [5,2,1,2,5,2,1,2,5]\n<strong>Output:</strong> 8\n<strong>Explanation:</strong> The optimal subarray here is [5,2,1] or [1,2,5].\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [
+    "The main point here is for the subarray to contain unique elements for each index. Only the first subarrays starting from that index have unique elements.",
+    "This can be solved using the two pointers technique"
+  ],
+  "metaData": "{\n  \"name\": \"maximumUniqueSubarray\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"294.8K\", \"totalSubmission\": \"459.2K\", \"totalAcceptedRaw\": 294761, \"totalSubmissionRaw\": 459245, \"acRate\": \"64.2%\"}",
+  "likes": 3401,
+  "dislikes": 67,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Longest Substring Without Repeating Characters\", \"titleSlug\": \"longest-substring-without-repeating-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[4,2,4,5,6]",
+    "[5,2,1,2,5,2,1,2,5]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"at-t\", \"name\": \"AT&T\"}], \"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 10, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"cashfree\", \"name\": \"Cashfree\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximumUniqueSubarray(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximumUniqueSubarray(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumUniqueSubarray(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumUniqueSubarray(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar maximumUniqueSubarray = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumUniqueSubarray(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaximumUniqueSubarray(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maximumUniqueSubarray(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumUniqueSubarray(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumUniqueSubarray(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumUniqueSubarray(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_unique_subarray(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef maximum_unique_subarray(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function maximumUniqueSubarray($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumUniqueSubarray(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumUniqueSubarray(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_unique_subarray(nums :: [integer]) :: integer\n  def maximum_unique_subarray(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_unique_subarray(Nums :: [integer()]) -> integer().\nmaximum_unique_subarray(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-unique-subarray nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1088",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n#### Overview\n\nThis is an interesting problem. We have to find all the subarrays having unique elements. Among all the resultant subarrays, we must erase exactly one subarray having the maximum sum.\n\n> It must be noted that subarray is a contiguous subsequence. In array `[1, 2, 3, 4]`, `[1, 2, 3]` is a subarray whereas `[1, 2, 4]` is not.\n\nIn practice, there is no need to actually erase the array. We could just move the pointers to find the subarray satisfying our condition and return its sum.\n\nLet's look at different approaches to solve the problem. This article is comprehensive with various ways of implementing the problem using varied data structures.\n\n---\n\n#### Approach 1: Brute Force\n\n**Intuition**\n\nThe naive solution to solve the problem would be to look for all possible subarrays that have unique elements and find their sum. We can maintain the maximum sum found so far, if we find another subarray having unique elements and a sum greater than the maximum sum, we can update the maximum sum.\n\n**Algorithm**\n\n- To look for all possible subarrays we must iterate over array `nums` starting at every position from $$0^{th}$$ index to $$n^{th}$$ index. Let's use the variable `start` to fix the starting position of every subarray.\n\n  For example, for array = `[4, 2, 4, 5, 6]`, subarrays beginning at `start` index $$0$$ are `[4]`, `[4, 2]`, `[4, 2, 4]` and so on.\n\n- For every `start` index, the `end` index would iterate from `start` index to $$n^{th}$$ index and generate all subarrays till the end of the array. Thus, we must use a nested _for_ loop. The outer loop would fix the starting position of the subarray, and the inner loop would increment the `end` position of the subarray.\n\n- Now, we want only those subarrays having unique elements. What should be the best way to implement that? The first thing that comes to our mind is - _Why don't we maintain a Set that tracks all the unique elements in the current subarray?_\n\n  And that's apparently the right choice. For every subarray, we could maintain a `set` and add every element to the `set` that we traverse for that subarray. If we come across an element that is already present in the `set`, the subarray no longer satisfies the condition and we must terminate. In other words, we would only increment the `end` index, until there are _unique_ elements in the subarray.\n\n- Instead of finding the sum of the subarray after it is generated, we could keep incrementing the sum as the new element is added to the subarray. Let `currentSum` be the sum of subarray generated so far. Every time we find that the next element pointed by the `end` index is unique, we add it's value to the `currentSum`.\n\n- We maintain a variable `result` that tracks the maximum sum seen so far and the sum is updated every time we find another subarray with a greater sum. In the end, we return the value of `result`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/fiTYX2eG/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"fiTYX2eG\"></iframe>\n\n**Complexity Analysis**\n\nLet $$n$$ be the length of array `nums`.\n\n- Time Complexity: $$\\mathcal{O}(n^{2})$$, as we use a nested for loop to generate all possible subarray. In the worst case, when all the array elements are unique, we would end up iterating $$n^{2}$$ times.\n\n  _This approach is exhaustive and results in Time Limit Exceeded (TLE)_\n\n- Space Complexity: $$\\mathcal{O}(m)$$, where $$m$$ is the number of unique elements.\n\n---\n\n#### Approach 2: Two Pointer Approach Using Set\n\n**Intuition**\n\nWe could optimize _Approach 1_. Instead of blindly looking for all the subarrays and calculating their sum, we could make use of previous calculations.\n\nFor example, for nums = `[4, 2, 3, 5, 4, 1]`, we found a subarray having unique elements `[4, 2, 3, 5]` with sum `14` starting at index `0` and ending at `3`.\n\nNow, the `end` pointer is incremented by $$1$$ and we find that the element at index `4` is $$4$$ which is already present in our current subarray. The subarray is now `[4, 2, 3, 5, 4]`. Here, instead of breaking the loop and re-initiating our search again from `start` index 1, we could simply reposition the `start` index such that there are unique elements in the array. How can we do that?\n\nThe simple way is to increment the `start` pointer until we find element `4` and fix the `start` pointer at the index after that. As `start` is incremented, we are removing each element from our current subarray, hence we must also update the `currentSum` and `set`.\n\nThe following figure illustrates the idea.\n\n![img](../Documents/5630/twoPointerApproach.svg)\n\n**Algorithm**\n\n- We would maintain $$2$$ pointers, `start` would point to the beginning and `end` would point to the end of the current subarray. Both pointers are initialized to $$0$$.\n\n- The `end` pointer would increment and expand the current subarray until all the array elements are unique. Now, we must use a `set` as in _Approach 1_ to check after every increment if the newly added element is unique or not.\n\n- We must also keep track of the sum of elements in the current subarray. Let's use the variable `currentSum` for that.\n\n- Now, we have to simply iterate over the array `nums`.\n\n  - If the newly added element pointed by index `end` is not present in `set`, then it is unique, we must add that element in `set` and also add it's value to the `currentSum`.\n\n  - Otherwise, we must remove elements from the subarray until the duplicate of the newly added element is removed from the subarray. One way to achieve that is to increment pointer `start` until the element pointed by pointer `end` is removed from the map.\n\n- After every increment of the `end` pointer, if the `currentSum` is greater than the previous one, update the `result`.The process would continue until the `end` pointer has reached the end of array `nums`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/9BwtYEeW/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"9BwtYEeW\"></iframe>\n\n**Complexity Analysis**\n\nLet $$n$$ be the length of array `nums`.\n\n- Time Complexity: $$\\mathcal{O}(n)$$ We would iterate over each array element at most twice. First, to add it to the current subarray using the `end` pointer. Second, to remove it from the subarray using the `start` pointer. Also, adding/remove elements from the set would take constant time. This gives us time complexity as $$\\mathcal{O}(2n)$$ which is roughly $$\\mathcal{O}(n)$$.\n\n- Space Complexity: $$\\mathcal{O}(m)$$, where $$m$$ is the number of unique elements.\n\n---\n\n#### Approach 3: Two Pointer Approach Using Boolean Array\n\n**Intuition**\n\nIn the previous approach, we were using a `set` data structure to keep track of all the elements in the current subarray. There is little overhead to add and then remove elements from the set. Can we use some data structure where we could just mark or unmark the occurrence of an element instead of actually adding and removing the elements?\n\nWe can use an array of type boolean instead of a set. We know that the maximum value of an array element can be $$10^{4}$$. So we can use a boolean array of size $$10^{4}$$ and each index would represent the corresponding value in array `nums`.\n\nThe following figure illustrates how we can store array `[4, 6, 8, 1]` in array `nums`.\n\n![img](../Documents/5630/booleanArrayExample.svg)\n\n**Algorithm**\n\n- Build a boolean array `isPresent` to track the elements present in current subarray. If an element $$i$$ is added to the current subarray, mark `isPresent[i] = true`. Similarly, if an element $$i$$, is removed from current subarray, mark `isPresent[i] = false`.\n\n- Initialize the `start` and `end` pointer at $$0^{th}$$ index and set `currentSum` to $$0$$.\n\n- Now, increment the `end` pointer by $$1$$ and check if the newly added element is already present in the current subarray or not.\n\n  - If the newly added element pointed by index `end` is marked `true` in array `isPresent`, it is unique, add that element in `set` and also add its value to the `currentSum`.\n\n  - Otherwise, we must remove elements from the subarray until the duplicate of the newly added element is removed from the subarray. One way to achieve that is to increment pointer `start` until the element pointed by pointer `end` is removed from the map.\n\n- After every increment of the `end` pointer, if the `currentSum` is greater than the previous one, update the `result`.The process would continue until the `end` pointer has reached the end of array `nums`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/QNA5jTbd/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"QNA5jTbd\"></iframe>\n\n**Complexity Analysis**\n\nLet $$n$$ be the length of array `nums` and $$k$$ be the range of non-negative values.\n\n- Time Complexity: We spend $\\mathcal{O}(k)$ time to initialize the `isPresent` array. After that, the sliding window moves each element at most twice (once when added, once when removed), which takes $O(n)$ So overall time complexity is $O(n + k)$\n\n- Space Complexity: $$\\mathcal{O}(k)$$, as we use a boolean array, `isPresent`, of size k.\n\n---\n\n#### Approach 4: Two Pointer Approach Using Count Map\n\n**Intuition**\n\nThis is just another way of implementing the solution. We can also use a count array of type integer to store the frequency of elements in the current subarray. An element is unique if it's frequency is $$1$$.\n\nWe can use a fixed size count array of size $$10^{4}$$ to store the occurrence of an element in the current subarray. If a new element is added to the current subarray, it's count would be incremented. Similarly, if an element is removed from the current subarray, it's count would be decremented.\n\nAs a new element is added to the subarray, we want to check if it's unique or not. We would know this information by checking if it's frequency in count array is $$1$$. If the frequency is greater than $$1$$, we would remove element from the beginning of current subarray until the frequency of the newly added element is exactly $$1$$.\n\n**Algorithm**\n\n- Build an integer array `countMap` to store the frequency of elements in current subarray. Initialize the `start` and `end` pointer at $$0^{th}$$ index and set `currentSum` to $$0$$.\n\n- Increment the `end` pointer by $$1$$ and update the element's frequency in `countMap`. Let the newly added element be `currentElement`, increment `countMap[currentElement]` by $$1$$.\n\n- If the value of `countMap[currentElement]` is greater than $$1$$, it is not unique in the current subarray. Remove elements from current subarray by incrementing `start` pointer until the frequency of `currentElement` is $$1$$.\n\n- After every increment of the `end` pointer, if the `currentSum` is greater than the previous one, update the `result`.The process would continue until the `end` pointer has reached the end of array `nums`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/iaxFpaqY/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"iaxFpaqY\"></iframe>\n\n**Complexity Analysis**\n\nLet $$n$$ be the length of array `nums` and $$k$$ be the range of non-negative values.\n\n- Time Complexity: We first initialize a frequency vector of size $k$, which takes $O(k)$. After that, the two-pointer traversal ensures each element is added and removed at most once, which is $O(n)$. Combining both gives us a total of $O(n + k)$\n\n- Space Complexity: $$\\mathcal{O}(k)$$, as we use $$k$$ space for `countMap`.\n\n---\n\n#### Approach 5: Using Prefix Sum with HashMap\n\n**Intuition**\n\nIn all the previous approaches, when we find that the newly added element is not unique in the current subarray, we remove the elements from the beginning of the subarray one by one by incrementing the `start` pointer by $$1$$ and shrink the subarray until the it contains all the unique elements.\n\nHowever, we already know the element that we want to remove from the current subarray.\n\nFor example, if our current subarray is `[2, 4, 3, 5]` and has all unique elements, when a new element `4` is added to the subarray, we find that the resultant subarray `[2, 4, 3, 5, 4]` doesn't contain all unique elements. At this point, we are sure that the property of having all unique elements for the current subarray got violated because of the element `4` that was just added.\n\nOur goal is to somehow remove the old occurrence of `4` from the subarray to restore its property of having all unique elements. How can we do that?\n\nOne way could be that, if we already know that the last index of element `4` in subarray was $$1$$, we could remove that element, by moving the `start` pointer at index $$2$$. After repositioning the `start` index, the current subarray would be `[3, 5, 4]` and contains all unique elements.\n\n> Wait a minute !! Are we missing something?\n>\n> _How would we now know the sum of all elements in subarray `[3, 5, 4]`? If we again iterate over each element of the subarray to get the current sum, our optimization would be a waste !!_\n\nThere is another idea for that. We can calculate the prefix sum of the array. The prefix sum stores sum of all elements till the current index starting from the $$0^{th}$$ index. Example, the value at position `prefixSum[i]` would be the sum of all the values in array` nums` from $$0^{th}$$ index to $$i^{th}$$ index.\n\nSo, in the above example, to get the sum of subarray `[3, 5, 4]` starting at index `2` and ending at index `4` we could simply calculate `prefixSum[4] - prefixSum[1]`.\n\nThe following figure illustrates the idea for `nums = [2, 4, 3, 5, 4, 1]`.\n\n![img](../Documents/5630/lastIndexApproach.svg)\n\n**Algorithm**\n\n- To implement the above idea, we need some data structure that could give us the last index of any element in constant time. We can use a map where the element would be the key and its value would be index when it last appeared in the array `nums`. Let the map be `lastIndexMap`.\n\n- Initialize the `start` and `end` pointer at $$0^{th}$$ index.\n\n- Now, we must build the `prefixSum` which would give the sum of any subarray in the array `nums`. Instead of building it beforehand, we can calculate the prefix sum for every index as we iterate elements at each index.\n\n- Initially, there is no element in the current subarray. We start adding an element to the subarray by incrementing the `end` pointer by $$1$$ and iterating over `nums`. `currentElement` is the element pointed by pointer `end`.\n\n- Calculate the prefix sum till `end` index and update in the array `prefixSum`.\n\n- We have to check if the current subarray starting at index `start` and ending at index `end` has all unique elements. We already have a map that maintains the last indexes of all elements in the subarray. Can we reuse the same map?\n\n  We could use this map to know the last index of `currentElement`. If the last occurrence of `currentElement` is between the `start` and `end` pointer, its last index would be greater than the `start` index. We can use this trick to determine if the `currentElement` is unique in the current subarray or not.\n\n  If the last index of current element is greater than `start`, then update `start` to the position after last index of `currentElement`. This could be written as ,\n\n```\nstart = max(start, lastIndexMap.get(currentElement) + 1)\n```\n\n- At every iteration, update the `result` to track the maximum sum seen so far and return at the end.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/JDM3cJnM/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"JDM3cJnM\"></iframe>\n\n**Complexity Analysis**\n\nLet $$n$$ be the length of array `nums`.\n\n- Time Complexity: $$\\mathcal{O}(n)$$ We iterate over every element only once.\n\n- Space Complexity: $$\\mathcal{O}(n)$$, as `lastIndexMap` would grow to a maximum size of `n`. Also, we use an integer array `prefixSum` of size `n`.\n\n---\n\n#### Approach 6: Using Prefix Sum with Count Array\n\n**Intuition**\n\nWe could further improve _Approach 5_ by using a fixed size integer array to store the last indexes. With this, we can implement the problem in constant space.\n\nFrom the problem description, we know that the maximum value of any element in the array `nums` would be $$10^{4}$$, hence we could build the array of that size and store the last index of any element in the array.\n\n**Algorithm**\n\n- Build an integer array `lastIndexes` of size $$10^{4}$$ to store the last index of any element in the array. If `currentElement` is the last added element to the subarray having index `end`, we would update `lastIndexes[currentElement]` to `i`.\n\n  Initially, all the values in the `lastIndexes` array would be initialized to `-1`.\n\n- Iterate over each element as in `Approach 6` and determine the maximum sum after every iteration. Update `result` with the maximum sum and return at the end.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/PVPhzgkv/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"PVPhzgkv\"></iframe>\n\n**Complexity Analysis**\n\nLet $$n$$ be the length of array `nums` and $$k$$ be the range of non-negative values.\n\n- Time Complexity: $O(n + k)$. We need $O(k)$ time to initialize `lastIndexes` of size $k$ and then iterate through all $n$ elements once.\n\n- Space Complexity: $O(n + k)$, since we store `prefixSum` of size $n$ and `lastIndexes` of size $k$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

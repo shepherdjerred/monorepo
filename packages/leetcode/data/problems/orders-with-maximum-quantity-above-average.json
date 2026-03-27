@@ -1,0 +1,53 @@
+{
+  "questionId": "2014",
+  "questionFrontendId": "1867",
+  "title": "Orders With Maximum Quantity Above Average",
+  "titleSlug": "orders-with-maximum-quantity-above-average",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>OrdersDetails</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| order_id    | int  |\n| product_id  | int  |\n| quantity    | int  |\n+-------------+------+\n(order_id, product_id) is the primary key (combination of columns with unique values) for this table.\nA single order is represented as multiple rows, one row for each product in the order.\nEach row of this table contains the quantity ordered of the product product_id in the order order_id.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>You are running an e-commerce site that is looking for <strong>imbalanced orders</strong>. An <strong>imbalanced order</strong> is one whose <strong>maximum</strong> quantity is <strong>strictly greater</strong> than the <strong>average</strong> quantity of <strong>every order (including itself)</strong>.</p>\n\n<p>The <strong>average </strong>quantity of an order is calculated as <code>(total quantity of all products in the order) / (number of different products in the order)</code>. The <strong>maximum</strong> quantity of an order is the highest <code>quantity</code> of any single product in the order.</p>\n\n<p>Write a solution to find the <code>order_id</code> of all <strong>imbalanced orders</strong>.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nOrdersDetails table:\n+----------+------------+----------+\n| order_id | product_id | quantity |\n+----------+------------+----------+\n| 1        | 1          | 12       |\n| 1        | 2          | 10       |\n| 1        | 3          | 15       |\n| 2        | 1          | 8        |\n| 2        | 4          | 4        |\n| 2        | 5          | 6        |\n| 3        | 3          | 5        |\n| 3        | 4          | 18       |\n| 4        | 5          | 2        |\n| 4        | 6          | 8        |\n| 5        | 7          | 9        |\n| 5        | 8          | 9        |\n| 3        | 9          | 20       |\n| 2        | 9          | 4        |\n+----------+------------+----------+\n<strong>Output:</strong> \n+----------+\n| order_id |\n+----------+\n| 1        |\n| 3        |\n+----------+\n<strong>Explanation:</strong> \nThe average quantity of each order is:\n- order_id=1: (12+10+15)/3 = 12.3333333\n- order_id=2: (8+4+6+4)/4 = 5.5\n- order_id=3: (5+18+20)/3 = 14.333333\n- order_id=4: (2+8)/2 = 5\n- order_id=5: (9+9)/2 = 9\n\nThe maximum quantity of each order is:\n- order_id=1: max(12, 10, 15) = 15\n- order_id=2: max(8, 4, 6, 4) = 8\n- order_id=3: max(5, 18, 20) = 20\n- order_id=4: max(2, 8) = 8\n- order_id=5: max(9, 9) = 9\n\nOrders 1 and 3 are imbalanced because they have a maximum quantity that exceeds the average quantity of every order.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists OrdersDetails (order_id int, product_id int, quantity int)\"], \"mssql\": [\"Create table OrdersDetails (order_id int, product_id int, quantity int)\"], \"oraclesql\": [\"Create table OrdersDetails (order_id int, product_id int, quantity int)\"], \"database\": true, \"name\": \"orders_above_average\", \"pythondata\": [\"OrdersDetails = pd.DataFrame([], columns=['order_id', 'product_id', 'quantity']).astype({'order_id':'Int64', 'product_id':'Int64', 'quantity':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists OrdersDetails (order_id int, product_id int, quantity int)\"], \"database_schema\": {\"OrdersDetails\": {\"order_id\": \"INT\", \"product_id\": \"INT\", \"quantity\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"19.5K\", \"totalSubmission\": \"27.6K\", \"totalAcceptedRaw\": 19528, \"totalSubmissionRaw\": 27636, \"acRate\": \"70.7%\"}",
+  "likes": 79,
+  "dislikes": 282,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"OrdersDetails\": [\"order_id\", \"product_id\", \"quantity\"]}, \"rows\": {\"OrdersDetails\": [[1 ,1, 12], [1 ,2, 10], [1 ,3, 15], [2 ,1, 8], [2 ,4, 4], [2 ,5, 6], [3 , 3, 5], [3 ,4, 18], [4 ,5, 2], [4 ,6, 8], [5 ,7, 9], [5 ,8, 9], [3 ,9, 20], [2 ,9, 4]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef orders_above_average(orders_details: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

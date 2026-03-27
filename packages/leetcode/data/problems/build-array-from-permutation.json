@@ -1,0 +1,136 @@
+{
+  "questionId": "2048",
+  "questionFrontendId": "1920",
+  "title": "Build Array from Permutation",
+  "titleSlug": "build-array-from-permutation",
+  "difficulty": "Easy",
+  "content": "<p>Given a <strong>zero-based permutation</strong> <code>nums</code> (<strong>0-indexed</strong>), build an array <code>ans</code> of the <strong>same length</strong> where <code>ans[i] = nums[nums[i]]</code> for each <code>0 &lt;= i &lt; nums.length</code> and return it.</p>\n\n<p>A <strong>zero-based permutation</strong> <code>nums</code> is an array of <strong>distinct</strong> integers from <code>0</code> to <code>nums.length - 1</code> (<strong>inclusive</strong>).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [0,2,1,5,3,4]\n<strong>Output:</strong> [0,1,2,4,5,3]<strong>\nExplanation:</strong> The array ans is built as follows: \nans = [nums[nums[0]], nums[nums[1]], nums[nums[2]], nums[nums[3]], nums[nums[4]], nums[nums[5]]]\n    = [nums[0], nums[2], nums[1], nums[5], nums[3], nums[4]]\n    = [0,1,2,4,5,3]</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [5,0,1,2,3,4]\n<strong>Output:</strong> [4,5,0,1,2,3]\n<strong>Explanation:</strong> The array ans is built as follows:\nans = [nums[nums[0]], nums[nums[1]], nums[nums[2]], nums[nums[3]], nums[nums[4]], nums[nums[5]]]\n    = [nums[5], nums[0], nums[1], nums[2], nums[3], nums[4]]\n    = [4,5,0,1,2,3]</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 1000</code></li>\n\t<li><code>0 &lt;= nums[i] &lt; nums.length</code></li>\n\t<li>The elements in <code>nums</code> are <strong>distinct</strong>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow-up:</strong> Can you solve it without using an extra space (i.e., <code>O(1)</code> memory)?</p>\n",
+  "hints": [
+    "Just apply what's said in the statement.",
+    "Notice that you can't apply it on the same array directly since some elements will change after application"
+  ],
+  "metaData": "{\n  \"name\": \"buildArray\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"856.5K\", \"totalSubmission\": \"940.2K\", \"totalAcceptedRaw\": 856513, \"totalSubmissionRaw\": 940156, \"acRate\": \"91.1%\"}",
+  "likes": 4034,
+  "dislikes": 491,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[0,2,1,5,3,4]",
+    "[5,0,1,2,3,4]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 9, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> buildArray(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] buildArray(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def buildArray(self, nums: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def buildArray(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number[]}\n */\nvar buildArray = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function buildArray(nums: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] BuildArray(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* buildArray(int* nums, int numsSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func buildArray(nums []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun buildArray(nums: IntArray): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func buildArray(_ nums: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn build_array(nums: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer[]}\ndef build_array(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer[]\n     */\n    function buildArray($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> buildArray(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def buildArray(nums: Array[Int]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec build_array(nums :: [integer]) :: [integer]\n  def build_array(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec build_array(Nums :: [integer()]) -> [integer()].\nbuild_array(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (build-array nums)\n  (-> (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2745",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach 1: Build As Required\n\n#### Intuition\n\nWe can construct a new array of the same length as the original array $\\textit{nums}$, with the element at index $i$ in the new array equal to $\\textit{nums}[\\textit{nums}[i]]$.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/BFYeMNED/shared\" frameBorder=\"0\" width=\"100%\" height=\"242\" name=\"BFYeMNED\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the $\\textit{nums}$.\n\n- Time complexity: $O(n)$.\n\nThis is the time complexity for constructing the new array.\n\n- Space complexity: $O(1)$.\n\nThe output array is not counted in the space complexity.\n\n### Approach 2: Build In Place\n\n#### Intuition\n\nWe can also directly modify the original array $\\textit{nums}$.\n\nIn order to allow the construction process to proceed completely, we need to enable each element $\\textit{nums}[i]$ in $\\textit{nums}$ to store both the 'current value' (i.e., $\\textit{nums}[i]$) and the 'final value' (i.e., $\\textit{nums}[\\textit{nums}[i]]$).\n\nWe noticed that the range of values of the elements in $\\textit{nums}$ is $[0, 999]$ inclusive, which means that both the 'current value' and the 'final value' of each element in $\\textit{nums}$ are within the closed interval $[0, 999]$.\n\nTherefore, we can use a concept similar to the \"$1000$-based system\" to represent the \"current value\" and \"final value\" of each element. For each element, we use the quotient when it is divided by $1000$ to represent its \"final value,\" and the remainder to represent its \"current value.\"\n\nSo, we first traverse $\\textit{nums}$, calculate the \"final value\" of each element, and add $1000$ times that value to the element. Then, we traverse the array again, and divide the value of each element by $1000$, retaining the quotient. At this point, $\\textit{nums}$ is the completed array, and we return this array as the answer.\n\n#### Details\n\nWhen calculating the \"final value\" of $\\textit{nums}[i]$ and modifying the element, we need to calculate the value of $\\textit{nums}[\\textit{nums}[i]]$ before the modification, and the element at the index $\\textit{nums}[i]$ in $\\textit{nums}$ may have been modified. Therefore, we need to take the modulus of the value at that index with 1000 to get the \"final value\".\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/BKhRMDXq/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"BKhRMDXq\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the $\\textit{nums}$.\n\n- Time complexity: $O(n)$.\n\nWe traversed and modified the $\\textit{nums}$ array twice, and the time complexity of each traversal and modification is $O(n)$.\n\n- Space complexity: $O(1)$.\n\nOnly a few additional variables are needed.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

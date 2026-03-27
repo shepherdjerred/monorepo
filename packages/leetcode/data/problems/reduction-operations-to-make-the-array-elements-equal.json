@@ -1,0 +1,137 @@
+{
+  "questionId": "2016",
+  "questionFrontendId": "1887",
+  "title": "Reduction Operations to Make the Array Elements Equal",
+  "titleSlug": "reduction-operations-to-make-the-array-elements-equal",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code>, your goal is to make all elements in <code>nums</code> equal. To complete one operation, follow these steps:</p>\n\n<ol>\n\t<li>Find the <strong>largest</strong> value in <code>nums</code>. Let its index be <code>i</code> (<strong>0-indexed</strong>) and its value be <code>largest</code>. If there are multiple elements with the largest value, pick the smallest <code>i</code>.</li>\n\t<li>Find the <strong>next largest</strong> value in <code>nums</code> <strong>strictly smaller</strong> than <code>largest</code>. Let its value be <code>nextLargest</code>.</li>\n\t<li>Reduce <code>nums[i]</code> to <code>nextLargest</code>.</li>\n</ol>\n\n<p>Return <em>the number of operations to make all elements in </em><code>nums</code><em> equal</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [5,1,3]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong>&nbsp;It takes 3 operations to make all elements in nums equal:\n1. largest = 5 at index 0. nextLargest = 3. Reduce nums[0] to 3. nums = [<u>3</u>,1,3].\n2. largest = 3 at index 0. nextLargest = 1. Reduce nums[0] to 1. nums = [<u>1</u>,1,3].\n3. largest = 3 at index 2. nextLargest = 1. Reduce nums[2] to 1. nums = [1,1,<u>1</u>].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,1,1]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong>&nbsp;All elements in nums are already equal.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,1,2,2,3]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong>&nbsp;It takes 4 operations to make all elements in nums equal:\n1. largest = 3 at index 4. nextLargest = 2. Reduce nums[4] to 2. nums = [1,1,2,2,<u>2</u>].\n2. largest = 2 at index 2. nextLargest = 1. Reduce nums[2] to 1. nums = [1,1,<u>1</u>,2,2].\n3. largest = 2 at index 3. nextLargest = 1. Reduce nums[3] to 1. nums = [1,1,1,<u>1</u>,2].\n4. largest = 2 at index 4. nextLargest = 1. Reduce nums[4] to 1. nums = [1,1,1,1,<u>1</u>].\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 5 * 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Sort the array.",
+    "Try to reduce all elements with maximum value to the next maximum value in one operation."
+  ],
+  "metaData": "{\n  \"name\": \"reductionOperations\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"108.8K\", \"totalSubmission\": \"150K\", \"totalAcceptedRaw\": 108836, \"totalSubmissionRaw\": 149999, \"acRate\": \"72.6%\"}",
+  "likes": 1275,
+  "dislikes": 52,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[5,1,3]",
+    "[1,1,1]",
+    "[1,1,2,2,3]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int reductionOperations(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int reductionOperations(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def reductionOperations(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def reductionOperations(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar reductionOperations = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function reductionOperations(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int ReductionOperations(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int reductionOperations(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func reductionOperations(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun reductionOperations(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func reductionOperations(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn reduction_operations(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef reduction_operations(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function reductionOperations($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int reductionOperations(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def reductionOperations(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec reduction_operations(nums :: [integer]) :: integer\n  def reduction_operations(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec reduction_operations(Nums :: [integer()]) -> integer().\nreduction_operations(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (reduction-operations nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2155",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach: Sort and Count\n\n**Intuition**\n\nThe problem description describes the following process:\n\n1. Find the largest value\n2. Decrease it to the second largest unique value\n3. Repeat\n\nThe termination condition is when all elements are equal. However, you may notice that in the end, the elements will always be equal to the original minimum element. Thus, we can reframe the problem as \"How many operations are required to reduce every number to the minimum element?\n\nLet's say the minimum element is `min`. We need to reduce every element to `min`. Because we operate on the largest elements first, let's start by sorting the array so we can easily access the elements in order.\n\n![example](../Figures/1887/1.png)\n<br>\n\nWe start by reducing `8` to `7`. Now that we have two `7`, the problem states that we should choose the one with the smaller index to reduce first. However, the order doesn't really matter because eventually, both of these `7` will be reduced to `6` anyways. For now, let's focus on only **one** of them (the index of the number that was originally `8`).\n\nSo far we have used two operations on the original `8`. One to reduce it to `7`, and another to reduce it to `6`. We now have three `6`. Eventually, all of them will be reduced to `5`. Again, let's just focus on the original `8`.\n\nNow, we have used three operations on the original `8`. We reduced it to `7`, then `6`, and now `5`. This process continues. Eventually, we will reduce it to `4`, then `3`, then `2`, and finally `min = 1`.\n\nAs you can see, the original `8` was reduced to each unique element in the array less than it. There were many operations done on other numbers in between, but if we were to focus ONLY on the original `8` and the operations performed on it, we find that the number of operations is equal to the count of unique numbers less than `8`.\n\nAn intuitive way to think about this is by imagining the array as a staircase. Starting at the highest step `8`, each step down is equivalent to a reduction operation. The number of steps to the bottom is the number of operations required to reduce `8` to `min`.\n\n![example](../Figures/1887/2.png)\n<br>\n\nIn fact, this idea extends to every position in the array!\n\n![example](../Figures/1887/3.png)\n<br>\n\nFor each position, we can find the number of operations required to reduce the number to `min` by counting the number of steps we take down. The following image has each position annotated with the number of steps/operations required.\n\n![example](../Figures/1887/4.png)\n<br>\n\nHere, let's emphasize once again that in the actual execution of the operations, we wouldn't continuously reduce a number to `min` because it may involve operations on other numbers as well (for example, before we reduce the representation of `8` to `6`, we also need to lower another `7` to `6`). However, for the sake of simplicity in calculations, we are only focusing on a series of operations involving the number we select.\n\nThe answer to the problem is simply the sum of all these numbers. How can we efficiently calculate the number of operations required at each step? \n\nAn important observation to make is that the number of steps **down** from a position to `min` is equal to the number of steps **up** from `min` to that same position.\n\nAfter we sort the array, iterating over it from left to right would be like \"walking\" up the staircase. Each time we encounter an index `i` where `nums[i] != nums[i - 1]`, we know that we had to take an **up step**. We can simply keep track of how many **up steps** we have taken so far in an integer `up`. We need `up` steps to reach `nums[i]`, which also means that `nums[i]` needs `up` operations to be reduced to `min`. Therefore, at each step, we increment our answer by `up`.\n\n**Algorithm**\n\n1. Sort `nums`.\n2. Initialize the answer `ans = 0` and the number of **up steps** taken so far `up = 0`.\n3. Iterate `i` over the indices of `nums`, starting with `i = 1`:\n    - Check if `nums[i] != nums[i - 1]`. If so, increment `up`.\n    - Add `up` to `ans`.\n4. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/HkH7Vbpk/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"HkH7Vbpk\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `nums`,\n\n* Time complexity: $$O(n \\cdot \\log{}n)$$\n\n    Sorting the array requires $$O(n \\cdot \\log{}n)$$ time.\n\n    After sorting, we iterate over the array once, performing $$O(1)$$ work at each iteration. Thus, the for loop requires $$O(n)$$ time.\n\n* Space Complexity: $$O(\\log n)$$ or $$O(n)$$\n\n    We are using $$O(1)$$ space for variables. However, sorting the input requires some space.\n\n    The space complexity of the sorting algorithm depends on the implementation of each programming language:\n    * In Java, Arrays.sort() for primitives is implemented using a variant of the Quick Sort algorithm, which has a space complexity of $$O(\\log n)$$\n    * In C++, the sort() function provided by STL uses a hybrid of Quick Sort, Heap Sort and Insertion Sort, with a worst case space complexity of $$O(\\log n)$$\n    * In Python, the sort() function is implemented using the Timsort algorithm, which has a worst-case space complexity of $$O(n)$$\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

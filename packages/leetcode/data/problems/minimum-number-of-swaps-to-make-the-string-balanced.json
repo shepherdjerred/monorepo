@@ -1,0 +1,146 @@
+{
+  "questionId": "2095",
+  "questionFrontendId": "1963",
+  "title": "Minimum Number of Swaps to Make the String Balanced",
+  "titleSlug": "minimum-number-of-swaps-to-make-the-string-balanced",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> string <code>s</code> of <strong>even</strong> length <code>n</code>. The string consists of <strong>exactly</strong> <code>n / 2</code> opening brackets <code>&#39;[&#39;</code> and <code>n / 2</code> closing brackets <code>&#39;]&#39;</code>.</p>\n\n<p>A string is called <strong>balanced</strong> if and only if:</p>\n\n<ul>\n\t<li>It is the empty string, or</li>\n\t<li>It can be written as <code>AB</code>, where both <code>A</code> and <code>B</code> are <strong>balanced</strong> strings, or</li>\n\t<li>It can be written as <code>[C]</code>, where <code>C</code> is a <strong>balanced</strong> string.</li>\n</ul>\n\n<p>You may swap the brackets at <strong>any</strong> two indices <strong>any</strong> number of times.</p>\n\n<p>Return <em>the <strong>minimum</strong> number of swaps to make </em><code>s</code> <em><strong>balanced</strong></em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;][][&quot;\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> You can make the string balanced by swapping index 0 with index 3.\nThe resulting string is &quot;[[]]&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;]]][[[&quot;\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> You can do the following to make the string balanced:\n- Swap index 0 with index 4. s = &quot;[]][][&quot;.\n- Swap index 1 with index 5. s = &quot;[[][]]&quot;.\nThe resulting string is &quot;[[][]]&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;[]&quot;\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> The string is already balanced.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == s.length</code></li>\n\t<li><code>2 &lt;= n &lt;= 10<sup>6</sup></code></li>\n\t<li><code>n</code> is even.</li>\n\t<li><code>s[i]</code> is either <code>&#39;[&#39; </code>or <code>&#39;]&#39;</code>.</li>\n\t<li>The number of opening brackets <code>&#39;[&#39;</code> equals <code>n / 2</code>, and the number of closing brackets <code>&#39;]&#39;</code> equals <code>n / 2</code>.</li>\n</ul>\n",
+  "hints": [
+    "Iterate over the string and keep track of the number of opening and closing brackets on each step.",
+    "If the number of closing brackets is ever larger, you need to make a swap.",
+    "Swap it with the opening bracket closest to the end of s."
+  ],
+  "metaData": "{\n  \"name\": \"minSwaps\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"243.9K\", \"totalSubmission\": \"312.1K\", \"totalAcceptedRaw\": 243940, \"totalSubmissionRaw\": 312093, \"acRate\": \"78.2%\"}",
+  "likes": 2564,
+  "dislikes": 151,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Remove Invalid Parentheses\", \"titleSlug\": \"remove-invalid-parentheses\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Add to Make Parentheses Valid\", \"titleSlug\": \"minimum-add-to-make-parentheses-valid\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Remove to Make Valid Parentheses\", \"titleSlug\": \"minimum-remove-to-make-valid-parentheses\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Insertions to Balance a Parentheses String\", \"titleSlug\": \"minimum-insertions-to-balance-a-parentheses-string\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"][][\"",
+    "\"]]][[[\"",
+    "\"[]\""
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 9, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"servicenow\", \"name\": \"ServiceNow\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"paypal\", \"name\": \"PayPal\"}, {\"timesEncountered\": 2, \"slug\": \"microstrategy\", \"name\": \"Microstrategy\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minSwaps(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minSwaps(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minSwaps(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minSwaps(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar minSwaps = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minSwaps(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinSwaps(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minSwaps(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minSwaps(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minSwaps(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minSwaps(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_swaps(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef min_swaps(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function minSwaps($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minSwaps(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minSwaps(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_swaps(s :: String.t) :: integer\n  def min_swaps(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_swaps(S :: unicode:unicode_binary()) -> integer().\nmin_swaps(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-swaps s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2458",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Stack\n\n#### Intuition\n\nWe are given a 0-indexed string `s` of even length `n` made up of `n/2` opening brackets `[` and `n/2` closing brackets `]`. Our task is to return the minimum number of swaps to make the string balanced.\n\nBalanced parentheses mean that every opening bracket `[` has a matching closing bracket `]` in the correct order. Unbalanced parentheses occur when there are more closing brackets `]` than opening brackets `[` at some point in the string.\n\nThere are two key points to keep in mind:\n1. Swapping balanced brackets won't help. If you swap characters in a balanced pair like `[]`, it becomes `][`, which makes the string unbalanced. So, this type of swap increases the problem instead of solving it.\n2. Swapping unbalanced brackets can fix the string. If a closing bracket `]` appears before its matching opening bracket `[`, a swap between an unbalanced `]` and an unbalanced `[` will balance one pair.\n\n\nWhat is the maximum number of brackets that you can balance with a single swap? The answer is 2 for all parentheses of the form `][`. Therefore, the optimal approach is to swap unbalanced parentheses with each other. Since 2 unbalanced parentheses are made balanced with a single swap, the total number of swaps to balance are given by `unbalanced / 2`. \n\nLet's understand this with an example:\n\nFor the string `]]][[[`,\n\nThere are total 3 mismatches in the string. Now, we need to swap the `]` and `[` at index `0` and `5` respectively. \n\nThe string is now given by `[]][[]`. There is 1 mismatch in the string. So, swap `]` and `[` at index `2` and `3` respectively. This swap reduced exactly 2 mismatches. \n\nThe string is balanced and given by `[][][]`. Therefore, it requires exactly 2 swaps to balance the string.\n\nTo solve the problem, we can use a stack to keep track of unmatched opening brackets `[` as we move through the string. Each time we find a closing bracket `]`, we check if there’s an unmatched opening bracket `[` on the stack. If there is, we remove it, as we’ve found a match and balanced the pair. If the stack is empty when we encounter a closing bracket `]`, this bracket is unbalanced.\n\nWe count how many unbalanced closing brackets `]` we find. After traversing the string, the number of unbalanced `]` brackets tells us how many swaps are needed. Each swap fixes two brackets—one unbalanced `[` and one unbalanced `]`. So, the minimum number of swaps is half the total number of unbalanced closing brackets.\n\n#### Algorithm\n\n1. Initialize a `stack` to keep track of unmatched opening brackets `[` and an integer `unbalanced` to count unbalanced closing brackets `]`.\n2. Traverse the string `s` character by character:\n    - If the current character is an opening bracket `[`, push it onto the `stack`.\n    - If the current character is a closing bracket `]`:\n        - Check if the `stack` is not empty:\n            - If it is not empty, pop the top element from the `stack`.\n            - If the `stack` is empty, increment the `unbalanced` counter.\n3. Return the result as the minimum number of swaps required to balance the string. The minimum number of swaps is calculated as `(unbalanced + 1) / 2`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/JnbKuFHN/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"JnbKuFHN\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the given string `s`.\n\n- Time complexity: $O(n)$\n\n    We iterate through each character of the string exactly once in the loop. Each push or pop operation on the stack takes constant time $O(1)$. Therefore, the total time complexity is $O(n)$.\n\n- Space complexity: $O(n)$\n\n    In the worst case, we may end up pushing all opening brackets `[` into the stack, so the space used by the stack can go up to $O(n)$. Therefore, the space complexity is $O(n)$.\n\n---\n\n### Approach 2: Space-Optimized Stack\n\n#### Intuition\n\nWe only need to count the unbalanced opening brackets `[` that don't have matching closing brackets `]`. This helps us figure out how many swaps are needed. Instead of using a stack, we can track the number of unmatched brackets with an integer, which saves space.\n\nThe `stackSize` represents the number of unmatched `[` brackets as we go through the string. When we encounter a closing bracket `]`, we try to balance it by reducing `stackSize` if there’s already an unmatched opening bracket (i.e., `stackSize` > 0).\n\nAfter the loop, the value of `stackSize` will show how many opening brackets are still unmatched. These remaining `[` brackets need to be balanced with closing brackets by performing swaps. Each swap balances two brackets (one `[` and one `]`), so the minimum number of swaps is `(stackSize + 1) / 2`.\n\n#### Algorithm\n\n1. Initialize `stackSize` to 0. This integer will keep track of the number of unmatched opening brackets `[`.\n2. For each character `ch` in the string `s`:\n    - If `ch` is an opening bracket `[`, increment `stackSize` by 1.\n    - If `ch` is a closing bracket `]`:\n        - Check if `stackSize` is greater than 0:\n            - If true, decrement `stackSize` by 1 (indicating a matching opening bracket has been found).\n            - If false, do nothing (this indicates an unbalanced closing bracket `]`).\n3. Return the result as the minimum number of swaps required to balance the string. The minimum number of swaps is calculated as `(stackSize+1)/2`.\n\n!?!../Documents/1963/slideshow1.json:960,540!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/PfFu3Nah/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"PfFu3Nah\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the given string `s`.\n\n- Time complexity: $O(n)$\n\n    We iterate through each character of the string exactly once in the loop. Each increment or decrement operation on the `stackSize` variable takes constant time $O(1)$. Therefore, the total time complexity is $O(n)$.\n\n- Space complexity: $O(1)$\n\n    We only use a single integer (`stackSize`) to keep track of unmatched opening brackets, which means the space complexity is constant. Thus, the space complexity is $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

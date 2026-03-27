@@ -1,0 +1,153 @@
+{
+  "questionId": "2101",
+  "questionFrontendId": "1970",
+  "title": "Last Day Where You Can Still Cross",
+  "titleSlug": "last-day-where-you-can-still-cross",
+  "difficulty": "Hard",
+  "content": "<p>There is a <strong>1-based</strong> binary matrix where <code>0</code> represents land and <code>1</code> represents water. You are given integers <code>row</code> and <code>col</code> representing the number of rows and columns in the matrix, respectively.</p>\n\n<p>Initially on day <code>0</code>, the <strong>entire</strong> matrix is <strong>land</strong>. However, each day a new cell becomes flooded with <strong>water</strong>. You are given a <strong>1-based</strong> 2D array <code>cells</code>, where <code>cells[i] = [r<sub>i</sub>, c<sub>i</sub>]</code> represents that on the <code>i<sup>th</sup></code> day, the cell on the <code>r<sub>i</sub><sup>th</sup></code> row and <code>c<sub>i</sub><sup>th</sup></code> column (<strong>1-based</strong> coordinates) will be covered with <strong>water</strong> (i.e., changed to <code>1</code>).</p>\n\n<p>You want to find the <strong>last</strong> day that it is possible to walk from the <strong>top</strong> to the <strong>bottom</strong> by only walking on land cells. You can start from <strong>any</strong> cell in the top row and end at <strong>any</strong> cell in the bottom row. You can only travel in the<strong> four</strong> cardinal directions (left, right, up, and down).</p>\n\n<p>Return <em>the <strong>last</strong> day where it is possible to walk from the <strong>top</strong> to the <strong>bottom</strong> by only walking on land cells</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/07/27/1.png\" style=\"width: 624px; height: 162px;\" />\n<pre>\n<strong>Input:</strong> row = 2, col = 2, cells = [[1,1],[2,1],[1,2],[2,2]]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The above image depicts how the matrix changes each day starting from day 0.\nThe last day where it is possible to cross from top to bottom is on day 2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/07/27/2.png\" style=\"width: 504px; height: 178px;\" />\n<pre>\n<strong>Input:</strong> row = 2, col = 2, cells = [[1,1],[1,2],[2,1],[2,2]]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The above image depicts how the matrix changes each day starting from day 0.\nThe last day where it is possible to cross from top to bottom is on day 1.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/07/27/3.png\" style=\"width: 666px; height: 167px;\" />\n<pre>\n<strong>Input:</strong> row = 3, col = 3, cells = [[1,2],[2,1],[3,3],[2,2],[1,1],[1,3],[2,3],[3,2],[3,1]]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The above image depicts how the matrix changes each day starting from day 0.\nThe last day where it is possible to cross from top to bottom is on day 3.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= row, col &lt;= 2 * 10<sup>4</sup></code></li>\n\t<li><code>4 &lt;= row * col &lt;= 2 * 10<sup>4</sup></code></li>\n\t<li><code>cells.length == row * col</code></li>\n\t<li><code>1 &lt;= r<sub>i</sub> &lt;= row</code></li>\n\t<li><code>1 &lt;= c<sub>i</sub> &lt;= col</code></li>\n\t<li>All the values of <code>cells</code> are <strong>unique</strong>.</li>\n</ul>\n",
+  "hints": [
+    "What graph algorithm allows us to find whether a path exists?",
+    "Can we use binary search to help us solve the problem?"
+  ],
+  "metaData": "{\n  \"name\": \"latestDayToCross\",\n  \"params\": [\n    {\n      \"name\": \"row\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"col\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"cells\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"130K\", \"totalSubmission\": \"189.4K\", \"totalAcceptedRaw\": 130044, \"totalSubmissionRaw\": 189399, \"acRate\": \"68.7%\"}",
+  "likes": 2378,
+  "dislikes": 48,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Bricks Falling When Hit\", \"titleSlug\": \"bricks-falling-when-hit\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Escape the Spreading Fire\", \"titleSlug\": \"escape-the-spreading-fire\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "2\n2\n[[1,1],[2,1],[1,2],[2,2]]",
+    "2\n2\n[[1,1],[1,2],[2,1],[2,2]]",
+    "3\n3\n[[1,2],[2,1],[3,3],[2,2],[1,1],[1,3],[2,3],[3,2],[3,1]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"atlassian\", \"name\": \"Atlassian\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int latestDayToCross(int row, int col, vector<vector<int>>& cells) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int latestDayToCross(int row, int col, int[][] cells) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def latestDayToCross(self, row: int, col: int, cells: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def latestDayToCross(self, row, col, cells):\n        \"\"\"\n        :type row: int\n        :type col: int\n        :type cells: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} row\n * @param {number} col\n * @param {number[][]} cells\n * @return {number}\n */\nvar latestDayToCross = function(row, col, cells) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function latestDayToCross(row: number, col: number, cells: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int LatestDayToCross(int row, int col, int[][] cells) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int latestDayToCross(int row, int col, int** cells, int cellsSize, int* cellsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func latestDayToCross(row int, col int, cells [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun latestDayToCross(row: Int, col: Int, cells: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func latestDayToCross(_ row: Int, _ col: Int, _ cells: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn latest_day_to_cross(row: i32, col: i32, cells: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} row\n# @param {Integer} col\n# @param {Integer[][]} cells\n# @return {Integer}\ndef latest_day_to_cross(row, col, cells)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $row\n     * @param Integer $col\n     * @param Integer[][] $cells\n     * @return Integer\n     */\n    function latestDayToCross($row, $col, $cells) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int latestDayToCross(int row, int col, List<List<int>> cells) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def latestDayToCross(row: Int, col: Int, cells: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec latest_day_to_cross(row :: integer, col :: integer, cells :: [[integer]]) :: integer\n  def latest_day_to_cross(row, col, cells) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec latest_day_to_cross(Row :: integer(), Col :: integer(), Cells :: [[integer()]]) -> integer().\nlatest_day_to_cross(Row, Col, Cells) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (latest-day-to-cross row col cells)\n  (-> exact-integer? exact-integer? (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1860",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nAs shown in the picture below, we could find a path that connects the `start` (the top row) and the `end` (the bottom row) in the left grid. However, if the land cell colored in dark blue is covered by water, we won't be able to reach `end` from `start` by only walking on land cells.\n\n![img](../Figures/1970/intro.png)\n\n---\n\n### Approach 1: Binary Search + Breadth-First Search\n\n#### Intuition   \n\n> If you are not familiar with breadth-first search (BFS), you can refer to our [Breadth-First Search Explore Card](https://leetcode.com/explore/featured/card/graph/620/breadth-first-search-in-graph/)\n\n\nBreadth-First Search (BFS) is a graph traversal algorithm that explores all the nodes in a graph that can be reached from a given starting node. It starts by visiting the starting node, and then visits all the nodes at a distance of one from the starting node, then all the nodes at a distance of two, and so on. This method is usually implemented using a queue data structure, where the starting node is inserted into the queue and then removed, and its neighbors are inserted into the queue, and so on.\n\nNow back to our problem, we split it into two parts: \n\n- Given a graph, how do we determine if there is a pathway. \n\n\n- As the water covers one more cell each day, how do we determine which day is the last day that a pathway exists?\n\n<br>\n\n\nTo check if there is a path, we can start a BFS traversal from all land cells in the top row of the graph, and check if any of the land cell in the bottom is visited. We will mark all the land cells in the top row as visited, then we move on to the neighbor cells in the four directions of these land cells.\n\nWe can use a queue data structure to keep track of the cells to be visited. Start by inserting all the land cells in the top row of the grid into the queue. Then, we repeat the following steps until the queue is empty:\n\n1. Dequeue the next cell from the queue.\n2. Check if the cell is in the bottom row the grid. If it is, then the grid is connected, and we can still cross it.\n3. If the cell is not in the bottom row of the grid, we will mark the it as visited, and enqueue its land neighbors which have not been visited yet.\n\n\n\n![img](../Figures/1970/b1.png)\n\n\n4. If we complete the BFS without reaching any of the land cells at the bottom, it means that there is no pathway.\n\n<br>\n\nNow move to the second subproblem: how to locate the last day that we can still cross?\n\nOne approach is to evaluate each day one by one, beginning from the first day, and verify if we can cross on day `i` after the water covers cell `cells[i]`. However, this approach is inefficient because it requires at most $$O(col\\times row)$$ BFS searches in the worst-case scenario.\n\n\n![img](../Figures/1970/b2.png)\n\nAlternatively, we can use binary search to identify the last day on which we can still cross by observing the following property of the problem:\n\n- If we can cross on day `i`, we can definitely cross on any day before `i`.\n- If we can't cross on day `i`, we definitely cannot cross on any day after `i`.\n \nLet `n` be the total number of days, and we know that the last day is between `1` and `n`, which is the maximum number of water cells that can be added to the map. Hence, our search space is `[left, right] = [1, n]`. \n\n\nAt each step, we compute the mid-day of our search space as `mid = right - (right - left) / 2`, and add all water cells from `cells[0 ~ mid]` to the grid, we then perform a BFS over the modified grid to determine if a pathway exists. If a path is present on day `mid`, we will move on to the half with larger values, `[mid, right]`, otherwise, we move on to the half with smaller values, `[left, mid - 1]`.\n\n\n\n<br>\n\n#### Algorithm\n\n1) Initialize the search space by setting the left boundary to `left = 1` and the right boundary to `right = n`.\n\n2) Define `canCross(row, col, cells, day)` to check if we can still cross after `day` days.\n    - Create an all-zero grid of size `row * col`.\n    - Set all cells in `cells[:day]` to 1.\n    - Add all land cells in the first row to an queue `queue`.\n    - While `queue` is not empty, deque the first cell `(cur_row, cur_col)`.\n        - If `cur_row == row - 1`, it means we have reached the bottom row, return `True`.\n        - Otherwise, we will check if it has unvisited land neighbors, then set their value to `-1`, and add them into `queue`.\n    - If we finish the BFS without reaching the bottom row, return `False`.\n\n\n3) While `left < right`:\n\n    - Find the middle day `mid = right - (right - left) / 2`.\n    - Use `canCross(row, col, cells, mid)` to check if there is a pathway.\n    - If there is a pathway, set `left = mid`, otherwise, set `right = mid - 1`.\n\n4) Return `left` as the last day when we can still cross.\n\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/WTDLp4LZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"WTDLp4LZ\"></iframe>\n\n\n#### Complexity Analysis\n\n* Time complexity: $$O(\\text{row} \\cdot \\text{col} \\cdot\\log (\\text{row} \\cdot \\text{col}))$$\n\n    - The binary search over a search space of size $$n$$ takes $$O(\\log n)$$ steps to find the last day that we can still cross. The size of our search space is $\\text{row} \\cdot \\text{col}$.\n\n    - At each step, we need to BFS over the modified grid, which takes $$O(\\text{row} \\cdot \\text{col})$$.\n    \n\n* Space complexity: $$O(\\text{row} \\cdot \\text{col})$$\n\n    - We need to build an 2-D array of size $$\\text{row} \\times \\text{col}$$.\n    - During the BFS, we might have at most $$O(\\text{row} \\cdot \\text{col})$$ in `queue`.\n\n<br/>\n\n\n\n---\n\n### Approach 2: Binary Search + Depth-First Search\n\n#### Intuition   \n\n> If you are not familiar with depth-first search (DFS), you can refer to our [Depth-First Search Explore Card](https://leetcode.com/explore/featured/card/graph/620/depth-first-search-in-graph/)\n\n\nIn the previous approach, we BFS over the grid to find if there is a pathway, this process can also be implemented with DFS, which is another graph traversal algorithm used to explore or search all the cells of a grid. We will start at a land cell in the top row and explore as far as possible along each path before backtracking.\n\nWe will visit an unvisited land cell, and then recursively visit all its adjacent land neighbors. This process continues until all reachable land cells in the grid have been visited or until we reach the bottom row. \n\n![img](../Figures/1970/d1.png)\n\nTo try all pathways, we must start DFS on each land cell in the top row of the grid. We can change the value of already visited cells to `-1` to avoid repeated visits to the same cell.\n\n\n<br>\n\n#### Algorithm\n\n1) Initialize the search space by setting the left boundary to `left = 1` and the right boundary to `right = n`.\n\n2) Define `canCross(row, col, cells, day)` to check if we can still cross after `day` days.\n    - Create an all-zero grid of size `row * col`.\n    - Set all cells in `cells[:day]` to 1.\n    - Iterate over the first row, for any land cell `(0, c)`, start DFS from this cell to explore its unvisited land neighbors recursively. If we reach any cell in the last row, then return `true`.\n    - If we can't reach the last row, return `false`.\n\n3) While the `left < right`:\n    - Find the middle day `mid = right - (right - left) / 2`.\n    - Check if there is a pathway after `mid` days.\n    - If there is a pathway, set `left = mid`, otherwise, set `right = mid - 1`.\n\n4) Return `left` as the last day when we can still cross.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/EV74WWVk/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"EV74WWVk\"></iframe>\n\n\n#### Complexity Analysis\n\n* Time complexity: $$O(\\text{row} \\cdot \\text{col} \\cdot\\log \\text{row} \\cdot \\text{col})$$\n\n    - The binary search over a search space of size $$n$$ takes $$O(\\log n)$$ steps to find the last day that we can still cross. The size of our search space is $\\text{row} \\cdot \\text{col}$.\n\n    - The DFS method visits each cell at most once, which takes $$O(\\text{row} \\cdot \\text{col})$$ time.\n\n    \n\n* Space complexity: $$O(\\text{row} \\cdot \\text{col})$$\n\n    - We need to build an 2-D array of size $$\\text{row} \\times \\text{col}$$.\n    - The recursion call stack from the DFS could use up to $$O(\\text{row} \\cdot \\text{col})$$ space.\n\n\n<br/>\n\n\n\n---\n\n### Approach 3: Disjoint Set Union (on land cells)\n\n#### Intuition   \n\n> If you are not familiar with disjoint set union (DSU), you can refer to our [Disjoint Set Explore Card](https://leetcode.com/explore/learn/card/graph/618/disjoint-set/3881/). We will not talk about implementation details in this article, but only about the interface to the data structure.\n\nA disjoint-set data structure, also called a union–find data structure or merge–find set, is a data structure that stores a collection of disjoint (non-overlapping) sets. Equivalently, it stores a partition of a set into disjoint subsets. It provides operations for adding new sets, merging sets (replacing them by their union), and finding a representative member of a set. It implements two useful operations:\n\n- `Find`: Determine which subset a particular element is in. This can be used to determine if two elements are in the same subset. \n- `Union`: Join two subsets into a single subset.\n\n<br>\n\n\nWe need to reverse the days `cells`, which equals replacing water cells with land cells. This is necessary because we are searching for the last day when there is a path, which is the same as the first day in reversed order. During the union-find process, will we traverse through `cells` in reverse and replace the corresponding water cell `cells[i]` by land cell. For each newly added land cell, we connect it with all of its neighboring land cells. We repeat this process until either the first row and the last row are connected or the traversal is complete.\n\n\n\n![img](../Figures/1970/uf1.png)\n\n\n\n\n> Considering that the top row may contain multiple disconnected cells (As shown on the left picture below, the group `1`, `2` and `3` contain cells in the top row, but they are not connected), how can we efficiently check whether a cell in the top row is connected to a cell in the bottom row? Do we need to check them one by one?\n\nThe answer is no, we just need two additional nodes in `dsu` (say `top` and `bottom`) that represent all land cells in the top row and all land cells in the bottom row, respectively.\n\n\n![img](../Figures/1970/uf2.png)\n\nDuring the iteration, for each water cell `cells[i]` that will be replaced by land, in addition to connecting it with its land neighbors, we will also:\n- connect it with `top` if it is in the first row.\n- connect it with `bottom` if it is in the last row.\n\nTherefore, we can simply check if the first row is connected with the bottom row after this day, by checking if `top` and `bottom` are connected.\n\nYou can refer to the following figure:\n\n![img](../Figures/1970/uf3_1.png)\n\n<br>\n\n#### Algorithm\n\n1) Create a disjoint set data structure `dsu` with a size of `row * col + 2`.\n\n\n2) Create an all-one `grid` of size `row * col` representing the water cells after the last day.\n\n\n3) Iterate over reversed `cells`, for each cell `cells[i] = (r, c)`:\n    - Check its neighbors in all four directions, and if there is a land cell `(new_r, new_c)`, we connect the root of `cells[i]` to the root of this neighbor in `dsu`.\n\n    - If `r = 0`, connect it with `top`.\n    - If `r = row - 1`, connect it with `bottom`.\n    - Check if `top` and `bottom` are connected, and return `i` if they are.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ENz43tEA/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ENz43tEA\"></iframe>\n\n\n#### Complexity Analysis\n\n\n* Time complexity: $$O(\\text{row} \\cdot \\text{col})$$\n\n    - For $T$ operations, the amortized time complexity of the union-find algorithm (using path compression with union by rank) is $O(alpha(T))$. Here, $\\alpha(T)$ is the inverse Ackermann function that grows so slowly, that it doesn't exceed $4$ for all reasonable $T$ (approximately $ T < 10^{600}$). You can read more about the complexity of union-find [here](https://en.wikipedia.org/wiki/Disjoint-set_data_structure#Time_complexity). Because the function grows so slowly, we consider it to be $O(1)$.\n    - We iterate over the reversed `cells` and perform `union` and `find` operations on cells of number $(\\text{row} \\cdot \\text{col})$, we consider the time complexity to be $O(\\text{row} \\cdot \\text{col})$.\n    \n    \n\n* Space complexity: $$O(\\text{row} \\cdot \\text{col})$$\n\n    - We use two arrays of size $$\\text{row} \\cdot \\text{col} + 2$$ to save the root and rank of each cell in the disjoint set data structure. \n\n    - We also create an array of size $$\\text{row} \\times \\text{col}$$ to represent each cell.\n\n\n<br/>\n\n\n\n\n---\n\n### Approach 4: Disjoint Set Union (on water cells)\n\n#### Intuition   \n\nIn contrast to the previous method of connecting the land cells in a reversed time, we now aim to connect water cells instead. \n\nIf we find a water pathway that connects the leftmost and rightmost columns on a particular day `i`, it implies that there is no land pathway that connects the top and bottom rows, which is the day we are looking for. \n\n\nIn short: **the last day when a land pathway exists is right before the first day when a water pathway exists**.\n\n![img](../Figures/1970/uf4.png)\n\nTo achieve this, we use the disjoint set union method similar to before, with a few minor differences:\n\n- Our connection condition is no longer four directions, but all eight directions.  If there is an eight-way connected water pathway, it is sufficient to block all land pathways from the top row to the bottom row.\n- We are looking for the waterway that connects `left` and `right`, so we need two additional nodes in `dsu` (say `left` and `right`) that represent all water cells in the leftmost column and all water cells in the rightmost column, respectively. By checking if `left` and `right` are connected, we can verify the existence of a valid waterway. \n\n<br>\n\n#### Algorithm\n\n1) Create a disjoint set union data structure `dsu` with a size of `row * col + 2`.\n\n\n2) Create an all-zero `grid` of size `row * col` representing the land cells on the first day.\n\n\n3) Iterate over `cells`, for each water cell `cells[i]` on day `i`:\n    - Check its neighbors in all eight directions, and if there is a water cell neighbor `(new_r, new_c)`, we connect the root of `cells[i]` to the root of this neighbor in `dsu`.\n    - If `c = 0`, connect it with `left`.\n    - If `c = col - 1`, connect it with `right`.\n    - Check if `left` and `right` are connected, and return `i` if they are.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ZhgmurrD/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ZhgmurrD\"></iframe>\n\n\n#### Complexity Analysis\n\n* Time complexity: $$O(\\text{row} \\cdot \\text{col} \\cdot \\alpha(\\text{row} \\cdot \\text{col}))$$\n\n\n    - For $T$ operations, the amortized time complexity of the union-find algorithm (using path compression with union by rank) is $O(alpha(T))$. Here, $\\alpha(T)$ is the inverse Ackermann function that grows so slowly, that it doesn't exceed $4$ for all reasonable $T$ (approximately $ T < 10^{600}$). You can read more about the complexity of union-find [here](https://en.wikipedia.org/wiki/Disjoint-set_data_structure#Time_complexity). Because the function grows so slowly, we consider it to be $O(1)$.\n    - We iterate over `cells` and perform `union` and `find` operations on cells of number $(\\text{row} \\cdot \\text{col})$, we consider the time complexity to be $O(\\text{row} \\cdot \\text{col})$.\n    \n\n* Space complexity: $$O(\\text{row} \\cdot \\text{col})$$\n\n    - We use two arrays of size $$\\text{row} \\cdot \\text{col} + 2$$ to save the root and rank of each cell in the disjoint set union data structure. \n\n    - We also create an array of size $$\\text{row} \\times \\text{col}$$ to represent each cell.\n\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

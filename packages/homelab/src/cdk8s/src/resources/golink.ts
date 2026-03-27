@@ -47,7 +47,7 @@ export function createGolinkDeployment(chart: Chart) {
       envVariables: {
         TS_AUTHKEY: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(chart, "tailscale-auth-key", item.name),
-          key: "TS_AUTHKEY",
+          key: "client_secret",
         }),
         TS_ADVERTISE_TAGS: EnvValue.fromValue("tag:k8s-operator"),
       },

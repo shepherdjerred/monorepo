@@ -1,0 +1,85 @@
+{
+  "questionId": "1931",
+  "questionFrontendId": "1778",
+  "title": "Shortest Path in a Hidden Grid",
+  "titleSlug": "shortest-path-in-a-hidden-grid",
+  "difficulty": "Medium",
+  "content": "<p>This is an <strong>interactive problem</strong>.</p>\n\n<p>There is a robot in a hidden grid, and you are trying to get it from its starting cell to the target cell in this grid. The grid is of size <code>m x n</code>, and each cell in the grid is either empty or blocked. It is <strong>guaranteed</strong> that the starting cell and the target cell are different, and neither of them is blocked.</p>\n\n<p>You want to find the minimum distance to the target cell. However, you <strong>do not know</strong> the grid&#39;s dimensions, the starting cell, nor the target cell. You are only allowed to ask queries to the <code>GridMaster</code> object.</p>\n\n<p>Thr <code>GridMaster</code> class has the following functions:</p>\n\n<ul>\n\t<li><code>boolean canMove(char direction)</code> Returns <code>true</code> if the robot can move in that direction. Otherwise, it returns <code>false</code>.</li>\n\t<li><code>void move(char direction)</code> Moves the robot in that direction. If this move would move the robot to a blocked cell or off the grid, the move will be <strong>ignored</strong>, and the robot will remain in the same position.</li>\n\t<li><code>boolean isTarget()</code> Returns <code>true</code> if the robot is currently on the target cell. Otherwise, it returns <code>false</code>.</li>\n</ul>\n\n<p>Note that <code>direction</code> in the above functions should be a character from <code>{&#39;U&#39;,&#39;D&#39;,&#39;L&#39;,&#39;R&#39;}</code>, representing the directions up, down, left, and right, respectively.</p>\n\n<p>Return <em>the <strong>minimum distance</strong> between the robot&#39;s initial starting cell and the target cell. If there is no valid path between the cells, return </em><code>-1</code>.</p>\n\n<p><strong>Custom testing:</strong></p>\n\n<p>The test input is read as a 2D matrix <code>grid</code> of size <code>m x n</code> where:</p>\n\n<ul>\n\t<li><code>grid[i][j] == -1</code> indicates that the robot is in cell <code>(i, j)</code> (the starting cell).</li>\n\t<li><code>grid[i][j] == 0</code> indicates that the cell <code>(i, j)</code> is blocked.</li>\n\t<li><code>grid[i][j] == 1</code> indicates that the cell <code>(i, j)</code> is empty.</li>\n\t<li><code>grid[i][j] == 2</code> indicates that the cell <code>(i, j)</code> is the target cell.</li>\n</ul>\n\n<p>There is exactly one <code>-1</code> and <code>2</code> in <code>grid</code>. Remember that you will <strong>not</strong> have this information in your code.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> grid = [[1,2],[-1,0]]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> One possible interaction is described below:\nThe robot is initially standing on cell (1, 0), denoted by the -1.\n- master.canMove(&#39;U&#39;) returns true.\n- master.canMove(&#39;D&#39;) returns false.\n- master.canMove(&#39;L&#39;) returns false.\n- master.canMove(&#39;R&#39;) returns false.\n- master.move(&#39;U&#39;) moves the robot to the cell (0, 0).\n- master.isTarget() returns false.\n- master.canMove(&#39;U&#39;) returns false.\n- master.canMove(&#39;D&#39;) returns true.\n- master.canMove(&#39;L&#39;) returns false.\n- master.canMove(&#39;R&#39;) returns true.\n- master.move(&#39;R&#39;) moves the robot to the cell (0, 1).\n- master.isTarget() returns true. \nWe now know that the target is the cell (0, 1), and the shortest path to the target cell is 2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> grid = [[0,0,-1],[1,1,1],[2,0,0]]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong>&nbsp;The minimum distance between the robot and the target cell is 4.</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> grid = [[-1,0],[0,2]]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong>&nbsp;There is no path from the robot to the target cell.</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n, m &lt;= 500</code></li>\n\t<li><code>m == grid.length</code></li>\n\t<li><code>n == grid[i].length</code></li>\n\t<li><code>grid[i][j]</code> is either <code>-1</code>, <code>0</code>, <code>1</code>, or <code>2</code>.</li>\n\t<li>There is <strong>exactly one</strong> <code>-1</code> in <code>grid</code>.</li>\n\t<li>There is <strong>exactly one</strong> <code>2</code> in <code>grid</code>.</li>\n</ul>\n",
+  "hints": [
+    "The grid is at a maximum 500 x 500, so it is clever to assume that the robot's initial cell is grid[501][501]",
+    "Run a DFS from the robot's position to make sure that you can reach the target, otherwise you should return -1.",
+    "Now that you are sure you can reach the target, run BFS to find the shortest path."
+  ],
+  "metaData": "{\n  \"name\": \"foobar\",\n  \"params\": [\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"grid\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"manual\": true,\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"csharp\",\n    \"javascript\",\n    \"swift\",\n    \"python3\"\n  ]\n}",
+  "stats": "{\"totalAccepted\": \"17.4K\", \"totalSubmission\": \"39K\", \"totalAcceptedRaw\": 17363, \"totalSubmissionRaw\": 39002, \"acRate\": \"44.5%\"}",
+  "likes": 208,
+  "dislikes": 89,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Robot Room Cleaner\", \"titleSlug\": \"robot-room-cleaner\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Path Cost in a Hidden Grid\", \"titleSlug\": \"minimum-path-cost-in-a-hidden-grid\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,2],[-1,0]]",
+    "[[0,0,-1],[1,1,1],[2,0,0]]",
+    "[[-1,0],[0,2]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 20, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    },
+    {
+      "name": "Interactive",
+      "slug": "interactive"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * // This is the GridMaster's API interface.\n * // You should not implement it, or speculate about its implementation\n * class GridMaster {\n *   public:\n *     bool canMove(char direction);\n *     void move(char direction);\n *     boolean isTarget();\n * };\n */\n\nclass Solution {\npublic:\n    int findShortestPath(GridMaster &master) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * // This is the GridMaster's API interface.\n * // You should not implement it, or speculate about its implementation\n * class GridMaster {\n *     boolean canMove(char direction);\n *     void move(char direction);\n *     boolean isTarget();\n * }\n */\n\nclass Solution {\n    public int findShortestPath(GridMaster master) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# \"\"\"\n# This is GridMaster's API interface.\n# You should not implement it, or speculate about its implementation\n# \"\"\"\n#class GridMaster(object):\n#    def canMove(self, direction: str) -> bool:\n#        \n#\n#    def move(self, direction: str) -> None:\n#        \n#\n#    def isTarget(self) -> bool:\n#        \n#\n\nclass Solution(object):\n    def findShortestPath(self, master: 'GridMaster') -> int:\n        \n"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# \"\"\"\n# This is GridMaster's API interface.\n# You should not implement it, or speculate about its implementation\n# \"\"\"\n#class GridMaster(object):\n#    def canMove(self, direction):\n#        \"\"\"\n#        :type direction: str\n#        :rtype bool\n#        \"\"\"\n#\n#    def move(self, direction):\n#        \"\"\"\n#        :type direction: str\n#        \"\"\"\n#\n#    def isTarget(self):\n#        \"\"\"\n#        :rtype bool\n#        \"\"\"\n#\n\nclass Solution(object):\n    def findShortestPath(self, master):\n        \"\"\"\n        :type master: GridMaster\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * // This is the GridMaster's API interface.\n * // You should not implement it, or speculate about its implementation\n * function GridMaster() {\n *\n *     @param {character} direction\n *     @return {boolean}\n *     this.canMove = function(direction) {\n *         ...\n *     };\n *     @param {character} direction\n *     @return {void}\n *     this.move = function(direction) {\n *         ...\n *     };\n *     @return {boolean}\n *     this.isTarget = function() {\n *         ...\n *     };\n * };\n */\n\n/**\n * @param {GridMaster} master\n * @return {integer}\n */\nvar findShortestPath = function(master) {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * // This is the GridMaster's API interface.\n * // You should not implement it, or speculate about its implementation\n * class GridMaster {\n *     bool canMove(char direction);\n *     void move(char direction);\n *     bool isTarget();\n * };\n */\n\nclass Solution {\n    public int FindShortestPath(GridMaster master) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * // This is the GridMaster's API interface.\n * // You should not implement it, or speculate about its implementation\n * class GridMaster {\n *     public func canMove(direction: Character) -> Bool {}\n *     public func move(direction: Character) {}\n *     public func isTarget() -> Bool {}\n * }\n */\n\nclass Solution {\n    func findShortestPath( _ master: gridMaster) -> Int {\n        \n    }\n}"
+    }
+  ],
+  "solution": null
+}

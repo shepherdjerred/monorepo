@@ -1,0 +1,140 @@
+{
+  "questionId": "1756",
+  "questionFrontendId": "1653",
+  "title": "Minimum Deletions to Make String Balanced",
+  "titleSlug": "minimum-deletions-to-make-string-balanced",
+  "difficulty": "Medium",
+  "content": "<p>You are given a string <code>s</code> consisting only of characters <code>&#39;a&#39;</code> and <code>&#39;b&#39;</code>​​​​.</p>\n\n<p>You can delete any number of characters in <code>s</code> to make <code>s</code> <strong>balanced</strong>. <code>s</code> is <strong>balanced</strong> if there is no pair of indices <code>(i,j)</code> such that <code>i &lt; j</code> and <code>s[i] = &#39;b&#39;</code> and <code>s[j]= &#39;a&#39;</code>.</p>\n\n<p>Return <em>the <strong>minimum</strong> number of deletions needed to make </em><code>s</code><em> <strong>balanced</strong></em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;aababbab&quot;\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> You can either:\nDelete the characters at 0-indexed positions 2 and 6 (&quot;aa<u>b</u>abb<u>a</u>b&quot; -&gt; &quot;aaabbb&quot;), or\nDelete the characters at 0-indexed positions 3 and 6 (&quot;aab<u>a</u>bb<u>a</u>b&quot; -&gt; &quot;aabbbb&quot;).\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;bbaaaaabb&quot;\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The only solution is to delete the first two characters.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s[i]</code> is&nbsp;<code>&#39;a&#39;</code> or <code>&#39;b&#39;</code>​​.</li>\n</ul>\n",
+  "hints": [
+    "You need to find for every index the number of Bs before it and the number of A's after it",
+    "You can speed up the finding of A's and B's in suffix and prefix using preprocessing"
+  ],
+  "metaData": "{\n  \"name\": \"minimumDeletions\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"288.9K\", \"totalSubmission\": \"423.5K\", \"totalAcceptedRaw\": 288870, \"totalSubmissionRaw\": 423527, \"acRate\": \"68.2%\"}",
+  "likes": 2603,
+  "dislikes": 82,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Check if All A's Appears Before All B's\", \"titleSlug\": \"check-if-all-as-appears-before-all-bs\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"aababbab\"",
+    "\"bbaaaaabb\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"redbus\", \"name\": \"redbus\"}, {\"timesEncountered\": 2, \"slug\": \"urban-company\", \"name\": \"Urban Company\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minimumDeletions(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minimumDeletions(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumDeletions(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumDeletions(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar minimumDeletions = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumDeletions(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinimumDeletions(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minimumDeletions(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumDeletions(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumDeletions(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumDeletions(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_deletions(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef minimum_deletions(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function minimumDeletions($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimumDeletions(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumDeletions(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_deletions(s :: String.t) :: integer\n  def minimum_deletions(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_deletions(S :: unicode:unicode_binary()) -> integer().\nminimum_deletions(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-deletions s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2387",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a string `s` containing only two characters: `'a'` and `'b'`. Our goal is to make the string \"balanced\" by removing any number of characters in the string. A string is considered \"balanced\" if there are no occurrences where a `'b'` is followed by an `'a'` at any point later in the string.\n\nWe have to find the minimum number of deletions required to balance the string. In other words, after all the deletions, when reading the string from left to right, if you see the character `'b'`, there should not be any `'a'` following it.\n\n---\n\n### Approach 1: Three-Pass Count Method\n\n#### Intuition\n\nEach position in the string can be a potential dividing point such that all the characters to the left of that character are `'a'`s and all the characters to the right are `'b'`s. The idea is to find the dividing point that minimizes the number of deletions. For example, in the string `s = aabbabba`, if the dividing point is located at index `2` (0-indexed), two deletions are required to balance `s`. On the other hand, if the dividing point is located at index `5`, three deletions are required to balance `s`.\n\nTo implement this, we use three passes through the string. In the first pass, we count and store the number of `'b'`s that occur to the left of each position. In the second pass, we count and store the number of `'a'`s that occur to the right of each position.\n\nWe can balance the string around a dividing point by deleting all `'b'`s to the left and all `'a'`s to the right of the point. Thus, in the third pass, we calculate the minimum deletions required at each position by adding the number of `'a'`s to the right and the number of `'b'`s to the left. \n\nBy checking every position, we ensure we find the optimal dividing line that minimizes the number of deletions. \n\n#### Algorithm\n\n- Initialize arrays `count_a` and `count_b` of size `n` to store counts of `'a'`s and `'b'`s.\n- Traverse the string from left to right:\n    - Update `count_b[i]` with the cumulative count of `'b'`s encountered so far.\n- Traverse the string from right to left:\n    - Update `count_a[i]` with the cumulative count of `'a'`s encountered so far.\n- Traverse the string from left to right:\n    - Compute the minimum deletions needed as `count_a[i] + count_b[i]`.\n- Return the minimum value computed.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/XHyWBc82/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"XHyWBc82\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the string `s`.\n\n- Time complexity: $O(n)$\n\n    The algorithm performs three linear passes over the string.\n\n- Space complexity: $O(n)$\n\n    We use two arrays of size `n` to store counts, resulting in linear space complexity. \n\n---\n\n### Approach 2: Combined Pass Method\n\n#### Intuition\n\nIn the previous approach, we traversed the string twice to count and store the number of `'a'`s after and the number of `'b'`s before for each position. We can improve efficiency by merging the two passes into a single pass.\n\nAlthough we still need to count the occurrences of `'a'`s and `'b'`s, we can optimize our process by avoiding storing the counts of `'b'`s to the left at every position. Instead, we count the `'a'`s while traversing the string from right to left. Then, during the second pass, we count the `'b'`s and simultaneously calculate the minimum deletions required. We achieve this by adding the current number of `'b'`s encountered to the pre-stored count of `'a'`s.\n\nThis optimization reduces our passes from three to two, which is an improvement in time efficiency. However, we are still using $O(n)$ extra space to store the `'a'` counts.\n\n#### Algorithm\n \n- Initialize array `count_a` of size `n` to store counts of `'a'`s from the right.\n- Traverse the string from right to left:\n    - Update `count_a[i]` with the cumulative count of `'a'`s encountered so far.\n- Initialize `b_count` to 0.\n- Traverse the string from left to right:\n    - Compute the minimum deletions needed as `count_a[i] + b_count`.\n    - Update `b_count` with the count of `'b'`s encountered so far.\n- Return the minimum value computed.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/g7vfx3PC/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"g7vfx3PC\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the string `s`.\n\n* Time complexity: $O(n)$\n\n    The algorithm performs two linear passes over the string.\n\n* Space complexity: $O(n)$\n\n    We use one array of size `n` to store counts, resulting in linear space complexity.\n\n---\n\n### Approach 3: Two-Variable Method\n\n#### Intuition\n\nWe can optimize our previous approach even further by using two variables to track the total counts of `'a'`s and `'b'`s. In the first pass, we traverse the string from left to right to count all occurrences of `'a'`. Then, in the second pass, we maintain and update these counts as we move through the string.\n\nAs we iterate through the string in the second pass, we keep track of the current number of `'b'`s encountered to the left and the remaining number of `'a'`s to the right. At each position, we calculate the minimum deletions required by adding the current count of `'b'`s to the left and the remaining count of `'a'`s to the right. \n\n#### Algorithm\n\n- Initialize `a_count` to the total number of `'a'`s in the string.\n- Initialize `b_count` to 0.\n- Initialize `min_deletions` to the length of the string.\n- Traverse the string from left to right:\n    - If the current character is `'a'`, decrement `a_count`.\n    - Compute the minimum deletions needed as `a_count + b_count`.\n    - If the current character is `'b'`, increment `b_count`.\n- Return the minimum value computed.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/3JsF5Hwr/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"3JsF5Hwr\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the string `s`.\n\n- Time complexity: $O(n)$\n\n    The algorithm performs a single linear pass over the string.\n\n- Space complexity: $O(1)$\n\n    We only use constant space auxiliary variables, resulting in constant space complexity. \n\n---\n\n### Approach 4: Using stack (one pass)\n\n#### Intuition\n\nWhat if we focus on removing \"ba\" pairs? These pairs unbalance the string because an `'a'` character is to the right of a `'b'` character. By leveraging a stack, we can efficiently count and remove these pairs in a single traversal of the string.\n\nTo implement this approach, we traverse the string and push each character onto the stack. When we encounter a \"ba\" pair—where an `'a'` is on top of the stack and a `'b'` is currently being processed—we pop the `'a'` from the stack, effectively \"removing\" this out-of-order pair. We keep a count of such removals throughout this process.\n\nHowever, in the worst case (when no deletions are needed), it still uses $O(n)$ space for the stack. \n\n#### Algorithm\n \n- Initialize an empty stack `char_stack` and `delete_count` to 0.\n- Traverse the string from left to right:\n    - If the stack is not empty and the top of the stack is `'b'` and the current character is `'a'`, pop the stack and increment `delete_count`.\n    - Otherwise, push the current character onto the stack.\n- Return `delete_count`.\n\nThe algorithm is visualized below:\n\n!?!../Documents/1653/approach4.json:805,580!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/6GQqXGbu/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"6GQqXGbu\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of string `s`.\n\n* Time complexity: $O(n)$\n\n    The algorithm performs a single linear pass over the string, with stack operations (push and pop) taking $O(1)$ time.\n\n* Space complexity: $O(n)$\n\n    The algorithm uses a stack that may grow up to the size of the string.\n\n---\n\n### Approach 5: Using DP (One Pass)\n\n#### Intuition\n\nNotice that we can use the solution for a smaller subproblem to solve the bigger problem. For example, if we knew how many deletions are required to balance the first 8 characters of the string `s`, we can use this information to find how many deletions are required to balance the first 9 characters of `s`. \n\nThus, the problem has an optimal substructure, meaning the solution for the entire string can be built from solutions to its prefixes. This leads us to consider a dynamic programming approach.\n\nLet's define the `dp` array such that, `dp[i]` is the minimum number of deletions required to balance the substring `s[0 ... i - 1]`. We initialize the first element of the array based on whether the first character of the substring is `'a'` or `'b'`. As we traverse the string, we update the dp array by considering the current character and the state of the previous elements.\n\nThe key to this approach is the DP formula used when we encounter an `'a'` character:\n\n```\ndp[i + 1] = min(dp[i] + 1, b_count)\n```\n\nThis formula encapsulates two possible actions:\n\n1. \"Remove `'a'`\" case (`dp[i] + 1`):\n   This represents the option of deleting the current `'a'`. If we choose to remove it, we need one more deletion than what was required for the previous substring (`dp[i]`), hence `dp[i] + 1`.\n\n2. \"Keep `'a'`\" case (`b_count`):\n   This represents the option of keeping the current `'a'` and removing all the `'b'`s that came before it. The number of `'b'`s we've seen so far is `b_count`, so this is the number of deletions needed if we keep this `'a'`.\n\nWe consider these two cases to balance the string:\n- By removing `'a'`, we're reducing the number of `'a'`s to match the existing `'b'`s.\n- By keeping `'a'` and removing all previous `'b'`s, we're ensuring all `'a'`s come before `'b'`s.\n\nWe take the minimum of these two options because we want the least number of deletions. This approach helps balance the string because at each step, we're either making the current prefix end with `'b'` (by removing `'a'`) or making it end with `'a'` (by removing all previous `'b'`s). Both of these actions move us towards a balanced string where all `'a'`s come before all `'b'`s.\n\nThe DP approach allows us to solve the problem in a single pass, which is efficient in time. However, it requires $O(n)$ space to store the `dp` array.\n\n#### Algorithm\n\n- Initialize array `dp` of size `n + 1` to 0, and `b_count` to 0.\n- Traverse the string from left to right:\n    - If the current character is `'b'`, update `dp[i + 1]` as `dp[i]` and increment `b_count`.\n    - If the current character is `'a'`, update `dp[i + 1]` as `min(dp[i] + 1, b_count)`.\n- Return `dp[n]`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/jjcJ896p/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"jjcJ896p\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of string `s`.\n\n- Time complexity: $O(n)$\n\n    The algorithm performs a single linear pass over the string with updates to the `dp` array.\n\n- Space complexity: $O(n)$\n\n    The algorithm uses requires additional space for the `dp` array.\n\n---\n\n### Approach 6: Optimized DP\n\n#### Intuition\n \nReviewing our dynamic programming (DP) solution, we observe that calculating the current state only requires knowledge of the previous state and a running count of `'b'`s. This insight indicates that storing the entire DP array is unnecessary. Instead, we can simplify the approach by using a single variable to keep track of the current minimum deletions and update the counts as we process the string.\n\nTo implement this optimization, we maintain two variables: one to track the current minimum deletions and another to count the number of `'b'`s encountered up to the current position. As we iterate through each character in the string, we update these variables accordingly. By doing so, we streamline our solution and reduce both time and space complexity, focusing only on the essential information needed to compute the minimum deletions efficiently.\n\n#### Algorithm\n \n- Initialize `min_deletions` to 0 and `b_count` to 0.\n- Traverse the string from left to right:\n    - If the current character is `'b'`, increment `b_count`.\n    - If the current character is `'a'`, update `min_deletions` as `min(min_deletions + 1, b_count)`.\n- Return `min_deletions`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/KTnTuBH7/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"KTnTuBH7\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of string `s`.\n\n* Time complexity: $O(n)$\n\n    The algorithm performs a single linear pass over the string.\n\n* Space complexity: $O(1)$\n\n    The algorithm uses a constant amount of additional space for `min_deletions` and `b_count`.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

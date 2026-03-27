@@ -1,0 +1,141 @@
+{
+  "questionId": "1986",
+  "questionFrontendId": "1857",
+  "title": "Largest Color Value in a Directed Graph",
+  "titleSlug": "largest-color-value-in-a-directed-graph",
+  "difficulty": "Hard",
+  "content": "<p>There is a <strong>directed graph</strong> of <code>n</code> colored nodes and <code>m</code> edges. The nodes are numbered from <code>0</code> to <code>n - 1</code>.</p>\n\n<p>You are given a string <code>colors</code> where <code>colors[i]</code> is a lowercase English letter representing the <strong>color</strong> of the <code>i<sup>th</sup></code> node in this graph (<strong>0-indexed</strong>). You are also given a 2D array <code>edges</code> where <code>edges[j] = [a<sub>j</sub>, b<sub>j</sub>]</code> indicates that there is a <strong>directed edge</strong> from node <code>a<sub>j</sub></code> to node <code>b<sub>j</sub></code>.</p>\n\n<p>A valid <strong>path</strong> in the graph is a sequence of nodes <code>x<sub>1</sub> -&gt; x<sub>2</sub> -&gt; x<sub>3</sub> -&gt; ... -&gt; x<sub>k</sub></code> such that there is a directed edge from <code>x<sub>i</sub></code> to <code>x<sub>i+1</sub></code> for every <code>1 &lt;= i &lt; k</code>. The <strong>color value</strong> of the path is the number of nodes that are colored the <strong>most frequently</strong> occurring color along that path.</p>\n\n<p>Return <em>the <strong>largest color value</strong> of any valid path in the given graph, or </em><code>-1</code><em> if the graph contains a cycle</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/04/21/leet1.png\" style=\"width: 400px; height: 182px;\" /></p>\n\n<pre>\n<strong>Input:</strong> colors = &quot;abaca&quot;, edges = [[0,1],[0,2],[2,3],[3,4]]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The path 0 -&gt; 2 -&gt; 3 -&gt; 4 contains 3 nodes that are colored <code>&quot;a&quot; (red in the above image)</code>.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/04/21/leet2.png\" style=\"width: 85px; height: 85px;\" /></p>\n\n<pre>\n<strong>Input:</strong> colors = &quot;a&quot;, edges = [[0,0]]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> There is a cycle from 0 to 0.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == colors.length</code></li>\n\t<li><code>m == edges.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= m &lt;= 10<sup>5</sup></code></li>\n\t<li><code>colors</code> consists of lowercase English letters.</li>\n\t<li><code>0 &lt;= a<sub>j</sub>, b<sub>j</sub>&nbsp;&lt; n</code></li>\n</ul>\n",
+  "hints": [
+    "Use topological sort.",
+    "let dp[u][c] := the maximum count of vertices with color c of any path starting from vertex u. (by JerryJin2905)"
+  ],
+  "metaData": "{\n  \"name\": \"largestPathValue\",\n  \"params\": [\n    {\n      \"name\": \"colors\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"edges\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"149.3K\", \"totalSubmission\": \"260.5K\", \"totalAcceptedRaw\": 149311, \"totalSubmissionRaw\": 260477, \"acRate\": \"57.3%\"}",
+  "likes": 2622,
+  "dislikes": 87,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"abaca\"\n[[0,1],[0,2],[2,3],[3,4]]",
+    "\"a\"\n[[0,0]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"juspay\", \"name\": \"Juspay\"}, {\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Topological Sort",
+      "slug": "topological-sort"
+    },
+    {
+      "name": "Memoization",
+      "slug": "memoization"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int largestPathValue(string colors, vector<vector<int>>& edges) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int largestPathValue(String colors, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def largestPathValue(self, colors: str, edges: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def largestPathValue(self, colors, edges):\n        \"\"\"\n        :type colors: str\n        :type edges: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} colors\n * @param {number[][]} edges\n * @return {number}\n */\nvar largestPathValue = function(colors, edges) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function largestPathValue(colors: string, edges: number[][]): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int LargestPathValue(string colors, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\nint largestPathValue(char * colors, int** edges, int edgesSize, int* edgesColSize){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func largestPathValue(colors string, edges [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun largestPathValue(colors: String, edges: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func largestPathValue(_ colors: String, _ edges: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn largest_path_value(colors: String, edges: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} colors\n# @param {Integer[][]} edges\n# @return {Integer}\ndef largest_path_value(colors, edges)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $colors\n     * @param Integer[][] $edges\n     * @return Integer\n     */\n    function largestPathValue($colors, $edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def largestPathValue(colors: String, edges: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (largest-path-value colors edges)\n  (-> string? (listof (listof exact-integer?)) exact-integer?)\n\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1817",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a directed graph with `n` nodes and `m` edges. We are also given a string `colors` where `colors[i]` is a lowercase English letter representing the color of the $i^{th}$ node in this graph (0-indexed).\n\nOur task is to return the maximum frequency of any color that occurs in any path in the given graph.\n\n---\n\n### Approach 1: Topological Sort Using Kahn's Algorithm\n\n#### Intuition\n\nTo find the maximum frequency of a color in a directed graph, we must iterate over all of its paths in an optimal manner. If we know the maximum frequency of all the colors for paths ending at `u`, we can use it to calculate the frequency of all colors for paths that use the outgoing edges from `u`.\n\nIf there is an edge from `u -> v`, the path ending at `v` will have the same color frequencies as the path ending at `u`, except that the color of `v` will be incremented by one.\n\nNow, if we do this for all the nodes that have an incoming edge to `v` and take the maximum frequency of each color across these edges, we will have the maximum frequency of all the colors for paths ending at `v`. After covering all the edges going into `v`, we can use the maximum frequency of all the colors stored in `v` for edges going out of `v`.\n\nWe notice that for each edge `u -> v`, we must first obtain the maximum frequency of all the colours for paths ending until `u`, and only then can we form the answers for paths ending until `v`. This leads us to consider using topological sort to solve the problem.\n\nA topological sort or topological ordering of a directed graph is a linear ordering of its vertices such that for every directed edge `u -> v` from vertex `u` to vertex `v`, `u` comes before `v` in the ordering.\n\nIn a directed acyclic graph, we can use Kahn's algorithm to get the topological ordering. Kahn’s algorithm works by keeping track of the number of incoming edges into each node (indegree). It works by repeatedly visiting the nodes with an indegree of zero and deleting all the edges associated with it leading to a decrement of indegree for the nodes whose incoming edges are deleted. This process continues until no elements with zero indegree can be found.\n\n> If you are not familiar with Kahn's algorithm, we suggest you read our [Leetcode Explore Card](https://leetcode.com/explore/learn/card/graph/623/kahns-algorithm-for-topological-sorting/3886/).\n\nWe also need to detect if a cycle is in the graph and return `-1` if so. The advantage of using Kahn's algorithm is that it also aids in the detection of graph cycles.\n\nLet's perform Kahn's algorithm on directed graph having a cycle. Here's a visual step-by-step represenntation of how it would work:\n\n![img](../Figures/1857/1857-1.png)\n\nWe can see that if there is a cycle, the indegree of nodes in the cycle cannot be set to `0` due to cyclic dependency. We are unable to visit the cycle's nodes. So, if the number of visited nodes is less than the total number of nodes in the graph, we have a cycle.\n\nTo solve the problem, we create a 2D-array `count` with `n` rows and `26` columns, where `n` is the number of graph nodes. We have an array of size `26` for each node to store the maximum frequency of each colour across the paths that end at the node.\n\nWe use Kahn's algorithm to perform the topological sort. A popped-out `node` indicates that all of its incoming edges have been processed, and it can now be used to iterate over all of its outgoing edges. So for each `node -> neighbor` edge, we use `count[neighbor][i] = max(count[neighbor][i], count[node][i])` (we use max here instead of just setting it because there could be multiple ways to reach the neighbor) for all colors `i`.\n\nWe also need to count the colour of `node`. So when `node` is popped (or pushed) out of the queue, we increase the frequency of the colour of `node` by '1'.\n\nWe make an `answer` variable to compute the answer. We update it every time when `node` is popped out of the queue by simply taking `node`'s colour into account. We perform `answer = max(answer, count[node][colors[node] - 'a'])`.\n\nYou may have noticed that we can update `answer` each time we update the frequencies of the colours using the outgoing edges of `nodes`, but only the `node` colour is sufficient. This is because on any path with the highest frequency of a particular colour, we can shorten it by starting from the first node with that colour and keeping the same count of the colour on this path. As a result, simply using the colour of the node itself suffices for the answer computations.\n\n#### Algorithm\n\n1. Create an integer variable `n = colors.length()` which stores the number of nodes in the graph.\n2. Create an adjacency list `adj` in which `adj[x]` contains all nodes with an incoming edge from node `x`.\n3. Create an array `indegree` of length `n` where `indegree[x]` stores the number of edges entering node `x`.\n4. Create a 2D-array `count` with `n` rows and `26` columns where `count[x]` keeps track of the maximum frequencies of all the colors for paths that end at node `x`. Note that color `a` corresponds to column `0`, `b` corresponds to column `1`, and so on.\n5. Initialize a queue of integers `q` and start a BFS algorithm moving from the leaf nodes to the parent nodes. \n6. Begin the BFS traversal by pushing all of the leaf nodes (`indegree` equal to `0`) in the queue.\n7. Create two integer variables `answer = 0` to store the answer to the problem and `nodesSeen = 0` to count number of visited nodes.\n8. While the queue is not empty;\n    - Dequeue the first `node` from the queue.\n    - Increment the frequency of the color of `node` by `1` and also update `answer`. We perform `answer = max(answer, ++count[node][colors[node] - 'a'])`.\n    - Increment `nodesSeen` by `1`.\n    - For each `neighbor` (nodes that have an incoming edge from `node`) of `node`, we try to update the frequencies of all colors stored for `neighbor` to cover all the paths that use `node -> neighbor` edge. We perform `count[neighbor][i] = max(count[neighbor][i], count[node][i])` for every color `i` where color `a` corresponds to `0`, `b` corresponds to `1`, and so on.\n    - We further decrement `indegree[neighbor]`by `1` to delete the `node -> neighbor` edge.\n    - If `indegree[neighbor] == 0`, it means that `neighbor` behaves as a leaf node, so we push `neighbor` in the queue.\n9. If number of nodes visited is less than total number of nodes, i.e., `nodesSeen < n` we return `-1` as there must be a cycle. Otherwise, we return `answer`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/esQmBuAZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"esQmBuAZ\"></iframe>\n\n#### Complexity Analysis\n\nHere, $n$ be the number of nodes and $m$ be the number of edges in the graph.\n\n* Time complexity: $O(26 \\cdot m + 26 \\cdot n) = O(m + n)$.\n    - Initializing the `adj` takes $O(m)$ time as we go through all the edges. The `indegree` array take $O(n)$ time and the `count` array takes $O(26 \\cdot n)$ time.\n    - Each queue operation takes $O(1)$ time, and a single node will be pushed once, leading to $O(n)$ operations for $n$ nodes. We iterate over the neighbor of each node that is popped out of the queue iterating over all the edges once. Since there are `m` edges at most and while iterating over each edge we try to update the frequencies of all the $26$ colors, it would take $O(26 \\cdot m)$ time.\n\n* Space complexity: $O(m + 26 \\cdot n) = O(m + n)$.\n    - The adjacency list `adj` is a map, which stores up to $n$ keys and $m$ total edges, resulting in $O(n + m)$ space. The `count` array takes $O(26 \\cdot n)$ space.\n    - The queue can have no more than $n$ elements in the worst-case scenario. It would take up $O(n)$ space in that case.\n\n---\n\n### Approach 2: Depth First Search\n\n#### Intuition\n\nIn the previous approach, we obtained the maximum frequencies of the colours for the paths ending at `u` first and then moved to `v` for an edge `u -> v`. We can also consider going in the opposite direction. We can use the maximum frequencies of colours across all paths that begin with `v` to form the maximum frequencies of colours for paths that begin with `u`. We can update the frequency of colours similar to the previous approach.\n\nUsing depth first search, we can also detect a cycle. To detect a cycle, we must keep track of the vertices that are currently in the function's recursion stack for DFS traversal. If a vertex is reached that is already in the recursion stack then there is a cycle in the graph.\n\n#### Algorithm\n\n1. Create an integer variable `n = colors.length()` which stores the number of nodes in the graph.\n2. Create an adjacency list `adj` in which `adj[x]` contains all nodes with an incoming edge from node `x`.\n3. Create a 2D-array `count` with `n` rows and `26` columns where `count[x]` keeps track of the maximum frequencies of all the colors among all the paths that begin at node `x`. Note, the definition of `count` is opposite in this case. The color `a` corresponds to column `0`, `b` corresponds to column `1`, and so on.\n4. Create two boolean arrays, `visit` and `inStack`, each of size `n`. The `visit` array keeps track of visited nodes and `inStack` keeps track of nodes that are currently in the ongoing DFS stack. It will help us to detect cycle in the graph.\n5. Create an integer variable `answer = 0` to store the answer to the problem.\n6. For each node we begin the DFS traveral. We implement the `dfs` method which takes six parameters: an integer `node` from which the current traversal begins, `colors`, `adj`, `count`, `visit` and `inStack`. It returns the maximum frequency of the color of `node` that we can get across all the paths starting from `node`. We return infinity if there is a cycle, which we can detect by checking `inStack`. For each node `i`, we update `answer` whenever we can using `answer = max(answer, dfs(i, colors, adj, count, visit, inStack))`:\n    - If `node` is already present in `inStack`, we have a cycle. We return infinity.\n    - If `node` is already visited, we return the frequency of `node`'s color, i.e., `count[node][colors[node] - 'a']`.\n    - We mark `node` as visited and also set `inStack[node] = true`.\n    - We iterate over all the outgoing edges of `node` and for each `neighbor`, we recursively call `dfs(neighbor, colors, adj, count, visit, inStack)`. If we get a cycle from `neighbor`, we return infinity. Otherwise, we try to update the frequencies of all colors stored for `node` by including the paths that use the `node -> neighbor` edge. We perform `count[node][i] = max(count[neighbor][i], count[node][i])` for every color `i` where `a` corresponds to `0`, `b` corresponds to `1`, and so on.\n    - After we have processed all the outgoing edges of `node`, we increment the frequency of `node`'s color by `1` to count `node` itself.\n    - Mark `inStack[node] = false` to mark `node` as out of stack.\n    - Similar to the previous approach, it is sufficient to just use the frequency of `node`'s color. We return `count[node][colors[node] - 'a']`.\n7. If `answer` is equal to infinity, we return `-1`, else we return `answer`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/KhCpUUMJ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"KhCpUUMJ\"></iframe>\n\n#### Complexity Analysis\n\nHere, $n$ be the number of nodes and $m$ be the number of edges in the graph.\n\n* Time complexity: $O(26 \\cdot m + 26 \\cdot n) = O(m + n)$.\n    - Initializing the `adj` takes $O(m)$ time as we go through all the edges. The `count` array takes $O(26 \\cdot n)$ time.\n    - The `dfs` function visits each node once, which takes $O(n)$ time in total. Since there are `m` edges at most and while iterating over each edge we try to update the frequencies of all the $26$ colors, it would take $O(26 \\cdot m)$ time.\n\n* Space complexity: $O(m + 26 \\cdot n) = O(m + n)$.\n    - The adjacency list `adj` is a map, which stores up to $n$ keys and $m$ total edges, resulting in $O(n + m)$ space. The `count` array takes $O(26 \\cdot n)$ space.\n    - The recursion call stack used by `dfs` can have no more than $n$ elements in the worst-case scenario. It would take up $O(n)$ space in that case.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

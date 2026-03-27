@@ -1,0 +1,140 @@
+{
+  "questionId": "1364",
+  "questionFrontendId": "1726",
+  "title": "Tuple with Same Product",
+  "titleSlug": "tuple-with-same-product",
+  "difficulty": "Medium",
+  "content": "<p>Given an array <code>nums</code> of <strong>distinct</strong> positive integers, return <em>the number of tuples </em><code>(a, b, c, d)</code><em> such that </em><code>a * b = c * d</code><em> where </em><code>a</code><em>, </em><code>b</code><em>, </em><code>c</code><em>, and </em><code>d</code><em> are elements of </em><code>nums</code><em>, and </em><code>a != b != c != d</code><em>.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2,3,4,6]\n<strong>Output:</strong> 8\n<strong>Explanation:</strong> There are 8 valid tuples:\n(2,6,3,4) , (2,6,4,3) , (6,2,3,4) , (6,2,4,3)\n(3,4,2,6) , (4,3,2,6) , (3,4,6,2) , (4,3,6,2)\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,4,5,10]\n<strong>Output:</strong> 16\n<strong>Explanation:</strong> There are 16 valid tuples:\n(1,10,2,5) , (1,10,5,2) , (10,1,2,5) , (10,1,5,2)\n(2,5,1,10) , (2,5,10,1) , (5,2,1,10) , (5,2,10,1)\n(2,10,4,5) , (2,10,5,4) , (10,2,4,5) , (10,2,5,4)\n(4,5,2,10) , (4,5,10,2) , (5,4,2,10) , (5,4,10,2)\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>4</sup></code></li>\n\t<li>All elements in <code>nums</code> are <strong>distinct</strong>.</li>\n</ul>\n",
+  "hints": [
+    "Note that all of the integers are distinct. This means that each time a product is formed it must be formed by two unique integers.",
+    "Count the frequency of each product of 2 distinct numbers. Then calculate the permutations formed."
+  ],
+  "metaData": "{\n  \"name\": \"tupleSameProduct\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"198.9K\", \"totalSubmission\": \"283.7K\", \"totalAcceptedRaw\": 198911, \"totalSubmissionRaw\": 283691, \"acRate\": \"70.1%\"}",
+  "likes": 1373,
+  "dislikes": 59,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[2,3,4,6]",
+    "[1,2,4,5,10]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 7, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int tupleSameProduct(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int tupleSameProduct(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def tupleSameProduct(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def tupleSameProduct(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar tupleSameProduct = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function tupleSameProduct(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int TupleSameProduct(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int tupleSameProduct(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func tupleSameProduct(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun tupleSameProduct(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func tupleSameProduct(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn tuple_same_product(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef tuple_same_product(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function tupleSameProduct($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int tupleSameProduct(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def tupleSameProduct(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec tuple_same_product(nums :: [integer]) :: integer\n  def tuple_same_product(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec tuple_same_product(Nums :: [integer()]) -> integer().\ntuple_same_product(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (tuple-same-product nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2660",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given an array `nums` containing `n` **distinct** positive integers. The goal is to find the number of tuples `(a, b, c, d)` such that:\n\n-   `a`, `b`, `c`, and `d` are distinct elements of the `nums` array, and\n-   The condition `a * b == c * d` is satisfied.\n\nNote, that a tuple refers to an ordered list of 4 elements. This means the tuples `(2, 3, 1, 6)` and `(3, 2, 1, 6)` are considered distinct and counted separately. \n\nIn fact, if we have two pairs of numbers `{a, b}` and `{c, d}` that satisfy `a * b == c * d`, we can generate multiple distinct tuples by varying the order of the elements and the pairs:\n\n-   `(a, b, c, d)`\n-   `(b, a, c, d)`\n-   `(a, b, d, c)`\n-   `(b, a, d, c)`\n-   `(c, d, a, b)`\n-   `(c, d, b, a)`\n-   `(d, c, a, b)`\n-   `(d, c, b, a)`\n\nTo understand this, observe that for every two pairs of distinct numbers `{a, b}` and `{c, d}`, there are three independent ways to reorder the elements and pairs:\n\n1. Within each pair:\n\n-   The order of elements in `{a, b}` can be `(a, b)` or `(b, a)` (2 options).\n-   Similarly, the order in `{c, d}` can be `(c, d)` or `(d, c)` (2 options).\n\n2. Between the pairs:\n\n-   The order of the two pairs can be `({a, b}, {c, d})` or `({c, d}, {a, b})` (2 options).\n\nSince these choices are independent, the total number of distinct tuples is the product of these options: $2 \\times 2 \\times 2 = 8$.\n\n---\n\n### Approach 1: Optimized Brute Force\n\n#### Intuition\n\nA straightforward way to solve the problem is to test all possible combinations of values for `a`, `b`, `c`, and `d` and count how many satisfy the condition. This approach can be implemented using 4 nested `for` loops, with each loop assigning a value to one of `a`, `b`, `c`, or `d`. However, this method has a time complexity of $O(n^4)$, which is inefficient for the given constraints.\n\nTo optimize this approach, we can make the following observations:\n\n1. If `a` and `b` are both greater (or both smaller) than `c` and `d`, then the condition `a * b == c * d` cannot be true because the first product will be strictly greater than (or strictly smaller than) the second. To address this, we will sort the array to ensure that the selected values for `c` and `d` always lie between the values of `a` and `b`.\n2. If `a * b` is not a multiple of `c` for some fixed values of `a`, `b`, and `c`, the condition cannot be satisfied for any integer value of `d`. For cases where the condition can be satisfied, the value of `d` is already determined as `d = a * b / c`. Instead of searching the entire array to find a matching value for `d`, we can store all possible values in a hash map and efficiently check if the required value exists. As we process each potential value of `c` that could form a tuple (i.e., values that divide the product `a * b`), we add them to a hash map, `possibleDValues`, ensuring they are readily available for efficient lookups when needed.\n\nFor example, consider the array `[1, 2, 3, 4, 8]`. Let `a = 1` and `b = 8`. Their product is `8`. If we choose `c = 4`, then `d` must be `8 / 4 = 2` to satisfy the condition. Number `2` exists in the array so the tuple `(1, 8, 4, 2)` is a valid one. However, for `c = 3`, `c` is not a divisor of `a * b`, so the condition cannot be satisfied for any value of `d` and therefore this combination won't lead to any valid tuple. \n\n> For a more comprehensive understanding of hash tables, check out the [Hash Table Explore Card 🔗](https://leetcode.com/explore/learn/card/hash-table/). This resource provides an in-depth look at hash tables, explaining their key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n#### Algorithm\n\n-   Initialize `numsLength` to the length of the `nums` array.\n-   Sort the array in increasing order.\n-   Initialize `totalNumberOfTuples` to `0`.\n-   Iterate over `nums` to try out all possible values of `a` with `aIndex` from `0` to `numsLength - 1`. \n    -   Iterate over the rest values of `nums` to try all possible values for `b` with `bIndex` from `numsLength - 1` to `aIndex + 1`.\n        -   Define `product` as `nums[aIndex] * nums[bIndex]`.\n        -   Initialize a hash map `possibleDValues`.\n            -   Iterate over `nums` with `cIndex` from `aIndex + 1` to `bIndex - 1`:\n                -   If the condition can be satisfied for some integer value of `d`, i.e. if `product % nums[cIndex] == 0`:\n                    -   Define the desired value of `d` as `dValue =  product / nums[cIndex]`.\n                    -   If `dValue` is in `possibleDValues` then add `8` (all possible tuples) to `totalNumberOfTuples`.\n                    -   Add `nums[cindex]` to the `possibleDValues`.\n-   Return `totalNumberOfTuples`.\n                        \n#### Implementation\n\n> This solution results in a TLE (Time Limit Exceeded) error for the `Python3` implementation.\n\n<iframe src=\"https://leetcode.com/playground/GMSAz8vi/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"GMSAz8vi\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the `nums` array.\n\n-   Time complexity: $O(n^3)$\n\n    First, we sort the array in $O(n \\log n)$ time. Next, we use 3 nested loops to fix the values of `a`, `b`, and `c`, and for each combination, we check whether the required value of `d` exists in the array. Using a hash set allows us to perform both insertion and lookup operations in constant time on average. Thus, the operations within the innermost loop take constant time. As a result, the overall time complexity of the algorithm is $O(n^3)$.\n\n-   Space complexity: $O(n)$\n\n    We create a hash set to store the possible values variable `d` can take. This hash set can grow up to $O(n)$ in size, so the algorithm requires $O(n)$ extra space.\n\n---\n\n### Approach 2: Count Product Frequency\n\n#### Intuition\n\nIn this approach, instead of directly finding the number of *tuples* in `nums` that meet the condition, we first create an array of all possible products of two numbers from `nums`. Then, we count how many times each product appears and from that, we calculate the number of *pairs* of products that are equal.\n\nThis simplified version of the problem is equivalent to the original because the distinctness of the numbers in `nums` ensures that if two products are the same, they must come from two different pairs of numbers. From each of these pairs, we can create `8` valid tuples, as explained in the overview.\n\nLet's take a look at an example, where `nums = [2, 3, 4, 6]`. \nFirst, we will calculate the pairwise products of the elements in `nums`, and store them in a new array: `pairProducts = [6, 8, 12, 12, 18, 24]`.\nWe notice that only one pair of equal products exists: `(12, 12)`. Based on the observation above, each of these `12`'s is formed by two distinct numbers in `nums` (`2` and `6`, `3` and `4`), which can create `8` tuples. Therefore, the answer here is `8`.\n\nTo count the number of times each product value occurs, we will sort the `pairProducts` array and process it from left to right. If the current value is equal to the last one seen, then we'll increment a counter. Otherwise, we will calculate the number of tuples for the previous product value and then update it to the current one.\n\n#### Algorithm\n\n-   Initialize\n    - `numsLength` to the length of the `nums` array.\n    -  an array, `pairProducts`, to store the pairwise products of the elements.\n    - `totalNumberOfTuples` to `0`.\n-   Iterate over `nums` with `firstIndex` from `0` to `numsLength - 1`:\n    -   Iterate over `nums` with `secondindex` from `firstIndex + 1` to `numsLength - 1`:\n        -   Add the product `nums[firstIndex] * nums[secondindex]` to the `pairProducts` list.\n-   Sort `pairProducts` in increasing order.\n-   Initialize `lastProductSeen` to `-1` and `sameProductCount` to `0`.\n-   Iterate over `pairProducts` with `productIndex` from `0` to `pairProducts.size - 1`:\n    -   If the current product is equal to the last seen:\n        -   Increment `sameProductCount` by `1`.\n    -   Otherwise:\n        -   Calculate the number of pairs of products with value `lastProductSeen`: `pairsOfEqualProduct = (sameProductCount - 1) * sameProductCount / 2`.\n        -   Add all possible tuples for that product value to the total: increment `totalNumberOfTuples` by `8 * pairsOfEqualProduct`.\n        -   Set `lastProductSeen` to the `pairProducts[productIndex]` and `sameProductCount` to `1`.\n-   Handle the last group of products: \n    -   Calculate the number of pairs of products with value `lastProductSeen`: `pairsOfEqualProduct = (sameProductCount - 1) * sameProductCount / 2`.\n    -   Add all possible tuples for that product value to the total: increment `totalNumberOfTuples` by `8 * pairsOfEqualProduct`.\n-   Return `totalNumberOfTuples`.\n                        \n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/EYewLEL4/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"EYewLEL4\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the `nums` array.\n\n-   Time complexity: $O(n^2 \\log{n})$\n\n    We iterate over the array with a nested loop to calculate all pairwise products, which takes $O(n^2)$. Sorting the `pairProducts` array requires $O(n^2 \\log{n^2}) = O(2n^2 \\log{n}) = O(n^2 \\log{n})$ time, as the length of the array is $O(n^2)$. Then, we perform a final pass over the `pairProducts` array to count the frequency of each product and update the total number of tuples. Each iteration only involves constant-time operations, and therefore this step costs $O(n^2)$ time. Overall, the time complexity of the algorithm is $O(n^2 + n^2 \\log{n} + n^2) = O(n^2 \\log{n})$.\n\n-   Space complexity: $O(n^2)$\n\n    The `pairProducts` array contains the products of all pairs of elements in `nums`. Since there exist $\\frac{n \\times (n - 1)}{2} = O(n^2)$ pairs of $n$ elements, the `pairProducts` array requires $O(n^2)$ space.\n\n---\n\n### Approach 3: Product Frequency Hash Map\n\n#### Intuition\n\nIn the previous approach, we identified a bottleneck caused by sorting the `pairProducts` array to calculate the frequency of each element. To address this, instead of storing each pair product in a new array, we will directly update the frequency of each product using a hash map. Then, following the same approach as before, we will count the number of pairs of products with the same value and calculate how many tuples can be formed from them.\n\n> For a more comprehensive understanding of hash tables, check out the [Hash Table Explore Card 🔗](https://leetcode.com/explore/learn/card/hash-table/). This resource provides an in-depth look at hash tables, explaining their key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n#### Algorithm\n\n-   Initialize \n    -   `numsLength` to the length of the `nums` array.\n    -   a hash map, `pairProductsFrequency`.\n    -   `totalNumberOfTuples` to `0`.\n-   Iterate over `nums` with `firstIndex` from `0` to `numsLength - 1`:\n    -   Iterate over `nums` with `secondindex` from `firstIndex + 1` to `numsLength - 1`:\n        -   Increment the frequency of the product: `nums[firstIndex] * nums[secondindex]` by `1`.\n-   For each element `[productValue, productFrequency]` of `pairProductsFrequency`:\n    -   Calculate the number of pairs of products with value `productValue`: `pairsOfEqualProduct = (productFrequency - 1) * productFrequency / 2`.\n    -   Add all possible tuples for that product value to the total: increment `totalNumberOfTuples` by `8 * pairsOfEqualProduct`.\n-   Return `totalNumberOfTuples`.\n                        \n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/BtU79MJh/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"BtU79MJh\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the `nums` array.\n\n-   Time complexity: $O(n^2)$\n\n    We begin by calculating all pairwise products in $O(n^2)$ time. Next, for each of these product values, we find the number of pairs of products of this value and then the number of tuples that can be formed. These calculations require constant time and therefore this part of the algorithm also takes $O(n^2)$ in the worst-case (when all product values are distinct). Therefore, the total time complexity of the algorithm is $O(n^2)$.\n\n-   Space complexity: $O(n^2)$\n\n    The `pairProductsFrequency` can grow up to $\\frac{n \\times (n - 1)}{2} = O(n^2)$ in size (when all pair products are different) and thus the algorithm requires $O(n^2)$ extra space.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

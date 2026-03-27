@@ -1,0 +1,135 @@
+{
+  "questionId": "1900",
+  "questionFrontendId": "1774",
+  "title": "Closest Dessert Cost",
+  "titleSlug": "closest-dessert-cost",
+  "difficulty": "Medium",
+  "content": "<p>You would like to make dessert and are preparing to buy the ingredients. You have <code>n</code> ice cream base flavors and <code>m</code> types of toppings to choose from. You must follow these rules when making your dessert:</p>\n\n<ul>\n\t<li>There must be <strong>exactly one</strong> ice cream base.</li>\n\t<li>You can add <strong>one or more</strong> types of topping or have no toppings at all.</li>\n\t<li>There are <strong>at most two</strong> of <strong>each type</strong> of topping.</li>\n</ul>\n\n<p>You are given three inputs:</p>\n\n<ul>\n\t<li><code>baseCosts</code>, an integer array of length <code>n</code>, where each <code>baseCosts[i]</code> represents the price of the <code>i<sup>th</sup></code> ice cream base flavor.</li>\n\t<li><code>toppingCosts</code>, an integer array of length <code>m</code>, where each <code>toppingCosts[i]</code> is the price of <strong>one</strong> of the <code>i<sup>th</sup></code> topping.</li>\n\t<li><code>target</code>, an integer representing your target price for dessert.</li>\n</ul>\n\n<p>You want to make a dessert with a total cost as close to <code>target</code> as possible.</p>\n\n<p>Return <em>the closest possible cost of the dessert to </em><code>target</code>. If there are multiple, return <em>the <strong>lower</strong> one.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> baseCosts = [1,7], toppingCosts = [3,4], target = 10\n<strong>Output:</strong> 10\n<strong>Explanation:</strong> Consider the following combination (all 0-indexed):\n- Choose base 1: cost 7\n- Take 1 of topping 0: cost 1 x 3 = 3\n- Take 0 of topping 1: cost 0 x 4 = 0\nTotal: 7 + 3 + 0 = 10.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> baseCosts = [2,3], toppingCosts = [4,5,100], target = 18\n<strong>Output:</strong> 17\n<strong>Explanation:</strong> Consider the following combination (all 0-indexed):\n- Choose base 1: cost 3\n- Take 1 of topping 0: cost 1 x 4 = 4\n- Take 2 of topping 1: cost 2 x 5 = 10\n- Take 0 of topping 2: cost 0 x 100 = 0\nTotal: 3 + 4 + 10 + 0 = 17. You cannot make a dessert with a total cost of 18.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> baseCosts = [3,10], toppingCosts = [2,5], target = 9\n<strong>Output:</strong> 8\n<strong>Explanation:</strong> It is possible to make desserts with cost 8 and 10. Return 8 as it is the lower cost.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == baseCosts.length</code></li>\n\t<li><code>m == toppingCosts.length</code></li>\n\t<li><code>1 &lt;= n, m &lt;= 10</code></li>\n\t<li><code>1 &lt;= baseCosts[i], toppingCosts[i] &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= target &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [
+    "As the constraints are not large, you can brute force and enumerate all the possibilities."
+  ],
+  "metaData": "{\n  \"name\": \"closestCost\",\n  \"params\": [\n    {\n      \"name\": \"baseCosts\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"toppingCosts\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"target\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"38.4K\", \"totalSubmission\": \"79.2K\", \"totalAcceptedRaw\": 38395, \"totalSubmissionRaw\": 79182, \"acRate\": \"48.5%\"}",
+  "likes": 738,
+  "dislikes": 95,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,7]\n[3,4]\n10",
+    "[2,3]\n[4,5,100]\n18",
+    "[3,10]\n[2,5]\n9"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int closestCost(vector<int>& baseCosts, vector<int>& toppingCosts, int target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int closestCost(int[] baseCosts, int[] toppingCosts, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def closestCost(self, baseCosts: List[int], toppingCosts: List[int], target: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def closestCost(self, baseCosts, toppingCosts, target):\n        \"\"\"\n        :type baseCosts: List[int]\n        :type toppingCosts: List[int]\n        :type target: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} baseCosts\n * @param {number[]} toppingCosts\n * @param {number} target\n * @return {number}\n */\nvar closestCost = function(baseCosts, toppingCosts, target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function closestCost(baseCosts: number[], toppingCosts: number[], target: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int ClosestCost(int[] baseCosts, int[] toppingCosts, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int closestCost(int* baseCosts, int baseCostsSize, int* toppingCosts, int toppingCostsSize, int target) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func closestCost(baseCosts []int, toppingCosts []int, target int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun closestCost(baseCosts: IntArray, toppingCosts: IntArray, target: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func closestCost(_ baseCosts: [Int], _ toppingCosts: [Int], _ target: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn closest_cost(base_costs: Vec<i32>, topping_costs: Vec<i32>, target: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} base_costs\n# @param {Integer[]} topping_costs\n# @param {Integer} target\n# @return {Integer}\ndef closest_cost(base_costs, topping_costs, target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $baseCosts\n     * @param Integer[] $toppingCosts\n     * @param Integer $target\n     * @return Integer\n     */\n    function closestCost($baseCosts, $toppingCosts, $target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int closestCost(List<int> baseCosts, List<int> toppingCosts, int target) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def closestCost(baseCosts: Array[Int], toppingCosts: Array[Int], target: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec closest_cost(base_costs :: [integer], topping_costs :: [integer], target :: integer) :: integer\n  def closest_cost(base_costs, topping_costs, target) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec closest_cost(BaseCosts :: [integer()], ToppingCosts :: [integer()], Target :: integer()) -> integer().\nclosest_cost(BaseCosts, ToppingCosts, Target) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (closest-cost baseCosts toppingCosts target)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,148 @@
+{
+  "questionId": "1788",
+  "questionFrontendId": "1686",
+  "title": "Stone Game VI",
+  "titleSlug": "stone-game-vi",
+  "difficulty": "Medium",
+  "content": "<p>Alice and Bob take turns playing a game, with Alice starting first.</p>\n\n<p>There are <code>n</code> stones in a pile. On each player&#39;s turn, they can <strong>remove</strong> a stone from the pile and receive points based on the stone&#39;s value. Alice and Bob may <strong>value the stones differently</strong>.</p>\n\n<p>You are given two integer arrays of length <code>n</code>, <code>aliceValues</code> and <code>bobValues</code>. Each <code>aliceValues[i]</code> and <code>bobValues[i]</code> represents how Alice and Bob, respectively, value the <code>i<sup>th</sup></code> stone.</p>\n\n<p>The winner is the person with the most points after all the stones are chosen. If both players have the same amount of points, the game results in a draw. Both players will play <strong>optimally</strong>.&nbsp;Both players know the other&#39;s values.</p>\n\n<p>Determine the result of the game, and:</p>\n\n<ul>\n\t<li>If Alice wins, return <code>1</code>.</li>\n\t<li>If Bob wins, return <code>-1</code>.</li>\n\t<li>If the game results in a draw, return <code>0</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> aliceValues = [1,3], bobValues = [2,1]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong>\nIf Alice takes stone 1 (0-indexed) first, Alice will receive 3 points.\nBob can only choose stone 0, and will only receive 2 points.\nAlice wins.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> aliceValues = [1,2], bobValues = [3,1]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong>\nIf Alice takes stone 0, and Bob takes stone 1, they will both have 1 point.\nDraw.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> aliceValues = [2,4,3], bobValues = [1,6,7]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong>\nRegardless of how Alice plays, Bob will be able to have more points than Alice.\nFor example, if Alice takes stone 1, Bob can take stone 2, and Alice takes stone 0, Alice will have 6 points to Bob&#39;s 7.\nBob wins.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == aliceValues.length == bobValues.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= aliceValues[i], bobValues[i] &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "When one takes the stone, they not only get the points, but they take them away from the other player too.",
+    "Greedily choose the stone with the maximum aliceValues[i] + bobValues[i]."
+  ],
+  "metaData": "{\n  \"name\": \"stoneGameVI\",\n  \"params\": [\n    {\n      \"name\": \"aliceValues\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"bobValues\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"28.3K\", \"totalSubmission\": \"46.7K\", \"totalAcceptedRaw\": 28312, \"totalSubmissionRaw\": 46741, \"acRate\": \"60.6%\"}",
+  "likes": 894,
+  "dislikes": 77,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Stone Game\", \"titleSlug\": \"stone-game\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Stone Game II\", \"titleSlug\": \"stone-game-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Stone Game III\", \"titleSlug\": \"stone-game-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Stone Game IV\", \"titleSlug\": \"stone-game-iv\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Stone Game V\", \"titleSlug\": \"stone-game-v\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Stone Game VII\", \"titleSlug\": \"stone-game-vii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Stone Game VIII\", \"titleSlug\": \"stone-game-viii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Stone Game IX\", \"titleSlug\": \"stone-game-ix\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,3]\n[2,1]",
+    "[1,2]\n[3,1]",
+    "[2,4,3]\n[1,6,7]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Game Theory",
+      "slug": "game-theory"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int stoneGameVI(vector<int>& aliceValues, vector<int>& bobValues) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int stoneGameVI(int[] aliceValues, int[] bobValues) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def stoneGameVI(self, aliceValues: List[int], bobValues: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def stoneGameVI(self, aliceValues, bobValues):\n        \"\"\"\n        :type aliceValues: List[int]\n        :type bobValues: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} aliceValues\n * @param {number[]} bobValues\n * @return {number}\n */\nvar stoneGameVI = function(aliceValues, bobValues) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function stoneGameVI(aliceValues: number[], bobValues: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int StoneGameVI(int[] aliceValues, int[] bobValues) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int stoneGameVI(int* aliceValues, int aliceValuesSize, int* bobValues, int bobValuesSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func stoneGameVI(aliceValues []int, bobValues []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun stoneGameVI(aliceValues: IntArray, bobValues: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func stoneGameVI(_ aliceValues: [Int], _ bobValues: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn stone_game_vi(alice_values: Vec<i32>, bob_values: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} alice_values\n# @param {Integer[]} bob_values\n# @return {Integer}\ndef stone_game_vi(alice_values, bob_values)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $aliceValues\n     * @param Integer[] $bobValues\n     * @return Integer\n     */\n    function stoneGameVI($aliceValues, $bobValues) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int stoneGameVI(List<int> aliceValues, List<int> bobValues) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def stoneGameVI(aliceValues: Array[Int], bobValues: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec stone_game_vi(alice_values :: [integer], bob_values :: [integer]) :: integer\n  def stone_game_vi(alice_values, bob_values) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec stone_game_vi(AliceValues :: [integer()], BobValues :: [integer()]) -> integer().\nstone_game_vi(AliceValues, BobValues) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (stone-game-vi aliceValues bobValues)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

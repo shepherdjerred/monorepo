@@ -1,0 +1,53 @@
+{
+  "questionId": "1862",
+  "questionFrontendId": "1715",
+  "title": "Count Apples and Oranges",
+  "titleSlug": "count-apples-and-oranges",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Boxes</code></p>\n\n<pre>\n+--------------+------+\n| Column Name  | Type |\n+--------------+------+\n| box_id       | int  |\n| chest_id     | int  |\n| apple_count  | int  |\n| orange_count | int  |\n+--------------+------+\nbox_id is the column with unique values for this table.\nchest_id is a foreign key (reference column) of the chests table.\nThis table contains information about the boxes and the number of oranges and apples they have. Each box may include a chest, which also can contain oranges and apples.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Chests</code></p>\n\n<pre>\n+--------------+------+\n| Column Name  | Type |\n+--------------+------+\n| chest_id     | int  |\n| apple_count  | int  |\n| orange_count | int  |\n+--------------+------+\nchest_id is the column with unique values for this table.\nThis table contains information about the chests and the corresponding number of oranges and apples they have.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to count the number of apples and oranges in all the boxes. If a box contains a chest, you should also include the number of apples and oranges it has.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nBoxes table:\n+--------+----------+-------------+--------------+\n| box_id | chest_id | apple_count | orange_count |\n+--------+----------+-------------+--------------+\n| 2      | null     | 6           | 15           |\n| 18     | 14       | 4           | 15           |\n| 19     | 3        | 8           | 4            |\n| 12     | 2        | 19          | 20           |\n| 20     | 6        | 12          | 9            |\n| 8      | 6        | 9           | 9            |\n| 3      | 14       | 16          | 7            |\n+--------+----------+-------------+--------------+\nChests table:\n+----------+-------------+--------------+\n| chest_id | apple_count | orange_count |\n+----------+-------------+--------------+\n| 6        | 5           | 6            |\n| 14       | 20          | 10           |\n| 2        | 8           | 8            |\n| 3        | 19          | 4            |\n| 16       | 19          | 19           |\n+----------+-------------+--------------+\n<strong>Output:</strong> \n+-------------+--------------+\n| apple_count | orange_count |\n+-------------+--------------+\n| 151         | 123          |\n+-------------+--------------+\n<strong>Explanation:</strong> \nbox 2 has 6 apples and 15 oranges.\nbox 18 has 4 + 20 (from the chest) = 24 apples and 15 + 10 (from the chest) = 25 oranges.\nbox 19 has 8 + 19 (from the chest) = 27 apples and 4 + 4 (from the chest) = 8 oranges.\nbox 12 has 19 + 8 (from the chest) = 27 apples and 20 + 8 (from the chest) = 28 oranges.\nbox 20 has 12 + 5 (from the chest) = 17 apples and 9 + 6 (from the chest) = 15 oranges.\nbox 8 has 9 + 5 (from the chest) = 14 apples and 9 + 6 (from the chest) = 15 oranges.\nbox 3 has 16 + 20 (from the chest) = 36 apples and 7 + 10 (from the chest) = 17 oranges.\nTotal number of apples = 6 + 24 + 27 + 27 + 17 + 14 + 36 = 151\nTotal number of oranges = 15 + 25 + 8 + 28 + 15 + 15 + 17 = 123\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Boxes (box_id int, chest_id int, apple_count int, orange_count int)\", \"Create table If Not Exists Chests (chest_id int, apple_count int, orange_count int)\"], \"mssql\": [\"Create table Boxes (box_id int, chest_id int, apple_count int, orange_count int)\", \"Create table Chests (chest_id int, apple_count int, orange_count int)\"], \"oraclesql\": [\"Create table Boxes (box_id int, chest_id int, apple_count int, orange_count int)\", \"Create table Chests (chest_id int, apple_count int, orange_count int)\"], \"database\": true, \"name\": \"count_apples_and_oranges\", \"pythondata\": [\"Boxes = pd.DataFrame([], columns=['box_id', 'chest_id', 'apple_count', 'orange_count']).astype({'box_id':'Int64', 'chest_id':'Int64', 'apple_count':'Int64', 'orange_count':'Int64'})\", \"Chests = pd.DataFrame([], columns=['chest_id', 'apple_count', 'orange_count']).astype({'chest_id':'Int64', 'apple_count':'Int64', 'orange_count':'Int64'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Boxes (box_id int, chest_id int, apple_count int, orange_count int)\\n\", \"Create table If Not Exists Chests (chest_id int, apple_count int, orange_count int)\"], \"database_schema\": {\"Boxes\": {\"box_id\": \"INT\", \"chest_id\": \"INT\", \"apple_count\": \"INT\", \"orange_count\": \"INT\"}, \"Chests\": {\"chest_id\": \"INT\", \"apple_count\": \"INT\", \"orange_count\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"19.2K\", \"totalSubmission\": \"25.3K\", \"totalAcceptedRaw\": 19204, \"totalSubmissionRaw\": 25336, \"acRate\": \"75.8%\"}",
+  "likes": 91,
+  "dislikes": 22,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Boxes\":[\"box_id\",\"chest_id\",\"apple_count\",\"orange_count\"],\"Chests\":[\"chest_id\",\"apple_count\",\"orange_count\"]},\"rows\":{\"Boxes\":[[2,null,6,15],[18,14,4,15],[19,3,8,4],[12,2,19,20],[20,6,12,9],[8,6,9,9],[3,14,16,7]],\"Chests\":[[6,5,6],[14,20,10],[2,8,8],[3,19,4],[16,19,19]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef count_apples_and_oranges(boxes: pd.DataFrame, chests: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

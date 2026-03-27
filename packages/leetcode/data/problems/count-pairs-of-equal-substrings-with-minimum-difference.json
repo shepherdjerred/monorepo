@@ -1,0 +1,135 @@
+{
+  "questionId": "1943",
+  "questionFrontendId": "1794",
+  "title": "Count Pairs of Equal Substrings With Minimum Difference",
+  "titleSlug": "count-pairs-of-equal-substrings-with-minimum-difference",
+  "difficulty": "Medium",
+  "content": "<p>You are given two strings <code>firstString</code> and <code>secondString</code> that are <strong>0-indexed</strong> and consist only of lowercase English letters. Count the number of index quadruples <code>(i,j,a,b)</code> that satisfy the following conditions:</p>\n\n<ul>\n\t<li><code>0 &lt;= i &lt;= j &lt; firstString.length</code></li>\n\t<li><code>0 &lt;= a &lt;= b &lt; secondString.length</code></li>\n\t<li>The substring of <code>firstString</code> that starts at the <code>i<sup>th</sup></code> character and ends at the <code>j<sup>th</sup></code> character (inclusive) is <strong>equal</strong> to the substring of <code>secondString</code> that starts at the <code>a<sup>th</sup></code> character and ends at the <code>b<sup>th</sup></code> character (inclusive).</li>\n\t<li><code>j - a</code> is the <strong>minimum</strong> possible value among all quadruples that satisfy the previous conditions.</li>\n</ul>\n\n<p>Return <em>the <strong>number</strong> of such quadruples</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> firstString = &quot;abcd&quot;, secondString = &quot;bccda&quot;\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The quadruple (0,0,4,4) is the only one that satisfies all the conditions and minimizes j - a.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> firstString = &quot;ab&quot;, secondString = &quot;cd&quot;\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> There are no quadruples satisfying all the conditions.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= firstString.length, secondString.length &lt;= 2 * 10<sup>5</sup></code></li>\n\t<li>Both strings consist only of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "If the chosen substrings are of size larger than 1, then you can remove all but the first character from both substrings, and you'll get equal substrings of size 1, with the same a but less j. Hence, it's always optimal to choose substrings of size 1.",
+    "If you choose a specific letter, then it's optimal to choose its first occurrence in firstString, and its last occurrence in secondString, to minimize j-a."
+  ],
+  "metaData": "{\n  \"name\": \"countQuadruples\",\n  \"params\": [\n    {\n      \"name\": \"firstString\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"secondString\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"2.5K\", \"totalSubmission\": \"3.9K\", \"totalAcceptedRaw\": 2466, \"totalSubmissionRaw\": 3858, \"acRate\": \"63.9%\"}",
+  "likes": 48,
+  "dislikes": 62,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"abcd\"\n\"bccda\"",
+    "\"ab\"\n\"cd\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countQuadruples(string firstString, string secondString) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countQuadruples(String firstString, String secondString) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countQuadruples(self, firstString: str, secondString: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countQuadruples(self, firstString, secondString):\n        \"\"\"\n        :type firstString: str\n        :type secondString: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} firstString\n * @param {string} secondString\n * @return {number}\n */\nvar countQuadruples = function(firstString, secondString) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countQuadruples(firstString: string, secondString: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountQuadruples(string firstString, string secondString) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int countQuadruples(char* firstString, char* secondString) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countQuadruples(firstString string, secondString string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countQuadruples(firstString: String, secondString: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countQuadruples(_ firstString: String, _ secondString: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_quadruples(first_string: String, second_string: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} first_string\n# @param {String} second_string\n# @return {Integer}\ndef count_quadruples(first_string, second_string)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $firstString\n     * @param String $secondString\n     * @return Integer\n     */\n    function countQuadruples($firstString, $secondString) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countQuadruples(String firstString, String secondString) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countQuadruples(firstString: String, secondString: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_quadruples(first_string :: String.t, second_string :: String.t) :: integer\n  def count_quadruples(first_string, second_string) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_quadruples(FirstString :: unicode:unicode_binary(), SecondString :: unicode:unicode_binary()) -> integer().\ncount_quadruples(FirstString, SecondString) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-quadruples firstString secondString)\n  (-> string? string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

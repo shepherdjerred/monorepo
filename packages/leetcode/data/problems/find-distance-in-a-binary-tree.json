@@ -1,0 +1,149 @@
+{
+  "questionId": "1883",
+  "questionFrontendId": "1740",
+  "title": "Find Distance in a Binary Tree",
+  "titleSlug": "find-distance-in-a-binary-tree",
+  "difficulty": "Medium",
+  "content": "<p>Given the root of a binary tree and two integers <code>p</code> and <code>q</code>, return <em>the <strong>distance</strong> between the nodes of value </em><code>p</code><em> and value </em><code>q</code><em> in the tree</em>.</p>\n\n<p>The <strong>distance</strong> between two nodes is the number of edges on the path from one to the other.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2018/12/14/binarytree.png\" />\n<pre>\n<strong>Input:</strong> root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 0\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> There are 3 edges between 5 and 0: 5-3-1-0.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2018/12/14/binarytree.png\" />\n<pre>\n<strong>Input:</strong> root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 7\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> There are 2 edges between 5 and 7: 5-2-7.</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2018/12/14/binarytree.png\" />\n<pre>\n<strong>Input:</strong> root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 5\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> The distance between a node and itself is 0.</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[1, 10<sup>4</sup>]</code>.</li>\n\t<li><code>0 &lt;= Node.val &lt;= 10<sup>9</sup></code></li>\n\t<li>All <code>Node.val</code> are <strong>unique</strong>.</li>\n\t<li><code>p</code> and <code>q</code> are values in the tree.</li>\n</ul>\n",
+  "hints": [
+    "Get the LCA of p and q.",
+    "The answer is the sum of distances between p-LCA and q-LCA"
+  ],
+  "metaData": "{\n  \"name\": \"findDistance\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"TreeNode\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"p\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"q\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"35.5K\", \"totalSubmission\": \"47.8K\", \"totalAcceptedRaw\": 35535, \"totalSubmissionRaw\": 47824, \"acRate\": \"74.3%\"}",
+  "likes": 485,
+  "dislikes": 19,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Step-By-Step Directions From a Binary Tree Node to Another\", \"titleSlug\": \"step-by-step-directions-from-a-binary-tree-node-to-another\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,5,1,6,2,0,8,null,null,7,4]\n5\n0",
+    "[3,5,1,6,2,0,8,null,null,7,4]\n5\n7",
+    "[3,5,1,6,2,0,8,null,null,7,4]\n5\n5"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    int findDistance(TreeNode* root, int p, int q) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public int findDistance(TreeNode root, int p, int q) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def findDistance(self, root: Optional[TreeNode], p: int, q: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def findDistance(self, root, p, q):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :type p: int\n        :type q: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @param {number} p\n * @param {number} q\n * @return {number}\n */\nvar findDistance = function(root, p, q) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction findDistance(root: TreeNode | null, p: number, q: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public int FindDistance(TreeNode root, int p, int q) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nint findDistance(struct TreeNode* root, int p, int q) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc findDistance(root *TreeNode, p int, q int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun findDistance(root: TreeNode?, p: Int, q: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func findDistance(_ root: TreeNode?, _ p: Int, _ q: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn find_distance(root: Option<Rc<RefCell<TreeNode>>>, p: i32, q: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @param {Integer} p\n# @param {Integer} q\n# @return {Integer}\ndef find_distance(root, p, q)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @param Integer $p\n     * @param Integer $q\n     * @return Integer\n     */\n    function findDistance($root, $p, $q) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  int findDistance(TreeNode? root, int p, int q) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def findDistance(root: TreeNode, p: Int, q: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec find_distance(root :: TreeNode.t | nil, p :: integer, q :: integer) :: integer\n  def find_distance(root, p, q) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec find_distance(Root :: #tree_node{} | null, P :: integer(), Q :: integer()) -> integer().\nfind_distance(Root, P, Q) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (find-distance root p q)\n  (-> (or/c tree-node? #f) exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2372",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe need to find the distance between two nodes with values `p` and `q` in a binary tree with unique values. Let's say that you need to find the path between any two nodes in a binary tree. The path will always be hill-shaped with exactly one peak. There will be a single low if one of the nodes is the parent of another, otherwise, there will be two lows in this graph (one at the beginning, and a second at the end).\n\nObserve that this topmost node on the path is the lowest common ancestor of both nodes. \n> Important note: According to the definition of [LCA on Wikipedia](https://en.wikipedia.org/wiki/Lowest_common_ancestor): The LCA is defined between two nodes `p` and `q` as the lowest node in the tree that has both `p` and `q` as descendants (where we allow a node to be a descendant of itself). Check out this [problem](https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-tree/description/) for a better understanding of the approach.\n\nIn each step, we move one unit of depth upwards until reaching the LCA, and downwards until reaching the target node. The left or right movements in the path don't affect the distance. The distance from the source to the target is the sum of the depth differences from the source to the LCA and from the LCA to the target. Therefore, we need to calculate the depths of these three nodes.\n\n---\n\n### Approach 1: Brute Force (Lowest Common Ancestor and Depth-First Search)\n\n#### Intuition\n\nWhile calculating the depth of these nodes, observe that the depth calculation from the root node to the LCA is redundant in all the 3 calculations. Therefore, we can assume LCA as the root node at depth 0 and start the depth calculation process from this node.\n\nTo calculate the depth of nodes, one could use either Depth-First Search (DFS) or Breadth-First Search (BFS). We will use DFS, starting from the LCA node and recursively calling child nodes while incrementing the depth by 1. When a node with the target value is encountered, we return the current depth. Calculate these depths for both `p` and `q`; their sum gives the distance.\n\n#### Algorithm\n\n**Main function - `findDistance(root, p, q)`**\n\n1. Find LCA of `p` and `q` by making a call to the function `findLCA(root,p,q)` and store it in `lca`.\n2. Return the sum of `depth(lca,p)` and `depth(lca,q)`.\n\n**`findLCA(root, p, q)`**\n\n1. If the `root` is `null` or root's current value is `p` or `q`, return `root`.\n2. Store `findLCA(root->left,p,q)` in `left` and `findLCA(root->right,p,q)` in `right`.\n3. If both `left` and `right` are not `null`, return `root`.\n4. Return the non-null node from either `left` or `right`.\n\n**`depth(root, target, currentDepth = 0)`**\n\n1. If the `root` is `null`, return -1.\n2. If value of `root` is `target`, return current depth.\n3. Check the left subtree by making a call to `depth(root->left, target, currentDepth+1)`.\n4. If a non-negative value is returned, return this depth. Otherwise, target is in the `right` subtree.\n5. Return `depth(root->right,target,currentDepth+1)`.\n \n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/HFnwGSys/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"HFnwGSys\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the tree.\n\n- Time complexity: $O(n)$\n\n   The `findLCA(root)` function takes $O(n)$ time because all the nodes are visited exactly once. Similarly, the `depth(root)` function also takes $O(n)$ time, resulting in a net time complexity of $O(n)$.\n\n- Space complexity: $O(n)$\n\n   The extra space comes from implicit stack space due to recursion in both `findLCA` and `depth` functions. The recursion could go up to $n$ levels deep. Therefore, the total space complexity is given by $O(n)$.\n\n---\n\n### Approach 2: Lowest Common Ancestor and Breadth-First Search\n\n#### Intuition\n\nIn this approach, we use breadth-first search (BFS) to determine the depth of nodes with values `p` and `q` from their lowest common ancestor (LCA). Unlike the previous depth-first approach, BFS iterates level by level, using a queue for FIFO (first in, first out) traversal. This method allows us to explore all nodes at each level before descending further into the tree.\n\nWe initialize the queue with the LCA of `p` and `q`. Then, we perform a level-order traversal using BFS on the tree. To understand this approach better, consider solving a similar problem ['Binary Tree Level Order Traversal'](https://leetcode.com/problems/binary-tree-level-order-traversal/description/). \n\nStart by initializing the initial `depth` to 0. After each level iteration, increment `depth` by 1. Whenever we encounter a node with a value of `p` or `q`, we add this `depth` value to the `distance`. Iterations stop either when the queue is empty or when we've found both `p` and `q`.\n\nUsing BFS to find the depth of a node offers key benefits over DFS. It is more memory and time efficient as it explores the tree level by level. This approach guarantees the shortest path once the target node is found, avoiding unnecessary exploration of deeper levels.\n\n#### Algorithm\n\n**Main function - `findDistance(root, p, q)`**\n\n1. Find LCA of `p` and `q` by making a call to the function `findLCA(root,p,q)` and store it in `lca`.\n2. Initialize a queue `bfs` with `lca`.\n3. Initialize a few variables `distance` and `depth` with 0, and `foundp` and `foundq` with `false`.\n4. Iterate until the queue isn't empty or both `foundp` and `foundq` aren't true:\n    - Initialize `size` with the size of the queue.\n    - Iterate for all `size` elements in the current queue:\n      - Store the front of `bfs` in `front` and pop it.\n      - If value of `front` is `p`:\n        - Increment `distance` with `depth` and set `foundp` as `true`. \n      - If value of `front` is `q`:\n        - Increment `distance` with `depth` and set `foundq` as `true`.  \n      - Push the non-null children of `front` at the end of `bfs`.\n    - Increment `depth` by 1.\n5. Return `distance`.  \n\n**`findLCA(root, p, q)`**\n\n1. If the `root` is `null` or root's current value is `p` or `q`, return `root`.\n2. Store `findLCA(root->left,p,q)` in `left` and `findLCA(root->right,p,q)` in `right`.\n3. If both `left` and `right` are not `null`, return `root`.\n4. Return the non-null node from either `left` or `right`.\n \n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/96cnsXtZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"96cnsXtZ\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the tree.\n\n- Time complexity: $O(n)$\n\n   The `findLCA(root)` function takes $O(n)$ time because all the nodes are visited exactly once. Similarly, the breadth-first search also takes $O(n)$ time.\n\n   The net time complexity is given by $O(n)$.\n\n- Space complexity: $O(n)$\n\n   The extra space comes from the `bfs` queue and the implicit stack space due to recursion in the `depth` function. The size of the `bfs` queue in the worst case could go up to $O(n)$. Therefore, the total space complexity is given by $O(n)$.\n\n---\n\n### Approach 3: One pass (Based on Lowest Common Ancestor)\n\n#### Intuition\n\nIn Approach 1, we created two separate functions to calculate the LCA and the depth of nodes. To streamline this into a single function, we can introduce an additional parameter in the LCA function to maintain depth information. Upon reaching the LCA of nodes `p` and `q`, we can compute the distance between them by subtracting twice the current depth from the sum of their depths. This concept is illustrated in the example below:\n\n![Figure 1.1](../Figures/1740/Slide6.png)\n\nLet's understand the recursive implementation behind this. We'll create a post-order traversal function that calculates the LCA while tracking depth. Instead of returning a node, this function returns an integer, `retDistance`. When `p` or `q` is encountered during traversal, their depths stored in `retDistance` are returned to the parent nodes. Upon reaching the LCA, we compute the distance between `p` and `q` by subtracting twice the current depth from their sum of depths.\n\n#### Algorithm\n\n**Main function - `findDistance(root, p, q)`**\n\n1. Return `distance(root, p, q, 0)`.\n\n**`distance(root, p, q, depth)`**\n\n1. If `root` is null or `p` equals `q`, return 0.\n2. If `root->val` is `p` or `q`:\n    - Store `distance(root->left, p, q, 1)` as `left` and `distance(root->right, p, q, 1)` as `right`.\n    - If `left` or `right` is positive, return `max(left, right)`.\n    - Otherwise, return `depth`.\n3. Store `distance(root->left, p, q, depth + 1)` as `left` and `distance(root->right, p, q, depth + 1)` as `right`.\n4. Store `retDistance` as the sum of `left` and `right`.\n5. If `left` and `right` are not 0, subtract `2 * depth` from `retDistance`.\n6. Return `retDistance`.\n\n!?!../Documents/1740/slideshow1.json:960,540!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/WdAgwdQ3/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"WdAgwdQ3\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the tree.\n\n- Time complexity: $O(n)$\n\n   The `distance` function takes $O(n)$ time because all the nodes are visited exactly once. The time complexity is given by $O(n)$.\n\n- Space complexity: $O(n)$\n\n   The extra space comes from implicit stack space due to recursion in the `distance` function. The recursion could go up to $n$ levels deep. Therefore, the total space complexity is given by $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

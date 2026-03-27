@@ -1,0 +1,153 @@
+{
+  "questionId": "1993",
+  "questionFrontendId": "1863",
+  "title": "Sum of All Subset XOR Totals",
+  "titleSlug": "sum-of-all-subset-xor-totals",
+  "difficulty": "Easy",
+  "content": "<p>The <strong>XOR total</strong> of an array is defined as the bitwise <code>XOR</code> of<strong> all its elements</strong>, or <code>0</code> if the array is<strong> empty</strong>.</p>\n\n<ul>\n\t<li>For example, the <strong>XOR total</strong> of the array <code>[2,5,6]</code> is <code>2 XOR 5 XOR 6 = 1</code>.</li>\n</ul>\n\n<p>Given an array <code>nums</code>, return <em>the <strong>sum</strong> of all <strong>XOR totals</strong> for every <strong>subset</strong> of </em><code>nums</code>.&nbsp;</p>\n\n<p><strong>Note:</strong> Subsets with the <strong>same</strong> elements should be counted <strong>multiple</strong> times.</p>\n\n<p>An array <code>a</code> is a <strong>subset</strong> of an array <code>b</code> if <code>a</code> can be obtained from <code>b</code> by deleting some (possibly zero) elements of <code>b</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,3]\n<strong>Output:</strong> 6\n<strong>Explanation: </strong>The 4 subsets of [1,3] are:\n- The empty subset has an XOR total of 0.\n- [1] has an XOR total of 1.\n- [3] has an XOR total of 3.\n- [1,3] has an XOR total of 1 XOR 3 = 2.\n0 + 1 + 3 + 2 = 6\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [5,1,6]\n<strong>Output:</strong> 28\n<strong>Explanation: </strong>The 8 subsets of [5,1,6] are:\n- The empty subset has an XOR total of 0.\n- [5] has an XOR total of 5.\n- [1] has an XOR total of 1.\n- [6] has an XOR total of 6.\n- [5,1] has an XOR total of 5 XOR 1 = 4.\n- [5,6] has an XOR total of 5 XOR 6 = 3.\n- [1,6] has an XOR total of 1 XOR 6 = 7.\n- [5,1,6] has an XOR total of 5 XOR 1 XOR 6 = 2.\n0 + 5 + 1 + 6 + 4 + 3 + 7 + 2 = 28\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [3,4,5,6,7,8]\n<strong>Output:</strong> 480\n<strong>Explanation:</strong> The sum of all XOR totals for every subset is 480.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 12</code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 20</code></li>\n</ul>\n",
+  "hints": [
+    "Is there a way to iterate through all the subsets of the array?",
+    "Can we use recursion to efficiently iterate through all the subsets?"
+  ],
+  "metaData": "{\n  \"name\": \"subsetXORSum\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"355.8K\", \"totalSubmission\": \"394.8K\", \"totalAcceptedRaw\": 355753, \"totalSubmissionRaw\": 394788, \"acRate\": \"90.1%\"}",
+  "likes": 2695,
+  "dislikes": 354,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,3]",
+    "[5,1,6]",
+    "[3,4,5,6,7,8]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Combinatorics",
+      "slug": "combinatorics"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int subsetXORSum(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int subsetXORSum(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def subsetXORSum(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def subsetXORSum(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar subsetXORSum = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function subsetXORSum(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int SubsetXORSum(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int subsetXORSum(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func subsetXORSum(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun subsetXORSum(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func subsetXORSum(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn subset_xor_sum(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef subset_xor_sum(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function subsetXORSum($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int subsetXORSum(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def subsetXORSum(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec subset_xor_sum(nums :: [integer]) :: integer\n  def subset_xor_sum(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec subset_xor_sum(Nums :: [integer()]) -> integer().\nsubset_xor_sum(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (subset-xor-sum nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2315",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nThe task is to calculate the sum of the **XOR** totals for every subset of `nums`.\n\nAll the possible subsets are known as the power set, which includes all combinations of different lengths, ranging from $0$ to $N$.\n\nRelevant properties of **XOR**:\n- The **XOR** operator `^` evaluates to true for two operands if exactly one of them is true.\n- The **XOR** total of a subset with one element is that element.\n- The **XOR** total of a subset with multiple elements is the **XOR** of all of the elements.\n\nThe solutions in this editorial utilize the following concepts:\n\n- **XOR** and **OR** bitwise operations: [Bitwise Operator Explore Card](https://leetcode.com/explore/learn/card/bit-manipulation/669/bit-manipulation-concepts/4496/)\n- Backtracking: [Backtracking Explore Card](https://leetcode.com/explore/learn/card/recursion-ii/472/backtracking/2654/)\n\nIf you are not familiar with a topic, we recommend you read the corresponding linked explore card.\n\n---\n\n### Approach 1: Generate All Subsets Using Backtracking\n\n#### Intuition\n\nWe can break calculating the sum of the subset **XOR** totals into three main steps.\n\n1. Generate all the subsets.\n2. Calculate the **XOR** total for each subset.\n3. Return the sum of the subset **XOR** totals.\n\nA common way to generate subsets is using backtracking.\n\nWe will use a list of lists to store the subsets, where each list is a subset. We can create a function `generateSubsets` that recursively generates all the subsets for the array `nums`.\n\nFor each element, we can include it in the subset or not include it.\n\n![subsets](../Figures/1863/1863_subsets.png)\n\nThe bottom row of the diagram shows all of the subsets for the input.\n\nFor a given element from `nums`, we can call `generateSubsets` with the element included in the subset and without the element in the subset.\n\nFor the first element, we can start building subsets in two ways:\n1. Include the element in the subset and continue choosing other elements. Add the element to the subset, call `generateSubsets` with the next element, and then remove the element from the subset so we can explore other subsets.\n2. Not include the element in the subset and continue choosing other elements. Call `generateSubsets` with the next element.\n\nOur base case is when we pass the last index of `nums` because there are no more elements to try adding to the subset. We add the subset to the list of subsets and return.\n\nThen, we use a nested loop to calculate the sum of the subset **XOR** totals. The outer loop iterates through the subsets, adding each subset's **XOR** total to the result. The inner loop iterates through each element in a subset, calculating the running **XOR** total for that subset. \n\n#### Algorithm\n\n1. Initialize a list of lists `subsets`.\n2. Declare a recursive function `generateSubsets` that generates all the subsets of `nums` using backtracking and add them to the list.\n    - Base case: `index` equals the size of `nums`. The current subset is complete. Add it to `subsets` and return.\n    - Include the current element `nums[i]` in the current subset. Add the element to the subset, call `generateSubsets` with the next element, and then remove the element from the subset. \n    - Generate the next subset without the current element. Call `generateSubsets` with the next element.\n3. Initialize a variable `result` to `0`.\n4. For each `subset` in `subsets`:\n    - Set `subsetXORTotal` to `0`.\n    - For each element `num` in the subset, **XOR** `num` with the `subsetXORTotal` to calculate the **XOR** total of the subset.\n    - Add the current subset's `subsetXORTotal` to the `result`.\n5. Return the `result`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/9qz46r4G/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"9qz46r4G\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the size of `nums`.\n\n* Time complexity: $O(N \\cdot 2^N)$\n\n    Each element can be included or excluded from any given subset, meaning there are $2^N$ possible subsets. Generating them takes $O(2^N)$.\n\n    We iterate through each of the $2^N$ subsets to calculate the result. The average size of each subset is approximately $\\frac{N}{2}$, so it takes $O(\\frac{N}{2} \\cdot 2^N)$.\n\n    Therefore, the overall time complexity is $O(2^N + \\frac{N}{2} \\cdot 2^N)$, which we can represent as $O(N \\cdot 2^N)$.\n\n* Space complexity: $O(N \\cdot 2^N)$\n\n    The `subsets` list will contain $2^N$ subsets with an average size of $\\frac{N}{2}$, so it requires $O(\\frac{N}{2} \\cdot 2^N)$ space.\n\n    The recursion depth can reach size $N$ because we generate subsets with and without each index in `nums`. The recursive call stack may use up to $O(N)$ space.\n\n    Therefore, the overall space complexity is $O(N + \\frac{N}{2} \\cdot 2^N)$, which we can represent as $O(N \\cdot 2^N)$.\n\n---\n\n### Approach 2: Optimized Backtracking \n\n#### Intuition\n\nThe previous approach generated each subset and then calculated the running **XOR** totals and sum. We can develop a more efficient approach by performing these calculations while we generate the subsets.\n\nWe can calculate the running **XOR** total for the current subset by passing the **XOR** of the running **XOR** and the current element in `nums` as a parameter to our helper function.\n\nFor the current subset, we save the **XOR** total by adding the element to the subset in the variable `withElement` and the **XOR** total by not adding the element in the variable `withoutElement`. Each of these variables represents the **XOR** total of a different subset, so we can return their sum to compute the running total for those two subsets.\n\nThe process is visualized below:\n\n![XOR Sum](../Figures/1863/1863_XORsum.png)\n\nThe subsets are shown in the above image for visualization purposes; the algorithm does not explicitly store the subsets in lists.\n\n#### Algorithm\n\n1. Declare a recursive function `XORSum` that calculates the sum of the subset **XOR** totals using backtracking. The parameters are `nums`, `index`, and `currentXOR`. \n    - Base case: `index` equals the size of `nums`. The current subset is complete. Return  `currentXOR`.\n    - Calculate the sum of the subset **XOR** totals when the current element `nums[i]` is added to the current subset. Save the result of `XORSum` with the next element and `currentXOR ^ nums[index]` as `withElement`.\n    - Calculate the sum of the subset **XOR** totals when the current element `nums[i]` is not added to the current subset. Save the result of `XORSum` with the next element and `currentXOR` as `withoutElement`.\n    - Return the sum of `withElement` and `withoutElement`, which is the sum of the subset **XOR** totals.\n2. Return the result of `XORSum` with `nums`. The initial index and initial `currentXOR` are both `0`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/EvtDBKgr/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"EvtDBKgr\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the size of `nums`.\n\n* Time complexity: $O(2^N)$\n\n    We traverse through each of the $2^N$ subsets to calculate the result.\n\n* Space complexity: $O(N)$\n\n    The recursion depth can reach $N$ because we calculate the **XOR** totals for each of the $N$ indices in `nums`. The recursive call stack may require up to $O(N)$ space.\n\n---\n\n### Approach 3: Bit Manipulation\n\n#### Intuition\n\n**XOR** is a bitwise operation, so we may be able to develop a more efficient approach using bit manipulation.\n\nWorking backward can help develop bit manipulation approaches.\n\nLet's start by considering what bits are set in the result.\n\n> Input: nums = [1,3] (N = 2) Output = 6 = `110`\n> Input: nums = [5,1,6] (N = 3) Output = 28 = `11100`\n> Input: nums = [3,4,5,6,7,8] (N = 6) Output = 480 = `111100000`\n\nLet's look for patterns in the output. Focusing on the bit representation, we can observe a pattern that the least significant (rightmost) `N - 1` bits in the binary representation are `0`.\n\nLet's see if we can break the pattern by testing more inputs.\n\n> Input: nums = [1] (N = 1) Output = 1 = `1`\n\n`1 - 1 = 0` so the least significant `N - 1` (0) bits in the binary representation are still `0`. All test cases will follow this pattern. The reason for this is further explained in the dropdown below.\n\nThis means we can find the bits that need to be set, then shift them by `N - 1`, and we will have the result.\n\nWe can observe that the most significant bits in the output are all `1`. Let's try to break this pattern.\n\n> Input: nums = [5, 20] (n = 2) Output = 42 = `101010`.\n\nWe found a test case that broke the pattern, which means we need to develop a way to determine the most significant bits.\n\nLet's compare the bits in the numbers with the bits in the output.\n\n![compare bits](../Figures/1863/1863_compare_bits.png)\n\nThis image shows the most significant of the output - all bits excluding the least significant (rightmost) `N - 1` bits.\n\nObserve that every bit that is set in any of the elements is set in the output. The **OR** operator is true for a bit position if that bit position is set for any of the elements in the input, so we can utilize **OR** to get from the input to the output.\n\nWe can generate and test a solution using this strategy. First, we calculate the running **OR** of each of the elements in `nums` and save it in `result`. Then, we append `N - 1` zeros to the right of the binary representation by shifting the `result` by `N - 1`.\n\n<details>\n<summary><b> Why Does This Method Work? (Click Here): </b></summary>\n\nThe underlying idea of this method is to directly find the number of times each bit is set in all of the subset **XOR** totals, and use this to set the appropriate bits in the result.\n\nWe utilize several additional properties of **XOR**:\n\n- The **XOR** of two equal numbers is zero.\n- The **XOR** total of the empty set is zero.\n- With more than two operands, the **XOR** operation evaluates to true when an odd number of them are true.\n\n```\n0 ^ 0 ^ 0 = 0\n0 ^ 0 ^ 1 = 1\n1 ^ 1 ^ 0 = 0\n1 ^ 1 ^ 1 = 1\n```\n\n*For a bit position to be set in the subset **XOR** total, it must be set in an odd number of the elements in the subset.*\n\nFor a given element, how many subsets will include it?\n\n- When `nums` contains $N$ elements, the total number of subsets, including the empty set, is $2^N$. A particular element will be included in half of those subsets as shown in the first approach. Half of $2^N$ is $2^{N-1}$.\n\nFor a given bit position `x`, how many subset **XOR** totals have the <code class=\"\">x<sup>th</sup></code> bit set?\n\n- If the <code class=\"\">x<sup>th</sup></code> bit is not set in any of the elements, none of the subset **XOR** totals will have the <code class=\"\">x<sup>th</sup></code> bit set.\n\n- If the <code class=\"\">x<sup>th</sup></code> bit is set in exactly one of the elements, it will be set in half of the **XOR** totals because half of the subsets contain that element.\n\n![bit set once](../Figures/1863/1863_bit_set_once.png)\n\n- If the <code class=\"\">x<sup>th</sup></code> bit is set in more than one of the elements, it will be set in half of the subset **XOR** totals. \n    - Let's consider when `nums` contains two elements with the <code class=\"\">x<sup>th</sup></code> bit set. The <code class=\"\">x<sup>th</sup></code> bit is not set in the **XOR** total of the empty subset. For the two subsets with one element, the <code class=\"\">x<sup>th</sup></code> bit is set in both of their **XOR** totals, so it will not be set in the **XOR** total of the subset containing both elements. Therefore, the <code class=\"\">x<sup>th</sup></code> bit will be set in two out of four, or half, of the subset **XOR** totals. Let's call this set of subsets $A$.\n    - If we add an element with the <code class=\"\">x<sup>th</sup></code> bit set to `nums`, all of the $A$ subsets will still be included. There will also be several new subsets that consist of one of the $A$ subsets and the new element. For each of these new subsets, if the <code class=\"\">x<sup>th</sup></code> bit of the **XOR** total was `0` in the corresponding subset in $A$, it will be `1` in the new subset, and vice versa. This means the <code class=\"\">x<sup>th</sup></code> bit will be set for half of the new subsets. Since the <code class=\"\">x<sup>th</sup></code> bit was also set for half of the $A$ subsets, the <code class=\"\">x<sup>th</sup></code> bit will be set for half of the total subsets.\n    - Adding another element that has the <code class=\"\">x<sup>th</sup></code> bit set to a subset creates a new subset for each of the original subsets. The <code class=\"\">x<sup>th</sup></code> bit will be flipped in **XOR** total for each new subset, so the <code class=\"\">x<sup>th</sup></code> bit will be set in half of the subsets.\n\n![bit set multiple](../Figures/1863/1863_bit_set_multiple.png)\n\n*This means for each bit that is set in any of the numbers in `nums`, the bit will be set in half of the subsets.*\n\nHow is this information used to set the appropriate bits in the result?\n\nWe take the **OR** of all of the elements to capture every bit that is set in any of the elements and store in `result`.\n\n*If a bit is set in any element at least once, its corresponding value will be added to the sum exactly $2^{N-1}$ times.*\n\n> Input: nums = [1,3] (N = 2) Output = 6 = `110`\n\n$2^{N-1} = 2^{2-1} = 2$\nThe first bit is set in $2$ of the subsets: $1 \\cdot 2 = 2$\nThe second bit is set in $2$ of the subsets: $2 \\cdot 2 = 4$\n$2 + 4 = 6$\n\nSo, we multiply the `result` containing the set bit positions by the number of subsets each bit is set in, $2^{N-1}$, which can be achieved using the shift operation: `result << (N - 1)`.\n\n</details>\n\n#### Algorithm\n\n1. Initialize a variable `result` to `0`.\n2. For each `num` in `nums`:\n    - Take the running **OR** of `result` and `num`, `result |= num`.\n3. Append `N - 1` zeros to the right of the binary representation of `result` by shifting `result` by `N - 1` places, `result << (N - 1)`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/mVMb8sab/shared\" frameBorder=\"0\" width=\"100%\" height=\"259\" name=\"mVMb8sab\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the size of `nums`.\n\n* Time complexity: $O(N)$\n\n    We traverse through each of the $N$ elements in `nums` to calculate the running **OR** so the time complexity is $O(N)$.\n\n* Space complexity: $O(1)$\n\n    We use a couple of variables but no data structures that grow with input size, so the space complexity is constant, i.e. $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

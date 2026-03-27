@@ -1,0 +1,125 @@
+{
+  "questionId": "1937",
+  "questionFrontendId": "1788",
+  "title": "Maximize the Beauty of the Garden",
+  "titleSlug": "maximize-the-beauty-of-the-garden",
+  "difficulty": "Hard",
+  "content": "<p>There is a garden of <code>n</code> flowers, and each flower has an integer beauty value. The flowers are arranged in a line. You are given an integer array <code>flowers</code> of size <code>n</code> and each <code>flowers[i]</code> represents the beauty of the <code>i<sup>th</sup></code> flower.</p>\r\n\r\n<p>A garden is <strong>valid</strong> if it meets these conditions:</p>\r\n\r\n<ul>\r\n\t<li>The garden has at least two flowers.</li>\r\n\t<li>The first and the last flower of the garden have the same beauty value.</li>\r\n</ul>\r\n\r\n<p>As the appointed gardener, you have the ability to <strong>remove</strong> any (possibly none) flowers from the garden. You want to remove flowers in a way that makes the remaining garden <strong>valid</strong>. The beauty of the garden is the sum of the beauty of all the remaining flowers.</p>\r\n\r\n<p>Return the maximum possible beauty of some <strong>valid</strong> garden after you have removed any (possibly none) flowers.</p>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong class=\"example\">Example 1:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> flowers = [1,2,3,1,2]\r\n<strong>Output:</strong> 8\r\n<strong>Explanation:</strong> You can produce the valid garden [2,3,1,2] to have a total beauty of 2 + 3 + 1 + 2 = 8.</pre>\r\n\r\n<p><strong class=\"example\">Example 2:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> flowers = [100,1,1,-3,1]\r\n<strong>Output:</strong> 3\r\n<strong>Explanation:</strong> You can produce the valid garden [1,1,1] to have a total beauty of 1 + 1 + 1 = 3.\r\n</pre>\r\n\r\n<p><strong class=\"example\">Example 3:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> flowers = [-1,-2,0,-1]\r\n<strong>Output:</strong> -2\r\n<strong>Explanation:</strong> You can produce the valid garden [-1,-1] to have a total beauty of -1 + -1 = -2.\r\n</pre>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong>Constraints:</strong></p>\r\n\r\n<ul>\r\n\t<li><code>2 &lt;= flowers.length &lt;= 10<sup>5</sup></code></li>\r\n\t<li><code>-10<sup>4</sup> &lt;= flowers[i] &lt;= 10<sup>4</sup></code></li>\r\n\t<li>It is possible to create a valid garden by removing some (possibly none) flowers.</li>\r\n</ul>",
+  "hints": [
+    "Consider every possible beauty and its first and last index in flowers.",
+    "Remove all flowers with negative beauties within those indices."
+  ],
+  "metaData": "{\n  \"name\": \"maximumBeauty\",\n  \"params\": [\n    {\n      \"name\": \"flowers\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"2.8K\", \"totalSubmission\": \"4.3K\", \"totalAcceptedRaw\": 2783, \"totalSubmissionRaw\": 4298, \"acRate\": \"64.8%\"}",
+  "likes": 82,
+  "dislikes": 6,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,2,3,1,2]",
+    "[100,1,1,-3,1]",
+    "[-1,-2,0,-1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximumBeauty(vector<int>& flowers) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximumBeauty(int[] flowers) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumBeauty(self, flowers: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumBeauty(self, flowers):\n        \"\"\"\n        :type flowers: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} flowers\n * @return {number}\n */\nvar maximumBeauty = function(flowers) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumBeauty(flowers: number[]): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaximumBeauty(int[] flowers) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\nint maximumBeauty(int* flowers, int flowersSize){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumBeauty(flowers []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumBeauty(flowers: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumBeauty(_ flowers: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_beauty(flowers: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} flowers\n# @return {Integer}\ndef maximum_beauty(flowers)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $flowers\n     * @return Integer\n     */\n    function maximumBeauty($flowers) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumBeauty(flowers: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-beauty flowers)\n  (-> (listof exact-integer?) exact-integer?)\n\n  )"
+    }
+  ],
+  "solution": null
+}

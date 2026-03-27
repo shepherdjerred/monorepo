@@ -1,0 +1,141 @@
+{
+  "questionId": "1895",
+  "questionFrontendId": "1769",
+  "title": "Minimum Number of Operations to Move All Balls to Each Box",
+  "titleSlug": "minimum-number-of-operations-to-move-all-balls-to-each-box",
+  "difficulty": "Medium",
+  "content": "<p>You have <code>n</code> boxes. You are given a binary string <code>boxes</code> of length <code>n</code>, where <code>boxes[i]</code> is <code>&#39;0&#39;</code> if the <code>i<sup>th</sup></code> box is <strong>empty</strong>, and <code>&#39;1&#39;</code> if it contains <strong>one</strong> ball.</p>\n\n<p>In one operation, you can move <strong>one</strong> ball from a box to an adjacent box. Box <code>i</code> is adjacent to box <code>j</code> if <code>abs(i - j) == 1</code>. Note that after doing so, there may be more than one ball in some boxes.</p>\n\n<p>Return an array <code>answer</code> of size <code>n</code>, where <code>answer[i]</code> is the <strong>minimum</strong> number of operations needed to move all the balls to the <code>i<sup>th</sup></code> box.</p>\n\n<p>Each <code>answer[i]</code> is calculated considering the <strong>initial</strong> state of the boxes.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> boxes = &quot;110&quot;\n<strong>Output:</strong> [1,1,3]\n<strong>Explanation:</strong> The answer for each box is as follows:\n1) First box: you will have to move one ball from the second box to the first box in one operation.\n2) Second box: you will have to move one ball from the first box to the second box in one operation.\n3) Third box: you will have to move one ball from the first box to the third box in two operations, and move one ball from the second box to the third box in one operation.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> boxes = &quot;001011&quot;\n<strong>Output:</strong> [11,8,5,4,3,4]</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == boxes.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 2000</code></li>\n\t<li><code>boxes[i]</code> is either <code>&#39;0&#39;</code> or <code>&#39;1&#39;</code>.</li>\n</ul>\n",
+  "hints": [
+    "If you want to move a ball from box i to box j, you'll need abs(i-j) moves.",
+    "To move all balls to some box, you can move them one by one.",
+    "For each box i, iterate on each ball in a box j, and add abs(i-j) to answers[i]."
+  ],
+  "metaData": "{\n  \"name\": \"minOperations\",\n  \"params\": [\n    {\n      \"name\": \"boxes\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"336.7K\", \"totalSubmission\": \"373.5K\", \"totalAcceptedRaw\": 336680, \"totalSubmissionRaw\": 373545, \"acRate\": \"90.1%\"}",
+  "likes": 3127,
+  "dislikes": 139,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Cost to Move Chips to The Same Position\", \"titleSlug\": \"minimum-cost-to-move-chips-to-the-same-position\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum Moves to Spread Stones Over Grid\", \"titleSlug\": \"minimum-moves-to-spread-stones-over-grid\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"110\"",
+    "\"001011\""
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> minOperations(string boxes) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] minOperations(String boxes) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minOperations(self, boxes: str) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minOperations(self, boxes):\n        \"\"\"\n        :type boxes: str\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} boxes\n * @return {number[]}\n */\nvar minOperations = function(boxes) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minOperations(boxes: string): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] MinOperations(string boxes) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* minOperations(char* boxes, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minOperations(boxes string) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minOperations(boxes: String): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minOperations(_ boxes: String) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_operations(boxes: String) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} boxes\n# @return {Integer[]}\ndef min_operations(boxes)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $boxes\n     * @return Integer[]\n     */\n    function minOperations($boxes) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> minOperations(String boxes) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minOperations(boxes: String): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_operations(boxes :: String.t) :: [integer]\n  def min_operations(boxes) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_operations(Boxes :: unicode:unicode_binary()) -> [integer()].\nmin_operations(Boxes) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-operations boxes)\n  (-> string? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2636",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nWe are given a binary string called `boxes`. Each element in this string represents a box:  \n- `0` means the box is empty,  \n- `1` means the box contains one ball.\n\nIn each operation, we can move a ball to any adjacent box (either to the left or right). Multiple balls can be in the same box at the same time, and we need to figure out how many operations are needed to move all balls to each box.\n\n> Note: The calculation of answer for each index is done considering the initial state of the `boxes` array.\n\n---\n\n### Approach 1: Brute Force\n\n#### Intuition   \n\nGiven that the number of boxes is bounded by 2000, we can use brute force techniques to solve this problem. This involves calculating the total number of operations for each box individually and storing the results in an array.\n\nFirst, we go through all the boxes to check if a box contains a ball. If a box has a ball, we then calculate how many operations are needed to move that ball to the current box by iterating through all other boxes. The number of operations needed to move a ball from one box to another is based on the distance between their positions. This is simply the absolute difference between the indices of the two boxes.\n\nNext, we add up the differences for all the balls and keep a running total of the operations required for each box. These totals are stored in an `answer` array, which holds the result for each box. Finally, after processing all boxes, we return the `answer` array.\n\n#### Algorithm\n\n1. Initialize the Result Array:\n   - Create an array `answer` of size equal to the length of the input string `boxes` and initialize all elements to 0.\n\n2. Iterate Through Each Box:\n   - Loop through the boxes using an index variable `currentBox`.\n\n3. Check for Balls in the Current Box:\n   - If the current box contains a ball (i.e., `boxes.charAt(currentBox) == '1'`):\n     - Iterate through all other boxes using an index variable `newPosition`.\n       - For each box, calculate the distance to the `currentBox` using the absolute difference `Math.abs(newPosition - currentBox)`.\n       - Add this distance to `answer[newPosition]`.\n\n4. Return the Result:\n   - After processing all boxes, return the `answer` array.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/4LUJ7Wre/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"4LUJ7Wre\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the string `boxes`.\n\n- Time Complexity: $O(n^2)$\n\n    The algorithm iterates through each box, and for each box containing a ball, it iterates through all other boxes to calculate the distances. This results in a nested loop structure with $n$ iterations for both the outer and inner loops, leading to a total time complexity of $O(n^2)$.\n\n- Space Complexity: $O(1)$\n\n    We use an `answer` array to store the result. However, since this array is part of the output defined by the problem, it is not considered in the space complexity analysis. Therefore, the overall space complexity remains $O(1)$.\n\n---\n\n### Approach 2: Sum of Left and Right Moves\n\n#### Intuition   \n\nFrom the previous approach, observe that a ball can move in only one direction: either left or right. If the target box is to the left of the ball, it will move left. If the target box is to the right of the ball, it will move right. So, for each box, some balls will come from the left side, and others will come from the right side.\n\nTo calculate the distances for all the balls coming from the left in just one pass, we use a combined approach within a single loop. As we iterate through the boxes from left to right, we keep track of how many balls we’ve encountered so far using the variable `ballsToLeft`. Each time we move to the next box, the distance for all the balls we’ve passed increases by one. So, the total number of operations for those balls increases by the number of balls we've encountered up to that point. We also keep track of the cumulative number of moves using the variable `movesToLeft`.\n\nSimilarly, we calculate the distances for the balls coming from the right by iterating through the boxes from right to left. This is achieved using the variable `ballsToRight` to track how many balls we’ve encountered, and `movesToRight` to track the cumulative moves. During this reverse pass, we simultaneously calculate and accumulate the number of moves required for balls coming from the right.\n\nIn each iteration, we update the `answer` array by adding the moves calculated from both the left and right sides. The value for each box in `answer[i]` (for the left pass) and `answer[j]` (for the right pass) represents the total moves required for balls to reach that box. \n\nAt the end of the loop, the `answer` array will contain the total number of moves for each box, and we return this array.\n\n#### Algorithm\n\n- Initialize `n` as the length of the `boxes` string and create an array `answer` to store the result.\n- Initialize variables `ballsToLeft`, `movesToLeft`, `ballsToRight`, and `movesToRight` to track the number of balls and the moves required to move balls to the left and right, respectively.\n\n- Single pass through the string `boxes`:\n  - For each index `i`:\n    - Left pass (first half of the loop):\n      - Add the current number of moves to the left (`movesToLeft`) to the corresponding index in the `answer` array.\n      - Update `ballsToLeft` by adding the number of balls in the current box.\n      - Update `movesToLeft` by adding `ballsToLeft` (total balls to the left) to account for the moves required for the next balls.\n\n    - Right pass (second half of the loop):\n      - Calculate the corresponding index `j` for the right pass (`n - 1 - i`).\n      - Add the current number of moves to the right (`movesToRight`) to the corresponding index in the `answer` array.\n      - Update `ballsToRight` by adding the number of balls in the current box.\n      - Update `movesToRight` by adding `ballsToRight` (total balls to the right) to account for the moves required for the next balls.\n\n- Return the `answer` array containing the minimum number of operations for each box.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/7kzM6czu/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"7kzM6czu\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the string `boxes`.\n\n- Time Complexity: $O(n)$\n\n    The algorithm uses a single loop that iterates over the string `boxes` once. Within this loop, it performs constant-time operations such as accessing characters, updating variables, and updating the `answer` array. Since the loop runs $n$ times, the overall time complexity is $O(n)$.\n\n- Space Complexity: $O(1)$\n\n    We use a few integer variables (`ballsToLeft`, `movesToLeft`, `ballsToRight`, `movesToRight`), all of which require constant space. Additionally, we use an `answer` array to store the result. However, since this array is part of the output defined by the problem, it is not considered in the space complexity analysis. Therefore, the overall space complexity remains $O(1)$.\n  \n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

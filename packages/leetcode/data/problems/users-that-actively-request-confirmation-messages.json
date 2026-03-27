@@ -1,0 +1,53 @@
+{
+  "questionId": "2092",
+  "questionFrontendId": "1939",
+  "title": "Users That Actively Request Confirmation Messages",
+  "titleSlug": "users-that-actively-request-confirmation-messages",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Signups</code></p>\n\n<pre>\n+----------------+----------+\n| Column Name    | Type     |\n+----------------+----------+\n| user_id        | int      |\n| time_stamp     | datetime |\n+----------------+----------+\nuser_id is the column with unique values for this table.\nEach row contains information about the signup time for the user with ID user_id.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Confirmations</code></p>\n\n<pre>\n+----------------+----------+\n| Column Name    | Type     |\n+----------------+----------+\n| user_id        | int      |\n| time_stamp     | datetime |\n| action         | ENUM     |\n+----------------+----------+\n(user_id, time_stamp) is the primary key (combination of columns with unique values) for this table.\nuser_id is a foreign key (reference column) to the Signups table.\naction is an ENUM (category) of the type (&#39;confirmed&#39;, &#39;timeout&#39;)\nEach row of this table indicates that the user with ID user_id requested a confirmation message at time_stamp and that confirmation message was either confirmed (&#39;confirmed&#39;) or expired without confirming (&#39;timeout&#39;).</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to find the IDs of the users that requested a confirmation message <strong>twice</strong> within a 24-hour window. Two messages exactly 24 hours apart are considered to be within the window. The <code>action</code> does not affect the answer, only the request time.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nSignups table:\n+---------+---------------------+\n| user_id | time_stamp          |\n+---------+---------------------+\n| 3       | 2020-03-21 10:16:13 |\n| 7       | 2020-01-04 13:57:59 |\n| 2       | 2020-07-29 23:09:44 |\n| 6       | 2020-12-09 10:39:37 |\n+---------+---------------------+\nConfirmations table:\n+---------+---------------------+-----------+\n| user_id | time_stamp          | action    |\n+---------+---------------------+-----------+\n| 3       | 2021-01-06 03:30:46 | timeout   |\n| 3       | 2021-01-06 03:37:45 | timeout   |\n| 7       | 2021-06-12 11:57:29 | confirmed |\n| 7       | 2021-06-13 11:57:30 | confirmed |\n| 2       | 2021-01-22 00:00:00 | confirmed |\n| 2       | 2021-01-23 00:00:00 | timeout   |\n| 6       | 2021-10-23 14:14:14 | confirmed |\n| 6       | 2021-10-24 14:14:13 | timeout   |\n+---------+---------------------+-----------+\n<strong>Output:</strong> \n+---------+\n| user_id |\n+---------+\n| 2       |\n| 3       |\n| 6       |\n+---------+\n<strong>Explanation:</strong> \nUser 2 requested two messages within exactly 24 hours of each other, so we include them.\nUser 3 requested two messages within 6 minutes and 59 seconds of each other, so we include them.\nUser 6 requested two messages within 23 hours, 59 minutes, and 59 seconds of each other, so we include them.\nUser 7 requested two messages within 24 hours and 1 second of each other, so we exclude them from the answer.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Signups (user_id int, time_stamp datetime)\", \"Create table If Not Exists Confirmations (user_id int, time_stamp datetime, action ENUM('confirmed','timeout'))\"], \"mssql\": [\"Create table Signups (user_id int, time_stamp datetime)\", \"Create table Confirmations (user_id int, time_stamp datetime, action VARCHAR(10) NOT NULL CHECK (action IN ('confirmed','timeout')))\"], \"oraclesql\": [\"Create table Signups (user_id int, time_stamp date)\", \"Create table Confirmations (user_id int, time_stamp date, action VARCHAR(10) NOT NULL CHECK (action IN ('confirmed','timeout')))\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD HH24:MI:SS'\"], \"database\": true, \"name\": \"find_requesting_users\", \"pythondata\": [\"Signups = pd.DataFrame([], columns=['user_id', 'time_stamp']).astype({'user_id':'Int64', 'time_stamp':'datetime64[ns]'})\", \"Confirmations = pd.DataFrame([], columns=['user_id', 'time_stamp', 'action']).astype({'user_id':'Int64', 'time_stamp':'datetime64[ns]', 'action':'object'})\"], \"postgresql\": [\"Create table If Not Exists Signups (user_id int, time_stamp timestamp)\\n\", \"Create table If Not Exists Confirmations (user_id int, time_stamp timestamp, action VARCHAR(30) CHECK (action IN ('confirmed','timeout')))\\n\"], \"database_schema\": {\"Signups\": {\"user_id\": \"INT\", \"time_stamp\": \"DATETIME\"}, \"Confirmations\": {\"user_id\": \"INT\", \"time_stamp\": \"DATETIME\", \"action\": \"ENUM('confirmed', 'timeout')\"}}}",
+  "stats": "{\"totalAccepted\": \"14.5K\", \"totalSubmission\": \"25.5K\", \"totalAcceptedRaw\": 14470, \"totalSubmissionRaw\": 25467, \"acRate\": \"56.8%\"}",
+  "likes": 67,
+  "dislikes": 49,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Signups\": [\"user_id\", \"time_stamp\"], \"Confirmations\": [\"user_id\", \"time_stamp\", \"action\"]}, \"rows\": {\"Signups\": [[3, \"2020-03-21 10:16:13\"], [7, \"2020-01-04 13:57:59\"], [2, \"2020-07-29 23:09:44\"], [6, \"2020-12-09 10:39:37\"]], \"Confirmations\": [[3, \"2021-01-06 03:30:46\", \"timeout\"], [3, \"2021-01-06 03:37:45\", \"timeout\"], [7, \"2021-06-12 11:57:29\", \"confirmed\"], [7, \"2021-06-13 11:57:30\", \"confirmed\"], [2, \"2021-01-22 00:00:00\", \"confirmed\"], [2, \"2021-01-23 00:00:00\", \"timeout\"], [6, \"2021-10-23 14:14:14\", \"confirmed\"], [6, \"2021-10-24 14:14:13\", \"timeout\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_requesting_users(signups: pd.DataFrame, confirmations: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,145 @@
+{
+  "questionId": "1777",
+  "questionFrontendId": "1657",
+  "title": "Determine if Two Strings Are Close",
+  "titleSlug": "determine-if-two-strings-are-close",
+  "difficulty": "Medium",
+  "content": "<p>Two strings are considered <strong>close</strong> if you can attain one from the other using the following operations:</p>\n\n<ul>\n\t<li>Operation 1: Swap any two <strong>existing</strong> characters.\n\n\t<ul>\n\t\t<li>For example, <code>a<u>b</u>cd<u>e</u> -&gt; a<u>e</u>cd<u>b</u></code></li>\n\t</ul>\n\t</li>\n\t<li>Operation 2: Transform <strong>every</strong> occurrence of one <strong>existing</strong> character into another <strong>existing</strong> character, and do the same with the other character.\n\t<ul>\n\t\t<li>For example, <code><u>aa</u>c<u>abb</u> -&gt; <u>bb</u>c<u>baa</u></code> (all <code>a</code>&#39;s turn into <code>b</code>&#39;s, and all <code>b</code>&#39;s turn into <code>a</code>&#39;s)</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>You can use the operations on either string as many times as necessary.</p>\n\n<p>Given two strings, <code>word1</code> and <code>word2</code>, return <code>true</code><em> if </em><code>word1</code><em> and </em><code>word2</code><em> are <strong>close</strong>, and </em><code>false</code><em> otherwise.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> word1 = &quot;abc&quot;, word2 = &quot;bca&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> You can attain word2 from word1 in 2 operations.\nApply Operation 1: &quot;a<u>bc</u>&quot; -&gt; &quot;a<u>cb</u>&quot;\nApply Operation 1: &quot;<u>a</u>c<u>b</u>&quot; -&gt; &quot;<u>b</u>c<u>a</u>&quot;\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> word1 = &quot;a&quot;, word2 = &quot;aa&quot;\n<strong>Output:</strong> false\n<strong>Explanation: </strong>It is impossible to attain word2 from word1, or vice versa, in any number of operations.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> word1 = &quot;cabbba&quot;, word2 = &quot;abbccc&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> You can attain word2 from word1 in 3 operations.\nApply Operation 1: &quot;ca<u>b</u>bb<u>a</u>&quot; -&gt; &quot;ca<u>a</u>bb<u>b</u>&quot;\nApply Operation 2: &quot;<u>c</u>aa<u>bbb</u>&quot; -&gt; &quot;<u>b</u>aa<u>ccc</u>&quot;\nApply Operation 2: &quot;<u>baa</u>ccc&quot; -&gt; &quot;<u>abb</u>ccc&quot;\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= word1.length, word2.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>word1</code> and <code>word2</code> contain only lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Operation 1 allows you to freely reorder the string.",
+    "Operation 2 allows you to freely reassign the letters' frequencies."
+  ],
+  "metaData": "{\n  \"name\": \"closeStrings\",\n  \"params\": [\n    {\n      \"name\": \"word1\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"word2\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"561.4K\", \"totalSubmission\": \"1M\", \"totalAcceptedRaw\": 561413, \"totalSubmissionRaw\": 1034900, \"acRate\": \"54.2%\"}",
+  "likes": 4120,
+  "dislikes": 360,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Buddy Strings\", \"titleSlug\": \"buddy-strings\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum Swaps to Make Strings Equal\", \"titleSlug\": \"minimum-swaps-to-make-strings-equal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Number of Steps to Make Two Strings Anagram\", \"titleSlug\": \"minimum-number-of-steps-to-make-two-strings-anagram\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"abc\"\n\"bca\"",
+    "\"a\"\n\"aa\"",
+    "\"cabbba\"\n\"abbccc\""
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"postmates\", \"name\": \"Postmates\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool closeStrings(string word1, string word2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean closeStrings(String word1, String word2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def closeStrings(self, word1: str, word2: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def closeStrings(self, word1, word2):\n        \"\"\"\n        :type word1: str\n        :type word2: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} word1\n * @param {string} word2\n * @return {boolean}\n */\nvar closeStrings = function(word1, word2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function closeStrings(word1: string, word2: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool CloseStrings(string word1, string word2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool closeStrings(char* word1, char* word2) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func closeStrings(word1 string, word2 string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun closeStrings(word1: String, word2: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func closeStrings(_ word1: String, _ word2: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn close_strings(word1: String, word2: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} word1\n# @param {String} word2\n# @return {Boolean}\ndef close_strings(word1, word2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $word1\n     * @param String $word2\n     * @return Boolean\n     */\n    function closeStrings($word1, $word2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool closeStrings(String word1, String word2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def closeStrings(word1: String, word2: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec close_strings(word1 :: String.t, word2 :: String.t) :: boolean\n  def close_strings(word1, word2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec close_strings(Word1 :: unicode:unicode_binary(), Word2 :: unicode:unicode_binary()) -> boolean().\nclose_strings(Word1, Word2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (close-strings word1 word2)\n  (-> string? string? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1051",
+    "content": "[TOC]\n\n## Solution\n---\n#### Overview ####\n\nOur aim is to determine if the given 2 strings are close. The problem states that the strings are _close_ if we could perform certain operations on either one string or both strings any number of times and make those strings equal.\nWe could perform the following transformations,\n\n_Operation 1_ : Swapping any 2 characters (a**a**b**c** -> a**c**b**a**).\n\n_Operation 2_ : Exchanging the occurrence of any 2 characters (**aa**b**cc** -> **cc**b**aa** OR **a**b**cc** -> **cc**b**a**).\n\nNow, performing these 2 operations for every 2 characters in strings and determining the closeness after every operation would be costly. How can we optimize it?\n\nFrom the given operations, we could observe that if any 2 strings are close, they always satisfy follow conditions,\n\n**Condition 1**: Every character that exists in `word1` must exist in `word2` as well, irrespective of the frequency.\n\nLet's understand this condition with an example. The following figure illustrates the valid transformations of a string `uua` on applying operations 1 and 2.\n\n![img](../Documents/5603/close_string_condition1.svg)\n\nIn all the transformations of string `uua`, the character `u` and `a` are always present. Thus, if any string is close to `uua` it must contain the characters `u` and `a`.\n\n**Condition 2**: The frequency of all the characters is always the same. In the above example for string `uua`, regardless of the operation, following condition always holds :\n\nThere exists 1 character that occurs once `(frequency = 1)` and 1 character that occurs twice `(frequency = 2)`\n\nThe following figure illustrates that all the transformations of `uua` follows this condition.\n\n![img](../Documents/5603/close_string_condition2.svg)\n\n\nBased on these insights, let's implement the solution using different approaches.\n\n---\n#### Approach 1: Using HashMap\n\n**Intuition**\n\nAs discussed above, we have to check for the following conditions to determine if given strings `word1` and `word1` are close:\n- The strings `word1` and `word2` must have the same characters (_Condition 1_).\n\n   We can build a set that contains the characters in word1 and word2 and check if both sets are equal.\n\n- The occurrence or frequency of characters in `word1` and `word2` must be the same. (_Condition 2_).\n\n    One way to get the frequency of each character in a string is to use a hashmap. We could build a hashmap with each character as a key and it's frequency as a value of hashmap. Now, we have to verify if there are equal number of characters with a particular frequency. For this, we can sort the frequency values in the hashmap and check for equality.\n\n> Instead of building a separate set to check for _Condition 1_, we can only build one hashmap and check if the keys (that represent each character in the string) are present in both maps.\n\n**Algorithm**\n- Initialize hashmaps `word1Map` and `word2Map` for strings `word1` and `word2` respectively.\n- Iterate over each word and build its hashmap where the key is the individual character of the word and value is the frequency of that character.\n- To check if characters in `word1` and `word2` are the same, we must check if the key values of hashmaps `word1Map` and `word2Map` are the same.\n- Now, to check the occurrence, we must sort the values of both hashmaps in increasing order and check for equality.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/PFSpnQif/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"PFSpnQif\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity: $$\\mathcal{O}(n)$$. We iterate over each word to build the hashmap which would take $$\\mathcal{O}(n)$$ time.\n  Further, we sort the character keys and frequency values of each hashmap. The maximum size of hashmap would be $$26$$, as we store each character `a-z` only once. In the worst case, all the sort operations would take $$\\mathcal{O}(26 \\log 26)$$ time to sort those frequency values.\nThis gives us total time complexity as $$\\mathcal{O}(n)$$.\n\n- Space Complexity: $$\\mathcal{O}(1)$$, as the maximum size of each hashmap would be $$26$$, we are using constant extra space.\n\n---\n\n#### Approach 2: Using Frequency Array Map\n\n**Intuition**\n\nWe know that the string contains all the lowercase characters `(a-z)` only. So, instead of using a hashmap to track the frequency of characters, we could build an array of size $$26$$ as a frequency map, where each array element represents a character's frequency (0th index = `a`, 1st index = `b` and so on). In order to check if all characters exist in both words, we could simply iterate over the fixed size frequency map.\n\n**Algorithm**\n- Build arrays `word1Map` and `word2Map` of size $$26$$ to store the frequencies of each character `(a-z)`.\n- For the first condition, we must check if the characters in `word1` and `word2` are the same. There could be multiple ways to implement this. One way is to iterate over each frequency map of size $$26$$ and ensure if a character does not exist in `word1Map`, then it must not exist in `word2Map` as well and vice versa.\nIf the condition is not satisfied for any of the characters, return false.\n\n- For the second condition, we could simply sort the array in increasing order and return true if arrays are equal, otherwise return false.\n\n**Implementation**\n<iframe src=\"https://leetcode.com/playground/SxK69W23/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"SxK69W23\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity : $$\\mathcal{O}(n)$$, where $$n$$ is the length of word.\n\n    We iterate over words of size $$n$$ to build the frequency map which takes $$\\mathcal{O}(n)$$.\n    To check if both words have the same characters and frequency, we iterate over a fixed-size array of size $$26$$ which takes constant time. The sort operation on the array also takes constant time, as the array is of size $$26$$.\n\n   This gives us time complexity of  $$\\mathcal{O}(n) + \\mathcal{O}(1) + \\mathcal{O}(1) = \\mathcal{O}(n)$$\n\n- Space Complexity: $$\\mathcal{O}(1)$$, as we use constant extra space of size $$26$$ to store the frequency map.\n---\n\n#### Approach 3: Using Bitwise Operation and Frequency Array Map\n\n**Intuition**\n\nThe previous approach iterates over the map of size $$26$$ to check if the `word1` and `word2` have the same characters (_Condition 1_). However, there is another efficient way to implement this.\n\nWe just want a way to know if a character exists in a word or not. Instead of iterating over a frequency map to check this condition, we could simply store this information in a single integer. This could be done by making use of Bitwise Operators.\n\nWe could use a integer $$\\text{wordBit}$$, where each bit in the $$\\text{wordBit}$$ stores the information about each of the 26 characters (`a-z`). The rightmost bit represents the character `a`, the next left bit would represent character `b` and so on.\n\nA character exists in the word if it's a corresponding bit is set to $$1$$. The following figure illustrates this idea.\n\n![img](../Documents/5603/close_string_word_bit.svg)\n\nTo set a bit represented by a character we must use the bitwise OR operator.\nExample,\n\n$$\\text{wordBit }  \\| \\text{ wordBit << 2}$$, sets the $$2^{nd}$$ bit, $$\\text{wordBit} = 100$$.\n\n$$\\text{wordBit }  \\| \\text{ wordBit << 5}$$, sets the $$5^{th}$$ bit, $$\\text{wordBit} = 100100$$.\n\n\n > It must be noted that this approach works because the size of the integer is $$32$$ bits (In Java and C++) and we only need to $$26$$ bits to store our information.\n\n**Algorithm**\n\n- Build arrays `word1Map` and `word2Map` of size 26 to store the frequencies of each character `(a-z)` as in _Approach 2_.\n\n- For the first condition, we must check if the characters in `word1` and `word2` are the same. We use `word1Bit` and `word2Bit` to store the bit information of `word1` and `word2` respectively. While building the frequency map, we update the word bits as well to mark the occurrence of a character.\n\n- For the second condition, we could simply sort the array in increasing order and return true if arrays are equal, otherwise return false.\n\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/MLq2gmoa/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"MLq2gmoa\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity : $$\\mathcal{O}(n)$$, where $$n$$ is the length of the word. The complexity is similar to _Approach 2_.\n\n- Space Complexity: $$\\mathcal{O}(1)$$, as we use constant extra space, frequency map of size $$26$$ and word bits of type integer.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "questionId": "2127",
+  "questionFrontendId": "1978",
+  "title": "Employees Whose Manager Left the Company",
+  "titleSlug": "employees-whose-manager-left-the-company",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Employees</code></p>\n\n<pre>\n+-------------+----------+\n| Column Name | Type     |\n+-------------+----------+\n| employee_id | int      |\n| name        | varchar  |\n| manager_id  | int      |\n| salary      | int      |\n+-------------+----------+\nIn SQL, employee_id is the primary key for this table.\nThis table contains information about the employees, their salary, and the ID of their manager. Some employees do not have a manager (manager_id is null). \n</pre>\n\n<p>&nbsp;</p>\n\n<p>Find the IDs of the employees whose salary is strictly less than <code>$30000</code> and whose manager left the company. When a manager leaves the company, their information is deleted from the <code>Employees</code> table, but the reports still have their <code>manager_id</code> set to the manager that left.</p>\n\n<p>Return the result table ordered by <code>employee_id</code>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input: </strong> \nEmployees table:\n+-------------+-----------+------------+--------+\n| employee_id | name      | manager_id | salary |\n+-------------+-----------+------------+--------+\n| 3           | Mila      | 9          | 60301  |\n| 12          | Antonella | null       | 31000  |\n| 13          | Emery     | null       | 67084  |\n| 1           | Kalel     | 11         | 21241  |\n| 9           | Mikaela   | null       | 50937  |\n| 11          | Joziah    | 6          | 28485  |\n+-------------+-----------+------------+--------+\n<strong>Output:</strong> \n+-------------+\n| employee_id |\n+-------------+\n| 11          |\n+-------------+\n\n<strong>Explanation:</strong> \nThe employees with a salary less than $30000 are 1 (Kalel) and 11 (Joziah).\nKalel&#39;s manager is employee 11, who is still in the company (Joziah).\nJoziah&#39;s manager is employee 6, who left the company because there is no row for employee 6 as it was deleted.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Employees (employee_id int, name varchar(20), manager_id int, salary int)\"], \"mssql\": [\"Create table Employees (employee_id int, name varchar(20), manager_id int, salary int)\"], \"oraclesql\": [\"Create table Employees (employee_id int, name varchar(20), manager_id int, salary int)\"], \"database\": true, \"name\": \"find_employees\", \"pythondata\": [\"Employees = pd.DataFrame([], columns=['employee_id', 'name', 'manager_id', 'salary']).astype({'employee_id':'Int64', 'name':'object', 'manager_id':'Int64', 'salary':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Employees (employee_id int, name varchar(20), manager_id int, salary int)\"], \"database_schema\": {\"Employees\": {\"employee_id\": \"INT\", \"name\": \"VARCHAR(20)\", \"manager_id\": \"INT\", \"salary\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"351.8K\", \"totalSubmission\": \"723.3K\", \"totalAcceptedRaw\": 351780, \"totalSubmissionRaw\": 723329, \"acRate\": \"48.6%\"}",
+  "likes": 621,
+  "dislikes": 55,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Employees\": [\"employee_id\", \"name\", \"manager_id\", \"salary\"]}, \"rows\": {\"Employees\": [[3, \"Mila\", 9, 60301], [12, \"Antonella\", null, 31000], [13, \"Emery\", null, 67084], [1, \"Kalel\", 11, 21241], [9, \"Mikaela\", null, 50937], [11, \"Joziah\", 6, 28485]]}}"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_employees(employees: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

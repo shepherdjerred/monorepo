@@ -1,0 +1,137 @@
+{
+  "questionId": "1791",
+  "questionFrontendId": "1672",
+  "title": "Richest Customer Wealth",
+  "titleSlug": "richest-customer-wealth",
+  "difficulty": "Easy",
+  "content": "<p>You are given an <code>m x n</code> integer grid <code>accounts</code> where <code>accounts[i][j]</code> is the amount of money the <code>i​​​​​<sup>​​​​​​th</sup>​​​​</code> customer has in the <code>j​​​​​<sup>​​​​​​th</sup></code>​​​​ bank. Return<em> the <strong>wealth</strong> that the richest customer has.</em></p>\n\n<p>A customer&#39;s <strong>wealth</strong> is the amount of money they have in all their bank accounts. The richest customer is the customer that has the maximum <strong>wealth</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> accounts = [[1,2,3],[3,2,1]]\n<strong>Output:</strong> 6\n<strong>Explanation</strong><strong>:</strong>\n<code>1st customer has wealth = 1 + 2 + 3 = 6\n</code><code>2nd customer has wealth = 3 + 2 + 1 = 6\n</code>Both customers are considered the richest with a wealth of 6 each, so return 6.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> accounts = [[1,5],[7,3],[3,5]]\n<strong>Output:</strong> 10\n<strong>Explanation</strong>: \n1st customer has wealth = 6\n2nd customer has wealth = 10 \n3rd customer has wealth = 8\nThe 2nd customer is the richest with a wealth of 10.</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> accounts = [[2,8,7],[7,1,3],[1,9,5]]\n<strong>Output:</strong> 17\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m ==&nbsp;accounts.length</code></li>\n\t<li><code>n ==&nbsp;accounts[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 50</code></li>\n\t<li><code>1 &lt;= accounts[i][j] &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "Calculate the wealth of each customer",
+    "Find the maximum element in array."
+  ],
+  "metaData": "{\n  \"name\": \"maximumWealth\",\n  \"params\": [\n    {\n      \"name\": \"accounts\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"1.2M\", \"totalSubmission\": \"1.4M\", \"totalAcceptedRaw\": 1217701, \"totalSubmissionRaw\": 1373078, \"acRate\": \"88.7%\"}",
+  "likes": 4875,
+  "dislikes": 389,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[1,2,3],[3,2,1]]",
+    "[[1,5],[7,3],[3,5]]",
+    "[[2,8,7],[7,1,3],[1,9,5]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 18, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximumWealth(vector<vector<int>>& accounts) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximumWealth(int[][] accounts) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumWealth(self, accounts: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumWealth(self, accounts):\n        \"\"\"\n        :type accounts: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} accounts\n * @return {number}\n */\nvar maximumWealth = function(accounts) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumWealth(accounts: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaximumWealth(int[][] accounts) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maximumWealth(int** accounts, int accountsSize, int* accountsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumWealth(accounts [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumWealth(accounts: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumWealth(_ accounts: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_wealth(accounts: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} accounts\n# @return {Integer}\ndef maximum_wealth(accounts)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $accounts\n     * @return Integer\n     */\n    function maximumWealth($accounts) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumWealth(List<List<int>> accounts) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumWealth(accounts: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_wealth(accounts :: [[integer]]) :: integer\n  def maximum_wealth(accounts) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_wealth(Accounts :: [[integer()]]) -> integer().\nmaximum_wealth(Accounts) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-wealth accounts)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1291",
+    "content": "## Video Solution\n\n---\n\n<div>\n    <div class=\"video-container\">\n     <iframe src=\"https://player.vimeo.com/video/722306580?texttrack=en-x-autogenerated\" frameborder=\"0\"\n       allow=\"autoplay; fullscreen\"></iframe>\n    </div>\n</div>\n\n## Solution\n\n--- \n### Overview\n\nThere are $$M$$ customers and each of them has some money deposited in $$N$$ number of banks. The goal is to find the wealth of the richest customer. To determine which customer is the richest, we must find the sum of money that each customer has across all of their bank accounts i.e., each customer's total wealth.\n</br>\n\n--- \n### Approach 1: Row Sum Maximum\n\n**Intuition**\n\nWe know the amount of money that each customer has in each of the $$N$$ banks. The total wealth of a customer is the sum of all the money that he/she has in all the banks. As an example, the table below shows three customers, the money each of them has in the $$4$$ banks, and their total wealth. Once we have the total wealth for each customer, we can compare them and return the highest total.\n\n![fig](../Figures/1672/1672A.png)\n\nThe solution described above can be broken down into two steps:\n- Find the wealth of each customer and store it in a list.\n- Find and return the greatest wealth contained in the list.\n\nWe can change it to a single-step solution. Instead of storing the wealth in a list, we can keep a variable `maxWealthSoFar`. It will store the highest wealth we have seen so far and it will be initialized to $$0$$ because that's the minimum wealth possible. This way we can find the highest wealth by comparing just after calculating it instead of first storing in a list.\n\n**Algorithm**\n\n1. Iterate over the customers i.e., `accounts`.\n2. For each `account` in `accounts`, we iterate over the money deposited in different banks and add it to `currCustomerWealth`.\n3. Compare `currCustomerWealth` with `maxWealthSoFar`. If `currCustomerWealth` is greater than `maxWealthSoFar` then update `maxWealthSoFar`.\n4. Return `maxWealthSoFar`.\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/AhdMWVSP/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"AhdMWVSP\"></iframe>\n\n**Complexity Analysis**\n\nLet $$M$$ be the number of customers and $$N$$ be the number of banks.\n\n* Time complexity: $$O(M \\cdot N)$$\n\n  For each of the $$M$$ customers, we need to iterate over all $$N$$ banks to find the sum of his/her wealth. Inside each iteration, operations like addition or finding maximum take $$O(1)$$ time. Hence, the total time complexity is $$O(M \\cdot N)$$.\n  \n* Space complexity: $$O(1)$$\n\n  We only need two variables `currCustomerWealth` and `maxWealthSoFar` to store the wealth of the current customer, and the highest wealth we have seen so far respectively. Therefore, the space complexity is constant.\n\n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

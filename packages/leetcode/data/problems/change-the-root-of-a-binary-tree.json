@@ -1,0 +1,70 @@
+{
+  "questionId": "1810",
+  "questionFrontendId": "1666",
+  "title": "Change the Root of a Binary Tree",
+  "titleSlug": "change-the-root-of-a-binary-tree",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>root</code> of a binary tree and a <code>leaf</code> node, reroot the tree so that the <code>leaf</code> is the new root.</p>\n\n<p>You can reroot the tree with the following steps for each node <code>cur</code> on the path <strong>starting from the </strong><code>leaf</code> up to the <code>root</code>​​​ <strong>excluding the root</strong>:</p>\n\n<ol>\n\t<li>If <code>cur</code> has a left child, then that child becomes <code>cur</code>&#39;s right child.</li>\n\t<li><code>cur</code>&#39;s original parent becomes <code>cur</code>&#39;s left child. Note that in this process the original parent&#39;s pointer to <code>cur</code> becomes <code>null</code>, making it have at most one child.</li>\n</ol>\n\n<p>Return <em>the new root </em><em>of the rerooted tree.</em></p>\n\n<p><strong>Note:</strong> Ensure that your solution sets the <code>Node.parent</code> pointers correctly after rerooting or you will receive &quot;Wrong Answer&quot;.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/09/21/bt_image_1.png\" style=\"width: 500px; height: 262px;\" />\n<pre>\n<strong>Input:</strong> root = [3,5,1,6,2,0,8,null,null,7,4], leaf = 7\n<strong>Output:</strong> [7,2,null,5,4,3,6,null,null,null,1,null,null,0,8]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> root = [3,5,1,6,2,0,8,null,null,7,4], leaf = 0\n<strong>Output:</strong> [0,1,null,3,8,5,null,null,null,6,2,null,null,7,4]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[2, 100]</code>.</li>\n\t<li><code>-10<sup>9</sup> &lt;= Node.val &lt;= 10<sup>9</sup></code></li>\n\t<li>All <code>Node.val</code> are <strong>unique</strong>.</li>\n\t<li><code>leaf</code> exist in the tree.</li>\n</ul>\n",
+  "hints": [
+    "Start traversing from the leaf. Always go up till you reach the root.",
+    "Change pointers as asked, make the current node's parent its left child, and make the left child the right one if needed."
+  ],
+  "metaData": "{\n  \"name\": \"foobar\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"TreeNode\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"leaf\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"manual\": true,\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"csharp\",\n    \"javascript\",\n    \"python3\"\n  ]\n}",
+  "stats": "{\"totalAccepted\": \"5.9K\", \"totalSubmission\": \"7.9K\", \"totalAcceptedRaw\": 5927, \"totalSubmissionRaw\": 7889, \"acRate\": \"75.1%\"}",
+  "likes": 69,
+  "dislikes": 200,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[3,5,1,6,2,0,8,null,null,7,4]\n7",
+    "[3,5,1,6,2,0,8,null,null,7,4]\n0"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/*\n// Definition for a Node.\nclass Node {\npublic:\n    int val;\n    Node* left;\n    Node* right;\n    Node* parent;\n};\n*/\n\nclass Solution {\npublic:\n    Node* flipBinaryTree(Node* root, Node * leaf) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/*\n// Definition for a Node.\nclass Node {\n    public int val;\n    public Node left;\n    public Node right;\n    public Node parent;\n};\n*/\n\nclass Solution {\n    public Node flipBinaryTree(Node root, Node leaf) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "\"\"\"\n# Definition for a Node.\nclass Node:\n    def __init__(self, val):\n        self.val = val\n        self.left = None\n        self.right = None\n        self.parent = None\n\"\"\"\n\nclass Solution:\n    def flipBinaryTree(self, root: 'Node', leaf: 'Node') -> 'Node':\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "\"\"\"\n# Definition for a Node.\nclass Node:\n    def __init__(self, val):\n        self.val = val\n        self.left = None\n        self.right = None\n        self.parent = None\n\"\"\"\n\nclass Solution(object):\n    def flipBinaryTree(self, root, leaf):\n        \"\"\"\n        :type node: Node\n        :rtype: Node\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * // Definition for a Node.\n * function Node(val) {\n *    this.val = val;\n *    this.left = null;\n *    this.right = null;\n *    this.parent = null;\n * };\n */\n\n/**\n * @param {Node} node\n * @return {Node}\n */\nvar flipBinaryTree = function(root, leaf) {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/*\n// Definition for a Node.\npublic class Node {\n    public int val;\n    public Node left;\n    public Node right;\n    public Node parent;\n}\n*/\n\npublic class Solution {\n    public Node FlipBinaryTree(Node root, Node leaf) {\n        \n    }\n}"
+    }
+  ],
+  "solution": null
+}

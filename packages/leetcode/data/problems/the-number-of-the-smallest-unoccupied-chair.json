@@ -1,0 +1,140 @@
+{
+  "questionId": "2054",
+  "questionFrontendId": "1942",
+  "title": "The Number of the Smallest Unoccupied Chair",
+  "titleSlug": "the-number-of-the-smallest-unoccupied-chair",
+  "difficulty": "Medium",
+  "content": "<p>There is a party where <code>n</code> friends numbered from <code>0</code> to <code>n - 1</code> are attending. There is an <strong>infinite</strong> number of chairs in this party that are numbered from <code>0</code> to <code>infinity</code>. When a friend arrives at the party, they sit on the unoccupied chair with the <strong>smallest number</strong>.</p>\n\n<ul>\n\t<li>For example, if chairs <code>0</code>, <code>1</code>, and <code>5</code> are occupied when a friend comes, they will sit on chair number <code>2</code>.</li>\n</ul>\n\n<p>When a friend leaves the party, their chair becomes unoccupied at the moment they leave. If another friend arrives at that same moment, they can sit in that chair.</p>\n\n<p>You are given a <strong>0-indexed</strong> 2D integer array <code>times</code> where <code>times[i] = [arrival<sub>i</sub>, leaving<sub>i</sub>]</code>, indicating the arrival and leaving times of the <code>i<sup>th</sup></code> friend respectively, and an integer <code>targetFriend</code>. All arrival times are <strong>distinct</strong>.</p>\n\n<p>Return<em> the <strong>chair number</strong> that the friend numbered </em><code>targetFriend</code><em> will sit on</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> times = [[1,4],[2,3],[4,6]], targetFriend = 1\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> \n- Friend 0 arrives at time 1 and sits on chair 0.\n- Friend 1 arrives at time 2 and sits on chair 1.\n- Friend 1 leaves at time 3 and chair 1 becomes empty.\n- Friend 0 leaves at time 4 and chair 0 becomes empty.\n- Friend 2 arrives at time 4 and sits on chair 0.\nSince friend 1 sat on chair 1, we return 1.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> times = [[3,10],[1,5],[2,6]], targetFriend = 0\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> \n- Friend 1 arrives at time 1 and sits on chair 0.\n- Friend 2 arrives at time 2 and sits on chair 1.\n- Friend 0 arrives at time 3 and sits on chair 2.\n- Friend 1 leaves at time 5 and chair 0 becomes empty.\n- Friend 2 leaves at time 6 and chair 1 becomes empty.\n- Friend 0 leaves at time 10 and chair 2 becomes empty.\nSince friend 0 sat on chair 2, we return 2.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == times.length</code></li>\n\t<li><code>2 &lt;= n &lt;= 10<sup>4</sup></code></li>\n\t<li><code>times[i].length == 2</code></li>\n\t<li><code>1 &lt;= arrival<sub>i</sub> &lt; leaving<sub>i</sub> &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= targetFriend &lt;= n - 1</code></li>\n\t<li>Each <code>arrival<sub>i</sub></code> time is <strong>distinct</strong>.</li>\n</ul>\n",
+  "hints": [
+    "Sort times by arrival time.",
+    "for each arrival_i find the smallest unoccupied chair and mark it as occupied until leaving_i."
+  ],
+  "metaData": "{\n  \"name\": \"smallestChair\",\n  \"params\": [\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"times\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"targetFriend\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"128K\", \"totalSubmission\": \"212.1K\", \"totalAcceptedRaw\": 128049, \"totalSubmissionRaw\": 212116, \"acRate\": \"60.4%\"}",
+  "likes": 1454,
+  "dislikes": 78,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[1,4],[2,3],[4,6]]\n1",
+    "[[3,10],[1,5],[2,6]]\n0"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"spinny\", \"name\": \"spinny\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int smallestChair(vector<vector<int>>& times, int targetFriend) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int smallestChair(int[][] times, int targetFriend) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def smallestChair(self, times: List[List[int]], targetFriend: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def smallestChair(self, times, targetFriend):\n        \"\"\"\n        :type times: List[List[int]]\n        :type targetFriend: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} times\n * @param {number} targetFriend\n * @return {number}\n */\nvar smallestChair = function(times, targetFriend) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function smallestChair(times: number[][], targetFriend: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int SmallestChair(int[][] times, int targetFriend) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int smallestChair(int** times, int timesSize, int* timesColSize, int targetFriend) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func smallestChair(times [][]int, targetFriend int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun smallestChair(times: Array<IntArray>, targetFriend: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func smallestChair(_ times: [[Int]], _ targetFriend: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn smallest_chair(times: Vec<Vec<i32>>, target_friend: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} times\n# @param {Integer} target_friend\n# @return {Integer}\ndef smallest_chair(times, target_friend)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $times\n     * @param Integer $targetFriend\n     * @return Integer\n     */\n    function smallestChair($times, $targetFriend) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int smallestChair(List<List<int>> times, int targetFriend) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def smallestChair(times: Array[Array[Int]], targetFriend: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec smallest_chair(times :: [[integer]], target_friend :: integer) :: integer\n  def smallest_chair(times, target_friend) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec smallest_chair(Times :: [[integer()]], TargetFriend :: integer()) -> integer().\nsmallest_chair(Times, TargetFriend) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (smallest-chair times targetFriend)\n  (-> (listof (listof exact-integer?)) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2526",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nWe have a party with friends who arrive and leave at different times. Each time a friend arrives, they sit on the lowest-numbered available chair. When they leave, their chair becomes available for others.\n\nThe input includes a 2D array of `times`, where each element represents the arrival and leaving time of a friend, and an integer `targetFriend`. We need to determine the chair number that the `targetFriend` will sit on based on the order of arrivals and departures.\n\nHere are some related questions that we recommend for you to solve:\n\n1. [Divide Intervals Into Minimum Number of Groups](https://leetcode.com/problems/divide-intervals-into-minimum-number-of-groups/description/)\n2. [Meeting Rooms II](https://leetcode.com/problems/meeting-rooms-ii/description/)\n3. [Meeting Rooms III](https://leetcode.com/problems/meeting-rooms-iii/description/)\n\n---\n\n### Approach 1: Brute Force\n\n#### Intuition\n\nThe first approach we'll look at is simulating the process. We'll start by sorting the input so that we can process the people in chronological order. We can then iterate over the people in order of when they arrive and determine which chair each person will take until we determine the chair for the target person.\n\nTo accomplish this, we'll use an array `chairTime` with a length of `n`. Even though there are an infinite number of chairs, we only need to worry about the first `n` - even if everybody is at the party simultaneously, we won't need more than `n` chairs.\n`chairTime[i]` will represent the time the $i^{th}$ chair becomes available. Initially, all values of `chairTime` are `0`, because every chair is available at the beginning.\n\nFor each person `(arrival, leaving)`, we will iterate over `chairTime` and find the first chair with a value less than or equal to `arrival`. This is the chair that the current person will take. Let's say that it is the $i^{th}$ chair. We can then set `chairTime[i] = leaving` since that's when the chair will become available again.\n\nWe can immediately return the answer when we figure out which seat `targetFriend` will take.\n\n#### Algorithm\n  \n- Store the arrival and departure times of the `targetFriend` in `targetTime`.\n  \n- Sort the `times` array based on arrival times to ensure friends are seated in the order they arrive.\n  \n- Initialize an integer `n` to represent the total number of friends and create an array `chairTime` of size `n` to keep track of when each chair becomes available.\n  \n- Iterate through each `time` in the sorted `times` array:\n  - For each time, loop through each chair (index `i`):\n    - If the `chairTime[i]` (when the chair becomes available) is less than or equal to the arrival time of the current friend (`time[0]`):\n      - Update `chairTime[i]` to the departure time of the current friend (`time[1]`).\n      - If the current `time` matches `targetTime`, return the chair index `i` (the chair assigned to the `targetFriend`).\n      - Break out of the loop to move on to the next friend.\n  \n- If no chair is found for the `targetFriend`, return 0 (default return value).\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/CXnkKius/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"CXnkKius\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `times` array.\n\n- Time complexity: $O(n^2)$\n\n    We first sort the `times` array, which takes $O(n \\log n)$. However, the nested loop within the `for` loop leads to an overall time complexity of $O(n^2)$. Specifically, for each entry in the sorted `times`, the inner loop checks each chair to see if it is available. In the worst case, this can lead to $n$ checks for each of the $n$ times, resulting in $O(n^2)$.\n\n- Space complexity: $O(n)$\n\n    The space complexity arises from the `chairTime` array, which stores the end times of chair usage. This array has a size equal to the number of friends $n$, leading to a space complexity of $O(n)$. Additionally, the `times` array is modified in place, so no extra space is used beyond what's necessary for `chairTime`. \n\n    The space taken by the sorting algorithm ($S$) depends on the language of implementation:\n    - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n)$.\n    - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worst-case space complexity of $O(\\log n)$.\n    - In Python, the `sort()` method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has a space complexity of $O(n)$.\n\n    Thus, the total space used is $O(n) + O(S) = O(n)$.\n\n---\n\n### Approach 2: Event-based with Two Priority Queues\n\n#### Intuition\n\nAn effective approach is to use an event-based method. We start by creating a list of events that represent the arrivals and departures of each friend (`{arrival time, friend index}`). By sorting these events by time, we establish a clear timeline for processing them sequentially.\n\nTo ensure that each arriving friend receives the smallest unoccupied chair, we use a min-heap `availableChairs`, which allows for efficient retrieval and removal of the smallest available chair. We also need to handle chair availability when friends leave, so we maintain another min-heap `occupiedChairs` to track the chairs being vacated and the corresponding times.\n\nInitially, we populate the `availableChairs` queue with all chair numbers since all chairs are free at the start.\n\nAs we process each event, we check if any friends have left by comparing the current time with the departure times in the `occupiedChairs` queue. When a chair becomes available, we add it back to the `availableChairs` queue. When a friend arrives, we allocate the lowest-numbered chair from the `availableChairs`. If this friend is the `targetFriend`, we return their chair index.\n\n#### Algorithm\n\n- Initialize `n` as the size of `times`, and create an array `events` to store both arrival and leave events.\n- Populate the `events` array with:\n  - Arrival events as pairs of `{arrival time, friend index}`.\n  - Leave events as pairs of `{leave time, -friend index}` (using bitwise NOT to distinguish).\n- Sort the `events` array by time to process them in order.\n- Create a min-heap `availableChairs` to keep track of free chairs and initialize it with all chair indices (0 to n-1).\n- Create a min-heap `occupiedChairs` to track when chairs will be vacated, storing pairs of `{leave time, chair index}`.\n- Iterate through each `event` in `events`:\n  - Extract the `time` and `friendIndex` from the event.\n    - Free up chairs for friends that have left:\n      - While the `occupiedChairs` heap is not empty and the top leave time is less than or equal to the current `time`, push the chair index back to `availableChairs` and pop it from `occupiedChairs`.\n    - Check if the `friendIndex` indicates an arrival:\n      - If `friendIndex` is non-negative (indicating a friend has arrived):\n        - Get the chair index from `availableChairs`, and pop it to mark it as occupied.\n        - If the `friendIndex` matches `targetFriend`, return the chair index.\n        - Otherwise, push a new entry into `occupiedChairs` with the leave time and chair index.\n\n- If the function reaches this point, return -1 (this case should not occur).\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/jfgqei6L/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"jfgqei6L\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `times` array.\n\n- Time complexity: $O(n \\log n)$\n\n    The first part of the algorithm constructs the `events` array, which takes $O(n)$ time since we iterate through the `times` array.\n    \n    The `events` array is then sorted, which takes $O(n \\log n)$ time.\n    \n    In the main loop, we process each event. While processing, we might have to pop elements from the `occupiedChairs` priority queue, but since each chair is only added and removed once, the total time spent on these operations across all events is $O(n \\log n)$ in the worst case.\n    \n    Therefore, the overall time complexity is dominated by the sorting step, yielding $O(n \\log n)$.\n\n- Space complexity: $O(n)$\n\n    We create the `events` array, which stores $2n$ pairs (one for each arrival and one for each departure), requiring $O(n)$ space.\n    \n    The `availableChairs` priority queue can also store up to $n$ chairs, which adds another $O(n)$ space in the worst case.\n    \n    The `occupiedChairs` priority queue will also have a size that can grow up to $n$ in the worst case.\n\n    The space taken by the sorting algorithm ($S$) depends on the language of implementation:\n    - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n)$.\n    - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worst-case space complexity of $O(\\log n)$.\n    - In Python, the `sort()` method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has a space complexity of $O(n)$.\n\n    Thus, the total space used is $O(n) + O(n) + O(n) + O(S) = O(n)$.\n\n---\n\n### Approach 3: Set with Sorted Insertion\n\n#### Intuition\n\nBuilding on the event-based concept, we can further optimize our approach using a set to manage available chairs. We begin by sorting the friends according to their arrival times, similar to the previous approach, while maintaining a priority queue `leavingQueue` to track departure times.\n\nAs we process each arrival event, we first check the `leavingQueue` for any friends who have left and add their chairs to the set of available chairs (`availableChairs`). When a friend arrives, we either assign the lowest numbered chair from the `availableChairs` or, if none are free, allocate the next available chair number. After assigning the chair, we record the departure time in the `leavingQueue`. If the arriving friend is our target, we return their assigned chair index.\n\n</br>\n\n![1942_approach3](../Figures/1942/1942_approach3.png)\n\n</br>\n\n#### Algorithm\n\n- Initialize a priority queue `leavingQueue` to track the leave times and corresponding chair numbers, using a min-heap to ensure chairs are freed up in order of their leave times.\n- Get the arrival time of the target friend using `targetArrival = times[targetFriend][0]`.\n\n- Sort the `times` array to process friends in order of arrival.\n  \n- Initialize `nextChair` to track the next available chair number, starting from 0.\n- Create a set of `availableChairs` to keep track of chairs that have become available.\n\n- Iterate through each entry in `times`:\n  - Extract `arrival` and `leave` times for the current friend.\n    - Free up chairs based on the current arrival time:\n      - While there are chairs in `leavingQueue` that have a leave time less than or equal to the current `arrival`:\n        - Insert the chair number from `leavingQueue` into `availableChairs`.\n        - Remove the chair from `leavingQueue`.\n    - Determine the `currentChair` for the current friend:\n      - If `availableChairs` is not empty, take the smallest chair from the set and remove it.\n      - If no chairs are available, assign the next chair by incrementing `nextChair`.\n    - Push the current leave time and chair number into `leavingQueue`.\n    - If the `arrival` time of the current friend matches the `targetArrival`, return `currentChair`.\n\n- If the loop completes without returning, it indicates the target friend's chair was not found; return 0 as a fallback (though this shouldn't normally happen with valid input).\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/jizAdLtF/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"jizAdLtF\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `times` array.\n\n- Time Complexity: $O(n \\log n)$\n\n    The `sort` function call takes $O(n \\log n)$ time due to the sorting algorithm used.\n\n    The `for` loop iterates through each of the $n$ times. Within this loop:\n       - The `while (!leavingQueue.empty() && leavingQueue.top().first <= arrival)` operation has a complexity of $O(\\log k)$ where $k$ is the number of elements in `leavingQueue`. Since in the worst case $k$ can be $n$, this part will be $O(\\log n)$ in the worst case.\n       - The insert and erase operations, which are part of the `set`, also take $O(\\log n)$ time each.\n       - The `leavingQueue.push()` operation is $O(\\log n)$.\n\n    Therefore, processing each time can take up to $O(n \\log n)$ overall.\n\n    Combining these parts, the dominant factor in the time complexity is the sorting step, leading to a total time complexity of $O(n \\log n)$.\n\n- Space Complexity: $O(n)$\n    \n    The `leavingQueue` is a priority queue that can store at most $n$ elements (one for each friend), which contributes $O(n)$ space.\n    \n    The `availableChairs` set can also store at most $n$ chair numbers, contributing another $O(n)$ space.\n\n    The space taken by the sorting algorithm ($S$) depends on the language of implementation:\n    - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n)$.\n    - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worst-case space complexity of $O(\\log n)$.\n    - In Python, the `sort()` method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has a space complexity of $O(n)$.\n\n    Thus, the total space complexity is dominated by these two structures, resulting in an overall space complexity of $O(n)$.\n \n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

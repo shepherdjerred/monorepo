@@ -1,0 +1,58 @@
+{
+  "questionId": "2024",
+  "questionFrontendId": "1873",
+  "title": "Calculate Special Bonus",
+  "titleSlug": "calculate-special-bonus",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Employees</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| employee_id | int     |\n| name        | varchar |\n| salary      | int     |\n+-------------+---------+\nemployee_id is the primary key (column with unique values) for this table.\nEach row of this table indicates the employee ID, employee name, and salary.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to calculate the bonus of each employee. The bonus of an employee is <code>100%</code> of their salary if the ID of the employee is <strong>an odd number</strong> and <strong>the employee&#39;s name does not start with the character </strong><code>&#39;M&#39;</code>. The bonus of an employee is <code>0</code> otherwise.</p>\n\n<p>Return the result table ordered by <code>employee_id</code>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nEmployees table:\n+-------------+---------+--------+\n| employee_id | name    | salary |\n+-------------+---------+--------+\n| 2           | Meir    | 3000   |\n| 3           | Michael | 3800   |\n| 7           | Addilyn | 7400   |\n| 8           | Juan    | 6100   |\n| 9           | Kannon  | 7700   |\n+-------------+---------+--------+\n<strong>Output:</strong> \n+-------------+-------+\n| employee_id | bonus |\n+-------------+-------+\n| 2           | 0     |\n| 3           | 0     |\n| 7           | 7400  |\n| 8           | 0     |\n| 9           | 7700  |\n+-------------+-------+\n<strong>Explanation:</strong> \nThe employees with IDs 2 and 8 get 0 bonus because they have an even employee_id.\nThe employee with ID 3 gets 0 bonus because their name starts with &#39;M&#39;.\nThe rest of the employees get a 100% bonus.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Employees (employee_id int, name varchar(30), salary int)\"], \"mssql\": [\"Create table Employees (employee_id int, name varchar(30), salary int)\"], \"oraclesql\": [\"Create table Employees (employee_id int, name varchar(30), salary int)\"], \"database\": true, \"name\": \"calculate_special_bonus\", \"pythondata\": [\"Employees = pd.DataFrame([], columns=['employee_id', 'name', 'salary']).astype({'employee_id':'int64', 'name':'object', 'salary':'int64'})\"], \"manual\": false, \"postgresql\": [\"Create table If Not Exists Employees (employee_id int, name varchar(30), salary int)\"], \"database_schema\": {\"Employees\": {\"employee_id\": \"INT\", \"name\": \"VARCHAR(30)\", \"salary\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"340.2K\", \"totalSubmission\": \"597.2K\", \"totalAcceptedRaw\": 340239, \"totalSubmissionRaw\": 597159, \"acRate\": \"57.0%\"}",
+  "likes": 1184,
+  "dislikes": 81,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Employees\":[\"employee_id\",\"name\",\"salary\"]},\"rows\":{\"Employees\":[[2,\"Meir\",3000],[3,\"Michael\",3800],[7,\"Addilyn\",7400],[8,\"Juan\",6100],[9,\"Kannon\",7700]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef calculate_special_bonus(employees: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "2024",
+    "content": "<!-- Don't delete this -->\n[TOC]\n\n# Solution\n\n---\n\n## pandas\n\n### Approach: If-Else Conditional Statement\n\n\n#### Algorithm\n\nLet's take a look at the bonus calculation conditions: the bonus is equal to the salary **only when** the employee's ID is odd **and** his name does not start with the letter `M`. Otherwise, the bonus is set to 0. This can be represented as a straightforward `if-else` statement:\n\n```python\nbonus = salary if (id % 2 and not name.startwith('M')) else 0\n```\n\nHow do we implement this expression to each row of the DataFrame `employee`? \n\nTo accomplish this task, we could use a loop to iterate through the DataFrame rows one by one. Instead of writing an explicit Python loop, we can use the `apply()` method to process rows more concisely. While this isn’t true vectorization (which would rely on pandas’ column-wise operations), it is often clearer to read and still avoids writing manual loops.\n\nBy defining a custom function that calculates the bonus based on the conditions and utilizing `apply()` with the `axis=1` argument, we can effortlessly process each row and compute the corresponding bonus. The custom function is outlined as follows:\n\n```python\nlambda x: x['salary'] if x['employee_id'] % 2 and not x['name'].startswith('M') else 0\n```\n\nIt implements our `if-else` logic statement by checking the conditions based on the employee's ID and the first letter of their name and returning the corresponding bonus value. We set the first parameter of `apply()` to this lambda function and set the parameter `axis` to 1, indicating that the function should be applied along the row.\n\n\n```python\nemployees['bonus'] = employees.apply(\n    lambda x: x['salary'] if x['employee_id'] % 2 and not x['name'].startswith('M') else 0, \n    axis=1\n)\n```\n\nThe above code creates a new column `bonus`:\n\n|   employee_id   |   name    |   salary  |   bonus  |\n|-----------------|-----------|----------|---------|\n|   0              |    Meir    |   3000    |     0     |\n|   1              |  Michael |   3800    |     0     |\n|   2              |  Addilyn |   7400    |   7400  |\n|   3              |    Juan   |   6100    |     0     |\n|   4              |  Kannon |   7700    |   7700  |\n\n<br>\n\nNext, we select the required columns `employee_id` and `bonus` and sort the DataFrame `df` in ascending order of `employee_id`.\n\n```python\ndf = employees[['employee_id', 'bonus']].sort_values('employee_id')\n```\nWe will obtain `df` as follows:\n\n| employee_id | bonus |\n| ----------- | ----- |\n| 2           | 0     |\n| 3           | 0     |\n| 7           | 7400  |\n| 8           | 0     |\n| 9           | 7700  |\n\n<br>\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/m9CfDhBB/shared\" frameBorder=\"0\" width=\"100%\" height=\"225\" name=\"m9CfDhBB\"></iframe>\n\n<br>\n<br>\n\n\n## Database\n\n### Approach: If Statement\n\n#### Algorithm\nIn SQL, we use the conditional function IF to perform conditional checks and return different values based on the condition's result. The syntax of the IF function is as follows:\n\n```sql\nIF(condition, value_if_true, value_if_false)\n```\n\nThe `condition` consists of two parts separated by the keyword AND:\n\n- `employee_id % 2 = 1`: this condition checks whether `employee_id` is an odd number. \n- `name NOT REGEXP '^M'`: we use the keyword REGEXP for regular expression pattern matching, which checks whether the name **does not** start with the letter \"M\" (`^M` represents a regular expression pattern that matches any name **not** starting with \"M\").\n\nTherefore, the IF function in our case is as follows:\n\n```sql\nIF(employee_id % 2 = 1 AND name NOT REGEXP '^M', salary, 0)\n```\n\nThe AS clause is used to give an alias `bonus` to the calculated column above. If both conditions are met, the `bonus` will be set to the employee's salary. Otherwise, it will be set to 0. Then the result set is sorted based on the `employee_id` column in ascending order. The complete code is as follows:\n\n\n#### Implementation\n\n```sql\nSELECT \n    employee_id,\n    IF(employee_id % 2 = 1 AND name NOT REGEXP '^M', salary, 0) AS bonus \nFROM \n    employees \nORDER BY \n    employee_id\n```\n\n| employee_id | bonus |\n| ----------- | ----- |\n| 2           | 0     |\n| 3           | 0     |\n| 7           | 7400  |\n| 8           | 0     |\n| 9           | 7700  |",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

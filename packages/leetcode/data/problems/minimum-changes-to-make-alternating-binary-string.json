@@ -1,0 +1,134 @@
+{
+  "questionId": "1884",
+  "questionFrontendId": "1758",
+  "title": "Minimum Changes To Make Alternating Binary String",
+  "titleSlug": "minimum-changes-to-make-alternating-binary-string",
+  "difficulty": "Easy",
+  "content": "<p>You are given a string <code>s</code> consisting only of the characters <code>&#39;0&#39;</code> and <code>&#39;1&#39;</code>. In one operation, you can change any <code>&#39;0&#39;</code> to <code>&#39;1&#39;</code> or vice versa.</p>\n\n<p>The string is called alternating if no two adjacent characters are equal. For example, the string <code>&quot;010&quot;</code> is alternating, while the string <code>&quot;0100&quot;</code> is not.</p>\n\n<p>Return <em>the <strong>minimum</strong> number of operations needed to make</em> <code>s</code> <em>alternating</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;0100&quot;\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> If you change the last character to &#39;1&#39;, s will be &quot;0101&quot;, which is alternating.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;10&quot;\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> s is already alternating.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;1111&quot;\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> You need two operations to reach &quot;0101&quot; or &quot;1010&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>s[i]</code> is either <code>&#39;0&#39;</code> or <code>&#39;1&#39;</code>.</li>\n</ul>\n",
+  "hints": [
+    "Think about how the final string will look like.",
+    "It will either start with a '0' and be like '010101010..' or with a '1' and be like '10101010..'",
+    "Try both ways, and check for each way, the number of changes needed to reach it from the given string. The answer is the minimum of both ways."
+  ],
+  "metaData": "{\n  \"name\": \"minOperations\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"295.7K\", \"totalSubmission\": \"435.9K\", \"totalAcceptedRaw\": 295676, \"totalSubmissionRaw\": 435893, \"acRate\": \"67.8%\"}",
+  "likes": 1835,
+  "dislikes": 55,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Remove Adjacent Almost-Equal Characters\", \"titleSlug\": \"remove-adjacent-almost-equal-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"0100\"",
+    "\"10\"",
+    "\"1111\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"ibm\", \"name\": \"IBM\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"tesla\", \"name\": \"Tesla\"}]}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minOperations(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minOperations(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minOperations(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minOperations(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar minOperations = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minOperations(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinOperations(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minOperations(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minOperations(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minOperations(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minOperations(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_operations(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef min_operations(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function minOperations($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minOperations(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minOperations(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_operations(s :: String.t) :: integer\n  def min_operations(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_operations(S :: unicode:unicode_binary()) -> integer().\nmin_operations(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-operations s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2190",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Start with Zero or Start with One\n\n**Intuition**\n\nOnce we make `s` alternating, there are two possibilities:\n\n1. `s` starts with `0`.\n2. `s` starts with `1`.\n\n![example](../Figures/1758/1.png)\n<br>\n\nIn the above image, we have the original `s`, then two alternating strings: one that starts with `0` and one that starts with `1`. We must convert `s` to either of these alternating strings, and the squares in red indicate mismatched positions with the original `s`.\n\nTo fix any mismatched position, we require `1` operation. Thus, if we were to convert `s` to an alternating string starting with `0`, we would require `5` operations. If we were to convert `s` to an alternative string starting with `1`, we would require `2` operations. Since we want the minimum, we would have an answer of `2`.\n\nThis brings us to our solution. We initialize two integers:\n\n1. `start0` which represents the number of operations we require if we convert `s` to an alternating string starting with `0`.\n2. `start1` which represents the number of operations we require if we convert `s` to an alternating string starting with `1`.\n\nWe then iterate `i` over the indices of `s`. At each index, we check if `i` is an even index or an odd index. To determine if `i` is an even or odd index, we check the value if `i % 2`. Here, `%` is the modulus operator. If `i % 2 = 0`, then `i` is even. Otherwise, `i` is odd.\n\n**If `i` is even**\n\nWhen considering an alternating string that starts with `0`, all even indices should have `0`, as indices `0, 2, 4, ...` will be `0`.\n\nWhen considering an alternating string that starts with `1`, all even indices should have `1`, as indices `0, 2, 4, ...` will be `1`.\n\nThus, if `s[i] = '0'`, we will increment `start1` since `s[i]` is mismatched and we would need an operation to fix it. Otherwise, `s[i] = '1'` and we increment `start0`.\n\n![example](../Figures/1758/2.png)\n<br>\n\n**If `i` is odd**\n\nWhen considering an alternating string that starts with `0`, all odd indices should have `1`, as indices `1, 3, 5, ...` will be `1`.\n\nWhen considering an alternating string that starts with `1`, all odd indices should have `0`, as indices `1, 3, 5, ...` will be `0`.\n\nThus, if `s[i] = '1'`, we will increment `start1` since `s[i]` is mismatched and we would need an operation to fix it. Otherwise, `s[i] = '0'` and we increment `start0`.\n\n![example](../Figures/1758/3.png)\n<br>\n\n---\n\nOnce we have finished iterating over all characters of `s`, we return the minimum between `start0` and `start1`.\n\n**Algorithm**\n\n1. Initialize `start0 = 0` and `start1 = 0`.\n2. Iterate `i` over the indices of `s`:\n    - If `i % 2 = 0`:\n        - If `s[i] = '0'`, increment `start1`. \n        - Otherwise, increment `start0`.\n    - Else:\n        - If `s[i] = '0'`, increment `start1`. \n        - Otherwise, increment `start0`.\n3. Return the minimum between `start0, start1`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/EhE8uc3s/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"EhE8uc3s\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `s`,\n\n* Time complexity: $$O(n)$$\n\n    We iterate over each character of `s` once, performing $$O(1)$$ work at each iteration.\n\n* Space complexity: $$O(1)$$\n\n    We aren't using any extra space other than a few integers.\n    \n<br/>\n\n---\n\n### Approach 2: Only Check One\n\n**Intuition**\n\nTake a look at the first image again:\n\n![example](../Figures/1758/1.png)\n<br>\n\nLet `n` be the length of `s`. There are `n` indices. Notice that an index `i` only needs to be fixed for **either** `start0` or `start1`, but never both. In the above image, if we create an alternating string that starts with `0`, we need to perform operations at indices `0, 1, 4, 5, 6`. This means that indices `0, 1, 4, 5, 6` are already correct for the alternating string that starts with `1`.\n\nIf we create an alternating string that starts with `0`, indices `2, 3` are already correct. Thus, when considering the alternating string that starts with `1`, we would need to fix indices `2, 3`.\n\nWhat does this mean? For a given `s`, if we need `start0` operations to create the alternating string that starts with `0`, we will need exactly `n - start0` operations to create the alternating string that starts with `1`.\n\nThus, we only need to calculate either `start0` or `start1` (it doesn't matter which one, we'll calculate `start0` in this article). We can then obtain the other value by subtracting from `n`.\n\n**Algorithm**\n\n1. Initialize `start0 = 0`.\n2. Iterate `i` over the indices of `s`:\n    - If `i % 2 = 0`:\n        - If `s[i] = '1'`, increment `start0`\n    - Else:\n        - If `s[i] = '0'`, increment `start0`.\n3. Return the minimum between `start0` and `s.length - start0`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/5uwt9766/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"5uwt9766\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `s`,\n\n* Time complexity: $$O(n)$$\n\n    We iterate over each character of `s` once, performing $$O(1)$$ work at each iteration.\n\n* Space complexity: $$O(1)$$\n\n    We aren't using any extra space other than a few integers.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

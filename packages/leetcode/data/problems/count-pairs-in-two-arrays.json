@@ -1,0 +1,146 @@
+{
+  "questionId": "2036",
+  "questionFrontendId": "1885",
+  "title": "Count Pairs in Two Arrays",
+  "titleSlug": "count-pairs-in-two-arrays",
+  "difficulty": "Medium",
+  "content": "<p>Given two integer arrays <code>nums1</code> and <code>nums2</code> of length <code>n</code>, count the pairs of indices <code>(i, j)</code> such that <code>i &lt; j</code> and <code>nums1[i] + nums1[j] &gt; nums2[i] + nums2[j]</code>.</p>\n\n<p>Return <em>the <strong>number of pairs</strong> satisfying the condition.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [2,1,2,1], nums2 = [1,2,1,2]\n<strong>Output:</strong> 1\n<strong>Explanation</strong>: The pairs satisfying the condition are:\n- (0, 2) where 2 + 2 &gt; 1 + 1.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [1,10,6,2], nums2 = [1,4,1,5]\n<strong>Output:</strong> 5\n<strong>Explanation</strong>: The pairs satisfying the condition are:\n- (0, 1) where 1 + 10 &gt; 1 + 4.\n- (0, 2) where 1 + 6 &gt; 1 + 1.\n- (1, 2) where 10 + 6 &gt; 4 + 1.\n- (1, 3) where 10 + 2 &gt; 4 + 5.\n- (2, 3) where 6 + 2 &gt; 1 + 5.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == nums1.length == nums2.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums1[i], nums2[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "We can write it as nums1[i] - nums2[i] > nums2[j] - nums1[j] instead of nums1[i] + nums1[j] > nums2[i] + nums2[j].",
+    "Store nums1[idx] - nums2[idx] in a data structure.",
+    "Store nums2[idx] - nums1[idx] in a different data structure.",
+    "For each integer in the first data structure, count the number of the strictly smaller integers in the second data structure with a larger index in the original array."
+  ],
+  "metaData": "{\n  \"name\": \"countPairs\",\n  \"params\": [\n    {\n      \"name\": \"nums1\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"nums2\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"12.1K\", \"totalSubmission\": \"20.1K\", \"totalAcceptedRaw\": 12133, \"totalSubmissionRaw\": 20111, \"acRate\": \"60.3%\"}",
+  "likes": 245,
+  "dislikes": 23,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Max Value of Equation\", \"titleSlug\": \"max-value-of-equation\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Substrings That Begin and End With the Same Letter\", \"titleSlug\": \"substrings-that-begin-and-end-with-the-same-letter\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,1,2,1]\n[1,2,1,2]",
+    "[1,10,6,2]\n[1,4,1,5]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"shopee\", \"name\": \"Shopee\"}, {\"timesEncountered\": 2, \"slug\": \"teradata\", \"name\": \"Teradata\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long countPairs(vector<int>& nums1, vector<int>& nums2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long countPairs(int[] nums1, int[] nums2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countPairs(self, nums1: List[int], nums2: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countPairs(self, nums1, nums2):\n        \"\"\"\n        :type nums1: List[int]\n        :type nums2: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums1\n * @param {number[]} nums2\n * @return {number}\n */\nvar countPairs = function(nums1, nums2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countPairs(nums1: number[], nums2: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long CountPairs(int[] nums1, int[] nums2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long countPairs(int* nums1, int nums1Size, int* nums2, int nums2Size) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countPairs(nums1 []int, nums2 []int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countPairs(nums1: IntArray, nums2: IntArray): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countPairs(_ nums1: [Int], _ nums2: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_pairs(nums1: Vec<i32>, nums2: Vec<i32>) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums1\n# @param {Integer[]} nums2\n# @return {Integer}\ndef count_pairs(nums1, nums2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums1\n     * @param Integer[] $nums2\n     * @return Integer\n     */\n    function countPairs($nums1, $nums2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countPairs(List<int> nums1, List<int> nums2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countPairs(nums1: Array[Int], nums2: Array[Int]): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_pairs(nums1 :: [integer], nums2 :: [integer]) :: integer\n  def count_pairs(nums1, nums2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_pairs(Nums1 :: [integer()], Nums2 :: [integer()]) -> integer().\ncount_pairs(Nums1, Nums2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-pairs nums1 nums2)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2291",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given two arrays, `nums1` and `nums2`, and need to count the pairs of indices `(i, j)` where the values in `nums1` have a greater sum than the values in `nums2`.\n\n**Key Observations**\n1. Both `nums1` and `nums2` are arrays of the same length.\n2. The values in the arrays are numbers greater than `0`.\n3. We need to count the pairs, not return the pairs themselves.\n\n---\n\n### Approach 1: Binary Search\n\n#### Intuition\n\nThe brute force approach would be to iterate using nested loops through every possible pair of indices in `nums1`, calculating the sum for each pair, and then comparing it with the sum of corresponding elements in `nums2`. This process is repeated for all pairs, incrementing a counter each time the condition is met.\n\nUnfortunately, this solution gives \"Time Limit Exceeded\" because it is computationally expensive. We need a more efficient approach.\n\nWe need to be able to count multiple pairs without explicitly checking each pair's validity. The inequality given in the problem description `nums1[i] + nums1[j] > nums2[i] + nums2[j]` is an algebraic expression, so we can manipulate it.\n\nWe can manipulate the inequality by subtracting like terms from each side:\n\n```\nnums1[i] + nums1[j]             >   nums2[i] + nums2[j]\n         - nums1[j] - nums2[i]    - nums2[i]            - nums1[j]\n```\n\nSubtract `nums2[i]` and `nums1[j]` from both sides.\n\n```          \nnums1[i] - nums2[i] > nums2[j] - nums1[j]      \n```\n\nTo determine a valid pair, we compare differences. We can store the difference between the value of each index of `nums1` and the corresponding value in `nums2` in an array `difference`. This way, each difference only needs to be calculated once.\n\n![differences](../Figures/1885/difference.png)\n\nThe `difference` array only stores the differences for `nums1[i] - nums2[i]`, not the differences for `nums2[j] - nums1[j]`.\n\nWe want to be able to directly compare `(i, j)` as two indexes of `difference`.\n\nWe can again rewrite the inequality:\n\n```        \nnums1[i] - nums2[i]                      >  nums2[j] - nums1[j]\n                   - nums2[j] + nums1[j]  - nums2[j] + nums1[j]\n```\n\nSubtract `nums1[j]` and `nums2[j]` from both sides.\n\n```\nnums1[i] - nums2[i] - nums2[j] + nums1[j] > 0\n```\n\nRe-order terms.\n\n```\n(nums1[i] - nums2[i]) + (nums1[j] - nums2[j]) > 0  \n```\n\n`nums1[j] - nums2[j]` is stored in `differences`, so given two elements `difference[i]` and `difference[j]`,  if their sum is greater than zero, we know the indices `(i, j)` are a valid pair.\n\nGiven `difference[i]`, we need to find indices that create valid pairs. Binary search is an efficient search method.\n\nBinary search can only be utilized on sorted data, so we start by sorting the array. Once we sort the difference array, we no longer have a record of the original index of each difference. When comparing a pair of distinct indices of the difference array, one index must be smaller than the other so the pair still meets the directive that `i < j`.\n\n> Binary search is an algorithm for finding the position of a target value within a sorted array. If you are unfamiliar with binary search, check out the [binary search explore card](https://leetcode.com/explore/learn/card/binary-search/). \n\nBinary search uses three-pointers. We can call them `left`, `mid`, and `right`.\n\nInitially, `left` points to the index of the first element in the search space, and `right` points to the last. During each iteration, we calculate `mid` as the middle element between `left` and `right`.\n\nWith every iteration, the search window is halved, and the search continues on either the right or the left side until either the target is found or the `left` becomes greater than the `right`.\n\nWe are not looking for just one target but for all indices that result in a positive sum when added to `difference[i]`.\n\nNotice that if `difference[i]` is positive, all following elements must also be positive because the elements are sorted. Therefore, this element forms a valid pair with every following element in the `difference` array. We add the number of elements that follow this element, or `N - i + 1`, to `result`.\n\n![positive pairs](../Figures/1885/positive_pairs.png)\n\n> Elements highlighted in green make a valid pair with `i`.\n\nOtherwise, we use binary search to find the index of the first element where the sum of `difference[i]` and `difference[mid]` is greater than `0`. If `difference[mid]` makes a valid pair with `difference[i]`, we continue the search in the right half; otherwise, we search in the left half. Once we find the first element that makes a valid pair with `difference[i]`, we know all of the following elements are larger than the first valid element and, therefore, also make valid pairs. Thus, we add `N - left` to `result`.\n\nFinding the valid pairs for a given index `i` using binary search is visualized below:\n\n!?!../Documents/1885/1885_slideshow1.json:960,540!?!\n\nThis strategy allows us to count the valid pairs without explicitly comparing the values of each pair.\n\n#### Algorithm\n\n1. Initialize a variable `N` to the length of `nums1`, which is the same length as `nums2`.\n\n2. Initialize an array `difference` of size `N`, and for each index `i` of difference, store `nums1[i] - nums2[i]`.\n\n3. Sort `difference` in ascending order.\n\n4. Initialize a variable `result`.\n\n5. For each index `i` of difference:\n\n    - If `difference[i]` is positive, all elements after `i` make a valid pair. Add `N - i - 1` to `result`.\n    - Otherwise, perform a binary search to find the first index of `difference` that makes a valid pair with `difference[i]`:\n        - Set `left` to `i + 1` and `right` to `N - 1`. These pointers represent the boundaries of the search space.\n        - While `left` is less than or equal to `right`:\n            - Set `mid` to `left + (right - left) / 2`, which is the middle of the search space. \n            - If `difference[i]` + `difference[mid]` is greater than `0`, it is a valid pair. Set `right` to `mid - 1`; we will continue to search in the left half of `difference`.\n            - Otherwise, `difference[i]` and `difference[mid]` are not a valid pair; their sum is not positive. Set `left` to `mid + 1`; we will continue to search in the right half `difference`.\n        - After the search completes, `left` points to the first index of `difference` that makes a valid pair with `i`. Add `N - left` to the `result` because all indexes following `left` also make a valid pair with `i`.\n\n6. Return `result`.\n\n#### Implementation\n\n`mid`, the middle of the search space, is set to the index in the middle of the search space. The basic midpoint formula is `(left + right) / 2`.\nYou'll notice that the below implementations instead use `left + (right - left) / 2`. This is because if `left + right` is greater than the maximum integer value, $2^{31} - 1$, it overflows and causes errors. \n\n`left + (right - left) / 2` is an equivalent formula, and never stores a value larger than `left` or `right`. Thus, if `left` and `right` are within the integer limits, we will never overflow.\n\n<iframe src=\"https://leetcode.com/playground/Qemsnagt/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Qemsnagt\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of `nums1` and `nums2`.\n\n* Time complexity: $O(n \\log n)$\n\n    Calculating the difference of each pair of elements `nums1[i]` and `nums2[i]` takes $O(n)$.\n\n    `difference` is of size $n$, so sorting `difference` takes $O(n \\log n)$. \n\n    Counting the number of valid pairs using binary search takes $O(n \\log n)$. The outer loop runs $n$ times, once for each element in `difference`, and the inner loop can run up to $\\log n$ times since we divide the search space in half with each iteration.\n\n    The total time complexity will be $O(n + 2n \\log n)$, which we can simplify to $O(n \\log n)$.\n\n* Space complexity: $O(n)$\n\n    We use a few variables and the array `difference`, which is size $O(n)$\n\n    Note that some extra space is used when we sort an array in place. The space complexity of the sorting algorithm depends on the programming language.\n    - In Python, the `sort` method sorts a list using the Tim Sort algorithm which is a combination of Merge Sort and Insertion Sort and has $O(n)$ additional space. Additionally, Tim Sort is designed to be a stable algorithm.\n    - In Java, Arrays.sort() is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n)$ for sorting an array.\n    - In C++, the sort() function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worse-case space complexity of $O( \\log n)$.\n\n    The dominating term is $O(n)$.\n\n---\n\n### Approach 2: Sort and Two Pointer\n\n#### Intuition\n\nWe can use some insights from the above solution to develop a more efficient solution. Similar to the last approach, we will populate and sort `difference` and initialize the variable `result`.\n\nIf `difference` is sorted, we can calculate the number of valid pairs without explicitly comparing each pair.\n\nGiven two elements, `difference[i]` and `difference[j]`, if their sum is positive, we know the indices `(i, j)` are a valid pair.\n\n> nums1 = [1,10,6,2]\n> nums2 = [1,4,1,5]\n> difference = [0,6,5,-3]\n> difference sorted = [-3,0,5,6]\n\nLet's say `i = 1` and `j = 3`. `difference[1] + difference[3] = 6 + 0 = 6` results in a positive sum.\n\nNotice that `i = 1` and `j = 2`. `difference[1] + difference[2] = 5 + 0 = 5` results in a positive sum also.\n\nFor a valid pair of indices, `(i, j)`, any `indices` between `i` and `j` also form a valid pair with `j`.\n\nWe use two pointers, `left`, pointing to the beginning of `difference`, and `right`, pointing to the end of `difference`, to traverse the array until they meet in the middle. With each iteration, we check that `difference[left] + difference[right]` is positive. If so, `right` makes a valid pair with all indices between it and `left`. We add `right - left` to the `result` and decrement `right`. Otherwise, `left` does not make a valid pair with `right`, so we increment `left`.\n\n#### Algorithm\n\n1. Initialize a variable `N` to the length of `nums1`, which is the same length as `nums2`.\n\n2. Initialize an array `difference` of size `N`, and for each index `i` of `difference`, store `nums1[i] - nums2[i]`.\n\n3. Sort `difference` in ascending order.\n\n4. Initialize a variable `result`.\n\n5. Initialize two pointers, `left` to `0`, and `right` to `N - 1`, which point to the beginning and end of `difference`, respectively. \n\n6. While `left` is less than `right`:\n\n    - If `difference[left] + difference[right]` is greater than `0`, `right` makes a valid pair with all indices between it and `left`. Add `right - left` to the `result` and decrement `right`.\n    - Otherwise, `difference[left]` and `difference[right]` are not a valid pair. Increment `left`.\n\n7. Return `result`.\n\nThe algorithm is visualized below:\n\n!?!../Documents/1885/1885_slideshow2.json:960,540!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/C4MuZzDp/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"C4MuZzDp\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of `nums1` and `nums2`.\n\n* Time complexity: $O(n \\log n)$\n\n    Calculating the difference of each pair of elements `nums1[i]` and `nums2[i]` takes $O(n)$.\n\n    `difference` is of size $n$, so sorting `difference` takes $O(n \\log n)$. \n\n    Counting the number of valid pairs takes $O(n)$, since we use two pointers to traverse the array, one from the beginning and one from the end. One of the pointers is moved one step to the center with each iteration. Iteration stops when they meet in the middle.\n\n    The total time complexity will be $O(2n + n \\log n)$, which we can simplify to $O(n \\log n)$.\n  \n* Space complexity: $O(n)$\n\n    We use a few variables and the array `difference`, which is size $O(n)$\n\n    Note that some extra space is used when we sort an array in place. The space complexity of the sorting algorithm depends on the programming language.\n    - In Python, the `sort` method sorts a list using the Tim Sort algorithm which is a combination of Merge Sort and Insertion Sort and has $O(n)$ additional space. Additionally, Tim Sort is designed to be a stable algorithm.\n    - In Java, Arrays.sort() is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n)$ for sorting an array.\n    - In C++, the sort() function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worse-case space complexity of $O( \\log n)$.\n\n    The dominating term is $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "questionId": "1908",
+  "questionFrontendId": "1757",
+  "title": "Recyclable and Low Fat Products",
+  "titleSlug": "recyclable-and-low-fat-products",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Products</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| product_id  | int     |\n| low_fats    | enum    |\n| recyclable  | enum    |\n+-------------+---------+\nproduct_id is the primary key (column with unique values) for this table.\nlow_fats is an ENUM (category) of type (&#39;Y&#39;, &#39;N&#39;) where &#39;Y&#39; means this product is low fat and &#39;N&#39; means it is not.\nrecyclable is an ENUM (category) of types (&#39;Y&#39;, &#39;N&#39;) where &#39;Y&#39; means this product is recyclable and &#39;N&#39; means it is not.</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to find the ids of products that are both low fat and recyclable.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nProducts table:\n+-------------+----------+------------+\n| product_id  | low_fats | recyclable |\n+-------------+----------+------------+\n| 0           | Y        | N          |\n| 1           | Y        | Y          |\n| 2           | N        | Y          |\n| 3           | Y        | Y          |\n| 4           | N        | N          |\n+-------------+----------+------------+\n<strong>Output:</strong> \n+-------------+\n| product_id  |\n+-------------+\n| 1           |\n| 3           |\n+-------------+\n<strong>Explanation:</strong> Only products 1 and 3 are both low fat and recyclable.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Products (product_id int, low_fats ENUM('Y', 'N'), recyclable ENUM('Y','N'))\"], \"mssql\": [\"Create table Products (product_id int, low_fats varchar(1) not null check(low_fats in ('Y', 'N')), recyclable varchar(1) not null check(recyclable in ('Y', 'N')))\"], \"oraclesql\": [\"Create table Products (product_id int, low_fats varchar(1) not null check(low_fats in ('Y', 'N')), recyclable varchar(1) not null check(recyclable in ('Y', 'N')))\"], \"database\": true, \"name\": \"find_products\", \"pythondata\": [\"Products = pd.DataFrame([], columns=['product_id', 'low_fats', 'recyclable']).astype({'product_id':'int64', 'low_fats':'category', 'recyclable':'category'})\"], \"postgresql\": [\"Create table If Not Exists Products (product_id int, low_fats VARCHAR(30) CHECK (low_fats IN ('Y', 'N')), recyclable VARCHAR(30) CHECK (recyclable IN ('Y','N')))\\n\"], \"database_schema\": {\"Products\": {\"product_id\": \"INT\", \"low_fats\": \"ENUM('Y', 'N')\", \"recyclable\": \"ENUM('Y', 'N')\"}}}",
+  "stats": "{\"totalAccepted\": \"2.3M\", \"totalSubmission\": \"2.6M\", \"totalAcceptedRaw\": 2348271, \"totalSubmissionRaw\": 2647203, \"acRate\": \"88.7%\"}",
+  "likes": 3340,
+  "dislikes": 130,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Products\":[\"product_id\",\"low_fats\",\"recyclable\"]},\"rows\":{\"Products\":[[\"0\",\"Y\",\"N\"],[\"1\",\"Y\",\"Y\"],[\"2\",\"N\",\"Y\"],[\"3\",\"Y\",\"Y\"],[\"4\",\"N\",\"N\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"tcs\", \"name\": \"tcs\"}]}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_products(products: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "2025",
+    "content": "<!-- Don't delete this -->\n[TOC] \n\n# Solution\n\n---\n\n## pandas\n\n### Approach: Selecting rows based on conditions\n#### Algorithm\nWe have the original DataFrame `products` shown below:\n\n| product_id | low_fats | recyclable |\n|------------|----------|------------|\n| 0          | Y        | N          |\n| 1          | Y        | Y          |\n| 2          | N        | Y          |\n| 3          | Y        | Y          |\n| 4          | N        | N          |\n\n\nIn Pandas, boolean indexing allows us to filter the DataFrame by using boolean arrays or conditions. It means that we can use a Series of boolean values or create conditions that evaluate to `True` or `False` for each row in the DataFrame. By applying these boolean values or conditions as an index to the DataFrame, we can selectively extract the rows that satisfy the conditions. \n\nIn this scenario, we should select only the rows where the `low_fats` column has a value of \"Y\" (indicating the product is low fat) and the `recyclable` column has a value of \"Y\" (indicating the product is recyclable), which can be represented as:\n\n```python3\ndf = products[(products['low_fats'] == 'Y') & (products['recyclable'] == 'Y')]\n```\n\nThis filtering creates a new DataFrame `df` containing the products that meet both criteria. Note that the rows with `product_id` equal to 0, 2, and 4 are filtered out.\n\n| product_id | low_fats | recyclable |\n|------------|----------|------------|\n| 1          | Y        | Y          |\n| 3          | Y        | Y          |\n\n\n<br>\n\nNext, we need to select only the desired column `product_id` from `df` using double square brackets.\n\n```python3\ndf = df[['product_id']]\n```\n\nThe resulting DataFrame looks like this:\n\n| product_id |\n|------------|\n| 1          |\n| 3          |\n\n<br>\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/giepmUye/shared\" frameBorder=\"0\" width=\"100%\" height=\"191\" name=\"giepmUye\"></iframe>\n\n<br>\n<br>\n\n\n## Database\n\n### Approach: Selecting rows based on conditions\n\n\n#### Algorithm\nThe keyword `SELECT` is used to specify the columns that we want to retrieve from the table `Products`. In this scenario, we want to retrieve the `product_id` column.\n\nThe keyword `WHERE` is used to filter the rows in the table `Products` based on specific conditions, which the `low_fats` column has the value \"Y\" (indicating low-fat products) and the `recyclable` column has the value \"Y\" (indicating recyclable products). We use the logical operator `AND` to combine both conditions, ensuring that the final result includes only product IDs for products that are both low fat and recyclable.\n\n\n#### Implementation\n\n```sql\nSELECT\n    product_id\nFROM\n    Products\nWHERE\n    low_fats = 'Y' AND recyclable = 'Y'\n```",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

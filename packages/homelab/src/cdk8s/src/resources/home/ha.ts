@@ -65,7 +65,7 @@ export function createHaDeployment(chart: Chart) {
       envVariables: {
         HASS_TOKEN: EnvValue.fromSecretValue({
           secret: haTokenSecret,
-          key: "PASSWORD",
+          key: "password",
         }),
         HASS_BASE_URL: EnvValue.fromValue(
           "http://home-homeassistant-service:8123",
@@ -76,7 +76,7 @@ export function createHaDeployment(chart: Chart) {
         SENTRY_ENABLED: EnvValue.fromValue("true"),
         SENTRY_DSN: EnvValue.fromSecretValue({
           secret: sentrySecret,
-          key: "CREDENTIAL",
+          key: "credential",
         }),
         SENTRY_ENVIRONMENT: EnvValue.fromValue("production"),
         SENTRY_RELEASE: EnvValue.fromValue(

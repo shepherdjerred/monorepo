@@ -1,0 +1,53 @@
+{
+  "questionId": "1821",
+  "questionFrontendId": "1677",
+  "title": "Product's Worth Over Invoices",
+  "titleSlug": "products-worth-over-invoices",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Product</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| product_id  | int     |\n| name        | varchar |\n+-------------+---------+\nproduct_id is the column with unique values for this table.\nThis table contains the ID and the name of the product. The name consists of only lowercase English letters. No two products have the same name.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Invoice</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| invoice_id  | int  |\n| product_id  | int  |\n| rest        | int  |\n| paid        | int  |\n| canceled    | int  |\n| refunded    | int  |\n+-------------+------+\ninvoice_id is the column with unique values for this table and the id of this invoice.\nproduct_id is the id of the product for this invoice.\nrest is the amount left to pay for this invoice.\npaid is the amount paid for this invoice.\ncanceled is the amount canceled for this invoice.\nrefunded is the amount refunded for this invoice.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution that will, for all products, return each product name with the total amount due, paid, canceled, and refunded across all invoices.</p>\n\n<p>Return the result table ordered by <code>product_name</code>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nProduct table:\n+------------+-------+\n| product_id | name  |\n+------------+-------+\n| 0          | ham   |\n| 1          | bacon |\n+------------+-------+\nInvoice table:\n+------------+------------+------+------+----------+----------+\n| invoice_id | product_id | rest | paid | canceled | refunded |\n+------------+------------+------+------+----------+----------+\n| 23         | 0          | 2    | 0    | 5        | 0        |\n| 12         | 0          | 0    | 4    | 0        | 3        |\n| 1          | 1          | 1    | 1    | 0        | 1        |\n| 2          | 1          | 1    | 0    | 1        | 1        |\n| 3          | 1          | 0    | 1    | 1        | 1        |\n| 4          | 1          | 1    | 1    | 1        | 0        |\n+------------+------------+------+------+----------+----------+\n<strong>Output:</strong> \n+-------+------+------+----------+----------+\n| name  | rest | paid | canceled | refunded |\n+-------+------+------+----------+----------+\n| bacon | 3    | 3    | 3        | 3        |\n| ham   | 2    | 4    | 5        | 3        |\n+-------+------+------+----------+----------+\n<strong>Explanation:</strong> \n- The amount of money left to pay for bacon is 1 + 1 + 0 + 1 = 3\n- The amount of money paid for bacon is 1 + 0 + 1 + 1 = 3\n- The amount of money canceled for bacon is 0 + 1 + 1 + 1 = 3\n- The amount of money refunded for bacon is 1 + 1 + 1 + 0 = 3\n- The amount of money left to pay for ham is 2 + 0 = 2\n- The amount of money paid for ham is 0 + 4 = 4\n- The amount of money canceled for ham is 5 + 0 = 5\n- The amount of money refunded for ham is 0 + 3 = 3\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Product(product_id int, name varchar(15))\", \"Create table If Not Exists Invoice(invoice_id int,product_id int,rest int, paid int, canceled int, refunded int)\"], \"mssql\": [\"Create table Product(product_id int, name varchar(15))\", \"Create table Invoice(invoice_id int,product_id int,rest int, paid int, canceled int, refunded int)\"], \"oraclesql\": [\"Create table Product(product_id int, name varchar(15))\", \"Create table Invoice(invoice_id int,product_id int,rest int, paid int, canceled int, refunded int)\"], \"database\": true, \"name\": \"analyze_products\", \"pythondata\": [\"Product = pd.DataFrame([], columns=['product_id', 'name']).astype({'product_id':'Int64', 'name':'object'})\", \"Invoice = pd.DataFrame([], columns=['invoice_id', 'product_id', 'rest', 'paid', 'canceled', 'refunded']).astype({'invoice_id':'Int64', 'product_id':'Int64', 'rest':'Int64', 'paid':'Int64', 'canceled':'Int64', 'refunded':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Product(product_id int, name varchar(15))\", \"Create table If Not Exists Invoice(invoice_id int,product_id int,rest int, paid int, canceled int, refunded int)\"], \"database_schema\": {\"Product\": {\"product_id\": \"INT\", \"name\": \"VARCHAR(15)\"}, \"Invoice\": {\"invoice_id\": \"INT\", \"product_id\": \"INT\", \"rest\": \"INT\", \"paid\": \"INT\", \"canceled\": \"INT\", \"refunded\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"20.4K\", \"totalSubmission\": \"52.9K\", \"totalAcceptedRaw\": 20403, \"totalSubmissionRaw\": 52867, \"acRate\": \"38.6%\"}",
+  "likes": 40,
+  "dislikes": 136,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Product\":[\"product_id\",\"name\"],\"Invoice\":[\"invoice_id\",\"product_id\",\"rest\",\"paid\",\"canceled\",\"refunded\"]},\"rows\":{\"Product\":[[0,\"ham\"],[1,\"bacon\"]],\"Invoice\":[[23,0,2,0,5,0],[12,0,0,4,0,3],[1,1,1,1,0,1],[2,1,1,0,1,1],[3,1,0,1,1,1],[4,1,1,1,1,0]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef analyze_products(product: pd.DataFrame, invoice: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

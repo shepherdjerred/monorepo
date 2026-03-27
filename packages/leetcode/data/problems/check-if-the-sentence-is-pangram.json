@@ -1,0 +1,136 @@
+{
+  "questionId": "1960",
+  "questionFrontendId": "1832",
+  "title": "Check if the Sentence Is Pangram",
+  "titleSlug": "check-if-the-sentence-is-pangram",
+  "difficulty": "Easy",
+  "content": "<p>A <strong>pangram</strong> is a sentence where every letter of the English alphabet appears at least once.</p>\n\n<p>Given a string <code>sentence</code> containing only lowercase English letters, return<em> </em><code>true</code><em> if </em><code>sentence</code><em> is a <strong>pangram</strong>, or </em><code>false</code><em> otherwise.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> sentence = &quot;thequickbrownfoxjumpsoverthelazydog&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> sentence contains at least one of every letter of the English alphabet.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> sentence = &quot;leetcode&quot;\n<strong>Output:</strong> false\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= sentence.length &lt;= 1000</code></li>\n\t<li><code>sentence</code> consists of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Iterate over the string and mark each character as found (using a boolean array, bitmask, or any other similar way).",
+    "Check if the number of found characters equals the alphabet length."
+  ],
+  "metaData": "{\n  \"name\": \"checkIfPangram\",\n  \"params\": [\n    {\n      \"name\": \"sentence\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"538K\", \"totalSubmission\": \"639.2K\", \"totalAcceptedRaw\": 537960, \"totalSubmissionRaw\": 639197, \"acRate\": \"84.2%\"}",
+  "likes": 3024,
+  "dislikes": 67,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"thequickbrownfoxjumpsoverthelazydog\"",
+    "\"leetcode\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 7, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 7, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool checkIfPangram(string sentence) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean checkIfPangram(String sentence) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def checkIfPangram(self, sentence: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def checkIfPangram(self, sentence):\n        \"\"\"\n        :type sentence: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} sentence\n * @return {boolean}\n */\nvar checkIfPangram = function(sentence) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function checkIfPangram(sentence: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool CheckIfPangram(string sentence) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool checkIfPangram(char* sentence) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func checkIfPangram(sentence string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun checkIfPangram(sentence: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func checkIfPangram(_ sentence: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn check_if_pangram(sentence: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} sentence\n# @return {Boolean}\ndef check_if_pangram(sentence)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $sentence\n     * @return Boolean\n     */\n    function checkIfPangram($sentence) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool checkIfPangram(String sentence) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def checkIfPangram(sentence: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec check_if_pangram(sentence :: String.t) :: boolean\n  def check_if_pangram(sentence) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec check_if_pangram(Sentence :: unicode:unicode_binary()) -> boolean().\ncheck_if_pangram(Sentence) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (check-if-pangram sentence)\n  (-> string? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1565",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nIn the problem, we are given a sentence `sentence` containing only lowercase English letters. If a sentence contains all letters of the English alphabet, we call it a **pangram**. \n\nFor example: `thequickbrownfoxjumpsoverthelazydog` is a pangram since we can find all 26 alphabets in it, while `leetcode` is not since it doesn't contain some letters, such as `a`.\n\nOur task is to check whether the given sentence `sentence` is a pangram. The problem is relatively simple and we propose several approaches, including a very interesting one.\n\n---\n\n### Approach 1: Find letters one by one\n\n#### Intuition   \n\nWe are asked to check whether `sentence` contains all 26 letters of the alphabet, so the most straightforward way is to check the presence of each letter one by one. We first iterate over `sentence` to find `a`, then we iterate again to find `b`, and so on. If we manage to find all 26 letters, then `sentence` is a pangram, otherwise, it is not.\n\nTake the picture below as an example:\n\n![img](../Figures/1832/1832_1.png)\n\n<br>\n\n#### Algorithm\n\n1) For each lowercase letter `currChar` from `a` to `z`, iterate over `sentence` to check if it contains the letter `currChar`. \n2) If we cannot find one of the letters, return `False`. Otherwise, return `True` after we finish all the iterations.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/EBxxmpSd/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"EBxxmpSd\"></iframe>\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of the input string `sentence`.\n\n* Time complexity: $$O(n)$$\n\n    - We need to iterate over `sentence` for 26 times.\n    - Each iteration takes at most $$O(n)$$ time.\n    - To sum up, the overall time complexity is $$O(n)$$\n\n* Space complexity: $$O(1)$$\n\n    - We just need to find letters one by one, thus the overall space complexity is $$O(1)$$.\n\n<br/>\n\n\n\n---\n\n### Approach 2: Set\n\n#### Intuition\n\nIn the previous approach, we iterate over `sentence` to look for only one character each time. Considering the following case, where we traversed most of the string before finding a letter between `b` and `z`. \n\n![img](../Figures/1832/1832-tc.png)\n\n\nAlthough the overall time complexity is still $$O(n)$$, there are many unnecessary iterations, can we accomplish the task in a single iteration? \n\nLet's look for a more efficient way! Instead of looking for one letter per iteration, we can record the presence of all letters in one iteration.\n\nWe can use a hash set `seen` to store all the unique letters in `sentence` that we encounter, \n\n![img](../Figures/1832/1832_2_1.png)\n\nIn the iteration, we add every letter to `seen`.\n\n![img](../Figures/1832/1832_2_2.png)\n\nOnce we finish iterating, we know if `sentence` contains all 26 letters by checking the size of `seen`. Note that hash set has no duplicated elements, thus we don't need to worry that `seen` contains some same letters.\n\n<br>\n\n#### Algorithm\n\n1) Initialize an empty hash set `seen`.\n2) Iterate over `sentence`, and add every letter to `seen`.\n3) Once we finish the iteration, check if the size of `seen` equals 26.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/TdsrpMnh/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"TdsrpMnh\"></iframe>\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of the input string `sentence`.\n\n* Time complexity: $$O(n)$$\n\n    - We only need one iteration over `sentence`. \n    - In each step, we add the current letter `currChar` to `seen`, which takes constant time.\n    - In summary, the overall time complexity is $$O(1)$$.\n\n* Space complexity: $$O(1)$$\n\n    - We use a hash set `seen` to store all the **unique** letters we encounter. There are at most 26 unique lowercase letters, so the space complexity is $$O(1)$$.\n\n<br/>\n\n\n\n---\n\n### Approach 3: Use Array as Counter\n\n#### Intuition\n\nNote that each letter of alphabets has its own ASCII code, we map their ASCII codes to a unique number. \n\n$$(ASCII\\ of)\\ a = 97$$\n\n$$(ASCII\\ of)\\ b = 98$$\n\n$$(ASCII\\ of)\\ c = 99$$\n\n$$...$$\n\n$$(ASCII\\ of)\\ z = 122$$\n\nTherefore we can just use an array `seen` of size 26 as the recorder, and map the ASCII codes to integers between `0` to `25` (inclusive) using:\n\n$$index\\ of\\ char = (ASCII\\ of)\\ char - (ASCII\\ of)\\ a$$\n\n**What is the mapped index of `c`?**\n\nUsing\n\n$$index\\ of\\ c = (ASCII\\ of)\\ c - (ASCII\\ of)\\ a = 2$$\n\nand we know that `2` is the index to record the presence of `c`.\n\n![img](../Figures/1832/1832_3.png)\n\n\nThere are multiple ways to record the presence of a letter, here we let the value on the mapped index equals `true`. Once we finish iterating, check if every value of `seen` is updated as `true`.\n\n<br>\n\n#### Algorithm\n\n1) Initialize an empty array `seen` of size 26.\n2) Iterate over `sentence`, for each character `currChar`, we let the value at the mapped index equal `true`.\n3) Once we finish the iteration, check if every value of `seen` equal `true`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/DiLHgb6x/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"DiLHgb6x\"></iframe>\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of input string `sentence`.\n\n* Time complexity: $$O(n)$$\n\n    - Similarly, we just need to traverse over `sentence` for once.\n    - In each step, we calculate the ASCII code of the current letter `currChar` and update the value at the mapped index in `seen`. This takes constant time.\n    - To sum up, the overall time complexity is $$O(n)$$. \n\n* Space complexity: $$O(1)$$\n\n    - We use an array of size 26. Thus the space complexity is $$O(1)$$.\n\n<br/>\n\n\n\n\n---\n\n### Approach 4: Bit Manipulation\n\n#### Intuition\n\nInstead of using an array or set, we can record the presence of all the letters in just one number, isn't that surprising! Let's see how it works.\n\nIn the previous approach, we used to map a letter `currChar` to an integer between `[0, 25]` using its ASCII code. Here we approach the problem with a similar idea.\n\nTake a look at the following picture. We convert a number (Let's say `23`) to its binary representation (`10111`), it contains some bits of `1`s. \n\n\nIf we map every bit from low to high to a letter of alphabet, i.e. the first bit for `a`, the second bit for `b`, and so on, then we can use the value of each bit recording the presence/absence of the corresponding letter. Hence, `10111` means the presence of letters `a, b, c, e`, while `d` is absent since the value of the fourth bit is `0`.\n\n![img](../Figures/1832/1832_4.png)\n\nNote that in binary representation, **left shifting by 1** equals **multiplying by 2**. Therefore:\n- `1` in the lowest bit (standing for `a`) equals $$1$$.\n- `1` in the second lowest bit (standing for `b`) equals $$2$$. \n- `1` in the third lowest bit (standing for `c`) equals $$4$$. \n- `1` in the 26th bit (standing for `z`) equals $$2^{25}$$. \n\n\n\n**How do we record the presence of a letter?**\n\nWe have known `seen = 23` represents the presence of `a, b, c, e`:\n\n$$23 = (10111)_{2} = 16 + 4 + 2 + 1$$\n\nLet's say we want to add letter `f` to it, here are the following steps:\n\n- Find the corresponding bit for `f`: \n\n$$mappedIndex = (ASCII\\ of)\\ f - (ASCII\\ of)\\ a = 5$$\n\n- Left shift `1` by 5 bits to get the value representing the presence of `f`.\n\n$$currBit = 1 \\ll 5 = 32$$\n\n- Use `OR` to record `currBit` in `seen`.\n\n$$seen\\ |= 32$$\n\n- Finally, we get `seen = 55`:\n\n$$seen = 55 = (110111)_{2}$$\n\nWe can tell that `seen` contains letter `f` now.\n\n\n\n\n**How do we check if we have encountered all 26 letters?**\n\nIn the binary representation of `seen`, each unique letter stands for a bit of `1` i. Therfore, assuming we encounter all 26 letters, `seen` will have 26 bits of `1`, i.e. \n\n$$seen = \\underbrace{111...111}_{26}$$\n\nThus,\n\n$$seen + 1 = 1\\underbrace{000...000}_{26} = (1 \\ll 26)$$. \n\nHence, we just need to check if `seen + 1` equals `1 << 26`. Job is done!\n\n\n<br>\n\n#### Algorithm\n\n1) Initialize the status of encountered letters as `seen = 0`.\n2) Iterate over `sentence`, for each letter `currChar`: \n    - Find the mapped index `mappedIndex` using its ASCII code.\n    - Get the value representing the bit of `currChar` as `currBit = 1 << mappedIndex`.  \n    - Add the `currBit` to `seen` by letting `seen |= currBit`.\n3) Once we finish iterating, check if `seen` equals `(1 << 26) - 1`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/A7dEC3jp/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"A7dEC3jp\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of the input string `sentence`.\n\n* Time complexity: $$O(n)$$\n\n    - We need to traverse over `sentence` for once.\n    - In each step, we get the mapped index using the ASCII code of the current letter, and update `seen` using `OR` operation which takes constant time.\n    - To sum up, the overall time complexity is $$O(n)$$. \n    \n\n* Space complexity: $$O(1)$$\n\n    - We just need to update one number `seen` which take constant space.\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

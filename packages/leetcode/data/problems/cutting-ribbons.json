@@ -1,0 +1,137 @@
+{
+  "questionId": "2045",
+  "questionFrontendId": "1891",
+  "title": "Cutting Ribbons",
+  "titleSlug": "cutting-ribbons",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>ribbons</code>, where <code>ribbons[i]</code> represents the length of the <code>i<sup>th</sup></code> ribbon, and an integer <code>k</code>. You may cut any of the ribbons into any number of segments of <strong>positive integer</strong> lengths, or perform no cuts at all.</p>\n\n<ul>\n\t<li>For example, if you have a ribbon of length <code>4</code>, you can:\n\n\t<ul>\n\t\t<li>Keep the ribbon of length <code>4</code>,</li>\n\t\t<li>Cut it into one ribbon of length <code>3</code> and one ribbon of length <code>1</code>,</li>\n\t\t<li>Cut it into two ribbons of length <code>2</code>,</li>\n\t\t<li>Cut it into one ribbon of length <code>2</code> and two ribbons of length <code>1</code>, or</li>\n\t\t<li>Cut it into four ribbons of length <code>1</code>.</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>Your task is to determine the <strong>maximum</strong> length of ribbon, <code>x</code>, that allows you to cut <em>at least</em> <code>k</code> ribbons, each of length <code>x</code>. You can discard any leftover ribbon from the cuts. If it is <strong>impossible</strong> to cut <code>k</code> ribbons of the same length, return 0.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> ribbons = [9,7,5], k = 3\n<strong>Output:</strong> 5\n<strong>Explanation:</strong>\n- Cut the first ribbon to two ribbons, one of length 5 and one of length 4.\n- Cut the second ribbon to two ribbons, one of length 5 and one of length 2.\n- Keep the third ribbon as it is.\nNow you have 3 ribbons of length 5.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> ribbons = [7,5,9], k = 4\n<strong>Output:</strong> 4\n<strong>Explanation:</strong>\n- Cut the first ribbon to two ribbons, one of length 4 and one of length 3.\n- Cut the second ribbon to two ribbons, one of length 4 and one of length 1.\n- Cut the third ribbon to three ribbons, two of length 4 and one of length 1.\nNow you have 4 ribbons of length 4.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> ribbons = [5,7,9], k = 22\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> You cannot obtain k ribbons of the same positive integer length.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= ribbons.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= ribbons[i] &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Use binary search on the answer.",
+    "You can get l/m branches of length m from a branch with length l."
+  ],
+  "metaData": "{\n  \"name\": \"maxLength\",\n  \"params\": [\n    {\n      \"name\": \"ribbons\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"87.5K\", \"totalSubmission\": \"165.1K\", \"totalAcceptedRaw\": 87519, \"totalSubmissionRaw\": 165071, \"acRate\": \"53.0%\"}",
+  "likes": 628,
+  "dislikes": 70,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Capacity To Ship Packages Within D Days\", \"titleSlug\": \"capacity-to-ship-packages-within-d-days\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Add Minimum Number of Rungs\", \"titleSlug\": \"add-minimum-number-of-rungs\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[9,7,5]\n3",
+    "[7,5,9]\n4",
+    "[5,7,9]\n22"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 19, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxLength(vector<int>& ribbons, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxLength(int[] ribbons, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxLength(self, ribbons: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxLength(self, ribbons, k):\n        \"\"\"\n        :type ribbons: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} ribbons\n * @param {number} k\n * @return {number}\n */\nvar maxLength = function(ribbons, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxLength(ribbons: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxLength(int[] ribbons, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxLength(int* ribbons, int ribbonsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxLength(ribbons []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxLength(ribbons: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxLength(_ ribbons: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_length(ribbons: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} ribbons\n# @param {Integer} k\n# @return {Integer}\ndef max_length(ribbons, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $ribbons\n     * @param Integer $k\n     * @return Integer\n     */\n    function maxLength($ribbons, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxLength(List<int> ribbons, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxLength(ribbons: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_length(ribbons :: [integer], k :: integer) :: integer\n  def max_length(ribbons, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_length(Ribbons :: [integer()], K :: integer()) -> integer().\nmax_length(Ribbons, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-length ribbons k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2604",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given an array `ribbons`, where each element represents the length of a ribbon, and an integer `k`. Our task is to determine if it is possible to cut the ribbons into at least `k` pieces, where all pieces have the same length. If possible, we need to find the longest possible length of these pieces.\n\n###### Example\n\nLet `ribbons = [1, 2, 3, 4]` and `k = 3`.\n\n-   **Option 1**: Cut ribbons into smaller ribbons, each of length 1. We can create 10 such ribbons. Since 10 is greater than 3, this cut is valid. \n-   **Option 2**: Cut ribbons into pieces of length 2. We can form 4 ($\\geq$ 3) such ribbons, so 2 is valid length as well. Note that we can entirely ignore any leftover portions of the ribbons (e.g., the leftover from cutting the first and third ribbons).\n\n![Overview Example](../Figures/1891/1891_overview_example_fix.png)\n\nSince our goal is to find the longest possible length we can achieve with `k` ribbons, our answer for this example is `2`.\n\n---\n\n### Approach: Binary Search on The Answer\n\n#### Intuition\n\nThe idea is to cut the ribbons into pieces of a certain length, making sure that the total number of pieces is at least `k`. The longest possible piece we can cut is limited by the longest ribbon we have, as no piece can be longer than the length of the longest ribbon in the array.\n\nNow, imagine you start by trying to cut the ribbons into pieces of a very large length (like the longest ribbon). This will give you fewer pieces. If that doesn't give you enough pieces, you try a smaller length, and you get more pieces. As the length of the pieces decreases, the number of pieces increases.\n\nNow that we've determined that approach won't work, how can we more efficiently check the possible lengths? Let's make another simple observation: the longer the pieces of ribbon are, the fewer pieces we can make. The shorter the pieces of ribbon are, the more pieces we can make. This means that the relationship between the ribbon length and the number of pieces is monotonic, meaning it consistently moves in a predictable direction: as the ribbon length increases, the number of pieces decreases, and vice versa.\n\nInstead of trying every possible piece length one by one (which would take too long and result in a TLE), binary search helps us narrow down the range of possible lengths in logarithmic time. We start with the largest possible piece length and gradually reduce it, checking whether we can still obtain at least `k` pieces. If we can, we attempt even smaller lengths; if we can't, we increase the piece length.\n\n!?!../Documents/1891/1891_slideshow.json:960,540!?!\n\n<br/>\n\n###### When to Use Upper vs. Lower Middle in Binary Search\n\nWhen a cut is possible for a candidate $x$, we move the left bound of the binary search to the value of $x$ (i.e., set `left = middle`) to search the higher range. To avoid an infinite loop when `left` is updated to `middle`, we must ensure that `middle` is distinct from `left` in subsequent iterations. Using the upper middle, i.e., `middle = (left + right + 1) / 2`, ensures progress.\n\n**Example**: Suppose `left = 3` and `right = 4`:\n\n-   Using the upper middle, `middle = (3 + 4 + 1) / 2 = 4`.\n    If it is possible to get `k` ribbons of length `middle`, we set `left = middle`, and `left` becomes 4.\n    The loop ends correctly since now `left == right`.\n-   If we used the lower middle here, `middle = (3 + 4) / 2 = 3`, and updating `left = middle = 3` would result in an infinite loop.\n\n> If you are new to binary search, check out the [Binary Search Explore Card 🔗](https://leetcode.com/explore/learn/card/binary-search/). This resource offers an in-depth look at binary search, explaining its key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n#### Algorithm\n\n-   Define a function `isPossible` that takes an integer `x`, the `ribbons` array, and `k` as parameters. This function returns a boolean indicating whether it’s possible to cut the ribbons to obtain at least `k` new ribbons, each of length `x`.\n    -   Initialize `totalRibbons = 0`.\n    -   Loop through the `ribbons` array:\n        -   For each ribbon, calculate the number of pieces it can contribute: `pieces = floor(ribbons[i] / x)`.\n        -   Add `pieces` to `totalRibbons`.\n        -   If `totalRibbons >= k`, return `true` as a valid cut is possible.\n    -   If the loop completes without reaching `k`, return `false`.\n-   In the `maxLength` main function:\n\n    -   Initialize the boundaries of the binary search: `left = 0` and `right = max(ribbons[i])`.\n    -   While `left < right`:\n        -   Set `middle = (left + right + 1) / 2`.\n        -   Use the `isPossible` function to check if it’s possible to cut the ribbons to obtain at least `k` ribbons of length `middle`.\n            -   If `isPossible(middle)` returns `true`, set `left = middle`.\n            -   Otherwise, set `right = middle - 1`.\n    -   When the loop ends, `left == right`, so return `left`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/o2bA6897/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"o2bA6897\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length and $m$ be the maximum value in the `ribbons` array.\n\n-   Time complexity: $O(n \\log m)$\n\n    The process of looping through the `ribbons` array to determine if a cut resulting in `k` ribbons of a given length is possible, using the `isPossible` function, takes $O(n)$ time. Within the binary search function, we initialize the search space as $[0, m]$ and halve it with each iteration, resulting in a time complexity of $O(\\log m)$. Consequently, the overall time complexity of the solution is $O(n \\log m)$.\n\n-   Space complexity: $O(1)$\n\n    We only use a fixed number of integer variables, which doesn't depend on the input size.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

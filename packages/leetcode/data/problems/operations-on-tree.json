@@ -1,0 +1,146 @@
+{
+  "questionId": "2104",
+  "questionFrontendId": "1993",
+  "title": "Operations on Tree",
+  "titleSlug": "operations-on-tree",
+  "difficulty": "Medium",
+  "content": "<p>You are given a tree with <code>n</code> nodes numbered from <code>0</code> to <code>n - 1</code> in the form of a parent array <code>parent</code> where <code>parent[i]</code> is the parent of the <code>i<sup>th</sup></code> node. The root of the tree is node <code>0</code>, so <code>parent[0] = -1</code> since it has no parent. You want to design a data structure that allows users to lock, unlock, and upgrade nodes in the tree.</p>\n\n<p>The data structure should support the following functions:</p>\n\n<ul>\n\t<li><strong>Lock:</strong> <strong>Locks</strong> the given node for the given user and prevents other users from locking the same node. You may only lock a node using this function if the node is unlocked.</li>\n\t<li><strong>Unlock: Unlocks</strong> the given node for the given user. You may only unlock a node using this function if it is currently locked by the same user.</li>\n\t<li><b>Upgrade</b><strong>: Locks</strong> the given node for the given user and <strong>unlocks</strong> all of its descendants <strong>regardless</strong> of who locked it. You may only upgrade a node if <strong>all</strong> 3 conditions are true:\n\t<ul>\n\t\t<li>The node is unlocked,</li>\n\t\t<li>It has at least one locked descendant (by <strong>any</strong> user), and</li>\n\t\t<li>It does not have any locked ancestors.</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>Implement the <code>LockingTree</code> class:</p>\n\n<ul>\n\t<li><code>LockingTree(int[] parent)</code> initializes the data structure with the parent array.</li>\n\t<li><code>lock(int num, int user)</code> returns <code>true</code> if it is possible for the user with id <code>user</code> to lock the node <code>num</code>, or <code>false</code> otherwise. If it is possible, the node <code>num</code> will become<strong> locked</strong> by the user with id <code>user</code>.</li>\n\t<li><code>unlock(int num, int user)</code> returns <code>true</code> if it is possible for the user with id <code>user</code> to unlock the node <code>num</code>, or <code>false</code> otherwise. If it is possible, the node <code>num</code> will become <strong>unlocked</strong>.</li>\n\t<li><code>upgrade(int num, int user)</code> returns <code>true</code> if it is possible for the user with id <code>user</code> to upgrade the node <code>num</code>, or <code>false</code> otherwise. If it is possible, the node <code>num</code> will be <strong>upgraded</strong>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/07/29/untitled.png\" style=\"width: 375px; height: 246px;\" />\n<pre>\n<strong>Input</strong>\n[&quot;LockingTree&quot;, &quot;lock&quot;, &quot;unlock&quot;, &quot;unlock&quot;, &quot;lock&quot;, &quot;upgrade&quot;, &quot;lock&quot;]\n[[[-1, 0, 0, 1, 1, 2, 2]], [2, 2], [2, 3], [2, 2], [4, 5], [0, 1], [0, 1]]\n<strong>Output</strong>\n[null, true, false, true, true, true, false]\n\n<strong>Explanation</strong>\nLockingTree lockingTree = new LockingTree([-1, 0, 0, 1, 1, 2, 2]);\nlockingTree.lock(2, 2);    // return true because node 2 is unlocked.\n                           // Node 2 will now be locked by user 2.\nlockingTree.unlock(2, 3);  // return false because user 3 cannot unlock a node locked by user 2.\nlockingTree.unlock(2, 2);  // return true because node 2 was previously locked by user 2.\n                           // Node 2 will now be unlocked.\nlockingTree.lock(4, 5);    // return true because node 4 is unlocked.\n                           // Node 4 will now be locked by user 5.\nlockingTree.upgrade(0, 1); // return true because node 0 is unlocked and has at least one locked descendant (node 4).\n                           // Node 0 will now be locked by user 1 and node 4 will now be unlocked.\nlockingTree.lock(0, 1);    // return false because node 0 is already locked.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == parent.length</code></li>\n\t<li><code>2 &lt;= n &lt;= 2000</code></li>\n\t<li><code>0 &lt;= parent[i] &lt;= n - 1</code> for <code>i != 0</code></li>\n\t<li><code>parent[0] == -1</code></li>\n\t<li><code>0 &lt;= num &lt;= n - 1</code></li>\n\t<li><code>1 &lt;= user &lt;= 10<sup>4</sup></code></li>\n\t<li><code>parent</code> represents a valid tree.</li>\n\t<li>At most <code>2000</code> calls <strong>in total</strong> will be made to <code>lock</code>, <code>unlock</code>, and <code>upgrade</code>.</li>\n</ul>\n",
+  "hints": [
+    "How can we use the small constraints to help us solve the problem?",
+    "How can we traverse the ancestors and descendants of a node?"
+  ],
+  "metaData": "{\n  \"classname\": \"LockingTree\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer[]\",\n        \"name\": \"parent\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"num\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"user\"\n        }\n      ],\n      \"name\": \"lock\",\n      \"return\": {\n        \"type\": \"boolean\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"num\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"user\"\n        }\n      ],\n      \"name\": \"unlock\",\n      \"return\": {\n        \"type\": \"boolean\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"num\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"user\"\n        }\n      ],\n      \"name\": \"upgrade\",\n      \"return\": {\n        \"type\": \"boolean\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"24.6K\", \"totalSubmission\": \"54.5K\", \"totalAcceptedRaw\": 24637, \"totalSubmissionRaw\": 54547, \"acRate\": \"45.2%\"}",
+  "likes": 520,
+  "dislikes": 85,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Throne Inheritance\", \"titleSlug\": \"throne-inheritance\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"LockingTree\",\"lock\",\"unlock\",\"unlock\",\"lock\",\"upgrade\",\"lock\"]\n[[[-1,0,0,1,1,2,2]],[2,2],[2,3],[2,2],[4,5],[0,1],[0,1]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"juspay\", \"name\": \"Juspay\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class LockingTree {\npublic:\n    LockingTree(vector<int>& parent) {\n        \n    }\n    \n    bool lock(int num, int user) {\n        \n    }\n    \n    bool unlock(int num, int user) {\n        \n    }\n    \n    bool upgrade(int num, int user) {\n        \n    }\n};\n\n/**\n * Your LockingTree object will be instantiated and called as such:\n * LockingTree* obj = new LockingTree(parent);\n * bool param_1 = obj->lock(num,user);\n * bool param_2 = obj->unlock(num,user);\n * bool param_3 = obj->upgrade(num,user);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class LockingTree {\n\n    public LockingTree(int[] parent) {\n        \n    }\n    \n    public boolean lock(int num, int user) {\n        \n    }\n    \n    public boolean unlock(int num, int user) {\n        \n    }\n    \n    public boolean upgrade(int num, int user) {\n        \n    }\n}\n\n/**\n * Your LockingTree object will be instantiated and called as such:\n * LockingTree obj = new LockingTree(parent);\n * boolean param_1 = obj.lock(num,user);\n * boolean param_2 = obj.unlock(num,user);\n * boolean param_3 = obj.upgrade(num,user);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class LockingTree:\n\n    def __init__(self, parent: List[int]):\n        \n\n    def lock(self, num: int, user: int) -> bool:\n        \n\n    def unlock(self, num: int, user: int) -> bool:\n        \n\n    def upgrade(self, num: int, user: int) -> bool:\n        \n\n\n# Your LockingTree object will be instantiated and called as such:\n# obj = LockingTree(parent)\n# param_1 = obj.lock(num,user)\n# param_2 = obj.unlock(num,user)\n# param_3 = obj.upgrade(num,user)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class LockingTree(object):\n\n    def __init__(self, parent):\n        \"\"\"\n        :type parent: List[int]\n        \"\"\"\n        \n\n    def lock(self, num, user):\n        \"\"\"\n        :type num: int\n        :type user: int\n        :rtype: bool\n        \"\"\"\n        \n\n    def unlock(self, num, user):\n        \"\"\"\n        :type num: int\n        :type user: int\n        :rtype: bool\n        \"\"\"\n        \n\n    def upgrade(self, num, user):\n        \"\"\"\n        :type num: int\n        :type user: int\n        :rtype: bool\n        \"\"\"\n        \n\n\n# Your LockingTree object will be instantiated and called as such:\n# obj = LockingTree(parent)\n# param_1 = obj.lock(num,user)\n# param_2 = obj.unlock(num,user)\n# param_3 = obj.upgrade(num,user)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} parent\n */\nvar LockingTree = function(parent) {\n    \n};\n\n/** \n * @param {number} num \n * @param {number} user\n * @return {boolean}\n */\nLockingTree.prototype.lock = function(num, user) {\n    \n};\n\n/** \n * @param {number} num \n * @param {number} user\n * @return {boolean}\n */\nLockingTree.prototype.unlock = function(num, user) {\n    \n};\n\n/** \n * @param {number} num \n * @param {number} user\n * @return {boolean}\n */\nLockingTree.prototype.upgrade = function(num, user) {\n    \n};\n\n/** \n * Your LockingTree object will be instantiated and called as such:\n * var obj = new LockingTree(parent)\n * var param_1 = obj.lock(num,user)\n * var param_2 = obj.unlock(num,user)\n * var param_3 = obj.upgrade(num,user)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class LockingTree {\n    constructor(parent: number[]) {\n        \n    }\n\n    lock(num: number, user: number): boolean {\n        \n    }\n\n    unlock(num: number, user: number): boolean {\n        \n    }\n\n    upgrade(num: number, user: number): boolean {\n        \n    }\n}\n\n/**\n * Your LockingTree object will be instantiated and called as such:\n * var obj = new LockingTree(parent)\n * var param_1 = obj.lock(num,user)\n * var param_2 = obj.unlock(num,user)\n * var param_3 = obj.upgrade(num,user)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class LockingTree {\n\n    public LockingTree(int[] parent) {\n        \n    }\n    \n    public bool Lock(int num, int user) {\n        \n    }\n    \n    public bool Unlock(int num, int user) {\n        \n    }\n    \n    public bool Upgrade(int num, int user) {\n        \n    }\n}\n\n/**\n * Your LockingTree object will be instantiated and called as such:\n * LockingTree obj = new LockingTree(parent);\n * bool param_1 = obj.Lock(num,user);\n * bool param_2 = obj.Unlock(num,user);\n * bool param_3 = obj.Upgrade(num,user);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} LockingTree;\n\n\nLockingTree* lockingTreeCreate(int* parent, int parentSize) {\n    \n}\n\nbool lockingTreeLock(LockingTree* obj, int num, int user) {\n    \n}\n\nbool lockingTreeUnlock(LockingTree* obj, int num, int user) {\n    \n}\n\nbool lockingTreeUpgrade(LockingTree* obj, int num, int user) {\n    \n}\n\nvoid lockingTreeFree(LockingTree* obj) {\n    \n}\n\n/**\n * Your LockingTree struct will be instantiated and called as such:\n * LockingTree* obj = lockingTreeCreate(parent, parentSize);\n * bool param_1 = lockingTreeLock(obj, num, user);\n \n * bool param_2 = lockingTreeUnlock(obj, num, user);\n \n * bool param_3 = lockingTreeUpgrade(obj, num, user);\n \n * lockingTreeFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type LockingTree struct {\n    \n}\n\n\nfunc Constructor(parent []int) LockingTree {\n    \n}\n\n\nfunc (this *LockingTree) Lock(num int, user int) bool {\n    \n}\n\n\nfunc (this *LockingTree) Unlock(num int, user int) bool {\n    \n}\n\n\nfunc (this *LockingTree) Upgrade(num int, user int) bool {\n    \n}\n\n\n/**\n * Your LockingTree object will be instantiated and called as such:\n * obj := Constructor(parent);\n * param_1 := obj.Lock(num,user);\n * param_2 := obj.Unlock(num,user);\n * param_3 := obj.Upgrade(num,user);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class LockingTree(parent: IntArray) {\n\n    fun lock(num: Int, user: Int): Boolean {\n        \n    }\n\n    fun unlock(num: Int, user: Int): Boolean {\n        \n    }\n\n    fun upgrade(num: Int, user: Int): Boolean {\n        \n    }\n\n}\n\n/**\n * Your LockingTree object will be instantiated and called as such:\n * var obj = LockingTree(parent)\n * var param_1 = obj.lock(num,user)\n * var param_2 = obj.unlock(num,user)\n * var param_3 = obj.upgrade(num,user)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass LockingTree {\n\n    init(_ parent: [Int]) {\n        \n    }\n    \n    func lock(_ num: Int, _ user: Int) -> Bool {\n        \n    }\n    \n    func unlock(_ num: Int, _ user: Int) -> Bool {\n        \n    }\n    \n    func upgrade(_ num: Int, _ user: Int) -> Bool {\n        \n    }\n}\n\n/**\n * Your LockingTree object will be instantiated and called as such:\n * let obj = LockingTree(parent)\n * let ret_1: Bool = obj.lock(num, user)\n * let ret_2: Bool = obj.unlock(num, user)\n * let ret_3: Bool = obj.upgrade(num, user)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct LockingTree {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl LockingTree {\n\n    fn new(parent: Vec<i32>) -> Self {\n        \n    }\n    \n    fn lock(&self, num: i32, user: i32) -> bool {\n        \n    }\n    \n    fn unlock(&self, num: i32, user: i32) -> bool {\n        \n    }\n    \n    fn upgrade(&self, num: i32, user: i32) -> bool {\n        \n    }\n}\n\n/**\n * Your LockingTree object will be instantiated and called as such:\n * let obj = LockingTree::new(parent);\n * let ret_1: bool = obj.lock(num, user);\n * let ret_2: bool = obj.unlock(num, user);\n * let ret_3: bool = obj.upgrade(num, user);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class LockingTree\n\n=begin\n    :type parent: Integer[]\n=end\n    def initialize(parent)\n        \n    end\n\n\n=begin\n    :type num: Integer\n    :type user: Integer\n    :rtype: Boolean\n=end\n    def lock(num, user)\n        \n    end\n\n\n=begin\n    :type num: Integer\n    :type user: Integer\n    :rtype: Boolean\n=end\n    def unlock(num, user)\n        \n    end\n\n\n=begin\n    :type num: Integer\n    :type user: Integer\n    :rtype: Boolean\n=end\n    def upgrade(num, user)\n        \n    end\n\n\nend\n\n# Your LockingTree object will be instantiated and called as such:\n# obj = LockingTree.new(parent)\n# param_1 = obj.lock(num, user)\n# param_2 = obj.unlock(num, user)\n# param_3 = obj.upgrade(num, user)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class LockingTree {\n    /**\n     * @param Integer[] $parent\n     */\n    function __construct($parent) {\n        \n    }\n  \n    /**\n     * @param Integer $num\n     * @param Integer $user\n     * @return Boolean\n     */\n    function lock($num, $user) {\n        \n    }\n  \n    /**\n     * @param Integer $num\n     * @param Integer $user\n     * @return Boolean\n     */\n    function unlock($num, $user) {\n        \n    }\n  \n    /**\n     * @param Integer $num\n     * @param Integer $user\n     * @return Boolean\n     */\n    function upgrade($num, $user) {\n        \n    }\n}\n\n/**\n * Your LockingTree object will be instantiated and called as such:\n * $obj = LockingTree($parent);\n * $ret_1 = $obj->lock($num, $user);\n * $ret_2 = $obj->unlock($num, $user);\n * $ret_3 = $obj->upgrade($num, $user);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class LockingTree {\n\n  LockingTree(List<int> parent) {\n    \n  }\n  \n  bool lock(int num, int user) {\n    \n  }\n  \n  bool unlock(int num, int user) {\n    \n  }\n  \n  bool upgrade(int num, int user) {\n    \n  }\n}\n\n/**\n * Your LockingTree object will be instantiated and called as such:\n * LockingTree obj = LockingTree(parent);\n * bool param1 = obj.lock(num,user);\n * bool param2 = obj.unlock(num,user);\n * bool param3 = obj.upgrade(num,user);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class LockingTree(_parent: Array[Int]) {\n\n    def lock(num: Int, user: Int): Boolean = {\n        \n    }\n\n    def unlock(num: Int, user: Int): Boolean = {\n        \n    }\n\n    def upgrade(num: Int, user: Int): Boolean = {\n        \n    }\n\n}\n\n/**\n * Your LockingTree object will be instantiated and called as such:\n * val obj = new LockingTree(parent)\n * val param_1 = obj.lock(num,user)\n * val param_2 = obj.unlock(num,user)\n * val param_3 = obj.upgrade(num,user)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule LockingTree do\n  @spec init_(parent :: [integer]) :: any\n  def init_(parent) do\n    \n  end\n\n  @spec lock(num :: integer, user :: integer) :: boolean\n  def lock(num, user) do\n    \n  end\n\n  @spec unlock(num :: integer, user :: integer) :: boolean\n  def unlock(num, user) do\n    \n  end\n\n  @spec upgrade(num :: integer, user :: integer) :: boolean\n  def upgrade(num, user) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# LockingTree.init_(parent)\n# param_1 = LockingTree.lock(num, user)\n# param_2 = LockingTree.unlock(num, user)\n# param_3 = LockingTree.upgrade(num, user)\n\n# LockingTree.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec locking_tree_init_(Parent :: [integer()]) -> any().\nlocking_tree_init_(Parent) ->\n  .\n\n-spec locking_tree_lock(Num :: integer(), User :: integer()) -> boolean().\nlocking_tree_lock(Num, User) ->\n  .\n\n-spec locking_tree_unlock(Num :: integer(), User :: integer()) -> boolean().\nlocking_tree_unlock(Num, User) ->\n  .\n\n-spec locking_tree_upgrade(Num :: integer(), User :: integer()) -> boolean().\nlocking_tree_upgrade(Num, User) ->\n  .\n\n\n%% Your functions will be called as such:\n%% locking_tree_init_(Parent),\n%% Param_1 = locking_tree_lock(Num, User),\n%% Param_2 = locking_tree_unlock(Num, User),\n%% Param_3 = locking_tree_upgrade(Num, User),\n\n%% locking_tree_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define locking-tree%\n  (class object%\n    (super-new)\n    \n    ; parent : (listof exact-integer?)\n    (init-field\n      parent)\n    \n    ; lock : exact-integer? exact-integer? -> boolean?\n    (define/public (lock num user)\n      )\n    ; unlock : exact-integer? exact-integer? -> boolean?\n    (define/public (unlock num user)\n      )\n    ; upgrade : exact-integer? exact-integer? -> boolean?\n    (define/public (upgrade num user)\n      )))\n\n;; Your locking-tree% object will be instantiated and called as such:\n;; (define obj (new locking-tree% [parent parent]))\n;; (define param_1 (send obj lock num user))\n;; (define param_2 (send obj unlock num user))\n;; (define param_3 (send obj upgrade num user))"
+    }
+  ],
+  "solution": null
+}

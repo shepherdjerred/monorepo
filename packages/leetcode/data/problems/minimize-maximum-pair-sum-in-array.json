@@ -1,0 +1,129 @@
+{
+  "questionId": "1988",
+  "questionFrontendId": "1877",
+  "title": "Minimize Maximum Pair Sum in Array",
+  "titleSlug": "minimize-maximum-pair-sum-in-array",
+  "difficulty": "Medium",
+  "content": "<p>The <strong>pair sum</strong> of a pair <code>(a,b)</code> is equal to <code>a + b</code>. The <strong>maximum pair sum</strong> is the largest <strong>pair sum</strong> in a list of pairs.</p>\r\n\r\n<ul>\r\n\t<li>For example, if we have pairs <code>(1,5)</code>, <code>(2,3)</code>, and <code>(4,4)</code>, the <strong>maximum pair sum</strong> would be <code>max(1+5, 2+3, 4+4) = max(6, 5, 8) = 8</code>.</li>\r\n</ul>\r\n\r\n<p>Given an array <code>nums</code> of <strong>even</strong> length <code>n</code>, pair up the elements of <code>nums</code> into <code>n / 2</code> pairs such that:</p>\r\n\r\n<ul>\r\n\t<li>Each element of <code>nums</code> is in <strong>exactly one</strong> pair, and</li>\r\n\t<li>The <strong>maximum pair sum </strong>is <strong>minimized</strong>.</li>\r\n</ul>\r\n\r\n<p>Return <em>the minimized <strong>maximum pair sum</strong> after optimally pairing up the elements</em>.</p>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong class=\"example\">Example 1:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> nums = [3,5,2,3]\r\n<strong>Output:</strong> 7\r\n<strong>Explanation:</strong> The elements can be paired up into pairs (3,3) and (5,2).\r\nThe maximum pair sum is max(3+3, 5+2) = max(6, 7) = 7.\r\n</pre>\r\n\r\n<p><strong class=\"example\">Example 2:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> nums = [3,5,4,2,4,6]\r\n<strong>Output:</strong> 8\r\n<strong>Explanation:</strong> The elements can be paired up into pairs (3,5), (4,4), and (6,2).\r\nThe maximum pair sum is max(3+5, 4+4, 6+2) = max(8, 8, 8) = 8.\r\n</pre>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong>Constraints:</strong></p>\r\n\r\n<ul>\r\n\t<li><code>n == nums.length</code></li>\r\n\t<li><code>2 &lt;= n &lt;= 10<sup>5</sup></code></li>\r\n\t<li><code>n</code> is <strong>even</strong>.</li>\r\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>5</sup></code></li>\r\n</ul>",
+  "hints": [
+    "Would sorting help find the optimal order?",
+    "Given a specific element, how would you minimize its specific pairwise sum?"
+  ],
+  "metaData": "{\n  \"name\": \"minPairSum\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"330.6K\", \"totalSubmission\": \"396.8K\", \"totalAcceptedRaw\": 330596, \"totalSubmissionRaw\": 396797, \"acRate\": \"83.3%\"}",
+  "likes": 2373,
+  "dislikes": 546,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[3,5,2,3]",
+    "[3,5,4,2,4,6]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"capgemini\", \"name\": \"Capgemini\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"ebay\", \"name\": \"eBay\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minPairSum(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minPairSum(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minPairSum(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minPairSum(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar minPairSum = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minPairSum(nums: number[]): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinPairSum(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\nint minPairSum(int* nums, int numsSize){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minPairSum(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minPairSum(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minPairSum(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_pair_sum(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef min_pair_sum(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function minPairSum($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minPairSum(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-pair-sum nums)\n  (-> (listof exact-integer?) exact-integer?)\n\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2097",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach: Sorting\n\n**Intuition**\n\nWe are given an array of $N$ integers (where $N$ is even), and we need to pair up all these integers in such a way that the maximum sum of a pair is minimized. We need to return the minimized maximum pair sum in the array.\n\nOne might think of pairing up the smaller integers together so that the pair sum is minimized at the beginning. However, in this way, we will end up pairing the bigger integers together and hence will increase the maximum pair sum. For example, we can pair up the array `[1, 1, 2, 3]` as `(1, 1), (2, 3)` with maximum sum as `5`. However, the optimal way would be to make a pair like `(1, 3), (1, 2)` with a maximum sum of `4`. This suggests that pairing adjacent numbers by value may not be the optimal approach.\n\nObserving the above example we can think about another potential strategy to pair up the smallest integer with the greatest integer and then second-smallest with the second-greatest and so on. This method ensures we don't end up pairing the two greatest integers as we did in the previous method. But how can we know this is optimal and would always produce the minimum pair sum?\n\nSuppose we have the array $[a_{1}, a_1, a_2, ......, a_{n}]$, where these integers are sorted in ascending order and so $a_{1}$ is the minimum integer and $a_{n}$ is the greatest one in the array. As per the above potential solution, we will pair up $a_{1}$ and $a_{n}$ together, we can try to prove this method wrong by contradiction. Let's say we assume there exist two integers in the array $a_{i}$ and $a_{j}$ and satisfy this:\n\n- $a_{1} \\le a_{i} \\le a_{n}$\n-  $a_{1} \\le a_{j} \\le a_{n}$\n\nLet's assume an opposite method, and prove that it leads to contradiction. Suppose the pair $[(a_{1}, a_{i}), (a_{n}, a_{j}) ]$ is optimal than pair $[(a_{1}, a_{n}), (a_{i}, a_{j}) ]$. This is however not true, because $a_{j} + a_{n}$ is always bigger than or equal to $a_{i} + a_{1}$, hence the max of $[(a_{1}, a_{i}), (a_{n}, a_{j}) ]$ will always be $a_{j} + a_{n}$. And no matter what the max of $[(a_{1}, a_{n}), (a_{i}, a_{j}) ]$ it will always be smaller than or equal to $a_{j} + a_{n}$. Therefore, our potential solution strategy is optimal.\n\nThe image below demonstrates the pairing:\n\n![fig](../Figures/1877/1877A.png)\n\nTherefore, we will sort the integers in the array and then pair the integers at the left end with the integers at the right end. The minimum value is paired with the maximum value, the next smallest value is paired with the next largest value, and so on. We need to iterate over only the first half of the array because the corresponding second element in the pair can be found by using the length of the array.\n\n**Algorithm**\n\n1. Sort the array `nums`.\n2. Initialize the variable `maxSum` to `0`.\n3. Iterate over the array `nums` from index `0` to `nums.length() / 2 - 1`.\n4. Get the sum of the current element and its corresponding pair `nums[i] + nums[nums.length() - 1 - i]`, and update `maxSum` if the sum is larger.\n5. Return `maxSum`.\n\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/LZKfda9j/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"LZKfda9j\"></iframe>\n\n**Complexity Analysis**\n\nHere, $N$ is the number of elements in the array `nums`.\n\n* Time complexity $O(N \\log N)$\n\n  Sorting the array `nums` will take $O(N \\log N)$ time, and then we iterate over the array `nums` which will take $O(N)$ time. Hence, the total time complexity is equal to $O(N \\log N)$.\n\n* Space complexity $O(\\log N)$\n\n  We don't need any extra space apart from the one required for sorting. The space complexity of the sorting algorithm depends on the implementation of each programming language. For instance, in Java, the Arrays.sort() for primitives is implemented as a variant of the quicksort algorithm whose space complexity is $O(\\log N)$. In C++ std::sort() function provided by STL is a hybrid of Quick Sort, Heap Sort, and Insertion Sort and has a worst-case space complexity of $O(\\log N)$. Thus, the use of the inbuilt sort() function might add up to $O(\\log N)$ to space complexity.\n  <br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "questionId": "1905",
+  "questionFrontendId": "1797",
+  "title": "Design Authentication Manager",
+  "titleSlug": "design-authentication-manager",
+  "difficulty": "Medium",
+  "content": "<p>There is an authentication system that works with authentication tokens. For each session, the user will receive a new authentication token that will expire <code>timeToLive</code> seconds after the <code>currentTime</code>. If the token is renewed, the expiry time will be <b>extended</b> to expire <code>timeToLive</code> seconds after the (potentially different) <code>currentTime</code>.</p>\n\n<p>Implement the <code>AuthenticationManager</code> class:</p>\n\n<ul>\n\t<li><code>AuthenticationManager(int timeToLive)</code> constructs the <code>AuthenticationManager</code> and sets the <code>timeToLive</code>.</li>\n\t<li><code>generate(string tokenId, int currentTime)</code> generates a new token with the given <code>tokenId</code> at the given <code>currentTime</code> in seconds.</li>\n\t<li><code>renew(string tokenId, int currentTime)</code> renews the <strong>unexpired</strong> token with the given <code>tokenId</code> at the given <code>currentTime</code> in seconds. If there are no unexpired tokens with the given <code>tokenId</code>, the request is ignored, and nothing happens.</li>\n\t<li><code>countUnexpiredTokens(int currentTime)</code> returns the number of <strong>unexpired</strong> tokens at the given currentTime.</li>\n</ul>\n\n<p>Note that if a token expires at time <code>t</code>, and another action happens on time <code>t</code> (<code>renew</code> or <code>countUnexpiredTokens</code>), the expiration takes place <strong>before</strong> the other actions.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/02/25/copy-of-pc68_q2.png\" style=\"width: 500px; height: 287px;\" />\n<pre>\n<strong>Input</strong>\n[&quot;AuthenticationManager&quot;, &quot;<code>renew</code>&quot;, &quot;generate&quot;, &quot;<code>countUnexpiredTokens</code>&quot;, &quot;generate&quot;, &quot;<code>renew</code>&quot;, &quot;<code>renew</code>&quot;, &quot;<code>countUnexpiredTokens</code>&quot;]\n[[5], [&quot;aaa&quot;, 1], [&quot;aaa&quot;, 2], [6], [&quot;bbb&quot;, 7], [&quot;aaa&quot;, 8], [&quot;bbb&quot;, 10], [15]]\n<strong>Output</strong>\n[null, null, null, 1, null, null, null, 0]\n\n<strong>Explanation</strong>\nAuthenticationManager authenticationManager = new AuthenticationManager(5); // Constructs the AuthenticationManager with <code>timeToLive</code> = 5 seconds.\nauthenticationManager.<code>renew</code>(&quot;aaa&quot;, 1); // No token exists with tokenId &quot;aaa&quot; at time 1, so nothing happens.\nauthenticationManager.generate(&quot;aaa&quot;, 2); // Generates a new token with tokenId &quot;aaa&quot; at time 2.\nauthenticationManager.<code>countUnexpiredTokens</code>(6); // The token with tokenId &quot;aaa&quot; is the only unexpired one at time 6, so return 1.\nauthenticationManager.generate(&quot;bbb&quot;, 7); // Generates a new token with tokenId &quot;bbb&quot; at time 7.\nauthenticationManager.<code>renew</code>(&quot;aaa&quot;, 8); // The token with tokenId &quot;aaa&quot; expired at time 7, and 8 &gt;= 7, so at time 8 the <code>renew</code> request is ignored, and nothing happens.\nauthenticationManager.<code>renew</code>(&quot;bbb&quot;, 10); // The token with tokenId &quot;bbb&quot; is unexpired at time 10, so the <code>renew</code> request is fulfilled and now the token will expire at time 15.\nauthenticationManager.<code>countUnexpiredTokens</code>(15); // The token with tokenId &quot;bbb&quot; expires at time 15, and the token with tokenId &quot;aaa&quot; expired at time 7, so currently no token is unexpired, so return 0.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= timeToLive &lt;= 10<sup>8</sup></code></li>\n\t<li><code>1 &lt;= currentTime &lt;= 10<sup>8</sup></code></li>\n\t<li><code>1 &lt;= tokenId.length &lt;= 5</code></li>\n\t<li><code>tokenId</code> consists only of lowercase letters.</li>\n\t<li>All calls to <code>generate</code> will contain unique values of <code>tokenId</code>.</li>\n\t<li>The values of <code>currentTime</code> across all the function calls will be <strong>strictly increasing</strong>.</li>\n\t<li>At most <code>2000</code> calls will be made to all functions combined.</li>\n</ul>\n",
+  "hints": [
+    "Using a map, track the expiry times of the tokens.",
+    "When generating a new token, add it to the map with its expiry time.",
+    "When renewing a token, check if it's on the map and has not expired yet. If so, update its expiry time.",
+    "To count unexpired tokens, iterate on the map and check for each token if it's not expired yet."
+  ],
+  "metaData": "{\n  \"classname\": \"AuthenticationManager\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer\",\n        \"name\": \"timeToLive\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"string\",\n          \"name\": \"tokenId\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"currentTime\"\n        }\n      ],\n      \"name\": \"generate\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"string\",\n          \"name\": \"tokenId\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"currentTime\"\n        }\n      ],\n      \"name\": \"renew\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"currentTime\"\n        }\n      ],\n      \"name\": \"countUnexpiredTokens\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"56.2K\", \"totalSubmission\": \"96.1K\", \"totalAcceptedRaw\": 56188, \"totalSubmissionRaw\": 96109, \"acRate\": \"58.5%\"}",
+  "likes": 433,
+  "dislikes": 58,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"AuthenticationManager\",\"renew\",\"generate\",\"countUnexpiredTokens\",\"generate\",\"renew\",\"renew\",\"countUnexpiredTokens\"]\n[[5],[\"aaa\",1],[\"aaa\",2],[6],[\"bbb\",7],[\"aaa\",8],[\"bbb\",10],[15]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 6, \"slug\": \"deliveroo\", \"name\": \"Deliveroo\"}, {\"timesEncountered\": 4, \"slug\": \"confluent\", \"name\": \"Confluent\"}, {\"timesEncountered\": 2, \"slug\": \"docusign\", \"name\": \"Docusign\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"atlassian\", \"name\": \"Atlassian\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"twitter\", \"name\": \"X\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Doubly-Linked List",
+      "slug": "doubly-linked-list"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class AuthenticationManager {\npublic:\n    AuthenticationManager(int timeToLive) {\n        \n    }\n    \n    void generate(string tokenId, int currentTime) {\n        \n    }\n    \n    void renew(string tokenId, int currentTime) {\n        \n    }\n    \n    int countUnexpiredTokens(int currentTime) {\n        \n    }\n};\n\n/**\n * Your AuthenticationManager object will be instantiated and called as such:\n * AuthenticationManager* obj = new AuthenticationManager(timeToLive);\n * obj->generate(tokenId,currentTime);\n * obj->renew(tokenId,currentTime);\n * int param_3 = obj->countUnexpiredTokens(currentTime);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class AuthenticationManager {\n\n    public AuthenticationManager(int timeToLive) {\n        \n    }\n    \n    public void generate(String tokenId, int currentTime) {\n        \n    }\n    \n    public void renew(String tokenId, int currentTime) {\n        \n    }\n    \n    public int countUnexpiredTokens(int currentTime) {\n        \n    }\n}\n\n/**\n * Your AuthenticationManager object will be instantiated and called as such:\n * AuthenticationManager obj = new AuthenticationManager(timeToLive);\n * obj.generate(tokenId,currentTime);\n * obj.renew(tokenId,currentTime);\n * int param_3 = obj.countUnexpiredTokens(currentTime);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class AuthenticationManager:\n\n    def __init__(self, timeToLive: int):\n        \n\n    def generate(self, tokenId: str, currentTime: int) -> None:\n        \n\n    def renew(self, tokenId: str, currentTime: int) -> None:\n        \n\n    def countUnexpiredTokens(self, currentTime: int) -> int:\n        \n\n\n# Your AuthenticationManager object will be instantiated and called as such:\n# obj = AuthenticationManager(timeToLive)\n# obj.generate(tokenId,currentTime)\n# obj.renew(tokenId,currentTime)\n# param_3 = obj.countUnexpiredTokens(currentTime)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class AuthenticationManager(object):\n\n    def __init__(self, timeToLive):\n        \"\"\"\n        :type timeToLive: int\n        \"\"\"\n        \n\n    def generate(self, tokenId, currentTime):\n        \"\"\"\n        :type tokenId: str\n        :type currentTime: int\n        :rtype: None\n        \"\"\"\n        \n\n    def renew(self, tokenId, currentTime):\n        \"\"\"\n        :type tokenId: str\n        :type currentTime: int\n        :rtype: None\n        \"\"\"\n        \n\n    def countUnexpiredTokens(self, currentTime):\n        \"\"\"\n        :type currentTime: int\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your AuthenticationManager object will be instantiated and called as such:\n# obj = AuthenticationManager(timeToLive)\n# obj.generate(tokenId,currentTime)\n# obj.renew(tokenId,currentTime)\n# param_3 = obj.countUnexpiredTokens(currentTime)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} timeToLive\n */\nvar AuthenticationManager = function(timeToLive) {\n    \n};\n\n/** \n * @param {string} tokenId \n * @param {number} currentTime\n * @return {void}\n */\nAuthenticationManager.prototype.generate = function(tokenId, currentTime) {\n    \n};\n\n/** \n * @param {string} tokenId \n * @param {number} currentTime\n * @return {void}\n */\nAuthenticationManager.prototype.renew = function(tokenId, currentTime) {\n    \n};\n\n/** \n * @param {number} currentTime\n * @return {number}\n */\nAuthenticationManager.prototype.countUnexpiredTokens = function(currentTime) {\n    \n};\n\n/** \n * Your AuthenticationManager object will be instantiated and called as such:\n * var obj = new AuthenticationManager(timeToLive)\n * obj.generate(tokenId,currentTime)\n * obj.renew(tokenId,currentTime)\n * var param_3 = obj.countUnexpiredTokens(currentTime)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class AuthenticationManager {\n    constructor(timeToLive: number) {\n        \n    }\n\n    generate(tokenId: string, currentTime: number): void {\n        \n    }\n\n    renew(tokenId: string, currentTime: number): void {\n        \n    }\n\n    countUnexpiredTokens(currentTime: number): number {\n        \n    }\n}\n\n/**\n * Your AuthenticationManager object will be instantiated and called as such:\n * var obj = new AuthenticationManager(timeToLive)\n * obj.generate(tokenId,currentTime)\n * obj.renew(tokenId,currentTime)\n * var param_3 = obj.countUnexpiredTokens(currentTime)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class AuthenticationManager {\n\n    public AuthenticationManager(int timeToLive) {\n        \n    }\n    \n    public void Generate(string tokenId, int currentTime) {\n        \n    }\n    \n    public void Renew(string tokenId, int currentTime) {\n        \n    }\n    \n    public int CountUnexpiredTokens(int currentTime) {\n        \n    }\n}\n\n/**\n * Your AuthenticationManager object will be instantiated and called as such:\n * AuthenticationManager obj = new AuthenticationManager(timeToLive);\n * obj.Generate(tokenId,currentTime);\n * obj.Renew(tokenId,currentTime);\n * int param_3 = obj.CountUnexpiredTokens(currentTime);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} AuthenticationManager;\n\n\nAuthenticationManager* authenticationManagerCreate(int timeToLive) {\n    \n}\n\nvoid authenticationManagerGenerate(AuthenticationManager* obj, char* tokenId, int currentTime) {\n    \n}\n\nvoid authenticationManagerRenew(AuthenticationManager* obj, char* tokenId, int currentTime) {\n    \n}\n\nint authenticationManagerCountUnexpiredTokens(AuthenticationManager* obj, int currentTime) {\n    \n}\n\nvoid authenticationManagerFree(AuthenticationManager* obj) {\n    \n}\n\n/**\n * Your AuthenticationManager struct will be instantiated and called as such:\n * AuthenticationManager* obj = authenticationManagerCreate(timeToLive);\n * authenticationManagerGenerate(obj, tokenId, currentTime);\n \n * authenticationManagerRenew(obj, tokenId, currentTime);\n \n * int param_3 = authenticationManagerCountUnexpiredTokens(obj, currentTime);\n \n * authenticationManagerFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type AuthenticationManager struct {\n    \n}\n\n\nfunc Constructor(timeToLive int) AuthenticationManager {\n    \n}\n\n\nfunc (this *AuthenticationManager) Generate(tokenId string, currentTime int)  {\n    \n}\n\n\nfunc (this *AuthenticationManager) Renew(tokenId string, currentTime int)  {\n    \n}\n\n\nfunc (this *AuthenticationManager) CountUnexpiredTokens(currentTime int) int {\n    \n}\n\n\n/**\n * Your AuthenticationManager object will be instantiated and called as such:\n * obj := Constructor(timeToLive);\n * obj.Generate(tokenId,currentTime);\n * obj.Renew(tokenId,currentTime);\n * param_3 := obj.CountUnexpiredTokens(currentTime);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class AuthenticationManager(timeToLive: Int) {\n\n    fun generate(tokenId: String, currentTime: Int) {\n        \n    }\n\n    fun renew(tokenId: String, currentTime: Int) {\n        \n    }\n\n    fun countUnexpiredTokens(currentTime: Int): Int {\n        \n    }\n\n}\n\n/**\n * Your AuthenticationManager object will be instantiated and called as such:\n * var obj = AuthenticationManager(timeToLive)\n * obj.generate(tokenId,currentTime)\n * obj.renew(tokenId,currentTime)\n * var param_3 = obj.countUnexpiredTokens(currentTime)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass AuthenticationManager {\n\n    init(_ timeToLive: Int) {\n        \n    }\n    \n    func generate(_ tokenId: String, _ currentTime: Int) {\n        \n    }\n    \n    func renew(_ tokenId: String, _ currentTime: Int) {\n        \n    }\n    \n    func countUnexpiredTokens(_ currentTime: Int) -> Int {\n        \n    }\n}\n\n/**\n * Your AuthenticationManager object will be instantiated and called as such:\n * let obj = AuthenticationManager(timeToLive)\n * obj.generate(tokenId, currentTime)\n * obj.renew(tokenId, currentTime)\n * let ret_3: Int = obj.countUnexpiredTokens(currentTime)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct AuthenticationManager {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl AuthenticationManager {\n\n    fn new(timeToLive: i32) -> Self {\n        \n    }\n    \n    fn generate(&self, token_id: String, current_time: i32) {\n        \n    }\n    \n    fn renew(&self, token_id: String, current_time: i32) {\n        \n    }\n    \n    fn count_unexpired_tokens(&self, current_time: i32) -> i32 {\n        \n    }\n}\n\n/**\n * Your AuthenticationManager object will be instantiated and called as such:\n * let obj = AuthenticationManager::new(timeToLive);\n * obj.generate(tokenId, currentTime);\n * obj.renew(tokenId, currentTime);\n * let ret_3: i32 = obj.count_unexpired_tokens(currentTime);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class AuthenticationManager\n\n=begin\n    :type time_to_live: Integer\n=end\n    def initialize(time_to_live)\n        \n    end\n\n\n=begin\n    :type token_id: String\n    :type current_time: Integer\n    :rtype: Void\n=end\n    def generate(token_id, current_time)\n        \n    end\n\n\n=begin\n    :type token_id: String\n    :type current_time: Integer\n    :rtype: Void\n=end\n    def renew(token_id, current_time)\n        \n    end\n\n\n=begin\n    :type current_time: Integer\n    :rtype: Integer\n=end\n    def count_unexpired_tokens(current_time)\n        \n    end\n\n\nend\n\n# Your AuthenticationManager object will be instantiated and called as such:\n# obj = AuthenticationManager.new(time_to_live)\n# obj.generate(token_id, current_time)\n# obj.renew(token_id, current_time)\n# param_3 = obj.count_unexpired_tokens(current_time)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class AuthenticationManager {\n    /**\n     * @param Integer $timeToLive\n     */\n    function __construct($timeToLive) {\n        \n    }\n  \n    /**\n     * @param String $tokenId\n     * @param Integer $currentTime\n     * @return NULL\n     */\n    function generate($tokenId, $currentTime) {\n        \n    }\n  \n    /**\n     * @param String $tokenId\n     * @param Integer $currentTime\n     * @return NULL\n     */\n    function renew($tokenId, $currentTime) {\n        \n    }\n  \n    /**\n     * @param Integer $currentTime\n     * @return Integer\n     */\n    function countUnexpiredTokens($currentTime) {\n        \n    }\n}\n\n/**\n * Your AuthenticationManager object will be instantiated and called as such:\n * $obj = AuthenticationManager($timeToLive);\n * $obj->generate($tokenId, $currentTime);\n * $obj->renew($tokenId, $currentTime);\n * $ret_3 = $obj->countUnexpiredTokens($currentTime);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class AuthenticationManager {\n\n  AuthenticationManager(int timeToLive) {\n    \n  }\n  \n  void generate(String tokenId, int currentTime) {\n    \n  }\n  \n  void renew(String tokenId, int currentTime) {\n    \n  }\n  \n  int countUnexpiredTokens(int currentTime) {\n    \n  }\n}\n\n/**\n * Your AuthenticationManager object will be instantiated and called as such:\n * AuthenticationManager obj = AuthenticationManager(timeToLive);\n * obj.generate(tokenId,currentTime);\n * obj.renew(tokenId,currentTime);\n * int param3 = obj.countUnexpiredTokens(currentTime);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class AuthenticationManager(_timeToLive: Int) {\n\n    def generate(tokenId: String, currentTime: Int): Unit = {\n        \n    }\n\n    def renew(tokenId: String, currentTime: Int): Unit = {\n        \n    }\n\n    def countUnexpiredTokens(currentTime: Int): Int = {\n        \n    }\n\n}\n\n/**\n * Your AuthenticationManager object will be instantiated and called as such:\n * val obj = new AuthenticationManager(timeToLive)\n * obj.generate(tokenId,currentTime)\n * obj.renew(tokenId,currentTime)\n * val param_3 = obj.countUnexpiredTokens(currentTime)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule AuthenticationManager do\n  @spec init_(time_to_live :: integer) :: any\n  def init_(time_to_live) do\n    \n  end\n\n  @spec generate(token_id :: String.t, current_time :: integer) :: any\n  def generate(token_id, current_time) do\n    \n  end\n\n  @spec renew(token_id :: String.t, current_time :: integer) :: any\n  def renew(token_id, current_time) do\n    \n  end\n\n  @spec count_unexpired_tokens(current_time :: integer) :: integer\n  def count_unexpired_tokens(current_time) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# AuthenticationManager.init_(time_to_live)\n# AuthenticationManager.generate(token_id, current_time)\n# AuthenticationManager.renew(token_id, current_time)\n# param_3 = AuthenticationManager.count_unexpired_tokens(current_time)\n\n# AuthenticationManager.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec authentication_manager_init_(TimeToLive :: integer()) -> any().\nauthentication_manager_init_(TimeToLive) ->\n  .\n\n-spec authentication_manager_generate(TokenId :: unicode:unicode_binary(), CurrentTime :: integer()) -> any().\nauthentication_manager_generate(TokenId, CurrentTime) ->\n  .\n\n-spec authentication_manager_renew(TokenId :: unicode:unicode_binary(), CurrentTime :: integer()) -> any().\nauthentication_manager_renew(TokenId, CurrentTime) ->\n  .\n\n-spec authentication_manager_count_unexpired_tokens(CurrentTime :: integer()) -> integer().\nauthentication_manager_count_unexpired_tokens(CurrentTime) ->\n  .\n\n\n%% Your functions will be called as such:\n%% authentication_manager_init_(TimeToLive),\n%% authentication_manager_generate(TokenId, CurrentTime),\n%% authentication_manager_renew(TokenId, CurrentTime),\n%% Param_3 = authentication_manager_count_unexpired_tokens(CurrentTime),\n\n%% authentication_manager_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define authentication-manager%\n  (class object%\n    (super-new)\n    \n    ; time-to-live : exact-integer?\n    (init-field\n      time-to-live)\n    \n    ; generate : string? exact-integer? -> void?\n    (define/public (generate token-id current-time)\n      )\n    ; renew : string? exact-integer? -> void?\n    (define/public (renew token-id current-time)\n      )\n    ; count-unexpired-tokens : exact-integer? -> exact-integer?\n    (define/public (count-unexpired-tokens current-time)\n      )))\n\n;; Your authentication-manager% object will be instantiated and called as such:\n;; (define obj (new authentication-manager% [time-to-live time-to-live]))\n;; (send obj generate token-id current-time)\n;; (send obj renew token-id current-time)\n;; (define param_3 (send obj count-unexpired-tokens current-time))"
+    }
+  ],
+  "solution": null
+}

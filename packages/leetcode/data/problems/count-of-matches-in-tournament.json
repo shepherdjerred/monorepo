@@ -1,0 +1,116 @@
+{
+  "questionId": "1806",
+  "questionFrontendId": "1688",
+  "title": "Count of Matches in Tournament",
+  "titleSlug": "count-of-matches-in-tournament",
+  "difficulty": "Easy",
+  "content": "<p>You are given an integer <code>n</code>, the number of teams in a tournament that has strange rules:</p>\n\n<ul>\n\t<li>If the current number of teams is <strong>even</strong>, each team gets paired with another team. A total of <code>n / 2</code> matches are played, and <code>n / 2</code> teams advance to the next round.</li>\n\t<li>If the current number of teams is <strong>odd</strong>, one team randomly advances in the tournament, and the rest gets paired. A total of <code>(n - 1) / 2</code> matches are played, and <code>(n - 1) / 2 + 1</code> teams advance to the next round.</li>\n</ul>\n\n<p>Return <em>the number of matches played in the tournament until a winner is decided.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 7\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> Details of the tournament: \n- 1st Round: Teams = 7, Matches = 3, and 4 teams advance.\n- 2nd Round: Teams = 4, Matches = 2, and 2 teams advance.\n- 3rd Round: Teams = 2, Matches = 1, and 1 team is declared the winner.\nTotal number of matches = 3 + 2 + 1 = 6.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 14\n<strong>Output:</strong> 13\n<strong>Explanation:</strong> Details of the tournament:\n- 1st Round: Teams = 14, Matches = 7, and 7 teams advance.\n- 2nd Round: Teams = 7, Matches = 3, and 4 teams advance.\n- 3rd Round: Teams = 4, Matches = 2, and 2 teams advance.\n- 4th Round: Teams = 2, Matches = 1, and 1 team is declared the winner.\nTotal number of matches = 7 + 3 + 2 + 1 = 13.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 200</code></li>\n</ul>\n",
+  "hints": [
+    "Simulate the tournament as given in the statement.",
+    "Be careful when handling odd integers."
+  ],
+  "metaData": "{\n  \"name\": \"numberOfMatches\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"321.9K\", \"totalSubmission\": \"372.6K\", \"totalAcceptedRaw\": 321859, \"totalSubmissionRaw\": 372591, \"acRate\": \"86.4%\"}",
+  "likes": 1882,
+  "dislikes": 248,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count Distinct Numbers on Board\", \"titleSlug\": \"count-distinct-numbers-on-board\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "7",
+    "14"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numberOfMatches(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numberOfMatches(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numberOfMatches(self, n: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numberOfMatches(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {number}\n */\nvar numberOfMatches = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numberOfMatches(n: number): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumberOfMatches(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\nint numberOfMatches(int n){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numberOfMatches(n int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numberOfMatches(n: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numberOfMatches(_ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn number_of_matches(n: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Integer}\ndef number_of_matches(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Integer\n     */\n    function numberOfMatches($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numberOfMatches(n: Int): Int = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "2188",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Simulate\n\n**Intuition**\n\nThe problem description describes what happens at each round:\n\n- If `n` is even, `n / 2` matches are played and `n / 2` teams play next round.\n- If `n` is odd, `(n - 1) / 2` matches are played and `(n - 1) / 2 + 1` teams play next round.\n\nWe can simply simulate the tournament according to the rules. We create a while loop that runs until `n = 1`.\n\nAt each iteration, we check if `n` is even or odd. If `n % 2 = 0`, then `n` is even. Otherwise, `n % 2 = 1` and `n` is odd. Here, `%` is the modulus operator.\n\nIf `n` is even, we add `n / 2` to our answer and set `n = n / 2`.\n\nIf `n` is odd, we add `(n - 1) / 2` to our answer and set `n = (n - 1) / 2 + 1`.\n\n**Algorithm**\n\n1. Initialize the answer `ans = 0`.\n2. While `n > 1`:\n    - If `n % 2 == 0`:\n        - Add `n / 2` to `ans`.\n        - Set `n` to `n / 2`.\n    - Else:\n        - Add `(n - 1) / 2` to `ans`.\n        - Set `n` to `(n - 1) / 2 + 1`.\n3. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/JQrHt2Ef/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"JQrHt2Ef\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(\\log{}n)$$\n\n    At each step in the while loop, we divide `n` or `n - 1` by two. `n` will reach `1` in approximately $$\\log_2{n}$$ steps. We perform $$O(1)$$ work at each step.\n\n* Space complexity: $$O(1)$$\n\n    We aren't using any extra space.\n    \n<br/>\n\n---\n\n### Approach 2: Logic\n\n**Intuition**\n\nInstead of simulating the entire tournament, here we will directly consider the beginning and end of the tournament.\n\nIn this tournament, when a team loses, they are eliminated and will no longer play any matches.\n\nThere are `n` teams, and `1` winner. Thus, `n - 1` teams will be eliminated.\n\nEach match is played between two teams. One team wins, one team loses. Thus, each match eliminates exactly one team.\n\nAs `n - 1` teams will be eliminated, there will be `n - 1` matches played, with each match eliminating a team.\n\n**Algorithm**\n\n1. Return `n - 1`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/6h7JPTr4/shared\" frameBorder=\"0\" width=\"100%\" height=\"157\" name=\"6h7JPTr4\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(1)$$\n\n* Space complexity: $$O(1)$$\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

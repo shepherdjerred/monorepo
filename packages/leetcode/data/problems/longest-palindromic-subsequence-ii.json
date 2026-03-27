@@ -1,0 +1,131 @@
+{
+  "questionId": "1822",
+  "questionFrontendId": "1682",
+  "title": "Longest Palindromic Subsequence II",
+  "titleSlug": "longest-palindromic-subsequence-ii",
+  "difficulty": "Medium",
+  "content": "<p>A subsequence of a string <code>s</code> is considered a <strong>good palindromic subsequence</strong> if:</p>\n\n<ul>\n\t<li>It is a subsequence of <code>s</code>.</li>\n\t<li>It is a palindrome (has the same value if reversed).</li>\n\t<li>It has an <strong>even</strong> length.</li>\n\t<li>No two consecutive characters are equal, except the two middle ones.</li>\n</ul>\n\n<p>For example, if <code>s = &quot;abcabcabb&quot;</code>, then <code>&quot;abba&quot;</code> is considered a <strong>good palindromic subsequence</strong>, while <code>&quot;bcb&quot;</code> (not even length) and <code>&quot;bbbb&quot;</code> (has equal consecutive characters) are not.</p>\n\n<p>Given a string <code>s</code>, return <em>the <strong>length</strong> of the <strong>longest good palindromic subsequence</strong> in </em><code>s</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;bbabab&quot;\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The longest good palindromic subsequence of s is &quot;baab&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;dcbccacdb&quot;\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The longest good palindromic subsequence of s is &quot;dccd&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 250</code></li>\n\t<li><code>s</code> consists of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "As with any good dp problem that uses palindromes, try building the palindrome from the edges",
+    "The prime point is to check that no two adjacent characters are equal, so save the past character while building the palindrome."
+  ],
+  "metaData": "{\n  \"name\": \"longestPalindromeSubseq\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"6.4K\", \"totalSubmission\": \"12.7K\", \"totalAcceptedRaw\": 6418, \"totalSubmissionRaw\": 12736, \"acRate\": \"50.4%\"}",
+  "likes": 158,
+  "dislikes": 30,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Longest Palindromic Subsequence\", \"titleSlug\": \"longest-palindromic-subsequence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"bbabab\"",
+    "\"dcbccacdb\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int longestPalindromeSubseq(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int longestPalindromeSubseq(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def longestPalindromeSubseq(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def longestPalindromeSubseq(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar longestPalindromeSubseq = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function longestPalindromeSubseq(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int LongestPalindromeSubseq(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int longestPalindromeSubseq(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func longestPalindromeSubseq(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun longestPalindromeSubseq(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func longestPalindromeSubseq(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn longest_palindrome_subseq(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef longest_palindrome_subseq(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function longestPalindromeSubseq($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int longestPalindromeSubseq(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def longestPalindromeSubseq(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec longest_palindrome_subseq(s :: String.t) :: integer\n  def longest_palindrome_subseq(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec longest_palindrome_subseq(S :: unicode:unicode_binary()) -> integer().\nlongest_palindrome_subseq(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (longest-palindrome-subseq s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

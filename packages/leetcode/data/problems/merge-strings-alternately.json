@@ -1,0 +1,121 @@
+{
+  "questionId": "1894",
+  "questionFrontendId": "1768",
+  "title": "Merge Strings Alternately",
+  "titleSlug": "merge-strings-alternately",
+  "difficulty": "Easy",
+  "content": "<p>You are given two strings <code>word1</code> and <code>word2</code>. Merge the strings by adding letters in alternating order, starting with <code>word1</code>. If a string is longer than the other, append the additional letters onto the end of the merged string.</p>\r\n\r\n<p>Return <em>the merged string.</em></p>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong class=\"example\">Example 1:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> word1 = &quot;abc&quot;, word2 = &quot;pqr&quot;\r\n<strong>Output:</strong> &quot;apbqcr&quot;\r\n<strong>Explanation:</strong>&nbsp;The merged string will be merged as so:\r\nword1:  a   b   c\r\nword2:    p   q   r\r\nmerged: a p b q c r\r\n</pre>\r\n\r\n<p><strong class=\"example\">Example 2:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> word1 = &quot;ab&quot;, word2 = &quot;pqrs&quot;\r\n<strong>Output:</strong> &quot;apbqrs&quot;\r\n<strong>Explanation:</strong>&nbsp;Notice that as word2 is longer, &quot;rs&quot; is appended to the end.\r\nword1:  a   b \r\nword2:    p   q   r   s\r\nmerged: a p b q   r   s\r\n</pre>\r\n\r\n<p><strong class=\"example\">Example 3:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> word1 = &quot;abcd&quot;, word2 = &quot;pq&quot;\r\n<strong>Output:</strong> &quot;apbqcd&quot;\r\n<strong>Explanation:</strong>&nbsp;Notice that as word1 is longer, &quot;cd&quot; is appended to the end.\r\nword1:  a   b   c   d\r\nword2:    p   q \r\nmerged: a p b q c   d\r\n</pre>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong>Constraints:</strong></p>\r\n\r\n<ul>\r\n\t<li><code>1 &lt;= word1.length, word2.length &lt;= 100</code></li>\r\n\t<li><code>word1</code> and <code>word2</code> consist of lowercase English letters.</li>\r\n</ul>",
+  "hints": [
+    "Use two pointers, one pointer for each string. Alternately choose the character from each pointer, and move the pointer upwards."
+  ],
+  "metaData": "{\n  \"name\": \"mergeAlternately\",\n  \"params\": [\n    {\n      \"name\": \"word1\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"word2\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"2M\", \"totalSubmission\": \"2.5M\", \"totalAcceptedRaw\": 2022163, \"totalSubmissionRaw\": 2463184, \"acRate\": \"82.1%\"}",
+  "likes": 4917,
+  "dislikes": 144,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Zigzag Iterator\", \"titleSlug\": \"zigzag-iterator\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Additions to Make Valid String\", \"titleSlug\": \"minimum-additions-to-make-valid-string\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"abc\"\n\"pqr\"",
+    "\"ab\"\n\"pqrs\"",
+    "\"abcd\"\n\"pq\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 12, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 3, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"wells-fargo\", \"name\": \"Wells Fargo\"}]}",
+  "topicTags": [
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string mergeAlternately(string word1, string word2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String mergeAlternately(String word1, String word2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def mergeAlternately(self, word1: str, word2: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def mergeAlternately(self, word1, word2):\n        \"\"\"\n        :type word1: str\n        :type word2: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} word1\n * @param {string} word2\n * @return {string}\n */\nvar mergeAlternately = function(word1, word2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function mergeAlternately(word1: string, word2: string): string {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string MergeAlternately(string word1, string word2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\nchar * mergeAlternately(char * word1, char * word2){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func mergeAlternately(word1 string, word2 string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun mergeAlternately(word1: String, word2: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func mergeAlternately(_ word1: String, _ word2: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn merge_alternately(word1: String, word2: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} word1\n# @param {String} word2\n# @return {String}\ndef merge_alternately(word1, word2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $word1\n     * @param String $word2\n     * @return String\n     */\n    function mergeAlternately($word1, $word2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def mergeAlternately(word1: String, word2: String): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (merge-alternately word1 word2)\n  (-> string? string? string?)\n\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1801",
+    "content": "[TOC]\n\n## Video Solution\n\n---\n <div>\n    <div class=\"video-container\">\n      <iframe src=\"https://player.vimeo.com/video/875703766?texttrack=en-x-autogenerated\" frameborder=\"0\"\n        allow=\"autoplay; fullscreen\"></iframe>\n    </div>\n</div>\n\n## Solution\n\n---\n\n### Overview\n\nWe are given two strings `word1` and `word2`. \n\nOur task is to merge the strings by adding letters in alternating order, starting with `word1`. If one string is longer than the other, the additional letters must be appended to the end of the merged string.\n\nWe must return the merged string that has been formed.\n\n---\n\n### Approach 1: Two Pointers\n\n#### Intuition\n\nThere are numerous ways in which we can combine the given strings. We've covered a few of them in this article.\n\nAn intuitive method is to use two pointers to iterate over both strings. Assume we have two pointers, `i` and `j`, with `i` pointing to the first letter of `word1` and `j` pointing to the first letter of `word2`. We also create an empty string `result` to store the outcome.\n\nWe append the letter pointed to by pointer `i` i.e., `word1[i]`, and increment `i` by `1` to point to the next letter of `word1`. Because we need to add the letters in alternating order, next we append `word2[j]` to `result`. We also increase `j` by `1`.\n\nWe continue iterating over the given strings until both are exhausted. We stop appending letters from `word1` when `i` reaches the end of `word1`, and we stop appending letters from `word2'` when `j` reaches the end of `word2`.\n\nHere's a visual representation of how the approach works in the second example given in the problem description:\n\n!?!../Documents/1768/1768-slides.json:601,301!?!\n\n#### Algorithm\n\n1. Create two variables, `m` and `n`, to store the length of `word1` and `word2`.\n2. Create an empty string variable `result` to store the result of merged words.\n3. Create two pointers, `i` and `j` to point to indices of `word1` and `word2`. We initialize both of them to `0`.\n4. While `i < m || j < n`:\n    - If `i < m`, it means that we have not completely traversed `word1`. As a result, we append `word1[i]` to `result`. We increment `i` to point to next index of `word1`.\n    - If `j < n`, it means that we have not completely traversed `word2`. As a result, we append `word2[j]` to `result`. We increment `j` to point to next index of `word2`.\n5. Return `result`.\n\nIt is important to note how we form the `result` string in the following codes:\n    - `cpp`: The strings are mutable in cpp, which means they can be changed. As a result, we used the `string` variable and performed all operations on it. It takes constant time to append a character to the string.\n    - `java`: The `String` class is immutable in java. So we used the mutable `StringBuilder` to concatenate letters to `result`.\n    - `python`: Strings are immutable in python as well. As a result, we used the list `result` to append letters and later joined the list with an empty string to return it as a string object. The `join` operation takes linear time equal to the length of `result` to merge `result` with empty string. \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/fLy387Q8/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"fLy387Q8\"></iframe>\n\n#### Complexity Analysis\n\nHere, $m$ is the length of `word1` and $n$ is the length of `word2`.\n\n* Time complexity: $O(m + n)$\n\n    - We iterate over `word1` and `word2` once and push their letters into `result`. It would take $O(m + n)$ time.\n\n* Space complexity: $O(1)$ or $O(m + n)$\n\n    - Without considering the space consumed by the input strings (`word1` and `word2`) and the output string (`result`), we do not use more than constant space.\n\n> In Java, the `StringBuilder` requires $O(n + m)$ space to store the merged result. Thus, while auxiliary space is $O(1)$, total space complexity is $O(n + m)$.\n\n---\n\n### Approach 2: One Pointer\n\n#### Intuition\n\nTo merge the given words, we can also use a single pointer.\n\nLet `i` be the pointer that we'll use. We begin with `i = 0` and progress to the size of the longer word between `word1` and `word2`, i.e., till `i = max(word1.length(), word2.length())`.\n\nAs we progress to the size of a longer word, we check each time if `i` points to an index that is in bounds of the words or not. If `i < word1.length()`, we append `word1[i]` to `result`. Similarly if `i < word2.length()`, we append `word2[i]` to results. \n\nHowever, if `i` exceeds the length of any word, we don't have any letters to add from that word, so we ignore it and continue adding the letter from the longer word.\n\n#### Algorithm\n\n1. Create two variables, `m` and `n`, to store the length of `word1` and `word2`.\n2. Create an empty string variable `result` to store the result of merged words.\n3. Iterate over `word1` and `word2` using a loop running from `i = 0` to `i < max(m, n)` and keep incrementing `i` by `1` after each iteration:\n    - If `i < m`, it means that we have not completely traversed `word1`. As a result, we append `word1[i]` to `result`.\n    - If `i < n`, it means that we have not completely traversed `word2`. As a result, we append `word2[i]` to `result`.\n4. Return `result`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/afgSid65/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"afgSid65\"></iframe>\n\n#### Complexity Analysis\n\nHere, $m$ is the length of `word1` and $n$ is the length of `word2`.\n\n* Time complexity: $O(m + n)$\n\n    - We iterate over `word1` and `word2` once pushing their letters into `result`. It would take $O(m + n)$ time.\n\n* Space complexity: $O(1)$\n\n    - Without considering the space consumed by the input strings (`word1` and `word2`) and the output string (`result`), we do not use more than constant space.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

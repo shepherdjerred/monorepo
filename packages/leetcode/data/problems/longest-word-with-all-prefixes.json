@@ -1,0 +1,145 @@
+{
+  "questionId": "2009",
+  "questionFrontendId": "1858",
+  "title": "Longest Word With All Prefixes",
+  "titleSlug": "longest-word-with-all-prefixes",
+  "difficulty": "Medium",
+  "content": "<p>Given an array of strings <code>words</code>, find the <strong>longest</strong> string in <code>words</code> such that <strong>every prefix</strong> of it is also in <code>words</code>.</p>\n\n<ul>\n\t<li>For example, let <code>words = [&quot;a&quot;, &quot;app&quot;, &quot;ap&quot;]</code>. The string <code>&quot;app&quot;</code> has prefixes <code>&quot;ap&quot;</code> and <code>&quot;a&quot;</code>, all of which are in <code>words</code>.</li>\n</ul>\n\n<p>Return <em>the string described above. If there is more than one string with the same length, return the <strong>lexicographically smallest</strong> one, and if no string exists, return </em><code>&quot;&quot;</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;k&quot;,&quot;ki&quot;,&quot;kir&quot;,&quot;kira&quot;, &quot;kiran&quot;]\n<strong>Output:</strong> &quot;kiran&quot;\n<strong>Explanation:</strong> &quot;kiran&quot; has prefixes &quot;kira&quot;, &quot;kir&quot;, &quot;ki&quot;, and &quot;k&quot;, and all of them appear in words.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;a&quot;, &quot;banana&quot;, &quot;app&quot;, &quot;appl&quot;, &quot;ap&quot;, &quot;apply&quot;, &quot;apple&quot;]\n<strong>Output:</strong> &quot;apple&quot;\n<strong>Explanation:</strong> Both &quot;apple&quot; and &quot;apply&quot; have all their prefixes in words.\nHowever, &quot;apple&quot; is lexicographically smaller, so we return that.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;abc&quot;, &quot;bc&quot;, &quot;ab&quot;, &quot;qwe&quot;]\n<strong>Output:</strong> &quot;&quot;\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= words.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= words[i].length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= sum(words[i].length) &lt;= 10<sup>5</sup></code></li>\n\t<li><code>words[i]</code> consists only of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Add all the words to a trie.",
+    "Check the longest path where all the nodes are words."
+  ],
+  "metaData": "{\n  \"name\": \"longestWord\",\n  \"params\": [\n    {\n      \"name\": \"words\",\n      \"type\": \"string[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"14.5K\", \"totalSubmission\": \"20.1K\", \"totalAcceptedRaw\": 14462, \"totalSubmissionRaw\": 20071, \"acRate\": \"72.1%\"}",
+  "likes": 204,
+  "dislikes": 7,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Longest Word in Dictionary\", \"titleSlug\": \"longest-word-in-dictionary\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"k\",\"ki\",\"kir\",\"kira\",\"kiran\"]",
+    "[\"a\",\"banana\",\"app\",\"appl\",\"ap\",\"apply\",\"apple\"]",
+    "[\"abc\",\"bc\",\"ab\",\"qwe\"]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Trie",
+      "slug": "trie"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string longestWord(vector<string>& words) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String longestWord(String[] words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def longestWord(self, words: List[str]) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def longestWord(self, words):\n        \"\"\"\n        :type words: List[str]\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} words\n * @return {string}\n */\nvar longestWord = function(words) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function longestWord(words: string[]): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string LongestWord(string[] words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* longestWord(char** words, int wordsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func longestWord(words []string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun longestWord(words: Array<String>): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func longestWord(_ words: [String]) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn longest_word(words: Vec<String>) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} words\n# @return {String}\ndef longest_word(words)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $words\n     * @return String\n     */\n    function longestWord($words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String longestWord(List<String> words) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def longestWord(words: Array[String]): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec longest_word(words :: [String.t]) :: String.t\n  def longest_word(words) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec longest_word(Words :: [unicode:unicode_binary()]) -> unicode:unicode_binary().\nlongest_word(Words) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (longest-word words)\n  (-> (listof string?) string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2441",
+    "content": "[TOC]\n\n## Solution\n    \n---\n\n### Approach 1: Hash Set\n\n#### Intuition\n\nThe brute force method for checking if a word contains all its prefixes involves testing each prefix against the `words` array. This method has two major inefficiencies:\n\n1. Searching through the `words` array repeatedly to see if a word exists is slow.\n2. Checking every prefix of a word leads to a quadratic time complexity, which is unsuitable for our constraints.\n\nTo improve this, we need to streamline the checking process. Hash sets are a good solution as they provide constant time lookups. If you’re not familiar with hash sets, you can review this LeetCode [Explore Card](https://leetcode.com/explore/learn/card/hash-table/183/combination-with-other-algorithms/).\n\nNext, we should sort the `words` array lexicographically. This sorting ensures that as we process each word, we’ve already seen all shorter words, which helps us determine if any prefix exists.\n\nAnother key improvement is that if a word’s prefix up to the second-to-last letter is valid (meaning all its own prefixes are present), the entire word is valid. This means we don't need to check all prefixes of a word; we only need to verify whether its immediate prefix exists in `words` and is itself valid.\n\nTo apply this, we use the hash set to store valid words. As we process each word, we check if its immediate prefix is in the hash set. If it is, the word is valid and we add it to the hash set. We keep track of the longest valid word found so far with the variable `longestValidWord`. During our scan, if we find a longer valid word, it replaces the current `longestValidWord`. If a valid word has the same length as `longestValidWord`, we do not replace it, as the initial sorting ensures that the lexicographically smallest word is already stored.\n\nAt the end of our iteration, `longestValidWord` will be the longest word that contains all its prefixes present in the array.\n\n#### Algorithm\n\n- Sort the input array `words` lexicographically in ascending order.\n- Initialize a hash set `validWords` to store the valid words during iteration.\n- Initialize a String variable `longestValidWord` to an empty string.\n- Iterate through each word in the sorted `words` array:\n  - Check if the current word's length is `1` or if its prefix exists in `validWords`.\n  - If either condition is `true`, add the current word to `validWords`.\n  - If the length of the current word is greater than the length of `longestValidWord`, update `longestValidWord` to the current word.\n- Return `longestValidWord` as the result.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/mQChP4fL/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"mQChP4fL\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the `words` array and $l$ be the length of the longest word.\n\n- Time complexity: $O(l \\cdot n \\cdot \\log n)$\n\n    Sorting the array takes $O(l \\cdot n \\cdot \\log n)$ time. The $l$ is due to the string comparisons during sorting.\n    \n    The algorithm iterates through the `words` array in linear time. For each word, the substring and set operations take $O(l)$ time.\n\n    Thus, the overall time complexity of the algorithm is $O(l \\cdot n \\cdot \\log n + n \\cdot l) = O(l \\cdot n \\cdot \\log n)$.\n\n- Space complexity: $O(n \\cdot l + S)$\n\n    In the worst case, the hash set can store all the words in the `words` array. If the length of the longest word is $l$, the space taken by the hash set is $O(n \\cdot l)$.\n\n    The space taken by the sorting algorithm ($S$) depends on the language of implementation:\n    - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n)$.\n    - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worst-case space complexity of $O(\\log n)$.\n    - In Python, the `sort()` method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has a space complexity of $O(n)$.\n\n---\n\n### Approach 2: Trie\n\n#### Intuition\n\nA Trie, or prefix tree, is a useful data structure for storing and searching strings. In a Trie, each node represents a character, and the path from the root to a node represents a string prefix. This makes it efficient for checking prefixes. By building a Trie from our list of words, we can quickly verify if a word has all its prefixes in the original array. To learn more about Tries and how they are implemented, check out this LeetCode [Explore Card](https://leetcode.com/explore/learn/card/trie/). For those who haven't implemented a Trie before, solving the [Implement Trie (Prefix Tree)](https://leetcode.com/problems/implement-trie-prefix-tree/description/) problem would be an excellent starting point before tackling this challenge. \n\nIn this discussion, we'll focus on how to leverage a Trie in our approach rather than delving into the details of Trie insertion, which are common across Trie problems. Our strategy using a Trie involves two main steps: building the Trie and then utilizing it to find our answer.\n\nThe first step is building a Trie from the input array of words. As we insert each word, we mark its final character to indicate the end of a word. This lets us differentiate between complete words and mere prefixes of longer words.\n\nHere's how the Trie would look for Example 2 of the problem description:\n\n![](../Figures/1858/trie.png)\n\nNext, we create a `hasAllPrefixes` method in the Trie. This method will check whether a word has all its prefixes as individual words in the Trie. For each character in the word, we check if the corresponding node in the Trie marks the end of a word. If it does, that prefix exists as a complete word. We continue checking each character until we’ve processed the entire word.\n\nAs we go through the list of words, we use a variable `longestValidWord` to track the longest valid word we've found. Once we’ve checked every word in the array using the Trie, `longestValidWord` will hold the longest word that has all its prefixes present in the array.\n\n#### Algorithm\n\nMain method `longestWord`:\n\n- Initialize a Trie data structure `trie`.\n- Initialize a String variable `longestValidWord` to an empty string.\n- Insert all words from the input array into the Trie.\n- Iterate through each word in the input `words` array:\n  - Check if all prefixes of the current word exist in the Trie using the `hasAllPrefixes` method.\n  - If all prefixes exist, compare the current word with `longestValidWord`:\n    - If the current word is longer, update `longestValidWord`.\n    - If the lengths are equal, update `longestValidWord` if the current word is lexicographically smaller.\n- Return `longestValidWord` as the result.\n\nHelper class `Trie`:\n\n- Define a nested `TrieNode` class:\n  - Initialize a `TrieNode` array `children` of size 26 for each lowercase letter.\n  - Initialize a boolean variable`isEndOfWord` to mark complete words.\n\n- Initialize a `TrieNode` as the `root` of the Trie.\n\n- Implement the `insert` method in the `Trie` class:\n  - Start from the `root` node.\n  - For each character in the word:\n    - Calculate the index based on the character.\n    - If no `TrieNode` exists at this index in the current node's `children` array, create a new `TrieNode`.\n    - Move to the `TrieNode` at the index.\n  - Mark the last node as the end of a word.\n\n- Implement the `hasAllPrefixes` method in the `Trie` class:\n  - Start from the `root` node.\n  - For each character in the word:\n    - Move to the corresponding child node.\n    - If the node doesn't exist or is not marked as the end of a word, return `false`.\n  - Return `true` if all prefixes exist and are valid words.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/iak4i5Wt/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"iak4i5Wt\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the `words` array and $l$ be the length of the longest word.\n\n* Time complexity: $O(n \\cdot l)$\n\n    The algorithm iterates over all the words and inserts each one into the Trie. The time complexity for this part is $O(n \\cdot l)$.\n\n    To find the longest word, the algorithm iterates over each word again, taking $O(n)$ time. For each word, it does a running check on all its prefixes, which takes $O(l)$ time. So, the time taken to check all prefixes is $O(n \\cdot l)$.\n\n    Thus, the overall time complexity of the algorithm is $2 \\cdot O(n \\cdot l) = O(n \\cdot l)$. \n\n* Space complexity: $O(n \\cdot l)$\n\n    In the worst case, when all words are unique and have no common prefixes, we can have up to $n \\cdot l$ nodes. Each node has an array of $26$ pointers and a boolean flag. Thus, the total space complexity of the algorithm is $O(26 \\cdot n \\cdot l) = O(n \\cdot l)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

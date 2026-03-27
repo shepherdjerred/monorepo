@@ -1,0 +1,140 @@
+{
+  "questionId": "2067",
+  "questionFrontendId": "1937",
+  "title": "Maximum Number of Points with Cost",
+  "titleSlug": "maximum-number-of-points-with-cost",
+  "difficulty": "Medium",
+  "content": "<p>You are given an <code>m x n</code> integer matrix <code>points</code> (<strong>0-indexed</strong>). Starting with <code>0</code> points, you want to <strong>maximize</strong> the number of points you can get from the matrix.</p>\n\n<p>To gain points, you must pick one cell in <strong>each row</strong>. Picking the cell at coordinates <code>(r, c)</code> will <strong>add</strong> <code>points[r][c]</code> to your score.</p>\n\n<p>However, you will lose points if you pick a cell too far from the cell that you picked in the previous row. For every two adjacent rows <code>r</code> and <code>r + 1</code> (where <code>0 &lt;= r &lt; m - 1</code>), picking cells at coordinates <code>(r, c<sub>1</sub>)</code> and <code>(r + 1, c<sub>2</sub>)</code> will <strong>subtract</strong> <code>abs(c<sub>1</sub> - c<sub>2</sub>)</code> from your score.</p>\n\n<p>Return <em>the <strong>maximum</strong> number of points you can achieve</em>.</p>\n\n<p><code>abs(x)</code> is defined as:</p>\n\n<ul>\n\t<li><code>x</code> for <code>x &gt;= 0</code>.</li>\n\t<li><code>-x</code> for <code>x &lt; 0</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong><strong> </strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/07/12/screenshot-2021-07-12-at-13-40-26-diagram-drawio-diagrams-net.png\" style=\"width: 300px; height: 300px;\" />\n<pre>\n<strong>Input:</strong> points = [[1,2,3],[1,5,1],[3,1,1]]\n<strong>Output:</strong> 9\n<strong>Explanation:</strong>\nThe blue cells denote the optimal cells to pick, which have coordinates (0, 2), (1, 1), and (2, 0).\nYou add 3 + 5 + 3 = 11 to your score.\nHowever, you must subtract abs(2 - 1) + abs(1 - 0) = 2 from your score.\nYour final score is 11 - 2 = 9.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/07/12/screenshot-2021-07-12-at-13-42-14-diagram-drawio-diagrams-net.png\" style=\"width: 200px; height: 299px;\" />\n<pre>\n<strong>Input:</strong> points = [[1,5],[2,3],[4,2]]\n<strong>Output:</strong> 11\n<strong>Explanation:</strong>\nThe blue cells denote the optimal cells to pick, which have coordinates (0, 1), (1, 1), and (2, 0).\nYou add 5 + 3 + 4 = 12 to your score.\nHowever, you must subtract abs(1 - 1) + abs(1 - 0) = 1 from your score.\nYour final score is 12 - 1 = 11.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == points.length</code></li>\n\t<li><code>n == points[r].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= m * n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= points[r][c] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Try using dynamic programming.",
+    "dp[i][j] is the maximum number of points you can have if points[i][j] is the most recent cell you picked."
+  ],
+  "metaData": "{\n  \"name\": \"maxPoints\",\n  \"params\": [\n    {\n      \"name\": \"points\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"158.1K\", \"totalSubmission\": \"378.2K\", \"totalAcceptedRaw\": 158067, \"totalSubmissionRaw\": 378247, \"acRate\": \"41.8%\"}",
+  "likes": 3264,
+  "dislikes": 242,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Path Sum\", \"titleSlug\": \"minimum-path-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimize the Difference Between Target and Chosen Elements\", \"titleSlug\": \"minimize-the-difference-between-target-and-chosen-elements\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,2,3],[1,5,1],[3,1,1]]",
+    "[[1,5],[2,3],[4,2]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long maxPoints(vector<vector<int>>& points) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long maxPoints(int[][] points) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxPoints(self, points: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxPoints(self, points):\n        \"\"\"\n        :type points: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} points\n * @return {number}\n */\nvar maxPoints = function(points) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxPoints(points: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long MaxPoints(int[][] points) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long maxPoints(int** points, int pointsSize, int* pointsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxPoints(points [][]int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxPoints(points: Array<IntArray>): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxPoints(_ points: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_points(points: Vec<Vec<i32>>) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} points\n# @return {Integer}\ndef max_points(points)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $points\n     * @return Integer\n     */\n    function maxPoints($points) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxPoints(List<List<int>> points) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxPoints(points: Array[Array[Int]]): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_points(points :: [[integer]]) :: integer\n  def max_points(points) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_points(Points :: [[integer()]]) -> integer().\nmax_points(Points) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-points points)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2406",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nOur goal with this problem is to determine the maximum number of points we can get by picking one cell from each row of a given matrix.  The possible score for each row consist of two components:\n1. The point value of the selected cell.\n2. A penalty equal to the horizontal distance between the current cell and the selected cell in the previous row.\n\n\nThe problem constraints hint that an efficient solution is needed. Specifically, since the problem is constrained by $m \\times n \\leq 10 ^ 5$, we should aim for an $O(m \\times n)$ solution.\n\nIn a brute-force approach, the idea would be to explore every possible combination of selecting one element from each row. Starting with the first row, we'd pick an element, then move to the next row and try every possible element there, repeating this process until we've chosen an element from each row. For each of these combinations, we would calculate the sum of the selected elements while also accounting for the cost incurred when switching columns between consecutive rows. \n\nThis approach involves using nested loops to compare every possible cell in each row, resulting in an exponential number of possibilities. As the number of rows and columns increases, the number of potential paths grows rapidly, making this method computationally infeasible for large grids. Instead, we need to optimize how we transition from one row to the next while keeping track of the maximum points we can accumulate.\n\nBefore attempting this problem, it may be helpful to solve related problems like \"[121. Best Time to Buy and Sell Stock](https://leetcode.com/problems/best-time-to-buy-and-sell-stock/description/)\" and \"[1014. Best Sightseeing Pair](https://leetcode.com/problems/best-sightseeing-pair/description/).\" These problems involve similar concepts of optimizing a series of decisions or transitions, which is a key aspect of solving the matrix points problem efficiently. Understanding the strategies used in those problems will build a foundation for approaching this one.\n    \n---\n\n### Approach 1: Dynamic Programming\n\n#### Intuition\n\nOur goal is to create a solution that efficiently finds the maximum points possible while moving from the top row to the bottom row of the matrix. To do this, we initialize an array called `previousRow` with the values of the first row of the matrix. We can then operate off this array to build another array, `currentRow`. Each element in `currentRow` will represent the number of points we can gain by picking that cell, taking into account both the point value of the cell and the penalty for choosing it.\n\t\nA straightforward approach to build `currentRow` would be to iterate over all cells in `previousRow` and apply the penalty for the horizontal distance:\n\n```\n// For the Xth and (X+1)th rows of the points matrix\ncurrentRow[i] = max(previousRow[j] - abs(j - i) for j in range(n)) + points[X+1][i]\n```\n\nSince this approach directly checks every cell in `previousRow` for each cell in `currentRow`, it involves repeated and redundant calculations and has a time complexity of $O(n^2)$ for each row, where $n$ is the number of columns. Given that we need to repeat this process for every row, this solution would not meet the problem's constraints, especially for large matrices.\n\nInstead of recalculating the possible scores from every cell in `previousRow` for each cell in `currentRow`, we can use two auxiliary arrays, `leftMax` and `rightMax`, to store the maximum possible contributions from the left and right, respectively. This allows us to simply compare these two precomputed values to determine the best score for each cell in `currentRow`.\n\n\nTo construct `leftMax`:\n1. Set `leftMax[0]` equal to `previousRow[0]`, as there are no values to its left.\n2. For each subsequent index `i`, compute `leftMax[i]` as the maximum of `previousRow[i]` and `leftMax[i-1] - 1`. The subtraction accounts for the penalty incurred when moving horizontally to the next cell.\n\nHave a look at this slideshow to better understand how each cell in `leftMax` is populated:\n\n!?!../Documents/1937/slideshow.json:1482,762!?!\n\nSimilarly, construct `rightMax` by iterating from right to left.\n\nWith `leftMax` and `rightMax` prepared, we can compute the maximum points for each cell in `currentRow` using:\n\n```\ncurrentRow[i] = max(leftMax[i], rightMax[i]) + points[X+1][i]\n```\n\nThis allows us to efficiently calculate the maximum points for each row in $O(n)$ time, making the overall time complexity $O(m \\times n)$, where $m$ is the number of rows.\n\nWe apply this optimized process iteratively from the first row to the last row of the matrix. After processing all rows, the array `previousRow` will contain the maximum possible points for each cell in the last row. The final answer is the maximum value found in this array, which represents the highest score achievable while moving from the top to the bottom of the matrix.\n\n#### Algorithm\n\n- Set `rows` and `cols` as the number of rows and columns in the input matrix `points`.\n- Create an array `previousRow`. Initialize it with values of the first row of the input matrix.\n- Iterate from the `0`th to `rows-2`th row. For each `row`:\n  - Initialize arrays:\n    - `leftMax`: for maximum points achievable from left to right.\n    - `rightMax`: for maximum points achievable from right to left.\n    - `currentRow`: for the maximum points achievable for each cell in the current row.\n  - Set the first element of `leftMax` to the first element of `previousRow`.\n  - Loop `col` from `1` to the end of `cols`:\n    - Set `leftMax[col]` to the maximum of `leftMax[col - 1] - 1` and `previousRow[col]`.\n  - Set the last element of `rightMax` to the last element of `previousRow`.\n  - Loop `col` from `cols - 2` to `0`:\n    - Set `rightMax[col]` to the maximum of `rightMax[col + 1] - 1` and `previousRow[col]`.\n  - Loop `col` from `0` to the end of `cols`:\n    - Calculate the maximum points for each cell in the current row:\n      1. Take the value from `points` for the next row (`points[row + 1][col]`).\n      2. Add the maximum of `leftMax[col]` and `rightMax[col]` to it.\n    - Set the calculated value to `currentRow[col]`.\n  - Update `previousRow` to be `currentRow`.\n- Initialize a variable `maxPoints` to store the overall maximum points.\n- Loop through all values of `previousRow` and set `maxPoints` to the maximum.\n- Return `maxPoints` as our answer.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Pkt9v2VS/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Pkt9v2VS\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ and $n$ be the height and width of `points`.\n\n- Time complexity: $O(m \\cdot n)$\n\n    The outer loop runs $m-1$ times. Inside it, two inner loops run $n-1$ times and another one runs $n$ times. Thus, the overall time complexity is $O((m-1) \\cdot (n-1 + n-1 + n))$, which simplifies to $O(m \\cdot n)$.\n\n- Space complexity: $O(n)$\n\n    We use four additional arrays, each of which takes $n$ space. All other variables take constant space.\n\n    Thus, the space complexity is $O(4 \\cdot n) = O(n)$.\n\n---\n\n### Approach 2: Dynamic Programming (Optimized)\n\n#### Intuition\n\nIn the previous approach, we used auxiliary arrays to keep track of the maximum points achievable from the left and right directions. This time, we streamline the process by using the `previousRow` array itself as temporary storage for the left-side maximums and then update it with the right-side maximums in a single pass. \n\nThus, we will require two passes to do this.\n \n1. First Pass: Left-to-Right Sweep\nWe begin by iterating through the row from left to right. As we move, we store the maximum points achievable from the left in the `previousRow` array. This step essentially builds the equivalent of the `leftMax` array directly within `previousRow`.\n\n- At the start, `runningMax` is initialized to `0`. At the beginning of each iteration, `runningMax` will hold the maximum value that can be achieved from the left till `i-1`.\n- For each cell `i`, we update `runningMax` to the maximum of `previousRow[i]` and `runningMax - 1`, where the subtraction accounts for the horizontal distance penalty.\n\nThis process ensures that `previousRow[i]` contains the maximum points that can be accumulated when moving from the left to the `i`th cell.\n\n1. Second Pass: Right-to-Left Sweep\nNext, we perform a second loop, this time iterating from right to left. This pass starts from the right and combines the results from the left-to-right pass with the maximum values from the right.\n\n- We reset `runningMax` to `0` before starting this pass. Similar to the left-to-right pass, we update `runningMax` for each column.\n- We take the maximum of the current `previousRow[col]` (which now contains the best value from the left) and the new `runningMax` (best value from the right).\n- We add `row[col]` to this maximum, incorporating the points from the current cell in the current row.\n\nAfter processing all rows, the array `previousRow` (which now holds the updated values) will contain the maximum points that can be accumulated for each cell in the last row of the matrix. The maximum value in this array is our final answer, representing the highest possible score from the top to the bottom of the matrix.\n\n#### Algorithm\n \n- Set `cols` as the number of columns in `points`.\n- Create an array `previousRow` of size `cols`.\n- Iterate through each `row` in the `points` matrix:\n  - Initialize a variable `runningMax` to `0`.\n  - Iterate `col` from `0` to `cols-1`:\n    - Update `runningMax` to the maximum of `runningMax - 1` and `previousRow[col]`.\n    - Set `previousRow[col]` equal to `runningMax`.\n  - Now, iterate `col` in the reverse order:\n    - Update `runningMax` to the maximum of `runningMax - 1` and `previousRow[col]`.\n    - Update `previousRow[col]` by taking the maximum of its current value and `runningMax`, then add the current cell's value.\n- Loop through all values of `previousRow` and set `maxPoints` to the maximum.\n- Return `maxPoints`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/myUZqkTc/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"myUZqkTc\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ and $n$ be the height and width of `points`.\n\n* Time complexity: $O(m \\cdot n)$\n\n    The main loop iterates through each row of `points`. Inside this loop, the algorithm uses two nested loops, each iterating $n$ times. Overall, this takes $O(m \\cdot n)$ time.\n\n    The final loop to find the maximum points also iterates $n$ times.\n\n    Thus, the total time complexity of the algorithm is $O(m \\cdot n) + O(n) = O(m \\cdot n)$.\n\n* Space complexity: $O(n)$\n\n    The algorithm uses an array `previousRow` of length $n$. Thus, the space complexity of the algorithm is $O(n)$. \n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,147 @@
+{
+  "questionId": "2023",
+  "questionFrontendId": "1912",
+  "title": "Design Movie Rental System",
+  "titleSlug": "design-movie-rental-system",
+  "difficulty": "Hard",
+  "content": "<p>You have a movie renting company consisting of <code>n</code> shops. You want to implement a renting system that supports searching for, booking, and returning movies. The system should also support generating a report of the currently rented movies.</p>\n\n<p>Each movie is given as a 2D integer array <code>entries</code> where <code>entries[i] = [shop<sub>i</sub>, movie<sub>i</sub>, price<sub>i</sub>]</code> indicates that there is a copy of movie <code>movie<sub>i</sub></code> at shop <code>shop<sub>i</sub></code> with a rental price of <code>price<sub>i</sub></code>. Each shop carries <strong>at most one</strong> copy of a movie <code>movie<sub>i</sub></code>.</p>\n\n<p>The system should support the following functions:</p>\n\n<ul>\n\t<li><strong>Search</strong>: Finds the <strong>cheapest 5 shops</strong> that have an <strong>unrented copy</strong> of a given movie. The shops should be sorted by <strong>price</strong> in ascending order, and in case of a tie, the one with the <strong>smaller </strong><code>shop<sub>i</sub></code> should appear first. If there are less than 5 matching shops, then all of them should be returned. If no shop has an unrented copy, then an empty list should be returned.</li>\n\t<li><strong>Rent</strong>: Rents an <strong>unrented copy</strong> of a given movie from a given shop.</li>\n\t<li><strong>Drop</strong>: Drops off a <strong>previously rented copy</strong> of a given movie at a given shop.</li>\n\t<li><strong>Report</strong>: Returns the <strong>cheapest 5 rented movies</strong> (possibly of the same movie ID) as a 2D list <code>res</code> where <code>res[j] = [shop<sub>j</sub>, movie<sub>j</sub>]</code> describes that the <code>j<sup>th</sup></code> cheapest rented movie <code>movie<sub>j</sub></code> was rented from the shop <code>shop<sub>j</sub></code>. The movies in <code>res</code> should be sorted by <strong>price </strong>in ascending order, and in case of a tie, the one with the <strong>smaller </strong><code>shop<sub>j</sub></code> should appear first, and if there is still tie, the one with the <strong>smaller </strong><code>movie<sub>j</sub></code> should appear first. If there are fewer than 5 rented movies, then all of them should be returned. If no movies are currently being rented, then an empty list should be returned.</li>\n</ul>\n\n<p>Implement the <code>MovieRentingSystem</code> class:</p>\n\n<ul>\n\t<li><code>MovieRentingSystem(int n, int[][] entries)</code> Initializes the <code>MovieRentingSystem</code> object with <code>n</code> shops and the movies in <code>entries</code>.</li>\n\t<li><code>List&lt;Integer&gt; search(int movie)</code> Returns a list of shops that have an <strong>unrented copy</strong> of the given <code>movie</code> as described above.</li>\n\t<li><code>void rent(int shop, int movie)</code> Rents the given <code>movie</code> from the given <code>shop</code>.</li>\n\t<li><code>void drop(int shop, int movie)</code> Drops off a previously rented <code>movie</code> at the given <code>shop</code>.</li>\n\t<li><code>List&lt;List&lt;Integer&gt;&gt; report()</code> Returns a list of cheapest <strong>rented</strong> movies as described above.</li>\n</ul>\n\n<p><strong>Note:</strong> The test cases will be generated such that <code>rent</code> will only be called if the shop has an <strong>unrented</strong> copy of the movie, and <code>drop</code> will only be called if the shop had <strong>previously rented</strong> out the movie.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;MovieRentingSystem&quot;, &quot;search&quot;, &quot;rent&quot;, &quot;rent&quot;, &quot;report&quot;, &quot;drop&quot;, &quot;search&quot;]\n[[3, [[0, 1, 5], [0, 2, 6], [0, 3, 7], [1, 1, 4], [1, 2, 7], [2, 1, 5]]], [1], [0, 1], [1, 2], [], [1, 2], [2]]\n<strong>Output</strong>\n[null, [1, 0, 2], null, null, [[0, 1], [1, 2]], null, [0, 1]]\n\n<strong>Explanation</strong>\nMovieRentingSystem movieRentingSystem = new MovieRentingSystem(3, [[0, 1, 5], [0, 2, 6], [0, 3, 7], [1, 1, 4], [1, 2, 7], [2, 1, 5]]);\nmovieRentingSystem.search(1);  // return [1, 0, 2], Movies of ID 1 are unrented at shops 1, 0, and 2. Shop 1 is cheapest; shop 0 and 2 are the same price, so order by shop number.\nmovieRentingSystem.rent(0, 1); // Rent movie 1 from shop 0. Unrented movies at shop 0 are now [2,3].\nmovieRentingSystem.rent(1, 2); // Rent movie 2 from shop 1. Unrented movies at shop 1 are now [1].\nmovieRentingSystem.report();   // return [[0, 1], [1, 2]]. Movie 1 from shop 0 is cheapest, followed by movie 2 from shop 1.\nmovieRentingSystem.drop(1, 2); // Drop off movie 2 at shop 1. Unrented movies at shop 1 are now [1,2].\nmovieRentingSystem.search(2);  // return [0, 1]. Movies of ID 2 are unrented at shops 0 and 1. Shop 0 is cheapest, followed by shop 1.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 3 * 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= entries.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= shop<sub>i</sub> &lt; n</code></li>\n\t<li><code>1 &lt;= movie<sub>i</sub>, price<sub>i</sub> &lt;= 10<sup>4</sup></code></li>\n\t<li>Each shop carries <strong>at most one</strong> copy of a movie <code>movie<sub>i</sub></code>.</li>\n\t<li>At most <code>10<sup>5</sup></code> calls <strong>in total</strong> will be made to <code>search</code>, <code>rent</code>, <code>drop</code> and <code>report</code>.</li>\n</ul>\n",
+  "hints": [
+    "You need to maintain a sorted list for each movie and a sorted list for rented movies",
+    "When renting a movie remove it from its movies sorted list and added it to the rented list and vice versa in the case of dropping a movie"
+  ],
+  "metaData": "{\n  \"classname\": \"MovieRentingSystem\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer\",\n        \"name\": \"n\"\n      },\n      {\n        \"name\": \"entries\",\n        \"type\": \"integer[][]\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"movie\"\n        }\n      ],\n      \"name\": \"search\",\n      \"return\": {\n        \"type\": \"list<integer>\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"shop\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"movie\"\n        }\n      ],\n      \"name\": \"rent\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"shop\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"movie\"\n        }\n      ],\n      \"name\": \"drop\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [],\n      \"name\": \"report\",\n      \"return\": {\n        \"type\": \"list<list<integer>>\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true,\n  \"manual\": false\n}",
+  "stats": "{\"totalAccepted\": \"73K\", \"totalSubmission\": \"116.8K\", \"totalAcceptedRaw\": 73022, \"totalSubmissionRaw\": 116839, \"acRate\": \"62.5%\"}",
+  "likes": 548,
+  "dislikes": 87,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"MovieRentingSystem\",\"search\",\"rent\",\"rent\",\"report\",\"drop\",\"search\"]\n[[3,[[0,1,5],[0,2,6],[0,3,7],[1,1,4],[1,2,7],[2,1,5]]],[1],[0,1],[1,2],[],[1,2],[2]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class MovieRentingSystem {\npublic:\n    MovieRentingSystem(int n, vector<vector<int>>& entries) {\n        \n    }\n    \n    vector<int> search(int movie) {\n        \n    }\n    \n    void rent(int shop, int movie) {\n        \n    }\n    \n    void drop(int shop, int movie) {\n        \n    }\n    \n    vector<vector<int>> report() {\n        \n    }\n};\n\n/**\n * Your MovieRentingSystem object will be instantiated and called as such:\n * MovieRentingSystem* obj = new MovieRentingSystem(n, entries);\n * vector<int> param_1 = obj->search(movie);\n * obj->rent(shop,movie);\n * obj->drop(shop,movie);\n * vector<vector<int>> param_4 = obj->report();\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class MovieRentingSystem {\n\n    public MovieRentingSystem(int n, int[][] entries) {\n        \n    }\n    \n    public List<Integer> search(int movie) {\n        \n    }\n    \n    public void rent(int shop, int movie) {\n        \n    }\n    \n    public void drop(int shop, int movie) {\n        \n    }\n    \n    public List<List<Integer>> report() {\n        \n    }\n}\n\n/**\n * Your MovieRentingSystem object will be instantiated and called as such:\n * MovieRentingSystem obj = new MovieRentingSystem(n, entries);\n * List<Integer> param_1 = obj.search(movie);\n * obj.rent(shop,movie);\n * obj.drop(shop,movie);\n * List<List<Integer>> param_4 = obj.report();\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class MovieRentingSystem:\n\n    def __init__(self, n: int, entries: List[List[int]]):\n        \n\n    def search(self, movie: int) -> List[int]:\n        \n\n    def rent(self, shop: int, movie: int) -> None:\n        \n\n    def drop(self, shop: int, movie: int) -> None:\n        \n\n    def report(self) -> List[List[int]]:\n        \n\n\n# Your MovieRentingSystem object will be instantiated and called as such:\n# obj = MovieRentingSystem(n, entries)\n# param_1 = obj.search(movie)\n# obj.rent(shop,movie)\n# obj.drop(shop,movie)\n# param_4 = obj.report()"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class MovieRentingSystem(object):\n\n    def __init__(self, n, entries):\n        \"\"\"\n        :type n: int\n        :type entries: List[List[int]]\n        \"\"\"\n        \n\n    def search(self, movie):\n        \"\"\"\n        :type movie: int\n        :rtype: List[int]\n        \"\"\"\n        \n\n    def rent(self, shop, movie):\n        \"\"\"\n        :type shop: int\n        :type movie: int\n        :rtype: None\n        \"\"\"\n        \n\n    def drop(self, shop, movie):\n        \"\"\"\n        :type shop: int\n        :type movie: int\n        :rtype: None\n        \"\"\"\n        \n\n    def report(self):\n        \"\"\"\n        :rtype: List[List[int]]\n        \"\"\"\n        \n\n\n# Your MovieRentingSystem object will be instantiated and called as such:\n# obj = MovieRentingSystem(n, entries)\n# param_1 = obj.search(movie)\n# obj.rent(shop,movie)\n# obj.drop(shop,movie)\n# param_4 = obj.report()"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} entries\n */\nvar MovieRentingSystem = function(n, entries) {\n    \n};\n\n/** \n * @param {number} movie\n * @return {number[]}\n */\nMovieRentingSystem.prototype.search = function(movie) {\n    \n};\n\n/** \n * @param {number} shop \n * @param {number} movie\n * @return {void}\n */\nMovieRentingSystem.prototype.rent = function(shop, movie) {\n    \n};\n\n/** \n * @param {number} shop \n * @param {number} movie\n * @return {void}\n */\nMovieRentingSystem.prototype.drop = function(shop, movie) {\n    \n};\n\n/**\n * @return {number[][]}\n */\nMovieRentingSystem.prototype.report = function() {\n    \n};\n\n/** \n * Your MovieRentingSystem object will be instantiated and called as such:\n * var obj = new MovieRentingSystem(n, entries)\n * var param_1 = obj.search(movie)\n * obj.rent(shop,movie)\n * obj.drop(shop,movie)\n * var param_4 = obj.report()\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class MovieRentingSystem {\n    constructor(n: number, entries: number[][]) {\n        \n    }\n\n    search(movie: number): number[] {\n        \n    }\n\n    rent(shop: number, movie: number): void {\n        \n    }\n\n    drop(shop: number, movie: number): void {\n        \n    }\n\n    report(): number[][] {\n        \n    }\n}\n\n/**\n * Your MovieRentingSystem object will be instantiated and called as such:\n * var obj = new MovieRentingSystem(n, entries)\n * var param_1 = obj.search(movie)\n * obj.rent(shop,movie)\n * obj.drop(shop,movie)\n * var param_4 = obj.report()\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class MovieRentingSystem {\n\n    public MovieRentingSystem(int n, int[][] entries) {\n        \n    }\n    \n    public IList<int> Search(int movie) {\n        \n    }\n    \n    public void Rent(int shop, int movie) {\n        \n    }\n    \n    public void Drop(int shop, int movie) {\n        \n    }\n    \n    public IList<IList<int>> Report() {\n        \n    }\n}\n\n/**\n * Your MovieRentingSystem object will be instantiated and called as such:\n * MovieRentingSystem obj = new MovieRentingSystem(n, entries);\n * IList<int> param_1 = obj.Search(movie);\n * obj.Rent(shop,movie);\n * obj.Drop(shop,movie);\n * IList<IList<int>> param_4 = obj.Report();\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} MovieRentingSystem;\n\n\nMovieRentingSystem* movieRentingSystemCreate(int n, int** entries, int entriesSize, int* entriesColSize) {\n    \n}\n\nint* movieRentingSystemSearch(MovieRentingSystem* obj, int movie, int* retSize) {\n    \n}\n\nvoid movieRentingSystemRent(MovieRentingSystem* obj, int shop, int movie) {\n    \n}\n\nvoid movieRentingSystemDrop(MovieRentingSystem* obj, int shop, int movie) {\n    \n}\n\nint** movieRentingSystemReport(MovieRentingSystem* obj, int* retSize, int** retColSize) {\n    \n}\n\nvoid movieRentingSystemFree(MovieRentingSystem* obj) {\n    \n}\n\n/**\n * Your MovieRentingSystem struct will be instantiated and called as such:\n * MovieRentingSystem* obj = movieRentingSystemCreate(n, entries, entriesSize, entriesColSize);\n * int* param_1 = movieRentingSystemSearch(obj, movie, retSize);\n \n * movieRentingSystemRent(obj, shop, movie);\n \n * movieRentingSystemDrop(obj, shop, movie);\n \n * int** param_4 = movieRentingSystemReport(obj, retSize, retColSize);\n \n * movieRentingSystemFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type MovieRentingSystem struct {\n    \n}\n\n\nfunc Constructor(n int, entries [][]int) MovieRentingSystem {\n    \n}\n\n\nfunc (this *MovieRentingSystem) Search(movie int) []int {\n    \n}\n\n\nfunc (this *MovieRentingSystem) Rent(shop int, movie int)  {\n    \n}\n\n\nfunc (this *MovieRentingSystem) Drop(shop int, movie int)  {\n    \n}\n\n\nfunc (this *MovieRentingSystem) Report() [][]int {\n    \n}\n\n\n/**\n * Your MovieRentingSystem object will be instantiated and called as such:\n * obj := Constructor(n, entries);\n * param_1 := obj.Search(movie);\n * obj.Rent(shop,movie);\n * obj.Drop(shop,movie);\n * param_4 := obj.Report();\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class MovieRentingSystem(n: Int, entries: Array<IntArray>) {\n\n    fun search(movie: Int): List<Int> {\n        \n    }\n\n    fun rent(shop: Int, movie: Int) {\n        \n    }\n\n    fun drop(shop: Int, movie: Int) {\n        \n    }\n\n    fun report(): List<List<Int>> {\n        \n    }\n\n}\n\n/**\n * Your MovieRentingSystem object will be instantiated and called as such:\n * var obj = MovieRentingSystem(n, entries)\n * var param_1 = obj.search(movie)\n * obj.rent(shop,movie)\n * obj.drop(shop,movie)\n * var param_4 = obj.report()\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass MovieRentingSystem {\n\n    init(_ n: Int, _ entries: [[Int]]) {\n        \n    }\n    \n    func search(_ movie: Int) -> [Int] {\n        \n    }\n    \n    func rent(_ shop: Int, _ movie: Int) {\n        \n    }\n    \n    func drop(_ shop: Int, _ movie: Int) {\n        \n    }\n    \n    func report() -> [[Int]] {\n        \n    }\n}\n\n/**\n * Your MovieRentingSystem object will be instantiated and called as such:\n * let obj = MovieRentingSystem(n, entries)\n * let ret_1: [Int] = obj.search(movie)\n * obj.rent(shop, movie)\n * obj.drop(shop, movie)\n * let ret_4: [[Int]] = obj.report()\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct MovieRentingSystem {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl MovieRentingSystem {\n\n    fn new(n: i32, entries: Vec<Vec<i32>>) -> Self {\n        \n    }\n    \n    fn search(&self, movie: i32) -> Vec<i32> {\n        \n    }\n    \n    fn rent(&self, shop: i32, movie: i32) {\n        \n    }\n    \n    fn drop(&self, shop: i32, movie: i32) {\n        \n    }\n    \n    fn report(&self) -> Vec<Vec<i32>> {\n        \n    }\n}\n\n/**\n * Your MovieRentingSystem object will be instantiated and called as such:\n * let obj = MovieRentingSystem::new(n, entries);\n * let ret_1: Vec<i32> = obj.search(movie);\n * obj.rent(shop, movie);\n * obj.drop(shop, movie);\n * let ret_4: Vec<Vec<i32>> = obj.report();\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class MovieRentingSystem\n\n=begin\n    :type n: Integer\n    :type entries: Integer[][]\n=end\n    def initialize(n, entries)\n        \n    end\n\n\n=begin\n    :type movie: Integer\n    :rtype: Integer[]\n=end\n    def search(movie)\n        \n    end\n\n\n=begin\n    :type shop: Integer\n    :type movie: Integer\n    :rtype: Void\n=end\n    def rent(shop, movie)\n        \n    end\n\n\n=begin\n    :type shop: Integer\n    :type movie: Integer\n    :rtype: Void\n=end\n    def drop(shop, movie)\n        \n    end\n\n\n=begin\n    :rtype: Integer[][]\n=end\n    def report()\n        \n    end\n\n\nend\n\n# Your MovieRentingSystem object will be instantiated and called as such:\n# obj = MovieRentingSystem.new(n, entries)\n# param_1 = obj.search(movie)\n# obj.rent(shop, movie)\n# obj.drop(shop, movie)\n# param_4 = obj.report()"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class MovieRentingSystem {\n    /**\n     * @param Integer $n\n     * @param Integer[][] $entries\n     */\n    function __construct($n, $entries) {\n        \n    }\n  \n    /**\n     * @param Integer $movie\n     * @return Integer[]\n     */\n    function search($movie) {\n        \n    }\n  \n    /**\n     * @param Integer $shop\n     * @param Integer $movie\n     * @return NULL\n     */\n    function rent($shop, $movie) {\n        \n    }\n  \n    /**\n     * @param Integer $shop\n     * @param Integer $movie\n     * @return NULL\n     */\n    function drop($shop, $movie) {\n        \n    }\n  \n    /**\n     * @return Integer[][]\n     */\n    function report() {\n        \n    }\n}\n\n/**\n * Your MovieRentingSystem object will be instantiated and called as such:\n * $obj = MovieRentingSystem($n, $entries);\n * $ret_1 = $obj->search($movie);\n * $obj->rent($shop, $movie);\n * $obj->drop($shop, $movie);\n * $ret_4 = $obj->report();\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class MovieRentingSystem {\n\n  MovieRentingSystem(int n, List<List<int>> entries) {\n    \n  }\n  \n  List<int> search(int movie) {\n    \n  }\n  \n  void rent(int shop, int movie) {\n    \n  }\n  \n  void drop(int shop, int movie) {\n    \n  }\n  \n  List<List<int>> report() {\n    \n  }\n}\n\n/**\n * Your MovieRentingSystem object will be instantiated and called as such:\n * MovieRentingSystem obj = MovieRentingSystem(n, entries);\n * List<int> param1 = obj.search(movie);\n * obj.rent(shop,movie);\n * obj.drop(shop,movie);\n * List<List<int>> param4 = obj.report();\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class MovieRentingSystem(_n: Int, _entries: Array[Array[Int]]) {\n\n    def search(movie: Int): List[Int] = {\n        \n    }\n\n    def rent(shop: Int, movie: Int): Unit = {\n        \n    }\n\n    def drop(shop: Int, movie: Int): Unit = {\n        \n    }\n\n    def report(): List[List[Int]] = {\n        \n    }\n\n}\n\n/**\n * Your MovieRentingSystem object will be instantiated and called as such:\n * val obj = new MovieRentingSystem(n, entries)\n * val param_1 = obj.search(movie)\n * obj.rent(shop,movie)\n * obj.drop(shop,movie)\n * val param_4 = obj.report()\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule MovieRentingSystem do\n  @spec init_(n :: integer, entries :: [[integer]]) :: any\n  def init_(n, entries) do\n    \n  end\n\n  @spec search(movie :: integer) :: [integer]\n  def search(movie) do\n    \n  end\n\n  @spec rent(shop :: integer, movie :: integer) :: any\n  def rent(shop, movie) do\n    \n  end\n\n  @spec drop(shop :: integer, movie :: integer) :: any\n  def drop(shop, movie) do\n    \n  end\n\n  @spec report() :: [[integer]]\n  def report() do\n    \n  end\nend\n\n# Your functions will be called as such:\n# MovieRentingSystem.init_(n, entries)\n# param_1 = MovieRentingSystem.search(movie)\n# MovieRentingSystem.rent(shop, movie)\n# MovieRentingSystem.drop(shop, movie)\n# param_4 = MovieRentingSystem.report()\n\n# MovieRentingSystem.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec movie_renting_system_init_(N :: integer(), Entries :: [[integer()]]) -> any().\nmovie_renting_system_init_(N, Entries) ->\n  .\n\n-spec movie_renting_system_search(Movie :: integer()) -> [integer()].\nmovie_renting_system_search(Movie) ->\n  .\n\n-spec movie_renting_system_rent(Shop :: integer(), Movie :: integer()) -> any().\nmovie_renting_system_rent(Shop, Movie) ->\n  .\n\n-spec movie_renting_system_drop(Shop :: integer(), Movie :: integer()) -> any().\nmovie_renting_system_drop(Shop, Movie) ->\n  .\n\n-spec movie_renting_system_report() -> [[integer()]].\nmovie_renting_system_report() ->\n  .\n\n\n%% Your functions will be called as such:\n%% movie_renting_system_init_(N, Entries),\n%% Param_1 = movie_renting_system_search(Movie),\n%% movie_renting_system_rent(Shop, Movie),\n%% movie_renting_system_drop(Shop, Movie),\n%% Param_4 = movie_renting_system_report(),\n\n%% movie_renting_system_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define movie-renting-system%\n  (class object%\n    (super-new)\n    \n    ; n : exact-integer?\n    ; entries : (listof (listof exact-integer?))\n    (init-field\n      n\n      entries)\n    \n    ; search : exact-integer? -> (listof exact-integer?)\n    (define/public (search movie)\n      )\n    ; rent : exact-integer? exact-integer? -> void?\n    (define/public (rent shop movie)\n      )\n    ; drop : exact-integer? exact-integer? -> void?\n    (define/public (drop shop movie)\n      )\n    ; report : -> (listof (listof exact-integer?))\n    (define/public (report)\n      )))\n\n;; Your movie-renting-system% object will be instantiated and called as such:\n;; (define obj (new movie-renting-system% [n n] [entries entries]))\n;; (define param_1 (send obj search movie))\n;; (send obj rent shop movie)\n;; (send obj drop shop movie)\n;; (define param_4 (send obj report))"
+    }
+  ],
+  "solution": {
+    "id": "2837",
+    "content": "### Approach: Hash Map + Ordered Set Approach\n\n#### Intuition\n\nWhen we look at this problem, one key detail is that each shop can have at most one copy of a movie. That means the pair $(\\textit{shop}, \\textit{movie})$ uniquely identifies a movie in the input list $\\textit{entries}$. To keep track of prices, we can use a hash map called $\\textit{t_price}$, where each key is the pair $(\\textit{shop}, \\textit{movie})$ and the value is simply the movie’s price.\n\nThe important thing about $\\textit{t_price}$ is that we never actually change it. No matter whether a movie is rented or dropped, the price stays fixed. To handle availability, we need two other structures: one for movies that are currently available, and one for those that are already rented. Let’s call them $\\textit{t_valid}$ and $\\textit{t_rent}$, respectively.\n\nFor available movies, we want to support fast searching of the cheapest shops. A good way to do this is to store, for each movie, an ordered set of pairs $(\\textit{price}, \\textit{shop})$. That way, when we run a $\\texttt{search(movie)}$ query, we can just grab the first five elements. Renting and dropping is then just about removing or inserting these pairs into the right set.\n\nFor rented movies, we need to be able to report the cheapest five overall, across all shops and all movies. Here an ordered set works well again, except this time we store triplets $(\\textit{price}, \\textit{shop}, \\textit{movie})$. This ordering ensures that when we take the first five elements, we’re getting the correct answer.\n\nSo, putting this together:\n\n- The constructor builds $\\textit{t_price}$ and fills in $\\textit{t_valid}$ with all available movies.\n- $\\texttt{search(movie)}$ just returns the first five shops from $\\textit{t_valid}[movie]$.\n- $\\texttt{rent}$ removes a movie from $\\textit{t_valid}$ and adds it to $\\textit{t_rent}$.\n- $\\texttt{drop}$ does the opposite.\n- $\\texttt{report}$ simply takes the first five triplets from $\\textit{t_rent}$ and extracts the shop and movie.\n\nThis design keeps all operations efficient, since inserts, deletes, and lookups in ordered sets are logarithmic. The memory usage is also linear in the size of the input.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/cSxcZKDR/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"cSxcZKDR\"></iframe>\n\n#### Complexity Analysis\n\n- Time complexity:\n\n    - $\\texttt{MovieRentingSystem(n, entries)}$ operation: $O(n \\log n)$.\n\n    - $\\texttt{search(movie)}$ operation: $O(\\log n)$.\n\n    - $\\texttt{rent(shop, movie)}$ operation: $O(\\log n)$.\n\n    - $\\texttt{drop(shop, movie)}$ operation: $O(\\log n)$.\n\n    - $\\texttt{report()}$ operation: $O(\\log n)$.\n\n- Space complexity: $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

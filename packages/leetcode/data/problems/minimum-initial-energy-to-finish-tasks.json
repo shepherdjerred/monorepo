@@ -1,0 +1,136 @@
+{
+  "questionId": "1784",
+  "questionFrontendId": "1665",
+  "title": "Minimum Initial Energy to Finish Tasks",
+  "titleSlug": "minimum-initial-energy-to-finish-tasks",
+  "difficulty": "Hard",
+  "content": "<p>You are given an array <code>tasks</code> where <code>tasks[i] = [actual<sub>i</sub>, minimum<sub>i</sub>]</code>:</p>\n\n<ul>\n\t<li><code>actual<sub>i</sub></code> is the actual amount of energy you <strong>spend to finish</strong> the <code>i<sup>th</sup></code> task.</li>\n\t<li><code>minimum<sub>i</sub></code> is the minimum amount of energy you <strong>require to begin</strong> the <code>i<sup>th</sup></code> task.</li>\n</ul>\n\n<p>For example, if the task is <code>[10, 12]</code> and your current energy is <code>11</code>, you cannot start this task. However, if your current energy is <code>13</code>, you can complete this task, and your energy will be <code>3</code> after finishing it.</p>\n\n<p>You can finish the tasks in <strong>any order</strong> you like.</p>\n\n<p>Return <em>the <strong>minimum</strong> initial amount of energy you will need</em> <em>to finish all the tasks</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> tasks = [[1,2],[2,4],[4,8]]\n<strong>Output:</strong> 8\n<strong>Explanation:</strong>\nStarting with 8 energy, we finish the tasks in the following order:\n    - 3rd task. Now energy = 8 - 4 = 4.\n    - 2nd task. Now energy = 4 - 2 = 2.\n    - 1st task. Now energy = 2 - 1 = 1.\nNotice that even though we have leftover energy, starting with 7 energy does not work because we cannot do the 3rd task.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> tasks = [[1,3],[2,4],[10,11],[10,12],[8,9]]\n<strong>Output:</strong> 32\n<strong>Explanation:</strong>\nStarting with 32 energy, we finish the tasks in the following order:\n    - 1st task. Now energy = 32 - 1 = 31.\n    - 2nd task. Now energy = 31 - 2 = 29.\n    - 3rd task. Now energy = 29 - 10 = 19.\n    - 4th task. Now energy = 19 - 10 = 9.\n    - 5th task. Now energy = 9 - 8 = 1.</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> tasks = [[1,7],[2,8],[3,9],[4,10],[5,11],[6,12]]\n<strong>Output:</strong> 27\n<strong>Explanation:</strong>\nStarting with 27 energy, we finish the tasks in the following order:\n    - 5th task. Now energy = 27 - 5 = 22.\n    - 2nd task. Now energy = 22 - 2 = 20.\n    - 3rd task. Now energy = 20 - 3 = 17.\n    - 1st task. Now energy = 17 - 1 = 16.\n    - 4th task. Now energy = 16 - 4 = 12.\n    - 6th task. Now energy = 12 - 6 = 6.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= tasks.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= actual<sub>​i</sub>&nbsp;&lt;= minimum<sub>i</sub>&nbsp;&lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [
+    "We can easily figure that the f(x) : does x solve this array is monotonic so binary Search is doable",
+    "Figure a sorting pattern"
+  ],
+  "metaData": "{\n  \"name\": \"minimumEffort\",\n  \"params\": [\n    {\n      \"name\": \"tasks\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"23.3K\", \"totalSubmission\": \"38.4K\", \"totalAcceptedRaw\": 23313, \"totalSubmissionRaw\": 38370, \"acRate\": \"60.8%\"}",
+  "likes": 615,
+  "dislikes": 40,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[1,2],[2,4],[4,8]]",
+    "[[1,3],[2,4],[10,11],[10,12],[8,9]]",
+    "[[1,7],[2,8],[3,9],[4,10],[5,11],[6,12]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"akuna-capital\", \"name\": \"Akuna Capital\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minimumEffort(vector<vector<int>>& tasks) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minimumEffort(int[][] tasks) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumEffort(self, tasks: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumEffort(self, tasks):\n        \"\"\"\n        :type tasks: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} tasks\n * @return {number}\n */\nvar minimumEffort = function(tasks) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumEffort(tasks: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinimumEffort(int[][] tasks) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minimumEffort(int** tasks, int tasksSize, int* tasksColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumEffort(tasks [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumEffort(tasks: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumEffort(_ tasks: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_effort(tasks: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} tasks\n# @return {Integer}\ndef minimum_effort(tasks)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $tasks\n     * @return Integer\n     */\n    function minimumEffort($tasks) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimumEffort(List<List<int>> tasks) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumEffort(tasks: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_effort(tasks :: [[integer]]) :: integer\n  def minimum_effort(tasks) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_effort(Tasks :: [[integer()]]) -> integer().\nminimum_effort(Tasks) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-effort tasks)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

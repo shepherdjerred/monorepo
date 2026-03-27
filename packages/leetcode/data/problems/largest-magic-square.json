@@ -1,0 +1,139 @@
+{
+  "questionId": "1311",
+  "questionFrontendId": "1895",
+  "title": "Largest Magic Square",
+  "titleSlug": "largest-magic-square",
+  "difficulty": "Medium",
+  "content": "<p>A <code>k x k</code> <strong>magic square</strong> is a <code>k x k</code> grid filled with integers such that every row sum, every column sum, and both diagonal sums are <strong>all equal</strong>. The integers in the magic square <strong>do not have to be distinct</strong>. Every <code>1 x 1</code> grid is trivially a <strong>magic square</strong>.</p>\n\n<p>Given an <code>m x n</code> integer <code>grid</code>, return <em>the <strong>size</strong> (i.e., the side length </em><code>k</code><em>) of the <strong>largest magic square</strong> that can be found within this grid</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/05/29/magicsquare-grid.jpg\" style=\"width: 413px; height: 335px;\" />\n<pre>\n<strong>Input:</strong> grid = [[7,1,4,5,6],[2,5,1,6,4],[1,5,4,3,2],[1,2,7,3,4]]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The largest magic square has a size of 3.\nEvery row sum, column sum, and diagonal sum of this magic square is equal to 12.\n- Row sums: 5+1+6 = 5+4+3 = 2+7+3 = 12\n- Column sums: 5+5+2 = 1+4+7 = 6+3+3 = 12\n- Diagonal sums: 5+4+3 = 6+4+2 = 12\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/05/29/magicsquare2-grid.jpg\" style=\"width: 333px; height: 255px;\" />\n<pre>\n<strong>Input:</strong> grid = [[5,1,3,1],[9,3,3,1],[1,3,3,8]]\n<strong>Output:</strong> 2\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == grid.length</code></li>\n\t<li><code>n == grid[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 50</code></li>\n\t<li><code>1 &lt;= grid[i][j] &lt;= 10<sup>6</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Check all squares in the matrix and find the largest one."
+  ],
+  "metaData": "{\n  \"name\": \"largestMagicSquare\",\n  \"params\": [\n    {\n      \"name\": \"grid\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"88.5K\", \"totalSubmission\": \"117.6K\", \"totalAcceptedRaw\": 88484, \"totalSubmissionRaw\": 117551, \"acRate\": \"75.3%\"}",
+  "likes": 609,
+  "dislikes": 333,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Magic Squares In Grid\", \"titleSlug\": \"magic-squares-in-grid\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[7,1,4,5,6],[2,5,1,6,4],[1,5,4,3,2],[1,2,7,3,4]]",
+    "[[5,1,3,1],[9,3,3,1],[1,3,3,8]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"wayfair\", \"name\": \"Wayfair\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int largestMagicSquare(vector<vector<int>>& grid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int largestMagicSquare(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def largestMagicSquare(self, grid: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def largestMagicSquare(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} grid\n * @return {number}\n */\nvar largestMagicSquare = function(grid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function largestMagicSquare(grid: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int LargestMagicSquare(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int largestMagicSquare(int** grid, int gridSize, int* gridColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func largestMagicSquare(grid [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun largestMagicSquare(grid: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func largestMagicSquare(_ grid: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn largest_magic_square(grid: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} grid\n# @return {Integer}\ndef largest_magic_square(grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $grid\n     * @return Integer\n     */\n    function largestMagicSquare($grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int largestMagicSquare(List<List<int>> grid) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def largestMagicSquare(grid: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec largest_magic_square(grid :: [[integer]]) :: integer\n  def largest_magic_square(grid) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec largest_magic_square(Grid :: [[integer()]]) -> integer().\nlargest_magic_square(Grid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (largest-magic-square grid)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2907",
+    "content": "### Approach: Enumerating Squares + Prefix Sum Optimization\n\n#### Intuition\n\nWe enumerate the square edge length $\\textit{edge}$ in descending order. For each possible edge length, we enumerate all squares of size $\\textit{edge}$ in the given matrix $\\textit{grid}$ and check whether they satisfy the conditions of a magic square.\n\nLet $l = \\min(m, n)$. The possible values of $\\textit{edge}$ lie in the range $[1, l]$. For a fixed edge length $\\textit{edge}$, the number of squares of this size is $(m - \\textit{edge} + 1)(n - \\textit{edge} + 1)$, which is $O(mn)$.\n\nFor each square, we need to compute the sums of all rows, columns, and the two diagonals. There are $\\textit{edge}$ rows, $\\textit{edge}$ columns, and $2$ diagonals. Without any optimization, computing each row or column sum takes $O(\\textit{edge})$ time, so the total time for checking one square is $O(\\textit{edge}^2)$.\n\nCombining all factors, the total time complexity of this brute-force approach is\n\n$$ \nO\\left(\\sum_{\\textit{edge}=1}^{l} mn \\cdot \\textit{edge}^2\\right) = O(l^3 mn).\n$$ \n\nAn $O(l^3 mn)$ algorithm may struggle to pass all test cases. Although the constant factor is small, this complexity is still risky for the given constraints. Therefore, we apply a prefix sum optimization to reduce the cost of computing line sums.\n\n##### Prefix Sum Optimization \n\nWe precompute prefix sums for each row and each column of the matrix $\\textit{grid}$.\n\n* Each row sum can be computed in $O(1)$ time using row prefix sums. Since there are $\\textit{edge}$ rows, the total time is $O(\\textit{edge})$.\n* Each column sum can be computed in $O(1)$ time using column prefix sums. Since there are $\\textit{edge}$ columns, the total time is $O(\\textit{edge})$.\n* We do not preprocess diagonal prefix sums because there are only two diagonals. Computing them directly still takes $O(\\textit{edge})$ time.\n\nAs a result, the total time for checking one square is reduced from $O(\\textit{edge}^2)$ to $O(\\textit{edge})$.\n\nTherefore, the overall time complexity becomes\n\n$$ \nO\\left(\\sum_{\\textit{edge}=1}^{l} mn \\cdot \\textit{edge}\\right) = O(l^2 mn),\n$$ \n\nwhich is acceptable for the given constraint $m, n \\leq 50$.\n\nSince a square of edge length $1$ is always a magic square, we only need to enumerate $\\textit{edge}$ in descending order over the range $[2, l]$.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/VEBv5ror/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"VEBv5ror\"></iframe>\n\n#### Complexity Analysis\n\n- Time complexity: $O(mn\\min(m, n)^2)$.\n\n- Space complexity: $O(mn)$.\n  \n  This space is used to store the row and column prefix sums.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

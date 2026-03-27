@@ -1,0 +1,144 @@
+{
+  "questionId": "2052",
+  "questionFrontendId": "1902",
+  "title": "Depth of BST Given Insertion Order",
+  "titleSlug": "depth-of-bst-given-insertion-order",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> integer array <code>order</code> of length <code>n</code>, a <strong>permutation</strong> of integers from <code>1</code> to <code>n</code> representing the <strong>order</strong> of insertion into a <strong>binary search tree</strong>.</p>\n\n<p>A binary search tree is defined as follows:</p>\n\n<ul>\n\t<li>The left subtree of a node contains only nodes with keys <strong>less than</strong> the node&#39;s key.</li>\n\t<li>The right subtree of a node contains only nodes with keys <strong>greater than</strong> the node&#39;s key.</li>\n\t<li>Both the left and right subtrees must also be binary search trees.</li>\n</ul>\n\n<p>The binary search tree is constructed as follows:</p>\n\n<ul>\n\t<li><code>order[0]</code> will be the <strong>root</strong> of the binary search tree.</li>\n\t<li>All subsequent elements are inserted as the <strong>child</strong> of <strong>any</strong> existing node such that the binary search tree properties hold.</li>\n</ul>\n\n<p>Return <em>the <strong>depth</strong> of the binary search tree</em>.</p>\n\n<p>A binary tree&#39;s <strong>depth</strong> is the number of <strong>nodes</strong> along the <strong>longest path</strong> from the root node down to the farthest leaf node.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/06/15/1.png\" style=\"width: 624px; height: 154px;\" />\n<pre>\n<strong>Input:</strong> order = [2,1,4,3]\n<strong>Output:</strong> 3\n<strong>Explanation: </strong>The binary search tree has a depth of 3 with path 2-&gt;3-&gt;4.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/06/15/2.png\" style=\"width: 624px; height: 146px;\" />\n<pre>\n<strong>Input:</strong> order = [2,1,3,4]\n<strong>Output:</strong> 3\n<strong>Explanation: </strong>The binary search tree has a depth of 3 with path 2-&gt;3-&gt;4.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/06/15/3.png\" style=\"width: 624px; height: 225px;\" />\n<pre>\n<strong>Input:</strong> order = [1,2,3,4]\n<strong>Output:</strong> 4\n<strong>Explanation: </strong>The binary search tree has a depth of 4 with path 1-&gt;2-&gt;3-&gt;4.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == order.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>order</code> is a permutation of integers between <code>1</code> and <code>n</code>.</li>\n</ul>\n",
+  "hints": [
+    "There are at most 2 possible places where a new node can be inserted?",
+    "How can we keep track of the depth of each node?"
+  ],
+  "metaData": "{\n  \"name\": \"maxDepthBST\",\n  \"params\": [\n    {\n      \"name\": \"order\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"3K\", \"totalSubmission\": \"7K\", \"totalAcceptedRaw\": 2982, \"totalSubmissionRaw\": 7020, \"acRate\": \"42.5%\"}",
+  "likes": 111,
+  "dislikes": 12,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[2,1,4,3]",
+    "[2,1,3,4]",
+    "[1,2,3,4]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Binary Search Tree",
+      "slug": "binary-search-tree"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxDepthBST(vector<int>& order) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxDepthBST(int[] order) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxDepthBST(self, order: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxDepthBST(self, order):\n        \"\"\"\n        :type order: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} order\n * @return {number}\n */\nvar maxDepthBST = function(order) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxDepthBST(order: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxDepthBST(int[] order) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxDepthBST(int* order, int orderSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxDepthBST(order []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxDepthBST(order: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxDepthBST(_ order: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_depth_bst(order: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} order\n# @return {Integer}\ndef max_depth_bst(order)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $order\n     * @return Integer\n     */\n    function maxDepthBST($order) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxDepthBST(List<int> order) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxDepthBST(order: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_depth_bst(order :: [integer]) :: integer\n  def max_depth_bst(order) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_depth_bst(Order :: [integer()]) -> integer().\nmax_depth_bst(Order) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-depth-bst order)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

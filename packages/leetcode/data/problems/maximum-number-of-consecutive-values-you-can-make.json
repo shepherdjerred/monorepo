@@ -1,0 +1,137 @@
+{
+  "questionId": "1930",
+  "questionFrontendId": "1798",
+  "title": "Maximum Number of Consecutive Values You Can Make",
+  "titleSlug": "maximum-number-of-consecutive-values-you-can-make",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>coins</code> of length <code>n</code> which represents the <code>n</code> coins that you own. The value of the <code>i<sup>th</sup></code> coin is <code>coins[i]</code>. You can <strong>make</strong> some value <code>x</code> if you can choose some of your <code>n</code> coins such that their values sum up to <code>x</code>.</p>\n\n<p>Return the <em>maximum number of consecutive integer values that you <strong>can</strong> <strong>make</strong> with your coins <strong>starting</strong> from and <strong>including</strong> </em><code>0</code>.</p>\n\n<p>Note that you may have multiple coins of the same value.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> coins = [1,3]\n<strong>Output:</strong> 2\n<strong>Explanation: </strong>You can make the following values:\n- 0: take []\n- 1: take [1]\nYou can make 2 consecutive integer values starting from 0.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> coins = [1,1,1,4]\n<strong>Output:</strong> 8\n<strong>Explanation: </strong>You can make the following values:\n- 0: take []\n- 1: take [1]\n- 2: take [1,1]\n- 3: take [1,1,1]\n- 4: take [4]\n- 5: take [4,1]\n- 6: take [4,1,1]\n- 7: take [4,1,1,1]\nYou can make 8 consecutive integer values starting from 0.</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> coins = [1,4,10,3,1]\n<strong>Output:</strong> 20</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>coins.length == n</code></li>\n\t<li><code>1 &lt;= n &lt;= 4 * 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= coins[i] &lt;= 4 * 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [
+    "If you can make the first x values and you have a value v, then you can make all the values <var>≤ v + x</var>",
+    "Sort the array of coins. You can always make the value 0 so you can start with x = 0.",
+    "Process the values starting from the smallest and stop when there is a value that cannot be achieved with the current x."
+  ],
+  "metaData": "{\n  \"name\": \"getMaximumConsecutive\",\n  \"params\": [\n    {\n      \"name\": \"coins\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"26.2K\", \"totalSubmission\": \"41.1K\", \"totalAcceptedRaw\": 26231, \"totalSubmissionRaw\": 41100, \"acRate\": \"63.8%\"}",
+  "likes": 868,
+  "dislikes": 60,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Patching Array\", \"titleSlug\": \"patching-array\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,3]",
+    "[1,1,1,4]",
+    "[1,4,10,3,1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int getMaximumConsecutive(vector<int>& coins) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int getMaximumConsecutive(int[] coins) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def getMaximumConsecutive(self, coins: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def getMaximumConsecutive(self, coins):\n        \"\"\"\n        :type coins: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} coins\n * @return {number}\n */\nvar getMaximumConsecutive = function(coins) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function getMaximumConsecutive(coins: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int GetMaximumConsecutive(int[] coins) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int getMaximumConsecutive(int* coins, int coinsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func getMaximumConsecutive(coins []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun getMaximumConsecutive(coins: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func getMaximumConsecutive(_ coins: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn get_maximum_consecutive(coins: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} coins\n# @return {Integer}\ndef get_maximum_consecutive(coins)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $coins\n     * @return Integer\n     */\n    function getMaximumConsecutive($coins) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int getMaximumConsecutive(List<int> coins) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def getMaximumConsecutive(coins: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec get_maximum_consecutive(coins :: [integer]) :: integer\n  def get_maximum_consecutive(coins) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec get_maximum_consecutive(Coins :: [integer()]) -> integer().\nget_maximum_consecutive(Coins) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (get-maximum-consecutive coins)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

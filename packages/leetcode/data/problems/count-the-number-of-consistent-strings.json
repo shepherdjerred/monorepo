@@ -1,0 +1,129 @@
+{
+  "questionId": "1786",
+  "questionFrontendId": "1684",
+  "title": "Count the Number of Consistent Strings",
+  "titleSlug": "count-the-number-of-consistent-strings",
+  "difficulty": "Easy",
+  "content": "<p>You are given a string <code>allowed</code> consisting of <strong>distinct</strong> characters and an array of strings <code>words</code>. A string is <strong>consistent </strong>if all characters in the string appear in the string <code>allowed</code>.</p>\n\n<p>Return<em> the number of <strong>consistent</strong> strings in the array </em><code>words</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> allowed = &quot;ab&quot;, words = [&quot;ad&quot;,&quot;bd&quot;,&quot;aaab&quot;,&quot;baa&quot;,&quot;badab&quot;]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> Strings &quot;aaab&quot; and &quot;baa&quot; are consistent since they only contain characters &#39;a&#39; and &#39;b&#39;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> allowed = &quot;abc&quot;, words = [&quot;a&quot;,&quot;b&quot;,&quot;c&quot;,&quot;ab&quot;,&quot;ac&quot;,&quot;bc&quot;,&quot;abc&quot;]\n<strong>Output:</strong> 7\n<strong>Explanation:</strong> All strings are consistent.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> allowed = &quot;cad&quot;, words = [&quot;cc&quot;,&quot;acd&quot;,&quot;b&quot;,&quot;ba&quot;,&quot;bac&quot;,&quot;bad&quot;,&quot;ac&quot;,&quot;d&quot;]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> Strings &quot;cc&quot;, &quot;acd&quot;, &quot;ac&quot;, and &quot;d&quot; are consistent.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= words.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= allowed.length &lt;=<sup> </sup>26</code></li>\n\t<li><code>1 &lt;= words[i].length &lt;= 10</code></li>\n\t<li>The characters in <code>allowed</code> are <strong>distinct</strong>.</li>\n\t<li><code>words[i]</code> and <code>allowed</code> contain only lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "A string is incorrect if it contains a character that is not allowed",
+    "Constraints are small enough for brute force"
+  ],
+  "metaData": "{\n  \"name\": \"countConsistentStrings\",\n  \"params\": [\n    {\n      \"name\": \"allowed\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"string[]\",\n      \"name\": \"words\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"439.9K\", \"totalSubmission\": \"497.1K\", \"totalAcceptedRaw\": 439929, \"totalSubmissionRaw\": 497080, \"acRate\": \"88.5%\"}",
+  "likes": 2274,
+  "dislikes": 90,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count Pairs Of Similar Strings\", \"titleSlug\": \"count-pairs-of-similar-strings\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"ab\"\n[\"ad\",\"bd\",\"aaab\",\"baa\",\"badab\"]",
+    "\"abc\"\n[\"a\",\"b\",\"c\",\"ab\",\"ac\",\"bc\",\"abc\"]",
+    "\"cad\"\n[\"cc\",\"acd\",\"b\",\"ba\",\"bac\",\"bad\",\"ac\",\"d\"]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"robinhood\", \"name\": \"Robinhood\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countConsistentStrings(string allowed, vector<string>& words) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countConsistentStrings(String allowed, String[] words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countConsistentStrings(self, allowed: str, words: List[str]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countConsistentStrings(self, allowed, words):\n        \"\"\"\n        :type allowed: str\n        :type words: List[str]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} allowed\n * @param {string[]} words\n * @return {number}\n */\nvar countConsistentStrings = function(allowed, words) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countConsistentStrings(allowed: string, words: string[]): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountConsistentStrings(string allowed, string[] words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\nint countConsistentStrings(char * allowed, char ** words, int wordsSize){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countConsistentStrings(allowed string, words []string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countConsistentStrings(allowed: String, words: Array<String>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countConsistentStrings(_ allowed: String, _ words: [String]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_consistent_strings(allowed: String, words: Vec<String>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} allowed\n# @param {String[]} words\n# @return {Integer}\ndef count_consistent_strings(allowed, words)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $allowed\n     * @param String[] $words\n     * @return Integer\n     */\n    function countConsistentStrings($allowed, $words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countConsistentStrings(allowed: String, words: Array[String]): Int = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "2431",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Brute Force\n\n#### Intuition\n\nWe need to find how many words in the given array contain only characters from the allowed string. To do this, we will go through each word in the array and check if it meets the condition.\n\nWe'll use a counter variable, `consistentCount`, to keep track of how many words meet the condition. For each word, we'll check every character it contains. If all the characters in a word are present in the `allowed` string, we'll count that word as consistent and increase our counter.\n\nAfter checking all the words, we'll return the value of `consistentCount` as the result.\n\n#### Algorithm\n\n- Initialize a variable `consistentCount` to store the number of consistent strings found.\n- Iterate through each `word` in the `words` array:\n  - Initialize a boolean variable `isWordConsistent` to `true`.\n  - Start an inner loop to iterate through each character in the current `word`:\n    - Set a boolean variable `isCharAllowed` to `false`, assuming the character is not allowed until found in the `allowed` string.\n    - Start another inner loop to iterate through each character in `allowed`:\n      - Compare the current character from the word with each character in `allowed`.\n      - If a match is found, set `isCharAllowed` to `true` and break out of the inner loop.\n    - If `isCharAllowed` is still `false`, set `isWordConsistent` to `false` and break out of the character checking loop.\n  - If `isWordConsistent` is `true`, increment `consistentCount` by 1.\n- Return the final value of `consistentCount` as the result.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/BgxN2SHK/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"BgxN2SHK\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ and $n$ be the lengths of `allowed` and `words`, respectively. \n\n- Time complexity: $O(m \\cdot n \\cdot k)$\n\n    The outermost loop iterates through each word in the `words` array, which has $n$ elements. This contributes $O(n)$ to our time complexity.\n\n    For each word, the algorithm iterates through its characters. If we denote the length of the longest word as $k$, this inner loop has a complexity of $O(k)$.\n\n    For each character in a word, in the worst case, we may need to search through the entire allowed string, taking $O(m)$ time.\n\n    Thus, the overall time complexity of the algorithm is $O(m \\cdot n \\cdot k)$.\n\n- Space complexity: $O(1)$\n\n    The algorithm does not use any data structures that scale with input space. Thus, the space complexity is constant.\n\n---\n\n### Approach 2: Boolean Array\n\n#### Intuition\n\nTo solve this problem efficiently, we need a better way to check if a string is consistent. The brute-force approach was slow because we kept checking each character against the `allowed` string. We need a faster method.\n\nThe key idea is to use a boolean array to mark which characters are allowed. Since we're only dealing with lowercase English letters, we need an array of size 26. Each index in the array will correspond to a character based on its ASCII value.\n\nEach character has an integer representation called its ASCII value. For example, `a` has an ASCII value of 97, `b` is 98, and so on until `z`, which is 122. We can map each character to an index from 0 to 25 by subtracting the ASCII value of `a` from the character's ASCII value. For example, `c` maps to index 2 because the difference between the ASCII values of `c` (99) and `a` (97) is 2.\n\nWith this setup, we can loop through each character in every word and check in constant time whether that character is allowed. If any character's index in our boolean array is `false`, the word isn't consistent. If all characters are marked `true`, we increase our counter of consistent words.\n\n#### Algorithm\n\n- Initialize a boolean array `isAllowed` of size `26` to store which characters are allowed.\n- Iterate through each character in the `allowed` string:\n  - Mark the corresponding index in `isAllowed` as `true`.\n- Initialize a variable `consistentCount` to store the number of consistent strings.\n- Iterate through each `word` in the `words` array:\n  - Set a boolean variable `isConsistent` to `true`.\n  - Iterate through each character in `word`:\n    - Check if the current character is allowed by accessing the corresponding index in `isAllowed`:\n      - If not allowed, set `isConsistent` to `false` and break the inner loop.\n  - If `isConsistent` is `true`, increment `consistentCount`.\n- Return the final value of `consistentCount` as the result.\n  \n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/7GakEK9c/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"7GakEK9c\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ and $n$ be the lengths of `allowed` and `words`, respectively. \n\n- Time complexity: $O(m + n \\cdot k)$\n\n    The algorithm iterates over each character in `allowed` to mark it as `true`, which takes $O(m)$ time.\n\n    The algorithm then iterates through each character of each word in the `words` array. If $k$ is the length of the longest word, the overall time complexity of this portion is $O(n \\cdot k)$.\n\n    Thus, the time complexity of the algorithm is $O(m) + O(n \\cdot k) = O(m + n \\cdot k)$.\n\n- Space complexity: $O(1)$\n\n    The only additional space used by the algorithm is the `isAllowed` array, which has a constant length of $26$. \n\n---\n\n### Approach 3: Hash Set\n\n#### Intuition\n\nAn alternative data structure that allows us to quickly check whether a given element exists or not is a hash set.  If you're new to hash sets, this LeetCode [Explore Card](https://leetcode.com/explore/learn/card/hash-table/183/combination-with-other-algorithms/1130/) provides a detailed explanation.\n\nWe'll start by creating a hash set called `allowedChars` and fill it with characters from the `allowed` string. This set will act as our lookup table for permitted characters. A key benefit of using a set over a boolean array is its flexibility: a boolean array always has 26 slots, even if `allowed` has fewer characters. A set, on the other hand, adjusts to only use the space it needs.\n\nNext, we loop through each word in `words`. For each word, we'll check each character to see if it's in the set. If every character of the word is present, we increment our counter.\n\n#### Algorithm\n \n- Initialize a set `allowedChars` to store the allowed characters.\n- Iterate through each character in the `allowed` string and add it to `allowedChars`.\n- Initialize a variable `consistentCount` to store the number of consistent strings.\n- Iterate through each `word` in the `words` array:\n  - Set a boolean variable `isConsistent` to `true`.\n  - Iterate through each character in `word`:\n    - Check if the current character is contained in `allowedChars`:\n      - If not, set `isConsistent` to `false` and break the inner loop.\n  - If `isConsistent` is `true`, increment `consistentCount`.\n- Return `consistentCount` as our answer.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/a9NZ47n5/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"a9NZ47n5\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ and $n$ be the lengths of `allowed` and `words`, respectively. \n\n* Time complexity: $O(m + n \\cdot k)$\n\n    The algorithm loops over `allowed` to populate the `allowedChars` set, taking $O(m)$ time.\n\n    The algorithm then iterates over each character of each word in the `words` array. If the $k$ is the length of the longest word, this takes $O(n \\cdot k)$ time.\n\n    Thus, the overall time complexity of the algorithm is $O(m) + O(n \\cdot k) = O(m + n \\cdot k)$.\n\n* Space complexity: $O(m)$\n\n    The `allowedChars` set can have a size of $m$ in the worst case (all characters in `allowed` are unique). All other variables take constant space.\n\n    Thus, the space complexity of the algorithm is $O(m)$.\n\n---\n\n### Approach 4: Bit Manipulation\n\n#### Intuition\n\nIn a binary number, each bit can be `0` or `1`. A boolean variable can be either `true` or `false`. The pattern is clear: each bit in a binary number can represent a boolean value. We can use this to show whether a character is in `allowed`. This representation is called a bitmask, which will work like the boolean array in the second approach, where each index stands for a character from `a` to `z`.\n\nSince there are only 26 possible characters, a 32-bit integer will be enough for our bitmask. We need to perform two main operations with this bitmask:\n\n1. Setting a bit: Each bit will show whether a character from `a` to `z` is present (`1`) or not (`0`). As in the second approach, the 0th bit will represent `a`, the 1st bit will represent `b`, and so on. To mark the presence of a character, we'll set the corresponding bit to `1`. To set a bit, we use Bitwise OR with `1` shifted left by that bit's position. For example, to set the 2nd bit in the binary number `1000010`, we use Bitwise OR with `1` shifted left by `2`. Here’s the pseudo-code for setting a bit for a character:\n\n```\nIf c is the character to be marked:\nmask = mask | (1 << (c - 'a'))\n```\n\n![](../Figures/1684/set.png)\n\n2. Checking a bit: To see if a character is in `allowed`, we check the corresponding bit in the bitmask. We can isolate the bit by right-shifting the bitmask by the bit's position and then using Bitwise AND with `1`. If the result is `1`, the character is in `allowed`. For example, to check if the 2nd bit in `1000110` is set, we right-shift by `2` and use Bitwise AND with `1`. This gives us `1`, so the bit is set. Here’s the pseudo-code for this check:\n\n```\nIf c is the character to be checked:\nbit = (mask >> (c - 'a')) & 1\n```\n\n![](../Figures/1684/check.png)\n\nUsing these methods, we can check each character in a word to see if the word is consistent.\n\n#### Algorithm\n\n- Initialize a variable `allowedBits` to store the bitmask of allowed characters.\n- Iterate through each character in the `allowed` string:\n  - Set the corresponding bit in `allowedBits` for each character.\n- Initialize a variable `consistentCount` to store the number of consistent strings.\n- Iterate through each `word` in the `words` array:\n  - Initialize a boolean variable `isConsistent` as `true`.\n  - Iterate through each character in `word`:\n    - Find the `bit` corresponding to the character in `allowedBits`.\n    - If the bit is `0`: \n      - Set `isConsistent` to `false` and break the inner loop.\n  - If `isConsistent` is `true`, increment `consistentCount`.\n- Return the final value of `consistentCount` as the result. \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Qjf37a9h/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Qjf37a9h\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ and $n$ be the lengths of `allowed` and `words`, respectively. \n\n- Time complexity: $O(m + n \\cdot k)$\n\n    Setting each bit for the characters in `allowed` takes $O(m)$ time.\n\n    If $k$ is the length of the longest word, iterating through each character in each word of the `words` array takes $O(n \\cdot k)$ time.\n\n    Thus, the overall time complexity of the algorithm is $O(m) + O(n \\cdot k) = O(m + n \\cdot k)$.\n\n- Space complexity: $O(1)$\n\n    All variables used by the algorithm take constant space.  \n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

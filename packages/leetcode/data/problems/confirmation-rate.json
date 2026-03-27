@@ -1,0 +1,53 @@
+{
+  "questionId": "2087",
+  "questionFrontendId": "1934",
+  "title": "Confirmation Rate",
+  "titleSlug": "confirmation-rate",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Signups</code></p>\n\n<pre>\n+----------------+----------+\n| Column Name    | Type     |\n+----------------+----------+\n| user_id        | int      |\n| time_stamp     | datetime |\n+----------------+----------+\nuser_id is the column of unique values for this table.\nEach row contains information about the signup time for the user with ID user_id.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Confirmations</code></p>\n\n<pre>\n+----------------+----------+\n| Column Name    | Type     |\n+----------------+----------+\n| user_id        | int      |\n| time_stamp     | datetime |\n| action         | ENUM     |\n+----------------+----------+\n(user_id, time_stamp) is the primary key (combination of columns with unique values) for this table.\nuser_id is a foreign key (reference column) to the Signups table.\naction is an ENUM (category) of the type (&#39;confirmed&#39;, &#39;timeout&#39;)\nEach row of this table indicates that the user with ID user_id requested a confirmation message at time_stamp and that confirmation message was either confirmed (&#39;confirmed&#39;) or expired without confirming (&#39;timeout&#39;).\n</pre>\n\n<p>&nbsp;</p>\n\n<p>The <strong>confirmation rate</strong> of a user is the number of <code>&#39;confirmed&#39;</code> messages divided by the total number of requested confirmation messages. The confirmation rate of a user that did not request any confirmation messages is <code>0</code>. Round the confirmation rate to <strong>two decimal</strong> places.</p>\n\n<p>Write a solution to find the <strong>confirmation rate</strong> of each user.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nSignups table:\n+---------+---------------------+\n| user_id | time_stamp          |\n+---------+---------------------+\n| 3       | 2020-03-21 10:16:13 |\n| 7       | 2020-01-04 13:57:59 |\n| 2       | 2020-07-29 23:09:44 |\n| 6       | 2020-12-09 10:39:37 |\n+---------+---------------------+\nConfirmations table:\n+---------+---------------------+-----------+\n| user_id | time_stamp          | action    |\n+---------+---------------------+-----------+\n| 3       | 2021-01-06 03:30:46 | timeout   |\n| 3       | 2021-07-14 14:00:00 | timeout   |\n| 7       | 2021-06-12 11:57:29 | confirmed |\n| 7       | 2021-06-13 12:58:28 | confirmed |\n| 7       | 2021-06-14 13:59:27 | confirmed |\n| 2       | 2021-01-22 00:00:00 | confirmed |\n| 2       | 2021-02-28 23:59:59 | timeout   |\n+---------+---------------------+-----------+\n<strong>Output:</strong> \n+---------+-------------------+\n| user_id | confirmation_rate |\n+---------+-------------------+\n| 6       | 0.00              |\n| 3       | 0.00              |\n| 7       | 1.00              |\n| 2       | 0.50              |\n+---------+-------------------+\n<strong>Explanation:</strong> \nUser 6 did not request any confirmation messages. The confirmation rate is 0.\nUser 3 made 2 requests and both timed out. The confirmation rate is 0.\nUser 7 made 3 requests and all were confirmed. The confirmation rate is 1.\nUser 2 made 2 requests where one was confirmed and the other timed out. The confirmation rate is 1 / 2 = 0.5.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Signups (user_id int, time_stamp datetime)\", \"Create table If Not Exists Confirmations (user_id int, time_stamp datetime, action ENUM('confirmed','timeout'))\"], \"mssql\": [\"Create table Signups (user_id int, time_stamp datetime)\", \"Create table Confirmations (user_id int, time_stamp datetime, action VARCHAR(10) NOT NULL CHECK (action IN ('confirmed','timeout')))\"], \"oraclesql\": [\"Create table Signups (user_id int, time_stamp date)\", \"Create table Confirmations (user_id int, time_stamp date, action VARCHAR(10) NOT NULL CHECK (action IN ('confirmed','timeout')))\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD HH24:MI:SS'\"], \"database\": true, \"name\": \"confirmation_rate\", \"pythondata\": [\"Signups = pd.DataFrame([], columns=['user_id', 'time_stamp']).astype({'user_id':'Int64', 'time_stamp':'datetime64[ns]'})\", \"Confirmations = pd.DataFrame([], columns=['user_id', 'time_stamp', 'action']).astype({'user_id':'Int64', 'time_stamp':'datetime64[ns]', 'action':'object'})\"], \"postgresql\": [\"Create table If Not Exists Signups (user_id int, time_stamp timestamp)\\n\", \"Create table If Not Exists Confirmations (user_id int, time_stamp timestamp, action VARCHAR(30) CHECK (action IN ('confirmed','timeout')))\\n\"], \"database_schema\": {\"Signups\": {\"user_id\": \"INT\", \"time_stamp\": \"DATETIME\"}, \"Confirmations\": {\"user_id\": \"INT\", \"time_stamp\": \"DATETIME\", \"action\": \"ENUM('confirmed', 'timeout')\"}}}",
+  "stats": "{\"totalAccepted\": \"589.6K\", \"totalSubmission\": \"954.5K\", \"totalAcceptedRaw\": 589588, \"totalSubmissionRaw\": 954503, \"acRate\": \"61.8%\"}",
+  "likes": 1580,
+  "dislikes": 133,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Signups\": [\"user_id\", \"time_stamp\"], \"Confirmations\": [\"user_id\", \"time_stamp\", \"action\"]}, \"rows\": {\"Signups\": [[3, \"2020-03-21 10:16:13\"], [7, \"2020-01-04 13:57:59\"], [2, \"2020-07-29 23:09:44\"], [6, \"2020-12-09 10:39:37\"]], \"Confirmations\": [[3, \"2021-01-06 03:30:46\", \"timeout\"], [3, \"2021-07-14 14:00:00\", \"timeout\"], [7, \"2021-06-12 11:57:29\", \"confirmed\"], [7, \"2021-06-13 12:58:28\", \"confirmed\"], [7, \"2021-06-14 13:59:27\", \"confirmed\"], [2, \"2021-01-22 00:00:00\", \"confirmed\"], [2, \"2021-02-28 23:59:59\", \"timeout\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef confirmation_rate(signups: pd.DataFrame, confirmations: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

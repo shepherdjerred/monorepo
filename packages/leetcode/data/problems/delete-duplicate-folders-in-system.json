@@ -1,0 +1,149 @@
+{
+  "questionId": "2079",
+  "questionFrontendId": "1948",
+  "title": "Delete Duplicate Folders in System",
+  "titleSlug": "delete-duplicate-folders-in-system",
+  "difficulty": "Hard",
+  "content": "<p>Due to a bug, there are many duplicate folders in a file system. You are given a 2D array <code>paths</code>, where <code>paths[i]</code> is an array representing an absolute path to the <code>i<sup>th</sup></code> folder in the file system.</p>\n\n<ul>\n\t<li>For example, <code>[&quot;one&quot;, &quot;two&quot;, &quot;three&quot;]</code> represents the path <code>&quot;/one/two/three&quot;</code>.</li>\n</ul>\n\n<p>Two folders (not necessarily on the same level) are <strong>identical</strong> if they contain the <strong>same non-empty</strong> set of identical subfolders and underlying subfolder structure. The folders <strong>do not</strong> need to be at the root level to be identical. If two or more folders are <strong>identical</strong>, then <strong>mark</strong> the folders as well as all their subfolders.</p>\n\n<ul>\n\t<li>For example, folders <code>&quot;/a&quot;</code> and <code>&quot;/b&quot;</code> in the file structure below are identical. They (as well as their subfolders) should <strong>all</strong> be marked:\n\n\t<ul>\n\t\t<li><code>/a</code></li>\n\t\t<li><code>/a/x</code></li>\n\t\t<li><code>/a/x/y</code></li>\n\t\t<li><code>/a/z</code></li>\n\t\t<li><code>/b</code></li>\n\t\t<li><code>/b/x</code></li>\n\t\t<li><code>/b/x/y</code></li>\n\t\t<li><code>/b/z</code></li>\n\t</ul>\n\t</li>\n\t<li>However, if the file structure also included the path <code>&quot;/b/w&quot;</code>, then the folders <code>&quot;/a&quot;</code> and <code>&quot;/b&quot;</code> would not be identical. Note that <code>&quot;/a/x&quot;</code> and <code>&quot;/b/x&quot;</code> would still be considered identical even with the added folder.</li>\n</ul>\n\n<p>Once all the identical folders and their subfolders have been marked, the file system will <strong>delete</strong> all of them. The file system only runs the deletion once, so any folders that become identical after the initial deletion are not deleted.</p>\n\n<p>Return <em>the 2D array </em><code>ans</code> <em>containing the paths of the <strong>remaining</strong> folders after deleting all the marked folders. The paths may be returned in <strong>any</strong> order</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/07/19/lc-dupfolder1.jpg\" style=\"width: 200px; height: 218px;\" />\n<pre>\n<strong>Input:</strong> paths = [[&quot;a&quot;],[&quot;c&quot;],[&quot;d&quot;],[&quot;a&quot;,&quot;b&quot;],[&quot;c&quot;,&quot;b&quot;],[&quot;d&quot;,&quot;a&quot;]]\n<strong>Output:</strong> [[&quot;d&quot;],[&quot;d&quot;,&quot;a&quot;]]\n<strong>Explanation:</strong> The file structure is as shown.\nFolders &quot;/a&quot; and &quot;/c&quot; (and their subfolders) are marked for deletion because they both contain an empty\nfolder named &quot;b&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/07/19/lc-dupfolder2.jpg\" style=\"width: 200px; height: 355px;\" />\n<pre>\n<strong>Input:</strong> paths = [[&quot;a&quot;],[&quot;c&quot;],[&quot;a&quot;,&quot;b&quot;],[&quot;c&quot;,&quot;b&quot;],[&quot;a&quot;,&quot;b&quot;,&quot;x&quot;],[&quot;a&quot;,&quot;b&quot;,&quot;x&quot;,&quot;y&quot;],[&quot;w&quot;],[&quot;w&quot;,&quot;y&quot;]]\n<strong>Output:</strong> [[&quot;c&quot;],[&quot;c&quot;,&quot;b&quot;],[&quot;a&quot;],[&quot;a&quot;,&quot;b&quot;]]\n<strong>Explanation: </strong>The file structure is as shown. \nFolders &quot;/a/b/x&quot; and &quot;/w&quot; (and their subfolders) are marked for deletion because they both contain an empty folder named &quot;y&quot;.\nNote that folders &quot;/a&quot; and &quot;/c&quot; are identical after the deletion, but they are not deleted because they were not marked beforehand.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/07/19/lc-dupfolder3.jpg\" style=\"width: 200px; height: 201px;\" />\n<pre>\n<strong>Input:</strong> paths = [[&quot;a&quot;,&quot;b&quot;],[&quot;c&quot;,&quot;d&quot;],[&quot;c&quot;],[&quot;a&quot;]]\n<strong>Output:</strong> [[&quot;c&quot;],[&quot;c&quot;,&quot;d&quot;],[&quot;a&quot;],[&quot;a&quot;,&quot;b&quot;]]\n<strong>Explanation:</strong> All folders are unique in the file system.\nNote that the returned array can be in a different order as the order does not matter.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= paths.length &lt;= 2 * 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= paths[i].length &lt;= 500</code></li>\n\t<li><code>1 &lt;= paths[i][j].length &lt;= 10</code></li>\n\t<li><code>1 &lt;= sum(paths[i][j].length) &lt;= 2 * 10<sup>5</sup></code></li>\n\t<li><code>path[i][j]</code> consists of lowercase English letters.</li>\n\t<li>No two paths lead to the same folder.</li>\n\t<li>For any folder not at the root level, its parent folder will also be in the input.</li>\n</ul>\n",
+  "hints": [
+    "Can we use a trie to build the folder structure?",
+    "Can we utilize hashing to hash the folder structures?"
+  ],
+  "metaData": "{\n  \"name\": \"deleteDuplicateFolder\",\n  \"params\": [\n    {\n      \"name\": \"paths\",\n      \"type\": \"list<list<string>>\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<list<string>>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"68K\", \"totalSubmission\": \"87.5K\", \"totalAcceptedRaw\": 67963, \"totalSubmissionRaw\": 87520, \"acRate\": \"77.7%\"}",
+  "likes": 620,
+  "dislikes": 143,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Find Duplicate File in System\", \"titleSlug\": \"find-duplicate-file-in-system\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Duplicate Subtrees\", \"titleSlug\": \"find-duplicate-subtrees\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[\"a\"],[\"c\"],[\"d\"],[\"a\",\"b\"],[\"c\",\"b\"],[\"d\",\"a\"]]",
+    "[[\"a\"],[\"c\"],[\"a\",\"b\"],[\"c\",\"b\"],[\"a\",\"b\",\"x\"],[\"a\",\"b\",\"x\",\"y\"],[\"w\"],[\"w\",\"y\"]]",
+    "[[\"a\",\"b\"],[\"c\",\"d\"],[\"c\"],[\"a\"]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 3, \"slug\": \"bookingcom\", \"name\": \"Booking.com\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Trie",
+      "slug": "trie"
+    },
+    {
+      "name": "Hash Function",
+      "slug": "hash-function"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<string>> deleteDuplicateFolder(vector<vector<string>>& paths) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<List<String>> deleteDuplicateFolder(List<List<String>> paths) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def deleteDuplicateFolder(self, paths: List[List[str]]) -> List[List[str]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def deleteDuplicateFolder(self, paths):\n        \"\"\"\n        :type paths: List[List[str]]\n        :rtype: List[List[str]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[][]} paths\n * @return {string[][]}\n */\nvar deleteDuplicateFolder = function(paths) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function deleteDuplicateFolder(paths: string[][]): string[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<IList<string>> DeleteDuplicateFolder(IList<IList<string>> paths) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nchar*** deleteDuplicateFolder(char*** paths, int pathsSize, int* pathsColSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func deleteDuplicateFolder(paths [][]string) [][]string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun deleteDuplicateFolder(paths: List<List<String>>): List<List<String>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func deleteDuplicateFolder(_ paths: [[String]]) -> [[String]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn delete_duplicate_folder(paths: Vec<Vec<String>>) -> Vec<Vec<String>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[][]} paths\n# @return {String[][]}\ndef delete_duplicate_folder(paths)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[][] $paths\n     * @return String[][]\n     */\n    function deleteDuplicateFolder($paths) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<String>> deleteDuplicateFolder(List<List<String>> paths) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def deleteDuplicateFolder(paths: List[List[String]]): List[List[String]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec delete_duplicate_folder(paths :: [[String.t]]) :: [[String.t]]\n  def delete_duplicate_folder(paths) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec delete_duplicate_folder(Paths :: [[unicode:unicode_binary()]]) -> [[unicode:unicode_binary()]].\ndelete_duplicate_folder(Paths) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (delete-duplicate-folder paths)\n  (-> (listof (listof string?)) (listof (listof string?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2800",
+    "content": "### Approach: Serialization-Based Representation of Subtrees\n\n#### Intuition\n\nWe can approach this problem at an abstract level (without worrying about implementation details at first) in three main steps:\n\n1. Build a tree representation of the file system using the input $\\textit{paths}$. This tree is a multi-way tree rooted at /, where each non-root node represents a folder.\n\n2. Traverse the tree starting from the root. As stated in the problem, if two nodes $x$ and $y$ contain subfolders with the same structure (i.e., the same nested arrangement of subfolders, recursively), then both $x$ and $y$ must be deleted. Therefore, to determine the structure of a node’s subtree, we must first traverse all its children and then backtrack to process the node itself. This corresponds to a post-order traversal of a multi-way tree.\n\nWhile backtracking to a node, we serialize its structure and store it in a data structure for later comparison with other nodes.\n\n3. Traverse the tree again from the root. When visiting a node $x$, if its serialized structure appears more than once in the data structure, it means a duplicate exists, and we delete $x$ (i.e., skip it). Otherwise, $x$ is unique, and we record the path from the root to $x$ in the final answer, then recursively visit its children.\n\nAfter this second traversal, all duplicate folders will have been removed, and we will have collected the remaining unique folder paths.\n\n#### Algorithm\n\nLet’s now solve these three steps one by one:\n\n**Step 1: Build the Tree**\n\nWe define a class to represent the nodes of the tree. We create a root node, and for each path in $\\textit{paths}$, we insert its folders into the tree. If you're familiar with the Trie data structure, this step will feel familiar.\n\n**Step 2: Serialize and Identify Duplicates**\n\nThe challenge here is not the post-order traversal itself, but rather how to represent the \"structure\" of a node in a way that can be used to compare nodes.\n\nTo do this, we adopt a serialization approach similar to what is used in [\"297. Serialize and Deserialize Binary Tree\"](https://leetcode.com/problems/serialize-and-deserialize-binary-tree/). Let $\\text{serial}(x)$ represent the serialized structure of node $x$. We define it as follows:\n \n- If $x$ is a leaf node (i.e., has no children), then $\\text{serial}(x)$ is an empty string `\"\"`. For instance, in Example 1, the three leaf nodes `b`, `b`, and `a` all serialize to `\"\"`.\n\n- If $x$ has children $y_1, y_2, \\dots, y_k$, then:\n\n    $$\n    \\text{serial}(x) = y_1(\\text{serial}(y_1))y_2(\\text{serial}(y_2))\\cdots y_k(\\text{serial}(y_k))\n    $$\n\n    In words, we recursively serialize each child, attach its folder name in front of its serialization, and wrap its structure in parentheses. The result is a string representing the structure of $x$'s subtree.\n    \n    However, this naive approach can be order-sensitive. If $x_1$ and $x_2$ have the same children but in different orders, their serializations will differ, even though their structures are equivalent. To handle this, we sort the serialized representations of children before concatenating. This ensures consistent serialization for equivalent subtrees.\n    \nAfter a single post-order traversal of the tree, we can record all serializations in a hash map, where the key is the serialization and the value is its frequency.\n\n**Step 3: Collect Unique Paths**\n\nWe now perform another DFS traversal from the root. We maintain a list path that tracks the current folder path. At each node:\n\n- If the node’s serialization appears more than once in the map, it is a duplicate and should be skipped.\n- Otherwise, the path to this node is added to the final answer, and we recursively traverse its children.\n\n#### Implementation\n\n> The C++ code below builds the tree, serializes it using post-order traversal, and collects the unique folder paths. Note: this version does **not free memory** after execution; in an interview, you may ask whether tree destruction is required.\n\n<iframe src=\"https://leetcode.com/playground/74j7V8qy/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"74j7V8qy\"></iframe>\n\n#### Complexity analysis\n\nWe focus here on the time required to compute the serialization of all node structures and the space required to store them in a hash map. All other operations, whether time- or space-related, are asymptotically smaller and can therefore be ignored.\n\nIn the worst case, each node in the tree has a unique serialized structure. Thus, the time and space complexities are both proportional to the total length of all serialized strings. Our task is to find an upper bound on this total length.\n\nTo do this, we use an important and intuitive result from tree theory:\n\n> Let $T$ be an unordered rooted tree. For a node $x$ in $T$, define:\n> - $\\textit{dist}[x]$: the number of nodes on the path from the root to $x$\n> - $\\textit{size}[x]$: the size of the subtree rooted at $x$\n> Then:\n>\n> $$\n> \\sum_{x \\in T} \\textit{dist}[x] = \\sum_{x \\in T} \\textit{size}[x]\n> $$\n\n**Why this holds:**\nFor any node $x'$, it contributes to the subtree size of each of its ancestors (including itself). Therefore, $x'$ appears once in the subtree size of every node along its path from the root. So the total number of appearances of all nodes across all subtree sizes equals the sum of all distances from the root.\n\nNow, returning to our problem:\n\n- The input array paths encodes the full paths from the root to each folder, and the total number of characters across all paths is bounded by $2 \\times 10^5$.\n\n- So $\\sum \\textit{dist}[x] \\leq 2 \\times 10^5$\n\n- And therefore $\\sum \\textit{size}[x] \\leq 2 \\times 10^5$\n\nFor each node $x$, the length of its serialized string representation includes two components:\n\n1. The sum of the lengths of the folder names of all its subfolders. Each subfolder name can have at most 10 characters, so this part is bounded by $10 \\cdot \\textit{size}[x]$.\n\n2. The number of parentheses used for structural disambiguation. Each subfolder is wrapped in a pair of parentheses, contributing at most $2 \\cdot \\textit{size}[x]$ characters.\n\nThus, for any node $x$, the total serialization length is at most:\n\n$$\n12 \\cdot \\textit{size}[x]\n$$\n\nSo the total length of all serialized strings across the entire tree is:\n\n$$\n12 \\cdot \\sum_{x \\in T} \\textit{size}[x] \\leq 12 \\cdot 2 \\times 10^5 = 2.4 \\times 10^6\n$$\n\nHence, the space complexity is $\\mathcal{O}(10^6)$ in the worst case.\n\nAs for the time complexity, even if we account for sorting the child structures (which adds an extra $\\log$ factor), the total operations remain bounded by around $10^7$, which comfortably fits within the time limits.\n\nIt's worth noting that this upper-bound analysis assumes extremely pessimistic and adversarial cases. In practical scenarios, the actual runtime is significantly lower, and this method performs very efficiently.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

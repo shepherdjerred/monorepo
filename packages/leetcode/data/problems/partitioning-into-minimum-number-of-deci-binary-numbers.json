@@ -1,0 +1,138 @@
+{
+  "questionId": "1807",
+  "questionFrontendId": "1689",
+  "title": "Partitioning Into Minimum Number Of Deci-Binary Numbers",
+  "titleSlug": "partitioning-into-minimum-number-of-deci-binary-numbers",
+  "difficulty": "Medium",
+  "content": "<p>A decimal number is called <strong>deci-binary</strong> if each of its digits is either <code>0</code> or <code>1</code> without any leading zeros. For example, <code>101</code> and <code>1100</code> are <strong>deci-binary</strong>, while <code>112</code> and <code>3001</code> are not.</p>\n\n<p>Given a string <code>n</code> that represents a positive decimal integer, return <em>the <strong>minimum</strong> number of positive <strong>deci-binary</strong> numbers needed so that they sum up to </em><code>n</code><em>.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = &quot;32&quot;\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> 10 + 11 + 11 = 32\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = &quot;82734&quot;\n<strong>Output:</strong> 8\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = &quot;27346209830709182346&quot;\n<strong>Output:</strong> 9\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>n</code> consists of only digits.</li>\n\t<li><code>n</code> does not contain any leading zeros and represents a positive integer.</li>\n</ul>\n",
+  "hints": [
+    "Think about if the input was only one digit. Then you need to add up as many ones as the value of this digit.",
+    "If the input has multiple digits, then you can solve for each digit independently, and merge the answers to form numbers that add up to that input.",
+    "Thus the answer is equal to the max digit."
+  ],
+  "metaData": "{\n  \"name\": \"minPartitions\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"371K\", \"totalSubmission\": \"410.1K\", \"totalAcceptedRaw\": 370954, \"totalSubmissionRaw\": 410098, \"acRate\": \"90.5%\"}",
+  "likes": 2829,
+  "dislikes": 1544,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"32\"",
+    "\"82734\"",
+    "\"27346209830709182346\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"nutanix\", \"name\": \"Nutanix\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minPartitions(string n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minPartitions(String n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minPartitions(self, n: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minPartitions(self, n):\n        \"\"\"\n        :type n: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} n\n * @return {number}\n */\nvar minPartitions = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minPartitions(n: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinPartitions(string n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minPartitions(char* n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minPartitions(n string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minPartitions(n: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minPartitions(_ n: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_partitions(n: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} n\n# @return {Integer}\ndef min_partitions(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $n\n     * @return Integer\n     */\n    function minPartitions($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minPartitions(String n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minPartitions(n: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_partitions(n :: String.t) :: integer\n  def min_partitions(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_partitions(N :: unicode:unicode_binary()) -> integer().\nmin_partitions(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-partitions n)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1079",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n#### Overview\n\nThis is an interesting problem that requires a little observation and insight. It's recommended to try a few examples on pen and paper to look for patterns. Below, we discuss a simple approach to solve this problem.\n\n---\n\n#### Approach 1: Math\n\n**Intuition**\n\nLet's begin with an example, `n = \"28734\"`. We need to decompose it into several numbers that only include `0` and/or `1`, as few as possible. Let's consider two sub-problems.\n\nThe first sub-problem is:\n\n> What is the lower bound of our solution? For this example, can it be less than `8`?\n\nFor `n = \"28734\"`, it cannot be less than `8`. Since there is an `8` in `28734` and what we have are only `0` and `1`, we need at least eight `1`'s to add up to `8`. In other words, we need at least **eight** numbers for `n = \"28734\"`.\n\n![Figure 1.1](../Documents/5626/5626_1_1.drawio.svg)\n\nThe second sub-problem is:\n\n> Can eight numbers work? That is to say, can we make up `28734` with **eight** numbers that only include `0` and/or `1`?\n\nYes. Note that if we put `0`s in the spare spaces in the above figure, we get eight numbers:\n\n![Figure 1.2](../Documents/5626/5626_1_2.drawio.svg)\n\nEach horizontal line represents a number that only includes `0` and/or `1`.\n\nAdd those numbers to get `28734`.\n\nFrom the above two solutions, we know that `8` numbers are feasible, and the solution cannot be less than `8`. That is to say, `8` is the correct solution to `n = \"28734\"`.\n\nThis example gives us an important insight:\n\n> The required minimum number of deci-binary numbers is the **max** digit in the string `n`.\n\n**Algorithm**\n\nReturn the maximum digit in the string `n`.\n\n> Challenge: Can you implement the code yourself without seeing our implementations?\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/ZDXWmFvs/shared\" frameBorder=\"0\" width=\"100%\" height=\"208\" name=\"ZDXWmFvs\"></iframe>\n\n**Complexity Analysis**\n\nLet $$M$$ be the length of string `n`. If instead of being a string, `n` were a number, then $$O(M) = O(\\log_{10} n)$$, as $$\\log_{10}$$ of a number gives its length.\n\n- Time Complexity: $$O(M)$$, since we need to iterate over string `n` to find the maximum digit.\n\n- Space Complexity: $$O(1)$$, since no additional data structures are required. Note that here we do not take the space of the input `n` into account.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,151 @@
+{
+  "questionId": "1865",
+  "questionFrontendId": "1724",
+  "title": "Checking Existence of Edge Length Limited Paths II",
+  "titleSlug": "checking-existence-of-edge-length-limited-paths-ii",
+  "difficulty": "Hard",
+  "content": "<p>An undirected graph of <code>n</code> nodes is defined by <code>edgeList</code>, where <code>edgeList[i] = [u<sub>i</sub>, v<sub>i</sub>, dis<sub>i</sub>]</code> denotes an edge between nodes <code>u<sub>i</sub></code> and <code>v<sub>i</sub></code> with distance <code>dis<sub>i</sub></code>. Note that there may be <strong>multiple</strong> edges between two nodes, and the graph may not be connected.</p>\n\n<p>Implement the <code>DistanceLimitedPathsExist</code> class:</p>\n\n<ul>\n\t<li><code>DistanceLimitedPathsExist(int n, int[][] edgeList)</code> Initializes the class with an undirected graph.</li>\n\t<li><code>boolean query(int p, int q, int limit)</code> Returns <code>true</code> if there exists a path from <code>p</code> to <code>q</code> such that each edge on the path has a distance <strong>strictly less than</strong> <code>limit</code>, and otherwise <code>false</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/01/05/messed.png\" style=\"width: 300px; height: 298px;\" /></strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;DistanceLimitedPathsExist&quot;, &quot;query&quot;, &quot;query&quot;, &quot;query&quot;, &quot;query&quot;]\n[[6, [[0, 2, 4], [0, 3, 2], [1, 2, 3], [2, 3, 1], [4, 5, 5]]], [2, 3, 2], [1, 3, 3], [2, 0, 3], [0, 5, 6]]\n<strong>Output</strong>\n[null, true, false, true, false]\n\n<strong>Explanation</strong>\nDistanceLimitedPathsExist distanceLimitedPathsExist = new DistanceLimitedPathsExist(6, [[0, 2, 4], [0, 3, 2], [1, 2, 3], [2, 3, 1], [4, 5, 5]]);\ndistanceLimitedPathsExist.query(2, 3, 2); // return true. There is an edge from 2 to 3 of distance 1, which is less than 2.\ndistanceLimitedPathsExist.query(1, 3, 3); // return false. There is no way to go from 1 to 3 with distances <strong>strictly</strong> less than 3.\ndistanceLimitedPathsExist.query(2, 0, 3); // return true. There is a way to go from 2 to 0 with distance &lt; 3: travel from 2 to 3 to 0.\ndistanceLimitedPathsExist.query(0, 5, 6); // return false. There are no paths from 0 to 5.\n</pre>\n\n<p>&nbsp;</p>\n<p><code><strong>Constraints:</strong></code></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= edgeList.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>edgeList[i].length == 3</code></li>\n\t<li><code>0 &lt;= u<sub>i</sub>, v<sub>i</sub>, p, q &lt;= n-1</code></li>\n\t<li><code>u<sub>i</sub> != v<sub>i</sub></code></li>\n\t<li><code>p != q</code></li>\n\t<li><code>1 &lt;= dis<sub>i</sub>, limit &lt;= 10<sup>9</sup></code></li>\n\t<li>At most&nbsp;<code>10<sup>4</sup></code> calls will be made to <code>query</code>.</li>\n</ul>\n",
+  "hints": [
+    "Find the minimum spanning tree of the given graph.",
+    "Root the tree in an arbitrary node and calculate the maximum weight of the edge from each node to the chosen root.",
+    "To answer a query, find the lca between the two nodes, and find the maximum weight from each of the query nodes to their lca and compare it to the given limit."
+  ],
+  "metaData": "{\n  \"classname\": \"DistanceLimitedPathsExist\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer\",\n        \"name\": \"n\"\n      },\n      {\n        \"name\": \"edgeList\",\n        \"type\": \"integer[][]\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"p\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"q\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"limit\"\n        }\n      ],\n      \"name\": \"query\",\n      \"return\": {\n        \"type\": \"boolean\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"4.1K\", \"totalSubmission\": \"8K\", \"totalAcceptedRaw\": 4130, \"totalSubmissionRaw\": 7972, \"acRate\": \"51.8%\"}",
+  "likes": 123,
+  "dislikes": 10,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Checking Existence of Edge Length Limited Paths\", \"titleSlug\": \"checking-existence-of-edge-length-limited-paths\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Number of Good Paths\", \"titleSlug\": \"number-of-good-paths\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Score of a Path Between Two Cities\", \"titleSlug\": \"minimum-score-of-a-path-between-two-cities\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"DistanceLimitedPathsExist\",\"query\",\"query\",\"query\",\"query\"]\n[[6,[[0,2,4],[0,3,2],[1,2,3],[2,3,1],[4,5,5]]],[2,3,2],[1,3,3],[2,0,3],[0,5,6]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"oscar-health\", \"name\": \"Oscar Health\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Minimum Spanning Tree",
+      "slug": "minimum-spanning-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class DistanceLimitedPathsExist {\npublic:\n    DistanceLimitedPathsExist(int n, vector<vector<int>>& edgeList) {\n        \n    }\n    \n    bool query(int p, int q, int limit) {\n        \n    }\n};\n\n/**\n * Your DistanceLimitedPathsExist object will be instantiated and called as such:\n * DistanceLimitedPathsExist* obj = new DistanceLimitedPathsExist(n, edgeList);\n * bool param_1 = obj->query(p,q,limit);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class DistanceLimitedPathsExist {\n\n    public DistanceLimitedPathsExist(int n, int[][] edgeList) {\n        \n    }\n    \n    public boolean query(int p, int q, int limit) {\n        \n    }\n}\n\n/**\n * Your DistanceLimitedPathsExist object will be instantiated and called as such:\n * DistanceLimitedPathsExist obj = new DistanceLimitedPathsExist(n, edgeList);\n * boolean param_1 = obj.query(p,q,limit);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class DistanceLimitedPathsExist:\n\n    def __init__(self, n: int, edgeList: List[List[int]]):\n        \n\n    def query(self, p: int, q: int, limit: int) -> bool:\n        \n\n\n# Your DistanceLimitedPathsExist object will be instantiated and called as such:\n# obj = DistanceLimitedPathsExist(n, edgeList)\n# param_1 = obj.query(p,q,limit)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class DistanceLimitedPathsExist(object):\n\n    def __init__(self, n, edgeList):\n        \"\"\"\n        :type n: int\n        :type edgeList: List[List[int]]\n        \"\"\"\n        \n\n    def query(self, p, q, limit):\n        \"\"\"\n        :type p: int\n        :type q: int\n        :type limit: int\n        :rtype: bool\n        \"\"\"\n        \n\n\n# Your DistanceLimitedPathsExist object will be instantiated and called as such:\n# obj = DistanceLimitedPathsExist(n, edgeList)\n# param_1 = obj.query(p,q,limit)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} edgeList\n */\nvar DistanceLimitedPathsExist = function(n, edgeList) {\n    \n};\n\n/** \n * @param {number} p \n * @param {number} q \n * @param {number} limit\n * @return {boolean}\n */\nDistanceLimitedPathsExist.prototype.query = function(p, q, limit) {\n    \n};\n\n/** \n * Your DistanceLimitedPathsExist object will be instantiated and called as such:\n * var obj = new DistanceLimitedPathsExist(n, edgeList)\n * var param_1 = obj.query(p,q,limit)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class DistanceLimitedPathsExist {\n    constructor(n: number, edgeList: number[][]) {\n        \n    }\n\n    query(p: number, q: number, limit: number): boolean {\n        \n    }\n}\n\n/**\n * Your DistanceLimitedPathsExist object will be instantiated and called as such:\n * var obj = new DistanceLimitedPathsExist(n, edgeList)\n * var param_1 = obj.query(p,q,limit)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class DistanceLimitedPathsExist {\n\n    public DistanceLimitedPathsExist(int n, int[][] edgeList) {\n        \n    }\n    \n    public bool Query(int p, int q, int limit) {\n        \n    }\n}\n\n/**\n * Your DistanceLimitedPathsExist object will be instantiated and called as such:\n * DistanceLimitedPathsExist obj = new DistanceLimitedPathsExist(n, edgeList);\n * bool param_1 = obj.Query(p,q,limit);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} DistanceLimitedPathsExist;\n\n\nDistanceLimitedPathsExist* distanceLimitedPathsExistCreate(int n, int** edgeList, int edgeListSize, int* edgeListColSize) {\n    \n}\n\nbool distanceLimitedPathsExistQuery(DistanceLimitedPathsExist* obj, int p, int q, int limit) {\n    \n}\n\nvoid distanceLimitedPathsExistFree(DistanceLimitedPathsExist* obj) {\n    \n}\n\n/**\n * Your DistanceLimitedPathsExist struct will be instantiated and called as such:\n * DistanceLimitedPathsExist* obj = distanceLimitedPathsExistCreate(n, edgeList, edgeListSize, edgeListColSize);\n * bool param_1 = distanceLimitedPathsExistQuery(obj, p, q, limit);\n \n * distanceLimitedPathsExistFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type DistanceLimitedPathsExist struct {\n    \n}\n\n\nfunc Constructor(n int, edgeList [][]int) DistanceLimitedPathsExist {\n    \n}\n\n\nfunc (this *DistanceLimitedPathsExist) Query(p int, q int, limit int) bool {\n    \n}\n\n\n/**\n * Your DistanceLimitedPathsExist object will be instantiated and called as such:\n * obj := Constructor(n, edgeList);\n * param_1 := obj.Query(p,q,limit);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class DistanceLimitedPathsExist(n: Int, edgeList: Array<IntArray>) {\n\n    fun query(p: Int, q: Int, limit: Int): Boolean {\n        \n    }\n\n}\n\n/**\n * Your DistanceLimitedPathsExist object will be instantiated and called as such:\n * var obj = DistanceLimitedPathsExist(n, edgeList)\n * var param_1 = obj.query(p,q,limit)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass DistanceLimitedPathsExist {\n\n    init(_ n: Int, _ edgeList: [[Int]]) {\n        \n    }\n    \n    func query(_ p: Int, _ q: Int, _ limit: Int) -> Bool {\n        \n    }\n}\n\n/**\n * Your DistanceLimitedPathsExist object will be instantiated and called as such:\n * let obj = DistanceLimitedPathsExist(n, edgeList)\n * let ret_1: Bool = obj.query(p, q, limit)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct DistanceLimitedPathsExist {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl DistanceLimitedPathsExist {\n\n    fn new(n: i32, edgeList: Vec<Vec<i32>>) -> Self {\n        \n    }\n    \n    fn query(&self, p: i32, q: i32, limit: i32) -> bool {\n        \n    }\n}\n\n/**\n * Your DistanceLimitedPathsExist object will be instantiated and called as such:\n * let obj = DistanceLimitedPathsExist::new(n, edgeList);\n * let ret_1: bool = obj.query(p, q, limit);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class DistanceLimitedPathsExist\n\n=begin\n    :type n: Integer\n    :type edge_list: Integer[][]\n=end\n    def initialize(n, edge_list)\n        \n    end\n\n\n=begin\n    :type p: Integer\n    :type q: Integer\n    :type limit: Integer\n    :rtype: Boolean\n=end\n    def query(p, q, limit)\n        \n    end\n\n\nend\n\n# Your DistanceLimitedPathsExist object will be instantiated and called as such:\n# obj = DistanceLimitedPathsExist.new(n, edge_list)\n# param_1 = obj.query(p, q, limit)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class DistanceLimitedPathsExist {\n    /**\n     * @param Integer $n\n     * @param Integer[][] $edgeList\n     */\n    function __construct($n, $edgeList) {\n        \n    }\n  \n    /**\n     * @param Integer $p\n     * @param Integer $q\n     * @param Integer $limit\n     * @return Boolean\n     */\n    function query($p, $q, $limit) {\n        \n    }\n}\n\n/**\n * Your DistanceLimitedPathsExist object will be instantiated and called as such:\n * $obj = DistanceLimitedPathsExist($n, $edgeList);\n * $ret_1 = $obj->query($p, $q, $limit);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class DistanceLimitedPathsExist {\n\n  DistanceLimitedPathsExist(int n, List<List<int>> edgeList) {\n    \n  }\n  \n  bool query(int p, int q, int limit) {\n    \n  }\n}\n\n/**\n * Your DistanceLimitedPathsExist object will be instantiated and called as such:\n * DistanceLimitedPathsExist obj = DistanceLimitedPathsExist(n, edgeList);\n * bool param1 = obj.query(p,q,limit);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class DistanceLimitedPathsExist(_n: Int, _edgeList: Array[Array[Int]]) {\n\n    def query(p: Int, q: Int, limit: Int): Boolean = {\n        \n    }\n\n}\n\n/**\n * Your DistanceLimitedPathsExist object will be instantiated and called as such:\n * val obj = new DistanceLimitedPathsExist(n, edgeList)\n * val param_1 = obj.query(p,q,limit)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule DistanceLimitedPathsExist do\n  @spec init_(n :: integer, edge_list :: [[integer]]) :: any\n  def init_(n, edge_list) do\n    \n  end\n\n  @spec query(p :: integer, q :: integer, limit :: integer) :: boolean\n  def query(p, q, limit) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# DistanceLimitedPathsExist.init_(n, edge_list)\n# param_1 = DistanceLimitedPathsExist.query(p, q, limit)\n\n# DistanceLimitedPathsExist.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec distance_limited_paths_exist_init_(N :: integer(), EdgeList :: [[integer()]]) -> any().\ndistance_limited_paths_exist_init_(N, EdgeList) ->\n  .\n\n-spec distance_limited_paths_exist_query(P :: integer(), Q :: integer(), Limit :: integer()) -> boolean().\ndistance_limited_paths_exist_query(P, Q, Limit) ->\n  .\n\n\n%% Your functions will be called as such:\n%% distance_limited_paths_exist_init_(N, EdgeList),\n%% Param_1 = distance_limited_paths_exist_query(P, Q, Limit),\n\n%% distance_limited_paths_exist_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define distance-limited-paths-exist%\n  (class object%\n    (super-new)\n    \n    ; n : exact-integer?\n    ; edge-list : (listof (listof exact-integer?))\n    (init-field\n      n\n      edge-list)\n    \n    ; query : exact-integer? exact-integer? exact-integer? -> boolean?\n    (define/public (query p q limit)\n      )))\n\n;; Your distance-limited-paths-exist% object will be instantiated and called as such:\n;; (define obj (new distance-limited-paths-exist% [n n] [edge-list edge-list]))\n;; (define param_1 (send obj query p q limit))"
+    }
+  ],
+  "solution": null
+}

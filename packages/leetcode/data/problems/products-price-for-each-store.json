@@ -1,0 +1,58 @@
+{
+  "questionId": "1926",
+  "questionFrontendId": "1777",
+  "title": "Product's Price for Each Store",
+  "titleSlug": "products-price-for-each-store",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Products</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| product_id  | int     |\n| store       | enum    |\n| price       | int     |\n+-------------+---------+\nIn SQL, (product_id, store) is the primary key for this table.\nstore is a category of type (&#39;store1&#39;, &#39;store2&#39;, &#39;store3&#39;) where each represents the store this product is available at.\nprice is the price of the product at this store.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Find the price of each product in each store.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nProducts table:\n+-------------+--------+-------+\n| product_id  | store  | price |\n+-------------+--------+-------+\n| 0           | store1 | 95    |\n| 0           | store3 | 105   |\n| 0           | store2 | 100   |\n| 1           | store1 | 70    |\n| 1           | store3 | 80    |\n+-------------+--------+-------+\n<strong>Output:</strong> \n+-------------+--------+--------+--------+\n| product_id  | store1 | store2 | store3 |\n+-------------+--------+--------+--------+\n| 0           | 95     | 100    | 105    |\n| 1           | 70     | null   | 80     |\n+-------------+--------+--------+--------+\n<strong>Explanation:</strong> \nProduct 0 price&#39;s are 95 for store1, 100 for store2 and, 105 for store3.\nProduct 1 price&#39;s are 70 for store1, 80 for store3 and, it&#39;s not sold in store2.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Products (product_id int, store ENUM('store1', 'store2', 'store3'), price int)\"], \"mssql\": [\"Create table Products (product_id int, store varchar(6) not null check(store in ('store1', 'store2', 'store3')), price int)\"], \"oraclesql\": [\"Create table Products (product_id int, store varchar(6) not null check(store in ('store1', 'store2', 'store3')), price int)\"], \"database\": true, \"name\": \"products_price\", \"pythondata\": [\"Products = pd.DataFrame([], columns=['product_id', 'store', 'price']).astype({'product_id':'Int64', 'store':'category', 'price':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Products (product_id int, store VARCHAR(30) CHECK (store IN ('store1', 'store2', 'store3')), price int)\\n\"], \"manual\": false, \"database_schema\": {\"Products\": {\"product_id\": \"INT\", \"store\": \"ENUM('store1', 'store2', 'store3')\", \"price\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"24.8K\", \"totalSubmission\": \"30.2K\", \"totalAcceptedRaw\": 24802, \"totalSubmissionRaw\": 30198, \"acRate\": \"82.1%\"}",
+  "likes": 142,
+  "dislikes": 13,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Rearrange Products Table\", \"titleSlug\": \"rearrange-products-table\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Dynamic Pivoting of a Table\", \"titleSlug\": \"dynamic-pivoting-of-a-table\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Products\":[\"product_id\",\"store\",\"price\"]},\"rows\":{\"Products\":[[\"0\",\"store1\",\"95\"],[\"0\",\"store3\",\"105\"],[\"0\",\"store2\",\"100\"],[\"1\",\"store1\",\"70\"],[\"1\",\"store3\",\"80\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"mcafee\", \"name\": \"McAfee\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef products_price(products: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "2093",
+    "content": "<!-- Don't delete this -->\n[TOC]\n\n# Solution\n\n---\n\n## pandas\n\n<!-- h3 for approaches -->\n### Approach 1: Using `.pivot()`\n\n<!-- h4 for sections -->\n#### Intuition\n\n<!-- Describe your approach to solving the problem. -->\nIn this problem, we are tasked with finding the price of each product for each store in the initial dataframe `products`.\n\n| product_id  | store  | price |\n|-------------|--------|-------|\n| 0           | store1 | 95    |\n| 0           | store3 | 105   |\n| 0           | store2 | 100   |\n| 1           | store1 | 70    |\n| 1           | store3 | 80    |\n\n<br>\n\nWe can utilize pandas's `.pivot()` method to reorganize/reshape the data by converting columns into rows and vice-versa. To do this, we need to pass the columns into their respective parameters:\n- Values passed into the `index` parameter become the DataFrame's new index\n- Values passed into the `columns` parameter become the DataFrame's unique columns\n- Values passed into the `values` parameter become the DataFrame's populated cells\n\nIn this case, we want to pass `product_id` into the `index` and `store` into `columns` to create the structure of our pivot table below.\n\n| product_id  | store1 | store2 | store3 |\n|-------------|--------|--------|--------|\n| 0           |        |        |        |\n| 1           |        |        |        |\n\n<br>\n\nLastly, to populate our pivot table with the prices of each product of each store, we will pass `price` into `values`, resulting in the the DataFrame below.\n\n| product_id  | store1 | store2 | store3 |\n|-------------|--------|--------|--------|\n| 0           | 95     | 100    | 105    |\n| 1           | 70     | null   | 80     |\n\n<br>\n\n<!-- h4 for sections -->\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/cTndWt2A/shared\" frameBorder=\"0\" width=\"100%\" height=\"225\" name=\"cTndWt2A\"></iframe>\n\n<br>\n---\n\n\n## Database\n\n<!-- h3 for approaches -->\n### Approach 1: Using `MAX, CASE WHEN` to pivot\n\n<!-- h4 for sections -->\n#### Intuition\n\n<!-- Describe your approach to solving the problem. -->\nWe will pivot our table by utilizing `CASE WHEN` and `AS` to produce new rows in our resulting table. While pivoting using `CASE WHEN`, it will not automatically group rows of the same `product_id` to fill the next available value, thus resulting in a null `price` and a singular `product_id`. \n\nTo resolve this, we can use aggregation functions `MAX`, `MIN`, or `SUM` on the column `price` to grab the next available `price` for each `product_id` rather than returning null and using `GROUP BY` to separate by unique `product_id`s. The role of the `MAX` function here is to ensure that only one row of results is returned for each product and to select the correct price for each store.\n\n\n<!-- h4 for sections -->\n#### Implementation\n\n```mysql []\nSELECT\n  product_id,\n  MAX(CASE WHEN store = 'store1' THEN price END) AS store1,\n  MAX(CASE WHEN store = 'store2' THEN price END) AS store2,\n  MAX(CASE WHEN store = 'store3' THEN price END) AS store3\nFROM \n    Products \nGROUP BY \n    product_id\n```\n\n<!-- an empty line to separate approaches -->\n<br>",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

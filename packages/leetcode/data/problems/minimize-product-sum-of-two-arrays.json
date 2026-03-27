@@ -1,0 +1,125 @@
+{
+  "questionId": "2029",
+  "questionFrontendId": "1874",
+  "title": "Minimize Product Sum of Two Arrays",
+  "titleSlug": "minimize-product-sum-of-two-arrays",
+  "difficulty": "Medium",
+  "content": "<p>The <b>product sum </b>of two equal-length arrays <code>a</code> and <code>b</code> is equal to the sum of <code>a[i] * b[i]</code> for all <code>0 &lt;= i &lt; a.length</code> (<strong>0-indexed</strong>).</p>\r\n\r\n<ul>\r\n\t<li>For example, if <code>a = [1,2,3,4]</code> and <code>b = [5,2,3,1]</code>, the <strong>product sum</strong> would be <code>1*5 + 2*2 + 3*3 + 4*1 = 22</code>.</li>\r\n</ul>\r\n\r\n<p>Given two arrays <code>nums1</code> and <code>nums2</code> of length <code>n</code>, return <em>the <strong>minimum product sum</strong> if you are allowed to <strong>rearrange</strong> the <strong>order</strong> of the elements in </em><code>nums1</code>.&nbsp;</p>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong class=\"example\">Example 1:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> nums1 = [5,3,4,2], nums2 = [4,2,2,5]\r\n<strong>Output:</strong> 40\r\n<strong>Explanation:</strong>&nbsp;We can rearrange nums1 to become [3,5,4,2]. The product sum of [3,5,4,2] and [4,2,2,5] is 3*4 + 5*2 + 4*2 + 2*5 = 40.\r\n</pre>\r\n\r\n<p><strong class=\"example\">Example 2:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> nums1 = [2,1,4,5,7], nums2 = [3,2,4,8,6]\r\n<strong>Output:</strong> 65\r\n<strong>Explanation: </strong>We can rearrange nums1 to become [5,7,4,1,2]. The product sum of [5,7,4,1,2] and [3,2,4,8,6] is 5*3 + 7*2 + 4*4 + 1*8 + 2*6 = 65.\r\n</pre>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong>Constraints:</strong></p>\r\n\r\n<ul>\r\n\t<li><code>n == nums1.length == nums2.length</code></li>\r\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\r\n\t<li><code>1 &lt;= nums1[i], nums2[i] &lt;= 100</code></li>\r\n</ul>",
+  "hints": [
+    "Is there a particular way we should order the arrays such that the product sum is minimized?",
+    "Would you want to multiply two numbers that are closer to one another or further?"
+  ],
+  "metaData": "{\n  \"name\": \"minProductSum\",\n  \"params\": [\n    {\n      \"name\": \"nums1\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"nums2\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"25.4K\", \"totalSubmission\": \"28.3K\", \"totalAcceptedRaw\": 25443, \"totalSubmissionRaw\": 28299, \"acRate\": \"89.9%\"}",
+  "likes": 257,
+  "dislikes": 28,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Choose Numbers From Two Arrays in Range\", \"titleSlug\": \"choose-numbers-from-two-arrays-in-range\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[5,3,4,2]\n[4,2,2,5]",
+    "[2,1,4,5,7]\n[3,2,4,8,6]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minProductSum(vector<int>& nums1, vector<int>& nums2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minProductSum(int[] nums1, int[] nums2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minProductSum(self, nums1: List[int], nums2: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minProductSum(self, nums1, nums2):\n        \"\"\"\n        :type nums1: List[int]\n        :type nums2: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums1\n * @param {number[]} nums2\n * @return {number}\n */\nvar minProductSum = function(nums1, nums2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minProductSum(nums1: number[], nums2: number[]): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinProductSum(int[] nums1, int[] nums2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\nint minProductSum(int* nums1, int nums1Size, int* nums2, int nums2Size){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minProductSum(nums1 []int, nums2 []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minProductSum(nums1: IntArray, nums2: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minProductSum(_ nums1: [Int], _ nums2: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_product_sum(nums1: Vec<i32>, nums2: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums1\n# @param {Integer[]} nums2\n# @return {Integer}\ndef min_product_sum(nums1, nums2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums1\n     * @param Integer[] $nums2\n     * @return Integer\n     */\n    function minProductSum($nums1, $nums2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minProductSum(nums1: Array[Int], nums2: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-product-sum nums1 nums2)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer?)\n\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1316",
+    "content": "[TOC]\n\n## Solution\n\n--- \n### Overview\n\nIn this problem, we are given two arrays $$ \\text{nums1} $$ and $$ \\text{nums2} $$ of the same length. Let's assume that $$ \\text{nums1} = [a_1, a_2, ... , a_n] $$, $$ \\text{nums2} = [b_1, b_2, ... , b_n]$$, their **product sum** is defined as:\n$$ \\text{product\\_sum} = a_1 \\cdot b_1 + a_2 \\cdot b_2 + ... + a_n \\cdot b_n $$.\n\n\nWe are allowed to freely rearrange the order of the elements in $$\\text{nums1}$$. After doing so, this operation might result in a different **product sum**. Take the figure below as an example: \n\n\n![img](../Figures/1874/1874-intro.png)\n\nOur goal is to find the minimum **product sum** of $$\\text{nums1}$$ and $$\\text{nums2}$$.\n\n---\n\n### Approach 1: Sort both arrays\n\n**Intuition**   \n\nFor convenience, let's temporarily disregard the restriction on $$\\text{nums2}$$ and assume that we can freely sort both arrays.\n\nStart from the base case, given $$\\text{nums1} = [a1, a2]$$ and $$\\text{nums2} = [b1, b2]$$ respectively, assume that: \n- $$a1 \\leqslant a2$$ \n- $$b1 \\leqslant b2$$\n\nAs shown in the figure below, these two arrays have two possible product sums:\n- $$\\text{sum1} = a_1 \\cdot b_1 + a_2 \\cdot b_2$$\n- $$\\text{sum2} = a_1 \\cdot b_2 + a_1 \\cdot b_2$$\n\n\n![img](../Figures/1874/1874-1.png)\n\nIt shows that: if we pair them as $${a_1 \\times b_2}$$ and $${a_2 \\times b_1}$$, their product sum is smaller than that of the other case. \n\n\n> Can we extend the conclusion of the base case to a more general case? In other words, will this rule work for longer arrays?\n\nSuppose that we have two arrays with certain orders so that their product sum is minimized. We randomly select two indexes $$i, j$$ and the corresponding elements from $$\\text{nums1}$$ and $$\\text{nums2}$$, namely: $$\\text{nums1}[i], \\text{nums1}[j], \\text{nums2}[i]$$, and $$\\text{nums2}[j]$$.\n\n\n> Assume $$i < j$$, what should the order of $$a_i,\\  a_j$$ and $$b_i,\\ b_j$$ be?\n\nIn the previous section, we demonstrated that: in order to obtain the minimum product sum of two arrays of size 2: \n- If $$a_i \\leqslant a_j$$, then $$b_i \\geqslant b_j$$ must hold.\n- If $$a_i \\geqslant a_j$$, then $$b_i \\leqslant b_j$$ must hold.\n\nFor this example, let's assume $$\\text{nums1}$$ is sorted in ascending order, that is: $$a_i \\leqslant a_j$$ if $$i < j$$. \nLet's also assume $$b_i \\geqslant b_j$$ for $$b_i, b_j$$ from $$\\text{nums2}$$, that is, $$\\text{nums2}$$ is sorted in descending order.  \n\n\n![img](../Figures/1874/1874-2.png)\n\n> This is equivalent to saying that $$\\text{nums2}$$ is sorted in descending order!\n\n![img](../Figures/1874/1874-3.png)\n\nTherefore, if $$\\text{nums1}$$ is sorted in ascending order, then we must sort $$\\text{nums2}$$ in **descending** order to get the minimum product sum!\n\n> Recall that we temporarily ignored the restriction that says we can only sort $$\\text{nums1}$$. Did sorting $$\\text{nums1}$$ and $$\\text{nums2}$$ allow us to obtain a smaller product sum than we could obtain by only sorting $$\\text{nums1}$$?\n\nThe answer is No. Suppose we sort $$\\text{nums1}$$ and $$\\text{nums2}$$ accordingly. We can always rearrange the relative order of these **element pairs** according to the original $$\\text{nums2}$$. Then the rearranged $$\\text{nums1}$$ can be obtained by reordering it. In other words, any product sum obtained from reordering both arrays can also be obtained from only reordering one array.\n\nTake the picture below as an example.\n\n![img](../Figures/1874/1874-sort_ornot.png)\n\n\n\n**Algorithm**\n\n1) Sort $$\\text{nums1}$$ in ascending order and $$\\text{nums2}$$ in descending order.\n2) Initialize the product sum $$\\text{ans}$$ as 0.\n3) Iterate over both sorted arrays and update the cumulative product sum.\n4) Return $$\\text{ans}$$.\n\n\n\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/6g8UHMKz/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"6g8UHMKz\"></iframe>\n\n\n**Complexity Analysis**\n\nLet $$n$$ be the length of the input arrays $$\\text{nums1}$$ and $$\\text{nums2}$$.\n\n* Time complexity: $$O(n\\cdot \\log n)$$\n\n    - We sort $$\\text{nums1}$$ and $$\\text{nums2}$$, each takes $$O(n\\cdot \\log n)$$ time.\n    - Then we iterate over the two sorted arrays to calculate the cumulative product sum, at step $$i$$ we need to calculate $$\\text{nums1}[i] \\cdot \\text{nums2}[i]$$ which takes constant time. This iteration takes $$O(n)$$ time.\n    - To sum up, the overall time complexity is $$O(n\\cdot \\log n)$$\n    \n\n* Space complexity: $$O(n)$$\n    - Some extra space is used when we sort $$\\text{nums1}$$ and $$\\text{nums2}$$ in place. The space complexity of the sorting algorithm depends on the programming language.\n        - In Python, the `sort` method sorts a list using the Timsort algorithm, which is a combination of Merge Sort and Insertion Sort and uses $$O(n)$$ additional space.\n        - In C++, the sort() function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with worst-case space complexity of $$O(\\log n)$$.\n        - In Java, Arrays.sort() is implemented using a variant of the Quick Sort algorithm which has a space complexity of $$O(\\log n)$$.\n    - We then traverse both arrays and calculate the cumulative product sum, this step takes $$O(1)$$ extra space.\n    - To sum up, the overall space complexity is $$O(n)$$ for Python and $$O(\\log n)$$ for C++ and Java.\n\n<br/>\n\n---\n\n### Approach 2: PriorityQueue\n\n**Intuition**   \n\nIn the previous approach, we sorted both $$\\text{nums1}$$ and $$\\text{nums2}$$. Recall the restriction on $$\\text{nums2}$$. So in this approach, we will just sort $$\\text{nums1}$$ in ascending order and keep $$\\text{nums2}$$ as it is. However, we can use a PriorityQueue $$\\text{pq}$$ to store all the elements from $$\\text{nums2}$$, thus we can get the elements from $$\\text{nums2}$$ in sorted order without actually 'sorting' $$\\text{nums2}$$. \n\nIn the previous approach, we iterated over the elements of $$\\text{nums2}$$ by their descending values. Similarly, we can get the elements from $$\\text{nums2}$$ in descending order by implementing a PriorityQueue $$\\text{pq}$$ as a Max-Heap; in each step during the iteration, we pop the top element - the largest element from the $$\\text{pq}$$. Therefore, we can repeatedly accumulate the product of each element from $$\\text{nums1}$$ with the top element in $$\\text{pq}$$, which is equivalent to iterating over decreasingly sorted $$\\text{nums2}$$.\n\n\n**Algorithm**\n\n1) Sort $$\\text{nums1}$$ in ascending order.\n2) Initialize the product sum $$\\text{ans}$$ as 0.\n3) Initialize an empty PriorityQueue $$\\text{pq}$$ and add every element of $$\\text{nums}$$ to $$\\text{pq}$$.\n4) Iterate over the sorted arrays $$\\text{nums1}$$. For each element in $$\\text{nums1}$$, calculate its product with the top element in $$\\text{pq}$$, then pop the top element from $$\\text{pq}$$.\n5) After finishing the iteration in step 4, return $$\\text{ans}$$.\n\n\n<iframe src=\"https://leetcode.com/playground/Sx7LzdbS/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"Sx7LzdbS\"></iframe>\n\n\n**Complexity Analysis**\n\nLet $$n$$ be the length of the input array $$\\text{nums1}$$ and $$\\text{nums2}$$.\n\n* Time complexity: $$O(n\\cdot \\log n)$$\n\n    - We create a max heap with the elements in $$\\text{nums2}$$. This requires $$O(n \\log n)$$ time if we push each element into the heap one by one and $$O(n)$$ time if we use the heapify method.  \n    - During the iteration, we repeatedly pop the top element from $$\\text{pq}$$, it takes $$O(n\\cdot \\log n)$$ time to pop $$n$$ elements.\n    - To sum up, the overall time complexity is $$O(n\\cdot \\log n)$$.\n    \n    \n* Space complexity: $$O(n)$$\n\n    - We initialize a PriorityQueue $$\\text{pq}$$ to keep all the elements from $$\\text{nums2}$$, which takes $$O(n)$$ space.\n    - Some extra space is used when we sort $$\\text{nums1}$$ in place. The space complexity of the sorting algorithm depends on the programming language.\n        - In Python, the `sort` method sorts a list using Timesort algorithm which is a combination of Merge Sort and Insertion Sort, and has $$O(n)$$ additional space.\n        - In C++, the sort() function is implemented as a hybrid of Quick Sort, Heap Sort, and Insetion Sort, with worse-case space complexity of $$O(\\log n)$$.\n        - In Java, Arrays.sort() is implemented using a variant of the Quick Sort algorithm which has a space complexity of $$O(\\log n)$$.\n    - In the iteration, we repeatedly pop the top element from $$\\text{pq}$$, calculate the product of each pair, and update the product sum, which only takes constant space.\n    - Therefore, the overall space complexity is $$O(n)$$.\n\n\n<br/>\n\n---\n\n### Approach 3: Counting Sort\n\n**Intuition**   \n\nThe constraints of integers in the input arrays is $$1 \\leq \\text{nums1}[i], \\text{nums2}[i] \\leq 100$$. Notice that the valid range of elements is quite small compared with the scale of the array. Therefore, it seems like a promising method is Counting Sort, which has linear time complexity and space complexity.\n\n\n>What is Counting Sort?\n\nFor a detailed introduction, you can refer to this article on [Counting Sort](https://en.wikipedia.org/wiki/Counting_sort).\n\nIn short, Counting Sort is not a comparison sort; thus, the $$O(n \\cdot \\log(n))$$ time complexity for comparison sorting does not apply. To perform a Counting Sort, we create an empty auxiliary array ($$\\text{counter1}$$), and for each number in $$\\text{nums1}$$, we increment $$\\text{counter1[index]}$$ where the index is based on the number's value. \n\n>How do we determine the size of the auxiliary array? \n\nGiven the constraints of integers in the input arrays as $$1 \\leq nums1[i], nums2[i] \\leq 100$$, using an auxiliary array with a length of 101 is enough to cover all the possible values within the given range. We let $$counter1[1]$$ represent the number of occurrences of all 1's, $$counter1[2]$$ represent the number of occurrences of all 2's, so on so forth. Hence we have built a bijection, a one-to-one correspondence between the element value in $$\\text{nums1}$$ and the index of $$counter1$$. As shown in the figure below.\n\n![img](../Figures/1874/1874-c1.png)\n\nMore specifically, let's take a look at the slides below as an example of how we sort $$\\text{nums1}$$ using Counting Sort. All the elements in $$\\text{counter1}$$ are initialized as 0 since we haven't count the occurrence of any number yet. Then we traverse $$\\text{nums1}$$, for each number $$num$$ in the array, we increment its number of occurrence by 1 in $$\\text{counter1}$$, that is, let $$\\text{counter1[num]} = \\text{counter1[num]} + 1$$. Please refer to the slides below.\n\n!?!../Documents/1874/countingSort.json:601,301!?!\n\nNow we have saved the 'sorted' arrays $$\\text{nums1}$$ and $$\\text{nums2}$$ in $$\\text{counter1}$$ and $$\\text{counter2}$$ respectively, the next step is to traverse $$\\text{counter1}$$ in ascending order and $$\\text{counter2}$$ in descending order.\n\n![img](../Figures/1874/1874-c2.png)\n\nTake the slides below as an example. \n\n!?!../Documents/1874/countingSort2.json:601,301!?!\n\n\n**Algorithm**\n\n1) Initialize two empty arrays $$\\text{counter1}$$ and $$\\text{counter2}$$ of length 101 as counters, initialize the product sum as $$\\text{ans} = 0$$.\n2) Iterate over $$\\text{nums1}$$ and update $$\\text{counter1}$$, the occurrence of each element, during the iteration.\n3) Iterate over $$\\text{nums2}$$ and update $$\\text{counter2}$$, the occurrence of each element, during the iteration.\n4) Initialize two 'pointers' $$p1 = 1$$, $$p2 = 100$$, stands for the index of $$\\text{counter1}$$ and $$\\text{counter2}$$ respectively.\n5) Calculate the cumulative product sum $$\\text{ans}$$ of each pair of elements.\n6) Return $$\\text{ans}$$.\n\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/6NiGKAxG/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"6NiGKAxG\"></iframe>\n\n**Complexity Analysis**\n\nLet $$n$$ be the length of the input array $$\\text{nums1}$$ and $$\\text{nums2}$$, and $$k$$ be the range of values in $$\\text{nums1}$$ or $$\\text{nums2}$$.\n\n* Time complexity: $$O(n + k)$$\n    - We need to traverse both the input arrays once. In each step during the iteration, we increment the count of the current number by 1 in $$\\text{counter1}$$ or $$\\text{counter2}$$; which just takes constant time. Thus each of these two traversals takes $$O(n)$$ time.\n    - Then, we traverse the two counter arrays $$\\text{counter1}$$ and $$\\text{counter2}$$, calculate the cumulative product sum, which takes $$O(k)$$ time.\n    - To sum up, the overall time complexity is $$O(n + k)$$.\n    \n\n* Space complexity: $$O(k)$$\n    - Given the range of input values, we used two arrays $$\\text{counter1}$$, $$\\text{counter2}$$ of size $$k$$ to record the number of occurrences of each number in $$\\text{nums1}$$ and $$\\text{nums2}$$, which takes $$O(k)$$ space.\n    - In the second iteration, we just need to record the cumulative product sum of the elements.\n    - To sum up, the overall space complexity is $$O(k)$$.\n\n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

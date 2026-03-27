@@ -1,0 +1,128 @@
+{
+  "questionId": "1975",
+  "questionFrontendId": "1848",
+  "title": "Minimum Distance to the Target Element",
+  "titleSlug": "minimum-distance-to-the-target-element",
+  "difficulty": "Easy",
+  "content": "<p>Given an integer array <code>nums</code> <strong>(0-indexed)</strong> and two integers <code>target</code> and <code>start</code>, find an index <code>i</code> such that <code>nums[i] == target</code> and <code>abs(i - start)</code> is <strong>minimized</strong>. Note that&nbsp;<code>abs(x)</code>&nbsp;is the absolute value of <code>x</code>.</p>\n\n<p>Return <code>abs(i - start)</code>.</p>\n\n<p>It is <strong>guaranteed</strong> that <code>target</code> exists in <code>nums</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,4,5], target = 5, start = 3\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> nums[4] = 5 is the only value equal to target, so the answer is abs(4 - 3) = 1.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1], target = 1, start = 0\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> nums[0] = 1 is the only value equal to target, so the answer is abs(0 - 0) = 0.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,1,1,1,1,1,1,1,1,1], target = 1, start = 0\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> Every value of nums is 1, but nums[0] minimizes abs(i - start), which is abs(0 - 0) = 0.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= start &lt; nums.length</code></li>\n\t<li><code>target</code> is in <code>nums</code>.</li>\n</ul>\n",
+  "hints": [
+    "Loop in both directions until you find the target element.",
+    "For each index i such that nums[i] == target calculate abs(i - start)."
+  ],
+  "metaData": "{\n  \"name\": \"getMinDistance\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"target\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"start\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"60.6K\", \"totalSubmission\": \"111.7K\", \"totalAcceptedRaw\": 60633, \"totalSubmissionRaw\": 111734, \"acRate\": \"54.3%\"}",
+  "likes": 392,
+  "dislikes": 68,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,2,3,4,5]\n5\n3",
+    "[1]\n1\n0",
+    "[1,1,1,1,1,1,1,1,1,1]\n1\n0"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"honeywell\", \"name\": \"Honeywell\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int getMinDistance(vector<int>& nums, int target, int start) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int getMinDistance(int[] nums, int target, int start) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def getMinDistance(self, nums: List[int], target: int, start: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def getMinDistance(self, nums, target, start):\n        \"\"\"\n        :type nums: List[int]\n        :type target: int\n        :type start: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} target\n * @param {number} start\n * @return {number}\n */\nvar getMinDistance = function(nums, target, start) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function getMinDistance(nums: number[], target: number, start: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int GetMinDistance(int[] nums, int target, int start) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int getMinDistance(int* nums, int numsSize, int target, int start) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func getMinDistance(nums []int, target int, start int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun getMinDistance(nums: IntArray, target: Int, start: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func getMinDistance(_ nums: [Int], _ target: Int, _ start: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn get_min_distance(nums: Vec<i32>, target: i32, start: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} target\n# @param {Integer} start\n# @return {Integer}\ndef get_min_distance(nums, target, start)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $target\n     * @param Integer $start\n     * @return Integer\n     */\n    function getMinDistance($nums, $target, $start) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int getMinDistance(List<int> nums, int target, int start) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def getMinDistance(nums: Array[Int], target: Int, start: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec get_min_distance(nums :: [integer], target :: integer, start :: integer) :: integer\n  def get_min_distance(nums, target, start) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec get_min_distance(Nums :: [integer()], Target :: integer(), Start :: integer()) -> integer().\nget_min_distance(Nums, Target, Start) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (get-min-distance nums target start)\n  (-> (listof exact-integer?) exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

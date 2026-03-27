@@ -1,0 +1,141 @@
+{
+  "questionId": "1972",
+  "questionFrontendId": "1861",
+  "title": "Rotating the Box",
+  "titleSlug": "rotating-the-box",
+  "difficulty": "Medium",
+  "content": "<p>You are given an <code>m x n</code> matrix of characters <code>boxGrid</code> representing a side-view of a box. Each cell of the box is one of the following:</p>\n\n<ul>\n\t<li>A stone <code>&#39;#&#39;</code></li>\n\t<li>A stationary obstacle <code>&#39;*&#39;</code></li>\n\t<li>Empty <code>&#39;.&#39;</code></li>\n</ul>\n\n<p>The box is rotated <strong>90 degrees clockwise</strong>, causing some of the stones to fall due to gravity. Each stone falls down until it lands on an obstacle, another stone, or the bottom of the box. Gravity <strong>does not</strong> affect the obstacles&#39; positions, and the inertia from the box&#39;s rotation <strong>does not </strong>affect the stones&#39; horizontal positions.</p>\n\n<p>It is <strong>guaranteed</strong> that each stone in <code>boxGrid</code> rests on an obstacle, another stone, or the bottom of the box.</p>\n\n<p>Return <em>an </em><code>n x m</code><em> matrix representing the box after the rotation described above</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/04/08/rotatingtheboxleetcodewithstones.png\" style=\"width: 300px; height: 150px;\" /></p>\n\n<pre>\n<strong>Input:</strong> boxGrid = [[&quot;#&quot;,&quot;.&quot;,&quot;#&quot;]]\n<strong>Output:</strong> [[&quot;.&quot;],\n&nbsp;        [&quot;#&quot;],\n&nbsp;        [&quot;#&quot;]]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/04/08/rotatingtheboxleetcode2withstones.png\" style=\"width: 375px; height: 195px;\" /></p>\n\n<pre>\n<strong>Input:</strong> boxGrid = [[&quot;#&quot;,&quot;.&quot;,&quot;*&quot;,&quot;.&quot;],\n&nbsp;             [&quot;#&quot;,&quot;#&quot;,&quot;*&quot;,&quot;.&quot;]]\n<strong>Output:</strong> [[&quot;#&quot;,&quot;.&quot;],\n&nbsp;        [&quot;#&quot;,&quot;#&quot;],\n&nbsp;        [&quot;*&quot;,&quot;*&quot;],\n&nbsp;        [&quot;.&quot;,&quot;.&quot;]]\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/04/08/rotatingtheboxleetcode3withstone.png\" style=\"width: 400px; height: 218px;\" /></p>\n\n<pre>\n<strong>Input:</strong> boxGrid = [[&quot;#&quot;,&quot;#&quot;,&quot;*&quot;,&quot;.&quot;,&quot;*&quot;,&quot;.&quot;],\n&nbsp;             [&quot;#&quot;,&quot;#&quot;,&quot;#&quot;,&quot;*&quot;,&quot;.&quot;,&quot;.&quot;],\n&nbsp;             [&quot;#&quot;,&quot;#&quot;,&quot;#&quot;,&quot;.&quot;,&quot;#&quot;,&quot;.&quot;]]\n<strong>Output:</strong> [[&quot;.&quot;,&quot;#&quot;,&quot;#&quot;],\n&nbsp;        [&quot;.&quot;,&quot;#&quot;,&quot;#&quot;],\n&nbsp;        [&quot;#&quot;,&quot;#&quot;,&quot;*&quot;],\n&nbsp;        [&quot;#&quot;,&quot;*&quot;,&quot;.&quot;],\n&nbsp;        [&quot;#&quot;,&quot;.&quot;,&quot;*&quot;],\n&nbsp;        [&quot;#&quot;,&quot;.&quot;,&quot;.&quot;]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == boxGrid.length</code></li>\n\t<li><code>n == boxGrid[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 500</code></li>\n\t<li><code>boxGrid[i][j]</code> is either <code>&#39;#&#39;</code>, <code>&#39;*&#39;</code>, or <code>&#39;.&#39;</code>.</li>\n</ul>\n",
+  "hints": [
+    "Rotate the box using the relation rotatedBox[i][j] = box[m - 1 - j][i].",
+    "Start iterating from the bottom of the box and for each empty cell check if there is any stone above it with no obstacles between them."
+  ],
+  "metaData": "{\n  \"name\": \"rotateTheBox\",\n  \"params\": [\n    {\n      \"name\": \"boxGrid\",\n      \"type\": \"character[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"character[][]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"169.4K\", \"totalSubmission\": \"214.1K\", \"totalAcceptedRaw\": 169448, \"totalSubmissionRaw\": 214058, \"acRate\": \"79.2%\"}",
+  "likes": 1629,
+  "dislikes": 83,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[\"#\",\".\",\"#\"]]",
+    "[[\"#\",\".\",\"*\",\".\"],[\"#\",\"#\",\"*\",\".\"]]",
+    "[[\"#\",\"#\",\"*\",\".\",\"*\",\".\"],[\"#\",\"#\",\"#\",\"*\",\".\",\".\"],[\"#\",\"#\",\"#\",\".\",\"#\",\".\"]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 18, \"slug\": \"visa\", \"name\": \"Visa\"}, {\"timesEncountered\": 16, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 8, \"slug\": \"capital-one\", \"name\": \"Capital One\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"roblox\", \"name\": \"Roblox\"}, {\"timesEncountered\": 4, \"slug\": \"square\", \"name\": \"Block\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"sig\", \"name\": \"SIG\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<char>> rotateTheBox(vector<vector<char>>& boxGrid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public char[][] rotateTheBox(char[][] boxGrid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def rotateTheBox(self, boxGrid: List[List[str]]) -> List[List[str]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def rotateTheBox(self, boxGrid):\n        \"\"\"\n        :type boxGrid: List[List[str]]\n        :rtype: List[List[str]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {character[][]} boxGrid\n * @return {character[][]}\n */\nvar rotateTheBox = function(boxGrid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function rotateTheBox(boxGrid: string[][]): string[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public char[][] RotateTheBox(char[][] boxGrid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nchar** rotateTheBox(char** boxGrid, int boxGridSize, int* boxGridColSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func rotateTheBox(boxGrid [][]byte) [][]byte {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun rotateTheBox(boxGrid: Array<CharArray>): Array<CharArray> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func rotateTheBox(_ boxGrid: [[Character]]) -> [[Character]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn rotate_the_box(box_grid: Vec<Vec<char>>) -> Vec<Vec<char>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Character[][]} box_grid\n# @return {Character[][]}\ndef rotate_the_box(box_grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[][] $boxGrid\n     * @return String[][]\n     */\n    function rotateTheBox($boxGrid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<String>> rotateTheBox(List<List<String>> boxGrid) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def rotateTheBox(boxGrid: Array[Array[Char]]): Array[Array[Char]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec rotate_the_box(box_grid :: [[char]]) :: [[char]]\n  def rotate_the_box(box_grid) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec rotate_the_box(BoxGrid :: [[char()]]) -> [[char()]].\nrotate_the_box(BoxGrid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (rotate-the-box boxGrid)\n  (-> (listof (listof char?)) (listof (listof char?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2579",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given an `m x n` grid that represents the side view of a box, containing stones (denoted as `'#'`) and immovable obstacles (denoted as `'*'`), as well as some empty cells in between (`'.'`).\n\nOur task is to simulate a 90-degree clockwise rotation of this box. After rotating, we must apply \"gravity\" to make the rocks fall as far down as possible, without moving the obstacles. The goal is to return the final layout of the box, as a new `n x m` grid, after both the rotation and gravity effects.\n\n---\n\n### Approach 1: Row by Row (Brute Force)\n\n#### Intuition\n\nIn this approach, we separate the task into two distinct operations: first, rotating the grid; then, applying the gravity effect. We execute each operation independently to simplify the process.\n\n###### 1. Rotate the grid\n\nLet's start by observing how the grid changes after a 90-degree clockwise rotation:\n\n-   The first row of the input grid becomes the last column of the output grid.\n-   The second row of the input grid becomes the second-to-last column of the output grid.\n-   ...\n-   The last row of the input grid becomes the first column of the output grid.\n\n> The **transpose** of a matrix is obtained by interchanging rows into columns or columns to rows.\n\nIf you aren't familiar with this concept, you might want to try out this problem first: [867. Transpose Matrix](https://leetcode.com/problems/transpose-matrix/description/), as a good lead-in to this one.\nLet's try to express this pattern, using the **transpose** of the original grid:\n\n-   The first column of the transpose grid becomes the last column of the output grid.\n-   The second column of the transpose grid becomes the second-to-last column of the output grid.\n-   ...\n-   The last column of the transpose grid becomes the first column of the output grid.\n\nWe can break down this rotation step further: first, find the transpose of the input grid, then reverse each row in the transpose grid.\n\n![rotate operation](../Figures/1861/1861_rotate_operation.png)\n\n###### 2. Apply the gravity effect\n\nTo apply the gravity effect to the rotated grid, we can follow a simple approach: for each empty cell, identify the first stone directly above it, ensuring there are no obstacles in between. This way, each stone falls to the lowest possible empty cell beneath it.\n\n!?!../Documents/1861/1861_approach1_fix.json:960,540!?!\n\n#### Algorithm\n\n-   Initialize `m` and `n` to the number of rows and columns of the original grid, respectively.\n-   Create an `n x m` grid, called `result`.\n-   Set `result` to be the transpose of the input grid:\n    -   Iterate over the rows with `i` from `0` to `m-1`:\n        -   Iterate over the columns with `j` from `0` to `n-1`:\n            -   Set `result[j][i] = box[i][j]`.\n-   Reverse the order of elements in each row of the transpose grid.\n-   Iterate over the columns of the rotated grid with `j` from `0` to `m-1`:\n    -   For each column `j`, iterate over its elements with `i` from `n-1` to `0`:\n        -   If `result[i][j]` is an empty cell:\n            -   Initialize `nextRowWithStone` to `-1`.\n            -   Loop through all rows above `i` with `k` from `i-1` to `0`.\n                -   If `result[k][j]` contains an obstacle, exit the loop.\n                -   If `result[k][j]` contains a stone, set `nextRowWithStone` equal to `k` and exit the loop.\n            -   If the loop ends and `nextRowWithStone` remains equal to `-1`, no stone exists above the current empty cell with no obstacles in between; continue.\n            -   Else, let the stone in `result[nextRowWithStone][j]` land on `result[i][j]` by setting `result[nextRowWithStone][j] = '.'` and `result[i][j] = '#'`.\n-   Return `result`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Po6ADV3z/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Po6ADV3z\"></iframe>\n\n#### Complexity Analysis\n\n-   Time complexity: $O(m \\times n^2)$\n\n    We need to access each cell to compute the transpose of the grid. This requires $O(m \\times n)$ time since there are $m$ rows and $n$ columns in the grid.\n\n    After transposing, we reverse each of the $n$ rows. Reversing a row involves swapping elements from the start and end until we reach the middle, which takes $O(m)$ time per row. Since there are $n$ rows, the total time for this operation is: $O(m \\times n)$\n\n    The gravity effect is implemented using an outer loop that iterates through the $m$ columns. For each column, two inner nested loops iterate through the rows:\n\n    -   The first inner loop checks each row from the bottom to the top, running up to $O(n)$ times.\n    -   The second inner loop checks the rows above the current empty cell to find a stone, which in the worst case can also iterate up to $O(n)$ times.\n\n    Therefore, for each column, the worst-case scenario for the gravity application results in $O(n) \\times O(n) = O(n^2)$\n\n    Consequently, for all $m$ columns, the total time complexity for applying gravity is $O(m \\times n^2)$\n\n-   Space complexity: $O(m \\times n)$\n\n    Since we avoid modifying the input, we create a second grid, `result`, of size $n \\times m$. Note that if we were allowed to alter the input directly, we could reduce the space complexity to $O(1)$.\n\n---\n\n### Approach 2: Row By Row (Optimized)\n\n#### Intuition\n\nWhen optimizing our solution, it's important to consider the lower bound of the algorithm's complexity. In this case, we need to somehow fill an $n \\times m$ grid, with a minimum required time of $O(m \\times n)$.\n\nThis prompts us to investigate whether we can reduce the time complexity of our previous approach to this lower bound. It turns out that we can achieve this because the third inner loop, which currently increases the time complexity to $O(m \\times n^2)$, is actually redundant.\n\nSpecifically, instead of checking each empty cell to see if a stone can land on it, we can maintain a pointer to the lowest empty cell in the current column that has no obstacles above it. When we encounter a stone, we allow it to fall to the cell indicated by this pointer and then update the pointer to the row directly above where the stone landed. If we encounter an obstacle, we reset the pointer to the row directly above the obstacle.\n\nWe will use the [same algorithm](#1-rotate-the-grid) from our initial approach to simulate the rotation of the grid, before applying the gravity effect as described above.\n\n!?!../Documents/1861/1861_approach2_fix.json:960,540!?!\n\n#### Algorithm\n\n-   Initialize `m` and `n` to the number of rows and columns of the original grid, respectively.\n-   Create an `n x m` grid, called `result`.\n-   Set `result` to be the transpose of the input grid:\n    -   Iterate over the rows with `i` from `0` to `m-1`:\n        -   Iterate over the columns with `j` from `0` to `n-1`:\n            -   Set `result[j][i] = box[i][j]`.\n-   Reverse the order of elements in each row of the transpose grid.\n-   Iterate over the columns of the rotated grid with `j` from `0` to `m-1`:\n    -   For each column `j`:\n        -   Initialize a variable `lowestRowWithEmptyCell` to `n-1`\n        -   Iterate over all of its elements in reversed order with `i` from `n-1` to `0`. On each iteration:\n            -   If `result[i][j]` contains a stone, let it fall to the lowest empty cell:\n                -   Set `result[lowestRowWithEmptyCell][j] = '#'`.\n                -   Set `result[i][j] = '.'`.\n                -   Update `lowestRowWithEmptyCell` to `i-1`.\n            -   if `result[i][j]` contains an obstacle, set `lowestRowWithEmptyCell = i-1`.\n-   Return `result`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/S8dHpXwx/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"S8dHpXwx\"></iframe>\n\n#### Complexity Analysis\n\n-   Time complexity: $O(m \\times n)$\n\n    Similar to the first approach, the rotation operation takes $O(m \\times n)$ time. The gravity effect is now implemented using two nested loops instead of three. The outer loop iterates over the $m$ columns, and for each column, the inner loop processes all $n$ elements. As a result, the total time complexity of the algorithm remains $O(m \\times n)$.\n\n-   Space complexity: $O(m \\times n)$\n\n    Once again, we avoid modifying the input directly by creating a second grid, `result`, of size $n \\times m$. However, if we were allowed to modify the input in place, the space complexity could be reduced to $O(1)$.\n\n---\n\n### Approach 3: Combine rotation and gravity operations\n\n#### Intuition\n\nAs mentioned earlier, the time complexity of $O(m \\times n)$ achieved with the second approach represents a lower bound for this particular problem. This means we cannot further optimize our algorithm in terms of complexity. However, in this approach, we aim to streamline our code by combining the operations of rotation and the effects of gravity. This will allow us to generate the result in a single pass instead of three, potentially reducing the runtime of our program.\n\nFirst, let's derive the formula to find the position of the cell originally located at $(i, j)$ in the rotated grid. Following the strategy outlined for the transpose grid, we will first map the position $(i, j)$ to $(j, i)$. Then, we will reverse each row, meaning that the first element becomes the last, the second element becomes the second-to-last, and so on. Specifically, the element at index $i$ will move to the position $m-i-1$. Combining these two conversions, we get that the cell originally located at $(i, j)$ will end up in the position $(j, m-i-1)$.\n\nNow, we are ready to execute the same algorithm as before. This time, we will read the type of each cell from the original grid, `box`, and place the results into the `result` grid using the positions determined by the formula outlined above.\n\n#### Algorithm\n\n-   Initialize `m` and `n` to the number of rows and columns of the original grid, respectively.\n-   Create an `n x m` grid, called `result`, and initialize all of its elements to be empty cells (`'.'`).\n-   Iterate over the rows of the original grid, `box`, with `i` from `0` to `m-1`:\n    -   For each row `i`, initialize a variable `lowestRowWithEmptyCell` to `n-1`.\n    -   Iterate over all of its elements in reversed order with `j` from `n-1` to `0`. On each iteration:\n        -   If `box[i][j]` contains a stone, let it fall to the lowest empty cell:\n            -   Set `result[lowestRowWithEmptyCell][m-i-1] = '#'`.\n            -   (Optionally) Set `result[j][m-i-1] = '.'`.\n            -   Update `lowestRowWithEmptyCell` to `i-1`.\n        -   If `box[i][j]` contains an obstacle:\n            -   Set `result[j][m-i-1] = '*'`.\n            -   Update `lowestRowWithEmptyCell` to `i-1`.\n-   Return `result`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/WNSuvFk7/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"WNSuvFk7\"></iframe>\n\n#### Complexity Analysis\n\n-   Time complexity: $O(m \\times n)$\n\n    The rotation of the grid and the gravity effect are implemented using two nested loops. The outer loop iterates over the $m$ rows of the original grid, and for each row, the inner loop processes all $n$ elements. Therefore, the total time complexity of the algorithm is $O(m \\times n)$.\n\n-   Space complexity: $O(m \\times n)$\n\n    Similar to the other two approaches, we prefer not to modify the input, by creating a new $n \\times m$ grid.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

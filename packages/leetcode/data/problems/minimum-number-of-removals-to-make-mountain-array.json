@@ -1,0 +1,144 @@
+{
+  "questionId": "1766",
+  "questionFrontendId": "1671",
+  "title": "Minimum Number of Removals to Make Mountain Array",
+  "titleSlug": "minimum-number-of-removals-to-make-mountain-array",
+  "difficulty": "Hard",
+  "content": "<p>You may recall that an array <code>arr</code> is a <strong>mountain array</strong> if and only if:</p>\n\n<ul>\n\t<li><code>arr.length &gt;= 3</code></li>\n\t<li>There exists some index <code>i</code> (<strong>0-indexed</strong>) with <code>0 &lt; i &lt; arr.length - 1</code> such that:\n\t<ul>\n\t\t<li><code>arr[0] &lt; arr[1] &lt; ... &lt; arr[i - 1] &lt; arr[i]</code></li>\n\t\t<li><code>arr[i] &gt; arr[i + 1] &gt; ... &gt; arr[arr.length - 1]</code></li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>Given an integer array <code>nums</code>​​​, return <em>the <strong>minimum</strong> number of elements to remove to make </em><code>nums<em>​​​</em></code><em> </em><em>a <strong>mountain array</strong>.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,3,1]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> The array itself is a mountain array so we do not need to remove any elements.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2,1,1,5,6,2,3,1]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> One solution is to remove the elements at indices 0, 1, and 5, making the array nums = [1,5,6,3,1].\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>3 &lt;= nums.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n\t<li>It is guaranteed that you can make a mountain array out of <code>nums</code>.</li>\n</ul>\n",
+  "hints": [
+    "Think the opposite direction instead of minimum elements to remove the maximum mountain subsequence",
+    "Think of LIS it's kind of close"
+  ],
+  "metaData": "{\n  \"name\": \"minimumMountainRemovals\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"122.8K\", \"totalSubmission\": \"224.1K\", \"totalAcceptedRaw\": 122806, \"totalSubmissionRaw\": 224136, \"acRate\": \"54.8%\"}",
+  "likes": 2291,
+  "dislikes": 41,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Longest Increasing Subsequence\", \"titleSlug\": \"longest-increasing-subsequence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Mountain in Array\", \"titleSlug\": \"longest-mountain-in-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Peak Index in a Mountain Array\", \"titleSlug\": \"peak-index-in-a-mountain-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Valid Mountain Array\", \"titleSlug\": \"valid-mountain-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find in Mountain Array\", \"titleSlug\": \"find-in-mountain-array\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Beautiful Towers II\", \"titleSlug\": \"beautiful-towers-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Beautiful Towers I\", \"titleSlug\": \"beautiful-towers-i\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,3,1]",
+    "[2,1,1,5,6,2,3,1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"paypal\", \"name\": \"PayPal\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minimumMountainRemovals(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minimumMountainRemovals(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumMountainRemovals(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumMountainRemovals(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar minimumMountainRemovals = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumMountainRemovals(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinimumMountainRemovals(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minimumMountainRemovals(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumMountainRemovals(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumMountainRemovals(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumMountainRemovals(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_mountain_removals(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef minimum_mountain_removals(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function minimumMountainRemovals($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimumMountainRemovals(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumMountainRemovals(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_mountain_removals(nums :: [integer]) :: integer\n  def minimum_mountain_removals(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_mountain_removals(Nums :: [integer()]) -> integer().\nminimum_mountain_removals(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-mountain-removals nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2538",
+    "content": "## Solution\n\n---\n\n### Overview\n\nIn the problem, we are given an array `nums` of length `N`, and the task is to determine the minimum number of elements to remove in order to transform it into a mountain array. A mountain array is defined as one that first strictly increases to a peak element at an index say `i`, then strictly decreases after that. Visually, this forms a \"mountain\" shape when plotted as shown below:\n\n![fig](../Figures/1671/1671A.png)\n\nTo solve this, we must choose a peak element at index `i` such that the left subarray `(nums[0...i])` forms a strictly increasing sequence, and the right subarray `(nums[i...N - 1])` forms a strictly decreasing sequence.\n\nFor each candidate index `i` (potential peak element):\n- The subarray `nums[0...i]` should be strictly increasing.\n- The subarray `nums[i...N - 1]` should be strictly decreasing.\n\nLet `L1` be the length of the longest strictly increasing subsequence (LIS) that ends at index `i`, and `L2` be the length of the longest strictly decreasing subsequence (LDS) that starts at index `i`.\n\nTo calculate the number of elements to remove:\n\n- On the left side of the peak, there are `i + 1` elements from `nums[0] to nums[i]`. Therefore, the number of elements to remove on the left side is `i + 1 - L1`.\n- On the right side, there are `N - i` elements from `nums[i] to nums[N - 1]`. The number of elements to remove on the right side is `N - i - L2`.\n\nThus, the total number of elements to remove for a given peak at index `i` is:\n\n> $\\text{removals} = \\text{(i + 1 − L1) + (N − i − L2) = N + 1 − L1 − L2}$\n\nThis formula calculates the total removals required if ` i` is chosen as the peak element.\n\nTherefore, the solution boils down to evaluating each index in the array as a potential peak element and determining the lengths of the ordered subsequences on both sides of it to calculate the number of required removals. We will discuss two approaches to find the lengths of these ordered subsequences: one using dynamic programming and the other utilizing binary search.\n\n---\n\n### Approach 1: LIS Using Dynamic Programming\n\n#### Intuition\n\nThe discussion above focuses on finding the lengths of ordered subsequences for each index in the given array. One approach is to compute these lengths on the fly while iterating over the indices to identify the optimal peak element. However, this method introduces redundant operations and is therefore inefficient. Instead, we can precompute the lengths of the ordered subsequences for each index in the array. This allows us to directly use these values to calculate the required removals for each index, ultimately yielding the minimum number of removals across all indices.\n\nTo find these lengths, we use dynamic programming, similar to the approach in [300. Longest Increasing Subsequence](https://leetcode.com/problems/longest-increasing-subsequence/solution/). First, we pass through the array from left to right to compute the longest increasing subsequence for each index `i`. For each element `nums[i]`, we compare it with all previous elements `nums[j]` where `j < i`. If `nums[i] > nums[j]`, we update the subsequence length at `i` with:\n\n\n> $\\text{lisLength[i] = max(lisLength[i], lisLength[j] + 1)}$\n\nNext, we perform a right-to-left pass to calculate the longest decreasing subsequence starting at each index `i`. For each element `nums[i]`, we compare it with all subsequent elements `nums[j]` where `j > i`. If `nums[i] > nums[j]`, we update with:\n> $\\text{ldsLength[i] = max(ldsLength[i], ldsLength[j] + 1)}$\n\nAfter precomputing the lengths of the ordered subsequences for all indices, we iterate through the `nums` array, considering each index `i` as a potential peak element. We calculate the number of elements that need to be removed using the expression:\n\n> $\\text{removals = N + 1 − lisLength[i] − ldsLength[i]}$\n\nBefore calculating the removals, it is essential to verify that the current index can serve as a valid peak by ensuring that both $\\text{lisLength}[i]$ and $\\text{ldsLength}[i]$ are greater than `1`. This condition is necessary because if either value is `0`, the peak would be positioned at the start or end of the array, which does not satisfy the criteria for a valid mountain array.\n\nIn the end, we can return the minimum value among the calculated removals as the result, representing the minimum number of elements that must be removed to form a valid mountain array.\n\n#### Algorithm\n\n1. Initialize LIS and LDS arrays:\n    - Create two arrays `lisLength` and `ldsLength` of size `N` initialized to `1`, representing the lengths of the longest increasing and decreasing subsequences, respectively.\n2. Calculate LIS (Longest Increasing Subsequence):\n    - For each index `i`, iterate through all indices `j` before `i`.\n    - If `nums[i] > nums[j]`, update `lisLength[i]` as `max(lisLength[i], lisLength[j] + 1)`.\n3. Calculate LDS (Longest Decreasing Subsequence):\n    - For each index `i`, iterate through all indices `j` after `i`.\n    - If `nums[i] > nums[j]`, update `ldsLength[i]` as `max(ldsLength[i], ldsLength[j] + 1)`.\n4. Determine minimum removals:\n    - For each index `i`, if both `lisLength[i] > 1` and `ldsLength[i] > 1` (i.e., it's a valid mountain peak), calculate the minimum removals required as `N - (lisLength[i] + ldsLength[i] - 1)`.\n5. Return `minRemovals`\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/2YdRPu7S/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"2YdRPu7S\"></iframe>\n\n#### Complexity Analysis\n\nHere, $N$ is the number of elements in the array `nums`.\n\n- Time complexity: $O(N^2)$\n\n  The process of determining the lengths of the increasing and decreasing subsequences using dynamic programming requires $O(N^2)$ time. Afterward, we iterate over the nums array to calculate the number of removals needed, which takes  $O(N)$ time. Therefore, the overall time complexity is  $O(N^2)$.\n\n- Space complexity: $O(N)$\n\n  We utilize two arrays, `lisLen` and `ldsLen`, each of size $N$ to store the lengths of the ordered subsequences. Consequently, the total space complexity is $O(N)$.\n\n---\n\n### Approach 2: LIS Using Binary Search\n\n#### Intuition\n\nThis approach shares the same high-level concept as the previous one: we will precompute the lengths of the longest increasing subsequence (LIS) and the longest decreasing subsequence (LDS) for each index. We then use these lengths to determine the number of elements that need to be removed for each index to serve as the peak of the mountain array.\n\nThe key difference lies in how we compute the lengths of the ordered subsequences. This method employs binary search, as discussed in the third approach of [300. Longest Increasing Subsequence](https://leetcode.com/problems/longest-increasing-subsequence/solution/).\n\nTo find the length of the longest increasing subsequence using binary search, we maintain a separate array that holds the longest increasing subsequence encountered so far. The strategy is to ensure that the length of this subsequence remains the same or increases with the addition of new elements. As we iterate through each element in the array nums, we use binary search to find the index of the first element in our subsequence that is greater than or equal to the current element. If this index is equal to the size of the subsequence, it indicates that the current element is greater than the last element in the subsequence. Therefore, we add it to the subsequence, which increases its length. If the binary search yields an index within the existing subsequence, we replace the element at that index with the current element. This is done because the current element is either equal to or smaller than the existing element, and this allows for potentially more elements to be added to the subsequence in the future.\n\nSimilarly, we determine the length of the decreasing subsequence by iterating from the right end of the array. To reuse the same logic, we can reverse the nums array and apply the same method to find the increasing subsequence, which is equivalent to the decreasing subsequence of the original array. This approach allows us to define a single method that computes the length of the longest increasing subsequence for both the left and right sides of the peak element.\n\n#### Algorithm\n\n1. Define the function`getLongestIncreasingSubsequenceLength` that takes vector `v`\n    - Initialize a list `lisLen` to store the current the length of the longest increasing sequence for each index.\n    - Initialize a list `lis` to store the current LIS sequence.\n    - For each element in the input array from index `1`, use a binary search (lowerBound) to find its position `index` in `lis`.\n        - If the element `v[i]` is larger than all elements in `lis`, append it.\n        - Otherwise, replace the element in `lis` at `index` with `v[i]`.\n        - Update the `lisLen[i]` to the size of `lis`.\n2. Calculate LIS for left to right using the above function and store it in the list `lisLength`\n3. Calculate LDS (longest decreasing subsequence) for left to right using the above function and store it in the list `ldsLength`\n    - Reverse the input array `nums` and and use the function `getLongestIncreasingSubsequenceLength`\n    - Reverse the resulting `ldsLen` to map back to the original array indices.\n4. Determine minimum removals:\n    - For each index `i`, if both `lisLength[i] > 1` and `ldsLength[i] > 1` (i.e., it's a valid mountain peak), calculate the minimum removals required as `N - (lisLength[i] + ldsLength[i] - 1)`.\n5. Return `minRemovals`\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/GTcjY4o5/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"GTcjY4o5\"></iframe>\n\n#### Complexity Analysis\n\nHere, $N$ represents the number of elements in the array nums.\n\n- Time Complexity: $O(N \\log N)$\n\n  The computation of the lengths of the increasing and decreasing subsequences using binary search takes $O(N \\log N)$, as we perform a binary search, which has a complexity of $O(\\ log N)$, for each of the $N$ elements. After this, we iterate through the nums array to calculate the number of removals needed, which requires $O(N)$ time. Thus, the overall time complexity is $O(N \\log N)$.\n\n- Space Complexity: $O(N)$\n\n  We need two arrays, `lisLen and ldsLen`, each of size $N$, to store the lengths of the ordered subsequences. Additionally, we require an array to store the actual subsequence, `lis`, which can be as long as the original array. Consequently, the total space complexity is $O(N)$\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

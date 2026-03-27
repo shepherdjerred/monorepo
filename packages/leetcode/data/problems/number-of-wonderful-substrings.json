@@ -1,0 +1,130 @@
+{
+  "questionId": "2044",
+  "questionFrontendId": "1915",
+  "title": "Number of Wonderful Substrings",
+  "titleSlug": "number-of-wonderful-substrings",
+  "difficulty": "Medium",
+  "content": "<p>A <strong>wonderful</strong> string is a string where <strong>at most one</strong> letter appears an <strong>odd</strong> number of times.</p>\r\n\r\n<ul>\r\n\t<li>For example, <code>&quot;ccjjc&quot;</code> and <code>&quot;abab&quot;</code> are wonderful, but <code>&quot;ab&quot;</code> is not.</li>\r\n</ul>\r\n\r\n<p>Given a string <code>word</code> that consists of the first ten lowercase English letters (<code>&#39;a&#39;</code> through <code>&#39;j&#39;</code>), return <em>the <strong>number of wonderful non-empty substrings</strong> in </em><code>word</code><em>. If the same substring appears multiple times in </em><code>word</code><em>, then count <strong>each occurrence</strong> separately.</em></p>\r\n\r\n<p>A <strong>substring</strong> is a contiguous sequence of characters in a string.</p>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong class=\"example\">Example 1:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> word = &quot;aba&quot;\r\n<strong>Output:</strong> 4\r\n<strong>Explanation:</strong> The four wonderful substrings are underlined below:\r\n- &quot;<u><strong>a</strong></u>ba&quot; -&gt; &quot;a&quot;\r\n- &quot;a<u><strong>b</strong></u>a&quot; -&gt; &quot;b&quot;\r\n- &quot;ab<u><strong>a</strong></u>&quot; -&gt; &quot;a&quot;\r\n- &quot;<u><strong>aba</strong></u>&quot; -&gt; &quot;aba&quot;\r\n</pre>\r\n\r\n<p><strong class=\"example\">Example 2:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> word = &quot;aabb&quot;\r\n<strong>Output:</strong> 9\r\n<strong>Explanation:</strong> The nine wonderful substrings are underlined below:\r\n- &quot;<strong><u>a</u></strong>abb&quot; -&gt; &quot;a&quot;\r\n- &quot;<u><strong>aa</strong></u>bb&quot; -&gt; &quot;aa&quot;\r\n- &quot;<u><strong>aab</strong></u>b&quot; -&gt; &quot;aab&quot;\r\n- &quot;<u><strong>aabb</strong></u>&quot; -&gt; &quot;aabb&quot;\r\n- &quot;a<u><strong>a</strong></u>bb&quot; -&gt; &quot;a&quot;\r\n- &quot;a<u><strong>abb</strong></u>&quot; -&gt; &quot;abb&quot;\r\n- &quot;aa<u><strong>b</strong></u>b&quot; -&gt; &quot;b&quot;\r\n- &quot;aa<u><strong>bb</strong></u>&quot; -&gt; &quot;bb&quot;\r\n- &quot;aab<u><strong>b</strong></u>&quot; -&gt; &quot;b&quot;\r\n</pre>\r\n\r\n<p><strong class=\"example\">Example 3:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> word = &quot;he&quot;\r\n<strong>Output:</strong> 2\r\n<strong>Explanation:</strong> The two wonderful substrings are underlined below:\r\n- &quot;<b><u>h</u></b>e&quot; -&gt; &quot;h&quot;\r\n- &quot;h<strong><u>e</u></strong>&quot; -&gt; &quot;e&quot;\r\n</pre>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong>Constraints:</strong></p>\r\n\r\n<ul>\r\n\t<li><code>1 &lt;= word.length &lt;= 10<sup>5</sup></code></li>\r\n\t<li><code>word</code> consists of lowercase English letters from <code>&#39;a&#39;</code>&nbsp;to <code>&#39;j&#39;</code>.</li>\r\n</ul>",
+  "hints": [
+    "For each prefix of the string, check which characters are of even frequency and which are not and represent it by a bitmask.",
+    "Find the other prefixes whose masks differs from the current prefix mask by at most one bit."
+  ],
+  "metaData": "{\n  \"name\": \"wonderfulSubstrings\",\n  \"params\": [\n    {\n      \"name\": \"word\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"89.8K\", \"totalSubmission\": \"134.8K\", \"totalAcceptedRaw\": 89763, \"totalSubmissionRaw\": 134760, \"acRate\": \"66.6%\"}",
+  "likes": 1833,
+  "dislikes": 284,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"aba\"",
+    "\"aabb\"",
+    "\"he\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\r\npublic:\r\n    long long wonderfulSubstrings(string word) {\r\n        \r\n    }\r\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\r\n    public long wonderfulSubstrings(String word) {\r\n        \r\n    }\r\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\r\n    def wonderfulSubstrings(self, word: str) -> int:"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\r\n    def wonderfulSubstrings(self, word):\r\n        \"\"\"\r\n        :type word: str\r\n        :rtype: int\r\n        \"\"\""
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\r\n * @param {string} word\r\n * @return {number}\r\n */\r\nvar wonderfulSubstrings = function(word) {\r\n    \r\n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function wonderfulSubstrings(word: string): number {\r\n\r\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\r\n    public long WonderfulSubstrings(string word) {\r\n        \r\n    }\r\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long wonderfulSubstrings(char * word){\r\n\r\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func wonderfulSubstrings(word string) int64 {\r\n    \r\n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\r\n    fun wonderfulSubstrings(word: String): Long {\r\n        \r\n    }\r\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\r\n    func wonderfulSubstrings(_ word: String) -> Int {\r\n        \r\n    }\r\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\r\n    pub fn wonderful_substrings(word: String) -> i64 {\r\n        \r\n    }\r\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} word\r\n# @return {Integer}\r\ndef wonderful_substrings(word)\r\n    \r\nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\r\n\r\n    /**\r\n     * @param String $word\r\n     * @return Integer\r\n     */\r\n    function wonderfulSubstrings($word) {\r\n        \r\n    }\r\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\r\n    def wonderfulSubstrings(word: String): Long = {\r\n        \r\n    }\r\n}"
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (wonderful-substrings word)\r\n  (-> string? exact-integer?)\r\n\r\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2284",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach: Count Parity Prefixes\n\n\n#### Intuition\n\nThere are two types of wonderful strings: those with no letters appearing an odd number of times, and those with exactly one letter appearing an odd number of times. After we find a solution to count the first type of strings, we can adapt it to cover all cases.\n\nThe parity of a letter means whether the count of that letter in a word is even or odd. We can find the parity of a letter by taking the frequency of that letter modulo $2$. Letters with odd frequencies have a parity of $1$, and letters with even frequencies have a parity of $0$. For example, the parity of letter \"a\" in \"abccada\" is $1$, whereas the parity of letter \"c\" is $0$. \n\nThe subtask now is to count the number of substrings with all letters appearing an even number of times. In other words, substrings where the parity of every letter is $0$. Because there are only $10$ distinct letters the string can consist of, we can use a bitmask of $10$ bits to represent the parities of all letters in a string. The `0`th (least significant) bit of the mask corresponds to the parity of letter \"a\", the `1`st bit corresponds to letter \"b\", and so on.\n\nFor example, the parity mask corresponding to string \"feffaec\" is $100101$, which equals $37$ in base 10. Letters \"a\", \"c\", and \"f\" appear an odd number of times, so their corresponding bits are set to `1`, and the other letters appear an even number of times, so their bits are set to `0`. We want to count the number of substrings with a mask of $0$ (if every character appears an even number of times, all bits will be set to `0`).\n\nFor any substring in the input string `word`, we can represent it as the difference between two prefixes of `s`. For example, substring $[2, 5]$ is the difference between prefix $[0, 5]$ and $[0, 1]$. Observe that the substring will equate to a mask of $0$ if and only if the masks of the two prefixes are equal. This is because we can \"subtract\" the larger prefix from the smaller prefix to create this substring using the `^` (XOR) operator. The XOR function is equivalent to subtraction under modulo $2$. All bits are independently calculated in the XOR function, where for each bit, the output is true when there is an odd number of true inputs. This gives us an efficient way to find the difference between the larger and smaller prefixes.\n\nThis gives us a linear time way to count strings with all characters appearing an even number of times: maintain the parity mask of the current prefix, and compare it with previous prefixes of the same value in a frequency map. The key is a mask, which corresponds to a prefix of the string, and the value is the frequency of the key mask. To count substrings with all even letters ending at some index $r$, take the prefix ending at $r$ with parity mask $m$, and add `freq[m]` to the answer. The difference of two prefixes with the same bitmask will equal `0`, which corresponds to strings with all even frequency letters.\n\nHere is an example of how parity masks are calculated for the string \"acadac\", which has a mask of $1001$. The `k`th letter of the alphabet will flip the `k`th smallest bit.\n\n![figA](../Figures/1915/1915_acadac_revised.png)\n\nAll that's left is to account for the case where exactly one letter appears an odd number of times. For the current prefix mask, we can find its counterpart in the frequency map by iterating through which bit should be flipped. For example, if the current prefix mask is $111$, and a smaller prefix has mask $101$, the substring generated by removing the intersection of these two prefixes will equal $010$, which means only the letter \"b\" appears an odd number of times.\n\n#### Algorithm\n\n1. Create a frequency table or map. Add the mask $0$ to account for the empty prefix.\n2. Initialize a `mask` int variable to $0$.\n3. For each character in `word`, flip the corresponding bit in `mask`.\n4. Add the frequency of `mask` to the answer.\n5. Increment the value associated with key `mask` by one.\n6. Iterate through each possible character that appears an odd number of times, and add the frequency of `mask ^ (1 << odd_c)`, where `^` is the XOR function.\n7. Return the result when all letters are processed.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/au2V8L5B/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"au2V8L5B\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity: $O(NA)$.\n\nThe number of distinct characters that can appear in `word` is defined as $A$. For each of the $N$ characters in `word`, we iterate through all possible characters that can be the odd character. Therefore, the time complexity of $O(NA)$, where $A \\leq 10$, because only letters \"a\" through \"j\" will appear.\n\n* Space complexity: $O(N)$.\n\nThe frequency map can store up to $N$ key/entry pairs, hence the linear space complexity.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "questionId": "1958",
+  "questionFrontendId": "1809",
+  "title": "Ad-Free Sessions",
+  "titleSlug": "ad-free-sessions",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Playback</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| session_id  | int  |\n| customer_id | int  |\n| start_time  | int  |\n| end_time    | int  |\n+-------------+------+\nsession_id is the column with unique values for this table.\ncustomer_id is the ID of the customer watching this session.\nThe session runs during the <strong>inclusive</strong> interval between start_time and end_time.\nIt is guaranteed that start_time &lt;= end_time and that two sessions for the same customer do not intersect.</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Ads</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| ad_id       | int  |\n| customer_id | int  |\n| timestamp   | int  |\n+-------------+------+\nad_id is the column with unique values for this table.\ncustomer_id is the ID of the customer viewing this ad.\ntimestamp is the moment of time at which the ad was shown.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to report all the sessions that did not get shown any ads.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nPlayback table:\n+------------+-------------+------------+----------+\n| session_id | customer_id | start_time | end_time |\n+------------+-------------+------------+----------+\n| 1          | 1           | 1          | 5        |\n| 2          | 1           | 15         | 23       |\n| 3          | 2           | 10         | 12       |\n| 4          | 2           | 17         | 28       |\n| 5          | 2           | 2          | 8        |\n+------------+-------------+------------+----------+\nAds table:\n+-------+-------------+-----------+\n| ad_id | customer_id | timestamp |\n+-------+-------------+-----------+\n| 1     | 1           | 5         |\n| 2     | 2           | 17        |\n| 3     | 2           | 20        |\n+-------+-------------+-----------+\n<strong>Output:</strong> \n+------------+\n| session_id |\n+------------+\n| 2          |\n| 3          |\n| 5          |\n+------------+\n<strong>Explanation:</strong> \nThe ad with ID 1 was shown to user 1 at time 5 while they were in session 1.\nThe ad with ID 2 was shown to user 2 at time 17 while they were in session 4.\nThe ad with ID 3 was shown to user 2 at time 20 while they were in session 4.\nWe can see that sessions 1 and 4 had at least one ad. Sessions 2, 3, and 5 did not have any ads, so we return them.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Playback(session_id int,customer_id int,start_time int,end_time int)\", \"Create table If Not Exists Ads (ad_id int, customer_id int, timestamp int)\"], \"mssql\": [\"Create table Playback(session_id int,customer_id int,start_time int,end_time int)\", \"Create table Ads (ad_id int, customer_id int, timestamp int)\"], \"oraclesql\": [\"Create table Playback(session_id int,customer_id int,start_time int,end_time int)\", \"Create table Ads (ad_id int, customer_id int, timestamp int)\"], \"database\": true, \"name\": \"ad_free_sessions\", \"pythondata\": [\"Playback = pd.DataFrame([], columns=['session_id', 'customer_id', 'start_time', 'end_time']).astype({'session_id':'Int64', 'customer_id':'Int64', 'start_time':'Int64', 'end_time':'Int64'})\", \"Ads = pd.DataFrame([], columns=['ad_id', 'customer_id', 'timestamp']).astype({'ad_id':'Int64', 'customer_id':'Int64', 'timestamp':'Int64'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Playback(session_id int,customer_id int,start_time int,end_time int)\\n\", \"Create table If Not Exists Ads (ad_id int, customer_id int, timestamp int)\"], \"database_schema\": {\"Playback\": {\"session_id\": \"INT\", \"customer_id\": \"INT\", \"start_time\": \"INT\", \"end_time\": \"INT\"}, \"Ads\": {\"ad_id\": \"INT\", \"customer_id\": \"INT\", \"timestamp\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"19.6K\", \"totalSubmission\": \"33.2K\", \"totalAcceptedRaw\": 19550, \"totalSubmissionRaw\": 33175, \"acRate\": \"58.9%\"}",
+  "likes": 99,
+  "dislikes": 61,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Playback\":[\"session_id\",\"customer_id\",\"start_time\",\"end_time\"],\"Ads\":[\"ad_id\",\"customer_id\",\"timestamp\"]},\"rows\":{\"Playback\":[[1,1,1,5],[2,1,15,23],[3,2,10,12],[4,2,17,28],[5,2,2,8]],\"Ads\":[[1,1,5],[2,2,17],[3,2,20]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef ad_free_sessions(playback: pd.DataFrame, ads: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

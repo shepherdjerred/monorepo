@@ -1,0 +1,53 @@
+{
+  "questionId": "1964",
+  "questionFrontendId": "1811",
+  "title": "Find Interview Candidates",
+  "titleSlug": "find-interview-candidates",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Contests</code></p>\n\n<pre>\n+--------------+------+\n| Column Name  | Type |\n+--------------+------+\n| contest_id   | int  |\n| gold_medal   | int  |\n| silver_medal | int  |\n| bronze_medal | int  |\n+--------------+------+\ncontest_id is the column with unique values for this table.\nThis table contains the LeetCode contest ID and the user IDs of the gold, silver, and bronze medalists.\nIt is guaranteed that any consecutive contests have consecutive IDs and that no ID is skipped.</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Users</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| user_id     | int     |\n| mail        | varchar |\n| name        | varchar |\n+-------------+---------+\nuser_id is the column with unique values for this table.\nThis table contains information about the users.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to report the <code>name</code> and the <code>mail</code> of all <strong>interview candidates</strong>. A user is an <strong>interview candidate</strong> if <strong>at least one</strong> of these two conditions is true:</p>\n\n<ul>\n\t<li>The user won <strong>any</strong> medal in <strong>three or more consecutive</strong> contests.</li>\n\t<li>The user won the <strong>gold</strong> medal in <strong>three or more different</strong> contests (not necessarily consecutive).</li>\n</ul>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nContests table:\n+------------+------------+--------------+--------------+\n| contest_id | gold_medal | silver_medal | bronze_medal |\n+------------+------------+--------------+--------------+\n| 190        | 1          | 5            | 2            |\n| 191        | 2          | 3            | 5            |\n| 192        | 5          | 2            | 3            |\n| 193        | 1          | 3            | 5            |\n| 194        | 4          | 5            | 2            |\n| 195        | 4          | 2            | 1            |\n| 196        | 1          | 5            | 2            |\n+------------+------------+--------------+--------------+\nUsers table:\n+---------+--------------------+-------+\n| user_id | mail               | name  |\n+---------+--------------------+-------+\n| 1       | sarah@leetcode.com | Sarah |\n| 2       | bob@leetcode.com   | Bob   |\n| 3       | alice@leetcode.com | Alice |\n| 4       | hercy@leetcode.com | Hercy |\n| 5       | quarz@leetcode.com | Quarz |\n+---------+--------------------+-------+\n<strong>Output:</strong> \n+-------+--------------------+\n| name  | mail               |\n+-------+--------------------+\n| Sarah | sarah@leetcode.com |\n| Bob   | bob@leetcode.com   |\n| Alice | alice@leetcode.com |\n| Quarz | quarz@leetcode.com |\n+-------+--------------------+\n<strong>Explanation:</strong> \nSarah won 3 gold medals (190, 193, and 196), so we include her in the result table.\nBob won a medal in 3 consecutive contests (190, 191, and 192), so we include him in the result table.\n    - Note that he also won a medal in 3 other consecutive contests (194, 195, and 196).\nAlice won a medal in 3 consecutive contests (191, 192, and 193), so we include her in the result table.\nQuarz won a medal in 5 consecutive contests (190, 191, 192, 193, and 194), so we include them in the result table.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong></p>\n\n<ul>\n\t<li>What if the first condition changed to be &quot;any medal in <code>n</code><strong> or more</strong> consecutive contests&quot;? How would you change your solution to get the interview candidates? Imagine that <code>n</code> is the parameter of a stored procedure.</li>\n\t<li>Some users may not participate in every contest but still perform well in the ones they do. How would you change your solution to only consider contests where the user <strong>was a participant</strong>? Suppose the registered users for each contest are given in another table.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Contests (contest_id int, gold_medal int, silver_medal int, bronze_medal int)\", \"Create table If Not Exists Users (user_id int, mail varchar(50), name varchar(30))\"], \"mssql\": [\"Create table Contests (contest_id int, gold_medal int, silver_medal int, bronze_medal int)\", \"Create table Users (user_id int, mail varchar(50), name varchar(30))\"], \"oraclesql\": [\"Create table Contests (contest_id int, gold_medal int, silver_medal int, bronze_medal int)\", \"Create table Users (user_id int, mail varchar(50), name varchar(30))\"], \"database\": true, \"name\": \"find_interview_candidates\", \"pythondata\": [\"Contests = pd.DataFrame([], columns=['contest_id', 'gold_medal', 'silver_medal', 'bronze_medal']).astype({'contest_id':'Int64', 'gold_medal':'Int64', 'silver_medal':'Int64', 'bronze_medal':'Int64'})\", \"Users = pd.DataFrame([], columns=['user_id', 'mail', 'name']).astype({'user_id':'Int64', 'mail':'object', 'name':'object'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Contests (contest_id int, gold_medal int, silver_medal int, bronze_medal int)\", \"Create table If Not Exists Users (user_id int, mail varchar(50), name varchar(30))\"], \"database_schema\": {\"Contests\": {\"contest_id\": \"INT\", \"gold_medal\": \"INT\", \"silver_medal\": \"INT\", \"bronze_medal\": \"INT\"}, \"Users\": {\"user_id\": \"INT\", \"mail\": \"VARCHAR(50)\", \"name\": \"VARCHAR(30)\"}}}",
+  "stats": "{\"totalAccepted\": \"19.5K\", \"totalSubmission\": \"32.1K\", \"totalAcceptedRaw\": 19468, \"totalSubmissionRaw\": 32080, \"acRate\": \"60.7%\"}",
+  "likes": 212,
+  "dislikes": 30,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Contests\":[\"contest_id\",\"gold_medal\",\"silver_medal\",\"bronze_medal\"],\"Users\":[\"user_id\",\"mail\",\"name\"]},\"rows\":{\"Contests\":[[190,1,5,2],[191,2,3,5],[192,5,2,3],[193,1,3,5],[194,4,5,2],[195,4,2,1],[196,1,5,2]],\"Users\":[[1,\"sarah@leetcode.com\",\"Sarah\"],[2,\"bob@leetcode.com\",\"Bob\"],[3,\"alice@leetcode.com\",\"Alice\"],[4,\"hercy@leetcode.com\",\"Hercy\"],[5,\"quarz@leetcode.com\",\"Quarz\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_interview_candidates(contests: pd.DataFrame, users: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

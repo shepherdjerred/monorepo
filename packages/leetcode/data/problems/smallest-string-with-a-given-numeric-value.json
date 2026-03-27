@@ -1,0 +1,136 @@
+{
+  "questionId": "1782",
+  "questionFrontendId": "1663",
+  "title": "Smallest String With A Given Numeric Value",
+  "titleSlug": "smallest-string-with-a-given-numeric-value",
+  "difficulty": "Medium",
+  "content": "<p>The <strong>numeric value</strong> of a <strong>lowercase character</strong> is defined as its position <code>(1-indexed)</code> in the alphabet, so the numeric value of <code>a</code> is <code>1</code>, the numeric value of <code>b</code> is <code>2</code>, the numeric value of <code>c</code> is <code>3</code>, and so on.</p>\n\n<p>The <strong>numeric value</strong> of a <strong>string</strong> consisting of lowercase characters is defined as the sum of its characters&#39; numeric values. For example, the numeric value of the string <code>&quot;abe&quot;</code> is equal to <code>1 + 2 + 5 = 8</code>.</p>\n\n<p>You are given two integers <code>n</code> and <code>k</code>. Return <em>the <strong>lexicographically smallest string</strong> with <strong>length</strong> equal to <code>n</code> and <strong>numeric value</strong> equal to <code>k</code>.</em></p>\n\n<p>Note that a string <code>x</code> is lexicographically smaller than string <code>y</code> if <code>x</code> comes before <code>y</code> in dictionary order, that is, either <code>x</code> is a prefix of <code>y</code>, or if <code>i</code> is the first position such that <code>x[i] != y[i]</code>, then <code>x[i]</code> comes before <code>y[i]</code> in alphabetic order.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 3, k = 27\n<strong>Output:</strong> &quot;aay&quot;\n<strong>Explanation:</strong> The numeric value of the string is 1 + 1 + 25 = 27, and it is the smallest string with such a value and length equal to 3.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 5, k = 73\n<strong>Output:</strong> &quot;aaszz&quot;\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>n &lt;= k &lt;= 26 * n</code></li>\n</ul>\n",
+  "hints": [
+    "Think greedily.",
+    "If you build the string from the end to the beginning, it will always be optimal to put the highest possible character at the current index."
+  ],
+  "metaData": "{\n  \"name\": \"getSmallestString\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"104.8K\", \"totalSubmission\": \"155.4K\", \"totalAcceptedRaw\": 104816, \"totalSubmissionRaw\": 155399, \"acRate\": \"67.4%\"}",
+  "likes": 1924,
+  "dislikes": 64,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "3\n27",
+    "5\n73"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string getSmallestString(int n, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String getSmallestString(int n, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def getSmallestString(self, n: int, k: int) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def getSmallestString(self, n, k):\n        \"\"\"\n        :type n: int\n        :type k: int\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number} k\n * @return {string}\n */\nvar getSmallestString = function(n, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function getSmallestString(n: number, k: number): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string GetSmallestString(int n, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* getSmallestString(int n, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func getSmallestString(n int, k int) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun getSmallestString(n: Int, k: Int): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func getSmallestString(_ n: Int, _ k: Int) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn get_smallest_string(n: i32, k: i32) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer} k\n# @return {String}\ndef get_smallest_string(n, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer $k\n     * @return String\n     */\n    function getSmallestString($n, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String getSmallestString(int n, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def getSmallestString(n: Int, k: Int): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec get_smallest_string(n :: integer, k :: integer) :: String.t\n  def get_smallest_string(n, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec get_smallest_string(N :: integer(), K :: integer()) -> unicode:unicode_binary().\nget_smallest_string(N, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (get-smallest-string n k)\n  (-> exact-integer? exact-integer? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1055",
+    "content": "[TOC]\n\n## Solution\n---\n#### Overview ####\n\nWe have to build a string of length $$n$$ that consists of English lowercase characters `a-z` by ensuring that following conditions are satisfied,\n- The numeric value of a string must be equal to a given value $$k$$. The numeric value of a string is equal to the sum of numeric values of all its characters.\nThe numeric value of alphabet characters ranges from $$1$$ to $$26$$, where value of $$a = 1$$, $$b=2$$ and so on.\n- The string must be _lexicographically smallest string_. In other words, we must build a string that would be the smallest in its dictionary order for a given numeric value.\n\nThe value of $$k$$ would be at least $$n$$.\nIf $$k = n$$, the numeric value of every position would be $$1$$ (`a`).\n\nExample: if `n = 3` and `k = 3`, result would be  `aaa`.\n\nThe value of $$k$$ would be at most $$(n * 26)$$.\nIf $$k = (n*26)$$, the numeric value of every position would be $$26$$ (`z`).\n\nExample: if `n = 3` and `k = 78 (3 * 26)` , result would be  `zzz`.\n\n\n\nBased on these insights, let's implement the solution using different approaches.\n\n---\n#### Approach 1: Build number from left to right\n\n**Intuition**\n\nTypically, we have to build a string by filling each position with a character that satisfies some conditions. To implement the solution for this problem we must answer the following question: _How to choose a character to be put for a given position in the string_.\n\nTo answer this question we must have information on 2 parameters,\n1) The remaining value of $$k$$ at any given point.\n2) The number of positions that are yet to be filled.\n\nLet's assume, we are given $$n = 4$$ and we have the first $$2$$ positions in the result filled with `a`. Now we have to decide which character to put at $$3^{rd}$$ position. Let's understand scenarios with different $$k$$ values.\n\n_Scenario 1_: If the given $$k$$ value is $$32$$. After filling first 2 positions with `a` ( numeric value = $$1$$), the remaining $$k$$ value would be $$30$$. Now we have to split $$30$$ into remaining $$2$$ positions in such a way that resultant string is _lexicographically smallest_.\n\n> Lexicographically smallest string is always alphabetically sorted. But an alphabetically sorted string may not be always lexicographically sorted. Example, numeric value of $$dz$$ (`4 + 26 = 30`) is same as the numeric value of $$ey$$ (`5 + 25 = 30`). Both the strings are alphabetically sorted. But, the former is also lexicographically sorted while the latter is not.\n\nThus, we have to choose the character at $$3^{rd}$$ position in such a way that the character at $$4^{th}$$ position would be as large as possible. We know that the largest possible character is `z` with a numeric value of $$26$$. As the remaining $$k$$ value is $$30$$, we can reserve $$26$$ for $$4^{th}$$ position and use the remaining for current position $$3$$.\n\nHence, the numeric value chosen for $$3^{rd}$$ position would be $$4 $$ `(30 - 26)` and the character with the numeric value $$4$$ is $$d$$. The resultant string would be `aadz`.\n\nThe following figure illustrates the idea.\n\n![img](../Documents/5506/smallestStringExample1.svg)\n\n_Scenario 2_: If the given $$k$$ value is $$24$$. After filling first 2 positions with `a` (numeric value = 1), the remaining $$k$$ value would be $$22$$.\nNow, since the remaining $$k$$ value is less than $$26$$, we must assign $$3^{rd}$$ position with smallest character i.e `a` having numeric value $$1$$ and leave the rest for $$4^{th}$$ position. The resultant string would be `aaau`.\n\nThe following figure illustrates the idea.\n\n![img](../Documents/5506/smallestStringExample2.svg)\n\nBased on the above examples, we could develop the following intuition to choose a character for a position.\n\nGiven a value $$k$$ and number of positions left to be filled as $$\\text{positionsLeft}$$,\n- If $$k$$ is greater than $$\\text{positionsLeft} * 26$$, we can reserve the maximum numeric value $$26$$ `(character = z)` for all the positions left. After that we could assign numeric value $$ k - (\\text{positionsLeft} * 26)$$ for the current position.\n\n- Otherwise, we must assign the smallest character i.e `a` at the current position.\n\n**Algorithm**\n- Build a string or character array `result` to store the characters chosen for each position.\n- Iterate from position $$1$$ to $$n$$ and fill the character at each position.\nFind the positions left to be filled excluding the current position given by  `positionsLeft` as  `n - position - 1`.\n\n     * If value of $$k$$ is greater than `positionsLeft * 26`, we could reserve numeric value $$26$$ `(character = z)` for all the remaining positions `positionsLeft`.\n\n        The numeric value for current `position` given by variable `add` would be `k - (positionsLeft * 26)`. Subtract the calculated value `add` from `k` to find the remaining `k` value after filling the current position.\n   * Otherwise, we must fill the the current position with the smallest character `a` having numeric value $$1$$. Subtract $$1$$ from `k` to find the remaining `k` value after filling the current position.\n\n- The process would continue until all the positions are filled.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/HtTEQxzd/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"HtTEQxzd\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity: $$\\mathcal{O}(n)$$, as we iterate over $$n$$ positions to build the resultant string.\n\n- Space Complexity: $$\\mathcal{O}(1)$$, as we use constant extra space to store `add` and `position` variables.\n---\n\n#### Approach 2: Build number from right\n\n**Intuition**\n\nThere is another way of looking at the problem. We know that we must fill all the $$n$$ positions and the smallest character could be `a` with numeric value $$1$$. If we have any $$k$$ left, we try to reserve as much as possible for the last positions.\n\nHence, we could first fill all the positions with `a`. Then iterate from backward: the last position to the first position. As we iterate from $$n^{th}$$ position, we must try to allocate the maximum possible value to each position.\n\n**Algorithm**\n\n- Build a string or character array `result` to store the characters chosen for each position.\n\n- Fill all the `n` positions in `result` with character `a`. Since character `a` has numeric value $$1$$, subtract `n` from `k`. (since we have filled `n` positions with numeric value $$1$$).\n\n- Now, start iterating from the last position `n-1` and allocate the maximum possible numeric value to each position based on the remaining `k`.\nAs we have already allocated `a` at each position with a value $$1$$, the maximum additional value that we can add at each position would be $$25$$ (`26 - 1`).\n\n-  Calculate the additional value to be added given by `add` as a minimum of `25` and `k`. Add the calculated value `add` at the current position and also subtract it from `k`.\n\n- The process would continue until either all the positions are filled or there are no `k` values left `(k = 0)`.\n\n\n\n**Implementation**\n<iframe src=\"https://leetcode.com/playground/P7Pay79C/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"P7Pay79C\"></iframe>\n\n**Complexity Analysis**\n\n-  Time Complexity: $$\\mathcal{O}(n)$$, as we iterate over $$n$$ positions to build the resultant string. First, to initialize all the positions with character `a` and then to add the additional value.\n\n- Space Complexity: $$\\mathcal{O}(1)$$, as we use constant extra space to store `add` and `position` variables.\n---\n\n#### Approach 3: Build number from right - Optimised solution\n\n**Intuition**\n\nIn _Approach 2_, we first filled all the positions with the smallest character `a`, subtracted $$1$$ numeric value for each position from $$k$$, and later calculated the additional value. Instead of that, we could simply leave some value from $$k$$ for the remaining positions while iterating over each position from backward.\n\nWhile allocating a numeric value at any position, we must just make sure that there would be sufficient `k` values left such that all the remaining positions would get at least the smallest numeric value i.e `1`.\n\n**Algorithm**\n\n- Build a string or character array `result` to store the character chosen for each position.\n\n - Start iterating from last position `n-1` and allocate maximum possible numeric value to each position based on remaining `k`.\n- We know that the largest character at any position could be `z` with numeric value $$26$$. Also, we must leave some value from `k`, that is, `1` numeric value for each remaining position (`k - position`). Thus the maximum numeric value for the current position given by `add` can be calculated as,  minimum of `k - position` and `26`.\n\n- Subtract the value calculated for the current position `add` from `k`.\n\n- The process would continue until all the positions are filled.\n\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/QRfoToqU/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"QRfoToqU\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity: $$\\mathcal{O}(n)$$, as we iterate over $$n$$ positions to build the resultant string.\n\n- Space Complexity: $$\\mathcal{O}(1)$$, as we use constant extra space to store `add` and `position` variables.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

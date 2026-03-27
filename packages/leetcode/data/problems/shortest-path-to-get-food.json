@@ -1,0 +1,144 @@
+{
+  "questionId": "550",
+  "questionFrontendId": "1730",
+  "title": "Shortest Path to Get Food",
+  "titleSlug": "shortest-path-to-get-food",
+  "difficulty": "Medium",
+  "content": "<p>You are starving and you want to eat food as quickly as possible. You want to find the shortest path to arrive at any food cell.</p>\n\n<p>You are given an <code>m x n</code> character matrix, <code>grid</code>, of these different types of cells:</p>\n\n<ul>\n\t<li><code>&#39;*&#39;</code> is your location. There is <strong>exactly one </strong><code>&#39;*&#39;</code> cell.</li>\n\t<li><code>&#39;#&#39;</code> is a food cell. There may be <strong>multiple</strong> food cells.</li>\n\t<li><code>&#39;O&#39;</code> is free space, and you can travel through these cells.</li>\n\t<li><code>&#39;X&#39;</code> is an obstacle, and you cannot travel through these cells.</li>\n</ul>\n\n<p>You can travel to any adjacent cell north, east, south, or west of your current location if there is not an obstacle.</p>\n\n<p>Return <em>the <strong>length</strong> of the shortest path for you to reach <strong>any</strong> food cell</em>. If there is no path for you to reach food, return <code>-1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/21/img1.jpg\" style=\"width: 300px; height: 201px;\" />\n<pre>\n<strong>Input:</strong> grid = [[&quot;X&quot;,&quot;X&quot;,&quot;X&quot;,&quot;X&quot;,&quot;X&quot;,&quot;X&quot;],[&quot;X&quot;,&quot;*&quot;,&quot;O&quot;,&quot;O&quot;,&quot;O&quot;,&quot;X&quot;],[&quot;X&quot;,&quot;O&quot;,&quot;O&quot;,&quot;#&quot;,&quot;O&quot;,&quot;X&quot;],[&quot;X&quot;,&quot;X&quot;,&quot;X&quot;,&quot;X&quot;,&quot;X&quot;,&quot;X&quot;]]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> It takes 3 steps to reach the food.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/21/img2.jpg\" style=\"width: 300px; height: 241px;\" />\n<pre>\n<strong>Input:</strong> grid = [[&quot;X&quot;,&quot;X&quot;,&quot;X&quot;,&quot;X&quot;,&quot;X&quot;],[&quot;X&quot;,&quot;*&quot;,&quot;X&quot;,&quot;O&quot;,&quot;X&quot;],[&quot;X&quot;,&quot;O&quot;,&quot;X&quot;,&quot;#&quot;,&quot;X&quot;],[&quot;X&quot;,&quot;X&quot;,&quot;X&quot;,&quot;X&quot;,&quot;X&quot;]]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> It is not possible to reach the food.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/21/img3.jpg\" style=\"width: 300px; height: 188px;\" />\n<pre>\n<strong>Input:</strong> grid = [[&quot;X&quot;,&quot;X&quot;,&quot;X&quot;,&quot;X&quot;,&quot;X&quot;,&quot;X&quot;,&quot;X&quot;,&quot;X&quot;],[&quot;X&quot;,&quot;*&quot;,&quot;O&quot;,&quot;X&quot;,&quot;O&quot;,&quot;#&quot;,&quot;O&quot;,&quot;X&quot;],[&quot;X&quot;,&quot;O&quot;,&quot;O&quot;,&quot;X&quot;,&quot;O&quot;,&quot;O&quot;,&quot;X&quot;,&quot;X&quot;],[&quot;X&quot;,&quot;O&quot;,&quot;O&quot;,&quot;O&quot;,&quot;O&quot;,&quot;#&quot;,&quot;O&quot;,&quot;X&quot;],[&quot;X&quot;,&quot;X&quot;,&quot;X&quot;,&quot;X&quot;,&quot;X&quot;,&quot;X&quot;,&quot;X&quot;,&quot;X&quot;]]\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> There can be multiple food cells. It only takes 6 steps to reach the bottom food.</pre>\n\n<p><strong class=\"example\">Example 4:</strong></p>\n\n<pre>\n<strong>Input:</strong> grid = [[&quot;X&quot;,&quot;X&quot;,&quot;X&quot;,&quot;X&quot;,&quot;X&quot;,&quot;X&quot;,&quot;X&quot;,&quot;X&quot;],[&quot;X&quot;,&quot;*&quot;,&quot;O&quot;,&quot;X&quot;,&quot;O&quot;,&quot;#&quot;,&quot;O&quot;,&quot;X&quot;],[&quot;X&quot;,&quot;O&quot;,&quot;O&quot;,&quot;X&quot;,&quot;O&quot;,&quot;O&quot;,&quot;X&quot;,&quot;X&quot;],[&quot;X&quot;,&quot;O&quot;,&quot;O&quot;,&quot;O&quot;,&quot;O&quot;,&quot;#&quot;,&quot;O&quot;,&quot;X&quot;],[&quot;O&quot;,&quot;O&quot;,&quot;O&quot;,&quot;O&quot;,&quot;O&quot;,&quot;O&quot;,&quot;O&quot;,&quot;O&quot;]]\n<strong>Output:</strong> 5</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == grid.length</code></li>\n\t<li><code>n == grid[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 200</code></li>\n\t<li><code>grid[row][col]</code> is <code>&#39;*&#39;</code>, <code>&#39;X&#39;</code>, <code>&#39;O&#39;</code>, or <code>&#39;#&#39;</code>.</li>\n\t<li>The <code>grid</code> contains <strong>exactly one</strong> <code>&#39;*&#39;</code>.</li>\n</ul>\n",
+  "hints": [
+    "Run BFS starting from the '*' position.",
+    "Keep the current number of the steps as a state in the queue.",
+    "The first time you reach a food, return the number of steps as the answer.",
+    "In case the queue is empty and you still did not manage to reach a food, return -1."
+  ],
+  "metaData": "{\n  \"name\": \"getFood\",\n  \"params\": [\n    {\n      \"name\": \"grid\",\n      \"type\": \"character[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"82.8K\", \"totalSubmission\": \"144.8K\", \"totalAcceptedRaw\": 82771, \"totalSubmissionRaw\": 144831, \"acRate\": \"57.2%\"}",
+  "likes": 722,
+  "dislikes": 41,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"01 Matrix\", \"titleSlug\": \"01-matrix\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Shortest Path in a Grid with Obstacles Elimination\", \"titleSlug\": \"shortest-path-in-a-grid-with-obstacles-elimination\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Amount of Time for Binary Tree to Be Infected\", \"titleSlug\": \"amount-of-time-for-binary-tree-to-be-infected\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[\"X\",\"X\",\"X\",\"X\",\"X\",\"X\"],[\"X\",\"*\",\"O\",\"O\",\"O\",\"X\"],[\"X\",\"O\",\"O\",\"#\",\"O\",\"X\"],[\"X\",\"X\",\"X\",\"X\",\"X\",\"X\"]]",
+    "[[\"X\",\"X\",\"X\",\"X\",\"X\"],[\"X\",\"*\",\"X\",\"O\",\"X\"],[\"X\",\"O\",\"X\",\"#\",\"X\"],[\"X\",\"X\",\"X\",\"X\",\"X\"]]",
+    "[[\"X\",\"X\",\"X\",\"X\",\"X\",\"X\",\"X\",\"X\"],[\"X\",\"*\",\"O\",\"X\",\"O\",\"#\",\"O\",\"X\"],[\"X\",\"O\",\"O\",\"X\",\"O\",\"O\",\"X\",\"X\"],[\"X\",\"O\",\"O\",\"O\",\"O\",\"#\",\"O\",\"X\"],[\"X\",\"X\",\"X\",\"X\",\"X\",\"X\",\"X\",\"X\"]]",
+    "[[\"X\",\"X\",\"X\",\"X\",\"X\"],[\"X\",\"*\",\"X\",\"O\",\"X\"],[\"X\",\"O\",\"X\",\"#\",\"X\"],[\"O\",\"O\",\"O\",\"O\",\"O\"]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int getFood(vector<vector<char>>& grid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int getFood(char[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def getFood(self, grid: List[List[str]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def getFood(self, grid):\n        \"\"\"\n        :type grid: List[List[str]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {character[][]} grid\n * @return {number}\n */\nvar getFood = function(grid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function getFood(grid: string[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int GetFood(char[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int getFood(char** grid, int gridSize, int* gridColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func getFood(grid [][]byte) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun getFood(grid: Array<CharArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func getFood(_ grid: [[Character]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn get_food(grid: Vec<Vec<char>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Character[][]} grid\n# @return {Integer}\ndef get_food(grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[][] $grid\n     * @return Integer\n     */\n    function getFood($grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int getFood(List<List<String>> grid) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def getFood(grid: Array[Array[Char]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec get_food(grid :: [[char]]) :: integer\n  def get_food(grid) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec get_food(Grid :: [[char()]]) -> integer().\nget_food(Grid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (get-food grid)\n  (-> (listof (listof char?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2649",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Breadth-First Search (BFS)\n\n#### Intuition\n\nOur task is to find the distance to the closest food cell from the starting cell among all the food cells present in the grid. Imagine the starting cell as the origin point, with \"explorers\" sent out to neighboring cells in all four directions: up, down, left, and right. This exploration happens in layers, where each layer represents a step farther from the starting point:\n1. Layer 0: The starting cell.\n2. Layer 1: The cells adjacent to the starting cell.\n3. Layer 2: The cells two steps away, and so on.\n\nThis systematic exploration is called Breadth-First Search (BFS). BFS explores cells layer by layer, so when a food cell is found, it is guaranteed to be the closest one because all cells at shorter distances are processed first. This property makes BFS optimal for finding the shortest path in an unweighted grid. Think of it like ripples spreading out from a stone dropped in water - each ripple represents how far we've searched from the starting point. \n\nHere's a short slideshow to visualize what this looks like:\n\n!?!../Documents/1730/slideshow.json:602,642!?!\n\nTo implement BFS, we use a queue which keeps track of the cells yet to be explored. We initialize the queue with the starting cell and proceed to run a loop while the queue is not empty (there are cells left to be explored). Inside the loop, we first get the size of the queue. This equates to the number of cells to be explored at this current level. We'll increment a step counter when all the cells in the current level are explored. \n\nNow, we'll poll out the cell at the front of the queue and attempt to explore its neighbors. If a neighbor is valid (within the boundaries of the grid) and not blocked, we'll check if it contains a food cell. If it does, we've found the closest food cell and we can return the step counter as our answer. Otherwise, we'll mark the cell as visited and add it to the queue for future exploration.\n\nIf the BFS loop is completed, it means we have completed our exploration and could not find a single food cell. In that case, we return -1.\n\nA natural question arises here: Why can't we use Depth-First Search (DFS) to find the shortest path? \n\nDFS is not a good choice for this problem because of how it explores paths. It focuses on going as far as possible down one path before backtracking, which can lead to inefficiencies. For example, if food is just one cell away, DFS might explore a long, far-off path first, wasting time. Additionally, even when DFS finds a path to food, there's no guarantee it's the shortest one, as it might have missed a more direct route in another direction. In contrast, Breadth-First Search (BFS) checks all nearby paths level by level, making it more reliable for finding the shortest path.\n\n> For a more comprehensive understanding of the Breadth-First Search algorithm, check out the [BFS Explore Card 🔗](https://leetcode.com/explore/learn/card/queue-stack/231/practical-application-queue/1376/). This resource provides an in-depth look at BFS, explaining its key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n#### Algorithm\n\n- Initialize a constant array of directions `dir` representing the possible moves: right `(0,1)`, left `(0,-1)`, up `(-1,0)`, and down `(1,0)`.\n\nMain method `getFood`:\n- Initialize variables `rows` and `cols` to store the dimensions of the input `grid`.\n- Create a `start` array with `-1` values to store the coordinates of the starting position.\n- Iterate through the `grid` to find the cell marked with `'*'`:\n  - When found, store its coordinates in the `start` array.\n- Initialize a `queue` data structure to perform BFS traversal.\n- Add the `start` position to the `queue`.\n- Initialize a variable `steps` to `1` to track the distance traveled.\n- Begin the BFS traversal while the `queue` is not empty:\n  - Store the current level size of the `queue`.\n  - Process all cells at the current level:\n    - Remove the front position from the `queue`.\n    - For each of the four directions:\n      - Calculate the new coordinates by adding the direction to the current position.\n      - Check if the new position is valid (within bounds and not blocked):\n        - If the new position contains food (`'#'`), return the current steps.\n        - Otherwise, mark the cell as visited (`'X'`) and add it to the `queue`.\n  - Increment the `steps` counter after processing all cells at the current level.\n- If no food is found after the BFS completes, return `-1` to indicate no valid path exists.\n\nHelper method `isValid(grid, row, col)`:\n- Check if the given position is:\n  - Within the grid's row boundaries\n  - Within the grid's column boundaries\n  - Not an obstacle (`'X'`)\n- Return `true` if all conditions are met, `false` otherwise.\n\n> Note: Our algorithm modifies the input matrix to mark cells as visited. However, some interviewers might view modifying the given input as poor practice. In such cases, you would need to create an additional `visited` matrix, which comes with the drawback of using extra space. Discuss the pros and cons of both methods with your interviewer for extra points.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/NMEDZWKe/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"NMEDZWKe\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ be the number of rows and $n$ be the number of columns in the grid.\n\n- Time complexity: $O(m \\cdot n)$\n\n    The BFS traversal visits each cell at most once. For each visited cell, we perform constant time operations (checking neighbors in four directions). Therefore, the time complexity is $O(m \\cdot n)$.\n\n- Space complexity: $O(m \\cdot n)$\n\n    The queue used for BFS traversal can store at most $m \\times n$ cells in the worst case, where all cells are free space (`'O'`) and need to be visited. No additional data structures that grow with the input size are used. Therefore, the space complexity is $O(m \\cdot n)$.\n\n---\n\n### Approach 2: A* Path Finding Algorithm\n\n#### Intuition\n\nIn the previous approach, Breadth-First Search (BFS) worked as a blind search method, systematically exploring all nearby cells in layers until it found food. While BFS guarantees the shortest path in an unweighted grid, it doesn't differentiate between \"promising\" and \"less promising\" paths. A* Path-Finding improves upon this by incorporating a heuristic - a mathematical estimate of how close we are to the target - to prioritize exploration.  \n\nThis heuristic allows us to focus on paths that are more likely to lead to food quickly, reducing unnecessary exploration and improving efficiency. \n\nThe heuristic we use is the Manhattan distance, which calculates the sum of the horizontal and vertical distances between the current cell and the food cell. It estimates how far a food cell is from the current position without considering obstacles.  \n\n$$\n\\begin{aligned}\n    \\text{Manhattan Distance} = |r_{\\text{current}} - r_{\\text{food}}| + |c_{\\text{current}} - c_{\\text{food}}|\n\\end{aligned}\n$$\n   \nEach cell has a total cost, which is the sum of the number of steps taken so far (*actual cost*) and the Manhattan distance to the nearest food cell (*heuristic cost*). This total cost represents the estimated effort to reach a food cell starting from the initial position and passing through the current cell.\n\nThe exploration process remains similar to BFS, but with one key difference: instead of exploring cells in the order they're discovered, we prioritize the most promising paths. We'll implement this using a priority queue. Each element in the queue will store:\n- A heuristic cost based on the Manhattan distance to the nearest food (total cost)\n- The number of steps taken so far\n- The current cell's coordinates (row and column)\n\nThe queue automatically sorts elements based on the lowest estimated cost, ensuring that promising paths are prioritized.\n\nFor each cell dequeued, examine its neighbors (north, south, east, and west). When we find a neighbor cell, we first check if it contains food. If it does, we can return the number of steps taken, confident that this is the shortest path since we always explore the most promising paths first. If it's not a food cell, we calculate its Manhattan distance to the nearest food cell and add this information (steps so far + heuristic) to the queue. This ensures that cells closer to food are explored before those farther away.\n\nIf we complete our grid exploration without finding a path to food, we return `-1` to indicate that no food cell is reachable from our starting position.\n\n#### Algorithm\n\n- Initialize a constant array of direction vectors `dir` representing the possible movements in four directions (right, left, up, down).\n\nMain method `getFood`:\n- Initialize:\n  - variables `rows` and `cols` to store the dimensions of the input grid.\n  - an array `start` to store the coordinates of the starting position.\n  - a list `foods` to store the coordinates of all food cells.\n- Iterate through each cell in the grid:\n  - If a cell contains `'*'`, store its coordinates in the `start` array.\n  - If a cell contains `'#'`, add its coordinates to the `foods` list.\n- If the `foods` list is empty, return `-1` as no food cells exist.\n- Initialize:\n  - a boolean array `seen` to track visited cells and prevent cycles.\n  - a priority queue `pq` that orders elements based on their total cost.\n- Calculate the initial Manhattan distance from the start position to the nearest food.\n- Add the initial state to the priority queue: [total cost, steps taken, row, column].\n- While the priority queue is not empty:\n  - Extract the current state from the queue.\n  - For each possible direction:\n    - Calculate the new position coordinates.\n    - If the new position is invalid or already visited, skip it.\n    - If the new position contains food, return the current steps + 1.\n    - Otherwise:\n      - Mark the current cell as visited.\n      - Calculate the Manhattan distance from the new position to the nearest food.\n      - Add the new state to the priority queue.\n- Return `-1` if no path to food is found.\n\nHelper method `calcDist(r, c, foods)`:\n- Initialize `minDist` to the maximum possible integer value.\n- For each food location:\n  - Calculate the Manhattan distance to the current position.\n  - Update `minDist` if the current distance is smaller.\n- Return the minimum distance found.\n\nHelper method `isValid(grid, r, c)`:\n- Check if the given position is:\n  - Within the grid's row boundaries\n  - Within the grid's column boundaries\n  - Not an obstacle (`'X'`)\n- Return `true` if all conditions are met, `false` otherwise.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/84XpjyT9/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"84XpjyT9\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ be the number of rows and $n$ be the number of columns in the grid.\n\n- Time complexity: $O((m \\cdot n)^2)$\n\n    The initial grid traversal to find the start and food positions takes $O(m \\cdot n)$ time. In the worst case, we might need to visit all cells in the grid. For each cell, we perform a heap operation which takes $O(\\log(m \\cdot n))$ time, and calculate the Manhattan distance to the food cells. \n    \n    The number of food cells is bounded by the grid size, making each distance calculation $O(m \\cdot n)$. Therefore, for each cell visited, we spend $O(m \\cdot n + \\log(m \\cdot n))$ time. \n    \n    Thus, the overall time complexity of the algorithm is $O(m \\cdot n \\cdot (m \\cdot n + \\log(m \\cdot n)))$, which can be simplified to $O((m \\cdot n)^2)$.\n\n- Space complexity: $O(m \\cdot n)$\n\n    The `seen` array to track visited cells requires $O(m \\cdot n)$ space. The priority queue, in the worst case where we need to visit all cells before finding food, will store $O(m \\cdot n)$ states. The `foods` list stores coordinates of food cells, requiring at most $O(m \\cdot n)$ space. Therefore, the total space complexity is $O(m \\cdot n)$.\n\n> Note: While the theoretical worst-case time complexity is large, the actual runtime will be significantly faster in practice. This is because the A* search algorithm with Manhattan distance heuristic guides the search towards food cells, typically exploring far fewer cells than a blind search would. The heuristic ensures that cells closer to food are explored first, often finding a path in near-linear time for typical grid configurations.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

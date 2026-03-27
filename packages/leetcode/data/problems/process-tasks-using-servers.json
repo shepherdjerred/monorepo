@@ -1,0 +1,131 @@
+{
+  "questionId": "2012",
+  "questionFrontendId": "1882",
+  "title": "Process Tasks Using Servers",
+  "titleSlug": "process-tasks-using-servers",
+  "difficulty": "Medium",
+  "content": "<p>You are given two <strong>0-indexed</strong> integer arrays <code>servers</code> and <code>tasks</code> of lengths <code>n</code>​​​​​​ and <code>m</code>​​​​​​ respectively. <code>servers[i]</code> is the <strong>weight</strong> of the <code>i<sup>​​​​​​th</sup></code>​​​​ server, and <code>tasks[j]</code> is the <strong>time needed</strong> to process the <code>j<sup>​​​​​​th</sup></code>​​​​ task <strong>in seconds</strong>.</p>\n\n<p>Tasks are assigned to the servers using a <strong>task queue</strong>. Initially, all servers are free, and the queue is <strong>empty</strong>.</p>\n\n<p>At second <code>j</code>, the <code>j<sup>th</sup></code> task is <strong>inserted</strong> into the queue (starting with the <code>0<sup>th</sup></code> task being inserted at second <code>0</code>). As long as there are free servers and the queue is not empty, the task in the front of the queue will be assigned to a free server with the <strong>smallest weight</strong>, and in case of a tie, it is assigned to a free server with the <strong>smallest index</strong>.</p>\n\n<p>If there are no free servers and the queue is not empty, we wait until a server becomes free and immediately assign the next task. If multiple servers become free at the same time, then multiple tasks from the queue will be assigned <strong>in order of insertion</strong> following the weight and index priorities above.</p>\n\n<p>A server that is assigned task <code>j</code> at second <code>t</code> will be free again at second <code>t + tasks[j]</code>.</p>\n\n<p>Build an array <code>ans</code>​​​​ of length <code>m</code>, where <code>ans[j]</code> is the <strong>index</strong> of the server the <code>j<sup>​​​​​​th</sup></code> task will be assigned to.</p>\n\n<p>Return <em>the array </em><code>ans</code>​​​​.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> servers = [3,3,2], tasks = [1,2,3,2,1,2]\n<strong>Output:</strong> [2,2,0,2,1,2]\n<strong>Explanation: </strong>Events in chronological order go as follows:\n- At second 0, task 0 is added and processed using server 2 until second 1.\n- At second 1, server 2 becomes free. Task 1 is added and processed using server 2 until second 3.\n- At second 2, task 2 is added and processed using server 0 until second 5.\n- At second 3, server 2 becomes free. Task 3 is added and processed using server 2 until second 5.\n- At second 4, task 4 is added and processed using server 1 until second 5.\n- At second 5, all servers become free. Task 5 is added and processed using server 2 until second 7.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> servers = [5,1,4,3,2], tasks = [2,1,2,4,5,2,1]\n<strong>Output:</strong> [1,4,1,4,1,3,2]\n<strong>Explanation: </strong>Events in chronological order go as follows: \n- At second 0, task 0 is added and processed using server 1 until second 2.\n- At second 1, task 1 is added and processed using server 4 until second 2.\n- At second 2, servers 1 and 4 become free. Task 2 is added and processed using server 1 until second 4. \n- At second 3, task 3 is added and processed using server 4 until second 7.\n- At second 4, server 1 becomes free. Task 4 is added and processed using server 1 until second 9. \n- At second 5, task 5 is added and processed using server 3 until second 7.\n- At second 6, task 6 is added and processed using server 2 until second 7.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>servers.length == n</code></li>\n\t<li><code>tasks.length == m</code></li>\n\t<li><code>1 &lt;= n, m &lt;= 2 * 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= servers[i], tasks[j] &lt;= 2 * 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "You can maintain a Heap of available Servers and a Heap of unavailable servers",
+    "Note that the tasks will be processed in the input order so you just need to find the x-th server that will be available according to the rules"
+  ],
+  "metaData": "{\n  \"name\": \"assignTasks\",\n  \"params\": [\n    {\n      \"name\": \"servers\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"tasks\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"46.5K\", \"totalSubmission\": \"110.8K\", \"totalAcceptedRaw\": 46525, \"totalSubmissionRaw\": 110805, \"acRate\": \"42.0%\"}",
+  "likes": 1031,
+  "dislikes": 289,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Parallel Courses III\", \"titleSlug\": \"parallel-courses-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,3,2]\n[1,2,3,2,1,2]",
+    "[5,1,4,3,2]\n[2,1,2,4,5,2,1]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"twitter\", \"name\": \"X\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> assignTasks(vector<int>& servers, vector<int>& tasks) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] assignTasks(int[] servers, int[] tasks) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def assignTasks(self, servers: List[int], tasks: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def assignTasks(self, servers, tasks):\n        \"\"\"\n        :type servers: List[int]\n        :type tasks: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} servers\n * @param {number[]} tasks\n * @return {number[]}\n */\nvar assignTasks = function(servers, tasks) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function assignTasks(servers: number[], tasks: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] AssignTasks(int[] servers, int[] tasks) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* assignTasks(int* servers, int serversSize, int* tasks, int tasksSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func assignTasks(servers []int, tasks []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun assignTasks(servers: IntArray, tasks: IntArray): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func assignTasks(_ servers: [Int], _ tasks: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn assign_tasks(servers: Vec<i32>, tasks: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} servers\n# @param {Integer[]} tasks\n# @return {Integer[]}\ndef assign_tasks(servers, tasks)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $servers\n     * @param Integer[] $tasks\n     * @return Integer[]\n     */\n    function assignTasks($servers, $tasks) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> assignTasks(List<int> servers, List<int> tasks) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def assignTasks(servers: Array[Int], tasks: Array[Int]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec assign_tasks(servers :: [integer], tasks :: [integer]) :: [integer]\n  def assign_tasks(servers, tasks) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec assign_tasks(Servers :: [integer()], Tasks :: [integer()]) -> [integer()].\nassign_tasks(Servers, Tasks) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (assign-tasks servers tasks)\n  (-> (listof exact-integer?) (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": null
+}

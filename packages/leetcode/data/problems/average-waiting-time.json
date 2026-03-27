@@ -1,0 +1,137 @@
+{
+  "questionId": "1803",
+  "questionFrontendId": "1701",
+  "title": "Average Waiting Time",
+  "titleSlug": "average-waiting-time",
+  "difficulty": "Medium",
+  "content": "<p>There is a restaurant with a single chef. You are given an array <code>customers</code>, where <code>customers[i] = [arrival<sub>i</sub>, time<sub>i</sub>]:</code></p>\n\n<ul>\n\t<li><code>arrival<sub>i</sub></code> is the arrival time of the <code>i<sup>th</sup></code> customer. The arrival times are sorted in <strong>non-decreasing</strong> order.</li>\n\t<li><code>time<sub>i</sub></code> is the time needed to prepare the order of the <code>i<sup>th</sup></code> customer.</li>\n</ul>\n\n<p>When a customer arrives, he gives the chef his order, and the chef starts preparing it once he is idle. The customer waits till the chef finishes preparing his order. The chef does not prepare food for more than one customer at a time. The chef prepares food for customers <strong>in the order they were given in the input</strong>.</p>\n\n<p>Return <em>the <strong>average</strong> waiting time of all customers</em>. Solutions within <code>10<sup>-5</sup></code> from the actual answer are considered accepted.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> customers = [[1,2],[2,5],[4,3]]\n<strong>Output:</strong> 5.00000\n<strong>Explanation:\n</strong>1) The first customer arrives at time 1, the chef takes his order and starts preparing it immediately at time 1, and finishes at time 3, so the waiting time of the first customer is 3 - 1 = 2.\n2) The second customer arrives at time 2, the chef takes his order and starts preparing it at time 3, and finishes at time 8, so the waiting time of the second customer is 8 - 2 = 6.\n3) The third customer arrives at time 4, the chef takes his order and starts preparing it at time 8, and finishes at time 11, so the waiting time of the third customer is 11 - 4 = 7.\nSo the average waiting time = (2 + 6 + 7) / 3 = 5.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> customers = [[5,2],[5,4],[10,3],[20,1]]\n<strong>Output:</strong> 3.25000\n<strong>Explanation:\n</strong>1) The first customer arrives at time 5, the chef takes his order and starts preparing it immediately at time 5, and finishes at time 7, so the waiting time of the first customer is 7 - 5 = 2.\n2) The second customer arrives at time 5, the chef takes his order and starts preparing it at time 7, and finishes at time 11, so the waiting time of the second customer is 11 - 5 = 6.\n3) The third customer arrives at time 10, the chef takes his order and starts preparing it at time 11, and finishes at time 14, so the waiting time of the third customer is 14 - 10 = 4.\n4) The fourth customer arrives at time 20, the chef takes his order and starts preparing it immediately at time 20, and finishes at time 21, so the waiting time of the fourth customer is 21 - 20 = 1.\nSo the average waiting time = (2 + 6 + 4 + 1) / 4 = 3.25.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= customers.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= arrival<sub>i</sub>, time<sub>i</sub> &lt;= 10<sup>4</sup></code></li>\n\t<li><code>arrival<sub>i&nbsp;</sub>&lt;= arrival<sub>i+1</sub></code></li>\n</ul>\n",
+  "hints": [
+    "Iterate on the customers, maintaining the time the chef will finish the previous orders.",
+    "If that time is before the current arrival time, the chef starts immediately. Else, the current customer waits till the chef finishes, and then the chef starts.",
+    "Update the running time by the time when the chef starts preparing + preparation time."
+  ],
+  "metaData": "{\n  \"name\": \"averageWaitingTime\",\n  \"params\": [\n    {\n      \"name\": \"customers\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"double\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"219.8K\", \"totalSubmission\": \"300.8K\", \"totalAcceptedRaw\": 219764, \"totalSubmissionRaw\": 300756, \"acRate\": \"73.1%\"}",
+  "likes": 1273,
+  "dislikes": 102,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Average Height of Buildings in Each Segment\", \"titleSlug\": \"average-height-of-buildings-in-each-segment\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,2],[2,5],[4,3]]",
+    "[[5,2],[5,4],[10,3],[20,1]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"instacart\", \"name\": \"Instacart\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    double averageWaitingTime(vector<vector<int>>& customers) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public double averageWaitingTime(int[][] customers) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def averageWaitingTime(self, customers: List[List[int]]) -> float:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def averageWaitingTime(self, customers):\n        \"\"\"\n        :type customers: List[List[int]]\n        :rtype: float\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} customers\n * @return {number}\n */\nvar averageWaitingTime = function(customers) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function averageWaitingTime(customers: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public double AverageWaitingTime(int[][] customers) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "double averageWaitingTime(int** customers, int customersSize, int* customersColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func averageWaitingTime(customers [][]int) float64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun averageWaitingTime(customers: Array<IntArray>): Double {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func averageWaitingTime(_ customers: [[Int]]) -> Double {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn average_waiting_time(customers: Vec<Vec<i32>>) -> f64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} customers\n# @return {Float}\ndef average_waiting_time(customers)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $customers\n     * @return Float\n     */\n    function averageWaitingTime($customers) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  double averageWaitingTime(List<List<int>> customers) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def averageWaitingTime(customers: Array[Array[Int]]): Double = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec average_waiting_time(customers :: [[integer]]) :: float\n  def average_waiting_time(customers) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec average_waiting_time(Customers :: [[integer()]]) -> float().\naverage_waiting_time(Customers) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (average-waiting-time customers)\n  (-> (listof (listof exact-integer?)) flonum?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2362",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nThere is a restaurant with a single chef. We are given the arrival time and order preparation time for every customer. This data is already sorted in non-decreasing order of arrival time.\n\nThe chef prepares the orders strictly on a **first-come, first-serve** basis. If the chef is busy preparing another order, all the subsequent customers need to wait for their turn. We need to find the average waiting time of all customers. The food preparation time should be included in the waiting time.\n\nConstraints on the number of customers, denoted by `n`, are `1 <= n <= 100000`. Therefore, we need to consider an approach with linear or log-linear time complexity.\n\n---\n\n### Approach: Simulation\n\n#### Intuition\n\nThe chef prepares customer orders as soon as they arrive at the restaurant, provided he isn't already busy. He never takes a rest if there is a queue of pending orders. Therefore, the average waiting time will always be minimal. Also, we are not allowed to change the order of customers. So, we can simulate the process in the provided order, maintaining the time when each customer receives their order. Subtracting this time from the customer's arrival time gives us the waiting time for that customer.\n\nThere is no waiting time for the first customer apart from the preparation time. Let's say another customer arrives while the chef is preparing this order. How much does this customer need to wait to place their order? The waiting time is given by the time gap between their arrival time and when the first customer receives his order. \n\nIn other words, the chef can only start preparing a customer's order when he is idle or when the customer has arrived at the restaurant, whichever happens later. Adding this to the preparation time gives us the time when the customer receives their order. The waiting time for the customer is given by the difference between the order's delivery time and the customer's arrival time.\n\nUsing this approach, we can calculate the sum of the waiting time for all the customers. Dividing it by the total number of customers gives us the average waiting time per customer. Don't forget to calculate this average in a floating-point/double data type for precision.\n\n#### Algorithm\n\n1. Initialize integers `nextIdleTime` and `netWaitTime` with 0.\n2. Iterate through the `customers` array:\n    - Set `nextIdleTime` as the maximum of customer's arrival time and the current value of `nextIdleTime` plus the order preparation time.\n    - Increment `netWaitTime` by the difference of `nextIdleTime` and the customer's arrival time.\n3. Divide the `netWaitTime` by `customers.size` to get the `averageWaitTime`.\n4. Return the `averageWaitTime`.\n\n!?!../Documents/1701_republish/slideshow1_republish.json:960,540!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/EwJjFmVX/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"EwJjFmVX\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `customers` array.\n\n- Time complexity: $O(n)$\n\n   The time complexity remains linear, as the loop traverses the array only once.\n\n- Space complexity: $O(1)$\n\n   We do not use any additional space, so the space complexity is constant.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

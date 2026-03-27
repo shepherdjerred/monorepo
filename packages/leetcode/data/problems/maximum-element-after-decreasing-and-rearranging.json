@@ -1,0 +1,141 @@
+{
+  "questionId": "1956",
+  "questionFrontendId": "1846",
+  "title": "Maximum Element After Decreasing and Rearranging",
+  "titleSlug": "maximum-element-after-decreasing-and-rearranging",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array of positive integers <code>arr</code>. Perform some operations (possibly none) on <code>arr</code> so that it satisfies these conditions:</p>\n\n<ul>\n\t<li>The value of the <strong>first</strong> element in <code>arr</code> must be <code>1</code>.</li>\n\t<li>The absolute difference between any 2 adjacent elements must be <strong>less than or equal to </strong><code>1</code>. In other words, <code>abs(arr[i] - arr[i - 1]) &lt;= 1</code> for each <code>i</code> where <code>1 &lt;= i &lt; arr.length</code> (<strong>0-indexed</strong>). <code>abs(x)</code> is the absolute value of <code>x</code>.</li>\n</ul>\n\n<p>There are 2 types of operations that you can perform any number of times:</p>\n\n<ul>\n\t<li><strong>Decrease</strong> the value of any element of <code>arr</code> to a <strong>smaller positive integer</strong>.</li>\n\t<li><strong>Rearrange</strong> the elements of <code>arr</code> to be in any order.</li>\n</ul>\n\n<p>Return <em>the <strong>maximum</strong> possible value of an element in </em><code>arr</code><em> after performing the operations to satisfy the conditions</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [2,2,1,2,1]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> \nWe can satisfy the conditions by rearranging <code>arr</code> so it becomes <code>[1,2,2,2,1]</code>.\nThe largest element in <code>arr</code> is 2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [100,1,1000]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> \nOne possible way to satisfy the conditions is by doing the following:\n1. Rearrange <code>arr</code> so it becomes <code>[1,100,1000]</code>.\n2. Decrease the value of the second element to 2.\n3. Decrease the value of the third element to 3.\nNow <code>arr = [1,2,3]</code>, which<code> </code>satisfies the conditions.\nThe largest element in <code>arr is 3.</code>\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [1,2,3,4,5]\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> The array already satisfies the conditions, and the largest element is 5.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= arr.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= arr[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Sort the Array.",
+    "Decrement each element to the largest integer that satisfies the conditions."
+  ],
+  "metaData": "{\n  \"name\": \"maximumElementAfterDecrementingAndRearranging\",\n  \"params\": [\n    {\n      \"name\": \"arr\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"114.6K\", \"totalSubmission\": \"174.2K\", \"totalAcceptedRaw\": 114570, \"totalSubmissionRaw\": 174219, \"acRate\": \"65.8%\"}",
+  "likes": 1136,
+  "dislikes": 278,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[2,2,1,2,1]",
+    "[100,1,1000]",
+    "[1,2,3,4,5]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximumElementAfterDecrementingAndRearranging(vector<int>& arr) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximumElementAfterDecrementingAndRearranging(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumElementAfterDecrementingAndRearranging(self, arr: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumElementAfterDecrementingAndRearranging(self, arr):\n        \"\"\"\n        :type arr: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arr\n * @return {number}\n */\nvar maximumElementAfterDecrementingAndRearranging = function(arr) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumElementAfterDecrementingAndRearranging(arr: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaximumElementAfterDecrementingAndRearranging(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maximumElementAfterDecrementingAndRearranging(int* arr, int arrSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumElementAfterDecrementingAndRearranging(arr []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumElementAfterDecrementingAndRearranging(arr: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumElementAfterDecrementingAndRearranging(_ arr: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_element_after_decrementing_and_rearranging(arr: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} arr\n# @return {Integer}\ndef maximum_element_after_decrementing_and_rearranging(arr)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $arr\n     * @return Integer\n     */\n    function maximumElementAfterDecrementingAndRearranging($arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumElementAfterDecrementingAndRearranging(List<int> arr) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumElementAfterDecrementingAndRearranging(arr: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_element_after_decrementing_and_rearranging(arr :: [integer]) :: integer\n  def maximum_element_after_decrementing_and_rearranging(arr) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_element_after_decrementing_and_rearranging(Arr :: [integer()]) -> integer().\nmaximum_element_after_decrementing_and_rearranging(Arr) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-element-after-decrementing-and-rearranging arr)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2173",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Greedy\n\n**Intuition**\n\nIn this problem, we need to maximize any value under the following rules:\n\n1. `arr[0] = 1`.\n2. Each adjacent element differs by at most `1`.\n3. We can decrease any value, but we can't increase values.\n4. We can rearrange values.\n\nFor an array of length `n`, the biggest value we could have is `n`. This scenario would be when the array is `[1, 2, 3, ..., n]`.\n\n![example](../Figures/1846/1.png)\n<br>\n\nThis is because each adjacent element differs by at most `1`, so the best we could do is to just count up from `1`, which the first element must be. When is this scenario impossible?\n\nBecause we are not allowed to increase elements, the best-case scenario is impossible when the original elements are not large enough to support the counting.\n\n![example](../Figures/1846/2.png)\n<br>\n\nSo what should our strategy be? We start at the first index with our answer `ans = 1`. This is because by the rules of the problem, the first element must be equal to `1`. Now, we iterate over the rest of the indices and try to increment by `1` each time.\n\nIf we can successfully increment, we update `ans = ans + 1`. We can successfully increment if there is an element in `arr` that is greater than or equal to `ans + 1`. Any element that is greater than or equal to `ans + 1` can be reduced to `ans + 1` according to the rules. However, once we reduce it, we can't use that element anymore in the future.\n\nSo which element should we choose at each step? We should greedily choose the **smallest** element that is greater than or equal to `ans + 1`. The reason we want the smallest element is because choosing a larger element does not give us any additional benefit - we will only increment our answer by `1` regardless. However, choosing the smallest element \"saves\" the larger elements to be reduced in the future.\n\nFor example, let's say you had `ans = 3` and there was a `4` and a `5` in the array. If you chose to reduce the `5` to a `4`, you would not be able to reach `ans = 5` anymore. However, if we use the `4` instead, then the `5` remains available when we want to increment `ans` to `5`.\n\nNote that because we are allowed to rearrange elements freely, their initial order is irrelevant. As such, we will start by sorting `arr` so we can process the elements in ascending order.\n\nWe also initialize `ans = 1` and begin iterating over `arr`, starting from index `1`. The reason we skip index `0` is because `arr[0] = 1` - we have no choice. At each index `i`, we try to increment `ans` by using `arr[i]`. If `arr[i]` is greater than or equal to `ans + 1`, then we can reduce `arr[i]` (or keep it the same) to `ans + 1`.\n\n![example](../Figures/1846/3.png)\n<br>\n\nIn the above example, we have an original sorted `arr = [1, 2, 2, 2, 5, 11, 17]`. Up to index `i = 3`, we cannot have `ans = 3` because none of the elements are large enough to support it. However, once we reach the `5`, we can reduce it to `3`. Then we reduce the `11` to `4` and the `17` to `5`. This makes sure we follow the rule where each adjacent element differs by at most `1` while also maximizing a value since we are incrementing at every opportunity.\n\n**Algorithm**\n\n1. Sort `arr` in ascending order.\n2. Initialize `ans = 1`.\n3. Iterate `i` over the indices of `arr`, starting from `i = 1`:\n    - If `arr[i] >= ans + 1`, increment `ans`.\n4. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/BgEmk2gr/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"BgEmk2gr\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `arr`,\n\n* Time complexity: $$O(n \\cdot \\log{}n)$$\n\n    We sort `arr` which costs $$O(n \\cdot \\log{}n)$$. Then, we iterate over it once which costs $$O(n)$$.\n\n* Space Complexity: $$O(\\log n)$$ or $$O(n)$$\n\n    The space complexity of the sorting algorithm depends on the implementation of each programming language:\n    * In Java, Arrays.sort() for primitives is implemented using a variant of the Quick Sort algorithm, which has a space complexity of $$O(\\log n)$$\n    * In C++, the sort() function provided by STL uses a hybrid of Quick Sort, Heap Sort and Insertion Sort, with a worst case space complexity of $$O(\\log n)$$\n    * In Python, the sort() function is implemented using the Timsort algorithm, which has a worst-case space complexity of $$O(n)$$\n    \n<br/>\n\n---\n\n### Approach 2: No Sort\n\n**Intuition**\n\n> While we are not directly sorting any data, this approach uses similar principles as Counting Sort.\n\nRecall that in the best-case scenario of an array of length `n`, our answer will be `n`. This is because the first element must be `1`, and we can only increment by `1` for each additional element. Thus, **we will never have any elements greater than `n`** in our final array. Since our range of values is bounded by `[1, n]`, we don't actually need to sort the array. Instead, we will iterate over its bounded values in a more efficient way.\n\nWe will initialize an array `counts` as a counter, where `counts[x]` is equal to the frequency of `x` in `arr`. Because we don't care about values greater than `n`, if there are any numbers in `arr` that are greater than `n`, we will simply treat them as `n`. For example, if we had `arr = [1, 100, 100, 100]`, then we would have `counts[4] = 3`. Here, we have `n = 4`, so we treat each of the `100` as `4`, and thus the count of `4` is `3`.\n\nOnce we have the frequency of each element, we will follow a process similar to the one from the previous approach. First, we set `ans = 1`. Now, we iterate over each value `num` in the range `[2, n]`. For each value `num`, we check how many times `num` appears in `arr` by referencing `count[num]`. We have two possibilities:\n\n1. `ans + count[num] <= num`. This would happen in a scenario like `[1, 2, 3, 100, 100]`. It means that there are less occurrences of `num` in `arr` than there are \"spots\" in the range `[ans + 1, num]`. In the above example, if `ans = 3` and we have `num = 100`, there are 97 \"spots\" between `3` and `100`: the spots are `4, 5, 6, ..., 99, 100`. Thus, we can reduce every instance of `num` to improve on `ans`, and we perform `ans += counts[num]`, resulting in `ans = 5`. Note that the case of `count[num] = 0` is handled by this scenario since adding `0` doesn't change anything.\n\n![example](../Figures/1846/4.png)\n<br>\n\n2. `ans + count[num] > num`. This would happen in a scenario like `[1, 3, 3, 3, 3, 3, 3]`. It means there are more `num` than there are spots. In scenario 1, we are happy to reduce every instance of `num` to improve our answer. In this scenario, we can't improve our answer by reducing all of `num`, because we would need elements greater than `num`. So far, we can only raise `ans` to a maximum of `num`. Thus, we simply set `ans = num`.\n\n![example](../Figures/1846/5.png)\n<br>\n\nThe two possibilities can be summarized with the following line:\n\n`ans = min(ans + counts[num], num)`\n\nEssentially, at each `num`, we increment `ans` by filling as many \"spots\" as we can using reduced `num`. However, the total number of filled \"spots\" cannot exceed `num` as the range `[1, 2, ..., num]` is fixed and we cannot increase our current elements to be larger than `num`.\n\n**Algorithm**\n\n1. Initialize an array `counts` with length `n + 1` and values of `0`.\n2. Iterate over each `num` in `arr`:\n    - Increment `counts[min(num, n)]`.\n3. Initialize `ans = 1`.\n4. Iterate `num` from `2` to `n`:\n    - Set `ans = min(ans + counts[num], num)`.\n5. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/5kYSe6nz/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"5kYSe6nz\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `arr`,\n\n* Time complexity: $$O(n)$$\n\n    To calculate `counts`, we iterate over `arr` once which costs $$O(n)$$. Then, we iterate between `2` and `n`. which costs $$O(n)$$.\n\n* Space complexity: $$O(n)$$\n\n    `counts` has a length of $$n + 1$$.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "questionId": "1818",
+  "questionFrontendId": "1717",
+  "title": "Maximum Score From Removing Substrings",
+  "titleSlug": "maximum-score-from-removing-substrings",
+  "difficulty": "Medium",
+  "content": "<p>You are given a string <code>s</code> and two integers <code>x</code> and <code>y</code>. You can perform two types of operations any number of times.</p>\n\n<ul>\n\t<li>Remove substring <code>&quot;ab&quot;</code> and gain <code>x</code> points.\n\n\t<ul>\n\t\t<li>For example, when removing <code>&quot;ab&quot;</code> from <code>&quot;c<u>ab</u>xbae&quot;</code> it becomes <code>&quot;cxbae&quot;</code>.</li>\n\t</ul>\n\t</li>\n\t<li>Remove substring <code>&quot;ba&quot;</code> and gain <code>y</code> points.\n\t<ul>\n\t\t<li>For example, when removing <code>&quot;ba&quot;</code> from <code>&quot;cabx<u>ba</u>e&quot;</code> it becomes <code>&quot;cabxe&quot;</code>.</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>Return <em>the maximum points you can gain after applying the above operations on</em> <code>s</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;cdbcbbaaabab&quot;, x = 4, y = 5\n<strong>Output:</strong> 19\n<strong>Explanation:</strong>\n- Remove the &quot;ba&quot; underlined in &quot;cdbcbbaaa<u>ba</u>b&quot;. Now, s = &quot;cdbcbbaaab&quot; and 5 points are added to the score.\n- Remove the &quot;ab&quot; underlined in &quot;cdbcbbaa<u>ab</u>&quot;. Now, s = &quot;cdbcbbaa&quot; and 4 points are added to the score.\n- Remove the &quot;ba&quot; underlined in &quot;cdbcb<u>ba</u>a&quot;. Now, s = &quot;cdbcba&quot; and 5 points are added to the score.\n- Remove the &quot;ba&quot; underlined in &quot;cdbc<u>ba</u>&quot;. Now, s = &quot;cdbc&quot; and 5 points are added to the score.\nTotal score = 5 + 4 + 5 + 5 = 19.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;aabbaaxybbaabb&quot;, x = 5, y = 4\n<strong>Output:</strong> 20\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= x, y &lt;= 10<sup>4</sup></code></li>\n\t<li><code>s</code> consists of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Note that it is always more optimal to take one type of substring before another",
+    "You can use a stack to handle erasures"
+  ],
+  "metaData": "{\n  \"name\": \"maximumGain\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"x\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"y\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"242.6K\", \"totalSubmission\": \"364.5K\", \"totalAcceptedRaw\": 242592, \"totalSubmissionRaw\": 364480, \"acRate\": \"66.6%\"}",
+  "likes": 1924,
+  "dislikes": 137,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count Words Obtained After Adding a Letter\", \"titleSlug\": \"count-words-obtained-after-adding-a-letter\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"cdbcbbaaabab\"\n4\n5",
+    "\"aabbaaxybbaabb\"\n5\n4"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"juspay\", \"name\": \"Juspay\"}, {\"timesEncountered\": 2, \"slug\": \"swiggy\", \"name\": \"Swiggy\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximumGain(string s, int x, int y) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximumGain(String s, int x, int y) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumGain(self, s: str, x: int, y: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumGain(self, s, x, y):\n        \"\"\"\n        :type s: str\n        :type x: int\n        :type y: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {number} x\n * @param {number} y\n * @return {number}\n */\nvar maximumGain = function(s, x, y) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumGain(s: string, x: number, y: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaximumGain(string s, int x, int y) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maximumGain(char* s, int x, int y) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumGain(s string, x int, y int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumGain(s: String, x: Int, y: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumGain(_ s: String, _ x: Int, _ y: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_gain(s: String, x: i32, y: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {Integer} x\n# @param {Integer} y\n# @return {Integer}\ndef maximum_gain(s, x, y)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param Integer $x\n     * @param Integer $y\n     * @return Integer\n     */\n    function maximumGain($s, $x, $y) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumGain(String s, int x, int y) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumGain(s: String, x: Int, y: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_gain(s :: String.t, x :: integer, y :: integer) :: integer\n  def maximum_gain(s, x, y) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_gain(S :: unicode:unicode_binary(), X :: integer(), Y :: integer()) -> integer().\nmaximum_gain(S, X, Y) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-gain s x y)\n  (-> string? exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2367",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Greedy Way (Stack)\n\n#### Intuition\n\nThe fundamental insight here is that we should always try to remove the substring ('ab' or 'ba') that yields the higher points first.\n\nTo solve this problem, we use a two-pass approach to efficiently remove both substrings:\n1. In the first pass, remove all instances of the higher-scoring substring.\n2. In the second pass, remove all instances of the lower-scoring substring from the remaining text.\n\nWe implement this using a stack-based approach. As we iterate through the string, we push characters onto a stack. If the character at the top of the stack and the current character form the target substring, we pop the stack and move on without pushing the current character. This effectively removes the substring. If you are unfamiliar with such a technique, trying out [this](https://leetcode.com/problems/valid-parentheses/description/) problem first may help.\n\nAfter the first pass, we reconstruct the remaining string by popping all characters from the stack into a new string and reversing it. We repeat this process for the lower-scoring substring.\n\nWe determine the total number of removed substrings by comparing the string's length before and after the removal process. The length difference, divided by 2 (since each substring is two characters long), gives the count of removed substrings. We then multiply this count by the point value of that substring to calculate the score for each pass.\n\n<details>\n<summary>Let us prove the greedy approach using the principle of contradiction:</summary>\n<br>\n\nSuppose $x \\geq y$. Therefore, removing 'ab' yields higher or equal points compared to 'ba'. Assume there exists an optimal sequence where removing 'ba' is more optimal than removing 'ab'. This would imply removing 1 'ab' restricts us from removing 2 'ba's, i.e., the 'ab' is shared by 2 'ba's.\n\nConsider the string 'baba'. If we remove 'ba' first, we are left with another 'ba', totaling $2 \\cdot y$ points.\n\nConversely, if we remove 'ab' first, we are left with one 'ba', totaling $x + y$ points.\n\nSince $x \\geq y$, $2 \\cdot y$ cannot be greater than $x + y$. Thus, our initial assumption is wrong.\n</details>\n\n#### Algorithm\n\nMain Method `maximumGain`:\n\n- Initialize `totalScore` to `0` to keep track of the accumulated points.\n- Determine `highPriorityPair` based on which of `x` or `y` is larger. If `x` > `y`, it's \"ab\", otherwise \"ba\".\n- Set `lowPriorityPair` as the opposite of `highPriorityPair`.\n- Call `removeSubstring` with the original string and `highPriorityPair`.\n- Calculate the number of removed pairs (`removedPairsCount`) by comparing the lengths of the original and processed strings, divided by 2.\n- Add to `totalScore` the product of removed pairs and the higher of `x` and `y`.\n- Call `removeSubstring` again with the result of the first pass and `lowPriorityPair`.\n- Calculate the number of removed pairs in this second pass.\n- Add to `totalScore` the product of removed pairs and the lower of `x` and `y`.\n- Return `totalScore`.\n\nHelper Method `removeSubstring`:\n\n- Define a method `removeSubstring` which takes the input string `input` and the substring to remove `targetPair` as parameters.\n- Initialize a stack `charStack` to store characters during processing.\n- Iterate over each character in `input`:\n  - If the top of the stack and the current character combine to form the target string, pop from the stack.\n  - Else, push the current character onto the stack.\n- Form a string by popping each character in the stack, reverse it, and return it.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/HTbbNxsD/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"HTbbNxsD\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the string `s`.\n\n- Time complexity: $O(n)$\n\n    The `removeSubstring` method is called twice in the algorithm. In it, the algorithm iterates over each character in the `input` string, which has a time complexity of $O(n)$. Reconstructing the string from the stack also takes $O(n)$. Thus, the total time complexity of the algorithm is $2 \\cdot ( O(n) + O(n) )$, which simplifies to $O(n)$.\n\n- Space complexity: $O(n)$\n\n    The `stringAfterFirstPass` and `stringAfterSecondPass` variables can use an additional space of $O(n)$ in the worst case. In the `removeSubstring` method, the stack can store at most $n$ characters, and the reconstructed string can also store at most `n` characters, resulting in a space complexity of $O(n)$ for each. When considering all these individual complexities together, the space complexity of the algorithm amounts to $O(n)$.\n\n---\n\n### Approach 2: Greedy Way (Without Stack)\n\n#### Intuition\n\nLet's consider eliminating the stack to improve the space complexity of Approach 1. In the `removeSubstring` method, we search for occurrences of the `target` string and remove them. Why not just remove these occurrences from the string directly?\n\nWe maintain two indices: `readIndex` and `writeIndex`. `readIndex` iterates over each character in `input`, while `writeIndex` indicates where the next character should be written in the modified string. During each iteration, we copy the character at `readIndex` to `writeIndex`. We then check if the last two characters of the modified string match `target`. If they do, we remove the substring from `input` by moving `writeIndex` back by 2 (the length of `target`). Subsequent iterations continue to overwrite positions of the removed substring.\n\nAfter processing all characters, we trim the modified `input` to remove any excess characters beyond `writeIndex`. The resulting string, now without any occurrences of `target`, can then be passed to the second call of the `removeSubstring` method.\n\nHave a look at the slideshow to better understand this process. In this example, we consider `s = \"cdbcbbaaabab\"`, `x = 4` and `y = 2`.\n\n!?!../Documents/1717/app2_slideshow.json:1524,604!?!\n\nNote: The algorithm modifies the input string in place, which is feasible because strings are mutable in C++ but immutable in Java and Python3. Therefore, in Java, we convert the string to a StringBuilder object, and in Python3, to a list. This conversion increases the space complexity of the algorithm but avoids using a stack at each call of the `removeSubstring` method.\n\n#### Algorithm\n\nMain method `maximumGain`:\n \n- Initialize `totalPoints` to keep track of the score.\n- Compare `x` and `y` to determine which substring to remove first:\n  - If `x > y`, call `removeSubstring` on \"ab\" first, then \"ba\".\n  - Else, call `removeSubstring` on \"ba\" first, then \"ab\".\n  - Add the value returned by `removeSubstring` after each call.\n- Return `totalPoints`, which contains the maximum score from removing substrings.\n\nHelper method `removeSubstring`:\n\n- Define a method `removeSubstring` which takes the `inputString`, the `targetString` and `pointsPerRemoval` as parameters.\n- Initialize `totalPoints` and `writeIndex` to `0`.\n- Iterate through the input string using `readIndex`:\n  - Copy the current character to the position at `writeIndex` and increment `writeIndex`.\n  - Check if the last two written characters match the target substring:\n    - If so, decrement `writeIndex` by 2.\n    - Add `pointsPerRemoval` to `totalPoints`.\n- Trim the string to remove all excess characters after `writeIndex`.\n- Return `totalPoints` accumulated during this pass.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/8VSgpRRE/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"8VSgpRRE\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the string `s`\n\n* Time complexity: $O(n)$\n\n    The algorithm calls `removeSubstring` twice, each iterating through the entire string once. All operations within the loop—such as character comparisons and index manipulations—are constant time. Thus, the time complexity is $2 \\cdot O(n)$, which can be simplified to $O(n)$.\n\n* Space complexity: $O(1)$ or $O(n)$\n\n    In the C++ implementation of the algorithm, where strings are mutable, we do not use any additional data structures which scale with input size. Thus, the space complexity remains $O(1)$.\n\n    In the Java and Python3 implementations, we use an additional data structure to bypass the caveat of immutable strings. This takes $O(n)$ space, which is the space complexity of the algorithm.\n\n---\n\n### Approach 3: Greedy Way (Counting)\n\n#### Intuition\n\nNotice that in previous approaches, removing substrings from the input string posed as the bottleneck to better performance. Instead of removing the substrings, can we count the number of substrings that can be potentially removed, and count the total score from there?\n\nLet's consider a case where \"ab\" is the higher-scoring substring. To find the score, we need to form pairs of the characters `a` and `b`, where:\n\n- If we encounter `b` and have previously seen an `a`, we can form an \"ab\" pair.\n- If we encounter `a` and have previously seen a `b`, we can form a \"ba\" pair.\n  \nBut, how do we ensure that the score is maximum? That's where the greedy strategy comes in:\n\nLet's use `aCount` and `bCount` to keep track of unpaired 'a's and 'b's respectively. \n1. When we come across an `a`, we simply increment `aCount`. We don't immediately pair it because a future 'b' might form a higher-scoring \"ab\" pair. \n2. When we encounter a `b`, we have two choices. If there's an unpaired `a` available (`aCount` > 0), we immediately form an \"ab\" pair, decrement `aCount`, and add points, since this is the most profitable option. Otherwise, we increment `bCount` for potential future \"ba\" pairs.\n3. When we encounter a non `a` or `b` character, it acts as a barrier. We form as many \"ba\" pairs as possible, add the points, and reset the counters. This segmentation ensures we don't incorrectly pair across these barriers.\n\nThe below slideshow gives a step-by-step demonstration of the entire algorithm. In this example, we consider `s = \"cdbcbbaaabab\"`, `x = 4` and `y = 2`.\n\n!?!../Documents/1717/app3_slideshow.json:1522,462!?!\n\nHowever, all of this is valid when \"ab\" is the higher-scoring substring. What if \"ba\" is the more profitable one? An easy trick to fix this is to simply reverse the given string `s` and flip the values of `x` and `y`. Since the order of counting does not matter, all \"ba\" substrings present in `s` are now \"ab\" and vice-versa.\n\n#### Algorithm\n \n- If `x` is less than `y`:\n  - Swap the values of `x` and `y` to ensure \"ab\" always has higher points than \"ba\".\n  - Reverse `s` to maintain the logic of the algorithm after swapping.\n- Initialize variables:\n  - `aCount` to count occurrences of 'a'.\n  - `bCount` to count occurrences of 'b'.\n  - `totalPoints` to accumulate the total score.\n- Iterate through the string `s`. For each character:\n  - If the character is 'a', increment `aCount`.\n  - If the character is 'b':\n    - If `aCount` is greater than 0, decrement `aCount` and increment `totalPoints` by `x` (for removing \"ab\" and gaining points).\n    - Else, increment `bCount` (for potential future \"ba\" pairs).\n  - If the character is neither `a` nor `b`:\n    - Increment `totalPoints` by the minimum of `aCount` and `bCount`, multiplied by `y` (for removing \"ba\" pairs and gaining points).\n    - Reset `aCount` and `bCount` to `0` to start counting for the next segment.\n- Add any remaining \"ba\" pairs by incrementing `totalPoints` by the minimum of `aCount` and `bCount`, multiplied by `y`.\n- Return `totalPoints`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/oUT94eA5/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"oUT94eA5\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the given string `s`.\n\n* Time complexity: $O(n)$\n\n    The algorithm reverses the string in the worst case and iterates over each character of the string exactly once, with each operation taking $O(n)$ time. Therefore, the time complexity of the algorithm is $O(n)$.\n\n* Space complexity: $O(1)$ or $O(n)$\n\n    In the C++ implementation of the algorithm, the string reversal takes constant space since `reverse()` flips the string in-place.\n\n    For the Java and Python3 implementations, the string reversal requires $O(n)$ space.\n\n    We do not use any other data structures that scale with the input size. Therefore, the space complexity of the algorithm is $O(1)$ for C++, and $O(n)$ for Java and Python3.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

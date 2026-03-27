@@ -1,0 +1,142 @@
+{
+  "questionId": "2112",
+  "questionFrontendId": "1984",
+  "title": "Minimum Difference Between Highest and Lowest of K Scores",
+  "titleSlug": "minimum-difference-between-highest-and-lowest-of-k-scores",
+  "difficulty": "Easy",
+  "content": "<p>You are given a <strong>0-indexed</strong> integer array <code>nums</code>, where <code>nums[i]</code> represents the score of the <code>i<sup>th</sup></code> student. You are also given an integer <code>k</code>.</p>\n\n<p>Pick the scores of any <code>k</code> students from the array so that the <strong>difference</strong> between the <strong>highest</strong> and the <strong>lowest</strong> of the <code>k</code> scores is <strong>minimized</strong>.</p>\n\n<p>Return <em>the <strong>minimum</strong> possible difference</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [90], k = 1\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> There is one way to pick score(s) of one student:\n- [<strong><u>90</u></strong>]. The difference between the highest and lowest score is 90 - 90 = 0.\nThe minimum possible difference is 0.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [9,4,1,7], k = 2\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> There are six ways to pick score(s) of two students:\n- [<strong><u>9</u></strong>,<strong><u>4</u></strong>,1,7]. The difference between the highest and lowest score is 9 - 4 = 5.\n- [<strong><u>9</u></strong>,4,<strong><u>1</u></strong>,7]. The difference between the highest and lowest score is 9 - 1 = 8.\n- [<strong><u>9</u></strong>,4,1,<strong><u>7</u></strong>]. The difference between the highest and lowest score is 9 - 7 = 2.\n- [9,<strong><u>4</u></strong>,<strong><u>1</u></strong>,7]. The difference between the highest and lowest score is 4 - 1 = 3.\n- [9,<strong><u>4</u></strong>,1,<strong><u>7</u></strong>]. The difference between the highest and lowest score is 7 - 4 = 3.\n- [9,4,<strong><u>1</u></strong>,<strong><u>7</u></strong>]. The difference between the highest and lowest score is 7 - 1 = 6.\nThe minimum possible difference is 2.</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= k &lt;= nums.length &lt;= 1000</code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "For the difference between the highest and lowest element to be minimized, the k chosen scores need to be as close to each other as possible.",
+    "What if the array was sorted?",
+    "After sorting the scores, any contiguous k scores are as close to each other as possible.",
+    "Apply a sliding window solution to iterate over each contiguous k scores, and find the minimum of the differences of all windows."
+  ],
+  "metaData": "{\n  \"name\": \"minimumDifference\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"250.2K\", \"totalSubmission\": \"377.8K\", \"totalAcceptedRaw\": 250222, \"totalSubmissionRaw\": 377791, \"acRate\": \"66.2%\"}",
+  "likes": 1461,
+  "dislikes": 376,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Array Partition\", \"titleSlug\": \"array-partition\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[90]\n1",
+    "[9,4,1,7]\n2"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"tinkoff\", \"name\": \"Tinkoff\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minimumDifference(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minimumDifference(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumDifference(self, nums: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumDifference(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number}\n */\nvar minimumDifference = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumDifference(nums: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinimumDifference(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minimumDifference(int* nums, int numsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumDifference(nums []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumDifference(nums: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumDifference(_ nums: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_difference(nums: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Integer}\ndef minimum_difference(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Integer\n     */\n    function minimumDifference($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimumDifference(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumDifference(nums: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_difference(nums :: [integer], k :: integer) :: integer\n  def minimum_difference(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_difference(Nums :: [integer()], K :: integer()) -> integer().\nminimum_difference(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-difference nums k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2913",
+    "content": "### Approach: Sorting\n\n#### Intuition\n\nTo minimize the difference between the highest and lowest scores among the selected $k$ students, we must select them continuously from the sorted array. This is because if we skip a certain index $i$ during the selection, replacing the current highest score in the selection with $\\textit{nums}[i]$ will not increase the highest score. Consequently, the difference between the highest and lowest scores will also not increase. Therefore, there must exist an optimal selection scheme in which $k$ consecutive elements are chosen from the sorted array.\n\nBased on this observation, we first sort the array $\\textit{nums}$ in ascending order. Then, we traverse $\\textit{nums}$ using a sliding window of fixed size $k$. Let the left boundary of the sliding window be $i$. The right boundary is then $i + k - 1$, and the difference between the highest and lowest scores among these $k$ students is $\\textit{nums}[i + k - 1] - \\textit{nums}[i]$.\n\nThe final answer is the minimum value among all possible $\\textit{nums}[i + k - 1] - \\textit{nums}[i]$.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/E7bmSjJ2/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"E7bmSjJ2\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the array $\\textit{nums}$.\n\n- Time complexity: $O(n \\log n)$.\n  \n  Sorting the array takes $O(n \\log n)$ time, and the subsequent sliding window traversal takes $O(n)$ time.\n\n- Space complexity: $O(\\log n)$ or $O(n)$.\n  \n  This is the stack space required for sorting.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

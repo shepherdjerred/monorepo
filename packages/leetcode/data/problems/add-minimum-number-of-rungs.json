@@ -1,0 +1,133 @@
+{
+  "questionId": "2066",
+  "questionFrontendId": "1936",
+  "title": "Add Minimum Number of Rungs",
+  "titleSlug": "add-minimum-number-of-rungs",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>strictly increasing</strong> integer array <code>rungs</code> that represents the <strong>height</strong> of rungs on a ladder. You are currently on the <strong>floor</strong> at height <code>0</code>, and you want to reach the last rung.</p>\n\n<p>You are also given an integer <code>dist</code>. You can only climb to the next highest rung if the distance between where you are currently at (the floor or on a rung) and the next rung is <strong>at most</strong> <code>dist</code>. You are able to insert rungs at any positive <strong>integer</strong> height if a rung is not already there.</p>\n\n<p>Return <em>the <strong>minimum</strong> number of rungs that must be added to the ladder in order for you to climb to the last rung.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> rungs = [1,3,5,10], dist = 2\n<strong>Output:</strong> 2\n<strong>Explanation:\n</strong>You currently cannot reach the last rung.\nAdd rungs at heights 7 and 8 to climb this ladder. \nThe ladder will now have rungs at [1,3,5,<u>7</u>,<u>8</u>,10].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> rungs = [3,6,8,10], dist = 3\n<strong>Output:</strong> 0\n<strong>Explanation:</strong>\nThis ladder can be climbed without adding additional rungs.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> rungs = [3,4,6,7], dist = 2\n<strong>Output:</strong> 1\n<strong>Explanation:</strong>\nYou currently cannot reach the first rung from the ground.\nAdd a rung at height 1 to climb this ladder.\nThe ladder will now have rungs at [<u>1</u>,3,4,6,7].\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= rungs.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= rungs[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= dist &lt;= 10<sup>9</sup></code></li>\n\t<li><code>rungs</code> is <strong>strictly increasing</strong>.</li>\n</ul>\n",
+  "hints": [
+    "Go as far as you can on the available rungs before adding new rungs.",
+    "If you have to add a new rung, add it as high up as possible.",
+    "Try using division to decrease the number of computations."
+  ],
+  "metaData": "{\n  \"name\": \"addRungs\",\n  \"params\": [\n    {\n      \"name\": \"rungs\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"dist\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"35.2K\", \"totalSubmission\": \"80.4K\", \"totalAcceptedRaw\": 35214, \"totalSubmissionRaw\": 80367, \"acRate\": \"43.8%\"}",
+  "likes": 394,
+  "dislikes": 31,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Cutting Ribbons\", \"titleSlug\": \"cutting-ribbons\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,3,5,10]\n2",
+    "[3,6,8,10]\n3",
+    "[3,4,6,7]\n2"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int addRungs(vector<int>& rungs, int dist) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int addRungs(int[] rungs, int dist) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def addRungs(self, rungs: List[int], dist: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def addRungs(self, rungs, dist):\n        \"\"\"\n        :type rungs: List[int]\n        :type dist: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} rungs\n * @param {number} dist\n * @return {number}\n */\nvar addRungs = function(rungs, dist) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function addRungs(rungs: number[], dist: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int AddRungs(int[] rungs, int dist) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int addRungs(int* rungs, int rungsSize, int dist) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func addRungs(rungs []int, dist int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun addRungs(rungs: IntArray, dist: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func addRungs(_ rungs: [Int], _ dist: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn add_rungs(rungs: Vec<i32>, dist: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} rungs\n# @param {Integer} dist\n# @return {Integer}\ndef add_rungs(rungs, dist)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $rungs\n     * @param Integer $dist\n     * @return Integer\n     */\n    function addRungs($rungs, $dist) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int addRungs(List<int> rungs, int dist) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def addRungs(rungs: Array[Int], dist: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec add_rungs(rungs :: [integer], dist :: integer) :: integer\n  def add_rungs(rungs, dist) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec add_rungs(Rungs :: [integer()], Dist :: integer()) -> integer().\nadd_rungs(Rungs, Dist) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (add-rungs rungs dist)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

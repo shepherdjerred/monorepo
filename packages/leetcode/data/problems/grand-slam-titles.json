@@ -1,0 +1,53 @@
+{
+  "questionId": "1932",
+  "questionFrontendId": "1783",
+  "title": "Grand Slam Titles",
+  "titleSlug": "grand-slam-titles",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Players</code></p>\n\n<pre>\n+----------------+---------+\n| Column Name    | Type    |\n+----------------+---------+\n| player_id      | int     |\n| player_name    | varchar |\n+----------------+---------+\nplayer_id is the primary key (column with unique values) for this table.\nEach row in this table contains the name and the ID of a tennis player.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Championships</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| year          | int     |\n| Wimbledon     | int     |\n| Fr_open       | int     |\n| US_open       | int     |\n| Au_open       | int     |\n+---------------+---------+\nyear is the primary key (column with unique values) for this table.\nEach row of this table contains the IDs of the players who won one each tennis tournament of the grand slam.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to report the number of grand slam tournaments won by each player. Do not include the players who did not win any tournament.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nPlayers table:\n+-----------+-------------+\n| player_id | player_name |\n+-----------+-------------+\n| 1         | Nadal       |\n| 2         | Federer     |\n| 3         | Novak       |\n+-----------+-------------+\nChampionships table:\n+------+-----------+---------+---------+---------+\n| year | Wimbledon | Fr_open | US_open | Au_open |\n+------+-----------+---------+---------+---------+\n| 2018 | 1         | 1       | 1       | 1       |\n| 2019 | 1         | 1       | 2       | 2       |\n| 2020 | 2         | 1       | 2       | 2       |\n+------+-----------+---------+---------+---------+\n<strong>Output:</strong> \n+-----------+-------------+-------------------+\n| player_id | player_name | grand_slams_count |\n+-----------+-------------+-------------------+\n| 2         | Federer     | 5                 |\n| 1         | Nadal       | 7                 |\n+-----------+-------------+-------------------+\n<strong>Explanation:</strong> \nPlayer 1 (Nadal) won 7 titles: Wimbledon (2018, 2019), Fr_open (2018, 2019, 2020), US_open (2018), and Au_open (2018).\nPlayer 2 (Federer) won 5 titles: Wimbledon (2020), US_open (2019, 2020), and Au_open (2019, 2020).\nPlayer 3 (Novak) did not win anything, we did not include them in the result table.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Players (player_id int, player_name varchar(20))\", \"Create table If Not Exists Championships (year int, Wimbledon int, Fr_open int, US_open int, Au_open int)\"], \"mssql\": [\"Create table Players (player_id int, player_name varchar(20))\", \"Create table Championships (year int, Wimbledon int, Fr_open int, US_open int, Au_open int)\"], \"oraclesql\": [\"Create table Players (player_id int, player_name varchar(20))\", \"Create table Championships (year int, Wimbledon int, Fr_open int, US_open int, Au_open int)\"], \"database\": true, \"name\": \"grand_slam_titles\", \"pythondata\": [\"Players = pd.DataFrame([], columns=['player_id', 'player_name']).astype({'player_id':'Int64', 'player_name':'object'})\", \"Championships = pd.DataFrame([], columns=['year', 'Wimbledon', 'Fr_open', 'US_open', 'Au_open']).astype({'year':'Int64', 'Wimbledon':'Int64', 'Fr_open':'Int64', 'US_open':'Int64', 'Au_open':'Int64'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Players (player_id int, player_name varchar(20))\\n\", \"Create table If Not Exists Championships (year int, Wimbledon int, Fr_open int, US_open int, Au_open int)\"], \"database_schema\": {\"Players\": {\"player_id\": \"INT\", \"player_name\": \"VARCHAR(20)\"}, \"Championships\": {\"year\": \"INT\", \"Wimbledon\": \"INT\", \"Fr_open\": \"INT\", \"US_open\": \"INT\", \"Au_open\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"34.2K\", \"totalSubmission\": \"41.3K\", \"totalAcceptedRaw\": 34232, \"totalSubmissionRaw\": 41282, \"acRate\": \"82.9%\"}",
+  "likes": 246,
+  "dislikes": 10,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Players\": [\"player_id\", \"player_name\"], \"Championships\": [\"year\", \"Wimbledon\", \"Fr_open\", \"US_open\", \"Au_open\"]}, \"rows\": {\"Players\": [[1, \"Nadal\"], [2, \"Federer\"], [3, \"Novak\"]], \"Championships\": [[2018, 1, 1, 1, 1], [2019, 1, 1, 2, 2], [2020, 2, 1, 2, 2]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef grand_slam_titles(players: pd.DataFrame, championships: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

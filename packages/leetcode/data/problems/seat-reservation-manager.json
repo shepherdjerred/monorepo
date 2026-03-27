@@ -1,0 +1,136 @@
+{
+  "questionId": "1955",
+  "questionFrontendId": "1845",
+  "title": "Seat Reservation Manager",
+  "titleSlug": "seat-reservation-manager",
+  "difficulty": "Medium",
+  "content": "<p>Design a system that manages the reservation state of <code>n</code> seats that are numbered from <code>1</code> to <code>n</code>.</p>\n\n<p>Implement the <code>SeatManager</code> class:</p>\n\n<ul>\n\t<li><code>SeatManager(int n)</code> Initializes a <code>SeatManager</code> object that will manage <code>n</code> seats numbered from <code>1</code> to <code>n</code>. All seats are initially available.</li>\n\t<li><code>int reserve()</code> Fetches the <strong>smallest-numbered</strong> unreserved seat, reserves it, and returns its number.</li>\n\t<li><code>void unreserve(int seatNumber)</code> Unreserves the seat with the given <code>seatNumber</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;SeatManager&quot;, &quot;reserve&quot;, &quot;reserve&quot;, &quot;unreserve&quot;, &quot;reserve&quot;, &quot;reserve&quot;, &quot;reserve&quot;, &quot;reserve&quot;, &quot;unreserve&quot;]\n[[5], [], [], [2], [], [], [], [], [5]]\n<strong>Output</strong>\n[null, 1, 2, null, 2, 3, 4, 5, null]\n\n<strong>Explanation</strong>\nSeatManager seatManager = new SeatManager(5); // Initializes a SeatManager with 5 seats.\nseatManager.reserve();    // All seats are available, so return the lowest numbered seat, which is 1.\nseatManager.reserve();    // The available seats are [2,3,4,5], so return the lowest of them, which is 2.\nseatManager.unreserve(2); // Unreserve seat 2, so now the available seats are [2,3,4,5].\nseatManager.reserve();    // The available seats are [2,3,4,5], so return the lowest of them, which is 2.\nseatManager.reserve();    // The available seats are [3,4,5], so return the lowest of them, which is 3.\nseatManager.reserve();    // The available seats are [4,5], so return the lowest of them, which is 4.\nseatManager.reserve();    // The only available seat is seat 5, so return 5.\nseatManager.unreserve(5); // Unreserve seat 5, so now the available seats are [5].\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= seatNumber &lt;= n</code></li>\n\t<li>For each call to <code>reserve</code>, it is guaranteed that there will be at least one unreserved seat.</li>\n\t<li>For each call to <code>unreserve</code>, it is guaranteed that <code>seatNumber</code> will be reserved.</li>\n\t<li>At most <code>10<sup>5</sup></code> calls <strong>in total</strong> will be made to <code>reserve</code> and <code>unreserve</code>.</li>\n</ul>\n",
+  "hints": [
+    "You need a data structure that maintains the states of the seats. This data structure should also allow you to get the first available seat and flip the state of a seat in a reasonable time.",
+    "You can let the data structure contain the available seats. Then you want to be able to get the lowest element and erase an element, in a reasonable time.",
+    "Ordered sets support these operations."
+  ],
+  "metaData": "{\n  \"classname\": \"SeatManager\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer\",\n        \"name\": \"n\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [],\n      \"name\": \"reserve\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"seatNumber\"\n        }\n      ],\n      \"name\": \"unreserve\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true,\n  \"manual\": false\n}",
+  "stats": "{\"totalAccepted\": \"148.5K\", \"totalSubmission\": \"221.2K\", \"totalAcceptedRaw\": 148452, \"totalSubmissionRaw\": 221165, \"acRate\": \"67.1%\"}",
+  "likes": 1480,
+  "dislikes": 92,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Design Phone Directory\", \"titleSlug\": \"design-phone-directory\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Design a Number Container System\", \"titleSlug\": \"design-a-number-container-system\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"SeatManager\",\"reserve\",\"reserve\",\"unreserve\",\"reserve\",\"reserve\",\"reserve\",\"reserve\",\"unreserve\"]\n[[5],[],[],[2],[],[],[],[],[5]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"dropbox\", \"name\": \"Dropbox\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class SeatManager {\npublic:\n    SeatManager(int n) {\n        \n    }\n    \n    int reserve() {\n        \n    }\n    \n    void unreserve(int seatNumber) {\n        \n    }\n};\n\n/**\n * Your SeatManager object will be instantiated and called as such:\n * SeatManager* obj = new SeatManager(n);\n * int param_1 = obj->reserve();\n * obj->unreserve(seatNumber);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class SeatManager {\n\n    public SeatManager(int n) {\n        \n    }\n    \n    public int reserve() {\n        \n    }\n    \n    public void unreserve(int seatNumber) {\n        \n    }\n}\n\n/**\n * Your SeatManager object will be instantiated and called as such:\n * SeatManager obj = new SeatManager(n);\n * int param_1 = obj.reserve();\n * obj.unreserve(seatNumber);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class SeatManager:\n\n    def __init__(self, n: int):\n        \n\n    def reserve(self) -> int:\n        \n\n    def unreserve(self, seatNumber: int) -> None:\n        \n\n\n# Your SeatManager object will be instantiated and called as such:\n# obj = SeatManager(n)\n# param_1 = obj.reserve()\n# obj.unreserve(seatNumber)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class SeatManager(object):\n\n    def __init__(self, n):\n        \"\"\"\n        :type n: int\n        \"\"\"\n        \n\n    def reserve(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n    def unreserve(self, seatNumber):\n        \"\"\"\n        :type seatNumber: int\n        :rtype: None\n        \"\"\"\n        \n\n\n# Your SeatManager object will be instantiated and called as such:\n# obj = SeatManager(n)\n# param_1 = obj.reserve()\n# obj.unreserve(seatNumber)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n */\nvar SeatManager = function(n) {\n    \n};\n\n/**\n * @return {number}\n */\nSeatManager.prototype.reserve = function() {\n    \n};\n\n/** \n * @param {number} seatNumber\n * @return {void}\n */\nSeatManager.prototype.unreserve = function(seatNumber) {\n    \n};\n\n/** \n * Your SeatManager object will be instantiated and called as such:\n * var obj = new SeatManager(n)\n * var param_1 = obj.reserve()\n * obj.unreserve(seatNumber)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class SeatManager {\n    constructor(n: number) {\n        \n    }\n\n    reserve(): number {\n        \n    }\n\n    unreserve(seatNumber: number): void {\n        \n    }\n}\n\n/**\n * Your SeatManager object will be instantiated and called as such:\n * var obj = new SeatManager(n)\n * var param_1 = obj.reserve()\n * obj.unreserve(seatNumber)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class SeatManager {\n\n    public SeatManager(int n) {\n        \n    }\n    \n    public int Reserve() {\n        \n    }\n    \n    public void Unreserve(int seatNumber) {\n        \n    }\n}\n\n/**\n * Your SeatManager object will be instantiated and called as such:\n * SeatManager obj = new SeatManager(n);\n * int param_1 = obj.Reserve();\n * obj.Unreserve(seatNumber);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} SeatManager;\n\n\nSeatManager* seatManagerCreate(int n) {\n    \n}\n\nint seatManagerReserve(SeatManager* obj) {\n    \n}\n\nvoid seatManagerUnreserve(SeatManager* obj, int seatNumber) {\n    \n}\n\nvoid seatManagerFree(SeatManager* obj) {\n    \n}\n\n/**\n * Your SeatManager struct will be instantiated and called as such:\n * SeatManager* obj = seatManagerCreate(n);\n * int param_1 = seatManagerReserve(obj);\n \n * seatManagerUnreserve(obj, seatNumber);\n \n * seatManagerFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type SeatManager struct {\n    \n}\n\n\nfunc Constructor(n int) SeatManager {\n    \n}\n\n\nfunc (this *SeatManager) Reserve() int {\n    \n}\n\n\nfunc (this *SeatManager) Unreserve(seatNumber int)  {\n    \n}\n\n\n/**\n * Your SeatManager object will be instantiated and called as such:\n * obj := Constructor(n);\n * param_1 := obj.Reserve();\n * obj.Unreserve(seatNumber);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class SeatManager(n: Int) {\n\n    fun reserve(): Int {\n        \n    }\n\n    fun unreserve(seatNumber: Int) {\n        \n    }\n\n}\n\n/**\n * Your SeatManager object will be instantiated and called as such:\n * var obj = SeatManager(n)\n * var param_1 = obj.reserve()\n * obj.unreserve(seatNumber)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass SeatManager {\n\n    init(_ n: Int) {\n        \n    }\n    \n    func reserve() -> Int {\n        \n    }\n    \n    func unreserve(_ seatNumber: Int) {\n        \n    }\n}\n\n/**\n * Your SeatManager object will be instantiated and called as such:\n * let obj = SeatManager(n)\n * let ret_1: Int = obj.reserve()\n * obj.unreserve(seatNumber)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct SeatManager {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl SeatManager {\n\n    fn new(n: i32) -> Self {\n        \n    }\n    \n    fn reserve(&self) -> i32 {\n        \n    }\n    \n    fn unreserve(&self, seat_number: i32) {\n        \n    }\n}\n\n/**\n * Your SeatManager object will be instantiated and called as such:\n * let obj = SeatManager::new(n);\n * let ret_1: i32 = obj.reserve();\n * obj.unreserve(seatNumber);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class SeatManager\n\n=begin\n    :type n: Integer\n=end\n    def initialize(n)\n        \n    end\n\n\n=begin\n    :rtype: Integer\n=end\n    def reserve()\n        \n    end\n\n\n=begin\n    :type seat_number: Integer\n    :rtype: Void\n=end\n    def unreserve(seat_number)\n        \n    end\n\n\nend\n\n# Your SeatManager object will be instantiated and called as such:\n# obj = SeatManager.new(n)\n# param_1 = obj.reserve()\n# obj.unreserve(seat_number)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class SeatManager {\n    /**\n     * @param Integer $n\n     */\n    function __construct($n) {\n        \n    }\n  \n    /**\n     * @return Integer\n     */\n    function reserve() {\n        \n    }\n  \n    /**\n     * @param Integer $seatNumber\n     * @return NULL\n     */\n    function unreserve($seatNumber) {\n        \n    }\n}\n\n/**\n * Your SeatManager object will be instantiated and called as such:\n * $obj = SeatManager($n);\n * $ret_1 = $obj->reserve();\n * $obj->unreserve($seatNumber);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class SeatManager {\n\n  SeatManager(int n) {\n    \n  }\n  \n  int reserve() {\n    \n  }\n  \n  void unreserve(int seatNumber) {\n    \n  }\n}\n\n/**\n * Your SeatManager object will be instantiated and called as such:\n * SeatManager obj = SeatManager(n);\n * int param1 = obj.reserve();\n * obj.unreserve(seatNumber);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class SeatManager(_n: Int) {\n\n    def reserve(): Int = {\n        \n    }\n\n    def unreserve(seatNumber: Int): Unit = {\n        \n    }\n\n}\n\n/**\n * Your SeatManager object will be instantiated and called as such:\n * val obj = new SeatManager(n)\n * val param_1 = obj.reserve()\n * obj.unreserve(seatNumber)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule SeatManager do\n  @spec init_(n :: integer) :: any\n  def init_(n) do\n    \n  end\n\n  @spec reserve() :: integer\n  def reserve() do\n    \n  end\n\n  @spec unreserve(seat_number :: integer) :: any\n  def unreserve(seat_number) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# SeatManager.init_(n)\n# param_1 = SeatManager.reserve()\n# SeatManager.unreserve(seat_number)\n\n# SeatManager.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec seat_manager_init_(N :: integer()) -> any().\nseat_manager_init_(N) ->\n  .\n\n-spec seat_manager_reserve() -> integer().\nseat_manager_reserve() ->\n  .\n\n-spec seat_manager_unreserve(SeatNumber :: integer()) -> any().\nseat_manager_unreserve(SeatNumber) ->\n  .\n\n\n%% Your functions will be called as such:\n%% seat_manager_init_(N),\n%% Param_1 = seat_manager_reserve(),\n%% seat_manager_unreserve(SeatNumber),\n\n%% seat_manager_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define seat-manager%\n  (class object%\n    (super-new)\n    \n    ; n : exact-integer?\n    (init-field\n      n)\n    \n    ; reserve : -> exact-integer?\n    (define/public (reserve)\n      )\n    ; unreserve : exact-integer? -> void?\n    (define/public (unreserve seat-number)\n      )))\n\n;; Your seat-manager% object will be instantiated and called as such:\n;; (define obj (new seat-manager% [n n]))\n;; (define param_1 (send obj reserve))\n;; (send obj unreserve seat-number)"
+    }
+  ],
+  "solution": {
+    "id": "2135",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n\n\n### Approach 1: Min Heap\n\n#### Intuition  \n\nIn this problem, we need to keep track of the reserved status of each seat. If a seat is already reserved, we can't reserve it again. We can use a boolean array `availableSeats` of size `n` to indicate whether the seat is available (i.e., not reserved) or not.    \n- In the `unreserve(seatNumber)` method, we will set `availableSeats[seatNumber]` to `true` to mark the seat as unreserved.  \n- In the `reserve()` method, to find the smallest-numbered unreserved seat, we can iterate over the entire `availableSeats` array from the start index (`0`) to the end, and the first index where `availableSeats[index]` is `true` will be the preferred seat, but iterating over the entire array for each `reserve()` method call is not optimal.\n\n**Can we dynamically maintain a collection of numbers and find the smallest number from the collection in the shortest time?**    \nYes, we can use a **min-heap** data structure here.\n\n\n> This data structure is a complete binary tree, where the parent nodes are always smaller than the corresponding child nodes, in order to keep the minimum-valued element at the root node of the tree. Here, pushing an element and popping an element are both logarithmic time operations, but getting the minimum-valued element is a constant time operation.    \n\nIf you are new to this data structure we recommend that you read [Leetcode's Heap Explore Card](https://leetcode.com/explore/learn/card/heap/).\n\n\nFor this given problem, we can push all available (i.e., unreserved) seats into the min-heap. To get the smallest available seat, we can pop the top element from the heap in logarithmic time. Because of the properties of the min-heap, when we need to maintain this heap in subsequent operations, we can achieve the required operations with a time complexity of only $O(\\log n)$.\n \n\n#### Algorithm\n\n1. Create a min-heap `availableSeats` that initially contains all seats from `1` to `n`.\n2. In the `reserve()` method, pop the first element of the `availableSeats` heap and return it.\n3. In the `unreserve(seatNumber)` method, we push `seatNumber` into the `availableSeats` heap.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/fqK7dSLA/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"fqK7dSLA\"></iframe>\n\n#### Complexity Analysis\n\nLet $$m$$ be the maximum number of calls made.\n\n* Time complexity:  $O((m + n) \\cdot \\log n)$\n    - While initializing the `SeatManager` object, we iterate over all `n` seats and push it into our heap, each push operation takes $O(\\log n)$ time, thus, overall it will take $O(n \\log n)$ time. \n    - In the `reserve()` method, we pop the minimum-valued element from the `availableSeats` heap, which takes $O(\\log n)$ time.\n    - In the `unreserve(seatNumber)` method, we push the `seatNumber` into the `availableSeats` heap which will also take $O(\\log n)$ time. \n    - There are a maximum of $$m$$ calls to `reserve()` or `unreserve()` methods, thus the overall time complexity is $$O(m \\cdot\\log n)$$.\n\n* Space complexity: $O(n)$\n    - The `availableSeats` heap contains all $n$ elements, taking $O(n)$ space.\n\n\n<br />\n\n---\n\n\n### Approach 2: Min Heap (without pre-initialization)\n\n#### Intuition  \n\nIn the previous approach, we require initializing the min-heap with all the `n` seats, when the `n` will be large and the number of calls to `reverse` and `unreserve` methods will be small, then the most computationally expensive step will be the initializing of the min-heap.   \nTherefore, we will try to improve the previous approach by eliminating the pre-initialization of the min-heap.\n\n\nLet's keep a variable `marker` to indicate that all seats greater than or equal to `marker` have never been reserved.    \nWhenever the `reserve` method is called, we return the current `marker` seat and move the `marker` to the next seat. \n\nFor example, suppose we had 15 seats and called the `reserve` method four times.\n\nInitially the `marker` is equal to `1`, we returned `1` and moved to the next seat.\n\n![slide_1](../Figures/1845/Slide1a.PNG)\n\nSimilarly, in the subsequent three calls, it will return `2`, `3`, and `4` respectively.\n\n![slide_2](../Figures/1845/Slide1b.PNG)\n\n\nBut, what if `unreserve(2)` is called now? Now we can't return the `marker` seat as a seat with a lower number than the `marker` became unreserved.  \n\nWe can keep these unreserved seats separately in a separate container (data structure).  \n\n\nAs it's stated in the problem statement `unreserve(seatNumber)` is only called if `seatNumber` has already been reserved, so the elements in this separate container will always be less than `marker` (Because the `seatNumber` was reserved earlier when the `marker` was on it and now the `marker` would have moved on).       \nHence, we can conclude that, if any element is present in this separate container, then it contains the minimum-numbered seat, otherwise, if this separate container is empty then the `marker` points to the minimum-numbered unreserved seat.\n\nTo fetch the minimum valued element among all elements from this separate container again we can use a min-heap.\n \n\n![slide_3](../Figures/1845/Slide2.PNG)\n\n\n#### Algorithm\n\n1. Create an empty min heap `availableSeats` and `marker` initialized to `1`.\n2. In the `reserve()` method, if the `availableSeats` heap is not empty then pop the top element and return it, otherwise, return the value stored by `marker` and increment `marker` by `1`.\n3. In the `unreserve(seatNumber)` method, we push `seatNumber` into the `availableSeats` heap.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/FJdXQduv/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"FJdXQduv\"></iframe>\n\n#### Complexity Analysis\n\n\nLet $$m$$ be the maximum number of calls made.\n\n* Time complexity:  $O(m \\cdot \\log n)$\n    - While initializing the `SeatManager` object, we perform constant time operations.\n    - In the `reserve()` method, in the worst-case, we will pop the minimum-valued element from the `availableSeats` heap which will take $O(\\log n)$.\n    - In the `unreserve(seatNumber)` method, we push the `seatNumber` into the `availableSeats` heap which will also take $O(\\log n)$ time.\n    - There are a maximum of $$m$$ calls to `reserve()` or `unreserve()` methods, thus the overall time complexity is $$O(m \\cdot \\log n)$$.\n\n* Space complexity: $O(n)$\n    - The `availableSeats` heap can contain $n$ elements in it. So in the worst case, it will take $O(n)$ space.\n\n\n<br />\n\n---\n\n\n\n### Approach 3: Sorted/Ordered Set\n\n#### Intuition  \n\nLike min-heap, we can use another advanced built-in data structure, the sorted set, to help dynamically maintain the ordered state of the reserved seat.\n\n> This data structure internally uses a height-balanced binary search tree (like, a red-black tree, AVL tree, etc.) to keep the data sorted. Thus, pushing an element, popping an element, and getting the minimum-valued element are all logarithmic time operations because the tree balances itself after each operation.\n\nYou can read more about [Height-Balanced BST](https://leetcode.com/explore/learn/card/introduction-to-data-structure-binary-search-tree/143/appendix-height-balanced-bst/1021/) in our explore card.\n\nThus, in this approach, we will implement the previous approach using a sorted set.\n\n> You can also implement the first approach using a sorted set.\n\n> **Note:** The sorted set approach is not expected during the interview, but we are including it here for the completeness of the article and to familiarize you with a built-in advanced data structure.\n\n#### Algorithm\n\n1. Create a sorted set `availableSeats` and `marker` initialized to `1`.\n2. In the `reserve()` method, if the `availableSeats` set is not empty, then pop its first element and return it, otherwise, return the value stored by `marker` and increment `marker` by `1`.\n3. In the `unreserve(seatNumber)` method, we push `seatNumber` into the `availableSeats` set.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ZdEqqLSc/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ZdEqqLSc\"></iframe>\n\n#### Complexity Analysis\n\n\nLet $$m$$ be the maximum number of calls made.\n\n* Time complexity:  $O(m \\cdot \\log n)$\n    - While initializing the `SeatManager` object, we perform constant time operations.\n    - In the `reserve()` method, we pop the minimum-valued element from the `availableSeats` set which takes $O(\\log n)$ time.\n    - In the `unreserve(seatNumber)` method, we push the `seatNumber` into the `availableSeats` set which will also take $O(\\log n)$ time.\n    - There are a maximum of $$m$$ calls to `reserve()` or `unreserve()` methods, thus the overall time complexity is $$O(m \\cdot \\log n)$$.\n\n* Space complexity: $O(n)$\n    - The `availableSeats` set can contain $n$ elements in it. So in the worst case, it will take $O(n)$ space.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

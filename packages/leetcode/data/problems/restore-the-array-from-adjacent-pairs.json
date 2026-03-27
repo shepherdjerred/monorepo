@@ -1,0 +1,141 @@
+{
+  "questionId": "1866",
+  "questionFrontendId": "1743",
+  "title": "Restore the Array From Adjacent Pairs",
+  "titleSlug": "restore-the-array-from-adjacent-pairs",
+  "difficulty": "Medium",
+  "content": "<p>There is an integer array <code>nums</code> that consists of <code>n</code> <strong>unique </strong>elements, but you have forgotten it. However, you do remember every pair of adjacent elements in <code>nums</code>.</p>\n\n<p>You are given a 2D integer array <code>adjacentPairs</code> of size <code>n - 1</code> where each <code>adjacentPairs[i] = [u<sub>i</sub>, v<sub>i</sub>]</code> indicates that the elements <code>u<sub>i</sub></code> and <code>v<sub>i</sub></code> are adjacent in <code>nums</code>.</p>\n\n<p>It is guaranteed that every adjacent pair of elements <code>nums[i]</code> and <code>nums[i+1]</code> will exist in <code>adjacentPairs</code>, either as <code>[nums[i], nums[i+1]]</code> or <code>[nums[i+1], nums[i]]</code>. The pairs can appear <strong>in any order</strong>.</p>\n\n<p>Return <em>the original array </em><code>nums</code><em>. If there are multiple solutions, return <strong>any of them</strong></em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> adjacentPairs = [[2,1],[3,4],[3,2]]\n<strong>Output:</strong> [1,2,3,4]\n<strong>Explanation:</strong> This array has all its adjacent pairs in adjacentPairs.\nNotice that adjacentPairs[i] may not be in left-to-right order.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> adjacentPairs = [[4,-2],[1,4],[-3,1]]\n<strong>Output:</strong> [-2,4,1,-3]\n<strong>Explanation:</strong> There can be negative numbers.\nAnother solution is [-3,1,4,-2], which would also be accepted.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> adjacentPairs = [[100000,-100000]]\n<strong>Output:</strong> [100000,-100000]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>nums.length == n</code></li>\n\t<li><code>adjacentPairs.length == n - 1</code></li>\n\t<li><code>adjacentPairs[i].length == 2</code></li>\n\t<li><code>2 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-10<sup>5</sup> &lt;= nums[i], u<sub>i</sub>, v<sub>i</sub> &lt;= 10<sup>5</sup></code></li>\n\t<li>There exists some <code>nums</code> that has <code>adjacentPairs</code> as its pairs.</li>\n</ul>\n",
+  "hints": [
+    "Find the first element of nums - it will only appear once in adjacentPairs.",
+    "The adjacent pairs are like edges of a graph. Perform a depth-first search from the first element."
+  ],
+  "metaData": "{\n  \"name\": \"restoreArray\",\n  \"params\": [\n    {\n      \"name\": \"adjacentPairs\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"126.7K\", \"totalSubmission\": \"168.8K\", \"totalAcceptedRaw\": 126742, \"totalSubmissionRaw\": 168831, \"acRate\": \"75.1%\"}",
+  "likes": 2052,
+  "dislikes": 71,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[2,1],[3,4],[3,2]]",
+    "[[4,-2],[1,4],[-3,1]]",
+    "[[100000,-100000]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 11, \"slug\": \"capital-one\", \"name\": \"Capital One\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"ebay\", \"name\": \"eBay\"}, {\"timesEncountered\": 2, \"slug\": \"sig\", \"name\": \"SIG\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"robinhood\", \"name\": \"Robinhood\"}, {\"timesEncountered\": 2, \"slug\": \"roblox\", \"name\": \"Roblox\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> restoreArray(vector<vector<int>>& adjacentPairs) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] restoreArray(int[][] adjacentPairs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def restoreArray(self, adjacentPairs: List[List[int]]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def restoreArray(self, adjacentPairs):\n        \"\"\"\n        :type adjacentPairs: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} adjacentPairs\n * @return {number[]}\n */\nvar restoreArray = function(adjacentPairs) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function restoreArray(adjacentPairs: number[][]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] RestoreArray(int[][] adjacentPairs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* restoreArray(int** adjacentPairs, int adjacentPairsSize, int* adjacentPairsColSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func restoreArray(adjacentPairs [][]int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun restoreArray(adjacentPairs: Array<IntArray>): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func restoreArray(_ adjacentPairs: [[Int]]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn restore_array(adjacent_pairs: Vec<Vec<i32>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} adjacent_pairs\n# @return {Integer[]}\ndef restore_array(adjacent_pairs)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $adjacentPairs\n     * @return Integer[]\n     */\n    function restoreArray($adjacentPairs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> restoreArray(List<List<int>> adjacentPairs) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def restoreArray(adjacentPairs: Array[Array[Int]]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec restore_array(adjacent_pairs :: [[integer]]) :: [integer]\n  def restore_array(adjacent_pairs) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec restore_array(AdjacentPairs :: [[integer()]]) -> [integer()].\nrestore_array(AdjacentPairs) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (restore-array adjacentPairs)\n  (-> (listof (listof exact-integer?)) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2167",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Depth-First Search (DFS)\n\n**Intuition**\n\nIn this problem, we are given information about numbers that are adjacent to each other in some array `nums`. We can think of these pairs in `adjacentPairs` as edges in a graph: if we have a pair `(x, y)`, we can imagine that there is an undirected edge between node `x` and `y`.\n\nThis graph would form a doubly-linked list, since the edges, by definition, only describe adjacent elements. In fact, this doubly-linked list would represent `nums`, since the adjacent elements are adjacent elements in `nums`!\n\n![example](../Figures/1743/1.png)\n<br>\n\nThis simplifies our problem: to recover `nums`, we simply need to perform a traversal over the graph, starting from one end of the \"linked list\". This is because as stated above, the graph/linked list represents `nums`. Thus, if we start at either end, we will continuously visit adjacent numbers one by one until we reach the other end, which is equivalent to iterating over the elements of `nums` in order.\n\nThis brings us to the question: how do we find either end of the graph/linked list, so that we know where to start the traversal from? From the above image, there are two ends: `1` and `4`. You may notice that these nodes only have one edge, whereas other nodes have exactly two edges. This is because every node has a node to its left and to its right, **except** for the nodes at the ends.\n\nThus, we can identify a `root` as a node that only has one edge. Once we have a `root`, we will perform a DFS from it.\n\n> If you are new to Depth First Search, please see our [Leetcode Explore Card](https://leetcode.com/explore/featured/card/graph/619/depth-first-search-in-graph/3882/) for more information on it!\n\nIt is typical in a DFS over a graph to use a data structure (usually a hash map) `seen` that keeps track of nodes we have already visited. In this problem, since the graph essentially forms a doubly linked list, we don't need to use any data structure. We simply need to keep track of the previous node we visited `prev`. Each node can have at most two edges: the node we came from, and a node we haven't visited yet. By keeping track of `prev` and not traversing to it, we ensure that we walk in a straight line and never visit a node twice.\n\nAt each `node` during the traversal, we add `node` to an answer list `ans`. Once the traversal is finished, `ans` will be a valid `nums`.\n\n**Algorithm**\n\n1. Initialize a `graph`, where `graph[node]` holds a list of neighbors for `node`.\n2. Iterate over each edge `(x, y)` in `adjacentPairs`:\n    - Add `y` to `graph[x]`.\n    - Add `x` to `graph[y]`.\n3. Iterate over each `num` in `graph`:  \n    - If the length of `graph[num]` is equal to `1`, set `root = num` and break from the loop.\n4. Define a function `dfs(node, prev, ans)`:\n    - Add `node` to `ans`.\n    - Iterate over each `neighbor` in `graph[node]`:\n        - If `neighbor != prev`:\n            - Call `dfs(neighbor, node, ans)`.\n5. Initialize the answer list `ans`.\n6. Call `dfs(root, k, ans)`, where `k` can be any value that is guaranteed to not appear in the graph, such as infinity.\n7. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/aA8tNT23/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"aA8tNT23\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of the hypothetical `nums`,\n\n* Time complexity: $$O(n)$$\n\n    Note that the length of `adjacentPairs` is equal to $$n - 1$$.\n\n    We first build `graph`, which involves iterating over $$O(n)$$ edges. Next, we find `root`, which may cost $$O(n)$$ iterations. Finally, we perform a DFS.\n\n    In the DFS, we never visit a node more than once. At each node, we perform $$O(1)$$ work. Thus, the DFS costs $$O(n)$$.\n\n* Space complexity: $$O(n)$$\n\n    When performing the DFS, the recursive call stack uses $$O(n)$$ space. Also, `graph` will have a size of $$O(n)$$.\n    \n<br/>\n\n---\n\n### Approach 2: Iterative, Follow the Path\n\n**Intuition**\n\nAs we discussed in the previous approach, the graph of this problem is essentially a linked list, so we don't need any algorithm like DFS or BFS (Breadth-First Search) to traverse it. We can just iteratively traverse it like we would a linked list.\n\nHere, we implement `graph` and find `root` in the same manner as the previous approach.\n\nNext, instead of a DFS, we use a variable `curr` that represents the current node. We also use a variable `prev` to indicate the previously visited node, to ensure we only move in a straight line. Note that the length of `graph` will be equal to the length of `nums` since each number in `nums` has at least one edge, and thus an entry in `graph`.\n\nWith this in mind, we will have a while loop that runs until `ans.length = graph.length`, indicating we have finished building `ans`. In this while loop, we iterate over each `neighbor` of `graph[curr]`. If `neighbor != prev`, it is the next node we should go to. We add `neighbor` to `ans`, update `prev` and `curr` accordingly, then break from the iteration to move on to the next node.\n\nOnce the while loop ends, we know that `ans` is complete, so we can simply return `ans`.\n\n**Algorithm**\n\n1. Initialize a `graph`, where `graph[node]` holds a list of neighbors for `node`.\n2. Iterate over each edge `(x, y)` in `adjacentPairs`:\n    - Add `y` to `graph[x]`.\n    - Add `x` to `graph[y]`.\n3. Iterate over each `num` in `graph`:  \n    - If the length of `graph[num]` is equal to `1`, set `root = num` and break from the loop.\n4. Initialize the following variables:\n    - `curr = root` as the current node.\n    - `ans = [root]` as the answer list.\n    - `prev` as the previous node we saw. Initialize it to any value that can't be in the graph, like infinity.\n5. While the length of `ans` is less than the length of `graph`:\n    - Iterate over each `neighbor` of `graph[curr]`:\n        - If `neighbor != prev`:\n            - Add `neighbor` to `ans`.\n            - Update `prev = curr`.\n            - Update `curr = neighbor`.\n            - Break from the iteration.\n6. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/aeGdq6rh/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"aeGdq6rh\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of the hypothetical `nums`,\n\n* Time complexity: $$O(n)$$\n\n    Note that the length of `adjacentPairs` is equal to $$n - 1$$.\n\n    We first build `graph`, which involves iterating over $$O(n)$$ edges. Next, we find `root`, which may cost $$O(n)$$ iterations.\n\n    Finally, we iterate over each node in order. At each node, we perform $$O(1)$$ work. Thus, this iteration costs $$O(n)$$ for $$O(n)$$ nodes.\n\n* Space complexity: $$O(n)$$\n\n    `graph` uses $$O(n)$$ space.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

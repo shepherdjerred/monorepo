@@ -1,0 +1,137 @@
+{
+  "questionId": "528",
+  "questionFrontendId": "1721",
+  "title": "Swapping Nodes in a Linked List",
+  "titleSlug": "swapping-nodes-in-a-linked-list",
+  "difficulty": "Medium",
+  "content": "<p>You are given the <code>head</code> of a linked list, and an integer <code>k</code>.</p>\n\n<p>Return <em>the head of the linked list after <strong>swapping</strong> the values of the </em><code>k<sup>th</sup></code> <em>node from the beginning and the </em><code>k<sup>th</sup></code> <em>node from the end (the list is <strong>1-indexed</strong>).</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/21/linked1.jpg\" style=\"width: 400px; height: 112px;\" />\n<pre>\n<strong>Input:</strong> head = [1,2,3,4,5], k = 2\n<strong>Output:</strong> [1,4,3,2,5]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> head = [7,9,6,6,7,8,3,0,9,5], k = 5\n<strong>Output:</strong> [7,9,6,6,8,7,3,0,9,5]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the list is <code>n</code>.</li>\n\t<li><code>1 &lt;= k &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= Node.val &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "We can traverse the linked list and store the elements in an array.",
+    "Upon conversion to an array, we can swap the required elements by indexing the array.",
+    "We can rebuild the linked list using the order of the elements in the array."
+  ],
+  "metaData": "{\r\n  \"name\": \"swapNodes\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"head\",\r\n      \"type\": \"ListNode\"\r\n    },\r\n    {\r\n        \"name\": \"k\",\r\n        \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"ListNode\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"456.9K\", \"totalSubmission\": \"659.3K\", \"totalAcceptedRaw\": 456919, \"totalSubmissionRaw\": 659280, \"acRate\": \"69.3%\"}",
+  "likes": 5729,
+  "dislikes": 211,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Remove Nth Node From End of List\", \"titleSlug\": \"remove-nth-node-from-end-of-list\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Swap Nodes in Pairs\", \"titleSlug\": \"swap-nodes-in-pairs\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Reverse Nodes in k-Group\", \"titleSlug\": \"reverse-nodes-in-k-group\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,4,5]\n2",
+    "[7,9,6,6,7,8,3,0,9,5]\n5"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    ListNode* swapNodes(ListNode* head, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode() {}\n *     ListNode(int val) { this.val = val; }\n *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n * }\n */\nclass Solution {\n    public ListNode swapNodes(ListNode head, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution:\n    def swapNodes(self, head: Optional[ListNode], k: int) -> Optional[ListNode]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for singly-linked list.\n# class ListNode(object):\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution(object):\n    def swapNodes(self, head, k):\n        \"\"\"\n        :type head: Optional[ListNode]\n        :type k: int\n        :rtype: Optional[ListNode]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for singly-linked list.\n * function ListNode(val, next) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.next = (next===undefined ? null : next)\n * }\n */\n/**\n * @param {ListNode} head\n * @param {number} k\n * @return {ListNode}\n */\nvar swapNodes = function(head, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *     val: number\n *     next: ListNode | null\n *     constructor(val?: number, next?: ListNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.next = (next===undefined ? null : next)\n *     }\n * }\n */\n\nfunction swapNodes(head: ListNode | null, k: number): ListNode | null {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public int val;\n *     public ListNode next;\n *     public ListNode(int val=0, ListNode next=null) {\n *         this.val = val;\n *         this.next = next;\n *     }\n * }\n */\npublic class Solution {\n    public ListNode SwapNodes(ListNode head, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     struct ListNode *next;\n * };\n */\nstruct ListNode* swapNodes(struct ListNode* head, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for singly-linked list.\n * type ListNode struct {\n *     Val int\n *     Next *ListNode\n * }\n */\nfunc swapNodes(head *ListNode, k int) *ListNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var li = ListNode(5)\n * var v = li.`val`\n * Definition for singly-linked list.\n * class ListNode(var `val`: Int) {\n *     var next: ListNode? = null\n * }\n */\nclass Solution {\n    fun swapNodes(head: ListNode?, k: Int): ListNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public var val: Int\n *     public var next: ListNode?\n *     public init() { self.val = 0; self.next = nil; }\n *     public init(_ val: Int) { self.val = val; self.next = nil; }\n *     public init(_ val: Int, _ next: ListNode?) { self.val = val; self.next = next; }\n * }\n */\nclass Solution {\n    func swapNodes(_ head: ListNode?, _ k: Int) -> ListNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for singly-linked list.\n// #[derive(PartialEq, Eq, Clone, Debug)]\n// pub struct ListNode {\n//   pub val: i32,\n//   pub next: Option<Box<ListNode>>\n// }\n// \n// impl ListNode {\n//   #[inline]\n//   fn new(val: i32) -> Self {\n//     ListNode {\n//       next: None,\n//       val\n//     }\n//   }\n// }\nimpl Solution {\n    pub fn swap_nodes(head: Option<Box<ListNode>>, k: i32) -> Option<Box<ListNode>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for singly-linked list.\n# class ListNode\n#     attr_accessor :val, :next\n#     def initialize(val = 0, _next = nil)\n#         @val = val\n#         @next = _next\n#     end\n# end\n# @param {ListNode} head\n# @param {Integer} k\n# @return {ListNode}\ndef swap_nodes(head, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a singly-linked list.\n * class ListNode {\n *     public $val = 0;\n *     public $next = null;\n *     function __construct($val = 0, $next = null) {\n *         $this->val = $val;\n *         $this->next = $next;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param ListNode $head\n     * @param Integer $k\n     * @return ListNode\n     */\n    function swapNodes($head, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *   int val;\n *   ListNode? next;\n *   ListNode([this.val = 0, this.next]);\n * }\n */\nclass Solution {\n  ListNode? swapNodes(ListNode? head, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode(_x: Int = 0, _next: ListNode = null) {\n *   var next: ListNode = _next\n *   var x: Int = _x\n * }\n */\nobject Solution {\n    def swapNodes(head: ListNode, k: Int): ListNode = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for singly-linked list.\n#\n# defmodule ListNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           next: ListNode.t() | nil\n#         }\n#   defstruct val: 0, next: nil\n# end\n\ndefmodule Solution do\n  @spec swap_nodes(head :: ListNode.t | nil, k :: integer) :: ListNode.t | nil\n  def swap_nodes(head, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for singly-linked list.\n%%\n%% -record(list_node, {val = 0 :: integer(),\n%%                     next = null :: 'null' | #list_node{}}).\n\n-spec swap_nodes(Head :: #list_node{} | null, K :: integer()) -> #list_node{} | null.\nswap_nodes(Head, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for singly-linked list:\n#|\n\n; val : integer?\n; next : (or/c list-node? #f)\n(struct list-node\n  (val next) #:mutable #:transparent)\n\n; constructor\n(define (make-list-node [val 0])\n  (list-node val #f))\n\n|#\n\n(define/contract (swap-nodes head k)\n  (-> (or/c list-node? #f) exact-integer? (or/c list-node? #f))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1103",
+    "content": "[TOC]\n\n## Solution\n---\n\n#### Overview\n\nThis is a simple problem based on the [Linked List](https://en.wikipedia.org/wiki/Linked_list) data structure. If you have solved problems using a Linked List before and have a basic idea on how a Linked List is traversed and modified, this problem will be easy to implement.\n\nThe general idea behind the problem is that we have to find the $$k^{th}$$ node from the beginning and the $$k^{th}$$ node from the end of the _Linked List_. Once we have pointers to both of these nodes, we could simply swap their values.\n\n> The problem description states that we have to swap the **values** of the nodes. Therefore, the actual nodes in the Linked List should remain unchanged and there is no need to change the actual list node pointers.\n\nIn this article, we're going to look at 3 different approaches. Each approach further reduces the number of passes we need to do through the list. Let's look at the approaches in detail.\n\n---\n\n\n#### Approach 1: Three Pass Approach\n\n**Intuition**\n\nGiven the problem to swap $$2$$ nodes in the linked list at $$k^{th}$$ position, we need to position $$2$$ pointers. The first pointer would point to the $$k^{th}$$ node at the beginning of the list given by `frontNode`. The second pointer would point to the $$k^{th}$$ node at the end of the list given by `endNode`.\n\nFinding the position of `frontNode` is simple. We can start traversing from the `head` node until we reach the $$k^{th}$$ node. But to find the `endNode`, we must first know the length of the Linked List. If the length of the Linked List is $$\\text{listLength}$$, the $$k^{th}$$ node from the end would be the $$\\text{(listLength - k)}^{th}$$ node.\n\nThe following figure illustrates the idea.\n\n![img](../Documents/5652/3PassApproach.svg)\n\n\n**Algorithm**\n\nAs explained above, we must implement the algorithm using 3 separate passes.\n\n_Pass 1_: Find the length of the Linked List by traversing each node in the list from `head` node to last node and increment the counter by $$1$$. Let the counter used to find length be `listLength`.\n\n_Pass 2_: Traverse until the $$k^{th}$$ node from the `head` node and set the `frontNode`.\n\n_Pass 3_: Traverse until the `listLength - k` node from the `head` node and set the `endNode`.\n\n- Swap the values of `frontNode` and `endNode`  using temporary variable `temp`.\n\n- Return the `head` node.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/7QGvKavs/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"7QGvKavs\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity : $$\\mathcal{O}(n)$$, where $$n$$ is the length of the Linked List. We are iterating over the Linked List thrice.\n\n  In the first pass, we are finding the length of the Linked List which would take $$\\mathcal{O}(n)$$ time.\n\n  In second pass and third pass, we are iterating `k` and `n - k` times respectively. This would take $$\\mathcal{O}(k + n - k)$$ i.e $$\\mathcal{O}(n)$$ time.\n\n  Thus, the total time complexity would be $$\\mathcal{O}(n) + \\mathcal{O}(n) = \\mathcal{O}(n)$$.\n\n- Space Complexity: $$\\mathcal{O}(1)$$, as we are using constant extra space to maintain list node pointers `frontNode`, `endNode` and `currentNode`.\n\n---\n\n#### Approach 2: Two Pass Approach\n\n_Approach 1_ solved the problem with three passes, in $$O(n)$$ time. We can't do better than $$O(n)$$, because all valid solutions must count how many nodes there are in order to be able to find the $$k^{th}$$ last node. But while we know we can't do better than $$O(n)$$, it's still often preferable to minimize the number of loops needed for Linked List problems.\n\n> **Interview Tip:** Reducing the number of passes/separate loops is a very common follow-up question for Linked List problems.\n\nThe first optimization we could think of over the three pass approach is that we could find the length of the Linked List as well as the position of `frontNode` in a single pass.\n\nTo find the length of the Linked List we are iterating from the `head` node until the end of the Linked List. On the way, we would also come across the $$k^{th}$$ node from the head of the list and we could set the `frontNode` pointer at the point.\n\n**Algorithm**\n\nThe problem can be solved in two passes with the following steps:\n\n- Iterate from the head of the Linked List until the end and store the length found in `listLength`. In the same loop, check if we have reached the $$k^{th}$$ node, and if so, set `frontNode` to point at that node.\n\n- Iterate from `head` node until `listLength - k` node and set the `endNode`.\n\n- Swap the values of `frontNode` and `endNode` using temporary variable `temp`.\n\n- Return the `head` node.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/9tucLLQB/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"9tucLLQB\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity : $$\\mathcal{O}(n)$$, where $$n$$ is the length of the Linked List. We are iterating over the Linked List twice.\n\n  In the first pass, we are finding the length of the Linked List and setting the `frontNode` which would take $$\\mathcal{O}(n)$$ time.\n\n  In the second pass, we are setting the `endNode` by iterating `n - k` times.\n\n  Thus, the total time complexity would be $$\\mathcal{O}(n) + \\mathcal{O}(n - k)$$ which is equivalent to $$ \\mathcal{O}(n)$$.\n\n- Space Complexity: $$\\mathcal{O}(1)$$, as we are using constant extra space to maintain list node pointers `frontNode`, `endNode` and `currentNode`.\n\n---\n#### Approach 3: Single Pass Approach\n\n**Intuition**\n\n_Can we implement the problem in a single pass?_\nThe problem is that to find the position of `endNode` we must know the length of the Linked List. And to find the length of the Linked List we must have iterated over the list before at least once.\n\nHowever, we could use a trick to find the position of the pointer `endNode` in a single pass. The trick is:\n\n_If `endNode` is `k` positions behind a certain node `currentNode`, when `currentNode` reaches the end of linked list i.e at $$n^{th}$$ node , the `endNode` would be at the $$n - k^{th}$$ node_.\n\n> A similar trick is used in a few other Linked List problems like [Remove Nth Node From the End of List](https://leetcode.com/problems/remove-nth-node-from-end-of-list/solution/) and the _Fast and Slow Pointer Approach_ in [Find The Middle Of Linked List](https://leetcode.com/problems/middle-of-the-linked-list/solution/).\n\nThe following figure illustrates the idea.\n\n![img](../Documents/5652/SinglePassApproach.svg)\n\nLet's see how we can implement this approach.\n\n**Algorithm**\n\nThe problem can be implemented in a single pass using the following steps,\n\n- Start iterating from the `head` of the Linked List until the end using a pointer `currentNode`.\n\n- Keep track of the number of nodes traversed so far using the variable `listLength`. The `listLength` is incremented by $$1$$ as each node is traversed.\n\n- If `listLength` is equal to `k`, we know that `currentNode` is pointing to the $$k^{th}$$ node from the beginning. Set `frontNode` to point to the $$k^{th}$$ node. Also, at this point, initialize `endNode` to point at the `head` of the linked list. Now we know that `endNode` is `k` nodes behind the `head` node.\n\n- If `endNode` is not null, we know that it is positioned `k` nodes behind the `currentNode` and so we increment `endNode` in addition to `currentNode`. When `currentNode` reaches the end of the list, `endNode` would be pointing at a node which is `k` nodes behind the last node.\n\n- Swap the values of `frontNode` and `endNode` using temporary variable `temp`.\n\n- Return the `head` node.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/aAytJaYg/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"aAytJaYg\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity : $$\\mathcal{O}(n)$$, where $$n$$ is the size of Linked List. We are iterating over the entire Linked List once.\n\n- Space Complexity: $$\\mathcal{O}(1)$$, as we are using constant extra space to maintain list node pointers `frontNode`, `endNode` and `currentNode`.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

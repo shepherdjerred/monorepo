@@ -1,0 +1,53 @@
+{
+  "questionId": "1842",
+  "questionFrontendId": "1699",
+  "title": "Number of Calls Between Two Persons",
+  "titleSlug": "number-of-calls-between-two-persons",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Calls</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| from_id     | int     |\n| to_id       | int     |\n| duration    | int     |\n+-------------+---------+\nThis table does not have a primary key (column with unique values), it may contain duplicates.\nThis table contains the duration of a phone call between from_id and to_id.\nfrom_id != to_id\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution&nbsp;to report the number of calls and the total call duration between each pair of distinct persons <code>(person1, person2)</code> where <code>person1 &lt; person2</code>.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nCalls table:\n+---------+-------+----------+\n| from_id | to_id | duration |\n+---------+-------+----------+\n| 1       | 2     | 59       |\n| 2       | 1     | 11       |\n| 1       | 3     | 20       |\n| 3       | 4     | 100      |\n| 3       | 4     | 200      |\n| 3       | 4     | 200      |\n| 4       | 3     | 499      |\n+---------+-------+----------+\n<strong>Output:</strong> \n+---------+---------+------------+----------------+\n| person1 | person2 | call_count | total_duration |\n+---------+---------+------------+----------------+\n| 1       | 2       | 2          | 70             |\n| 1       | 3       | 1          | 20             |\n| 3       | 4       | 4          | 999            |\n+---------+---------+------------+----------------+\n<strong>Explanation:</strong> \nUsers 1 and 2 had 2 calls and the total duration is 70 (59 + 11).\nUsers 1 and 3 had 1 call and the total duration is 20.\nUsers 3 and 4 had 4 calls and the total duration is 999 (100 + 200 + 200 + 499).\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Calls (from_id int, to_id int, duration int)\"], \"mssql\": [\"Create table Calls (from_id int, to_id int, duration int)\"], \"oraclesql\": [\"Create table Calls (from_id int, to_id int, duration int)\"], \"database\": true, \"name\": \"number_of_calls\", \"pythondata\": [\"Calls = pd.DataFrame([], columns=['from_id', 'to_id', 'duration']).astype({'from_id':'Int64', 'to_id':'Int64', 'duration':'Int64'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Calls (from_id int, to_id int, duration int)\"], \"database_schema\": {\"Calls\": {\"from_id\": \"INT\", \"to_id\": \"INT\", \"duration\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"53.2K\", \"totalSubmission\": \"65.8K\", \"totalAcceptedRaw\": 53160, \"totalSubmissionRaw\": 65791, \"acRate\": \"80.8%\"}",
+  "likes": 312,
+  "dislikes": 16,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Calls\":[\"from_id\",\"to_id\",\"duration\"]},\"rows\":{\"Calls\":[[1,2,59],[2,1,11],[1,3,20],[3,4,100],[3,4,200],[3,4,200],[4,3,499]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef number_of_calls(calls: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

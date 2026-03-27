@@ -1,0 +1,135 @@
+{
+  "questionId": "1819",
+  "questionFrontendId": "1718",
+  "title": "Construct the Lexicographically Largest Valid Sequence",
+  "titleSlug": "construct-the-lexicographically-largest-valid-sequence",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer <code>n</code>, find a sequence with elements in the range <code>[1, n]</code> that satisfies all of the following:</p>\n\n<ul>\n\t<li>The integer <code>1</code> occurs once in the sequence.</li>\n\t<li>Each integer between <code>2</code> and <code>n</code> occurs twice in the sequence.</li>\n\t<li>For every integer <code>i</code> between <code>2</code> and <code>n</code>, the <strong>distance</strong> between the two occurrences of <code>i</code> is exactly <code>i</code>.</li>\n</ul>\n\n<p>The <strong>distance</strong> between two numbers on the sequence, <code>a[i]</code> and <code>a[j]</code>, is the absolute difference of their indices, <code>|j - i|</code>.</p>\n\n<p>Return <em>the <strong>lexicographically largest</strong> sequence</em><em>. It is guaranteed that under the given constraints, there is always a solution. </em></p>\n\n<p>A sequence <code>a</code> is lexicographically larger than a sequence <code>b</code> (of the same length) if in the first position where <code>a</code> and <code>b</code> differ, sequence <code>a</code> has a number greater than the corresponding number in <code>b</code>. For example, <code>[0,1,9,0]</code> is lexicographically larger than <code>[0,1,5,6]</code> because the first position they differ is at the third number, and <code>9</code> is greater than <code>5</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 3\n<strong>Output:</strong> [3,1,2,3,2]\n<strong>Explanation:</strong> [2,3,2,1,3] is also a valid sequence, but [3,1,2,3,2] is the lexicographically largest valid sequence.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 5\n<strong>Output:</strong> [5,3,1,4,3,5,2,4,2]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 20</code></li>\n</ul>\n",
+  "hints": [
+    "Heuristic algorithm may work."
+  ],
+  "metaData": "{\n  \"name\": \"constructDistancedSequence\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"112.7K\", \"totalSubmission\": \"155K\", \"totalAcceptedRaw\": 112743, \"totalSubmissionRaw\": 155017, \"acRate\": \"72.7%\"}",
+  "likes": 1157,
+  "dislikes": 183,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"The Number of Beautiful Subsets\", \"titleSlug\": \"the-number-of-beautiful-subsets\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Lexicographically Largest String From the Box I\", \"titleSlug\": \"find-the-lexicographically-largest-string-from-the-box-i\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "3",
+    "5"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> constructDistancedSequence(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] constructDistancedSequence(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def constructDistancedSequence(self, n: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def constructDistancedSequence(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {number[]}\n */\nvar constructDistancedSequence = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function constructDistancedSequence(n: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] ConstructDistancedSequence(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* constructDistancedSequence(int n, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func constructDistancedSequence(n int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun constructDistancedSequence(n: Int): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func constructDistancedSequence(_ n: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn construct_distanced_sequence(n: i32) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Integer[]}\ndef construct_distanced_sequence(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Integer[]\n     */\n    function constructDistancedSequence($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> constructDistancedSequence(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def constructDistancedSequence(n: Int): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec construct_distanced_sequence(n :: integer) :: [integer]\n  def construct_distanced_sequence(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec construct_distanced_sequence(N :: integer()) -> [integer()].\nconstruct_distanced_sequence(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (construct-distanced-sequence n)\n  (-> exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2685",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nGiven an integer `n`, we need to find the lexicographically largest sequence that satisfies all of these conditions:\n- The integer `1` occurs once in the sequence.\n- All other integers from `2` to `n` occur exactly twice, and the distance between these occurrences is equal to the value of this integer.\n\nThe distance between two integers is defined as the difference in the indices of both the integers. For example: in the array `nums = [1,2,3,1,2]`, the distance between both occurences of 1 is given by 3.\n\n> A sequence `a` is lexicographically larger than a sequence `b` (of the same length) if in the first position where `a` and `b` differ, sequence `a` has a number greater than the corresponding number in `b`. For example, `[0,1,9,0]` is lexicographically larger than `[0,1,5,6]` because the first position they differ is at the third number, and 9 is greater than 5.\n\n---\n\n### Approach: Backtracking\n\n#### Intuition\n\nObserve the lexicographically largest sequences for smaller values of `n`:\n\n- For `n = 1`: `[1]`\n- For `n = 2`: `[2, 1, 2]`\n- For `n = 3`: `[3, 1, 2, 3, 2]`\n- For `n = 4`: `[4, 2, 3, 2, 4, 3, 1]`\n\nIdentifying an intuitive pattern for these sequences is challenging. Given that `n` lies in the range `1 <= n <= 20`, we can generate all possible valid sequences and find the lexicographically largest among them using backtracking. We'll use a recursive boolean function to determine whether the current sequence is valid. If it's not, we can terminate the recursive process early. \n\nLet's represent the recursive function as `bool findLargestSequence(currentIndex, resultSequence, isNumberUsed, targetNumber)`, where we start with an empty sequence `resultSequence` and assign values from `1` to `n` one by one at the `currentIndex`. However, since we want to find the lexicographically maximum sequence, we can start assigning the values from `n` to `1`, in decreasing order. This would help us assign greater values at the beginning of the list. Therefore, the first valid list created would be the lexicographically greatest one.\n\nThe base case occurs when `currentIndex` reaches the end of the sequence, signaling that a valid solution has been constructed. We return `true` and save the current sequence as the answer.\n\nWe will try to place all the values from `n` to `1` at the `currentIndex`. If the value to be assigned, `numberToPlace`, is not `1`, we must assign this value at an index located `numberToPlace` positions away to create a valid sequence. If that position, given by `numberToPlace + currentIndex`, already contains a value, the current sequence is invalid, and we cannot assign the current value to this index. So we move to the next possible value for `numberToPlace` and check if it can be assigned to the current index. For `numberToPlace = 1`, we can proceed directly to the next index.\n\nAfter assigning `numberToPlace`, we recursively attempt to fill subsequent positions by passing the modified sequence and incrementing the `currentIndex` in the recursive state. However, backtracking requires that we undo the assignments at both `currentIndex` and `currentIndex + numberToPlace` to explore other valid sequences. So we unassign the values at both these indices and repeat the process for other values of `numberToPlace`.\n\n#### Algorithm\n\nRecursive Helper Function `findLexicographicallyLargestSequence(currentIndex, resultSequence, isNumberUsed, targetNumber)`:\n\n- If `currentIndex` equals the size of `resultSequence`, return `true` as the sequence is fully constructed.  \n- If `resultSequence[currentIndex]` is not zero, recursively call the function for `currentIndex + 1`.  \n- Loop through numbers from `targetNumber` down to `1` to ensure a lexicographically largest result.  \n  - If `isNumberUsed[numberToPlace] == true`, continue to the next number.  \n  - Mark the number as used by setting `isNumberUsed[numberToPlace] = true`.  \n  - Place `numberToPlace` at `currentIndex` in `resultSequence`.  \n  - If `numberToPlace == 1`, directly move to the next index and recursively call the function. If the recursion returns `true`, return `true`.  \n  - For larger numbers, check if `currentIndex + numberToPlace` is a valid index and that position is empty. If valid:  \n    - Place `numberToPlace` at `currentIndex + numberToPlace`.  \n    - Recursively call the function and return `true` if the recursion succeeds.  \n    - Undo the placement at `currentIndex + numberToPlace` for backtracking.  \n  - Undo the current placement and mark `numberToPlace` as unused.  \n- Return `false` if no valid placement is found.\n\nMain Function:\n\n- Initialize `resultSequence` as a vector of size `2 * targetNumber - 1`, filled with zeros, to store the final sequence.\n- Create a boolean vector `isNumberUsed` of size `targetNumber + 1`, initialized to `false`, to track the numbers already placed in the sequence.\n- Call the recursive helper function `findLexicographicallyLargestSequence(0, resultSequence, isNumberUsed, targetNumber)` to construct the sequence.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/QHtdmgDi/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"QHtdmgDi\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the target number.\n\n- Time Complexity: $O(n!)$\n\n    The recursive function generates permutations by exploring all possible ways to arrange a set of numbers. For a given target number `n`, the function places each number from `n` down to 1 at every valid index in the sequence. Since there are `n` possible choices for the first number, `n-1` choices for the second, and so on, the total number of possible arrangements is the factorial of `n`, denoted as $O(n!)$. This is because each recursive call explores a new possibility by reducing the problem size by 1 until all positions are filled, creating a tree-like structure with `n!` leaves at the deepest level.\n\n    However, while the theoretical time complexity is $O(n!)$, the actual runtime is often much lower in practice. This is due to early pruning of invalid states during the backtracking process. The algorithm can stop as soon as it finds the lexicographically largest valid permutation or an invalid permutation, avoiding further exploration of unnecessary branches. This reduces the number of recursive calls significantly, as many permutations are discarded without fully exploring their subtrees.\n\n- Space Complexity: $O(n)$\n\n    The recursion depth is bounded by `n` due to backtracking. Additional space is required for the `resultSequence` and `isNumberUsed` lists, both of size $O(n)$. Therefore, the total space complexity is given by $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

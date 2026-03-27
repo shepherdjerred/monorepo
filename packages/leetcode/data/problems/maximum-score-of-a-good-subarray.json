@@ -1,0 +1,148 @@
+{
+  "questionId": "1918",
+  "questionFrontendId": "1793",
+  "title": "Maximum Score of a Good Subarray",
+  "titleSlug": "maximum-score-of-a-good-subarray",
+  "difficulty": "Hard",
+  "content": "<p>You are given an array of integers <code>nums</code> <strong>(0-indexed)</strong> and an integer <code>k</code>.</p>\n\n<p>The <strong>score</strong> of a subarray <code>(i, j)</code> is defined as <code>min(nums[i], nums[i+1], ..., nums[j]) * (j - i + 1)</code>. A <strong>good</strong> subarray is a subarray where <code>i &lt;= k &lt;= j</code>.</p>\n\n<p>Return <em>the maximum possible <strong>score</strong> of a <strong>good</strong> subarray.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,4,3,7,4,5], k = 3\n<strong>Output:</strong> 15\n<strong>Explanation:</strong> The optimal subarray is (1, 5) with a score of min(4,3,7,4,5) * (5-1+1) = 3 * 5 = 15. \n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [5,5,4,5,4,1,1,1], k = 0\n<strong>Output:</strong> 20\n<strong>Explanation:</strong> The optimal subarray is (0, 4) with a score of min(5,5,4,5,4) * (4-0+1) = 4 * 5 = 20.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 2 * 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= k &lt; nums.length</code></li>\n</ul>\n",
+  "hints": [
+    "Try thinking about the prefix before index k and the suffix after index k as two separate arrays.",
+    "Using two pointers or binary search, we can find the maximum prefix of each array where the numbers are less than or equal to a certain value"
+  ],
+  "metaData": "{\n  \"name\": \"maximumScore\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"89.3K\", \"totalSubmission\": \"138.7K\", \"totalAcceptedRaw\": 89331, \"totalSubmissionRaw\": 138706, \"acRate\": \"64.4%\"}",
+  "likes": 2005,
+  "dislikes": 50,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Largest Rectangle in Histogram\", \"titleSlug\": \"largest-rectangle-in-histogram\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,4,3,7,4,5]\n3",
+    "[5,5,4,5,4,1,1,1]\n0"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Monotonic Stack",
+      "slug": "monotonic-stack"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximumScore(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximumScore(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumScore(self, nums: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumScore(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number}\n */\nvar maximumScore = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumScore(nums: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaximumScore(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maximumScore(int* nums, int numsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumScore(nums []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumScore(nums: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumScore(_ nums: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_score(nums: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Integer}\ndef maximum_score(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Integer\n     */\n    function maximumScore($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumScore(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumScore(nums: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_score(nums :: [integer], k :: integer) :: integer\n  def maximum_score(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_score(Nums :: [integer()], K :: integer()) -> integer().\nmaximum_score(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-score nums k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2073",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Binary Search\n\n**Intuition**\n\nThe score of a subarray is its length multiplied by its minimum element. In this problem, we must find the maximum score of all subarrays that contain `nums[k]`.\n\nHow can we improve our score? When we take more elements we increase the length of the subarray, which helps the score. However, we may find new minimums, which would decrease our score.\n\nWe can start by separating the array - numbers to the left of `k` and numbers to the right of `k` (and including `k`).\n\n![img](../Figures/1793/1.png)\n<br>\n\nNotice that `k` is the meeting point of these sections. If we want to take elements in the left section, we start from the end of the left section and move toward the beginning. If we want to take elements in the right section, we start from the beginning and move toward the end.\n\nOf course, each element we take will increase our length by `1`. But how will it affect our minimum? To compute this quickly, we can create new arrays for each section. These arrays will represent the minimum element we have seen in the section if we started from `k`.\n\n![img](../Figures/1793/2.png)\n<br>\n\nIn the above example, let's say that we took two elements from the left section. We can quickly see that the minimum element from the left section is `3` using these arrays. Similarly, if we took all elements from the right section, we could quickly see that the minimum element from the right section is `4`.\n\n> We will call these arrays that allow us to find the minimums `left` and `right`.\n\nNow that we have these arrays, how can we solve the problem? Because `nums[k]` is in the right section, we will iterate over the entire right section and try to take each element. Let's say we take some number of elements from the right section, and the minimum is `x`. How many elements can we take from the left section without changing `x` as the minimum? We must only take elements from the left that are greater than or equal to `x`.\n  \nLet's switch to another example. For a given array, assuming we have already built the `left` and `right` arrays using the previous method.\n  \n![img](../Figures/1793/3.png)\n<br>\n\nIn the above example, let's say that we take four elements from the right section. The minimum is `5`. How many elements can we take from the left section without changing the minimum? Two. This gives us a total size of `4 + 2 = 6`, and a total score of `6 * 5 = 30`.\n\nHow do we quickly find the number of elements we can take from the left section? Note that when we are building the array `left` from right to left, each time we go left we encounter a new number that is only likely to lower the minimum value, and the further to the left we go, the smaller the minimum value becomes, i.e., `left` is already sorted from smallest to largest. Therefore, we can perform a binary search to identify how many elements we can take.\n\nThis brings us to our solution. We iterate with `j` over each index of `right` and assign `currMin = right[j]`, which represents the minimum of our subarray. We then perform a binary search to find `i`, the insertion index of `currMin` in `left`. Once we have `i`, we can calculate the size of our subarray, and thus the score. We take the maximum of all scores.\n\nHow do we calculate the size of our subarray given `i` and `j`?\n\n![img](../Figures/1793/4.png)\n<br>\n\nBecause the right section starts at index `k`, its indices are offset by `k` from the real indices. Thus, in the original array, `right[j]` points to index `k + j`. The left section is not offset at all, so `i` is correctly positioned. The size of a subarray bounded by `[left, right]` is `right - left + 1`. Thus, the size of our subarray `[i, k + j]` is `(k + j) - i + 1`. We can multiply this by `right[j]` to calculate our score.\n\nYou may have noticed: this algorithm assumes that in the optimal subarray, the minimum value is in the right section. But what if this assumption is wrong, and its actually in the left section? We can check the left section by simply reversing the array and then applying the same algorithm to it. Note that when we reverse the array, `k` will change. After reversal, the original `k` will be at `nums.length - k - 1`.\n\n**Algorithm**\n\n1. Define a function `solve(nums, k)` that runs our algorithm:\n    - Set `n = nums.length`, `left` to an array of length `k`, and `currMin` to a large value.\n    - Iterate `i` from `k - 1` until `0`. At each index, update `currMin` with `nums[i]` if it is smaller and set `left[i] = currMin`.\n    - Initialize an empty array `right` and reset `currMin` to a large value.\n    - Iterate `i` from `k` until `n - 1`. At each index, update `currMin` with `nums[i]` if it is smaller and push `currMin` to `right`.\n    - Initialize `ans = 0`.\n    - Iterate `j` over the indices of `right`:\n        - Set `currMin = right[j]`.\n        - Find `i`, the insertion index of `currMin` in `left` using binary search.\n        - Calculate `size = (k + j) - i - 1`.\n        - Update `ans` with `currMin * size` if it is larger.\n    - Return `ans`.\n2. Initialize `ans = solve(nums, k)`.\n3. Reverse `nums`.\n4. Return the larger of `ans, solve(nums, nums.length - k - 1)`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/AePxSPjG/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"AePxSPjG\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `nums`,\n\n* Time complexity: $$O(n \\cdot \\log{}n)$$\n\n    We require $$O(n)$$ time to create `left` and `right`. Then, we iterate over the indices of `right`, which is not more than $$O(n)$$ iterations. At each iteration, we perform a binary search over `left`, which does not cost more than $$O(\\log{}n)$$. Thus, `solve` costs $$O(n \\cdot \\log{}n)$$, and we call it twice.\n\n* Space complexity: $$O(n)$$\n\n    `left` and `right` have a combined length of $$n$$.\n    \n<br/>\n\n---\n\n### Approach 2: Monotonic Stack\n\n**Intuition**\n\nIn this approach, we will use a similar idea as in the previous approach. For a given index `i`, if we treat `nums[i]` as the minimum element, we need to know how many elements we can take on the left and right such that we do not take any elements less than `nums[i]`.\n\n> You might be thinking: what if `nums[k]` is not included? We will get to that after presenting the full idea of the approach.\n\nEssentially, we need to know how far away the next lesser element is on both sides. If we have this information for all indices, we can quickly calculate the maximum score possible by treating every `nums[i]` as the minimum, since in the optimal solution, one of the indices must be the minimum.\n\nThere is a very similar problem called [Next Greater Element](https://leetcode.com/problems/next-greater-element-i/). The logic is identical, except that we are looking for the next smaller element. We can accomplish this using a monotonic stack.\n\n<details><summary><b>If you aren't familiar with monotonic stacks, click here.</b></summary>\n\nA monotonic stack is a stack whose elements are always sorted. In our case, we want a monotonic **increasing** stack, i.e. the elements in the stack are always sorted in ascending order.\n\nTo maintain this monotonic stack, we need to make sure that whenever we push a new element, it is the largest value in the stack. Before we push an element `num`, we check the top of the stack. If the top of the stack is greater than `num`, we pop from it. Since there may be multiple elements greater than `num` in the stack, we need to use a while loop to \"clean\" the stack before pushing `num`.\n\nOnly once there are no elements in the stack greater than `num` will we push `num`.\n\n</details>\n\n<br>\n\nWe will create an array `left`, where `left[i]` has the index of the first element to the left of `i` that has a lower value in `nums` than `nums[i]`.\n\nSimilarly, we will create an array `right` where `right[i]` has the index of the first element to the right of `i` that has a lower value in `nums` than `nums[i]`.\n\nSo how do we calculate `right`? Let's say that we are iterating over `nums` from the left and we have a chain of increasing numbers:\n\n![img](../Figures/1793/5.png)\n<br>\n\nAs you can see in the example, we have 6 increasing numbers, and then a `1` that is less than all of them. This `1` (at index 6) should be the value of `right` for all the indices of the increasing numbers. If we maintain a monotonic increasing stack, then this `1` will cause all those numbers to be popped out.\n\nWith a monotonic increasing stack, whenever we see an element that is smaller than the top of the stack, it is guaranteed to be the first smaller element for the element at the top of the stack. This is exactly what we are looking for.\n\nTo calculate `left`, we use the exact same process, except we iterate backward starting from the end of `nums`.\n\nNote that because we need to remember what indices to update when we pop from the stack, we will store indices on the stack instead of the elements themselves. We can easily find the values by referencing `nums`.\n\nWe will initialize the values of `left` to `-1` and the values of `right` to `n`. This way, the math will still work out later if there are elements that do not have any lower values to the left or right.\n\nOnce we have `left` and `right`, we can iterate over all indices `i` and try to find a maximum score. Remember that the subarray must contain index `k`. Thus, we can only use an index `i` as the minimum if `left[i] < k` and `right[i] > k`.\n\nWhen we treat an index `i` as the minimum, what score can we achieve? Our window starts one index after `left[i]` because including `left[i]` would create a new minimum. Similarly, our window ends one index before `right[i]`. Thus, we need to subtract `2` from the normal subarray size formula. This gives us a subarray size of `right[i] - left[i] - 1`. We multiply this size by `nums[i]` to get our score.\n\n**Algorithm**\n\n1. Initialize `n = nums.length`, `left` as an array of length `n` with values of `-1`, and an empty `stack`.\n2. Iterate `i` from `n - 1` until `0`:\n    - While the element at the index at the top of `stack` is greater than `nums[i]`, pop this index from `stack`. Given `j` as the index popped from the `stack`, set `left[j] = i`.\n    - Push `i` to `stack`.\n3. Initialize `right` as an array of length `n` with values of `n` and reset `stack`.\n4. Iterate `i` over the indices of `nums`:\n    - While the element at the index at the top of `stack` is greater than `nums[i]`, pop this index from `stack`. Given `j` as the index popped from the `stack`, set `right[j] = i`.\n    - Push `i` to `stack`.\n5. Initialize `ans = 0`.\n6. Iterate `i` over the indices of `nums`:\n    - If `left[i] < k` and `right[i] > k`, update `ans` with `nums[i] * (right[i] - left[i] - 1)` if it is larger.\n7. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/N4kEkyfF/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"N4kEkyfF\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `nums`,\n\n* Time complexity: $$O(n)$$\n\n    It costs $$O(n)$$ to calculate `left` and `right`. We iterate over each index once and perform amortized $$O(1)$$ work at each iteration. The reason it amortizes to $$O(1)$$, despite the while loop, is because the while loop can run a maximum of $$n$$ times across all iterations, and each index can only be pushed onto and popped from the stack once.\n\n    To calculate `ans`, we iterate over the indices once and perform $$O(1)$$ work at each iteration.\n\n* Space complexity: $$O(n)$$\n\n    `left`, `right`, and `stack` all require $$O(n)$$ space.\n    \n<br/>\n\n---\n\n### Approach 3: Greedy\n\n**Intuition**\n\nSometimes the simplest approach is the best! The optimal subarray must contain index `k`, so it makes sense to consider the subarray with only `nums[k]` as a starting point.\n\nFrom here, how do we expand the subarray? We can either add an element to the left or an element to the right. Let's say we have two pointers, `left` and `right` that represent our subarray. Which direction should we go?\n\nIf we move left, it's equivalent to adding `nums[left - 1]` to our subarray. If we move right, it's equivalent to adding `nums[right + 1]` to our subarray. We should move in the direction of the greater element.\n\nAt each step, we update `currMin` which is initially set to `nums[k]`, and try to update `ans` which is also initially set to `nums[k]`. We can update `ans` with `currMin * (right - left + 1)` if it is larger.\n\nThis greedy process is very similar to the one used to solve [Container With Most Water](https://leetcode.com/problems/container-with-most-water/). But why does it work? We will use a proof by contradiction to demonstrate that not doing it this way wouldn't result in a higher value either.\n\nAt each step, we choose between having our subarray as `[left - 1, right]` or `[left, right + 1]`. Let's assume that `nums[left - 1] > nums[right + 1]` and the optimal subarray has not been found yet. The optimal subarray must include `nums[left - 1]`. If it doesn't, then it must include `nums[right + 1]`, since we could only move right to \"avoid\" `nums[left - 1]`. However, any subarray that includes `nums[right + 1]` could also include `nums[left - 1]` without affecting the minimum, while also increasing the length of the subarray and thus the score. Thus, it is impossible for the optimal subarray to include `nums[right + 1]` and not `nums[left - 1]`, and in general the optimal subarray must include `nums[left - 1]`.\n\n**Algorithm**\n\nTo implement the while loop, we will iterate until we have exhausted the array. If one of the pointers is out of bounds, we will consider the element it points to as `0`.\n\n1. Initialize `n = nums.length`, `left = k`, `right = k`, `ans = nums[k]`, and `currMin = nums[k]`.\n2. While `left > 0` or `right < n - 1`:\n    - Compare `nums[left - 1]` with `nums[right + 1]`:\n        - If `nums[right + 1]` is greater, increment `right` and update `currMin` with `nums[right]` if it is lower.\n        - Otherwise, decrement `left` and update `currMin` with `nums[left]` if it is lower.\n    - Update `ans` with `currMin * (right - left + 1)` if it is greater.\n3. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/ayvayDq2/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"ayvayDq2\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `nums`,\n\n* Time complexity: $$O(n)$$\n\n    At each iteration, our `left` or `right` pointers move closer to the edges of the array by `1`. Thus, we perform $$O(n)$$ iterations. Each iteration costs $$O(1)$$.\n\n* Space complexity: $$O(1)$$\n\n    We aren't using any extra space other than a few integers.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

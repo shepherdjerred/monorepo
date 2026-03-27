@@ -1,0 +1,141 @@
+{
+  "questionId": "1915",
+  "questionFrontendId": "1790",
+  "title": "Check if One String Swap Can Make Strings Equal",
+  "titleSlug": "check-if-one-string-swap-can-make-strings-equal",
+  "difficulty": "Easy",
+  "content": "<p>You are given two strings <code>s1</code> and <code>s2</code> of equal length. A <strong>string swap</strong> is an operation where you choose two indices in a string (not necessarily different) and swap the characters at these indices.</p>\n\n<p>Return <code>true</code> <em>if it is possible to make both strings equal by performing <strong>at most one string swap </strong>on <strong>exactly one</strong> of the strings. </em>Otherwise, return <code>false</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s1 = &quot;bank&quot;, s2 = &quot;kanb&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> For example, swap the first character with the last character of s2 to make &quot;bank&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s1 = &quot;attack&quot;, s2 = &quot;defend&quot;\n<strong>Output:</strong> false\n<strong>Explanation:</strong> It is impossible to make them equal with one string swap.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s1 = &quot;kelb&quot;, s2 = &quot;kelb&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> The two strings are already equal, so no string swap operation is required.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s1.length, s2.length &lt;= 100</code></li>\n\t<li><code>s1.length == s2.length</code></li>\n\t<li><code>s1</code> and <code>s2</code> consist of only lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "The answer is false if the number of nonequal positions in the strings is not equal to 0 or 2.",
+    "Check that these positions have the same set of characters."
+  ],
+  "metaData": "{\n  \"name\": \"areAlmostEqual\",\n  \"params\": [\n    {\n      \"name\": \"s1\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"s2\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"309.9K\", \"totalSubmission\": \"626.2K\", \"totalAcceptedRaw\": 309927, \"totalSubmissionRaw\": 626238, \"acRate\": \"49.5%\"}",
+  "likes": 1709,
+  "dislikes": 87,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Buddy Strings\", \"titleSlug\": \"buddy-strings\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Make Number of Distinct Characters Equal\", \"titleSlug\": \"make-number-of-distinct-characters-equal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Almost Equal Pairs I\", \"titleSlug\": \"count-almost-equal-pairs-i\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"bank\"\n\"kanb\"",
+    "\"attack\"\n\"defend\"",
+    "\"kelb\"\n\"kelb\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 24, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool areAlmostEqual(string s1, string s2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean areAlmostEqual(String s1, String s2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def areAlmostEqual(self, s1: str, s2: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def areAlmostEqual(self, s1, s2):\n        \"\"\"\n        :type s1: str\n        :type s2: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s1\n * @param {string} s2\n * @return {boolean}\n */\nvar areAlmostEqual = function(s1, s2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function areAlmostEqual(s1: string, s2: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool AreAlmostEqual(string s1, string s2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool areAlmostEqual(char* s1, char* s2) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func areAlmostEqual(s1 string, s2 string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun areAlmostEqual(s1: String, s2: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func areAlmostEqual(_ s1: String, _ s2: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn are_almost_equal(s1: String, s2: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s1\n# @param {String} s2\n# @return {Boolean}\ndef are_almost_equal(s1, s2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s1\n     * @param String $s2\n     * @return Boolean\n     */\n    function areAlmostEqual($s1, $s2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool areAlmostEqual(String s1, String s2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def areAlmostEqual(s1: String, s2: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec are_almost_equal(s1 :: String.t, s2 :: String.t) :: boolean\n  def are_almost_equal(s1, s2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec are_almost_equal(S1 :: unicode:unicode_binary(), S2 :: unicode:unicode_binary()) -> boolean().\nare_almost_equal(S1, S2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (are-almost-equal s1 s2)\n  (-> string? string? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2664",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given two strings `s1` and `s2` and want to determine if it is possible to make the strings equal by performing at most one string swap on one of the strings. A string swap involves choosing any two indices in the string and swapping the characters at these positions.\n\n---\n\n### Approach 1: Frequency Map + Check Differences\n\n#### Intuition\n\nTo start, consider the example where `s1 = \"bank\"` and `s2 = \"kanb\"`. If we swap the first and last characters of `s1`, we get `\"kanb\"`, which matches `s2`. Alternatively, we could swap the first and last characters of `s2` to get `\"bank\"`, which matches `s1`. One observation we can make is that this swapping only works if the two strings share the same characters and frequencies. The only difference would be the ordering of characters.\n\nIn other words, it is necessary for the two strings to be anagrams for a string swap to be possible. Otherwise, one string will have a certain character that the other is missing, and no amount of swapping can make them equal.\n\nHowever, two strings being anagrams is not enough to ensure swapping will make them equal. Let's consider another example: `s1 = hello` and `s2 = olleh`. We know that the two strings are anagrams, but it is still not possible for a single string swap to make `s1` equal to `s2` or vice versa. If we were to compare each character of `s1`, `s1[i]`, to its corresponding character in `s2`, `s2[i]`, we see that there is a total of 4 differences at indices `i = 0, 1, 3, 4`. One string swap can only resolve two differences, so they cannot be made equal. This leads us to our second requirement for a string swap to be possible: If there are any differences, the total number of character-by-character differences has to be exactly 2. Note the edge case where `s1` and `s2` are already equal, in which there are 0 character-by-character differences and no string swaps are needed.\n\nNow, we have fully developed a rule for determining if the two strings can be made equal:\n\n- If `s1` and `s2` are already equal, then no string swap is needed and we know it's trivially possible for the strings to be equal.\n- If `s1` and `s2` have the same set of character frequencies (i.e. are anagrams) and have exactly 2 character-by-character differences, then we know it's possible to make the strings equal with 1 string swap.\n- Otherwise, the two strings can't be made equal with one string swap.\n\nTo implement these checks, we can use two frequency maps `s1FrequencyMap` and `s2FrequencyMap` to keep track of the frequency of each letter for the two strings. As we go through the characters of the two strings and populate the frequency maps, we can also maintain counter `numDiffs` that counts the number of differences at corresponding indices. If the two strings are anagrams and `numDiffs` equals 2, we know that one swap can resolve the differences.\n\n#### Algorithm\n\n- Check edge case: if `s1` and `s2` are already equal, then return `true`.\n- Initialize the frequency maps for each string: `s1FrequencyMap` and `s2FrequencyMap` are character arrays of size 26.\n- Initialize the counter `numDiffs` to maintain the number of character differences between the two strings.\n- Iterate through the characters of `s1` and `s2`:\n    - Let `s1Char` and `s2Char` be the current characters of `s1` and `s2`, respectively.\n    - If `s1Char != s2Char`, then increment `numDiffs`. If `numDiffs` is now greater than `2`, then we know one string swap will not make the strings equal, so return `false`.\n    - Update the frequency maps by incrementing the frequency of `s1Char` and `s2Char`: `s1FrequencyMap[s1Char]++` and `s2FrequencyMap[s2Char]++`.\n- Now, the strings are equal only if the frequency maps are equal. If `s1FrequencyMap` and `s2FrequencyMap` have the same frequencies, then return `true`. Otherwise, return `false`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/eBLNyvmp/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"eBLNyvmp\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the length of `s1` and `s2`.\n\n- Time Complexity: $O(N)$\n\n    Iterating through `s1` and `s2` takes $O(N)$ time. For each character we iterate, updating the frequency maps and diff counter takes $O(1)$ constant time. Thus, the total time complexity is $O(N)$.\n\n- Space Complexity: $O(1)$\n\n    Each frequency map has a fixed size of 26, regardless of the length of `s1` and `s2`. Thus, the space complexity is $O(1)$ constant time.\n\n---\n\n### Approach 2: Only Check Differences\n\n#### Intuition\n\nFor our previous approach, we already achieved an efficient constant space complexity. However, let's try to optimize further and see if we can check if the two strings can be made equal without using the frequency maps.\n\nLet's take another look at the example `s1 = bank` and `s2 = kanb`. We previously established that there are exactly 2 character differences: at index 0 and index 3. This makes it possible for one string swap to make the strings equal.\n\nHowever, we can make a more specific observation: This swap only works because the character at index 0 of `s1` matches the character at index 3 of `s2`. Similarly, the character at index 3 for `s1` is equal to the character at index 0 for `s2`. In other words, if the characters in the mismatched positions \"cross-match\", a swap will be able to make the strings equal.\n\n![Swap matching](../Figures/1790/swap.png)\n\nThis leads us to a stricter rule:\n- For the strings to be equal after a single swap, there must be exactly two mismatched indices, `i` and `j`, such that:\n    1. `s1[i] == s2[j]`\n    2. `s1[j] == s2[i]`\n\nSimilar to before, if the strings are already identical, no swap is needed. In all other cases, equality is not possible.\n\nFor this rule, we can simply introduce two new variables `firstIndexDiff` and `secondIndexDiff` to keep track of the indices of differences. We continue to use `numDiffs` to make sure the `numDiffs` doesn't surpass 2. We will iterate through `s1` and `s2` like we do in approach 1, except we now update `firstIndexDiff`, `secondIndexDiff`, and `numDiffs` when we see a character difference.\n\n> Note: For this approach's implementation, observe that we do not have to explicitly check the trivial edge case where `s1` and `s2` are equal. If the two strings are equal, then no diffs are found, and `s1[firstIndexDiff] == s2[secondIndexDiff] && s1[secondIndexDiff] == s2[firstIndexDiff]` will always be true, assuming the default initialized values of `firstIndexDiff` and `secondIndexDiff` are valid (they can just be 0).\n\n#### Algorithm\n\n- Initialize `firstIndexDiff`, `secondIndexDiff`, and `numDiffs` all to 0.\n- Iterate through the characters of `s1` and `s2`:\n    - Let `s1Char` and `s2Char` be the current characters of `s1` and `s2` at index `i`, respectively.\n    - If `s1Char != s2Char`:\n        - Increment `numDiffs`.\n        - If `numDiffs` is now greater than `2`, then we know one string swap will not make the strings equal, so return `false`.\n        - If `numDiffs` is now equal to `1`, then we have found our first difference: assign `firstIndexDiff = i`.\n        - Otherwise, `numDiffs` is `2` so we have found our second difference: assign `secondIndexDiff = i`.\n- Return `s1[firstIndexDiff] == s2[secondIndexDiff] && s1[secondIndexDiff] == s2[firstIndexDiff]`\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/aPrp7ahg/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"aPrp7ahg\"></iframe>\n\n#### Complexity Analysis\n\n- Time Complexity: $O(N)$\n\n    Iterating through `s1` and `s2` takes $O(N)$ time. For each character we iterate, updating `numDiffs`, `firstIndexDiff`, `secondIndexDiff` takes $O(1)$ constant time. Thus, the total time complexity is $O(N)$.\n\n- Space Complexity: $O(1)$\n\n    We only use 3 integer variables, so the space complexity is constant $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

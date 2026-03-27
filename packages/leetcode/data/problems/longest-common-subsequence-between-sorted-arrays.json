@@ -1,0 +1,142 @@
+{
+  "questionId": "2071",
+  "questionFrontendId": "1940",
+  "title": "Longest Common Subsequence Between Sorted Arrays",
+  "titleSlug": "longest-common-subsequence-between-sorted-arrays",
+  "difficulty": "Medium",
+  "content": "<p>Given an array of integer arrays <code>arrays</code> where each <code>arrays[i]</code> is sorted in <strong>strictly increasing</strong> order, return <em>an integer array representing the <strong>longest common subsequence</strong> among&nbsp;<strong>all</strong> the arrays</em>.</p>\n\n<p>A <strong>subsequence</strong> is a sequence that can be derived from another sequence by deleting some elements (possibly none) without changing the order of the remaining elements.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> arrays = [[<u>1</u>,3,<u>4</u>],\n                 [<u>1</u>,<u>4</u>,7,9]]\n<strong>Output:</strong> [1,4]\n<strong>Explanation:</strong> The longest common subsequence in the two arrays is [1,4].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> arrays = [[<u>2</u>,<u>3</u>,<u>6</u>,8],\n                 [1,<u>2</u>,<u>3</u>,5,<u>6</u>,7,10],\n                 [<u>2</u>,<u>3</u>,4,<u>6</u>,9]]\n<strong>Output:</strong> [2,3,6]\n<strong>Explanation:</strong> The longest common subsequence in all three arrays is [2,3,6].\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> arrays = [[1,2,3,4,5],\n                 [6,7,8]]\n<strong>Output:</strong> []\n<strong>Explanation:</strong> There is no common subsequence between the two arrays.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= arrays.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= arrays[i].length &lt;= 100</code></li>\n\t<li><code>1 &lt;= arrays[i][j] &lt;= 100</code></li>\n\t<li><code>arrays[i]</code> is sorted in <strong>strictly increasing</strong> order.</li>\n</ul>\n",
+  "hints": [
+    "Fix one array.",
+    "Choose the next array and get the common elements.",
+    "Use the common elements as the new fixed array and keep merging with the rest of the arrays."
+  ],
+  "metaData": "{\n  \"name\": \"longestCommonSubsequence\",\n  \"params\": [\n    {\n      \"name\": \"arrays\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<integer>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"14.9K\", \"totalSubmission\": \"18.3K\", \"totalAcceptedRaw\": 14914, \"totalSubmissionRaw\": 18346, \"acRate\": \"81.3%\"}",
+  "likes": 191,
+  "dislikes": 7,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Merge Two Sorted Lists\", \"titleSlug\": \"merge-two-sorted-lists\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,3,4],[1,4,7,9]]",
+    "[[2,3,6,8],[1,2,3,5,6,7,10],[2,3,4,6,9]]",
+    "[[1,2,3,4,5],[6,7,8]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> longestCommonSubsequence(vector<vector<int>>& arrays) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<Integer> longestCommonSubsequence(int[][] arrays) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def longestCommonSubsequence(self, arrays: List[List[int]]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def longestCommonSubsequence(self, arrays):\n        \"\"\"\n        :type arrays: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} arrays\n * @return {number[]}\n */\nvar longestCommonSubsequence = function(arrays) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function longestCommonSubsequence(arrays: number[][]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<int> LongestCommonSubsequence(int[][] arrays) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* longestCommonSubsequence(int** arrays, int arraysSize, int* arraysColSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func longestCommonSubsequence(arrays [][]int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun longestCommonSubsequence(arrays: Array<IntArray>): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func longestCommonSubsequence(_ arrays: [[Int]]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn longest_common_subsequence(arrays: Vec<Vec<i32>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} arrays\n# @return {Integer[]}\ndef longest_common_subsequence(arrays)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $arrays\n     * @return Integer[]\n     */\n    function longestCommonSubsequence($arrays) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> longestCommonSubsequence(List<List<int>> arrays) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def longestCommonSubsequence(arrays: Array[Array[Int]]): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec longest_common_subsequence(arrays :: [[integer]]) :: [integer]\n  def longest_common_subsequence(arrays) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec longest_common_subsequence(Arrays :: [[integer()]]) -> [integer()].\nlongest_common_subsequence(Arrays) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (longest-common-subsequence arrays)\n  (-> (listof (listof exact-integer?)) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2327",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nGiven the list of arrays, we aim to find the longest subsequence common to all of the arrays.\n\nThe brute force approach to solving this problem would be to generate the set of all of the possible subsequences for each array, and then find the longest common subsequence among the sets of subsequences. For a given array of length $n$, there are $2^n$ possible subsequences, so this approach would be computationally expensive.\n\nEach array is sorted in **strictly increasing order**. This allows us to find the longest common subsequence without generating every subsequence of every array.\n\nInvalid test case (violates strictly increasing):\n> Input: arrays = [[4,4,4], [4,4,7,9]]\n> Output: [4,4]\n\n- For a given array, each value is unique; i.e., the array contains no duplicates. Each value in the longest common subsequence will also be unique.\n\nInvalid test case (not sorted):\n> Input: arrays = [[4,3,1], [1,4,7,9]]\n> Output: [1]\n\n- If an element is in both arrays, it will be in the longest common subsequence.\n\nValid test case (sorted in strictly increasing order):\n> Input: arrays = [[1,3,4], [1,4,7,9]]\n> Output: [1,4]\n\n- Elements appear in the same order relative to other elements in the arrays, which means they will appear in the same order relative to each other in the subsequences. The longest common subsequence will be sorted in strictly increasing order.\n\nWe can conclude that if an element is in every array in `arrays`, it will be in the longest common subsequence exactly once. \n\n---\n\n### Approach 1: Hash Map\n\n#### Intuition\n\nFor each element that is in any of the arrays, we can check if it is in all of the arrays. If so, it is in the longest common subsequence.\n\nInstead of performing a linear search for each element in each array, we can count the number of times each element occurs in all of the arrays combined. If the frequency of an element equals the number of arrays, the element is in all of the arrays, so we add it to the result. \n\nHashmaps are a versatile data structure that can be used for counting frequencies, so we store the frequency of each element in the hashmap.\n\n> Input: arrays = [[2,3,6,8], [1,2,3,5,6,7,10], [2,3,4,6,9]]\n\n`frequencies` hashmap:\n\n| num |  2  | 3   | 6   | 8   |  1  | 5   | 7   |  10 | 4   | 9   |\n|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|\n|freq |  3  |  3  |  3  |  1  |  1  |  1  |  1  |  1  |  1  |  1  |\n\nThere are `3` arrays in `arrays`. We add all the numbers with a frequency of `3` to the result.\n\n> Output: [2,3,6]\n\n#### Algorithm\n\n1. Initialize a hashmap called `frequencies`.\n2. Initialize an array `longestCommonSubseq` for storing the result.\n3. For each `array` in `arrays`:\n    - For each `num` in the `array`:\n        - Increment `frequencies[num]` by `1`.\n        - If the frequency of `num` equals the number of arrays, append `num` to the `longestCommonSubseq`.\n4. Return `longestCommonSubseq`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/LdxuSD4f/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"LdxuSD4f\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of `arrays` and $m$ be the average length of `arrays[i]`.\n\n* Time complexity: $O(n \\cdot m)$\n\n    We use a nested loop to traverse each element in each array in `arrays`. Hashmap lookup and insertion operations are $O(1)$ in the average case. Therefore, the time complexity is $O(n \\cdot m)$.\n\n* Space complexity: $O(n \\cdot m)$\n\n    The hashmap is size $O(e)$ where $e$ is the number of distinct elements across all of the arrays. At worst, there can be $n \\cdot m$ distinct elements, so the space complexity is $O(n \\cdot m)$.\n\n    > Note: When the length of each array is the same as the range of elements (as with the given constraints), $e = m$, so the space complexity could be represented as $O(m)$. \n\n**Set Intersection**\n\nNote that given a group of sets, their intersection is all of their common elements. Another approach to solving this problem would be to create hash sets out of the first and second arrays and find their intersection. Then, find the set intersection between the result and each of the following arrays. Finally, sort and return the result. Below is the Python3 code for this approach. \n\nThis approach is less straightforward for languages that do not have built-in set functions and requires an additional sorting step, which leads to a worse time complexity, so it is not discussed in depth.\n\n<iframe src=\"https://leetcode.com/playground/NXiFtrCd/shared\" frameBorder=\"0\" width=\"100%\" height=\"191\" name=\"NXiFtrCd\"></iframe>\n\n---\n\n### Approach 2: Two Pointer\n\n#### Intuition\n\nFirst, let's develop a way to find the longest common subsequence between two arrays.\n\nIf an element is in both arrays, it is in their longest common subsequence. We can leverage the fact that both arrays are sorted, and traverse them simultaneously, in ascending order.\n\nA common algorithm that traverses two arrays in order is merge sort. We can use a similar two-pointer method to traverse both arrays simultaneously without a nested loop.\n\n`first` will indicate the position in `nums1`, and `second` will indicate the position in `nums2`.\n \nDuring each iteration, we compare the values of `nums1[first]` and `nums2[second]`. There are three possibilities.\n \n1. The elements are equal. We have found a common value, and we add the longest common subsequence. We increment `first` and `second`.\n\n2. `nums1[first] < nums2[second]`. Because `nums2` is sorted, every element after `second` will also be greater than `nums1[first]`. However, there is a chance that an element in `nums1` after `first` will be equal to `nums2[second]`. Thus, we should increment `first`.\n\n3. `nums1[first] > nums2[second]`. The logic works the other way visa versa. We should increment `second`.\n\nOnce we reach the end of one of the arrays, we return their longest common subsequence.\n\nBelow is a visualization of the two-pointer approach for finding the longest common subsequence between two arrays:\n\n!?!../Documents/1940/1940_slideshow.json:960,570!?!\n\nAfter finding the longest common subsequence between the first two arrays, we can use the same function to find the longest common subsequence between the current longest common subsequence and the next array in the list. We update the longest common subsequence and repeat this process until we have processed all of the arrays.\n\n#### Algorithm\n\n1. Initialize an array `longestCommonSubseq` to `arrays[0]`.\n2. Define a function `longestSeq()` that finds the longest common subsequence between two arrays.\n    - Initialize an array `longestCommonSeq` that stores the longest common subsequence between the two input arrays.\n    - Initialize two variables: `first`, which will store the position in `nums1`, and `second`, which will store the position in `nums2` to `0`, the starting index.\n    - Iterate through `nums1` and `nums2` while `first` is less than the size of `nums1` and `second` is less than the size of `nums2`:\n        - If `nums1[first]` is less than `nums2[second]`, increment `first` by `1` because we need a larger value from `nums1` to match the value at `nums2[second]`.\n        - If `nums1[first]` is greater than `nums2[second]`, increment `second` by `1` because we need a larger value from `nums2` to match the value at `nums1[first]`.\n        - Otherwise, `nums1[first]` must equal `nums2[second]`, so append `nums1[first]` to the `longestCommonSeq`, and increment both `first` and `second`.\n    - Return `longestCommonSeq`\n3. For each `array` in `arrays`:\n    - If the length of the `longestCommonSubseq` is `0`, there are no elements that are common to all of the arrays. Return the empty array `longestCommonSubseq`.\n    - Call `longestSeq()` with `longestCommonSubseq` and the current array. Update `longestCommonSubseq` to the returned value.\n4. Return `longestCommonSubseq`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/dQsTZifz/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"dQsTZifz\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of `arrays` and $m$ be the average length of `arrays[i]`.\n\n* Time complexity: $O(n \\cdot m)$\n\n    We use a nested loop to traverse each element in each array in `arrays`. The `longestSeq()` function will visit each element in each of the two arrays at most once, so it takes $O(m)$ time. Therefore, the time complexity is $O(n \\cdot m)$.\n\n* Space complexity: $O(m)$\n\n    The array we use to store the current longest common subsequence uses $O(m)$ space.\n\n### Approach 3: Binary Search\n\n#### Intuition\n\nAs discussed in the overview, if an element is in every array in `arrays`, it is in the longest common subsequence. Conversely, if an element is missing from any of the `arrays`, it is not in the longest common subsequence.\n\nTo solve this problem, we need to search for common values between arrays. The arrays are sorted, which means we can utilize binary search. \n\n> Binary search is a search algorithm that finds the position of a target value within a sorted array.\n\nIf you are unfamiliar with binary search, check out the [Binary Search Explore Card](https://leetcode.com/explore/learn/card/binary-search/). \n\nBinary search uses three pointers, which we can call `left`, `mid`, and `right`.\n\nInitially, `left` points to the first index of the array, and `right` points to the last. At each step, we calculate `mid` as the middle element between `left` and `right`.\n\nBinary search compares the target value with the middle element at each iteration.\n\n - If the target value is equal to the middle element, the target has been found.\n\n- If the target value is less than the middle element, continue to search in the left half.\n\n- If the target value is greater than the middle element, continue to search in the right half.\n\nWith every iteration, the search window is divided in half, and the search is continued on either the right or the left side until either the target is found or `left` becomes greater than `right`.\n\nEvery array must contain every element of the longest common subsequence, so the longest common subsequence cannot be shorter than the shortest array. To make the search process more efficient, we initially set the longest common subsequence to the shortest array.\n\nThen, we iterate through all of the arrays and search for each element of the longest common subsequence in each array. If an element is missing from an array, we remove it from the longest common subsequence. If the longest common subsequence becomes empty, we return an empty list.\n\n#### Algorithm\n\n**Implementation Note:** \n`mid`, the middle of the subarray, is set to the index in the middle of the array. The basic midpoint formula is `(left + right) / 2`.\nYou'll notice that the below implementations instead use `left + (right - left) / 2`. This is because if `left + right` is greater than the maximum integer value, $2^{31} - 1$, it overflows and causes errors. \n\n`left + (right - left) / 2` is an equivalent formula, and never stores a value larger than `left` or `right`. Thus, if `left` and `right` are within the integer limits, we will never overflow.\n\n1. Iterate through each array in `arrays`, updating the variable `shortestArray` to the shortest array found so far.\n2. Initialize an array `longestCommonSubseq` to `shortestArray`.\n3. Define a function `binarySearch()` that takes an array `nums` and a target value as parameters and returns `true` if the target is in the array.\n    - Initialize the `left` pointer to `0` and the `right` pointer to `nums.length -1`. These represent the first and last indices of the array.\n    - While `left` is less than or equal to `right`, iteratively perform a binary search:\n        - Set `mid` to `left + (right - left) / 2`, which is the middle of this section of `nums`. We will compare `nums[mid]` to `target`.\n        - If `nums[mid]` is greater than `target`, set `right` to `mid - 1`; we will continue to search in the left half `nums`.\n        - If `nums[mid]` is less than `target`, set `left` to `mid + 1`; we will continue to search in the right half `nums`.\n        - Otherwise, `nums[mid]` equals `target`, return `true`.\n    - If the loop completes without finding the `target`, return `false`.\n4. For each remaining array in `arrays`:\n    - If the length of the `longestCommonSubseq` is `0`, there are no elements that are common to all of the arrays. Return the empty array `longestCommonSubseq`.\n    - Initialize an array `uncommon` that stores the elements that are in the `longestCommonSubseq` but not the current array.\n    - For each element `num` in the `longestCommonSubseq`, use `binarySearch()` to determine whether `num` is in the current array. If it is not, add `num` to `uncommon`.\n    - Remove each element in `uncommon` from the `longestCommonSubseq`.\n5. Return `longestCommonSubseq`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/8r9XYeNG/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"8r9XYeNG\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of `arrays` and $m$ be the average length of `arrays[i]`. Let $s$ be the length of the shortest array in `arrays`.\n\n* Time complexity: $O(n \\cdot (s \\log m) + s^2)$\n\n    Finding the shortest array takes $O(n)$.\n\n    We iterate through the arrays, using binary search to look for each element in the current longest common subsequence. Binary search takes $O( \\log m)$ time to search through $m$ elements, so the inner loop takes $O(s \\log m)$ time. This means the time complexity of this step is $O(n \\cdot (s \\log m))$.\n\n    Removing an element from an array of length $n$ takes $O(n)$. This means it takes $O(s^2)$ time total to remove all the elements of the shortest array from the longest common subsequence if there is no longest common subsequence.\n\n    The overall time complexity is $O(n \\cdot (s \\log m) + n + s^2)$, which we can simplify to $O(n \\cdot (s \\log m) + s^2)$\n    \n    > If the shortest array is significantly shorter than many of the other arrays, this approach will be more efficient than the previous two.\n\n* Space complexity: $O(s)$\n\n    `shortestArray`, `longestCommonSubseq`, and `uncommon` can each use up to $O(s)$ space.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

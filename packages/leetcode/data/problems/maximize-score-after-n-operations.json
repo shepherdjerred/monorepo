@@ -1,0 +1,157 @@
+{
+  "questionId": "1906",
+  "questionFrontendId": "1799",
+  "title": "Maximize Score After N Operations",
+  "titleSlug": "maximize-score-after-n-operations",
+  "difficulty": "Hard",
+  "content": "<p>You are given <code>nums</code>, an array of positive integers of size <code>2 * n</code>. You must perform <code>n</code> operations on this array.</p>\n\n<p>In the <code>i<sup>th</sup></code> operation <strong>(1-indexed)</strong>, you will:</p>\n\n<ul>\n\t<li>Choose two elements, <code>x</code> and <code>y</code>.</li>\n\t<li>Receive a score of <code>i * gcd(x, y)</code>.</li>\n\t<li>Remove <code>x</code> and <code>y</code> from <code>nums</code>.</li>\n</ul>\n\n<p>Return <em>the maximum score you can receive after performing </em><code>n</code><em> operations.</em></p>\n\n<p>The function <code>gcd(x, y)</code> is the greatest common divisor of <code>x</code> and <code>y</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong>&nbsp;The optimal choice of operations is:\n(1 * gcd(1, 2)) = 1\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [3,4,6,8]\n<strong>Output:</strong> 11\n<strong>Explanation:</strong>&nbsp;The optimal choice of operations is:\n(1 * gcd(3, 6)) + (2 * gcd(4, 8)) = 3 + 8 = 11\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,4,5,6]\n<strong>Output:</strong> 14\n<strong>Explanation:</strong>&nbsp;The optimal choice of operations is:\n(1 * gcd(1, 5)) + (2 * gcd(2, 4)) + (3 * gcd(3, 6)) = 1 + 4 + 9 = 14\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 7</code></li>\n\t<li><code>nums.length == 2 * n</code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>6</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Find every way to split the array until n groups of 2. Brute force recursion is acceptable.",
+    "Calculate the gcd of every pair and greedily multiply the largest gcds."
+  ],
+  "metaData": "{\n  \"name\": \"maxScore\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"69.6K\", \"totalSubmission\": \"120.2K\", \"totalAcceptedRaw\": 69631, \"totalSubmissionRaw\": 120169, \"acRate\": \"57.9%\"}",
+  "likes": 1716,
+  "dislikes": 114,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,2]",
+    "[3,4,6,8]",
+    "[1,2,3,4,5,6]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"sprinklr\", \"name\": \"Sprinklr\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Number Theory",
+      "slug": "number-theory"
+    },
+    {
+      "name": "Bitmask",
+      "slug": "bitmask"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxScore(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxScore(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxScore(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxScore(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar maxScore = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxScore(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxScore(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxScore(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxScore(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxScore(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxScore(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_score(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef max_score(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function maxScore($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxScore(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxScore(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_score(nums :: [integer]) :: integer\n  def max_score(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_score(Nums :: [integer()]) -> integer().\nmax_score(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-score nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1830",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nIn this problem, we have an array of size $\\text{2 * n}$, and we perform $\\text{n}$ operations, in each operation, we choose two numbers $\\text{x}$ and $\\text{y}$ and then we receive a score of $\\text{i * gcd(x, y)}$, where $\\text{i}$ is the current operation number, and remove these two numbers from our array. We need to maximize the sum of scores at the end.\n\n---\n\n### Approach 1: DP with Bitmasking (Recursive)\n\n#### Intuition   \n\nThe problem can be solved by using a backtracking approach, we can try forming all cases of all possible pairs of elements, generating the total score in each case, and selecting the one with the maximum score. \n\n![img1](../Figures/1799/Slide1.PNG)\n\nWe can write a recursive function `backtrack()` which generates all possibilities by picking two elements and recursively finding the answer for the remaining array after discarding the two chosen elements. We break the current **bigger problem into smaller similar sub-problems**.  \n\n```python\ndef backtrack(array) -> int:\n    for element1 in array:\n        for element2 in array:\n            # get the current score for pair (element1, element2)\n            # remove both elements from the array and get the remaining array score \n            # put the elements back in the array and try other elements, i.e. BACKTRACK\n```\n\nThis is a brute-force approach. We can implement some optimizations.\n\n\nNow, say we have an array of eight elements $\\text{[a, b, c, d, e, f, g, h]}$. Consider two cases.   \n- In case 1, we picked pairs $\\text{(c, d)}$ and $\\text{(b, e)}$, and we are left to find out the answer of the array $\\text{[a, f, g, h]}$.\n- In case 2, we picked pairs $\\text{(b, c)}$ and $\\text{(d, e)}$, and we are left to find out the answer of the array $\\text{[a, f, g, h]}$.\n\nIn both cases, we can see that the sub-problem $\\text{[a, f, g, h]}$ needs to be calculated, thus we can **memoize the results** to save computation time whenever a sub-problem is repeated.\n\n![img2](../Figures/1799/Slide2.PNG)\n\n\nNow, we know that the state of the current sub-problem depends on the remaining elements of the array. So we need to memoize the result based on this state. An easy way to implement this is using **bitmasking**.\n\nWe can keep a boolean array, and we mark picked numbers in this array. \nBut instead of using an array, we can achieve the same functionality using an integer.  \n\nAs integers have $32$ bits, each bit can be $0$ or $1$. We can use these bits to represent if an element of our array is picked or not.   \nIn an integer number (say $\\text{mask}$) if the bit at position $\\text{i}$ is $0$, it means the array element at the $\\text{i}^{th}$ index is not picked otherwise if it's $1$ it means the element was picked earlier.\n\n**Note:** If number of elements in the `nums` array will exceed $32$ then we will not be able to use this method with a 32 bit integer.\n\n\nSo we can map the `mask` (current state) with the result, using a hashmap or an array, `memo`.  \nHere, the `mask`'s value will vary from $0$ (no element is picked) to $2^{\\text{nums array size}} - 1$ (i.e. $111111...11$ in binary, all elements are picked).   \nThus, the `memo` array's size will be $2^{\\text{nums array size}} = 2^{2n}$.\n\n\n\n#### Algorithm\n\n1. Create a function `backtrack` which takes the `nums` array, `mask` and `pairsPicked` integers, and `memo` array as arguments:\n    - If we picked all elements from the `nums` array, then we return $0$ from here as no score can be received now.\n    - If we had already solved the same sub-problem earlier, i.e. `memo[mask] != -1`, then we return the stored result from the `memo` array.\n    - Otherwise, initialize `maxScore` as `0`.\n    - Using two nested for loops we iterate on each pair of numbers pointed by `firstIndex` and `secondIndex` in the `nums` array. We check if the bit of `mask` at these indices is `0` to make sure those numbers were not picked earlier.\n        - We mark them as picked in `newMask`, calculate the current score `currScore`, and find the score of the remaining numbers `remainingScore` recursively passing `newMask` in its parameter.\n        - If the `maxScore` is smaller than `currScore + remainingScore`, we update `maxScore` with it.\n        - At the end of the loops, we discard the picked numbers and reset the `mask` to its previous value (i.e. we are backtracking).\n    - In the end, we store the result of the current sub-problem in the `memo` array and return the result `maxScore`.\n2. Create a `memo` array of size $2^{2 n}$ and initialize with `-1`.\n3. Call the `backtrack` function with `mask = 0` and `pairsPicked = 0` to denote no element is initially picked and return the result.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/JYrCBwq9/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"JYrCBwq9\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $m = 2 * n$ is the number of elements, and $A$ is the maximum value in the `nums` array.   \nThe maximum value of $A$ can be $10^6$.\n\n* Time complexity: $$O(2^{2n} \\cdot (2n)^2 \\cdot \\log A) = O(4^n \\cdot n^2 \\cdot \\log A)$$   \n    - We make exponential amount of calls to `backtrack` function, but as only $2^{m}$ unique states of `mask` are possible, due to memoization, we will only evaluate $2^{m}$ calls of the function (in other calls we directly return stored result).\n    - In each `backtrack` function call we iterate on all pairs using a nested for loop which will take $O(m^2)$ time, and for each pair, we perform a gcd operation which will take at most $O(\\log A)$ time.  So, we take $O(m^2 \\cdot \\log A) $ time in each function call.  \n   - Thus, overall we take $O(2^{m} \\cdot m^2 \\cdot \\log A)$ time.\n\n> **Note:** A better upper bound for the time complexity might exist for this approach, but this analysis is sufficient during the limited time of an interview setting.\n\n* Space complexity: $$O(n + 2^{2n}) = O(4^n)$$\n    - The recursive stack will take at most $O(n)$ space at any time. \n    - We store the results of all possible states in the `memo` array, and a total of $2^{m} = 2^{2n}$ states are possible.\n    - Thus, we use $O(n + 2^{2n}) = O(4^n)$ space.\n\n<br/>\n\n---\n\n### Approach 2: DP with Bitmasking (Iterative)\n\n#### Intuition  \n\nThe previous approach can also be implemented iteratively.\n\nWe keep one integer variable `state` which will represent all the states of all possible sub-problems.  \nAlso, let's keep a `dp` array, where `dp[i]` will store the maximum score we can get after we have picked elements represented by `i` (in binary).  \n\nAs we can't get more score after picking all the numbers.    \nThus, our base case will be: $\\text{dp[finalMask] = 0}$, where $\\text{finalMask = 1111...111}$ (in binary).\n\n\nWhen we are at a sub-problem $\\text{state = X}$ and we choose a pair at indices $\\text{(i, j)}$.  \nThen the current state's score will be, the maximum score we can get with the remaining numbers and the current score, i.e.  \n\n> $\\text{dp[state] = dp[stateAfterPickingCurrPair] + operationNumber * gcd(nums[i], nums[j])}$,  \n\nwhere, $\\text{stateAfterPickingCurrPair = X | (1 << i) | (1 << j)}$ (the new mask will always be greater than the current mask, this hints we need to find the result for the bigger mask first).  \nand, $\\text{operationNumber}$ will be one more than the number of pairs we already picked, $\\text{(number of ones in mask / 2) + 1}$.\n\n\nTo sum up, in this approach, we will iterate on all possible `states` in decreasing order. The maximum score for the base state when all elements are picked is zero, otherwise, we iterate on all possible pairs of numbers we can choose, and using the chosen numbers and the score of the state after picking the current pair (as discussed above) we calculate the current state's maximum score.  \n\n**Note:** If any state represents we picked odd number of elements then we skip that state, it will not be a valid state for us as we always pick numbers in pairs.\n\n#### Algorithm\n\n1. Initialize variable: \n    - `maxStates` as $2^{2n}$, `finalMask` as `maxStates - 1`.\n    - an array `dp` of size `maxStates` to store the maximum score we can get after picking the remaining numbers represented by each possible state.\n2. Iterate on all possible states `state` from `finalMask` to `0` in decreasing order:\n    - If we have picked all numbers, we know we can't get more score as no number is remaining. Therefore, we set `dp[state]` to `0` and continue to the next iteration. Otherwise, we count the number of numbers already picked `numbersTaken` using built-in STL methods and calculate the number of pairs formed `pairsFormed` by dividing `numbersTaken` by `2`.\n    - If `numbersTaken` is odd, it means we have picked an odd number of numbers, and this state is not possible in our problem. Therefore, we continue to the next state.\n    - Using two nested for loops we iterate on each pair of remaining numbers pointed by `firstIndex` and `secondIndex` in the nums array. \n        - We check if the bit of state at these indices is `0` to make sure those numbers were not picked earlier.\n        - We mark them as picked in `stateAfterPickingCurrPair`, calculate the current score `currentScore` by multiplying the number of pairs formed after picking current pair, `pairsFormed + 1` by the gcd of these two picked numbers, and find the score of the remaining numbers `remainingScore` by looking up `dp[stateAfterPickingCurrPair]`.\n        - If the `dp[state]` is smaller than `currentScore + remainingScore`, we update `dp[state]` with it.\n3. Return the maximum score we can get by picking all numbers, which is stored in `dp[0]`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/VDkZ8zr7/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"VDkZ8zr7\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $m = 2 * n$ is the number of elements, and $A$ is the maximum value in the `nums` array.  \nThe maximum value of $A$ can be $10^6$.\n\n* Time complexity: $$O(2^{2n} \\cdot (2n)^2 \\cdot \\log A) = O(4^n \\cdot n^2 \\cdot \\log A)$$  \n    - We iterate over $2^{m}$ states.    \n    - And for each state, we find the number of set bits in the current `state` which in the worst case will take $O(\\log_2 (2^m - 1)) = O(\\log_2 2^m) = O(m)$ time, then we iterate on all pairs using a nested for loop which will take $O(m^2)$ time, and for each pair, we perform a gcd operation which will take at most $O(\\log A)$ time.  So, we take $O(m + m^2 \\cdot \\log A) = O(m^2 \\cdot \\log A)$ time.  \n   - Thus, overall we take $O(2^{m} \\cdot m^2 \\cdot \\log A)$ time.\n\n* Space complexity: $$O(2^{2n}) = O(4^n)$$\n    - We keep an additional array `dp` of size $2^{m} = 2^{2n}$ to store results for all possible states.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "questionId": "2038",
+  "questionFrontendId": "1926",
+  "title": "Nearest Exit from Entrance in Maze",
+  "titleSlug": "nearest-exit-from-entrance-in-maze",
+  "difficulty": "Medium",
+  "content": "<p>You are given an <code>m x n</code> matrix <code>maze</code> (<strong>0-indexed</strong>) with empty cells (represented as <code>&#39;.&#39;</code>) and walls (represented as <code>&#39;+&#39;</code>). You are also given the <code>entrance</code> of the maze, where <code>entrance = [entrance<sub>row</sub>, entrance<sub>col</sub>]</code> denotes the row and column of the cell you are initially standing at.</p>\n\n<p>In one step, you can move one cell <strong>up</strong>, <strong>down</strong>, <strong>left</strong>, or <strong>right</strong>. You cannot step into a cell with a wall, and you cannot step outside the maze. Your goal is to find the <strong>nearest exit</strong> from the <code>entrance</code>. An <strong>exit</strong> is defined as an <strong>empty cell</strong> that is at the <strong>border</strong> of the <code>maze</code>. The <code>entrance</code> <strong>does not count</strong> as an exit.</p>\n\n<p>Return <em>the <strong>number of steps</strong> in the shortest path from the </em><code>entrance</code><em> to the nearest exit, or </em><code>-1</code><em> if no such path exists</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/06/04/nearest1-grid.jpg\" style=\"width: 333px; height: 253px;\" />\n<pre>\n<strong>Input:</strong> maze = [[&quot;+&quot;,&quot;+&quot;,&quot;.&quot;,&quot;+&quot;],[&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;+&quot;],[&quot;+&quot;,&quot;+&quot;,&quot;+&quot;,&quot;.&quot;]], entrance = [1,2]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> There are 3 exits in this maze at [1,0], [0,2], and [2,3].\nInitially, you are at the entrance cell [1,2].\n- You can reach [1,0] by moving 2 steps left.\n- You can reach [0,2] by moving 1 step up.\nIt is impossible to reach [2,3] from the entrance.\nThus, the nearest exit is [0,2], which is 1 step away.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/06/04/nearesr2-grid.jpg\" style=\"width: 253px; height: 253px;\" />\n<pre>\n<strong>Input:</strong> maze = [[&quot;+&quot;,&quot;+&quot;,&quot;+&quot;],[&quot;.&quot;,&quot;.&quot;,&quot;.&quot;],[&quot;+&quot;,&quot;+&quot;,&quot;+&quot;]], entrance = [1,0]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> There is 1 exit in this maze at [1,2].\n[1,0] does not count as an exit since it is the entrance cell.\nInitially, you are at the entrance cell [1,0].\n- You can reach [1,2] by moving 2 steps right.\nThus, the nearest exit is [1,2], which is 2 steps away.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/06/04/nearest3-grid.jpg\" style=\"width: 173px; height: 93px;\" />\n<pre>\n<strong>Input:</strong> maze = [[&quot;.&quot;,&quot;+&quot;]], entrance = [0,0]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> There are no exits in this maze.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>maze.length == m</code></li>\n\t<li><code>maze[i].length == n</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 100</code></li>\n\t<li><code>maze[i][j]</code> is either <code>&#39;.&#39;</code> or <code>&#39;+&#39;</code>.</li>\n\t<li><code>entrance.length == 2</code></li>\n\t<li><code>0 &lt;= entrance<sub>row</sub> &lt; m</code></li>\n\t<li><code>0 &lt;= entrance<sub>col</sub> &lt; n</code></li>\n\t<li><code>entrance</code> will always be an empty cell.</li>\n</ul>\n",
+  "hints": [
+    "Which type of traversal lets you find the distance from a point?",
+    "Try using a Breadth First Search."
+  ],
+  "metaData": "{\n  \"name\": \"nearestExit\",\n  \"params\": [\n    {\n      \"name\": \"maze\",\n      \"type\": \"character[][]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"entrance\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"275.6K\", \"totalSubmission\": \"569.2K\", \"totalAcceptedRaw\": 275641, \"totalSubmissionRaw\": 569219, \"acRate\": \"48.4%\"}",
+  "likes": 2628,
+  "dislikes": 128,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[\"+\",\"+\",\".\",\"+\"],[\".\",\".\",\".\",\"+\"],[\"+\",\"+\",\"+\",\".\"]]\n[1,2]",
+    "[[\"+\",\"+\",\"+\"],[\".\",\".\",\".\"],[\"+\",\"+\",\"+\"]]\n[1,0]",
+    "[[\".\",\"+\"]]\n[0,0]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"ebay\", \"name\": \"eBay\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int nearestExit(vector<vector<char>>& maze, vector<int>& entrance) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int nearestExit(char[][] maze, int[] entrance) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def nearestExit(self, maze: List[List[str]], entrance: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def nearestExit(self, maze, entrance):\n        \"\"\"\n        :type maze: List[List[str]]\n        :type entrance: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {character[][]} maze\n * @param {number[]} entrance\n * @return {number}\n */\nvar nearestExit = function(maze, entrance) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function nearestExit(maze: string[][], entrance: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NearestExit(char[][] maze, int[] entrance) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int nearestExit(char** maze, int mazeSize, int* mazeColSize, int* entrance, int entranceSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func nearestExit(maze [][]byte, entrance []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun nearestExit(maze: Array<CharArray>, entrance: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func nearestExit(_ maze: [[Character]], _ entrance: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn nearest_exit(maze: Vec<Vec<char>>, entrance: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Character[][]} maze\n# @param {Integer[]} entrance\n# @return {Integer}\ndef nearest_exit(maze, entrance)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[][] $maze\n     * @param Integer[] $entrance\n     * @return Integer\n     */\n    function nearestExit($maze, $entrance) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int nearestExit(List<List<String>> maze, List<int> entrance) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def nearestExit(maze: Array[Array[Char]], entrance: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec nearest_exit(maze :: [[char]], entrance :: [integer]) :: integer\n  def nearest_exit(maze, entrance) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec nearest_exit(Maze :: [[char()]], Entrance :: [integer()]) -> integer().\nnearest_exit(Maze, Entrance) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (nearest-exit maze entrance)\n  (-> (listof (listof char?)) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1571",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nIn this problem, we are given a matrix `maze` that represents a maze of walls and empty cells. We start from the starting point `entrance` and want to reach the exit of this maze. \n\nAn exit is an empty cell located at the border of `maze`.\n\n![img](../Figures/1926/1926-ex.png)\n\nAs shown in the picture above, the cells colored in green are **exits** because they are empty and at the border of `maze`. Note that the cell `(1, 0)` in example 2 is not an exit because it is an **entrance**: entrance does not count as an exit.\n\nHere our task is to find out the number of steps to the nearest exit in the given `maze`. \n\n(In the first example above, we move up by 1 step and reach an exit, so the number of steps is $$1$$, while in the second example we need to move two cells right to reach the only exit, thus the number of steps is $$2$$.)\n\n---\n\n### Approach: Breadth First Search (BFS)\n\n#### Intuition   \n\nThis problem is about finding the shortest path in a matrix, thus Breadth First Search (BFS) is a promising method.\n\n> Why BFS over Depth First Search (DFS) for this problem?\n\nThe reason is that DFS is not guaranteed to find the shortest path, as it will explore the matrix as much as possible before moving on to another branch. As shown in the picture below, we may explore the matrix along the green or orange paths first, but these are not the shortest path. \n\nIn BFS, however, we explore cells by the order of their distance from the starting position, so whenever we reach an exit cell, we are guaranteed that it is the closest exit! \n\n![img](../Figures/1926/1926-ex_2.png)\n\nIn BFS, we explore cells in the order of their distance from the starting position. We will first visit the cell with a distance of $$0$$, then move on to all the cells with a distance of $$1$$, then move on to all the cells with a distance of $$2$$, and so forth.\n\n![img](../Figures/1926/1926-ex_3.png)\n\nWe use a queue as the container to store all the cells to be visited. Since the operation on a queue is done in First In, First Out (FIFO) order, it allows us to explore all the cells with distance `d` which we previously stored, before moving on to cells with larger distance `d + 1`!\n\n\n> How do we prevent revisiting the same cells?\n\nUpon finding an unvisited neighbor cell, we mark it as visited before adding it to the queue, and we skip these visited cells during further searches. Thus, each empty cell will be added to the queue at most once. (Since the input matrix `maze` use different characters to separate empty cells (`.`) and walls (`+`), we can take advantage of this by marking cells to be visited as `+`.)\n\n\nLet's take a look at the following slides as an example:\n\n!?!../Documents/1926/s1.json:601,301!?!\n\n<br>\n\n#### Algorithm\n\n1) Initialize an empty queue `queue` to store all the nodes to be visited.\n2) Add `entrance` and its distance $$0$$ to `queue` and mark `entrance` as visited.\n3) While we don't reach an exit and `queue` still has cells, pop the first cell from `queue`. Suppose its distance from `entrance` is `curr_distance`. We check its neighboring cells in all four directions, if it has an unvisited neighbor cell:\n    - If this neighbor cell is an exit, return its distance from the starting position, `curr_distance + 1`, as the nearest distance.\n    - Otherwise, we mark it as visited, and add it to `queue` along with its distance `curr_distance + 1`.\n4) If we finish the iteration and no exit is found, return -1.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/nW7tgrUd/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"nW7tgrUd\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$m, n$$ be the size of the input matrix `maze`.\n\n* Time complexity: $$O(m \\cdot n)$$\n\n    - For each visited cell, we add it to `queue` and pop it from `queue` once, which takes constant time as the operation on queue requires $$O(1)$$ time.\n    - For each cell in `queue`, we mark it as visited in `maze`, and check if it has any unvisited neighbors in all four directions. This also takes constant time.\n    - In the worst-case scenario, we may have to visit $$O(m \\cdot n)$$ cells before the iteration stops.\n    - To sum up, the overall time complexity is $$O(m \\cdot n)$$.\n    \n\n* Space complexity: $$O(max(m, n))$$\n\n    - We modify the input matrix `maze` in-place to mark each visited cell, it requires constant space.\n    - We use a queue `queue` to store the cells to be visited. In the worst-case scenario, there may be $$O(m + n)$$ cells stored in `queue`. \n    - The space complexity is $$O(m + n) + O(max(m, n))$$.\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

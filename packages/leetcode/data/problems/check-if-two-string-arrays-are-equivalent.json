@@ -1,0 +1,137 @@
+{
+  "questionId": "1781",
+  "questionFrontendId": "1662",
+  "title": "Check If Two String Arrays are Equivalent",
+  "titleSlug": "check-if-two-string-arrays-are-equivalent",
+  "difficulty": "Easy",
+  "content": "<p>Given two string arrays <code>word1</code> and <code>word2</code>, return<em> </em><code>true</code><em> if the two arrays <strong>represent</strong> the same string, and </em><code>false</code><em> otherwise.</em></p>\n\n<p>A string is <strong>represented</strong> by an array if the array elements concatenated <strong>in order</strong> forms the string.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> word1 = [&quot;ab&quot;, &quot;c&quot;], word2 = [&quot;a&quot;, &quot;bc&quot;]\n<strong>Output:</strong> true\n<strong>Explanation:</strong>\nword1 represents string &quot;ab&quot; + &quot;c&quot; -&gt; &quot;abc&quot;\nword2 represents string &quot;a&quot; + &quot;bc&quot; -&gt; &quot;abc&quot;\nThe strings are the same, so return true.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> word1 = [&quot;a&quot;, &quot;cb&quot;], word2 = [&quot;ab&quot;, &quot;c&quot;]\n<strong>Output:</strong> false\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> word1  = [&quot;abc&quot;, &quot;d&quot;, &quot;defg&quot;], word2 = [&quot;abcddefg&quot;]\n<strong>Output:</strong> true\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= word1.length, word2.length &lt;= 10<sup>3</sup></code></li>\n\t<li><code>1 &lt;= word1[i].length, word2[i].length &lt;= 10<sup>3</sup></code></li>\n\t<li><code>1 &lt;= sum(word1[i].length), sum(word2[i].length) &lt;= 10<sup>3</sup></code></li>\n\t<li><code>word1[i]</code> and <code>word2[i]</code> consist of lowercase letters.</li>\n</ul>\n",
+  "hints": [
+    "Concatenate all strings in the first array into a single string in the given order, the same for the second array.",
+    "Both arrays represent the same string if and only if the generated strings are the same."
+  ],
+  "metaData": "{\n  \"name\": \"arrayStringsAreEqual\",\n  \"params\": [\n    {\n      \"name\": \"word1\",\n      \"type\": \"string[]\"\n    },\n    {\n      \"type\": \"string[]\",\n      \"name\": \"word2\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"609.9K\", \"totalSubmission\": \"708.6K\", \"totalAcceptedRaw\": 609916, \"totalSubmissionRaw\": 708589, \"acRate\": \"86.1%\"}",
+  "likes": 3161,
+  "dislikes": 205,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Check if an Original String Exists Given Two Encoded Strings\", \"titleSlug\": \"check-if-an-original-string-exists-given-two-encoded-strings\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"ab\", \"c\"]\n[\"a\", \"bc\"]",
+    "[\"a\", \"cb\"]\n[\"ab\", \"c\"]",
+    "[\"abc\", \"d\", \"defg\"]\n[\"abcddefg\"]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool arrayStringsAreEqual(vector<string>& word1, vector<string>& word2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean arrayStringsAreEqual(String[] word1, String[] word2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def arrayStringsAreEqual(self, word1: List[str], word2: List[str]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def arrayStringsAreEqual(self, word1, word2):\n        \"\"\"\n        :type word1: List[str]\n        :type word2: List[str]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} word1\n * @param {string[]} word2\n * @return {boolean}\n */\nvar arrayStringsAreEqual = function(word1, word2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function arrayStringsAreEqual(word1: string[], word2: string[]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool ArrayStringsAreEqual(string[] word1, string[] word2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool arrayStringsAreEqual(char** word1, int word1Size, char** word2, int word2Size) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func arrayStringsAreEqual(word1 []string, word2 []string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun arrayStringsAreEqual(word1: Array<String>, word2: Array<String>): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func arrayStringsAreEqual(_ word1: [String], _ word2: [String]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn array_strings_are_equal(word1: Vec<String>, word2: Vec<String>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} word1\n# @param {String[]} word2\n# @return {Boolean}\ndef array_strings_are_equal(word1, word2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $word1\n     * @param String[] $word2\n     * @return Boolean\n     */\n    function arrayStringsAreEqual($word1, $word2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool arrayStringsAreEqual(List<String> word1, List<String> word2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def arrayStringsAreEqual(word1: Array[String], word2: Array[String]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec array_strings_are_equal(word1 :: [String.t], word2 :: [String.t]) :: boolean\n  def array_strings_are_equal(word1, word2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec array_strings_are_equal(Word1 :: [unicode:unicode_binary()], Word2 :: [unicode:unicode_binary()]) -> boolean().\narray_strings_are_equal(Word1, Word2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (array-strings-are-equal word1 word2)\n  (-> (listof string?) (listof string?) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1595",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n#### Overview\n\nIt's a fairly basic problem and we have many different ways to solve it.\n\nBelow, we will discuss five approaches: *Connecting*, *Splitting*, *No Pretreatment*, *Splitting One*, and *Connecting One*.\n\nGenerally, we recommend *Connecting* and *Splitting* since they are easy to implement. We also provide other solutions for exploring possibilities. The ideas of those solutions are similar, but their implementations are different.\n\n---\n\n#### Approach 1: Connecting\n\n**Intuition**\n\nSince many programming languages have built-in methods to compare two strings, it is natural to concatenate `word1` and `word2` into whole strings, and then compare them.\n\n![Figure 1.1](../Documents/5605/5605_1_1.drawio.svg)\n\n**Algorithm**\n\n*Step 1:* Build concatenated strings for `word1` and `word2`.\n\n*Step 2:* Check if the strings are the same.\n\n> Challenge: Can you implement the code yourself without seeing our implementations?\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/mciMshEd/shared\" frameBorder=\"0\" width=\"100%\" height=\"191\" name=\"mciMshEd\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the maximum of the number of all characters in `word1` and the number of all characters in `word2`.\n\n* Time Complexity: $$\\mathcal{O}(N)$$, since we need to iterate over all characters in `word1` and `word2` to build the new strings.\n\n* Space Complexity: $$\\mathcal{O}(N)$$, since we need extra $$\\mathcal{O}(N)$$ space to store the new built strings.\n\n---\n\n#### Approach 2: Splitting\n\n**Intuition**\n\nIf you do not like concatenating, we can split them into single characters, and then use for-loop to compare them.\n\n![Figure 2.1](../Documents/5605/5605_2_1.drawio.svg)\n\n**Algorithm**\n\n*Step 1:* Build lists of split characters for `word1` and `word2`.\n\n*Step 2:* Check if the lists are the same.\n\n> Challenge: Can you implement the code yourself without seeing our implementations?\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/dmFLWnNT/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"dmFLWnNT\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the maximum of the number of all characters in `word1` and the number of all characters in `word2`.\n\n* Time Complexity: $$\\mathcal{O}(N)$$, since we need to iterate over all characters in `word1` and `word2` to split them in the list.\n\n* Space Complexity: $$\\mathcal{O}(N)$$, since we need extra $$\\mathcal{O}(N)$$ space to store the lists.\n\n---\n\n#### Approach 3: No Pretreatment\n\n**Intuition**\n\nBoth approaches above require some preprocessing on `word1` or `word2`. Can we compare them directly?\n\nOf course. We can iterate over each character in one string array and compare the corresponding character in the other string array.\n\nTo achieve this, we need some index to track the character in the other string array.\n\nHere we use two indexes: `stringIndex ` and `characterIndex `. `stringIndex` points to the index of the string in the string array, and `characterIndex` represents the index of the character in the string.\n\nFor example:\n\n![Figure 3.1](../Documents/5605/5605_3_1.drawio.svg)\n\n**Algorithm**\n\n*Step 1:* Iterate over `word1` and check if the corresponding character in `word2` is the same.\n\n> Note: You can switch the position of `word1` and `word2`.\n\n> Challenge: Can you implement the code yourself without seeing our implementations?\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/YTadJ8N5/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"YTadJ8N5\"></iframe>\n\n> Note: We precalculate the lengths of strings in `word2` to prevent re-calculate it during the iteration. However, some built-in data structures automatically maintain the lengths as integers (such as list in Python). In this case, you can skip this precalculation. We here explicitly write the precalculation to emphasize it.\n> \n\n**Complexity Analysis**\n\nLet $$N$$ be the number of all characters in `word1`, and $$M$$ be the length of `word2`.\n\n* Time Complexity: $$\\mathcal{O}(N)$$, since we need to iterate over `word1` to check if characters match.\n\n* Space Complexity: $$\\mathcal{O}(M)$$, since we need extra $$\\mathcal{O}(M)$$ space to store the lengths of strings in `word2`. You can save this space if the data structure automatically stores the lengths.\n\n---\n\n#### Approach 4: Splitting One\n\n**Intuition**\n\nThe tracking method in *Approach 3* seems to be a little complicated: we need two indexes! Can we simplify it? \n\nYes! If we split the string array into a character array, then only one index is needed.\n\n![Figure 4.1](../Documents/5605/5605_4_1.drawio.svg)\n\n**Algorithm**\n\n*Step 1:* Build lists of split characters for `word2`.\n\n*Step 2:* Iterate over `word1` and check if the corresponding character in `word2` is the same.\n\n> Note: You can switch the position of `word1` and `word2`.\n\n> Challenge: Can you implement the code yourself without seeing our implementations?\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/5eGMJqTZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"5eGMJqTZ\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the maximum of the number of all characters in `word1` and the number of all characters in `word2`.\n\n* Time Complexity: $$\\mathcal{O}(N)$$, since we need to iterate over `word1` to check if characters match.\n\n* Space Complexity: $$\\mathcal{O}(N)$$, since we need extra $$\\mathcal{O}(N)$$ space to store the list in the worst case.\n\n---\n\n#### Approach 5: Connecting One\n\n**Intuition**\n\nOf course, instead of splitting in *Approach 4*, we can connect them into a whole array. In this case also, we only need one index.\n\n![Figure 5.1](../Documents/5605/5605_5_1.drawio.svg)\n\n**Algorithm**\n\n*Step 1:* Build concatenated strings for `word2`.\n\n*Step 2:* Iterate over `word1` and check if the corresponding character in `word2` is the same.\n\n> Note: You can switch the position of `word1` and `word2`.\n\n> Challenge: Can you implement the code yourself without seeing our implementations?\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/X38x5sEw/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"X38x5sEw\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the maximum of the number of all characters in `word1` and the number of all characters in `word2`.\n\n* Time Complexity: $$\\mathcal{O}(N)$$, since we need to iterate over `word1` to check if characters match.\n\n* Space Complexity: $$\\mathcal{O}(N)$$, since we need extra $$\\mathcal{O}(N)$$ space to store the new string in the worst case.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

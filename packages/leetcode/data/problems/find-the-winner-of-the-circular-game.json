@@ -1,0 +1,149 @@
+{
+  "questionId": "1951",
+  "questionFrontendId": "1823",
+  "title": "Find the Winner of the Circular Game",
+  "titleSlug": "find-the-winner-of-the-circular-game",
+  "difficulty": "Medium",
+  "content": "<p>There are <code>n</code> friends that are playing a game. The friends are sitting in a circle and are numbered from <code>1</code> to <code>n</code> in <strong>clockwise order</strong>. More formally, moving clockwise from the <code>i<sup>th</sup></code> friend brings you to the <code>(i+1)<sup>th</sup></code> friend for <code>1 &lt;= i &lt; n</code>, and moving clockwise from the <code>n<sup>th</sup></code> friend brings you to the <code>1<sup>st</sup></code> friend.</p>\n\n<p>The rules of the game are as follows:</p>\n\n<ol>\n\t<li><strong>Start</strong> at the <code>1<sup>st</sup></code> friend.</li>\n\t<li>Count the next <code>k</code> friends in the clockwise direction <strong>including</strong> the friend you started at. The counting wraps around the circle and may count some friends more than once.</li>\n\t<li>The last friend you counted leaves the circle and loses the game.</li>\n\t<li>If there is still more than one friend in the circle, go back to step <code>2</code> <strong>starting</strong> from the friend <strong>immediately clockwise</strong> of the friend who just lost and repeat.</li>\n\t<li>Else, the last friend in the circle wins the game.</li>\n</ol>\n\n<p>Given the number of friends, <code>n</code>, and an integer <code>k</code>, return <em>the winner of the game</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/03/25/ic234-q2-ex11.png\" style=\"width: 500px; height: 345px;\" />\n<pre>\n<strong>Input:</strong> n = 5, k = 2\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> Here are the steps of the game:\n1) Start at friend 1.\n2) Count 2 friends clockwise, which are friends 1 and 2.\n3) Friend 2 leaves the circle. Next start is friend 3.\n4) Count 2 friends clockwise, which are friends 3 and 4.\n5) Friend 4 leaves the circle. Next start is friend 5.\n6) Count 2 friends clockwise, which are friends 5 and 1.\n7) Friend 1 leaves the circle. Next start is friend 3.\n8) Count 2 friends clockwise, which are friends 3 and 5.\n9) Friend 5 leaves the circle. Only friend 3 is left, so they are the winner.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 6, k = 5\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The friends leave in this order: 5, 4, 6, 2, 3. The winner is friend 1.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= k &lt;= n &lt;= 500</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong></p>\n\n<p>Could you solve this problem in linear time with constant space?</p>\n",
+  "hints": [
+    "Simulate the process.",
+    "Maintain in a circular list the people who are still in the circle and the current person you are standing at.",
+    "In each turn, count k people and remove the last person from the list."
+  ],
+  "metaData": "{\n  \"name\": \"findTheWinner\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"373.2K\", \"totalSubmission\": \"453.9K\", \"totalAcceptedRaw\": 373233, \"totalSubmissionRaw\": 453852, \"acRate\": \"82.2%\"}",
+  "likes": 4101,
+  "dislikes": 128,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "5\n2",
+    "6\n5"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 6, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 21, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"sofi\", \"name\": \"SoFi\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Recursion",
+      "slug": "recursion"
+    },
+    {
+      "name": "Queue",
+      "slug": "queue"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findTheWinner(int n, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findTheWinner(int n, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findTheWinner(self, n: int, k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findTheWinner(self, n, k):\n        \"\"\"\n        :type n: int\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number} k\n * @return {number}\n */\nvar findTheWinner = function(n, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findTheWinner(n: number, k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindTheWinner(int n, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findTheWinner(int n, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findTheWinner(n int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findTheWinner(n: Int, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findTheWinner(_ n: Int, _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_the_winner(n: i32, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer} k\n# @return {Integer}\ndef find_the_winner(n, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer $k\n     * @return Integer\n     */\n    function findTheWinner($n, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findTheWinner(int n, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findTheWinner(n: Int, k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_the_winner(n :: integer, k :: integer) :: integer\n  def find_the_winner(n, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_the_winner(N :: integer(), K :: integer()) -> integer().\nfind_the_winner(N, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-the-winner n k)\n  (-> exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2365",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nIn this circular game, `n` friends numbered from `1` to `n` stand in a circle. In the first round, we start counting from friend 1 and eliminate the `k`-th friend. In each subsequent round, counting starts from the friend immediately clockwise to the one just eliminated, and the `k`-th friend is eliminated again. This process repeats until only one person remains.\n\nA straightforward approach for turn-based games can be to simulate the game's rules. Here, our algorithm can eliminate the `k`-th friend in each iteration. However, optimizations are often possible, as in this problem, where we can reduce space and time complexity. \n\nWe will start with a simulation approach and then explore more efficient methods that avoid manually following the game's rules.\n\n> Note: This is famously known as the Josephus Problem.\n\n---\n\n### Approach 1: Simulation with List\n\n### Intuition\n\nTo simulate this elimination game, we can start by representing the `n` friends using a list data structure. Initially, this list contains all the friends labeled from `1` to `n`. The idea is to repeatedly count to the `k`-th friend in the list and remove them from the game. By continually removing every `k`-th friend and adjusting our starting point after each removal, we can narrow down the group until only one friend remains. This final remaining friend is the winner of the game.\n\n### Algorithm\n\n1. Initialize a list of size `n`, representing `n` friends labeled from `1` to `n`\n2. Maintain a `startIndex` variable that keeps track of the position from where counting begins, initially set to 0.\n3. While more than 1 friend is remaining:\n    * Calculate the new index of the next friend to remove as `(startIndex + k - 1) % numFriendsRemaining`. We apply the modulus operator to ensure counting wraps around the circle.\n    * Remove the friend at the calculated index\n    * Update `startIndex` to the removed index\n4. Return the label of the last remaining friend \n\n### Implementation \n\n<iframe src=\"https://leetcode.com/playground/P2pXifyP/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"P2pXifyP\"></iframe>\n\n\n### Complexity Analysis\n\nLet $n$ be the initial size of the friend circle.\n\n* Time Complexity: $O(n^2)$\n\n    Considering the `pop` operation inside the loop, the time complexity for each iteration can be $O(n)$ in the worst case (when `pop` shifts all subsequent elements). Since we might potentially perform $n-1$ `pop` operations (removing `n-1` friends), the overall worst-case time complexity is $O(n^2)$.\n\n* Space Complexity: $O(n)$\n\n    The space complexity of the algorithm is primarily dominated by the `circle` list, which stores `n` integers representing the friends. Therefore, the space complexity is $O(n)$. Other variables like `startIndex` and `removalIndex` are integers and require constant additional space, $O(1)$.\n\n### Approach 2: Simulation with Queue\n\n### Intuition\n\nInstead of using a list to manage eliminations (which can be a costly $O(n)$ operation), we can optimize the elimination process by using a queue. In a queue, removing the first element is done in $O(1)$ time. Initially, we fill the queue with friends labeled from `1` to `n`. The key insight is how eliminations can be handled at each round. In each round, we simulate the process by rotating the queue `k-1` times. This action effectively moves the `k`-th friend to the front of the queue, ready for removal. Once positioned, removing this front element simulates eliminating that friend from the game. This rotation and removal process continues until only one friend remains in the queue, who is then declared the winner of the game.\n\nWith the use of a queue, the cost of the pop operation, which was $O(n)$ in the list approach, is now reduced to $O(1)$. The traversal operation remains the only operation with linear time complexity.\n\n### Algorithm\n\n1. Initialize a queue of size `n`, where the elements are labeled 1 to `n`.\n2. While more than 1 friend is remaining\n    - Remove the next `k-1` friends and re-add them to the queue.\n    - Remove the next friend (the `k`-th friend that should be eliminated in the game)\n3. Return the value of the last friend remaining \n\n### Implementation \n\n<iframe src=\"https://leetcode.com/playground/nDy7g7me/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"nDy7g7me\"></iframe>\n\n\n### Complexity Analysis\n\nLet $n$ be the number of friends and $k$ be the step count for elimination.\n\n* Time Complexity: $O(n \\cdot k)$\n\n    The time complexity is $O(n \\cdot k)$ because each elimination cycle involves rotating the queue $k-1$ times, and this happens $n-1$ times.\n\n* Space Complexity: $O(n)$\n\n    The space complexity is $O(n)$ due to the queue storing all $n$ friends initially.\n\n### Approach 3: Recursion\n\n### Intuition\n\nThe game involves repetitively eliminating the `k`-th friend from a circle, shrinking the size of the circle at every turn. This suggests that we can break down the problem into smaller, similar subproblems.\n\nLet’s look at a smaller instance of the problem where n=4 and k=2. We'll track both the number and index of each friend in the circle.\n\nAt the start of the game, friend 0 is at the beginning of the circle, and each friend's number corresponds to their index (we'll use zero-based indexing for now and adjust to one-based indexing later as required by the problem):\n\n![Beginning of first turn](../Figures/1823/first_turn_start.png)\n\nIn the first round, we start our count at friend 0 and eliminate the k-th friend. With k=2, we eliminate friend 1 at index 1, leaving three friends in the circle. \n\n![First elimination](../Figures/1823/first_turn_elimination.png)\n\nFor the second round, we treat the friend immediately after friend 1 (friend 2) as the new starting point. The updated indices now appear as follows:\n\n![Beginning of second turn](../Figures/1823/second_turn_start.png)\n\nFrom this process, there are two key insights:\n\n1. The problem, initially dealing with a circle of `n` friends, now reduces to a subproblem with `n-1` friends\n2. In the new subproblem, friend indices shift by `-k`. For instance, friend 3 moves from index `3` to index `1` in the new circle.\n\nThese observations suggest a recurrence relation for a recursive solution. Let's define $f(n,k)$ as function that returns the index of the winning friend with a game of `n` friends and a step size of `k`. In our example above, $f(4,2)$ would yield the final answer.\n\nWe observed that after the first turn/elimination, our problem reduces to a smaller subproblem of $f(n-1, k)$. Accounting for the indexing offset discussed above, we can form the following relationship between $f(n,k)$ and $f(n-1,k)$:\n\n$$f(n, k) = (f(n-1, k) + k) \\bmod n$$\n\nWe add k to $f(n-1, k)$ to convert back to the original indexing of the circle of size `n` (we saw above how the new indexing on a circle of size `n-1` shifts the original indexing by `-k`). Like before, we mod this value by the size of the circle to account for cases where the offset wraps around to the start of the circle.\n\nThe base case is $f(1, k) = 0$, as the last remaining friend will always be at index `0`\n\n### Algorithm\n\n1. Define a `winnerHelper(int n, int k)` function where:\n    - If the base case is reached (`n == 1`), return `0`.\n    - Otherwise, return the recurrence relation expression: $(\\text{winnerHelper}(n-1, k) + k)  \\bmod  n$.\n2. Return the value of the last friend remaining.\n\n### Implementation \n\n<iframe src=\"https://leetcode.com/playground/E6BKmr6U/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"E6BKmr6U\"></iframe>\n\n\n### Complexity Analysis\n\nLet $n$ be the initial size of the friend circle.\n\n* Time Complexity: $O(n)$\n\n    The function makes $n$ recursive calls, each performing $O(1)$ operations (modulo and addition).\n\n* Space Complexity: $O(n)$\n\n    The space complexity is determined by the maximum depth of the recursion stack, which is $n$.\n\n### Approach 4: Iterative\n\n### Intuition\n\nWe can further leverage the recurrence relation we found earlier, but optimize it by eliminating the extra space overhead incurred by the recursive calls. To achieve this, we can start by solving the base case where `n = 1` and iteratively compute the position of the winner, building up to solving the solution for `n = N`. This iteration will efficiently compute the solution with no extra space needed.\n\n### Algorithm\n\n1. Initialize `ans` to 0, representing the answer for the base case `n = 1`\n2. Iterate through values of `n` from 2 to `N`:\n    - Compute the answer for the current `n` using the recurrence relation: `ans = (ans + k) % n`\n3. Return `ans + 1`\n\n\n### Implementation \n\n<iframe src=\"https://leetcode.com/playground/U32t5twS/shared\" frameBorder=\"0\" width=\"100%\" height=\"242\" name=\"U32t5twS\"></iframe>\n\n\n### Complexity Analysis\n\nLet $n$ be the initial size of the friend circle.\n\n* Time Complexity: $O(n)$\n\n    The loop runs $O(n)$ times, where each iteration involves a constant time calculation. Thus, the total time complexity is $O(n)$.\n\n* Space Complexity: $O(1)$\n\n    Unlike the recursive approach, no extra memory is needed to maintain a call stack. Furthermore, no auxiliary data structures are used. Thus, the space complexity is constant.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,133 @@
+{
+  "questionId": "2061",
+  "questionFrontendId": "1931",
+  "title": "Painting a Grid With Three Different Colors",
+  "titleSlug": "painting-a-grid-with-three-different-colors",
+  "difficulty": "Hard",
+  "content": "<p>You are given two integers <code>m</code> and <code>n</code>. Consider an <code>m x n</code> grid where each cell is initially white. You can paint each cell <strong>red</strong>, <strong>green</strong>, or <strong>blue</strong>. All cells <strong>must</strong> be painted.</p>\n\n<p>Return<em> the number of ways to color the grid with <strong>no two adjacent cells having the same color</strong></em>. Since the answer can be very large, return it <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/06/22/colorthegrid.png\" style=\"width: 200px; height: 50px;\" />\n<pre>\n<strong>Input:</strong> m = 1, n = 1\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The three possible colorings are shown in the image above.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/06/22/copy-of-colorthegrid.png\" style=\"width: 321px; height: 121px;\" />\n<pre>\n<strong>Input:</strong> m = 1, n = 2\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> The six possible colorings are shown in the image above.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> m = 5, n = 5\n<strong>Output:</strong> 580986\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= m &lt;= 5</code></li>\n\t<li><code>1 &lt;= n &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [
+    "Represent each colored column by a bitmask based on each cell color.",
+    "Use bitmasks DP with state (currentCell, prevColumn)."
+  ],
+  "metaData": "{\n  \"name\": \"colorTheGrid\",\n  \"params\": [\n    {\n      \"name\": \"m\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"n\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"75.6K\", \"totalSubmission\": \"97.9K\", \"totalAcceptedRaw\": 75617, \"totalSubmissionRaw\": 97911, \"acRate\": \"77.2%\"}",
+  "likes": 935,
+  "dislikes": 58,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Number of Ways to Paint N \\u00d7 3 Grid\", \"titleSlug\": \"number-of-ways-to-paint-n-3-grid\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "1\n1",
+    "1\n2",
+    "5\n5"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"intuit\", \"name\": \"Intuit\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int colorTheGrid(int m, int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int colorTheGrid(int m, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def colorTheGrid(self, m: int, n: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def colorTheGrid(self, m, n):\n        \"\"\"\n        :type m: int\n        :type n: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} m\n * @param {number} n\n * @return {number}\n */\nvar colorTheGrid = function(m, n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function colorTheGrid(m: number, n: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int ColorTheGrid(int m, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int colorTheGrid(int m, int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func colorTheGrid(m int, n int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun colorTheGrid(m: Int, n: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func colorTheGrid(_ m: Int, _ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn color_the_grid(m: i32, n: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} m\n# @param {Integer} n\n# @return {Integer}\ndef color_the_grid(m, n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $m\n     * @param Integer $n\n     * @return Integer\n     */\n    function colorTheGrid($m, $n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int colorTheGrid(int m, int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def colorTheGrid(m: Int, n: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec color_the_grid(m :: integer, n :: integer) :: integer\n  def color_the_grid(m, n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec color_the_grid(M :: integer(), N :: integer()) -> integer().\ncolor_the_grid(M, N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (color-the-grid m n)\n  (-> exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2755",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach: State Compression Dynamic Programming\n\n#### Hint\n\nTo ensure that the colors of any two adjacent cells are different, we need to guarantee the following:\n\n- Any two adjacent cells in the same row have different colors.\n\n- For adjacent rows, the colors of the cells in the same column are different.\n\nTherefore, we can proceed as follows:\n\n- First, use enumeration to find all valid coloring schemes for a single row.\n\n- Then, use dynamic programming to calculate the number of ways to color the entire $m \\times n$ grid.\n\nIn this problem, the maximum values of $m$ and $n$ are $5$ and $1000$, respectively. Since $m$ is smaller, we treat it as the row length and $n$ as the column length to make row enumeration feasible.\n\n#### Intuition\n\nWe begin by enumerating the number of ways to color a row.\n\nGiven the three available colors, red, green, and blue, we can represent them as $0$, $1$, and $2$. In this way, a coloring scheme corresponds to a ternary number of length $m$, with a decimal range of $[0, 3^m)$.\n\nThus, we can enumerate all integers in the range $[0, 3^m)$, convert them into ternary strings of length $m$, and check whether any two adjacent digits are different.\n\nNext, we use dynamic programming to compute the total number of coloring schemes. Let $f[i][\\textit{mask}]$ represent the number of ways to color rows $0$ through $i$, where the $i$-th row's coloring scheme corresponds to the ternary value $\\textit{mask}$. For the state transition, we consider all valid coloring schemes $\\textit{mask}'$ for the $(i - 1)$-th row:\n\n$$\nf[i][\\textit{mask}] = \\sum_{\\text{\\textit{mask} and \\textit{mask}' have different numbers on the same digit}} f[i-1][\\textit{mask}']\n$$\n\nAs long as the digits at corresponding positions in $\\textit{mask}$ and $\\textit{mask}'$ are different, the two rows can be adjacent, and we can perform the state transition.\n\nThe final answer is the sum of all $f[n - 1][\\textit{mask}]$ for $\\textit{mask} \\in [0, 3^m)$.\n\nThe base case shown above for the dynamic programming is based on the first row. When $i = 0$, the state $f[i - 1][..]$ is undefined, so we must handle it separately: if all adjacent digits in a given $\\textit{mask}$ differ, then we set $f[0][\\textit{mask}] = 1$; otherwise, $f[0][\\textit{mask}] = 0$.\n\nFor all other transitions, given a current $\\textit{mask}$, we need to find all $\\textit{mask}'$ from the previous row that satisfy the condition (i.e., no overlapping digits at the same positions). Since this can be expensive to compute repeatedly, we can preprocess all valid transitions ahead of time. The implementation code below reflects this optimization.\n\nIt’s also worth noting that since $f[i][..]$ only depends on $f[i - 1][..]$, we can use two one-dimensional arrays of length $3^m$ and alternate between them to save space.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/6LVhv3Lt/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"6LVhv3Lt\"></iframe>\n\n#### Complexity Analysis\n\n- Time complexity: $O(3^{2m} \\cdot n)$.\n\n    The time complexity of preprocessing $\\textit{mask}$ is $O(m \\cdot 3^m)$.\n    \n    The time complexity of preprocessing all valid $(\\textit{mask}, \\textit{mask}')$ pairs is $O(3^{2m})$.\n    \n    The time complexity of the dynamic programming step is $O(3^{2m} \\cdot n)$, which dominates the previous two in terms of asymptotic growth.\n\n- Space complexity: $O(3^{2m})$.\n\n    The space required to store all valid $\\textit{mask}$ values is $O(m \\cdot 3^m)$.\n    \n    The space required to store all valid $(\\textit{mask}, \\textit{mask}')$ pairs is $O(3^{2m})$, which is asymptotically larger than the others.\n    \n    The space required to store the dynamic programming states is $O(3^m)$.\n\n    However, it should be noted that in actual situations, when $m=5$, there are only 48 $\\textit{mask}$ that meet the requirements, which is much less than $3^m=324$; there are only 486 pairs of $(\\textit{mask}, \\textit{mask}')$ that meet the requirements, which is much less than $3^{2m}=59049$. Therefore, the actual running time of the algorithm will be faster.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

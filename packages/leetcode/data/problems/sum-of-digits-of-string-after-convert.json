@@ -1,0 +1,137 @@
+{
+  "questionId": "2076",
+  "questionFrontendId": "1945",
+  "title": "Sum of Digits of String After Convert",
+  "titleSlug": "sum-of-digits-of-string-after-convert",
+  "difficulty": "Easy",
+  "content": "<p>You are given a string <code>s</code> consisting of lowercase English letters, and an integer <code>k</code>. Your task is to <em>convert</em> the string into an integer by a special process, and then <em>transform</em> it by summing its digits repeatedly <code>k</code> times. More specifically, perform the following steps:</p>\n\n<ol>\n\t<li><strong>Convert</strong> <code>s</code> into an integer by replacing each letter with its position in the alphabet (i.e.&nbsp;replace <code>&#39;a&#39;</code> with <code>1</code>, <code>&#39;b&#39;</code> with <code>2</code>, ..., <code>&#39;z&#39;</code> with <code>26</code>).</li>\n\t<li><strong>T</strong><strong>ransform</strong> the integer by replacing it with the <strong>sum of its digits</strong>.</li>\n\t<li>Repeat the <strong>transform</strong> operation (step 2) <code>k</code><strong> times</strong> in total.</li>\n</ol>\n\n<p>For example, if <code>s = &quot;zbax&quot;</code> and <code>k = 2</code>, then the resulting integer would be <code>8</code> by the following operations:</p>\n\n<ol>\n\t<li><strong>Convert</strong>: <code>&quot;zbax&quot; ➝ &quot;(26)(2)(1)(24)&quot; ➝ &quot;262124&quot; ➝ 262124</code></li>\n\t<li><strong>Transform #1</strong>: <code>262124 ➝ 2 + 6 + 2 + 1 + 2 + 4 ➝ 17</code></li>\n\t<li><strong>Transform #2</strong>: <code>17 ➝ 1 + 7 ➝ 8</code></li>\n</ol>\n\n<p>Return the <strong>resulting</strong> <strong>integer</strong> after performing the <strong>operations</strong> described above.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;iiii&quot;, k = 1</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">36</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The operations are as follows:<br />\n- Convert: &quot;iiii&quot; ➝ &quot;(9)(9)(9)(9)&quot; ➝ &quot;9999&quot; ➝ 9999<br />\n- Transform #1: 9999 ➝ 9 + 9 + 9 + 9 ➝ 36<br />\nThus the resulting integer is 36.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;leetcode&quot;, k = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">6</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The operations are as follows:<br />\n- Convert: &quot;leetcode&quot; ➝ &quot;(12)(5)(5)(20)(3)(15)(4)(5)&quot; ➝ &quot;12552031545&quot; ➝ 12552031545<br />\n- Transform #1: 12552031545 ➝ 1 + 2 + 5 + 5 + 2 + 0 + 3 + 1 + 5 + 4 + 5 ➝ 33<br />\n- Transform #2: 33 ➝ 3 + 3 ➝ 6<br />\nThus the resulting integer is 6.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;zbax&quot;, k = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">8</span></p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= k &lt;= 10</code></li>\n\t<li><code>s</code> consists of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "First, let's note that after the first transform the value will be at most 100 * 10 which is not much",
+    "After The first transform, we can just do the rest of the transforms by brute force"
+  ],
+  "metaData": "{\n  \"name\": \"getLucky\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"236.9K\", \"totalSubmission\": \"316.8K\", \"totalAcceptedRaw\": 236937, \"totalSubmissionRaw\": 316816, \"acRate\": \"74.8%\"}",
+  "likes": 1200,
+  "dislikes": 104,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Happy Number\", \"titleSlug\": \"happy-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Add Digits\", \"titleSlug\": \"add-digits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Count Integers With Even Digit Sum\", \"titleSlug\": \"count-integers-with-even-digit-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum Element After Replacement With Digit Sum\", \"titleSlug\": \"minimum-element-after-replacement-with-digit-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"iiii\"\n1",
+    "\"leetcode\"\n2",
+    "\"zbax\"\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int getLucky(string s, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int getLucky(String s, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def getLucky(self, s: str, k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def getLucky(self, s, k):\n        \"\"\"\n        :type s: str\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {number} k\n * @return {number}\n */\nvar getLucky = function(s, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function getLucky(s: string, k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int GetLucky(string s, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int getLucky(char* s, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func getLucky(s string, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun getLucky(s: String, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func getLucky(_ s: String, _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn get_lucky(s: String, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {Integer} k\n# @return {Integer}\ndef get_lucky(s, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param Integer $k\n     * @return Integer\n     */\n    function getLucky($s, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int getLucky(String s, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def getLucky(s: String, k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec get_lucky(s :: String.t, k :: integer) :: integer\n  def get_lucky(s, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec get_lucky(S :: unicode:unicode_binary(), K :: integer()) -> integer().\nget_lucky(S, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (get-lucky s k)\n  (-> string? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2424",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: String Concatenation to Summation \n\n#### Intuition\n\nWe need to convert a given string into a sequence of integers and then repeatedly sum the digits of this sequence `k` times. The final result is the integer obtained after performing these operations.\n\nOne approach is to follow each step from the problem description literally:\n1. Convert each letter in the string `s` to its position in the alphabet: 'a' becomes 1, 'b' becomes 2, and so on.\n2. Concatenate these numbers to form a large string. For example, `\"zbax\"` becomes `\"262124\"`.\n3. Perform the transformation `k` times. Each transformation involves summing the digits of this large number.\n\nConvert the string to digits, sum them, and convert the result back to a string. Repeat this process for `k` transformations. Finally, convert the resulting string to an integer and return it. This method is straightforward but may be inefficient for very large numbers or high values of `k`.\n\n#### Algorithm \n\n- Initialize an empty string `numericString` to store the numerical representation of each character in `s`.\n\n- Iterate through each character `ch` in `s`:\n  - Convert `ch` to its corresponding numerical value (1 for 'a', 2 for 'b', etc.).\n  - Append this numerical value to `numericString`.\n\n- While `k` is greater than 0:\n  - Initialize `digitSum` to 0 to accumulate the sum of digits.\n  - Iterate through each character `digit` in `numericString`:\n    - Convert `digit` to its integer value and add it to `digitSum`.\n  - Convert `digitSum` back to a string and assign it to `numericString`.\n  - Decrement `k` by 1.\n\n- Convert the final `numericString` to an integer and return it.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/fEviTtoU/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"fEviTtoU\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of `s`. \n\n- Time complexity: $O(n)$\n\n    For each character in the string `s`, we compute its numeric value and append it to `numericString`. We perform this transformation $k$ times. In each transformation, we iterate over the digits of `numericString`. The length of `numericString` depends on the total number of digits obtained from converting characters. In the worst case, each character contributes up to 2 digits (e.g., 'z' becomes 26). Thus, the length of `numericString` could be up to $2n$, making each transformation $O(n)$ on average.\n\n    After converting `s` to `numericString`, we apply the digit sum transformation. Each transformation involves computing the sum of the digits of `numericString`. If `numericString` has up to $2n$ digits, the processing of each transformation would be $O(n)$.\n\n    However, once the result of a transformation becomes a single digit (i.e., less than 10), further transformations are unnecessary. \n\n    To understand the impact of additional transformations, we sum over decreasing logarithmic terms:\n        $$\n        n \\times \\left(1 + \\frac{\\log_{10}(n)}{n} + \\frac{\\log_{10}(\\log_{10}(n))}{n} + \\ldots \\right)\n        $$\n    \n    These terms diminish quickly because each term is divided by $n$, which grows faster than the logarithmic functions. As a result, the total number of these logarithmic summations is bounded by a small constant factor.\n\n    This shows that despite theoretically having $k$ transformations, the actual impact of additional logarithmic terms diminishes rapidly, and can be treated as effectively constant in practice.\n\n- Space complexity: $O(n)$\n\n    We use space proportional to the length of `numericString`, which can be up to $O(n)$ in the worst case. This gives us $O(n)$ space complexity for storing the intermediate numeric string.\n\n---\n\n### Approach 2: Direct Integer Operation\n\n#### Intuition\n\nInstead of converting the letters of the string to integers and combining them using string concatenation, we can simplify the process by summing their values directly as we iterate through the given string. Next, we'll sum the digits of the integer `k` times.\n\nGiven that `k` has a minimum value of 1 and the input string `s` can be up to 100 characters long, the maximum possible sum for each character's position in the alphabet is 10 (from the letter 's', which is 19, but the digit sum is 1 + 9 = 10). Therefore, the maximum possible sum for a string consisting of 100 characters, each having a position value like 's', is approximately $10 \\times 100 = 1000$, which means further operations become more manageable and efficient.\n\nThis means we can solve the problem efficiently without dealing with very large numbers or performing complex string manipulations.\n\nThe algorithm is visualized below:\n\n!?!../Documents/1945_fix/approach2_fix.json:990,545!?!\n\n#### Algorithm\n \n- Initialize `currentNumber` to 0 to accumulate the sum of digit values of characters in `s`.\n\n- Iterate through each character `ch` in `s`:\n  - Convert `ch` to its corresponding numerical position in the alphabet (1 for 'a', 2 for 'b', etc.).\n  - While `position` is greater than 0:\n    - Add the last digit of `position` to `currentNumber`.\n    - Remove the last digit from `position`.\n\n- For `k-1` iterations:\n  - Initialize `digitSum` to 0 to accumulate the sum of digits in `currentNumber`.\n  - While `currentNumber` is greater than 0:\n    - Add the last digit of `currentNumber` to `digitSum`.\n    - Remove the last digit from `currentNumber`.\n  - Assign `digitSum` to `currentNumber`.\n\n- Return the final value of `currentNumber`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/8W6QosRE/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"8W6QosRE\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of `s`. \n\n* Time complexity: $O(n)$\n\n    For each character in `s`, we compute the sum of its digits. The time complexity for processing each character is $O(\\log_{10}(\\text{position}))$, where the position is at most 26, which is a constant time operation. Since there are `n` characters, the total complexity is $O(n)$.\n\n    After the initial conversion, the digit sum transformations are applied. Initially, this involves reducing `currentNumber` to its digit sum, where each transformation involves a constant number of operations since the number of digits in `currentNumber` is small (bounded by 4, as the maximum sum after conversion is 1000). If the result becomes a single digit (less than 10), no further transformations are needed. This means that the number of transformations is effectively constant in practice.\n\n    To understand the time complexity of the transformations in detail, we sum over decreasing logarithmic terms:\n      $$\n      n \\times \\left(1 + \\frac{\\log_{10}(n)}{n} + \\frac{\\log_{10}(\\log_{10}(n))}{n} + \\ldots \\right)\n      $$\n\n    These terms diminish quickly because each term is divided by $n$, which grows faster than the logarithmic functions. Thus, the total number of summations is bounded by a small constant factor. This reasoning shows that despite $k$ transformations theoretically contributing to additional $K$ complexity, the actual time complexity is effectively much lower than $k$ due to the rapidly diminishing impact of additional logarithmic terms, and hence can be treated as constant.\n\n    Therefore, when summing over the decreasing logarithmic terms, the additional complexity is bounded by a constant factor relative to $n$, making the overall time complexity $O(n)$.\n\n* Space complexity: $O(1)$\n\n    The space complexity is $O(1)$ due to the constant space required for the integer calculations.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

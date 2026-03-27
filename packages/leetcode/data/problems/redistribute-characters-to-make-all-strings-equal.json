@@ -1,0 +1,140 @@
+{
+  "questionId": "2025",
+  "questionFrontendId": "1897",
+  "title": "Redistribute Characters to Make All Strings Equal",
+  "titleSlug": "redistribute-characters-to-make-all-strings-equal",
+  "difficulty": "Easy",
+  "content": "<p>You are given an array of strings <code>words</code> (<strong>0-indexed</strong>).</p>\n\n<p>In one operation, pick two <strong>distinct</strong> indices <code>i</code> and <code>j</code>, where <code>words[i]</code> is a non-empty string, and move <strong>any</strong> character from <code>words[i]</code> to <strong>any</strong> position in <code>words[j]</code>.</p>\n\n<p>Return <code>true</code> <em>if you can make<strong> every</strong> string in </em><code>words</code><em> <strong>equal </strong>using <strong>any</strong> number of operations</em>,<em> and </em><code>false</code> <em>otherwise</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;abc&quot;,&quot;aabc&quot;,&quot;bc&quot;]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> Move the first &#39;a&#39; in <code>words[1] to the front of words[2],\nto make </code><code>words[1]</code> = &quot;abc&quot; and words[2] = &quot;abc&quot;.\nAll the strings are now equal to &quot;abc&quot;, so return <code>true</code>.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;ab&quot;,&quot;a&quot;]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> It is impossible to make all the strings equal using the operation.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= words.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= words[i].length &lt;= 100</code></li>\n\t<li><code>words[i]</code> consists of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Characters are independent—only the frequency of characters matters.",
+    "It is possible to distribute characters if all characters can be divided equally among all strings."
+  ],
+  "metaData": "{\n  \"name\": \"makeEqual\",\n  \"params\": [\n    {\n      \"name\": \"words\",\n      \"type\": \"string[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"manual\": false\n}",
+  "stats": "{\"totalAccepted\": \"158.5K\", \"totalSubmission\": \"237.2K\", \"totalAcceptedRaw\": 158489, \"totalSubmissionRaw\": 237163, \"acRate\": \"66.8%\"}",
+  "likes": 1166,
+  "dislikes": 85,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"abc\",\"aabc\",\"bc\"]",
+    "[\"ab\",\"a\"]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"moengage\", \"name\": \"Moengage\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool makeEqual(vector<string>& words) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean makeEqual(String[] words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def makeEqual(self, words: List[str]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def makeEqual(self, words):\n        \"\"\"\n        :type words: List[str]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} words\n * @return {boolean}\n */\nvar makeEqual = function(words) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function makeEqual(words: string[]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool MakeEqual(string[] words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool makeEqual(char** words, int wordsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func makeEqual(words []string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun makeEqual(words: Array<String>): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func makeEqual(_ words: [String]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn make_equal(words: Vec<String>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} words\n# @return {Boolean}\ndef make_equal(words)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $words\n     * @return Boolean\n     */\n    function makeEqual($words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool makeEqual(List<String> words) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def makeEqual(words: Array[String]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec make_equal(words :: [String.t]) :: boolean\n  def make_equal(words) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec make_equal(Words :: [unicode:unicode_binary()]) -> boolean().\nmake_equal(Words) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (make-equal words)\n  (-> (listof string?) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2191",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Count Character Frequencies\n\n**Intuition**\n\nThe operation that we are allowed to perform is extremely powerful. We are allowed to move any character to any position in any string. As we are allowed to perform the operation an unlimited number of times, the only thing that matters is the letters we have available to use in `words`. Given these letters available to us, we can form any combination of words with their letters having any permutation we want.\n\nSo, what would it require to make every string equal? There are two requirements for a string to be equal:\n\n1. The strings must have the same letters with the same frequencies. For example, `\"aabccc\"` has two `\"a\"`, one `\"b\"`, and three `\"c\"`.\n2. The letters must be in the same positions.\n\nWe don't need to worry about requirement #2 because as we mentioned above, the operation is extremely powerful and we can create any order we want. So the important thing is that we make every string have the same letters with the same frequencies. If one string has five `\"h\"`, then every other string must also have five `\"h\"`, for example.\n\nWe will start by collecting all the letters available for us to use. We create a hash map `counts`, where `counts[letter]` tells us how many times `letter` appears in the input. We iterate over every `word` in `words`, and for each `word` we iterate over every character `c` and increment `counts[c]`.\n\nOnce we have calculated `counts`, we analyze each letter's frequency. Let's say that the length of `words` is `n`. If a given letter has a frequency of `val`, we need to allocate `val / n` copies to each string. This is only possible if `val / n` is an integer, i.e. `val` is divisible by `n`. We can check if `val` is divisible by `n` by taking the modulus. If `val % n = 0`, then `val` is divisible by `n`.\n\nIf a letter's frequency is divisible by `n`, we know we can allocate an equal number of copies of this letter to every string. Again, we don't need to worry about the positions mentioned in requirement #2, since we can create any order we want. If every letter's frequency can be evenly allocated, we are guaranteed to make equal strings and the overall task is possible. If ANY letter's frequency cannot be evenly allocated, the task is impossible.\n\n**Algorithm**\n\n1. Create a hash map `counts`.\n2. Iterate over each string `word` in `words`:\n    - Iterate over each character `c` in `word`:\n        - Increment `counts[c]`.\n3. Set `n = words.length`.\n4. Iterate over each value `val` of `counts`:\n    - If `val % n != 0`, return `false`.\n5. Return `true`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/AeqpT5qg/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"AeqpT5qg\"></iframe>\n\nBonus Python 1-liner:\n\n<iframe src=\"https://leetcode.com/playground/aKkqe7Vc/shared\" frameBorder=\"0\" width=\"100%\" height=\"106\" name=\"aKkqe7Vc\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `words` and $$k$$ as the average length of the elements in `words`,\n\n* Time complexity: $$O(n \\cdot k)$$\n\n    To calculate `counts`, we iterate over every letter in the input. There are $$n \\cdot k$$ letters, so this costs $$O(n \\cdot k)$$ as hash map operations take constant time.\n\n    Then, we iterate over the values of `counts`. Note that the input can only contain lowercase English letters. Thus, there will never be more than `26` values in `counts`, so this takes $$O(1)$$.\n\n* Space complexity: $$O(1)$$\n\n    The only extra space we are using is for `counts`. However, the input only contains lowercase English letters, so `counts` never grows larger than a size of `26`.\n    \n<br/>\n\n---\n\n### Approach 2: Count With Array\n\n**Intuition**\n\nBecause the input only contains lowercase English letters, we can use an array to implement `counts` instead of a hash map. Each letter is assigned a unique integer in ASCII encodings and as these values are contiguous, we can subtract the ASCII value of `'a'` from the ASCII value of the letter to map it to a relative position in the alphabet. For example, `'a' - 'a'` results in `0`, `'b' - 'a'` results in `1`, `'c' - 'a'` results in `2`, and so on. In this way, each letter can be mapped directly to an index in the array.\n\nIn this approach, we will implement the same idea from the previous approach, except we will use an array of length `26` instead of a hash map for `counts`. We let `counts[i]` represent the frequency of the letter at position `i` in the alphabet. For example,\n\n- `'a'` is at position `0` in the alphabet, so `counts[0]` represents the frequency of `'a'`.\n- `'b'` is at position `1` in the alphabet, so `counts[1]` represents the frequency of `'b'`.\n- ...\n- `'z'` is at position `25` in the alphabet, so `counts[25]` represents the frequency of `'z'`.\n\n**Algorithm**\n\n1. Create an array `counts` of length `26`.\n2. Iterate over each string `word` in `words`:\n    - Iterate over each character `c` in `word`:\n        - Increment `counts[c - 'a']`.\n3. Set `n = words.length`.\n4. Iterate over each value `val` of `counts`:\n    - If `val % n != 0`, return `false`.\n5. Return `true`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/acxXCHNv/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"acxXCHNv\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `words` and $$k$$ as the average length of the elements in `words`,\n\n* Time complexity: $$O(n \\cdot k)$$\n\n    To calculate `counts`, we iterate over every letter in the input. There are $$n \\cdot k$$ letters, so this costs $$O(n \\cdot k)$$.\n\n    Then, we iterate over the values of `counts`, which has a length of `26`.\n\n* Space complexity: $$O(1)$$\n\n    The only extra space we use is for `counts`, which has a length of `26`.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

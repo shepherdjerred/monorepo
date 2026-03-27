@@ -1,0 +1,113 @@
+{
+  "questionId": "1765",
+  "questionFrontendId": "1669",
+  "title": "Merge In Between Linked Lists",
+  "titleSlug": "merge-in-between-linked-lists",
+  "difficulty": "Medium",
+  "content": "<p>You are given two linked lists: <code>list1</code> and <code>list2</code> of sizes <code>n</code> and <code>m</code> respectively.</p>\n\n<p>Remove <code>list1</code>&#39;s nodes from the <code>a<sup>th</sup></code> node to the <code>b<sup>th</sup></code> node, and put <code>list2</code> in their place.</p>\n\n<p>The blue edges and nodes in the following figure indicate the result:</p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/11/05/fig1.png\" style=\"height: 130px; width: 504px;\" />\n<p><em>Build the result list and return its head.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/03/01/ll.png\" style=\"width: 609px; height: 210px;\" />\n<pre>\n<strong>Input:</strong> list1 = [10,1,13,6,9,5], a = 3, b = 4, list2 = [1000000,1000001,1000002]\n<strong>Output:</strong> [10,1,13,1000000,1000001,1000002,5]\n<strong>Explanation:</strong> We remove the nodes 3 and 4 and put the entire list2 in their place. The blue edges and nodes in the above figure indicate the result.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/11/05/merge_linked_list_ex2.png\" style=\"width: 463px; height: 140px;\" />\n<pre>\n<strong>Input:</strong> list1 = [0,1,2,3,4,5,6], a = 2, b = 5, list2 = [1000000,1000001,1000002,1000003,1000004]\n<strong>Output:</strong> [0,1,1000000,1000001,1000002,1000003,1000004,6]\n<strong>Explanation:</strong> The blue edges and nodes in the above figure indicate the result.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>3 &lt;= list1.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= a &lt;= b &lt; list1.length - 1</code></li>\n\t<li><code>1 &lt;= list2.length &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Check which edges need to be changed.",
+    "Let the next node of the (a-1)th node of list1 be the 0-th node in list 2.",
+    "Let the next node of the last node of list2 be the (b+1)-th node in list 1."
+  ],
+  "metaData": "{\n  \"name\": \"mergeInBetween\",\n  \"params\": [\n    {\n      \"name\": \"list1\",\n      \"type\": \"ListNode\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"a\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"b\"\n    },\n    {\n      \"type\": \"ListNode\",\n      \"name\": \"list2\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"ListNode\"\n  },\n  \"manual\": true\n}",
+  "stats": "{\"totalAccepted\": \"275.8K\", \"totalSubmission\": \"332.7K\", \"totalAcceptedRaw\": 275821, \"totalSubmissionRaw\": 332671, \"acRate\": \"82.9%\"}",
+  "likes": 2265,
+  "dislikes": 227,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[10,1,13,6,9,5]\n3\n4\n[1000000,1000001,1000002]",
+    "[0,1,2,3,4,5,6]\n2\n5\n[1000000,1000001,1000002,1000003,1000004]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"squarepoint-capital\", \"name\": \"Squarepoint Capital\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"arista-networks\", \"name\": \"Arista Networks\"}, {\"timesEncountered\": 2, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 2, \"slug\": \"paypal\", \"name\": \"PayPal\"}]}",
+  "topicTags": [
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    ListNode* mergeInBetween(ListNode* list1, int a, int b, ListNode* list2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode() {}\n *     ListNode(int val) { this.val = val; }\n *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n * }\n */\nclass Solution {\n    public ListNode mergeInBetween(ListNode list1, int a, int b, ListNode list2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution:\n    def mergeInBetween(self, list1: ListNode, a: int, b: int, list2: ListNode) -> ListNode:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for singly-linked list.\n# class ListNode(object):\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution(object):\n    def mergeInBetween(self, list1, a, b, list2):\n        \"\"\"\n        :type list1: ListNode\n        :type a: int\n        :type b: int\n        :type list2: ListNode\n        :rtype: ListNode\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for singly-linked list.\n * function ListNode(val, next) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.next = (next===undefined ? null : next)\n * }\n */\n/**\n * @param {ListNode} list1\n * @param {number} a\n * @param {number} b\n * @param {ListNode} list2\n * @return {ListNode}\n */\nvar mergeInBetween = function(list1, a, b, list2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *     val: number\n *     next: ListNode | null\n *     constructor(val?: number, next?: ListNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.next = (next===undefined ? null : next)\n *     }\n * }\n */\n\nfunction mergeInBetween(list1: ListNode | null, a: number, b: number, list2: ListNode | null): ListNode | null {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public int val;\n *     public ListNode next;\n *     public ListNode(int val=0, ListNode next=null) {\n *         this.val = val;\n *         this.next = next;\n *     }\n * }\n */\npublic class Solution {\n    public ListNode MergeInBetween(ListNode list1, int a, int b, ListNode list2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     struct ListNode *next;\n * };\n */\n\n\nstruct ListNode* mergeInBetween(struct ListNode* list1, int a, int b, struct ListNode* list2){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for singly-linked list.\n * type ListNode struct {\n *     Val int\n *     Next *ListNode\n * }\n */\nfunc mergeInBetween(list1 *ListNode, a int, b int, list2 *ListNode) *ListNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var li = ListNode(5)\n * var v = li.`val`\n * Definition for singly-linked list.\n * class ListNode(var `val`: Int) {\n *     var next: ListNode? = null\n * }\n */\nclass Solution {\n    fun mergeInBetween(list1: ListNode?, a: Int, b: Int, list2: ListNode?): ListNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public var val: Int\n *     public var next: ListNode?\n *     public init() { self.val = 0; self.next = nil; }\n *     public init(_ val: Int) { self.val = val; self.next = nil; }\n *     public init(_ val: Int, _ next: ListNode?) { self.val = val; self.next = next; }\n * }\n */\nclass Solution {\n    func mergeInBetween(_ list1: ListNode?, _ a: Int, _ b: Int, _ list2: ListNode?) -> ListNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for singly-linked list.\n// #[derive(PartialEq, Eq, Clone, Debug)]\n// pub struct ListNode {\n//   pub val: i32,\n//   pub next: Option<Box<ListNode>>\n// }\n// \n// impl ListNode {\n//   #[inline]\n//   fn new(val: i32) -> Self {\n//     ListNode {\n//       next: None,\n//       val\n//     }\n//   }\n// }\nimpl Solution {\n    pub fn merge_in_between(list1: Option<Box<ListNode>>, a: i32, b: i32, list2: Option<Box<ListNode>>) -> Option<Box<ListNode>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for singly-linked list.\n# class ListNode\n#     attr_accessor :val, :next\n#     def initialize(val = 0, _next = nil)\n#         @val = val\n#         @next = _next\n#     end\n# end\n# @param {ListNode} list1\n# @param {Integer} a\n# @param {Integer} b\n# @param {ListNode} list2\n# @return {ListNode}\ndef merge_in_between(list1, a, b, list2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a singly-linked list.\n * class ListNode {\n *     public $val = 0;\n *     public $next = null;\n *     function __construct($val = 0, $next = null) {\n *         $this->val = $val;\n *         $this->next = $next;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param ListNode $list1\n     * @param Integer $a\n     * @param Integer $b\n     * @param ListNode $list2\n     * @return ListNode\n     */\n    function mergeInBetween($list1, $a, $b, $list2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode(_x: Int = 0, _next: ListNode = null) {\n *   var next: ListNode = _next\n *   var x: Int = _x\n * }\n */\nobject Solution {\n    def mergeInBetween(list1: ListNode, a: Int, b: Int, list2: ListNode): ListNode = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "2272",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nThe task is to replace the section of `list1` from the <code class=\"\">a<sup>th</sup></code> node to the <code class=\"\">b<sup>th</sup></code> node with `list2`. Note that `a` and `b` refer to the node's indices (0-indexed), not their values. \n\nThe resultant linked list will have this format:\n\n[`list1` from index `0` to `a - 1`] ⟶ [`list2`] ⟶ [`list1` index `b + 1` to `tail`]\n\n---\n\n### Approach 1: Merge Values in Array\n\n#### Intuition\n\nThe linked list is 0-indexed, and we need to merge the linked lists based on their indices. We can traverse the linked lists, and use an array `mergeArray` to store the nodes' values in the correct order. \n\n> The `ListNode` implementation does not store the length of the linked list, so we cannot compute the required length of the `mergeArray`. We use a dynamic array implementation so we can add values as necessary. \n\nAfter adding the values to the array, we will build a new linked list using the values stored in the array.\n\nFirst, we add the node values of `list1` before index `a` to the array.\n\nNext, we add the node values of `list2` to the array.\n\nThen, we add the node values of `list1` after index `b` to the array.\n\nFinally, we iterate through the array, creating a new node for each value and adding it to the result linked list, which we return.\n\n#### Algorithm\n\n1. Initialize an array,  `mergeArray`.\n2. Add `list1` node values from index `0` to `a - 1` to the array:\n    - Initialize a variable `index` to `0` and a ListNode `current1` to `list1`.\n    - While `index` is less than `a`, add `current1.val` to the `mergeArray`, set `current1` to `current1.next`, and increment `index`.\n3. Add `list2` node values to the array:\n    - Initialize a ListNode `current2` to `list2`.\n    - While `current2` is not `null`, add `current2.val` to the `mergeArray` and set `current2` to `current2.next`.\n4. Find the node at index `b + 1`. \n    - While `index` is less than `b + 1`, set `current1` to `current1.next`, and increment `index`.\n5. Add `list1` node values from index `b + 1` to tail to the array. \n    - While `current1` is not `null`, add `current1.val` to the `mergeArray` and set `current1` to `current1.next`.\n6. Build a new linked list by traversing the `mergeArray` in a reverse manner:\n    - Initialize a ListNode `resultList` with `null`.\n    - For each value in `mergeArray`, create a new node `newNode` with the value and set the `next` field to `resultList`. Then set `resultList` to `newnode`. This adds the new node to the front of `resultList`.\n7. Return `resultList`, the front of the new linked list.\n\nThe algorithm is visualized below:\n\n!?!../Documents/1669/1669_slideshow1.json:960,540!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/LiRKLphS/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"LiRKLphS\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of `list1` and $m$ be the length of `list2`.\n\n* Time complexity: $O(n + m)$\n\n    The algorithm traverses `list1` and `list2` to add the nodes to the array, taking $n + m$ computational steps.\n    \n    Then, the array is traversed once to create the resulting linked list. The size of the array will be at most $n + m$. \n    \n    Therefore, the time complexity is $O(n + m)$. \n\n* Space complexity: $O(n + m)$\n\n    We use `mergeArray`, which can contain the values of `list1` and `list2`. It can have at most $n + m$ elements. Therefore, the space complexity is $O(n + m)$. \n\n---\n\n### Approach 2: Two Pointer\n\n#### Intuition\n\nThe above approach used extra space to solve the problem. Because of the nature of linked lists, we can meet our goal by changing the pointers, which allows us to solve the problem with limited extra space.\n\nThe below image shows how to replace index `a` through `b` of `list1` with `list2` by modifying pointers with the following input:\n\n**Input:** list1 = [1,1,1,1,1,1,1], a = 3, b = 4, list2 = [2,2,2]\n\n![Example](../Figures/1669/image1.png)\n\nThe `next` of the node at index `a - 1` of `list1` points to the head of `list2`.    \nThe `next` of the tail of `list2` points to the node at index `b + 1` of `list1`.\n\nTo solve the problem, we will need to complete the following two steps:\n\n**Step 1**    \n- Find the node at index `a - 1` of `list1`, which we will call `start`.\n- Set `start.next` to `list2`.\n\n**Step 2**    \n- Find the node at (original) index `b` of `list1`, which we will call `end`.\n- Set the `next` of the tail of `list2` to `end.next`.\n\nWe can find the `start` node and the `end` node using a for loop with the iterator `index` where `index` is the index of the current node.\n\nWe traverse `list1` with the pointer `end`, which starts at the head of `list1` and is progressed using `end = end.next` until `end` points to the node at index `b` of `list1`. Inside the loop, we set `start` to `end` if `index = a - 1`.\n\nAfter the loop, we set `start.next` to `list2`, then traverse `list2` until we find its tail. \n\nNext, we set the `next` of \"tail of `list2`\" to `end.next`. Moreover, we set `end.next` to `null` so there aren't multiple pointers to the node at (original) index `b + 1`. \n\nFinally, we return `list1`.\n\n> **Note:** This approach modifies the input. The problem statement implies that the lists can be modified as they are merged.\n>\n> **Interview Tip: In-place Algorithms**\n>\n> In-place algorithms overwrite the input to save space, but sometimes this can cause problems.\n>\n> Here are a couple of situations where an in-place algorithm might not be suitable.\n>\n> 1. The algorithm needs to run in a multi-threaded environment, without exclusive access to the array. Other threads might need to read the array too, and might not expect it to be modified.\n>\n> 2. Even if there is only a single thread, or the algorithm has exclusive access to the array while running, the array might need to be reused later or by another thread once the lock has been released.\n>\n> In an interview, you should always check whether the interviewer minds you overwriting the input. Be ready to explain the pros and cons of doing so if asked!\n\n#### Algorithm\n\n1. Initialize two ListNodes, `start` to `null` and `end` to `list1`.\n2. Find the nodes at index `a - 1` and `b` of `list1`. Traverse through `list1` using a `for` loop with the iterator `index` from `0` to `b - 1`:\n    - If `index` equals `a - 1` set `start` to `end`.\n    - Progress to the next node in `list1`  by setting `end` to `end.next`.\n3. Set `start.next` to `list2`.\n4. Find the tail of `list2` by traversing the list with `list2 = list2.next` until the last node is reached.\n5. Set `list2.next` to `end.next` and set `end.next` to `null`. Note that the order of the statements is important.\n6. Return `list1`, which points to the head of the resultant linked list.\n\nThe algorithm is visualized below:\n\n!?!../Documents/1669/1669_slideshow2.json:960,540!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/4MXf743C/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"4MXf743C\"></iframe>\n\n**Note:** Setting `end.next` to `null` is not necessary to solve this problem, but is a good practice to prevent unpredictable behavior. This way, modifications made to the removed nodes won't affect the result linked list.\n\n<details>\n\n<summary>Click to see Recursive Implementation</summary>\n\n<p>\n\nWe start by defining a recursive function, `findTail`, that takes a linked list as a parameter and returns the tail of that linked list.\n\nThen we define a recursive function, `merge`, which takes all the same parameters as `mergeInBetween`, plus an integer `index` and two pointers `start` and `end`. This function works very similarly to the above implementation. If `index` is `a - 1`, we set `start` to `end`. The base case is when `index` is `b`: we connect the `start` node to `list2`; find the tail of `list2` and set it to `end.next`; and return `list1` as the merged list. Otherwise, the function recursively calls itself, with `index + 1` and `end.next`.\n\n<iframe src=\"https://leetcode.com/playground/ZyiNF2fi/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ZyiNF2fi\"></iframe>\n \nBoth functions in the recursive implementation use tail recursion, which is an optimization technique used in functional programming to avoid the use of explicit loops and improve performance.\n\nIn a recursive function, each recursive call creates a new stack frame, which can lead to a stack overflow if the function is called too many times. Tail recursion reduces this problem by reusing the current stack frame instead of creating a new one. Functions that use tail recursion have the following properties: the last statement of the function is a recursive call, and the function has a base case that can be reached by the recursive call. The base case is used to stop the recursion and return a value.\n\n> Note: The recursive implementation shown here illustrates how an algorithm can be implemented both iteratively and recursively. While the recursion-based solution is valid, the iterative implementation remains the most intuitive and optimized solution.\n\n$\\downarrow_{\\text{Section after Recursive Implementation}}$\n\n</p>\n\n</details> \n\n#### Complexity Analysis\n\nLet $n$ be the length of `list1` and $m$ be the length of `list2`.\n\n* Time complexity: $O(n + m)$\n\n    The algorithm traverses `list1` once to find the nodes `start` and `end`. Note that `list1` is not fully traversed for every input, but in the worst case, we may need to traverse at most $n$ nodes. `list2` is traversed once to find its tail. The other operations all take constant time. \n    \n    Therefore, the time complexity is $O(n + m)$. \n    \n    The recursive implementation has the same time complexity as the iterative implementation.\n\n* Space complexity: $O(1)$\n\n    We use a few variables and pointers, including `index`, `start`, and `end`, which use constant extra space. We don't use any data structures that grow with input size, so the space complexity of the iterative implementation is $O(1)$. \n    \n    The recursive implementation may use up to $O(n + m)$ space for the recursive call stack, though this space may be reduced through the use of tail recursion, depending on the implementation language.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

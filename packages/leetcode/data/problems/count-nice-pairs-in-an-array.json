@@ -1,0 +1,145 @@
+{
+  "questionId": "1925",
+  "questionFrontendId": "1814",
+  "title": "Count Nice Pairs in an Array",
+  "titleSlug": "count-nice-pairs-in-an-array",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array <code>nums</code> that consists of non-negative integers. Let us define <code>rev(x)</code> as the reverse of the non-negative integer <code>x</code>. For example, <code>rev(123) = 321</code>, and <code>rev(120) = 21</code>. A pair of indices <code>(i, j)</code> is <strong>nice</strong> if it satisfies all of the following conditions:</p>\n\n<ul>\n\t<li><code>0 &lt;= i &lt; j &lt; nums.length</code></li>\n\t<li><code>nums[i] + rev(nums[j]) == nums[j] + rev(nums[i])</code></li>\n</ul>\n\n<p>Return <em>the number of nice pairs of indices</em>. Since that number can be too large, return it <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [42,11,1,97]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The two pairs are:\n - (0,3) : 42 + rev(97) = 42 + 79 = 121, 97 + rev(42) = 97 + 24 = 121.\n - (1,2) : 11 + rev(1) = 11 + 1 = 12, 1 + rev(11) = 1 + 11 = 12.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [13,10,35,24,76]\n<strong>Output:</strong> 4\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "The condition can be rearranged to (nums[i] - rev(nums[i])) == (nums[j] - rev(nums[j])).",
+    "Transform each nums[i] into (nums[i] - rev(nums[i])). Then, count the number of (i, j) pairs that have equal values.",
+    "Keep a map storing the frequencies of values that you have seen so far. For each i, check if nums[i] is in the map. If it is, then add that count to the overall count. Then, increment the frequency of nums[i]."
+  ],
+  "metaData": "{\n  \"name\": \"countNicePairs\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"134.5K\", \"totalSubmission\": \"277.6K\", \"totalAcceptedRaw\": 134519, \"totalSubmissionRaw\": 277606, \"acRate\": \"48.5%\"}",
+  "likes": 2048,
+  "dislikes": 93,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Number of Pairs of Interchangeable Rectangles\", \"titleSlug\": \"number-of-pairs-of-interchangeable-rectangles\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Number of Bad Pairs\", \"titleSlug\": \"count-number-of-bad-pairs\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Pairs Satisfying Inequality\", \"titleSlug\": \"number-of-pairs-satisfying-inequality\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[42,11,1,97]",
+    "[13,10,35,24,76]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"roblox\", \"name\": \"Roblox\"}, {\"timesEncountered\": 2, \"slug\": \"square\", \"name\": \"Block\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countNicePairs(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countNicePairs(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countNicePairs(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countNicePairs(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar countNicePairs = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countNicePairs(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountNicePairs(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int countNicePairs(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countNicePairs(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countNicePairs(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countNicePairs(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_nice_pairs(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef count_nice_pairs(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function countNicePairs($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countNicePairs(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countNicePairs(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_nice_pairs(nums :: [integer]) :: integer\n  def count_nice_pairs(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_nice_pairs(Nums :: [integer()]) -> integer().\ncount_nice_pairs(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-nice-pairs nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2159",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach: Counting With Hash Map\n\n**Intuition**\n\nIn this problem, we are presented with the following formula:\n\n`nums[i] + rev(nums[j]) == nums[j] + rev(nums[i])`\n\nLet's denote `x = nums[i]` and `y = nums[j]` and rewrite the formula:\n\n`x + rev(y) == y + rev(x)`\n\nNow, let's rearrange the formula so that all terms involving `x` are on one side and all terms involving `y` are on the other:\n\n`x - rev(x) == y - rev(y)`\n\nWe have simplified the problem. As you can see, for a given `num`, we are interested in `num - rev(num)`. Let's define a new array `arr` with the same length as `nums` where:\n\n`arr[i] = nums[i] - rev(nums[i])`\n\n![example](../Figures/1814/1.png)\n<br>\n\nTo reverse the digits of a given integer `num` as described by the problem, we can initialize an integer `result = 0` as the reversed number. We then continuously take the last digit of `num` using the modulo operator `%` and append it to `result` as the least significant digit, this could be done by multiplying `result` by 10 and adding the last digit. Then we remove the last digit from `num` by dividing it by 10. \n\nThe process above continues until `num` becomes 0, at which point, `result` contains the reversed integer.\n\nNow, the problem becomes \"how many pairs in `arr` are equal?\". This can be solved using a counting trick with a hash map. We will iterate over `arr` and keep a hash map `dic` (short for dictionary) that keeps track of how many times we have seen a number. For each `num` we iterate over, we check how many times we have already seen `num`. Each `num` we had already seen earlier can be paired with the current `num` to form a pair. Thus, we would add `dic[num]` to the answer, and finally increment `dic[num]` by 1, keeping track of the current `num`.\n\nThe following animation demonstrates this counting process using an arbitrary `arr`:\n\n!?!../Documents/1814.json:960,540!?!\n<br>\n\n**Algorithm**\n\nNote: to avoid overflow, calculating the answer should be done MOD $$10^9 + 7$$.\n\n1. Implement the function `rev` as described by the problem description.\n2. Create `arr`, where `arr[i] = nums[i] - rev(nums[i])`.\n3. Initialize an empty hash map `dic` and the answer variable, `ans`.\n4. Iterate over each `num` in `arr`:\n    - Add `dic[num]` to `ans`.\n    - Increment `dic[num]`.\n5. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/99Zk9bgZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"99Zk9bgZ\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `nums`,\n\n* Time complexity: $$O(n)$$\n\n    First, we create `arr` which costs $$O(n)$$.\n\n    Next, we iterate over `arr` which has a length of `n`. At each iteration, we perform $$O(1)$$ work, so this costs $$O(n)$$ as well.\n\n    Note that `rev(num)` has a cost that is logarithmic with `num`. However, it is standard on LeetCode to treat the size of integers and mathematical operations performed on them as $$O(1)$$.\n\n* Space complexity: $$O(n)$$\n\n    `arr` uses $$O(n)$$ space. In the scenario where all `num - rev(num)` is unique, then `dic` will also grow to a size of $$O(n)$$.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

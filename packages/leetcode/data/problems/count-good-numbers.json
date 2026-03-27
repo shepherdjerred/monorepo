@@ -1,0 +1,137 @@
+{
+  "questionId": "2050",
+  "questionFrontendId": "1922",
+  "title": "Count Good Numbers",
+  "titleSlug": "count-good-numbers",
+  "difficulty": "Medium",
+  "content": "<p>A digit string is <strong>good</strong> if the digits <strong>(0-indexed)</strong> at <strong>even</strong> indices are <strong>even</strong> and the digits at <strong>odd</strong> indices are <strong>prime</strong> (<code>2</code>, <code>3</code>, <code>5</code>, or <code>7</code>).</p>\n\n<ul>\n\t<li>For example, <code>&quot;2582&quot;</code> is good because the digits (<code>2</code> and <code>8</code>) at even positions are even and the digits (<code>5</code> and <code>2</code>) at odd positions are prime. However, <code>&quot;3245&quot;</code> is <strong>not</strong> good because <code>3</code> is at an even index but is not even.</li>\n</ul>\n\n<p>Given an integer <code>n</code>, return <em>the <strong>total</strong> number of good digit strings of length </em><code>n</code>. Since the answer may be large, <strong>return it modulo </strong><code>10<sup>9</sup> + 7</code>.</p>\n\n<p>A <strong>digit string</strong> is a string consisting of digits <code>0</code> through <code>9</code> that may contain leading zeros.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 1\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> The good numbers of length 1 are &quot;0&quot;, &quot;2&quot;, &quot;4&quot;, &quot;6&quot;, &quot;8&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 4\n<strong>Output:</strong> 400\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 50\n<strong>Output:</strong> 564908303\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>15</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Is there a formula we can use to find the count of all the good numbers?",
+    "Exponentiation can be done very fast if we looked at the binary bits of n."
+  ],
+  "metaData": "{\n  \"name\": \"countGoodNumbers\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"long\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"275.3K\", \"totalSubmission\": \"478.9K\", \"totalAcceptedRaw\": 275331, \"totalSubmissionRaw\": 478867, \"acRate\": \"57.5%\"}",
+  "likes": 2442,
+  "dislikes": 595,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count the Number of Arrays with K Matching Adjacent Elements\", \"titleSlug\": \"count-the-number-of-arrays-with-k-matching-adjacent-elements\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "1",
+    "4",
+    "50"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}]}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Recursion",
+      "slug": "recursion"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countGoodNumbers(long long n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countGoodNumbers(long n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countGoodNumbers(self, n: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countGoodNumbers(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {number}\n */\nvar countGoodNumbers = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countGoodNumbers(n: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountGoodNumbers(long n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int countGoodNumbers(long long n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countGoodNumbers(n int64) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countGoodNumbers(n: Long): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countGoodNumbers(_ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_good_numbers(n: i64) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Integer}\ndef count_good_numbers(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Integer\n     */\n    function countGoodNumbers($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countGoodNumbers(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countGoodNumbers(n: Long): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_good_numbers(n :: integer) :: integer\n  def count_good_numbers(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_good_numbers(N :: integer()) -> integer().\ncount_good_numbers(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-good-numbers n)\n  (-> exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2724",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Fast Exponentiation\n\n**Intuition**\n\nFor the numbers at even indices, they can be $0, 2, 4, 6, 8$, a total of $5$ types. A digit string of length $n$ has $\\lfloor \\dfrac{n+1}{2} \\rfloor$ even indices, where $\\lfloor x \\rfloor$ denotes the floor function of $x$.\n\nFor the numbers at odd indices, they can be $2, 3, 5, 7$, a total of $4$ types. A digit string of length $n$ has $\\lfloor \\dfrac{n}{2} \\rfloor$ odd indices.\n\nTherefore, the total number of good numbers in a digit string of length $n$ is:\n\n$$\n5^{\\lfloor \\frac{n+1}{2} \\rfloor} \\cdot 4^{\\lfloor \\frac{n}{2} \\rfloor}\n$$\n\nIn this question, since the maximum value of $n$ can reach $10^{15}$, directly calculating the power in the formula using ordinary multiplication would exceed the time limit. Therefore, we need to use the fast exponentiation algorithm to optimize the calculation of the power.\n\nFor reference, see [50. Pow(x, n) editorial](https://leetcode.com/problems/powx-n/editorial/).\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/KaBezRLa/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"KaBezRLa\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $O(\\log n)$\n\nSince the fast exponentiation algorithm halves the power times each time, it only takes $\\log n$ time to find the power of $n$ of a number.\n\n* Space complexity: $O(1)$\n\nOnly a few additional variables are needed.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

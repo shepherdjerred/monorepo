@@ -1,0 +1,137 @@
+{
+  "questionId": "1885",
+  "questionFrontendId": "1759",
+  "title": "Count Number of Homogenous Substrings",
+  "titleSlug": "count-number-of-homogenous-substrings",
+  "difficulty": "Medium",
+  "content": "<p>Given a string <code>s</code>, return <em>the number of <strong>homogenous</strong> substrings of </em><code>s</code><em>.</em> Since the answer may be too large, return it <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>A string is <strong>homogenous</strong> if all the characters of the string are the same.</p>\n\n<p>A <strong>substring</strong> is a contiguous sequence of characters within a string.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abbcccaa&quot;\n<strong>Output:</strong> 13\n<strong>Explanation:</strong> The homogenous substrings are listed as below:\n&quot;a&quot;   appears 3 times.\n&quot;aa&quot;  appears 1 time.\n&quot;b&quot;   appears 2 times.\n&quot;bb&quot;  appears 1 time.\n&quot;c&quot;   appears 3 times.\n&quot;cc&quot;  appears 2 times.\n&quot;ccc&quot; appears 1 time.\n3 + 1 + 2 + 1 + 3 + 2 + 1 = 13.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;xy&quot;\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The homogenous substrings are &quot;x&quot; and &quot;y&quot;.</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;zzzzz&quot;\n<strong>Output:</strong> 15\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s</code> consists of lowercase letters.</li>\n</ul>\n",
+  "hints": [
+    "A string of only 'a's of length k contains k + 1 choose 2 homogenous substrings.",
+    "Split the string into substrings where each substring contains only one letter, and apply the formula on each substring's length."
+  ],
+  "metaData": "{\n  \"name\": \"countHomogenous\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"131.9K\", \"totalSubmission\": \"229.9K\", \"totalAcceptedRaw\": 131868, \"totalSubmissionRaw\": 229885, \"acRate\": \"57.4%\"}",
+  "likes": 1588,
+  "dislikes": 104,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Consecutive Characters\", \"titleSlug\": \"consecutive-characters\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Number of Substrings With Only 1s\", \"titleSlug\": \"number-of-substrings-with-only-1s\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Sum of Subarray Ranges\", \"titleSlug\": \"sum-of-subarray-ranges\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count the Number of Good Subarrays\", \"titleSlug\": \"count-the-number-of-good-subarrays\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"abbcccaa\"",
+    "\"xy\"",
+    "\"zzzzz\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"virtu\", \"name\": \"Virtu Financial\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countHomogenous(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countHomogenous(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countHomogenous(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countHomogenous(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar countHomogenous = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countHomogenous(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountHomogenous(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int countHomogenous(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countHomogenous(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countHomogenous(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countHomogenous(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_homogenous(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef count_homogenous(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function countHomogenous($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countHomogenous(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countHomogenous(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_homogenous(s :: String.t) :: integer\n  def count_homogenous(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_homogenous(S :: unicode:unicode_binary()) -> integer().\ncount_homogenous(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-homogenous s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2170",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach: Counting Streaks\n\n**Intuition**\n\nTo solve this problem, we will make use of a very common counting trick that shows up in many LeetCode problems. The trick rests on the simple fact:\n\n- In a string of length `n`, there are `n` substrings that **end** with the final character.\n\nWhat do we mean by this? Let's say you had the string `\"abcd\"`. How many substrings **end** with `d`?\n\n1. If we choose `a` as the first character, we have the substring `\"abcd\"`.\n2. If we choose `b` as the first character, we have the substring `\"bcd\"`.\n3. If we choose `c` as the first character, we have the substring `\"cd\"`.\n4. If we choose `d` as the first character, we have the substring `\"d\"`.\n\nIn general, we lock in the final character, and then have `n` choices for the first character. Thus, the answer is always the length of the string.\n\nIn this problem, we need to find the number of substrings where every character is equal. We can start by separating each group of similar characters in the string:\n\n![example](../Figures/1759/1.png)\n<br>\n\nWe can consider each group individually and sum up their answers to find the overall answer. Let's take a look at the blue group, `\"bbb\"`:\n\n![example](../Figures/1759/2.png)\n<br>\n\nThis group has a length of `3`. If we want to form a substring from this group, we need to decide on two things: the starting index and the ending index.\n\nFor the ending index, we have `3` choices. For each ending index `i`, as we established above, we have `i + 1` choices for the starting index. From the example, you can see that by choosing index `2` as the ending index, we can choose index `0`, `1`, or `2` as the starting index.\n\nThis brings us to our solution. We will iterate over the string `s` and keep track of the current streak of consecutive characters we have seen. Let's say we use a variable `currStreak` to track this.\n\nFor an index `i`, if `s[i] == s[i - 1]`, then we increment `currStreak`. Otherwise, we reset `currStreak = 1` as we have lost our streak and must start a new one with `s[i]`.\n\nNow, at each index, we consider: how many homogenous substrings can **end** at this index? `currStreak` tells us the length of our current group, and since we are treating the current index as the **ending** index, the answer to this question is `currStreak`.\n\nThus, we simply add `currStreak` to our answer at each iteration. Going back to our example with `\"bbb\"`, when we encounter the first `\"b\"`, we have `currStreak = 1` and add `1` to our answer. This is because the only homogenous substring that could end at this character is the substring which is the character itself.\n\nAt the next `\"b\"`, we increase `currStreak` to `2`. Then, we add `2` to our answer. We have two choices for starting indices: the first `\"b\"` and the current `\"b\"`.\n\nLastly, we go to the final `\"b\"` and increase `currStreak` to `3`. Now, we add `3` to our answer as we have three choices for starting indices: the first, second, and current `\"b\"`.\n\n**Algorithm**\n\nNote: to avoid overflow, all arithmetic should be done MOD $$10^9 + 7$$.\n\n1. Initialize:\n    - The answer `ans = 0`.\n    - The current streak `currStreak = 0`.\n    - The modulus `MOD = ` $$10^9 + 7$$.\n2. Iterate `i` over the indices of `s`:\n    - If `i == 0` or `s[i] == s[i - 1]`, increment `currStreak`.\n    - Otherwise, reset `currStreak = 1`.\n    - Add `currStreak` to `ans`.\n3. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/nHXM2pjn/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"nHXM2pjn\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `s`,\n\n* Time complexity: $$O(n)$$\n\n    We iterate over each index of `s` once, performing $$O(1)$$ work at each iteration.\n\n* Space complexity: $$O(1)$$\n\n    We aren't using any extra space except for a few integer variables.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

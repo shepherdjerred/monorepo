@@ -1,0 +1,132 @@
+{
+  "questionId": "1910",
+  "questionFrontendId": "1784",
+  "title": "Check if Binary String Has at Most One Segment of Ones",
+  "titleSlug": "check-if-binary-string-has-at-most-one-segment-of-ones",
+  "difficulty": "Easy",
+  "content": "<p>Given a binary string <code>s</code> <strong>​​​​​without leading zeros</strong>, return <code>true</code>​​​ <em>if </em><code>s</code><em> contains <strong>at most one contiguous segment of ones</strong></em>. Otherwise, return <code>false</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;1001&quot;\n<strong>Output:</strong> false\n<strong>Explanation: </strong>The string has two segments of size 1.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;110&quot;\n<strong>Output:</strong> true</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 100</code></li>\n\t<li><code>s[i]</code>​​​​ is either <code>&#39;0&#39;</code> or <code>&#39;1&#39;</code>.</li>\n\t<li><code>s[0]</code> is&nbsp;<code>&#39;1&#39;</code>.</li>\n</ul>\n",
+  "hints": [
+    "It's guaranteed to have at least one segment",
+    "The string size is small so you can count all segments of ones with no that have no adjacent ones."
+  ],
+  "metaData": "{\n  \"name\": \"checkOnesSegment\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"189K\", \"totalSubmission\": \"385.4K\", \"totalAcceptedRaw\": 188982, \"totalSubmissionRaw\": 385360, \"acRate\": \"49.0%\"}",
+  "likes": 652,
+  "dislikes": 1158,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Longer Contiguous Segments of Ones than Zeros\", \"titleSlug\": \"longer-contiguous-segments-of-ones-than-zeros\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"1001\"",
+    "\"110\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"cisco\", \"name\": \"Cisco\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool checkOnesSegment(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean checkOnesSegment(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def checkOnesSegment(self, s: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def checkOnesSegment(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {boolean}\n */\nvar checkOnesSegment = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function checkOnesSegment(s: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool CheckOnesSegment(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool checkOnesSegment(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func checkOnesSegment(s string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun checkOnesSegment(s: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func checkOnesSegment(_ s: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn check_ones_segment(s: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Boolean}\ndef check_ones_segment(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Boolean\n     */\n    function checkOnesSegment($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool checkOnesSegment(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def checkOnesSegment(s: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec check_ones_segment(s :: String.t) :: boolean\n  def check_ones_segment(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec check_ones_segment(S :: unicode:unicode_binary()) -> boolean().\ncheck_ones_segment(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (check-ones-segment s)\n  (-> string? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2931",
+    "content": "### Approach: Find the $01$ sequence\n\n#### Intuition\n\nThe problem gives a binary string $s$ of length $n$ that does not contain leading zeros. We need to determine whether the string contains zero or exactly one segment of consecutive $1$s.\n\nLet us analyze the possible cases:\n- If the string $s$ contains no segment of consecutive $1$s, then the entire string consists only of zeros, that is, $00 \\cdots 00$.\n- If the string $s$ contains exactly one segment of consecutive $1$s, and since the string does not have leading zeros, it must be of the form $1 \\cdots 100 \\cdots 00$.\n\nIn both cases, the string does not contain the substring $01$.\n\nConversely, if a binary string contains the substring $01$, it means that after encountering a $0$, we later encounter a $1$ again. This implies that there are at least two separate segments of consecutive $1$s.\n\nTherefore, we can determine whether the string contains zero or exactly one segment of consecutive $1$s by checking whether it contains the substring $01$. If it does, the condition is not satisfied; otherwise, it is satisfied.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/4zrPZdyt/shared\" frameBorder=\"0\" width=\"100%\" height=\"157\" name=\"4zrPZdyt\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the string $s$.\n\n- Time complexity: $O(n)$.\n- Space complexity: $O(1)$.\n  \n  Only constant space is used.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

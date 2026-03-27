@@ -1,0 +1,138 @@
+{
+  "questionId": "1305",
+  "questionFrontendId": "1944",
+  "title": "Number of Visible People in a Queue",
+  "titleSlug": "number-of-visible-people-in-a-queue",
+  "difficulty": "Hard",
+  "content": "<p>There are <code>n</code> people standing in a queue, and they numbered from <code>0</code> to <code>n - 1</code> in <strong>left to right</strong> order. You are given an array <code>heights</code> of <strong>distinct</strong> integers where <code>heights[i]</code> represents the height of the <code>i<sup>th</sup></code> person.</p>\n\n<p>A person can <strong>see</strong> another person to their right in the queue if everybody in between is <strong>shorter</strong> than both of them. More formally, the <code>i<sup>th</sup></code> person can see the <code>j<sup>th</sup></code> person if <code>i &lt; j</code> and <code>min(heights[i], heights[j]) &gt; max(heights[i+1], heights[i+2], ..., heights[j-1])</code>.</p>\n\n<p>Return <em>an array </em><code>answer</code><em> of length </em><code>n</code><em> where </em><code>answer[i]</code><em> is the <strong>number of people</strong> the </em><code>i<sup>th</sup></code><em> person can <strong>see</strong> to their right in the queue</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/05/29/queue-plane.jpg\" style=\"width: 600px; height: 247px;\" /></p>\n\n<pre>\n<strong>Input:</strong> heights = [10,6,8,5,11,9]\n<strong>Output:</strong> [3,1,2,1,1,0]\n<strong>Explanation:</strong>\nPerson 0 can see person 1, 2, and 4.\nPerson 1 can see person 2.\nPerson 2 can see person 3 and 4.\nPerson 3 can see person 4.\nPerson 4 can see person 5.\nPerson 5 can see no one since nobody is to the right of them.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> heights = [5,1,2,3,10]\n<strong>Output:</strong> [4,1,1,1,0]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == heights.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= heights[i] &lt;= 10<sup>5</sup></code></li>\n\t<li>All the values of <code>heights</code> are <strong>unique</strong>.</li>\n</ul>\n",
+  "hints": [
+    "How to solve this problem in quadratic complexity ?",
+    "For every subarray start at index i, keep finding new maximum values until a value larger than arr[i] is found.",
+    "Since the limits are high, you need a linear solution.",
+    "Use a stack to keep the values of the array sorted as you iterate the array from the end to the start.",
+    "Keep popping from the stack the elements in sorted order until a value larger than arr[i] is found, these are the ones that person i can see."
+  ],
+  "metaData": "{\n  \"name\": \"canSeePersonsCount\",\n  \"params\": [\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"heights\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"123.6K\", \"totalSubmission\": \"169.8K\", \"totalAcceptedRaw\": 123572, \"totalSubmissionRaw\": 169827, \"acRate\": \"72.8%\"}",
+  "likes": 2215,
+  "dislikes": 67,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Buildings With an Ocean View\", \"titleSlug\": \"buildings-with-an-ocean-view\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Sum of Subarray Ranges\", \"titleSlug\": \"sum-of-subarray-ranges\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Sum of Total Strength of Wizards\", \"titleSlug\": \"sum-of-total-strength-of-wizards\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Number of People That Can Be Seen in a Grid\", \"titleSlug\": \"number-of-people-that-can-be-seen-in-a-grid\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Building Where Alice and Bob Can Meet\", \"titleSlug\": \"find-building-where-alice-and-bob-can-meet\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[10,6,8,5,11,9]",
+    "[5,1,2,3,10]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 13, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"waymo\", \"name\": \"Waymo\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 8, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 4, \"slug\": \"rippling\", \"name\": \"Rippling\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"servicenow\", \"name\": \"ServiceNow\"}, {\"timesEncountered\": 3, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 3, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 3, \"slug\": \"expedia\", \"name\": \"Expedia\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Monotonic Stack",
+      "slug": "monotonic-stack"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> canSeePersonsCount(vector<int>& heights) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] canSeePersonsCount(int[] heights) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def canSeePersonsCount(self, heights: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def canSeePersonsCount(self, heights):\n        \"\"\"\n        :type heights: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} heights\n * @return {number[]}\n */\nvar canSeePersonsCount = function(heights) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function canSeePersonsCount(heights: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] CanSeePersonsCount(int[] heights) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* canSeePersonsCount(int* heights, int heightsSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func canSeePersonsCount(heights []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun canSeePersonsCount(heights: IntArray): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func canSeePersonsCount(_ heights: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn can_see_persons_count(heights: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} heights\n# @return {Integer[]}\ndef can_see_persons_count(heights)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $heights\n     * @return Integer[]\n     */\n    function canSeePersonsCount($heights) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> canSeePersonsCount(List<int> heights) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def canSeePersonsCount(heights: Array[Int]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec can_see_persons_count(heights :: [integer]) :: [integer]\n  def can_see_persons_count(heights) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec can_see_persons_count(Heights :: [integer()]) -> [integer()].\ncan_see_persons_count(Heights) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (can-see-persons-count heights)\n  (-> (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": null
+}

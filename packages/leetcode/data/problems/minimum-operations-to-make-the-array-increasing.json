@@ -1,0 +1,118 @@
+{
+  "questionId": "1938",
+  "questionFrontendId": "1827",
+  "title": "Minimum Operations to Make the Array Increasing",
+  "titleSlug": "minimum-operations-to-make-the-array-increasing",
+  "difficulty": "Easy",
+  "content": "<p>You are given an integer array <code>nums</code> (<strong>0-indexed</strong>). In one operation, you can choose an element of the array and increment it by <code>1</code>.</p>\r\n\r\n<ul>\r\n\t<li>For example, if <code>nums = [1,2,3]</code>, you can choose to increment <code>nums[1]</code> to make <code>nums = [1,<u><b>3</b></u>,3]</code>.</li>\r\n</ul>\r\n\r\n<p>Return <em>the <strong>minimum</strong> number of operations needed to make</em> <code>nums</code> <em><strong>strictly</strong> <strong>increasing</strong>.</em></p>\r\n\r\n<p>An array <code>nums</code> is <strong>strictly increasing</strong> if <code>nums[i] &lt; nums[i+1]</code> for all <code>0 &lt;= i &lt; nums.length - 1</code>. An array of length <code>1</code> is trivially strictly increasing.</p>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong class=\"example\">Example 1:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> nums = [1,1,1]\r\n<strong>Output:</strong> 3\r\n<strong>Explanation:</strong> You can do the following operations:\r\n1) Increment nums[2], so nums becomes [1,1,<u><strong>2</strong></u>].\r\n2) Increment nums[1], so nums becomes [1,<u><strong>2</strong></u>,2].\r\n3) Increment nums[2], so nums becomes [1,2,<u><strong>3</strong></u>].\r\n</pre>\r\n\r\n<p><strong class=\"example\">Example 2:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> nums = [1,5,2,4,1]\r\n<strong>Output:</strong> 14\r\n</pre>\r\n\r\n<p><strong class=\"example\">Example 3:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> nums = [8]\r\n<strong>Output:</strong> 0\r\n</pre>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong>Constraints:</strong></p>\r\n\r\n<ul>\r\n\t<li><code>1 &lt;= nums.length &lt;= 5000</code></li>\r\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>4</sup></code></li>\r\n</ul>",
+  "hints": [
+    "nums[i+1] must be at least equal to nums[i] + 1.",
+    "Think greedily. You don't have to increase nums[i+1] beyond nums[i]+1.",
+    "Iterate on i and set nums[i] = max(nums[i-1]+1, nums[i]) ."
+  ],
+  "metaData": "{\n  \"name\": \"minOperations\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"134.6K\", \"totalSubmission\": \"164.3K\", \"totalAcceptedRaw\": 134628, \"totalSubmissionRaw\": 164322, \"acRate\": \"81.9%\"}",
+  "likes": 1318,
+  "dislikes": 68,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Increment to Make Array Unique\", \"titleSlug\": \"minimum-increment-to-make-array-unique\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Make Array Non-decreasing or Non-increasing\", \"titleSlug\": \"make-array-non-decreasing-or-non-increasing\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Product After K Increments\", \"titleSlug\": \"maximum-product-after-k-increments\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Replacements to Sort the Array\", \"titleSlug\": \"minimum-replacements-to-sort-the-array\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Operations to Make Columns Strictly Increasing\", \"titleSlug\": \"minimum-operations-to-make-columns-strictly-increasing\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,1,1]",
+    "[1,5,2,4,1]",
+    "[8]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"deutsche-bank\", \"name\": \"Deutsche Bank\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minOperations(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minOperations(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minOperations(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minOperations(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar minOperations = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minOperations(nums: number[]): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinOperations(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\nint minOperations(int* nums, int numsSize){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minOperations(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minOperations(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minOperations(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_operations(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef min_operations(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function minOperations($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minOperations(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-operations nums)\n  (-> (listof exact-integer?) exact-integer?)\n\n  )"
+    }
+  ],
+  "solution": null
+}

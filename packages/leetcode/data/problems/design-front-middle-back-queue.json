@@ -1,0 +1,146 @@
+{
+  "questionId": "1767",
+  "questionFrontendId": "1670",
+  "title": "Design Front Middle Back Queue",
+  "titleSlug": "design-front-middle-back-queue",
+  "difficulty": "Medium",
+  "content": "<p>Design a queue that supports <code>push</code> and <code>pop</code> operations in the front, middle, and back.</p>\n\n<p>Implement the <code>FrontMiddleBack</code> class:</p>\n\n<ul>\n\t<li><code>FrontMiddleBack()</code> Initializes the queue.</li>\n\t<li><code>void pushFront(int val)</code> Adds <code>val</code> to the <strong>front</strong> of the queue.</li>\n\t<li><code>void pushMiddle(int val)</code> Adds <code>val</code> to the <strong>middle</strong> of the queue.</li>\n\t<li><code>void pushBack(int val)</code> Adds <code>val</code> to the <strong>back</strong> of the queue.</li>\n\t<li><code>int popFront()</code> Removes the <strong>front</strong> element of the queue and returns it. If the queue is empty, return <code>-1</code>.</li>\n\t<li><code>int popMiddle()</code> Removes the <strong>middle</strong> element of the queue and returns it. If the queue is empty, return <code>-1</code>.</li>\n\t<li><code>int popBack()</code> Removes the <strong>back</strong> element of the queue and returns it. If the queue is empty, return <code>-1</code>.</li>\n</ul>\n\n<p><strong>Notice</strong> that when there are <b>two</b> middle position choices, the operation is performed on the <strong>frontmost</strong> middle position choice. For example:</p>\n\n<ul>\n\t<li>Pushing <code>6</code> into the middle of <code>[1, 2, 3, 4, 5]</code> results in <code>[1, 2, <u>6</u>, 3, 4, 5]</code>.</li>\n\t<li>Popping the middle from <code>[1, 2, <u>3</u>, 4, 5, 6]</code> returns <code>3</code> and results in <code>[1, 2, 4, 5, 6]</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong>\n[&quot;FrontMiddleBackQueue&quot;, &quot;pushFront&quot;, &quot;pushBack&quot;, &quot;pushMiddle&quot;, &quot;pushMiddle&quot;, &quot;popFront&quot;, &quot;popMiddle&quot;, &quot;popMiddle&quot;, &quot;popBack&quot;, &quot;popFront&quot;]\n[[], [1], [2], [3], [4], [], [], [], [], []]\n<strong>Output:</strong>\n[null, null, null, null, null, 1, 3, 4, 2, -1]\n\n<strong>Explanation:</strong>\nFrontMiddleBackQueue q = new FrontMiddleBackQueue();\nq.pushFront(1);   // [<u>1</u>]\nq.pushBack(2);    // [1, <u>2</u>]\nq.pushMiddle(3);  // [1, <u>3</u>, 2]\nq.pushMiddle(4);  // [1, <u>4</u>, 3, 2]\nq.popFront();     // return 1 -&gt; [4, 3, 2]\nq.popMiddle();    // return 3 -&gt; [4, 2]\nq.popMiddle();    // return 4 -&gt; [2]\nq.popBack();      // return 2 -&gt; []\nq.popFront();     // return -1 -&gt; [] (The queue is empty)\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= val &lt;= 10<sup>9</sup></code></li>\n\t<li>At most&nbsp;<code>1000</code>&nbsp;calls will be made to&nbsp;<code>pushFront</code>,&nbsp;<code>pushMiddle</code>,&nbsp;<code>pushBack</code>, <code>popFront</code>, <code>popMiddle</code>, and <code>popBack</code>.</li>\n</ul>\n",
+  "hints": [
+    "The constraints are low enough for a brute force, single array approach.",
+    "For an O(1) per method approach, use 2 double-ended queues: one for the first half and one for the second half."
+  ],
+  "metaData": "{\n  \"classname\": \"FrontMiddleBackQueue\",\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"val\"\n        }\n      ],\n      \"name\": \"pushFront\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"val\"\n        }\n      ],\n      \"name\": \"pushMiddle\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"val\"\n        }\n      ],\n      \"name\": \"pushBack\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [],\n      \"name\": \"popFront\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    },\n    {\n      \"params\": [],\n      \"name\": \"popMiddle\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    },\n    {\n      \"params\": [],\n      \"name\": \"popBack\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"43K\", \"totalSubmission\": \"75.4K\", \"totalAcceptedRaw\": 43019, \"totalSubmissionRaw\": 75425, \"acRate\": \"57.0%\"}",
+  "likes": 817,
+  "dislikes": 115,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Design Circular Deque\", \"titleSlug\": \"design-circular-deque\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Design Circular Queue\", \"titleSlug\": \"design-circular-queue\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"FrontMiddleBackQueue\",\"pushFront\",\"pushBack\",\"pushMiddle\",\"pushMiddle\",\"popFront\",\"popMiddle\",\"popMiddle\",\"popBack\",\"popFront\"]\n[[],[1],[2],[3],[4],[],[],[],[],[]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"citadel\", \"name\": \"Citadel\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Queue",
+      "slug": "queue"
+    },
+    {
+      "name": "Doubly-Linked List",
+      "slug": "doubly-linked-list"
+    },
+    {
+      "name": "Data Stream",
+      "slug": "data-stream"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class FrontMiddleBackQueue {\npublic:\n    FrontMiddleBackQueue() {\n        \n    }\n    \n    void pushFront(int val) {\n        \n    }\n    \n    void pushMiddle(int val) {\n        \n    }\n    \n    void pushBack(int val) {\n        \n    }\n    \n    int popFront() {\n        \n    }\n    \n    int popMiddle() {\n        \n    }\n    \n    int popBack() {\n        \n    }\n};\n\n/**\n * Your FrontMiddleBackQueue object will be instantiated and called as such:\n * FrontMiddleBackQueue* obj = new FrontMiddleBackQueue();\n * obj->pushFront(val);\n * obj->pushMiddle(val);\n * obj->pushBack(val);\n * int param_4 = obj->popFront();\n * int param_5 = obj->popMiddle();\n * int param_6 = obj->popBack();\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class FrontMiddleBackQueue {\n\n    public FrontMiddleBackQueue() {\n        \n    }\n    \n    public void pushFront(int val) {\n        \n    }\n    \n    public void pushMiddle(int val) {\n        \n    }\n    \n    public void pushBack(int val) {\n        \n    }\n    \n    public int popFront() {\n        \n    }\n    \n    public int popMiddle() {\n        \n    }\n    \n    public int popBack() {\n        \n    }\n}\n\n/**\n * Your FrontMiddleBackQueue object will be instantiated and called as such:\n * FrontMiddleBackQueue obj = new FrontMiddleBackQueue();\n * obj.pushFront(val);\n * obj.pushMiddle(val);\n * obj.pushBack(val);\n * int param_4 = obj.popFront();\n * int param_5 = obj.popMiddle();\n * int param_6 = obj.popBack();\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class FrontMiddleBackQueue:\n\n    def __init__(self):\n        \n\n    def pushFront(self, val: int) -> None:\n        \n\n    def pushMiddle(self, val: int) -> None:\n        \n\n    def pushBack(self, val: int) -> None:\n        \n\n    def popFront(self) -> int:\n        \n\n    def popMiddle(self) -> int:\n        \n\n    def popBack(self) -> int:\n        \n\n\n# Your FrontMiddleBackQueue object will be instantiated and called as such:\n# obj = FrontMiddleBackQueue()\n# obj.pushFront(val)\n# obj.pushMiddle(val)\n# obj.pushBack(val)\n# param_4 = obj.popFront()\n# param_5 = obj.popMiddle()\n# param_6 = obj.popBack()"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class FrontMiddleBackQueue(object):\n\n    def __init__(self):\n        \n\n    def pushFront(self, val):\n        \"\"\"\n        :type val: int\n        :rtype: None\n        \"\"\"\n        \n\n    def pushMiddle(self, val):\n        \"\"\"\n        :type val: int\n        :rtype: None\n        \"\"\"\n        \n\n    def pushBack(self, val):\n        \"\"\"\n        :type val: int\n        :rtype: None\n        \"\"\"\n        \n\n    def popFront(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n    def popMiddle(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n    def popBack(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your FrontMiddleBackQueue object will be instantiated and called as such:\n# obj = FrontMiddleBackQueue()\n# obj.pushFront(val)\n# obj.pushMiddle(val)\n# obj.pushBack(val)\n# param_4 = obj.popFront()\n# param_5 = obj.popMiddle()\n# param_6 = obj.popBack()"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar FrontMiddleBackQueue = function() {\n    \n};\n\n/** \n * @param {number} val\n * @return {void}\n */\nFrontMiddleBackQueue.prototype.pushFront = function(val) {\n    \n};\n\n/** \n * @param {number} val\n * @return {void}\n */\nFrontMiddleBackQueue.prototype.pushMiddle = function(val) {\n    \n};\n\n/** \n * @param {number} val\n * @return {void}\n */\nFrontMiddleBackQueue.prototype.pushBack = function(val) {\n    \n};\n\n/**\n * @return {number}\n */\nFrontMiddleBackQueue.prototype.popFront = function() {\n    \n};\n\n/**\n * @return {number}\n */\nFrontMiddleBackQueue.prototype.popMiddle = function() {\n    \n};\n\n/**\n * @return {number}\n */\nFrontMiddleBackQueue.prototype.popBack = function() {\n    \n};\n\n/** \n * Your FrontMiddleBackQueue object will be instantiated and called as such:\n * var obj = new FrontMiddleBackQueue()\n * obj.pushFront(val)\n * obj.pushMiddle(val)\n * obj.pushBack(val)\n * var param_4 = obj.popFront()\n * var param_5 = obj.popMiddle()\n * var param_6 = obj.popBack()\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class FrontMiddleBackQueue {\n    constructor() {\n        \n    }\n\n    pushFront(val: number): void {\n        \n    }\n\n    pushMiddle(val: number): void {\n        \n    }\n\n    pushBack(val: number): void {\n        \n    }\n\n    popFront(): number {\n        \n    }\n\n    popMiddle(): number {\n        \n    }\n\n    popBack(): number {\n        \n    }\n}\n\n/**\n * Your FrontMiddleBackQueue object will be instantiated and called as such:\n * var obj = new FrontMiddleBackQueue()\n * obj.pushFront(val)\n * obj.pushMiddle(val)\n * obj.pushBack(val)\n * var param_4 = obj.popFront()\n * var param_5 = obj.popMiddle()\n * var param_6 = obj.popBack()\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class FrontMiddleBackQueue {\n\n    public FrontMiddleBackQueue() {\n        \n    }\n    \n    public void PushFront(int val) {\n        \n    }\n    \n    public void PushMiddle(int val) {\n        \n    }\n    \n    public void PushBack(int val) {\n        \n    }\n    \n    public int PopFront() {\n        \n    }\n    \n    public int PopMiddle() {\n        \n    }\n    \n    public int PopBack() {\n        \n    }\n}\n\n/**\n * Your FrontMiddleBackQueue object will be instantiated and called as such:\n * FrontMiddleBackQueue obj = new FrontMiddleBackQueue();\n * obj.PushFront(val);\n * obj.PushMiddle(val);\n * obj.PushBack(val);\n * int param_4 = obj.PopFront();\n * int param_5 = obj.PopMiddle();\n * int param_6 = obj.PopBack();\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} FrontMiddleBackQueue;\n\n\nFrontMiddleBackQueue* frontMiddleBackQueueCreate() {\n    \n}\n\nvoid frontMiddleBackQueuePushFront(FrontMiddleBackQueue* obj, int val) {\n    \n}\n\nvoid frontMiddleBackQueuePushMiddle(FrontMiddleBackQueue* obj, int val) {\n    \n}\n\nvoid frontMiddleBackQueuePushBack(FrontMiddleBackQueue* obj, int val) {\n    \n}\n\nint frontMiddleBackQueuePopFront(FrontMiddleBackQueue* obj) {\n    \n}\n\nint frontMiddleBackQueuePopMiddle(FrontMiddleBackQueue* obj) {\n    \n}\n\nint frontMiddleBackQueuePopBack(FrontMiddleBackQueue* obj) {\n    \n}\n\nvoid frontMiddleBackQueueFree(FrontMiddleBackQueue* obj) {\n    \n}\n\n/**\n * Your FrontMiddleBackQueue struct will be instantiated and called as such:\n * FrontMiddleBackQueue* obj = frontMiddleBackQueueCreate();\n * frontMiddleBackQueuePushFront(obj, val);\n \n * frontMiddleBackQueuePushMiddle(obj, val);\n \n * frontMiddleBackQueuePushBack(obj, val);\n \n * int param_4 = frontMiddleBackQueuePopFront(obj);\n \n * int param_5 = frontMiddleBackQueuePopMiddle(obj);\n \n * int param_6 = frontMiddleBackQueuePopBack(obj);\n \n * frontMiddleBackQueueFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type FrontMiddleBackQueue struct {\n    \n}\n\n\nfunc Constructor() FrontMiddleBackQueue {\n    \n}\n\n\nfunc (this *FrontMiddleBackQueue) PushFront(val int)  {\n    \n}\n\n\nfunc (this *FrontMiddleBackQueue) PushMiddle(val int)  {\n    \n}\n\n\nfunc (this *FrontMiddleBackQueue) PushBack(val int)  {\n    \n}\n\n\nfunc (this *FrontMiddleBackQueue) PopFront() int {\n    \n}\n\n\nfunc (this *FrontMiddleBackQueue) PopMiddle() int {\n    \n}\n\n\nfunc (this *FrontMiddleBackQueue) PopBack() int {\n    \n}\n\n\n/**\n * Your FrontMiddleBackQueue object will be instantiated and called as such:\n * obj := Constructor();\n * obj.PushFront(val);\n * obj.PushMiddle(val);\n * obj.PushBack(val);\n * param_4 := obj.PopFront();\n * param_5 := obj.PopMiddle();\n * param_6 := obj.PopBack();\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class FrontMiddleBackQueue() {\n\n    fun pushFront(`val`: Int) {\n        \n    }\n\n    fun pushMiddle(`val`: Int) {\n        \n    }\n\n    fun pushBack(`val`: Int) {\n        \n    }\n\n    fun popFront(): Int {\n        \n    }\n\n    fun popMiddle(): Int {\n        \n    }\n\n    fun popBack(): Int {\n        \n    }\n\n}\n\n/**\n * Your FrontMiddleBackQueue object will be instantiated and called as such:\n * var obj = FrontMiddleBackQueue()\n * obj.pushFront(`val`)\n * obj.pushMiddle(`val`)\n * obj.pushBack(`val`)\n * var param_4 = obj.popFront()\n * var param_5 = obj.popMiddle()\n * var param_6 = obj.popBack()\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass FrontMiddleBackQueue {\n\n    init() {\n        \n    }\n    \n    func pushFront(_ val: Int) {\n        \n    }\n    \n    func pushMiddle(_ val: Int) {\n        \n    }\n    \n    func pushBack(_ val: Int) {\n        \n    }\n    \n    func popFront() -> Int {\n        \n    }\n    \n    func popMiddle() -> Int {\n        \n    }\n    \n    func popBack() -> Int {\n        \n    }\n}\n\n/**\n * Your FrontMiddleBackQueue object will be instantiated and called as such:\n * let obj = FrontMiddleBackQueue()\n * obj.pushFront(val)\n * obj.pushMiddle(val)\n * obj.pushBack(val)\n * let ret_4: Int = obj.popFront()\n * let ret_5: Int = obj.popMiddle()\n * let ret_6: Int = obj.popBack()\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct FrontMiddleBackQueue {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl FrontMiddleBackQueue {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn push_front(&self, val: i32) {\n        \n    }\n    \n    fn push_middle(&self, val: i32) {\n        \n    }\n    \n    fn push_back(&self, val: i32) {\n        \n    }\n    \n    fn pop_front(&self) -> i32 {\n        \n    }\n    \n    fn pop_middle(&self) -> i32 {\n        \n    }\n    \n    fn pop_back(&self) -> i32 {\n        \n    }\n}\n\n/**\n * Your FrontMiddleBackQueue object will be instantiated and called as such:\n * let obj = FrontMiddleBackQueue::new();\n * obj.push_front(val);\n * obj.push_middle(val);\n * obj.push_back(val);\n * let ret_4: i32 = obj.pop_front();\n * let ret_5: i32 = obj.pop_middle();\n * let ret_6: i32 = obj.pop_back();\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class FrontMiddleBackQueue\n    def initialize()\n        \n    end\n\n\n=begin\n    :type val: Integer\n    :rtype: Void\n=end\n    def push_front(val)\n        \n    end\n\n\n=begin\n    :type val: Integer\n    :rtype: Void\n=end\n    def push_middle(val)\n        \n    end\n\n\n=begin\n    :type val: Integer\n    :rtype: Void\n=end\n    def push_back(val)\n        \n    end\n\n\n=begin\n    :rtype: Integer\n=end\n    def pop_front()\n        \n    end\n\n\n=begin\n    :rtype: Integer\n=end\n    def pop_middle()\n        \n    end\n\n\n=begin\n    :rtype: Integer\n=end\n    def pop_back()\n        \n    end\n\n\nend\n\n# Your FrontMiddleBackQueue object will be instantiated and called as such:\n# obj = FrontMiddleBackQueue.new()\n# obj.push_front(val)\n# obj.push_middle(val)\n# obj.push_back(val)\n# param_4 = obj.pop_front()\n# param_5 = obj.pop_middle()\n# param_6 = obj.pop_back()"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class FrontMiddleBackQueue {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param Integer $val\n     * @return NULL\n     */\n    function pushFront($val) {\n        \n    }\n  \n    /**\n     * @param Integer $val\n     * @return NULL\n     */\n    function pushMiddle($val) {\n        \n    }\n  \n    /**\n     * @param Integer $val\n     * @return NULL\n     */\n    function pushBack($val) {\n        \n    }\n  \n    /**\n     * @return Integer\n     */\n    function popFront() {\n        \n    }\n  \n    /**\n     * @return Integer\n     */\n    function popMiddle() {\n        \n    }\n  \n    /**\n     * @return Integer\n     */\n    function popBack() {\n        \n    }\n}\n\n/**\n * Your FrontMiddleBackQueue object will be instantiated and called as such:\n * $obj = FrontMiddleBackQueue();\n * $obj->pushFront($val);\n * $obj->pushMiddle($val);\n * $obj->pushBack($val);\n * $ret_4 = $obj->popFront();\n * $ret_5 = $obj->popMiddle();\n * $ret_6 = $obj->popBack();\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class FrontMiddleBackQueue {\n\n  FrontMiddleBackQueue() {\n    \n  }\n  \n  void pushFront(int val) {\n    \n  }\n  \n  void pushMiddle(int val) {\n    \n  }\n  \n  void pushBack(int val) {\n    \n  }\n  \n  int popFront() {\n    \n  }\n  \n  int popMiddle() {\n    \n  }\n  \n  int popBack() {\n    \n  }\n}\n\n/**\n * Your FrontMiddleBackQueue object will be instantiated and called as such:\n * FrontMiddleBackQueue obj = FrontMiddleBackQueue();\n * obj.pushFront(val);\n * obj.pushMiddle(val);\n * obj.pushBack(val);\n * int param4 = obj.popFront();\n * int param5 = obj.popMiddle();\n * int param6 = obj.popBack();\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class FrontMiddleBackQueue() {\n\n    def pushFront(`val`: Int): Unit = {\n        \n    }\n\n    def pushMiddle(`val`: Int): Unit = {\n        \n    }\n\n    def pushBack(`val`: Int): Unit = {\n        \n    }\n\n    def popFront(): Int = {\n        \n    }\n\n    def popMiddle(): Int = {\n        \n    }\n\n    def popBack(): Int = {\n        \n    }\n\n}\n\n/**\n * Your FrontMiddleBackQueue object will be instantiated and called as such:\n * val obj = new FrontMiddleBackQueue()\n * obj.pushFront(`val`)\n * obj.pushMiddle(`val`)\n * obj.pushBack(`val`)\n * val param_4 = obj.popFront()\n * val param_5 = obj.popMiddle()\n * val param_6 = obj.popBack()\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule FrontMiddleBackQueue do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec push_front(val :: integer) :: any\n  def push_front(val) do\n    \n  end\n\n  @spec push_middle(val :: integer) :: any\n  def push_middle(val) do\n    \n  end\n\n  @spec push_back(val :: integer) :: any\n  def push_back(val) do\n    \n  end\n\n  @spec pop_front() :: integer\n  def pop_front() do\n    \n  end\n\n  @spec pop_middle() :: integer\n  def pop_middle() do\n    \n  end\n\n  @spec pop_back() :: integer\n  def pop_back() do\n    \n  end\nend\n\n# Your functions will be called as such:\n# FrontMiddleBackQueue.init_()\n# FrontMiddleBackQueue.push_front(val)\n# FrontMiddleBackQueue.push_middle(val)\n# FrontMiddleBackQueue.push_back(val)\n# param_4 = FrontMiddleBackQueue.pop_front()\n# param_5 = FrontMiddleBackQueue.pop_middle()\n# param_6 = FrontMiddleBackQueue.pop_back()\n\n# FrontMiddleBackQueue.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec front_middle_back_queue_init_() -> any().\nfront_middle_back_queue_init_() ->\n  .\n\n-spec front_middle_back_queue_push_front(Val :: integer()) -> any().\nfront_middle_back_queue_push_front(Val) ->\n  .\n\n-spec front_middle_back_queue_push_middle(Val :: integer()) -> any().\nfront_middle_back_queue_push_middle(Val) ->\n  .\n\n-spec front_middle_back_queue_push_back(Val :: integer()) -> any().\nfront_middle_back_queue_push_back(Val) ->\n  .\n\n-spec front_middle_back_queue_pop_front() -> integer().\nfront_middle_back_queue_pop_front() ->\n  .\n\n-spec front_middle_back_queue_pop_middle() -> integer().\nfront_middle_back_queue_pop_middle() ->\n  .\n\n-spec front_middle_back_queue_pop_back() -> integer().\nfront_middle_back_queue_pop_back() ->\n  .\n\n\n%% Your functions will be called as such:\n%% front_middle_back_queue_init_(),\n%% front_middle_back_queue_push_front(Val),\n%% front_middle_back_queue_push_middle(Val),\n%% front_middle_back_queue_push_back(Val),\n%% Param_4 = front_middle_back_queue_pop_front(),\n%% Param_5 = front_middle_back_queue_pop_middle(),\n%% Param_6 = front_middle_back_queue_pop_back(),\n\n%% front_middle_back_queue_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define front-middle-back-queue%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; push-front : exact-integer? -> void?\n    (define/public (push-front val)\n      )\n    ; push-middle : exact-integer? -> void?\n    (define/public (push-middle val)\n      )\n    ; push-back : exact-integer? -> void?\n    (define/public (push-back val)\n      )\n    ; pop-front : -> exact-integer?\n    (define/public (pop-front)\n      )\n    ; pop-middle : -> exact-integer?\n    (define/public (pop-middle)\n      )\n    ; pop-back : -> exact-integer?\n    (define/public (pop-back)\n      )))\n\n;; Your front-middle-back-queue% object will be instantiated and called as such:\n;; (define obj (new front-middle-back-queue%))\n;; (send obj push-front val)\n;; (send obj push-middle val)\n;; (send obj push-back val)\n;; (define param_4 (send obj pop-front))\n;; (define param_5 (send obj pop-middle))\n;; (define param_6 (send obj pop-back))"
+    }
+  ],
+  "solution": null
+}

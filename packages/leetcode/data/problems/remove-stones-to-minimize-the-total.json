@@ -1,0 +1,141 @@
+{
+  "questionId": "2094",
+  "questionFrontendId": "1962",
+  "title": "Remove Stones to Minimize the Total",
+  "titleSlug": "remove-stones-to-minimize-the-total",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> integer array <code>piles</code>, where <code>piles[i]</code> represents the number of stones in the <code>i<sup>th</sup></code> pile, and an integer <code>k</code>. You should apply the following operation <strong>exactly</strong> <code>k</code> times:</p>\n\n<ul>\n\t<li>Choose any <code>piles[i]</code> and <strong>remove</strong> <code>floor(piles[i] / 2)</code> stones from it.</li>\n</ul>\n\n<p><strong>Notice</strong> that you can apply the operation on the <strong>same</strong> pile more than once.</p>\n\n<p>Return <em>the <strong>minimum</strong> possible total number of stones remaining after applying the </em><code>k</code><em> operations</em>.</p>\n\n<p><code>floor(x)</code> is the <strong>largest</strong>&nbsp;integer that is <strong>smaller</strong> than or <strong>equal</strong> to <code>x</code> (i.e., rounds <code>x</code>&nbsp;down).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> piles = [5,4,9], k = 2\n<strong>Output:</strong> 12\n<strong>Explanation:</strong>&nbsp;Steps of a possible scenario are:\n- Apply the operation on pile 2. The resulting piles are [5,4,<u>5</u>].\n- Apply the operation on pile 0. The resulting piles are [<u>3</u>,4,5].\nThe total number of stones in [3,4,5] is 12.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> piles = [4,3,6,7], k = 3\n<strong>Output:</strong> 12\n<strong>Explanation:</strong>&nbsp;Steps of a possible scenario are:\n- Apply the operation on pile 2. The resulting piles are [4,3,<u>3</u>,7].\n- Apply the operation on pile 3. The resulting piles are [4,3,3,<u>4</u>].\n- Apply the operation on pile 0. The resulting piles are [<u>2</u>,3,3,4].\nThe total number of stones in [2,3,3,4] is 12.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= piles.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= piles[i] &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Choose the pile with the maximum number of stones each time.",
+    "Use a data structure that helps you find the mentioned pile each time efficiently.",
+    "One such data structure is a Priority Queue."
+  ],
+  "metaData": "{\n  \"name\": \"minStoneSum\",\n  \"params\": [\n    {\n      \"name\": \"piles\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"149K\", \"totalSubmission\": \"227.2K\", \"totalAcceptedRaw\": 149018, \"totalSubmissionRaw\": 227222, \"acRate\": \"65.6%\"}",
+  "likes": 1969,
+  "dislikes": 183,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Operations to Halve Array Sum\", \"titleSlug\": \"minimum-operations-to-halve-array-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximal Score After Applying K Operations\", \"titleSlug\": \"maximal-score-after-applying-k-operations\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Take Gifts From the Richest Pile\", \"titleSlug\": \"take-gifts-from-the-richest-pile\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[5,4,9]\n2",
+    "[4,3,6,7]\n3"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"expedia\", \"name\": \"Expedia\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minStoneSum(vector<int>& piles, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minStoneSum(int[] piles, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minStoneSum(self, piles: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minStoneSum(self, piles, k):\n        \"\"\"\n        :type piles: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} piles\n * @param {number} k\n * @return {number}\n */\nvar minStoneSum = function(piles, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minStoneSum(piles: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinStoneSum(int[] piles, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minStoneSum(int* piles, int pilesSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minStoneSum(piles []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minStoneSum(piles: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minStoneSum(_ piles: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_stone_sum(piles: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} piles\n# @param {Integer} k\n# @return {Integer}\ndef min_stone_sum(piles, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $piles\n     * @param Integer $k\n     * @return Integer\n     */\n    function minStoneSum($piles, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minStoneSum(List<int> piles, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minStoneSum(piles: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_stone_sum(piles :: [integer], k :: integer) :: integer\n  def min_stone_sum(piles, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_stone_sum(Piles :: [integer()], K :: integer()) -> integer().\nmin_stone_sum(Piles, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-stone-sum piles k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1570",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach: Greedy + Max Heap\n\n**Intuition**\n\nAt any given step, which number should we choose? We want to minimize the total number of stones remaining, which means we want to maximize the number of stones we remove at each step, so we should greedily choose the largest number at every step.\n\nEvery time we complete an operation, the data changes and we need to find the maximum number again. The best data structure for this would be a heap, as it allows us to update the data and always retrieve the maximum value in $$O(\\log{}n)$$ time, compared to $$O(n)$$ if we just used an array.\n\n**Algorithm**\n\n1. Initialize a max `heap` from `piles`.\n\n2. Perform the following `k` times:\n    - Pop the maximum element from the heap, call it `curr`.\n    - Calculate how many stones `remove` should be removed from `curr` after performing the operation. It is the floor of `curr / 2`.\n    - Push `curr - remove` onto the heap.\n\n3. Return the sum of the elements in the heap.\n\n**Implementation**\n\n> Note: C++'s `priority_queue` doesn't allow iteration, so we'll track the answer as we perform the heap operations.\n\n<iframe src=\"https://leetcode.com/playground/HojLrku2/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"HojLrku2\"></iframe>\n\n> Python's heapq only implements min heaps, which is why we need to make all the values negative to simulate a max heap.\n\n**Complexity Analysis**\n\nGiven $$n$$ as `piles.length`,\n\n* Time complexity: $$O(n + k \\cdot \\log{}n)$$\n\n    An array can be converted to a heap in linear time ($$O(n)$$) using a method like Python's `heapq.heapify()`. After converting the input to a heap, we perform `k` heap operations. Each heap operation costs $$O(\\log{}n)$$, which gives us a time complexity of $$O(n + k \\cdot \\log{}n)$$.\n\n* Space complexity: $$O(n)$$\n\n    The heap's length is equal to $$n$$, which is all the extra space we use.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

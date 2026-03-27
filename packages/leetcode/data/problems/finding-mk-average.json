@@ -1,0 +1,142 @@
+{
+  "questionId": "1953",
+  "questionFrontendId": "1825",
+  "title": "Finding MK Average",
+  "titleSlug": "finding-mk-average",
+  "difficulty": "Hard",
+  "content": "<p>You are given two integers, <code>m</code> and <code>k</code>, and a stream of integers. You are tasked to implement a data structure that calculates the <strong>MKAverage</strong> for the stream.</p>\n\n<p>The <strong>MKAverage</strong> can be calculated using these steps:</p>\n\n<ol>\n\t<li>If the number of the elements in the stream is less than <code>m</code> you should consider the <strong>MKAverage</strong> to be <code>-1</code>. Otherwise, copy the last <code>m</code> elements of the stream to a separate container.</li>\n\t<li>Remove the smallest <code>k</code> elements and the largest <code>k</code> elements from the container.</li>\n\t<li>Calculate the average value for the rest of the elements <strong>rounded down to the nearest integer</strong>.</li>\n</ol>\n\n<p>Implement the <code>MKAverage</code> class:</p>\n\n<ul>\n\t<li><code>MKAverage(int m, int k)</code> Initializes the <strong>MKAverage</strong> object with an empty stream and the two integers <code>m</code> and <code>k</code>.</li>\n\t<li><code>void addElement(int num)</code> Inserts a new element <code>num</code> into the stream.</li>\n\t<li><code>int calculateMKAverage()</code> Calculates and returns the <strong>MKAverage</strong> for the current stream <strong>rounded down to the nearest integer</strong>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;MKAverage&quot;, &quot;addElement&quot;, &quot;addElement&quot;, &quot;calculateMKAverage&quot;, &quot;addElement&quot;, &quot;calculateMKAverage&quot;, &quot;addElement&quot;, &quot;addElement&quot;, &quot;addElement&quot;, &quot;calculateMKAverage&quot;]\n[[3, 1], [3], [1], [], [10], [], [5], [5], [5], []]\n<strong>Output</strong>\n[null, null, null, -1, null, 3, null, null, null, 5]\n\n<strong>Explanation</strong>\n<code>MKAverage obj = new MKAverage(3, 1); \nobj.addElement(3);        // current elements are [3]\nobj.addElement(1);        // current elements are [3,1]\nobj.calculateMKAverage(); // return -1, because m = 3 and only 2 elements exist.\nobj.addElement(10);       // current elements are [3,1,10]\nobj.calculateMKAverage(); // The last 3 elements are [3,1,10].\n                          // After removing smallest and largest 1 element the container will be [3].\n                          // The average of [3] equals 3/1 = 3, return 3\nobj.addElement(5);        // current elements are [3,1,10,5]\nobj.addElement(5);        // current elements are [3,1,10,5,5]\nobj.addElement(5);        // current elements are [3,1,10,5,5,5]\nobj.calculateMKAverage(); // The last 3 elements are [5,5,5].\n                          // After removing smallest and largest 1 element the container will be [5].\n                          // The average of [5] equals 5/1 = 5, return 5\n</code></pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>3 &lt;= m &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt; k*2 &lt; m</code></li>\n\t<li><code>1 &lt;= num &lt;= 10<sup>5</sup></code></li>\n\t<li>At most <code>10<sup>5</sup></code> calls will be made to <code>addElement</code> and <code>calculateMKAverage</code>.</li>\n</ul>\n",
+  "hints": [
+    "At each query, try to save and update the sum of the elements needed to calculate MKAverage.",
+    "You can use BSTs for fast insertion and deletion of the elements."
+  ],
+  "metaData": "{\n  \"classname\": \"MKAverage\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"name\": \"m\",\n        \"type\": \"integer\"\n      },\n      {\n        \"name\": \"k\",\n        \"type\": \"integer\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"num\"\n        }\n      ],\n      \"name\": \"addElement\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [],\n      \"name\": \"calculateMKAverage\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"28.6K\", \"totalSubmission\": \"73.8K\", \"totalAcceptedRaw\": 28577, \"totalSubmissionRaw\": 73800, \"acRate\": \"38.7%\"}",
+  "likes": 528,
+  "dislikes": 142,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Find Median from Data Stream\", \"titleSlug\": \"find-median-from-data-stream\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Kth Largest Element in a Stream\", \"titleSlug\": \"kth-largest-element-in-a-stream\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sequentially Ordinal Rank Tracker\", \"titleSlug\": \"sequentially-ordinal-rank-tracker\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"MKAverage\",\"addElement\",\"addElement\",\"calculateMKAverage\",\"addElement\",\"calculateMKAverage\",\"addElement\",\"addElement\",\"addElement\",\"calculateMKAverage\"]\n[[3,1],[3],[1],[],[10],[],[5],[5],[5],[]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 48, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Queue",
+      "slug": "queue"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Data Stream",
+      "slug": "data-stream"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class MKAverage {\npublic:\n    MKAverage(int m, int k) {\n        \n    }\n    \n    void addElement(int num) {\n        \n    }\n    \n    int calculateMKAverage() {\n        \n    }\n};\n\n/**\n * Your MKAverage object will be instantiated and called as such:\n * MKAverage* obj = new MKAverage(m, k);\n * obj->addElement(num);\n * int param_2 = obj->calculateMKAverage();\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class MKAverage {\n\n    public MKAverage(int m, int k) {\n        \n    }\n    \n    public void addElement(int num) {\n        \n    }\n    \n    public int calculateMKAverage() {\n        \n    }\n}\n\n/**\n * Your MKAverage object will be instantiated and called as such:\n * MKAverage obj = new MKAverage(m, k);\n * obj.addElement(num);\n * int param_2 = obj.calculateMKAverage();\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class MKAverage:\n\n    def __init__(self, m: int, k: int):\n        \n\n    def addElement(self, num: int) -> None:\n        \n\n    def calculateMKAverage(self) -> int:\n        \n\n\n# Your MKAverage object will be instantiated and called as such:\n# obj = MKAverage(m, k)\n# obj.addElement(num)\n# param_2 = obj.calculateMKAverage()"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class MKAverage(object):\n\n    def __init__(self, m, k):\n        \"\"\"\n        :type m: int\n        :type k: int\n        \"\"\"\n        \n\n    def addElement(self, num):\n        \"\"\"\n        :type num: int\n        :rtype: None\n        \"\"\"\n        \n\n    def calculateMKAverage(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your MKAverage object will be instantiated and called as such:\n# obj = MKAverage(m, k)\n# obj.addElement(num)\n# param_2 = obj.calculateMKAverage()"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} m\n * @param {number} k\n */\nvar MKAverage = function(m, k) {\n    \n};\n\n/** \n * @param {number} num\n * @return {void}\n */\nMKAverage.prototype.addElement = function(num) {\n    \n};\n\n/**\n * @return {number}\n */\nMKAverage.prototype.calculateMKAverage = function() {\n    \n};\n\n/** \n * Your MKAverage object will be instantiated and called as such:\n * var obj = new MKAverage(m, k)\n * obj.addElement(num)\n * var param_2 = obj.calculateMKAverage()\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class MKAverage {\n    constructor(m: number, k: number) {\n        \n    }\n\n    addElement(num: number): void {\n        \n    }\n\n    calculateMKAverage(): number {\n        \n    }\n}\n\n/**\n * Your MKAverage object will be instantiated and called as such:\n * var obj = new MKAverage(m, k)\n * obj.addElement(num)\n * var param_2 = obj.calculateMKAverage()\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class MKAverage {\n\n    public MKAverage(int m, int k) {\n        \n    }\n    \n    public void AddElement(int num) {\n        \n    }\n    \n    public int CalculateMKAverage() {\n        \n    }\n}\n\n/**\n * Your MKAverage object will be instantiated and called as such:\n * MKAverage obj = new MKAverage(m, k);\n * obj.AddElement(num);\n * int param_2 = obj.CalculateMKAverage();\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} MKAverage;\n\n\nMKAverage* mKAverageCreate(int m, int k) {\n    \n}\n\nvoid mKAverageAddElement(MKAverage* obj, int num) {\n    \n}\n\nint mKAverageCalculateMKAverage(MKAverage* obj) {\n    \n}\n\nvoid mKAverageFree(MKAverage* obj) {\n    \n}\n\n/**\n * Your MKAverage struct will be instantiated and called as such:\n * MKAverage* obj = mKAverageCreate(m, k);\n * mKAverageAddElement(obj, num);\n \n * int param_2 = mKAverageCalculateMKAverage(obj);\n \n * mKAverageFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type MKAverage struct {\n    \n}\n\n\nfunc Constructor(m int, k int) MKAverage {\n    \n}\n\n\nfunc (this *MKAverage) AddElement(num int)  {\n    \n}\n\n\nfunc (this *MKAverage) CalculateMKAverage() int {\n    \n}\n\n\n/**\n * Your MKAverage object will be instantiated and called as such:\n * obj := Constructor(m, k);\n * obj.AddElement(num);\n * param_2 := obj.CalculateMKAverage();\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class MKAverage(m: Int, k: Int) {\n\n    fun addElement(num: Int) {\n        \n    }\n\n    fun calculateMKAverage(): Int {\n        \n    }\n\n}\n\n/**\n * Your MKAverage object will be instantiated and called as such:\n * var obj = MKAverage(m, k)\n * obj.addElement(num)\n * var param_2 = obj.calculateMKAverage()\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass MKAverage {\n\n    init(_ m: Int, _ k: Int) {\n        \n    }\n    \n    func addElement(_ num: Int) {\n        \n    }\n    \n    func calculateMKAverage() -> Int {\n        \n    }\n}\n\n/**\n * Your MKAverage object will be instantiated and called as such:\n * let obj = MKAverage(m, k)\n * obj.addElement(num)\n * let ret_2: Int = obj.calculateMKAverage()\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct MKAverage {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl MKAverage {\n\n    fn new(m: i32, k: i32) -> Self {\n        \n    }\n    \n    fn add_element(&self, num: i32) {\n        \n    }\n    \n    fn calculate_mk_average(&self) -> i32 {\n        \n    }\n}\n\n/**\n * Your MKAverage object will be instantiated and called as such:\n * let obj = MKAverage::new(m, k);\n * obj.add_element(num);\n * let ret_2: i32 = obj.calculate_mk_average();\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class MKAverage\n\n=begin\n    :type m: Integer\n    :type k: Integer\n=end\n    def initialize(m, k)\n        \n    end\n\n\n=begin\n    :type num: Integer\n    :rtype: Void\n=end\n    def add_element(num)\n        \n    end\n\n\n=begin\n    :rtype: Integer\n=end\n    def calculate_mk_average()\n        \n    end\n\n\nend\n\n# Your MKAverage object will be instantiated and called as such:\n# obj = MKAverage.new(m, k)\n# obj.add_element(num)\n# param_2 = obj.calculate_mk_average()"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class MKAverage {\n    /**\n     * @param Integer $m\n     * @param Integer $k\n     */\n    function __construct($m, $k) {\n        \n    }\n  \n    /**\n     * @param Integer $num\n     * @return NULL\n     */\n    function addElement($num) {\n        \n    }\n  \n    /**\n     * @return Integer\n     */\n    function calculateMKAverage() {\n        \n    }\n}\n\n/**\n * Your MKAverage object will be instantiated and called as such:\n * $obj = MKAverage($m, $k);\n * $obj->addElement($num);\n * $ret_2 = $obj->calculateMKAverage();\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class MKAverage {\n\n  MKAverage(int m, int k) {\n    \n  }\n  \n  void addElement(int num) {\n    \n  }\n  \n  int calculateMKAverage() {\n    \n  }\n}\n\n/**\n * Your MKAverage object will be instantiated and called as such:\n * MKAverage obj = MKAverage(m, k);\n * obj.addElement(num);\n * int param2 = obj.calculateMKAverage();\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class MKAverage(_m: Int, _k: Int) {\n\n    def addElement(num: Int): Unit = {\n        \n    }\n\n    def calculateMKAverage(): Int = {\n        \n    }\n\n}\n\n/**\n * Your MKAverage object will be instantiated and called as such:\n * val obj = new MKAverage(m, k)\n * obj.addElement(num)\n * val param_2 = obj.calculateMKAverage()\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule MKAverage do\n  @spec init_(m :: integer, k :: integer) :: any\n  def init_(m, k) do\n    \n  end\n\n  @spec add_element(num :: integer) :: any\n  def add_element(num) do\n    \n  end\n\n  @spec calculate_mk_average() :: integer\n  def calculate_mk_average() do\n    \n  end\nend\n\n# Your functions will be called as such:\n# MKAverage.init_(m, k)\n# MKAverage.add_element(num)\n# param_2 = MKAverage.calculate_mk_average()\n\n# MKAverage.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec mk_average_init_(M :: integer(), K :: integer()) -> any().\nmk_average_init_(M, K) ->\n  .\n\n-spec mk_average_add_element(Num :: integer()) -> any().\nmk_average_add_element(Num) ->\n  .\n\n-spec mk_average_calculate_mk_average() -> integer().\nmk_average_calculate_mk_average() ->\n  .\n\n\n%% Your functions will be called as such:\n%% mk_average_init_(M, K),\n%% mk_average_add_element(Num),\n%% Param_2 = mk_average_calculate_mk_average(),\n\n%% mk_average_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define mk-average%\n  (class object%\n    (super-new)\n    \n    ; m : exact-integer?\n    ; k : exact-integer?\n    (init-field\n      m\n      k)\n    \n    ; add-element : exact-integer? -> void?\n    (define/public (add-element num)\n      )\n    ; calculate-mk-average : -> exact-integer?\n    (define/public (calculate-mk-average)\n      )))\n\n;; Your mk-average% object will be instantiated and called as such:\n;; (define obj (new mk-average% [m m] [k k]))\n;; (send obj add-element num)\n;; (define param_2 (send obj calculate-mk-average))"
+    }
+  ],
+  "solution": null
+}

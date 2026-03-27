@@ -1,0 +1,58 @@
+{
+  "questionId": "1827",
+  "questionFrontendId": "1683",
+  "title": "Invalid Tweets",
+  "titleSlug": "invalid-tweets",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Tweets</code></p>\n\n<pre>\n+----------------+---------+\n| Column Name    | Type    |\n+----------------+---------+\n| tweet_id       | int     |\n| content        | varchar |\n+----------------+---------+\ntweet_id is the primary key (column with unique values) for this table.\ncontent consists of alphanumeric characters, &#39;!&#39;, or &#39; &#39; and no other special characters.\nThis table contains all the tweets in a social media app.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to find the IDs of the invalid tweets. The tweet is invalid if the number of characters used in the content of the tweet is <strong>strictly greater</strong> than <code>15</code>.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nTweets table:\n+----------+-----------------------------------+\n| tweet_id | content                           |\n+----------+-----------------------------------+\n| 1        | Let us Code                       |\n| 2        | More than fifteen chars are here! |\n+----------+-----------------------------------+\n<strong>Output:</strong> \n+----------+\n| tweet_id |\n+----------+\n| 2        |\n+----------+\n<strong>Explanation:</strong> \nTweet 1 has length = 11. It is a valid tweet.\nTweet 2 has length = 33. It is an invalid tweet.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Tweets(tweet_id int, content varchar(50))\"], \"mssql\": [\"Create table Tweets(tweet_id int, content varchar(50))\"], \"oraclesql\": [\"Create table Tweets(tweet_id int, content varchar(50))\"], \"database\": true, \"name\": \"invalid_tweets\", \"pythondata\": [\"Tweets = pd.DataFrame([], columns=['tweet_id', 'content']).astype({'tweet_id':'Int64', 'content':'object'})\"], \"postgresql\": [\"Create table If Not Exists Tweets(tweet_id int, content varchar(50))\"], \"database_schema\": {\"Tweets\": {\"tweet_id\": \"INT\", \"content\": \"VARCHAR(50)\"}}}",
+  "stats": "{\"totalAccepted\": \"1.4M\", \"totalSubmission\": \"1.6M\", \"totalAcceptedRaw\": 1396961, \"totalSubmissionRaw\": 1640167, \"acRate\": \"85.2%\"}",
+  "likes": 1485,
+  "dislikes": 381,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Tweets\":[\"tweet_id\",\"content\"]},\"rows\":{\"Tweets\":[[1,\"Let us Code\"],[2,\"More than fifteen chars are here!\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 8, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 7, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"twitter\", \"name\": \"X\"}, {\"timesEncountered\": 2, \"slug\": \"acko\", \"name\": \"Acko\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef invalid_tweets(tweets: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "1940",
+    "content": "<!-- Don't delete this -->\n[TOC]\n\n# Solution\n\n---\n\n## pandas\n\n### Approach: Filtering Rows\n\n#### Algorithm\n\n<table>\n  <tr>\n    <th>tweet_id</th>\n    <th>content</th>\n  </tr>\n  <tr>\n    <td>1</td>\n    <td>Vote for Biden</td>\n  </tr>\n  <tr>\n    <td>2</td>\n    <td>Let us make America great again!</td>\n  </tr>\n</table>\n\n\nThis question requires determining if the tweet's length is greater than 15, which involves calculating the length of a string.\n\nFor a DataFrame, we can calculate the length of a string in a column using the [str.len()](https://pandas.pydata.org/docs/reference/api/pandas.Series.str.len.html) series method. This method is applied to the desired column of the DataFrame to retrieve the length of each string element in that column. \n\nWe apply `str.len()` method on the `content` column. The result `is_valid` is a boolean Series which means each tweet is valid (with length greater than 15) or not.\n\n```python\nis_valid = tweets['content'].str.len() > 15\n```\n\nWe will obtain the following Series:\n\n```\n0    False\n1     True\nName: content, dtype: bool\n```\n\n<br>\n\nNext, we use `tweets[is_valid]` to select rows from `tweets` using `is_valid` as a filter.\n\n```python\ndf = tweets[is_valid]\n```\n\nHence, we can obtain the following DataFrame `df`:\n\n<table>\n  <tr>\n    <th>tweet_id</th>\n    <th>content</th>\n  </tr>\n  <tr>\n    <td>2</td>\n    <td>Let us make America great again!</td>\n  </tr>\n</table>  \n\n<br>\n\nNote that we need to return the required columns. The complete code is as follows:\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/jsdqNkrs/shared\" frameBorder=\"0\" width=\"100%\" height=\"157\" name=\"jsdqNkrs\"></iframe>\n\n\n\n<br>\n\n## Database\n\n### Approach: Filtering Rows\n\n#### Algorithm\n\nFor a SQL table, the best function to use to count the number of characters used in a string is [CHAR_LENGTH(str)](https://dev.mysql.com/doc/refman/5.7/en/string-functions.html#function_char-length), which returns the length of the string `str`.\n\nThe other common function, [LENGTH(str)](https://dev.mysql.com/doc/refman/5.7/en/string-functions.html#function_length), also works for this question since the column `content` contains only English characters and no special characters. Otherwise, `LENGTH()` might return a different result because this function returns the length of the string `str` **in bytes** and certain characters contain more than 1 byte. \n\nUsing character `'¥'` as an example: `CHAR_LENGTH()` returns 1 as the result, while  `LENGTH()` return 2 because this string contains 2 bytes. \n\n<table>\n  <tr>\n    <th>LENGTH('¥')</th>\n    <th>CHAR_LENGTH('¥')</th>\n  </tr>\n  <tr>\n    <td>2</td>\n    <td>1</td>\n  </tr>\n</table>\n\n<br>\n\n#### Implementation\n\n```sql\nSELECT \n    tweet_id\nFROM \n    tweets\nWHERE \n    CHAR_LENGTH(content)> 15\n```",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

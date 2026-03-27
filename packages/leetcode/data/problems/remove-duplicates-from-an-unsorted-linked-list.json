@@ -1,0 +1,122 @@
+{
+  "questionId": "1982",
+  "questionFrontendId": "1836",
+  "title": "Remove Duplicates From an Unsorted Linked List",
+  "titleSlug": "remove-duplicates-from-an-unsorted-linked-list",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>head</code> of a linked list, find all the values that appear <strong>more than once</strong> in the list and delete the nodes that have any of those values.</p>\r\n\r\n<p>Return <em>the linked list after the deletions.</em></p>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong class=\"example\">Example 1:</strong></p>\r\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/04/21/tmp-linked-list.jpg\" style=\"width: 422px; height: 222px;\" />\r\n<pre>\r\n<strong>Input:</strong> head = [1,2,3,2]\r\n<strong>Output:</strong> [1,3]\r\n<strong>Explanation:</strong> 2 appears twice in the linked list, so all 2&#39;s should be deleted. After deleting all 2&#39;s, we are left with [1,3].\r\n</pre>\r\n\r\n<p><strong class=\"example\">Example 2:</strong></p>\r\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/04/21/tmp-linked-list-1.jpg\" style=\"width: 422px; height: 151px;\" />\r\n<pre>\r\n<strong>Input:</strong> head = [2,1,1,2]\r\n<strong>Output:</strong> []\r\n<strong>Explanation:</strong> 2 and 1 both appear twice. All the elements should be deleted.\r\n</pre>\r\n\r\n<p><strong class=\"example\">Example 3:</strong></p>\r\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/04/21/tmp-linked-list-2.jpg\" style=\"width: 500px; height: 142px;\" />\r\n<pre>\r\n<strong>Input:</strong> head = [3,2,2,1,3,2,4]\r\n<strong>Output:</strong> [1,4]\r\n<strong>Explanation: </strong>3 appears twice and 2 appears three times. After deleting all 3&#39;s and 2&#39;s, we are left with [1,4].\r\n</pre>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong>Constraints:</strong></p>\r\n\r\n<ul>\r\n\t<li>The number of nodes in the list is in the range&nbsp;<code>[1, 10<sup>5</sup>]</code></li>\r\n\t<li><code>1 &lt;= Node.val &lt;= 10<sup>5</sup></code></li>\r\n</ul>",
+  "hints": [
+    "Is there a way we can know beforehand which nodes to delete?",
+    "Count the number of appearances for each number."
+  ],
+  "metaData": "{\n  \"name\": \"deleteDuplicatesUnsorted\",\n  \"params\": [\n    {\n      \"name\": \"head\",\n      \"type\": \"ListNode\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"ListNode\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"39.9K\", \"totalSubmission\": \"52.7K\", \"totalAcceptedRaw\": 39891, \"totalSubmissionRaw\": 52741, \"acRate\": \"75.6%\"}",
+  "likes": 408,
+  "dislikes": 12,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Remove Duplicates from Sorted List II\", \"titleSlug\": \"remove-duplicates-from-sorted-list-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Remove Duplicates from Sorted List\", \"titleSlug\": \"remove-duplicates-from-sorted-list\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,2]",
+    "[2,1,1,2]",
+    "[3,2,2,1,3,2,4]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    ListNode* deleteDuplicatesUnsorted(ListNode* head) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode() {}\n *     ListNode(int val) { this.val = val; }\n *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n * }\n */\nclass Solution {\n    public ListNode deleteDuplicatesUnsorted(ListNode head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution:\n    def deleteDuplicatesUnsorted(self, head: ListNode) -> ListNode:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for singly-linked list.\n# class ListNode(object):\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution(object):\n    def deleteDuplicatesUnsorted(self, head):\n        \"\"\"\n        :type head: ListNode\n        :rtype: ListNode\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for singly-linked list.\n * function ListNode(val, next) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.next = (next===undefined ? null : next)\n * }\n */\n/**\n * @param {ListNode} head\n * @return {ListNode}\n */\nvar deleteDuplicatesUnsorted = function(head) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *     val: number\n *     next: ListNode | null\n *     constructor(val?: number, next?: ListNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.next = (next===undefined ? null : next)\n *     }\n * }\n */\n\nfunction deleteDuplicatesUnsorted(head: ListNode | null): ListNode | null {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public int val;\n *     public ListNode next;\n *     public ListNode(int val=0, ListNode next=null) {\n *         this.val = val;\n *         this.next = next;\n *     }\n * }\n */\npublic class Solution {\n    public ListNode DeleteDuplicatesUnsorted(ListNode head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     struct ListNode *next;\n * };\n */\n\n\nstruct ListNode* deleteDuplicatesUnsorted(struct ListNode* head){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for singly-linked list.\n * type ListNode struct {\n *     Val int\n *     Next *ListNode\n * }\n */\nfunc deleteDuplicatesUnsorted(head *ListNode) *ListNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var li = ListNode(5)\n * var v = li.`val`\n * Definition for singly-linked list.\n * class ListNode(var `val`: Int) {\n *     var next: ListNode? = null\n * }\n */\nclass Solution {\n    fun deleteDuplicatesUnsorted(head: ListNode?): ListNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public var val: Int\n *     public var next: ListNode?\n *     public init() { self.val = 0; self.next = nil; }\n *     public init(_ val: Int) { self.val = val; self.next = nil; }\n *     public init(_ val: Int, _ next: ListNode?) { self.val = val; self.next = next; }\n * }\n */\nclass Solution {\n    func deleteDuplicatesUnsorted(_ head: ListNode?) -> ListNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for singly-linked list.\n// #[derive(PartialEq, Eq, Clone, Debug)]\n// pub struct ListNode {\n//   pub val: i32,\n//   pub next: Option<Box<ListNode>>\n// }\n// \n// impl ListNode {\n//   #[inline]\n//   fn new(val: i32) -> Self {\n//     ListNode {\n//       next: None,\n//       val\n//     }\n//   }\n// }\nimpl Solution {\n    pub fn delete_duplicates_unsorted(head: Option<Box<ListNode>>) -> Option<Box<ListNode>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for singly-linked list.\n# class ListNode\n#     attr_accessor :val, :next\n#     def initialize(val = 0, _next = nil)\n#         @val = val\n#         @next = _next\n#     end\n# end\n# @param {ListNode} head\n# @return {ListNode}\ndef delete_duplicates_unsorted(head)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a singly-linked list.\n * class ListNode {\n *     public $val = 0;\n *     public $next = null;\n *     function __construct($val = 0, $next = null) {\n *         $this->val = $val;\n *         $this->next = $next;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param ListNode $head\n     * @return ListNode\n     */\n    function deleteDuplicatesUnsorted($head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode(_x: Int = 0, _next: ListNode = null) {\n *   var next: ListNode = _next\n *   var x: Int = _x\n * }\n */\nobject Solution {\n    def deleteDuplicatesUnsorted(head: ListNode): ListNode = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for singly-linked list:\n#|\n\n; val : integer?\n; next : (or/c list-node? #f)\n(struct list-node\n  (val next) #:mutable #:transparent)\n\n; constructor\n(define (make-list-node [val 0])\n  (list-node val #f))\n\n|#\n\n(define/contract (delete-duplicates-unsorted head)\n  (-> (or/c list-node? #f) (or/c list-node? #f))\n\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2364",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nTo remove all nodes in a linked list that appear more than once, we need a data structure to track the frequency of each value. Hash maps are ideal for this due to their efficient insertion and lookup operations, both with an average-case time complexity of $O(1)$.\n\nObserve that we will move all instances of the repeated values, not only the duplicate values. For example: if there are two `3`s, we will remove both. \n\n---\n\n### Approach 1: Iterative Two Pass + Hash Map\n\n#### Intuition\n\nThe idea is to perform two passes over the linked list:\n\n1. Count Occurrences: Traverse the linked list and count the occurrences of each value using a hash map. \n\n2. Remove Duplicates: Traverse the linked list again and remove the nodes with values appearing more than once, according to the hash map.\n\nTo delete a node in a linked list, we'll adjust the pointers to bypass the node to be removed. During the second pass, we'll keep track of the current and previous nodes as we traverse the list.\n\nWhen a node's value appears more than once, we update the previous node's `next` pointer to skip the current node and point to the node right after the current node. This effectively removes the current node from the list\n\nIf the node does not need to be removed, we move the previous pointer to the current node and continue traversing.\n\n![remove_fig1](../Figures/1836/1836_slides_remove.png)\n\nIn this approach, we use a dummy node to handle edge cases and simplify the deletion process. A dummy node, added at the beginning of the list, ensures we always have a previous node to refer to, even if the head needs to be removed. This method avoids common mistakes that often occur when modifying linked lists.\n\nUsing dummy nodes is a common technique for linked list problems, particularly those that involve modifying the list in-place. \n\n!?!../Documents/1836/slideshow.json:960,540!?!\n\nHere are some commonly asked linked list questions in interviews that use dummy nodes:\n\n* [21. Merge Two Sorted Lists](https://leetcode.com/problems/merge-two-sorted-lists/description/)\n* [2. Add Two Numbers](https://leetcode.com/problems/add-two-numbers/description/)\n* [19. Remove Nth Node From End of List](https://leetcode.com/problems/remove-nth-node-from-end-of-list/description/)\n* [23. Merge k Sorted Lists](https://leetcode.com/problems/merge-k-sorted-lists/description/)\n\nIf you have a LeetCode Premium subscription, you can learn more about linked lists using this [Linked List Explore Card](https://leetcode.com/explore/learn/card/linked-list/).\n\n#### Algorithm\n\n1. Initialization:\n    - Create a dummy node `dummy` and set its `next` pointer to the head of the linked list.\n    - Initialize an empty hash map `frequency` to count the occurrences of each value in the linked list.\n    - Initialize three pointers: `temp` pointing to the head, `current` pointing to `dummy->next`, and `prev` pointing to `dummy`.\n2. Count Occurrences:\n    - While `temp` is not null:\n        - Increment the count of `temp->val` in the `frequency` hash map.\n        - Move `temp` to the next node.\n3. Remove Duplicates:\n    - While `current` is not null:\n        - If the value of `current` appears more than once in the `frequency` hash map:\n            - Set `prev->next` to `current->next` to bypass the current node.\n        - Otherwise:\n            - Move `prev` to `current`.\n        - Move `current` to the next node.\n4. Return `dummy->next`, which is the head of the modified linked list.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/PsfYRtks/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"PsfYRtks\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the linked list.\n\n- Time Complexity: $O(n)$\n  \n    The first while loop traverses the list once to count the occurrences of each value, resulting in a time complexity of $O(n)$. Hash map operations (insertion and lookup) are $O(1)$.\n  \n    The second while loop that removes nodes with duplicate values also traverses the list once, resulting in a time complexity of $O(n)$.\n  \n    Therefore, the overall time complexity is $O(n)$.\n\n- Space Complexity: $O(n)$\n  \n    The hash map used to store the frequency of each value requires $O(n)$ space in the worst case, where all nodes have distinct values.\n  \n    The additional space used by the dummy node and the pointers is constant $O(1)$.\n  \n    Therefore, the overall space complexity is $O(n)$.\n\n---\n\n### Approach 2: Recursive + Hash Map\n\n#### Intuition\n\nWe can solve this problem using recursion as well. The fundamental idea behind recursion is to break down a problem into smaller subproblems and solve each one, given that we know the solution to the previous subproblems. \n\nIn this case, the subproblem is to decide whether or not to delete the current node. We traverse the linked list recursively until we reach the tail. Because the recursion backs up, we can assume that we have already handled the nodes that are after the current node. \n\n> This is why recursion is so powerful; we can assume that each subproblem has been solved and we can use the answer for the subproblem to solve our current problem.\n\nThe decision to remove the current node is based on its frequency count, and we use the same hash map from the previous approach to track these frequencies.\n\nA good example of this application of recursion can be round in this problem :\n\n* [24. Swap Nodes in Pairs](https://leetcode.com/problems/swap-nodes-in-pairs/description/)\n\n#### Algorithm\n\n1. Initialization:\n    - Initialize an empty hash map `frequency` to count the occurrences of each value in the linked list.\n    - Define a function `countFrequencies` with parameters `head` and `frequency`.\n    - Define a function `deleteDuplicatesUnsortedHelper` with parameters `head` and `frequency`.\n2. Count Occurrences:\n    - In `countFrequencies` function:\n        - Initialize a pointer `current` pointing to `head`.\n        - While `current` is not null:\n            - Increment the count of `current.val` in the `frequency` hash map.\n            - Move `current` to the next node.\n3. Remove Duplicates:\n    - In `deleteDuplicatesUnsortedHelper` function:\n        - If `head` is null:\n            - Return null.\n        - Recursively call `deleteDuplicatesUnsortedHelper` and store the result in `updatedNextNode`.\n        - Set `head.next` to `updatedNextNode`.\n        - If the value of `head` appears more than once in the `frequency` hash map:\n            - Return `updatedNextNode` to bypass the current node.\n        - Otherwise:\n            - Return `head` to include the current node in the modified list.\n4. Main Function:\n    - In `deleteDuplicatesUnsorted` function:\n        - Initialize the `frequency` hash map.\n        - Call `countFrequencies` to populate the `frequency` map.\n        - Return the result of `deleteDuplicatesUnsortedHelper`, which is the head of the modified linked list.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/97jBkezm/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"97jBkezm\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the linked list.\n\n- Time Complexity: $O(n)$\n  \n    The `countFrequencies` function traverses the list once to count the occurrences of each value, resulting in a time complexity of $O(n)$. The hash map operations (insertion and lookup) are $O(1)$.\n  \n    The `deleteDuplicatesUnsortedHelper` function traverses the linked list to remove nodes with duplicate values. Each node is processed exactly once, resulting in a time complexity of $O(n)$.\n  \n    Therefore, the overall time complexity is $O(n)$.\n\n- Space Complexity: $O(n)$\n  \n    The hash map used to store the frequency of each value requires $O(n)$ space in the worst case, where all nodes have distinct values.\n  \n    The additional space used by the recursion stack in `deleteDuplicatesUnsortedHelper` is $O(n)$ in the worst case.\n  \n    Therefore, the overall space complexity is $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

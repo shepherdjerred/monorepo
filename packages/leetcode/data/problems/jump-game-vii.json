@@ -1,0 +1,139 @@
+{
+  "questionId": "2001",
+  "questionFrontendId": "1871",
+  "title": "Jump Game VII",
+  "titleSlug": "jump-game-vii",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> binary string <code>s</code> and two integers <code>minJump</code> and <code>maxJump</code>. In the beginning, you are standing at index <code>0</code>, which is equal to <code>&#39;0&#39;</code>. You can move from index <code>i</code> to index <code>j</code> if the following conditions are fulfilled:</p>\n\n<ul>\n\t<li><code>i + minJump &lt;= j &lt;= min(i + maxJump, s.length - 1)</code>, and</li>\n\t<li><code>s[j] == &#39;0&#39;</code>.</li>\n</ul>\n\n<p>Return <code>true</code><i> if you can reach index </i><code>s.length - 1</code><i> in </i><code>s</code><em>, or </em><code>false</code><em> otherwise.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;<u>0</u>11<u>0</u>1<u>0</u>&quot;, minJump = 2, maxJump = 3\n<strong>Output:</strong> true\n<strong>Explanation:</strong>\nIn the first step, move from index 0 to index 3. \nIn the second step, move from index 3 to index 5.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;01101110&quot;, minJump = 2, maxJump = 3\n<strong>Output:</strong> false\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s[i]</code> is either <code>&#39;0&#39;</code> or <code>&#39;1&#39;</code>.</li>\n\t<li><code>s[0] == &#39;0&#39;</code></li>\n\t<li><code>1 &lt;= minJump &lt;= maxJump &lt; s.length</code></li>\n</ul>\n",
+  "hints": [
+    "Consider for each reachable index i the interval [i + a, i + b].",
+    "Use partial sums to mark the intervals as reachable."
+  ],
+  "metaData": "{\n  \"name\": \"canReach\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"minJump\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"maxJump\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"66.5K\", \"totalSubmission\": \"251.6K\", \"totalAcceptedRaw\": 66460, \"totalSubmissionRaw\": 251592, \"acRate\": \"26.4%\"}",
+  "likes": 1809,
+  "dislikes": 120,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Jump Game II\", \"titleSlug\": \"jump-game-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Jump Game\", \"titleSlug\": \"jump-game\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Jump Game III\", \"titleSlug\": \"jump-game-iii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Jump Game IV\", \"titleSlug\": \"jump-game-iv\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Jump Game V\", \"titleSlug\": \"jump-game-v\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Jump Game VI\", \"titleSlug\": \"jump-game-vi\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Jump Game VII\", \"titleSlug\": \"jump-game-vii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Jump Game VIII\", \"titleSlug\": \"jump-game-viii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Vowel Strings in Ranges\", \"titleSlug\": \"count-vowel-strings-in-ranges\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Jumps to Reach the Last Index\", \"titleSlug\": \"maximum-number-of-jumps-to-reach-the-last-index\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"011010\"\n2\n3",
+    "\"01101110\"\n2\n3"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool canReach(string s, int minJump, int maxJump) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean canReach(String s, int minJump, int maxJump) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def canReach(self, s: str, minJump: int, maxJump: int) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def canReach(self, s, minJump, maxJump):\n        \"\"\"\n        :type s: str\n        :type minJump: int\n        :type maxJump: int\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {number} minJump\n * @param {number} maxJump\n * @return {boolean}\n */\nvar canReach = function(s, minJump, maxJump) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function canReach(s: string, minJump: number, maxJump: number): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool CanReach(string s, int minJump, int maxJump) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool canReach(char* s, int minJump, int maxJump) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func canReach(s string, minJump int, maxJump int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun canReach(s: String, minJump: Int, maxJump: Int): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func canReach(_ s: String, _ minJump: Int, _ maxJump: Int) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn can_reach(s: String, min_jump: i32, max_jump: i32) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {Integer} min_jump\n# @param {Integer} max_jump\n# @return {Boolean}\ndef can_reach(s, min_jump, max_jump)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param Integer $minJump\n     * @param Integer $maxJump\n     * @return Boolean\n     */\n    function canReach($s, $minJump, $maxJump) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool canReach(String s, int minJump, int maxJump) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def canReach(s: String, minJump: Int, maxJump: Int): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec can_reach(s :: String.t, min_jump :: integer, max_jump :: integer) :: boolean\n  def can_reach(s, min_jump, max_jump) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec can_reach(S :: unicode:unicode_binary(), MinJump :: integer(), MaxJump :: integer()) -> boolean().\ncan_reach(S, MinJump, MaxJump) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (can-reach s minJump maxJump)\n  (-> string? exact-integer? exact-integer? boolean?)\n  )"
+    }
+  ],
+  "solution": null
+}

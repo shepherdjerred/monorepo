@@ -1,0 +1,120 @@
+{
+  "questionId": "1800",
+  "questionFrontendId": "1680",
+  "title": "Concatenation of Consecutive Binary Numbers",
+  "titleSlug": "concatenation-of-consecutive-binary-numbers",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer <code>n</code>, return <em>the <strong>decimal value</strong> of the binary string formed by concatenating the binary representations of </em><code>1</code><em> to </em><code>n</code><em> in order, <strong>modulo </strong></em><code>10<sup>9 </sup>+ 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 1\n<strong>Output:</strong> 1\n<strong>Explanation: </strong>&quot;1&quot; in binary corresponds to the decimal value 1. \n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 3\n<strong>Output:</strong> 27\n<strong>Explanation: </strong>In binary, 1, 2, and 3 corresponds to &quot;1&quot;, &quot;10&quot;, and &quot;11&quot;.\nAfter concatenating them, we have &quot;11011&quot;, which corresponds to the decimal value 27.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 12\n<strong>Output:</strong> 505379714\n<strong>Explanation</strong>: The concatenation results in &quot;1101110010111011110001001101010111100&quot;.\nThe decimal value of that is 118505380540.\nAfter modulo 10<sup>9</sup> + 7, the result is 505379714.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Express the nth number value in a recursion formula and think about how we can do a fast evaluation."
+  ],
+  "metaData": "{\n  \"name\": \"concatenatedBinary\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"190.9K\", \"totalSubmission\": \"286.7K\", \"totalAcceptedRaw\": 190875, \"totalSubmissionRaw\": 286727, \"acRate\": \"66.6%\"}",
+  "likes": 1769,
+  "dislikes": 450,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Possible Number by Binary Concatenation\", \"titleSlug\": \"maximum-possible-number-by-binary-concatenation\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "1",
+    "3",
+    "12"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int concatenatedBinary(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int concatenatedBinary(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def concatenatedBinary(self, n: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def concatenatedBinary(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {number}\n */\nvar concatenatedBinary = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function concatenatedBinary(n: number): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int ConcatenatedBinary(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\nint concatenatedBinary(int n){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func concatenatedBinary(n int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun concatenatedBinary(n: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func concatenatedBinary(_ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn concatenated_binary(n: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Integer}\ndef concatenated_binary(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Integer\n     */\n    function concatenatedBinary($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def concatenatedBinary(n: Int): Int = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "1071",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n#### Overview\n\nThe sequence described in the problem is [A047778](https://oeis.org/A047778), and you can check the first few terms [here](https://oeis.org/A047778/list). As we see, the number grows rapidly.\n\nBelow, we will discuss three approaches: *Change to Binary String*, *Math*, and *Math (Bitwise Operation)*.\n\nGenerally, we recommend the third approach since it has fast performance and low space usage.\n\n---\n\n#### Approach 1: Change to Binary String\n\n**Intuition**\n\nThe problem requires us to do three things:\n\n1. Transform numbers from $$1$$ to $$n$$ into binary.\n\n  This step is similar to [Convert a Number to Hexadecimal](https://leetcode.com/problems/convert-a-number-to-hexadecimal/). All we need to do is keep dividing by $$2$$ and collecting the remainders. Also, many programming languages have built-in APIs.\n  \n2. Concatenate binarys.\n\n  It is simple since we always have a built-in API.\n  \n3. Transform the concatenation into decimal.\n\n  The third step is similar to [Convert Binary Number in a Linked List to Integer](https://leetcode.com/problems/convert-binary-number-in-a-linked-list-to-integer/). We need to iterate each element, and for each element, we multiply the current result by $$2$$ and add the element to the result.\n\n![Figure 1.1](../Documents/5620/5620_1_1.drawio.svg)\n\nIf you are unclear about the detail, please check the problem linked above.\n\nHowever, if we directly combine those three steps, we probably meet *Time Limit Exceed*. This is because the second step, concatenation, takes a long time since it needs to generate a new string after each connection or to reallocate itself. Of course, in some programming languages such as Python, it is fast enough to pass, but for some others, optimizations are needed.\n\nLuckily, if we dig into those three steps, we will find that the concatenation is **not** necessary. When we transform the binary into the decimal, we only need the **next** element when iterating. Therefore, we can transform the next number into binary when we need the next element.\n\nFor example, if `n == 3`, and we have calculated the binary form of `1` (binary: `1`) and `2` (binary: `10`), and the current result is `110` (binary) = `6` (decimal). Now we want to include `3`. We can transform `3` into `11` (binary) and then add to the result. There is no need for concatenation.\n\n![Figure 1.2](../Documents/5620/5620_1_2.drawio.svg)\n\n**Algorithm**\n\n*Step 1:* Initialize an integer `result` to store the final result.\n\n*Step 2:* Iterate from 1 to n. For each number:\n  - Convert the number into binary form.\n  - Iterate the binary string. For each element (`0` or `1`), update `result` to 2*`result` + element.\n\n*Step 3:* Return `result`.\n\n> Challenge: Can you implement the code yourself without seeing our implementations?\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/TVzoNojK/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"TVzoNojK\"></iframe>\n\nNote: Due to the convenient API and big integer characteristics in Python, we can directly **concatenate** strings together and make it into decimal at once. Though it requires extra space but is easier to implement.\n\n**Complexity Analysis**\n\n* Time Complexity: $$\\mathcal{O}(n\\log(n))$$. We iterate $$n$$ numbers, and for each number we spend $$\\mathcal{O}(\\log(n))$$ to transform it into the binary form and add it to the final result.\n\n* Space Complexity: Depends on the implementation. In Python, we firstly concatenate all string together, so the total space usage is $$\\mathcal{O}(n\\log(n))$$. While in Java and C++, we add the string into the final result immediately without concatenating, so the space complexity is $$\\mathcal{O}(n)$$. Of course, you can implement the immediately adding version in Python, but that requires extra codes.\n\n---\n\n#### Approach 2: Math\n\n**Intuition**\n\nRecall the last example in *Approach 1*. Let's dig into what happens when we add `3` (binary: `11`) to previous result `110` (binary, concatenated by `1` and `10`) (decimal: `6`).\n\nWhat we do indeed is shift `110` (binary) two units left and then add `3`.\n\n![Figure 2.1](../Documents/5620/5620_2_1.drawio.svg)\n\nMoving \"two\" units left is because `11` (binary) has a length of $$2$$.\n\nTo find out the length of the binary representation of a number, we can use $$\\log$$ with base $$2$$. Alternatively, we can record the current length, and increase it when we meet a power of $$2$$.\n\nIn conclusion, we can multiply the previous result by some power of $$2$$ to shift it to the left, and add the number to get the next result.\n\nThis process does not involve anything related to the binary transformation!\n\n**Algorithm**\n\n*Step 1:* Initialize an integer `result` to store the final result.\n\n*Step 2:* Iterate from 1 to n. For each number `i`:\n  - Find the length of the binary representation of the number. Denote by `length`.\n  - Update `result` to $$\\text{result} \\cdot 2^{\\text{length}} + i$$.\n\n*Step 3:* Return `result`.\n\n> Challenge: Can you implement the code yourself without seeing our implementations?\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/NNixBe8w/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"NNixBe8w\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$\\mathcal{O}(n\\log(n))$$. We iterate $$n$$ numbers, and for each number we spend $$\\mathcal{O}(\\log(n))$$ to check wether it is power of $$2$$ and add to the final result.\n\n* Space Complexity: $$\\mathcal{O}(1)$$, since we do not need any extra data structure.\n\n---\n\n#### Approach 3: Math (Bitwise Operation)\n\n**Intuition**\n\nIn *Approach 2*, we still need to spend $$\\mathcal{O}(\\log(i))$$ to find the length of number `i`. Can we make it faster?\n\nOf course! \n\nWith bitwise operation, we can check whether a number is the power of $$2$$ in $$\\mathcal{O}(1)$$. If `(x & (x-1)) == 0`, then `x` is the power of $$2$$.\n\nFor example, if `x == 4`, then `x - 1 == 3`. Their binary form is `100` (binary) and `011` (binary). All of their bits are different, so the bitwise \"and\" operation yields `0`.\n\n![Figure 3.1](../Documents/5620/5620_3_1.drawio.svg)\n\nWe only need to increase the length when we meet a power of $$2$$.\n\nAlso, we can use bitwise operations to replace other executions.\n\n![Figure 3.1](../Documents/5620/5620_3_2.drawio.svg)\n\n**Algorithm**\n\n*Step 1:* Initialize an integer `result` to store the final result.\n\n*Step 2:* Iterate from 1 to n. For each number `i`:\n  - Find the length of the binary representation of the number. Denote by `length`.\n  - Update `result` to `result << length | i`.\n\n*Step 3:* Return `result`.\n\n> Challenge: Can you implement the code yourself without seeing our implementations?\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/JvkhN3MA/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"JvkhN3MA\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$\\mathcal{O}(n)$$. We iterate $$n$$ numbers, and for each number we spend $$\\mathcal{O}(1)$$ to add it to the final result.\n\n* Space Complexity: $$\\mathcal{O}(1)$$, since we do not need any extra data structure.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

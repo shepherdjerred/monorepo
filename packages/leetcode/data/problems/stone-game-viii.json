@@ -1,0 +1,129 @@
+{
+  "questionId": "2002",
+  "questionFrontendId": "1872",
+  "title": "Stone Game VIII",
+  "titleSlug": "stone-game-viii",
+  "difficulty": "Hard",
+  "content": "<p>Alice and Bob take turns playing a game, with <strong>Alice starting first</strong>.</p>\r\n\r\n<p>There are <code>n</code> stones arranged in a row. On each player&#39;s turn, while the number of stones is <strong>more than one</strong>, they will do the following:</p>\r\n\r\n<ol>\r\n\t<li>Choose an integer <code>x &gt; 1</code>, and <strong>remove</strong> the leftmost <code>x</code> stones from the row.</li>\r\n\t<li>Add the <strong>sum</strong> of the <strong>removed</strong> stones&#39; values to the player&#39;s score.</li>\r\n\t<li>Place a <strong>new stone</strong>, whose value is equal to that sum, on the left side of the row.</li>\r\n</ol>\r\n\r\n<p>The game stops when <strong>only</strong> <strong>one</strong> stone is left in the row.</p>\r\n\r\n<p>The <strong>score difference</strong> between Alice and Bob is <code>(Alice&#39;s score - Bob&#39;s score)</code>. Alice&#39;s goal is to <strong>maximize</strong> the score difference, and Bob&#39;s goal is the <strong>minimize</strong> the score difference.</p>\r\n\r\n<p>Given an integer array <code>stones</code> of length <code>n</code> where <code>stones[i]</code> represents the value of the <code>i<sup>th</sup></code> stone <strong>from the left</strong>, return <em>the <strong>score difference</strong> between Alice and Bob if they both play <strong>optimally</strong>.</em></p>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong class=\"example\">Example 1:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> stones = [-1,2,-3,4,-5]\r\n<strong>Output:</strong> 5\r\n<strong>Explanation:</strong>\r\n- Alice removes the first 4 stones, adds (-1) + 2 + (-3) + 4 = 2 to her score, and places a stone of\r\n  value 2 on the left. stones = [2,-5].\r\n- Bob removes the first 2 stones, adds 2 + (-5) = -3 to his score, and places a stone of value -3 on\r\n  the left. stones = [-3].\r\nThe difference between their scores is 2 - (-3) = 5.\r\n</pre>\r\n\r\n<p><strong class=\"example\">Example 2:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> stones = [7,-6,5,10,5,-2,-6]\r\n<strong>Output:</strong> 13\r\n<strong>Explanation:</strong>\r\n- Alice removes all stones, adds 7 + (-6) + 5 + 10 + 5 + (-2) + (-6) = 13 to her score, and places a\r\n  stone of value 13 on the left. stones = [13].\r\nThe difference between their scores is 13 - 0 = 13.\r\n</pre>\r\n\r\n<p><strong class=\"example\">Example 3:</strong></p>\r\n\r\n<pre>\r\n<strong>Input:</strong> stones = [-10,-12]\r\n<strong>Output:</strong> -22\r\n<strong>Explanation:</strong>\r\n- Alice can only make one move, which is to remove both stones. She adds (-10) + (-12) = -22 to her\r\n  score and places a stone of value -22 on the left. stones = [-22].\r\nThe difference between their scores is (-22) - 0 = -22.\r\n</pre>\r\n\r\n<p>&nbsp;</p>\r\n<p><strong>Constraints:</strong></p>\r\n\r\n<ul>\r\n\t<li><code>n == stones.length</code></li>\r\n\t<li><code>2 &lt;= n &lt;= 10<sup>5</sup></code></li>\r\n\t<li><code>-10<sup>4</sup> &lt;= stones[i] &lt;= 10<sup>4</sup></code></li>\r\n</ul>",
+  "hints": [
+    "Let's note that the only thing that matters is how many stones were removed so we can maintain dp[numberOfRemovedStones]",
+    "dp[x] = max(sum of all elements up to y - dp[y]) for all y > x"
+  ],
+  "metaData": "{\n  \"name\": \"stoneGameVIII\",\n  \"params\": [\n    {\n      \"name\": \"stones\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"12.9K\", \"totalSubmission\": \"23.8K\", \"totalAcceptedRaw\": 12885, \"totalSubmissionRaw\": 23839, \"acRate\": \"54.1%\"}",
+  "likes": 475,
+  "dislikes": 25,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Stone Game\", \"titleSlug\": \"stone-game\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Stone Game II\", \"titleSlug\": \"stone-game-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Stone Game III\", \"titleSlug\": \"stone-game-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Stone Game IV\", \"titleSlug\": \"stone-game-iv\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Stone Game V\", \"titleSlug\": \"stone-game-v\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Stone Game VI\", \"titleSlug\": \"stone-game-vi\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Stone Game VII\", \"titleSlug\": \"stone-game-vii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Stone Game VIII\", \"titleSlug\": \"stone-game-viii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Stone Game IX\", \"titleSlug\": \"stone-game-ix\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[-1,2,-3,4,-5]",
+    "[7,-6,5,10,5,-2,-6]",
+    "[-10,-12]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    },
+    {
+      "name": "Game Theory",
+      "slug": "game-theory"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int stoneGameVIII(vector<int>& stones) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int stoneGameVIII(int[] stones) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def stoneGameVIII(self, stones: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def stoneGameVIII(self, stones):\n        \"\"\"\n        :type stones: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} stones\n * @return {number}\n */\nvar stoneGameVIII = function(stones) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function stoneGameVIII(stones: number[]): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int StoneGameVIII(int[] stones) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\nint stoneGameVIII(int* stones, int stonesSize){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func stoneGameVIII(stones []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun stoneGameVIII(stones: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func stoneGameVIII(_ stones: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn stone_game_viii(stones: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} stones\n# @return {Integer}\ndef stone_game_viii(stones)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $stones\n     * @return Integer\n     */\n    function stoneGameVIII($stones) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def stoneGameVIII(stones: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (stone-game-viii stones)\n  (-> (listof exact-integer?) exact-integer?)\n\n  )"
+    }
+  ],
+  "solution": null
+}
