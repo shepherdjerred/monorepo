@@ -234,7 +234,7 @@ export class RecallDb {
       .vectorSearch(queryVector)
       .limit(limit)
       .toArray();
-    return results as unknown as (ChunkRow & { _distance: number })[];
+    return results as (ChunkRow & { _distance: number })[];
   }
 
   // Aggregate queries

@@ -65,11 +65,11 @@ export async function indexFile(options: IndexFileOptions): Promise<IndexResult>
   } else {
     const { data, content: mdBody } = matter(rawContent ?? "");
     body = mdBody;
-    const rawTitle = data["title"];
+    const rawTitle: unknown = data["title"];
     title = typeof rawTitle === "string"
       ? rawTitle
       : path.basename(absPath, path.extname(absPath));
-    const rawTags = data["tags"];
+    const rawTags: unknown = data["tags"];
     fileTags = [
       ...tags,
       ...(Array.isArray(rawTags) ? rawTags.map(String) : []),
@@ -87,16 +87,14 @@ export async function indexFile(options: IndexFileOptions): Promise<IndexResult>
     console.error(`[index] ${String(chunks.length)} chunks`);
   }
 
-  // Remove old data
+  // Remove old LanceDB data first (if this fails, SQLite is untouched)
   await db.deleteChunks(absPath);
-  db.deleteFts(absPath);
 
-  // Embed and store
+  // Embed and store vectors in LanceDB
   if (chunks.length > 0) {
     let vectors: number[][];
 
     if (embedder == null) {
-      // Fallback: zero vectors (FTS-only mode)
       const { mockEmbed } = await import("./embeddings.ts");
       vectors = chunks.map((c) => mockEmbed(c.text));
     } else {
@@ -113,12 +111,9 @@ export async function indexFile(options: IndexFileOptions): Promise<IndexResult>
     }));
 
     await db.addChunks(chunkRows);
-
-    // FTS: index full body for keyword search
-    db.upsertFts(absPath, title, fileTags.join(" "), body);
   }
 
-  // Update metadata
+  // Commit all SQLite changes atomically (FTS + metadata)
   const meta: MetadataRow = {
     path: absPath,
     title,
@@ -129,7 +124,15 @@ export async function indexFile(options: IndexFileOptions): Promise<IndexResult>
     chunk_count: chunks.length,
     indexed_at: new Date().toISOString(),
   };
-  db.upsertMetadata(meta);
+
+  const commitSqlite = db.sqlite.transaction(() => {
+    db.deleteFts(absPath);
+    if (chunks.length > 0) {
+      db.upsertFts(absPath, title, fileTags.join(" "), body);
+    }
+    db.upsertMetadata(meta);
+  });
+  commitSqlite();
 
   const durationMs = performance.now() - start;
 

@@ -9,8 +9,8 @@ export const LOGS_DIR = path.join(RECALL_DIR, "logs");
 export const FETCHED_DIR = path.join(RECALL_DIR, "fetched");
 
 export const EMBEDDING_DIM = 1024;
-export const CHUNK_SIZE = 200; // tokens — bge-m3 via mlx-embedding-models has ~512 token limit, keep well under
-export const CHUNK_OVERLAP = 20;
+export const CHUNK_SIZE = 400; // tokens — bge-m3 via mlx-embedding-models has ~512 token limit
+export const CHUNK_OVERLAP = 50;
 
 export const WATCHED_DIRS: WatchedDir[] = [
   {

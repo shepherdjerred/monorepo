@@ -82,7 +82,7 @@ export async function reindexAll(
 
   // Clear progress line
   if (!verbose) {
-    process.stderr.write("\r" + " ".repeat(100) + "\r");
+    process.stderr.write("\r" + " ".repeat(200) + "\r");
   }
 
   // Remove docs that no longer exist in any watched directory

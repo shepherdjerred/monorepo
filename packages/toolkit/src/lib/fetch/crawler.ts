@@ -2,6 +2,22 @@ import { fetchWithLightpanda } from "./lightpanda.ts";
 import { fetchWithPinchtab } from "./pinchtab.ts";
 import { saveFetchedPage, extractDomain } from "./save.ts";
 
+const MAX_URLS = 500;
+const DELAY_MS = 200;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function decodeXmlEntities(text: string): string {
+  return text
+    .replaceAll("&amp;", "&")
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">")
+    .replaceAll("&quot;", '"')
+    .replaceAll("&apos;", "'");
+}
+
 export type CrawlOptions = {
   baseUrl: string;
   maxDepth: number;
@@ -35,7 +51,10 @@ export async function crawlSite(options: CrawlOptions): Promise<CrawlResult> {
   const savedPaths: string[] = [];
   let errors = 0;
 
-  for (const url of urls) {
+  for (const [i, url] of urls.entries()) {
+    // Rate limit between fetches
+    if (i > 0) await sleep(DELAY_MS);
+
     try {
       const result = useBrowser
         ? await fetchWithPinchtab(url, verbose)
@@ -92,6 +111,7 @@ async function discoverUrls(
     const normalized = normalizeUrl(item.url);
 
     if (visited.has(normalized)) continue;
+    if (discovered.length >= MAX_URLS) break;
     visited.add(normalized);
     discovered.push(normalized);
 
@@ -164,7 +184,7 @@ async function fetchSitemapUrls(
   while ((match = locRegex.exec(content)) != null) {
     const url = match[1];
     if (url == null) continue;
-    const trimmedUrl = url.trim();
+    const trimmedUrl = decodeXmlEntities(url.trim());
     // Filter to same domain and base path
     if (trimmedUrl.startsWith(parsed.origin) && trimmedUrl.startsWith(baseUrl.replace(/\/$/, ""))) {
       urls.push(trimmedUrl);

@@ -5,6 +5,8 @@ export type FetchResult = {
   durationMs: number;
 };
 
+const TIMEOUT_MS = 30_000;
+
 export async function fetchWithLightpanda(
   url: string,
   verbose: boolean,
@@ -32,31 +34,48 @@ export async function fetchWithLightpanda(
     stderr: "pipe",
   });
 
-  const [stdout, stderr] = await Promise.all([
-    new Response(proc.stdout).text(),
-    new Response(proc.stderr).text(),
-  ]);
+  // Kill process after timeout
+  const timer = setTimeout(() => {
+    proc.kill();
+  }, TIMEOUT_MS);
 
-  const exitCode = await proc.exited;
-  const durationMs = performance.now() - start;
+  try {
+    const [stdout, stderr] = await Promise.all([
+      new Response(proc.stdout).text(),
+      new Response(proc.stderr).text(),
+    ]);
 
-  if (verbose) {
-    console.error(
-      `[fetch] response: ${stdout.length.toLocaleString()} chars in ${String(Math.round(durationMs))}ms`,
-    );
-  }
+    const exitCode = await proc.exited;
+    const durationMs = performance.now() - start;
 
-  if (exitCode !== 0) {
+    if (verbose) {
+      console.error(
+        `[fetch] response: ${stdout.length.toLocaleString()} chars in ${String(Math.round(durationMs))}ms`,
+      );
+    }
+
+    if (durationMs >= TIMEOUT_MS) {
+      return {
+        success: false,
+        error: `lightpanda timed out after ${String(TIMEOUT_MS / 1000)}s`,
+        durationMs,
+      };
+    }
+
+    if (exitCode !== 0) {
+      return {
+        success: false,
+        error: stderr.trim() || `lightpanda exited with code ${String(exitCode)}`,
+        durationMs,
+      };
+    }
+
     return {
-      success: false,
-      error: stderr.trim() || `lightpanda exited with code ${String(exitCode)}`,
+      success: true,
+      content: stdout,
       durationMs,
     };
+  } finally {
+    clearTimeout(timer);
   }
-
-  return {
-    success: true,
-    content: stdout,
-    durationMs,
-  };
 }

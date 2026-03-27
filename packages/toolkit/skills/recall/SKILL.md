@@ -1,7 +1,7 @@
 ---
 name: toolkit-recall
-description: Local RAG search across plans, research, memories, conversations, and fetched docs. Use toolkit fetch to save web pages and toolkit recall search to find them.
-user-invocable: false
+description: Search past decisions, prior research, conversation history, monorepo docs, and fetched web pages. Use toolkit recall search to find context from previous work, and toolkit fetch to save web pages for future search.
+user-invocable: true
 allowed-tools:
   - Bash
   - Read

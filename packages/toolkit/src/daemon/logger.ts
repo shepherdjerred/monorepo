@@ -32,6 +32,8 @@ export class Logger {
     if (today !== this.currentDate) {
       this.currentDate = today;
       this.logPath = path.join(this.logsDir, `recall-${today}.log`);
+      // Purge old logs on date change (not just on init)
+      void this.purgeOldLogs();
     }
   }
 

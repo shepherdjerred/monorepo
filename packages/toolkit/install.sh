@@ -28,12 +28,12 @@ echo "Creating recall directories..."
 mkdir -p "$RECALL_DIR/fetched"
 mkdir -p "$RECALL_DIR/logs"
 
-# Install MLX embedding dependencies
+# Install MLX embedding dependencies (non-fatal — keyword search still works without it)
 echo "Installing MLX embeddings..."
 if python3 -c "import mlx_embedding_models" 2>/dev/null; then
   echo "  mlx-embedding-models already installed"
 else
-  pip install mlx-embedding-models "transformers<5" einops
+  python3 -m pip install --user mlx-embedding-models "transformers<5" einops || echo "  Warning: MLX install failed. Keyword search will still work."
 fi
 
 # Install and start daemon

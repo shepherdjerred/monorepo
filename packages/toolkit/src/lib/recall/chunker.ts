@@ -6,7 +6,7 @@ export type Chunk = {
 };
 
 /**
- * Split markdown text into chunks, respecting heading boundaries.
+ * Split markdown text into chunks, respecting heading boundaries and code fences.
  * Uses a simple character-based approximation (4 chars ≈ 1 token).
  */
 export function chunkMarkdown(
@@ -16,7 +16,6 @@ export function chunkMarkdown(
 ): Chunk[] {
   if (text.trim().length === 0) return [];
 
-  // Split on markdown headings (## or higher)
   const sections = splitOnHeadings(text);
   const chunks: Chunk[] = [];
   let index = 0;
@@ -28,9 +27,9 @@ export function chunkMarkdown(
       chunks.push({ text: section.trim(), index });
       index++;
     } else {
-      // Section too large — split by paragraphs, then by size
       const subChunks = splitLargeSection(section, maxChars, overlapChars);
       for (const sub of subChunks) {
+        if (sub.trim().length === 0) continue;
         chunks.push({ text: sub.trim(), index });
         index++;
       }
@@ -40,14 +39,25 @@ export function chunkMarkdown(
   return chunks;
 }
 
+/**
+ * Split on markdown headings, but not inside fenced code blocks.
+ */
 function splitOnHeadings(text: string): string[] {
   const sections: string[] = [];
   const lines = text.split("\n");
   let current: string[] = [];
+  let inCodeFence = false;
 
   for (const line of lines) {
-    // Split on ## headings (level 2+) but keep # level 1 with following content
-    if (/^#{1,3}\s/.test(line) && current.length > 0) {
+    // Track fenced code blocks
+    if (line.startsWith("```")) {
+      inCodeFence = !inCodeFence;
+      current.push(line);
+      continue;
+    }
+
+    // Only split on headings outside code fences
+    if (!inCodeFence && /^#{1,3}\s/.test(line) && current.length > 0) {
       sections.push(current.join("\n"));
       current = [line];
     } else {
@@ -62,6 +72,10 @@ function splitOnHeadings(text: string): string[] {
   return sections;
 }
 
+/**
+ * Split a large section into chunks by paragraphs.
+ * If a single paragraph exceeds maxChars, split it on sentence boundaries.
+ */
 function splitLargeSection(
   text: string,
   maxChars: number,
@@ -72,9 +86,29 @@ function splitLargeSection(
   let current = "";
 
   for (const para of paragraphs) {
+    // If a single paragraph exceeds maxChars, split it further
+    if (para.length > maxChars) {
+      // Flush current buffer first
+      if (current.trim().length > 0) {
+        chunks.push(current);
+        current = "";
+      }
+      // Split oversized paragraph on sentence boundaries
+      const sentences = splitSentences(para);
+      for (const sentence of sentences) {
+        if (current.length + sentence.length + 1 > maxChars && current.length > 0) {
+          chunks.push(current);
+          const overlapStart = Math.max(0, current.length - overlapChars);
+          current = current.slice(overlapStart) + " " + sentence;
+        } else {
+          current = current.length > 0 ? current + " " + sentence : sentence;
+        }
+      }
+      continue;
+    }
+
     if (current.length + para.length + 2 > maxChars && current.length > 0) {
       chunks.push(current);
-      // Keep overlap from end of previous chunk
       const overlapStart = Math.max(0, current.length - overlapChars);
       current = current.slice(overlapStart) + "\n\n" + para;
     } else {
@@ -87,4 +121,11 @@ function splitLargeSection(
   }
 
   return chunks;
+}
+
+/**
+ * Split text on sentence boundaries (period/question/exclamation followed by space).
+ */
+function splitSentences(text: string): string[] {
+  return text.split(/(?<=[.!?])\s+/).filter((s) => s.length > 0);
 }

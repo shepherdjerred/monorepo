@@ -36,6 +36,8 @@ function generatePlist(): string {
         <key>PATH</key>
         <string>${HOME}/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
     </dict>
+    <key>ThrottleInterval</key>
+    <integer>5</integer>
 </dict>
 </plist>`;
 }

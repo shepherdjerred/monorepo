@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { parseArgs } from "node:util";
 import { createRecallDb, type RecallDb } from "#lib/recall/db.ts";
 import { EmbeddingClient } from "#lib/recall/embeddings.ts";
@@ -320,7 +321,7 @@ async function handleDaemon(args: string[]): Promise<void> {
     allowPositionals: true,
   });
 
-  const action = positionals[0] as string | undefined;
+  const action: string = positionals[0] ?? "";
   switch (action) {
     case "start":
       await daemonStart(values.verbose);
@@ -331,7 +332,6 @@ async function handleDaemon(args: string[]): Promise<void> {
     case "status":
       await daemonStatus(values.verbose);
       break;
-    case undefined:
     default:
       console.error("Usage: toolkit recall daemon start|stop|status");
       process.exit(1);
@@ -401,9 +401,12 @@ function printPerfStats(db: RecallDb): void {
   if (reindexStats.length > 0) {
     console.log(`Recent Reindexes`);
     for (const r of reindexStats) {
-      const details = JSON.parse(r.details) as Record<string, unknown>;
+      const details = z.record(z.string(), z.unknown()).parse(JSON.parse(r.details));
+      const scanned = typeof details["scanned"] === "number" ? details["scanned"] : 0;
+      const indexed = typeof details["indexed"] === "number" ? details["indexed"] : 0;
+      const skipped = typeof details["skipped"] === "number" ? details["skipped"] : 0;
       console.log(
-        `  ${String(Math.round(r.duration_ms))}ms — ${String(details["scanned"] ?? 0)} scanned, ${String(details["indexed"] ?? 0)} indexed, ${String(details["skipped"] ?? 0)} skipped`,
+        `  ${String(Math.round(r.duration_ms))}ms — ${String(scanned)} scanned, ${String(indexed)} indexed, ${String(skipped)} skipped`,
       );
     }
     console.log();

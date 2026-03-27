@@ -147,7 +147,7 @@ function reciprocalRankFusion(
   const scores = new Map<string, { score: number; result: SearchResult }>();
 
   for (const [rank, result] of listA.entries()) {
-    const key = result.path;
+    const key = `${result.path}:${String(result.chunkIndex)}`;
     const existing = scores.get(key);
     const rrfScore = 1 / (k + rank + 1);
     if (existing == null) {
@@ -158,7 +158,7 @@ function reciprocalRankFusion(
   }
 
   for (const [rank, result] of listB.entries()) {
-    const key = result.path;
+    const key = `${result.path}:${String(result.chunkIndex)}`;
     const existing = scores.get(key);
     const rrfScore = 1 / (k + rank + 1);
     if (existing == null) {

@@ -46,7 +46,7 @@ src/
 │   └── grafana/          # Grafana subcommands
 └── lib/
     ├── fetch/            # Lightpanda + PinchTab wrappers, save logic
-    ├── recall/           # SQLite + sqlite-vec + FTS5, embeddings, chunker, search
+    ├── recall/           # LanceDB + SQLite FTS5, MLX embeddings, chunker, search
     ├── github/           # GitHub API via gh CLI
     ├── pagerduty/        # PagerDuty REST API client
     ├── bugsink/          # Bugsink REST API client

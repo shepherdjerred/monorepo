@@ -1,0 +1,67 @@
+{
+  "id": "34f5bf55-5886-450f-b011-90159f80f05d",
+  "title": "Best Time to Buy and Sell Stock",
+  "slug": "best-time-to-buy-sell-stock",
+  "difficulty": "easy",
+  "tags": ["array", "dynamic-programming", "greedy"],
+  "description": "You are given an array `prices` where `prices[i]` is the price of a given stock on the ith day.\n\nYou want to maximize your profit by choosing a single day to buy and a single day to sell. You must buy before you sell.\n\nReturn the maximum profit. If no profit is possible, return 0.",
+  "parts": [
+    {
+      "partNumber": 1,
+      "prompt": "Find the maximum profit from buying and selling a stock once. You must buy before you sell.",
+      "internalNotes": "Brute force is O(n²) checking all pairs. Optimal: track min price seen so far, compute profit at each step. Common mistakes: selling before buying, not handling decreasing prices.",
+      "hints": [
+        { "level": "subtle", "content": "You only need to track one piece of information as you scan left to right." },
+        { "level": "moderate", "content": "What's the best price you could have bought at, for each sell day?" },
+        { "level": "explicit", "content": "Track the minimum price seen so far. At each day, profit = price - minSoFar." }
+      ],
+      "testCases": [
+        { "input": "6\n7 1 5 3 6 4", "expected": "5", "explanation": "Buy at 1, sell at 6" },
+        { "input": "5\n7 6 4 3 1", "expected": "0", "explanation": "Prices only decrease, no profit possible" },
+        { "input": "3\n1 2 3", "expected": "2", "explanation": "Buy at 1, sell at 3" },
+        { "input": "1\n5", "expected": "0", "explanation": "Single day, no transaction" },
+        { "input": "4\n2 4 1 7", "expected": "6", "explanation": "Buy at 1, sell at 7" }
+      ],
+      "followUps": ["What's the time and space complexity?"],
+      "expectedApproach": "Single pass tracking min price, compute max profit at each step.",
+      "expectedComplexity": { "time": "O(n)", "space": "O(1)" },
+      "transitionCriteria": {
+        "minApproachQuality": "optimal",
+        "mustExplainComplexity": true,
+        "transitionPrompt": "Nice. Now what if you could make unlimited transactions? You can buy and sell multiple times, but must sell before buying again."
+      }
+    },
+    {
+      "partNumber": 2,
+      "prompt": "Now you can make unlimited buy/sell transactions (but must sell before buying again). Maximize total profit.",
+      "internalNotes": "Greedy: add up all positive differences between consecutive days. Equivalent to buying every valley and selling every peak. Common mistake: trying to find peaks/valleys explicitly instead of using the simpler greedy.",
+      "hints": [
+        { "level": "subtle", "content": "Think about what happens between any two consecutive days." },
+        { "level": "moderate", "content": "If tomorrow's price is higher than today's, what should you do?" },
+        { "level": "explicit", "content": "Sum all positive differences: if prices[i+1] > prices[i], add the difference." }
+      ],
+      "testCases": [
+        { "input": "6\n7 1 5 3 6 4", "expected": "7", "explanation": "(5-1)+(6-3) = 4+3 = 7" },
+        { "input": "5\n1 2 3 4 5", "expected": "4", "explanation": "Buy at 1, sell at 5" },
+        { "input": "5\n7 6 4 3 1", "expected": "0", "explanation": "No profit possible" }
+      ],
+      "followUps": [
+        "What's the time complexity?",
+        "Can you prove this greedy approach is optimal?"
+      ],
+      "expectedApproach": "Greedy: sum all consecutive positive differences.",
+      "expectedComplexity": { "time": "O(n)", "space": "O(1)" }
+    }
+  ],
+  "constraints": [
+    "1 <= prices.length <= 10^5",
+    "0 <= prices[i] <= 10^4"
+  ],
+  "io": {
+    "inputFormat": "int n, int[] prices",
+    "outputFormat": "int (maximum profit)",
+    "parseHint": "First line: n. Second line: n space-separated prices."
+  },
+  "source": "LeetCode #121 / #122",
+  "escalationPattern": "constraint-addition"
+}

@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { Logger } from "./logger.ts";
@@ -96,14 +97,32 @@ async function tailFollow(
     }
   }
 
-  // Poll for new content
+  // Poll for new content, check for date rollover every 60s
+  let currentFilePath = filePath;
+  let rolloverCheck = Date.now();
+
   const interval = setInterval(() => {
     void (async () => {
     try {
-      const currentStat = await stat(filePath).catch(() => null);
+      // Check for date rollover every 60s
+      if (Date.now() - rolloverCheck > 60_000) {
+        rolloverCheck = Date.now();
+        const today = new Date().toISOString().slice(0, 10);
+        const todayFile = path.join(LOGS_DIR, `recall-${today}.log`);
+        if (todayFile !== currentFilePath) {
+          const todayExists = await stat(todayFile).catch(() => null);
+          if (todayExists != null) {
+            currentFilePath = todayFile;
+            offset = 0;
+            console.error(`\n[logs] switched to ${todayFile}`);
+          }
+        }
+      }
+
+      const currentStat = await stat(currentFilePath).catch(() => null);
       if (currentStat == null || currentStat.size <= offset) return;
 
-      const fd = Bun.file(filePath);
+      const fd = Bun.file(currentFilePath);
       const content = await fd.text();
       const newContent = content.slice(offset);
       offset = currentStat.size;
@@ -136,9 +155,11 @@ function matchesFilters(
 ): boolean {
   if (level != null || sinceTs != null) {
     try {
-      const entry = JSON.parse(line) as { level?: string; ts?: string };
-      if (level != null && entry.level !== level) return false;
-      if (sinceTs != null && entry.ts != null && entry.ts < sinceTs) return false;
+      const entry = z.record(z.string(), z.unknown()).parse(JSON.parse(line));
+      const entryLevel = typeof entry["level"] === "string" ? entry["level"] : undefined;
+      const entryTs = typeof entry["ts"] === "string" ? entry["ts"] : undefined;
+      if (level != null && entryLevel !== level) return false;
+      if (sinceTs != null && entryTs != null && entryTs < sinceTs) return false;
     } catch {
       return false;
     }
@@ -148,11 +169,15 @@ function matchesFilters(
 
 function formatLogLine(line: string): string {
   try {
-    const entry = JSON.parse(line) as Record<string, unknown>;
-    const ts = String(entry["ts"] ?? "").slice(11, 19); // HH:MM:SS
-    const level = String(entry["level"] ?? "").toUpperCase().padEnd(5);
-    const mod = String(entry["mod"] ?? "").padEnd(8);
-    const msg = String(entry["msg"] ?? "");
+    const entry = z.record(z.string(), z.unknown()).parse(JSON.parse(line));
+    const rawTs = entry["ts"];
+    const rawLevel = entry["level"];
+    const rawMod = entry["mod"];
+    const rawMsg = entry["msg"];
+    const ts = (typeof rawTs === "string" ? rawTs : "").slice(11, 19); // HH:MM:SS
+    const level = (typeof rawLevel === "string" ? rawLevel : "").toUpperCase().padEnd(5);
+    const mod = (typeof rawMod === "string" ? rawMod : "").padEnd(8);
+    const msg = typeof rawMsg === "string" ? rawMsg : "";
 
     // Gather extra fields
     const skip = new Set(["ts", "level", "mod", "msg"]);

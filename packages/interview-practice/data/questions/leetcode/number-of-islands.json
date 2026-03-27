@@ -1,0 +1,90 @@
+{
+  "id": "1033619c-a9ce-43c6-8340-2d381ac6f19b",
+  "title": "Number of Islands",
+  "slug": "number-of-islands",
+  "difficulty": "medium",
+  "tags": ["graph", "bfs", "dfs", "matrix"],
+  "description": "Given an `m x n` 2D binary grid which represents a map of '1's (land) and '0's (water), return the number of islands.\n\nAn island is surrounded by water and is formed by connecting adjacent lands horizontally or vertically. You may assume all four edges of the grid are surrounded by water.",
+  "parts": [
+    {
+      "partNumber": 1,
+      "prompt": "Count the number of islands in a 2D grid of '1' (land) and '0' (water). Islands are formed by connected land cells (horizontally/vertically adjacent).",
+      "internalNotes": "Standard BFS/DFS flood fill. Iterate through grid, when '1' found, increment count and flood-fill to mark all connected land. Common mistakes: forgetting to mark visited, diagonal vs orthogonal adjacency, modifying input vs using separate visited array.",
+      "hints": [
+        { "level": "subtle", "content": "Think about how you would explore all connected land from a starting cell." },
+        { "level": "moderate", "content": "Graph traversal — BFS or DFS from each unvisited land cell." },
+        { "level": "explicit", "content": "For each '1' you haven't visited, do a BFS/DFS marking all connected '1's as visited. Count how many times you start a new traversal." }
+      ],
+      "testCases": [
+        {
+          "input": "4 5\n11110\n11010\n11000\n00000",
+          "expected": "1",
+          "explanation": "All land is connected"
+        },
+        {
+          "input": "4 5\n11000\n11000\n00100\n00011",
+          "expected": "3",
+          "explanation": "Three separate island groups"
+        },
+        {
+          "input": "1 1\n0",
+          "expected": "0",
+          "explanation": "All water"
+        },
+        {
+          "input": "3 3\n101\n010\n101",
+          "expected": "5",
+          "explanation": "No orthogonal connections, each '1' is its own island"
+        }
+      ],
+      "followUps": [
+        "What's the time complexity?",
+        "What's the space complexity?",
+        "Could you solve this without modifying the input grid?"
+      ],
+      "expectedApproach": "BFS or DFS flood fill. O(m*n) time.",
+      "expectedComplexity": { "time": "O(m*n)", "space": "O(m*n)" },
+      "transitionCriteria": {
+        "minApproachQuality": "working",
+        "mustExplainComplexity": true,
+        "transitionPrompt": "Good. Now imagine the grid starts as all water, and land cells are added one at a time. After each addition, return the number of islands. Can you do this efficiently?"
+      }
+    },
+    {
+      "partNumber": 2,
+      "prompt": "The grid starts as all water. You receive a stream of positions where land is added one at a time. After each addition, return the current number of islands. Optimize for many additions.",
+      "internalNotes": "Union-Find is the optimal approach. Each new land cell starts as its own island (count++). Check 4 neighbors — if any is land, union them (count-- for each successful union). Common mistake: BFS from scratch each time (O(m*n) per query instead of amortized O(α)).",
+      "hints": [
+        { "level": "subtle", "content": "Re-running BFS after every addition is too slow. What data structure tracks connected components efficiently?" },
+        { "level": "moderate", "content": "Think about Union-Find (Disjoint Set Union)." },
+        { "level": "explicit", "content": "Use Union-Find. Each new cell is a new component. Union with existing land neighbors. Track component count." }
+      ],
+      "testCases": [
+        {
+          "input": "3 3\n5\n0 0\n0 1\n1 2\n2 1\n1 1",
+          "expected": "1\n1\n2\n3\n1",
+          "explanation": "After each addition: 1 island, still 1, now 2 disconnected, 3 disconnected, all connected = 1"
+        }
+      ],
+      "followUps": [
+        "What's the amortized time complexity per operation?",
+        "What is the path compression and union by rank optimization?"
+      ],
+      "expectedApproach": "Union-Find with path compression and union by rank.",
+      "expectedComplexity": { "time": "O(α(m*n)) per operation", "space": "O(m*n)" }
+    }
+  ],
+  "constraints": [
+    "m == grid.length",
+    "n == grid[i].length",
+    "1 <= m, n <= 300",
+    "grid[i][j] is '0' or '1'"
+  ],
+  "io": {
+    "inputFormat": "int m, int n, string[] grid",
+    "outputFormat": "int (number of islands)",
+    "parseHint": "First line: m n. Next m lines: grid rows as strings of '0' and '1'."
+  },
+  "source": "LeetCode #200 / #305",
+  "escalationPattern": "static-to-dynamic"
+}

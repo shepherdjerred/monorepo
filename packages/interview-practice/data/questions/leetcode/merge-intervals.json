@@ -1,0 +1,66 @@
+{
+  "id": "e6e5c9d3-eefd-4d52-8820-02c8fbdef342",
+  "title": "Merge Intervals",
+  "slug": "merge-intervals",
+  "difficulty": "medium",
+  "tags": ["array", "sorting", "intervals"],
+  "description": "Given an array of intervals where `intervals[i] = [start_i, end_i]`, merge all overlapping intervals, and return an array of the non-overlapping intervals that cover all the intervals in the input.",
+  "parts": [
+    {
+      "partNumber": 1,
+      "prompt": "Given a list of intervals, merge all overlapping intervals and return the merged list.",
+      "internalNotes": "Sort by start time, then linear merge. Key insight: after sorting, you only need to compare the current interval with the last merged one. Common mistakes: not sorting first, using O(n²) pairwise comparison, off-by-one on overlap condition (touching intervals [1,2] and [2,3] should merge).",
+      "hints": [
+        { "level": "subtle", "content": "What happens if you look at the intervals in a specific order?" },
+        { "level": "moderate", "content": "Sort by start time first. Then think about when two consecutive intervals overlap." },
+        { "level": "explicit", "content": "Sort by start. Iterate: if current start <= last merged end, extend the merged interval. Otherwise start a new merged interval." }
+      ],
+      "testCases": [
+        { "input": "4\n1 3\n2 6\n8 10\n15 18", "expected": "1 6\n8 10\n15 18" },
+        { "input": "2\n1 4\n4 5", "expected": "1 5", "explanation": "Touching intervals merge" },
+        { "input": "1\n1 1", "expected": "1 1", "explanation": "Single point interval" },
+        { "input": "3\n1 4\n0 4\n3 5", "expected": "0 5", "explanation": "All overlap into one" },
+        { "input": "3\n1 2\n3 4\n5 6", "expected": "1 2\n3 4\n5 6", "explanation": "No overlaps" }
+      ],
+      "followUps": ["What's the time complexity?", "Is the sort stable? Does it matter?"],
+      "expectedApproach": "Sort by start time, then single pass merge comparing with last merged interval.",
+      "expectedComplexity": { "time": "O(n log n)", "space": "O(n)" },
+      "transitionCriteria": {
+        "minApproachQuality": "optimal",
+        "mustExplainComplexity": false,
+        "transitionPrompt": "Great. Now, given a set of meeting time intervals, determine the minimum number of conference rooms required."
+      }
+    },
+    {
+      "partNumber": 2,
+      "prompt": "Given an array of meeting time intervals, find the minimum number of conference rooms required so that no two overlapping meetings share a room.",
+      "internalNotes": "Min-heap or sweep line. Sort events (start=+1, end=-1), scan and track max concurrent. Or sort by start, use a min-heap of end times. Common mistakes: not realizing this is different from merge intervals, trying to greedily assign rooms without a heap.",
+      "hints": [
+        { "level": "subtle", "content": "Think about what happens at each moment in time — how many meetings are ongoing?" },
+        { "level": "moderate", "content": "Consider a sweep line: what if you tracked meeting starts and ends as separate events?" },
+        { "level": "explicit", "content": "Create events: +1 at each start, -1 at each end. Sort by time (break ties: end before start). Scan and track max concurrent count." }
+      ],
+      "testCases": [
+        { "input": "3\n0 30\n5 10\n15 20", "expected": "2", "explanation": "Meetings [0,30] and [5,10] overlap" },
+        { "input": "2\n7 10\n2 4", "expected": "1", "explanation": "No overlap" },
+        { "input": "4\n0 5\n1 6\n2 7\n3 8", "expected": "4", "explanation": "All overlap" },
+        { "input": "3\n1 5\n5 10\n10 15", "expected": "1", "explanation": "Sequential, no overlap (end=start counts as no overlap)" }
+      ],
+      "followUps": ["What's the time complexity?", "Could you use a min-heap approach instead?"],
+      "expectedApproach": "Sweep line with +1/-1 events, or min-heap of end times.",
+      "expectedComplexity": { "time": "O(n log n)", "space": "O(n)" }
+    }
+  ],
+  "constraints": [
+    "1 <= intervals.length <= 10^4",
+    "intervals[i].length == 2",
+    "0 <= start_i <= end_i <= 10^4"
+  ],
+  "io": {
+    "inputFormat": "int n, then n lines of 'start end'",
+    "outputFormat": "Merged intervals, one per line as 'start end'",
+    "parseHint": "First line: n. Next n lines: start end (space-separated)."
+  },
+  "source": "LeetCode #56 / #253",
+  "escalationPattern": "specific-to-general"
+}

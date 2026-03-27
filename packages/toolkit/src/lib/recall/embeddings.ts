@@ -4,15 +4,34 @@ import { EMBEDDING_DIM } from "./config.ts";
 const ReadyMessage = z.object({ error: z.string().optional(), ready: z.boolean().optional() });
 const EmbedResponse = z.object({ embeddings: z.array(z.array(z.number())).optional(), error: z.string().optional() });
 
-function asReader(value: unknown): ReadableStreamDefaultReader<Uint8Array> {
-  const stream = value as unknown;
-  // Bun.spawn with stdout: "pipe" returns a ReadableStream
-  return (stream as ReadableStream<Uint8Array>).getReader();
+interface StdinWriter {
+  write(data: string): void;
+  flush(): void;
+  end(): void;
 }
 
-function asStdinWriter(value: unknown): { write: (data: string) => void; flush: () => void; end: () => void } {
-  // Bun.spawn with stdin: "pipe" returns a FileSink
-  return value as unknown as { write: (data: string) => void; flush: () => void; end: () => void };
+interface ReadResult {
+  value: Uint8Array | undefined;
+  done: boolean;
+}
+
+interface TypedReader {
+  read(): Promise<ReadResult>;
+}
+
+function getReader(stdout: unknown): TypedReader {
+  const stream = stdout as ReadableStream<Uint8Array>;
+  const raw = stream.getReader();
+  return {
+    async read(): Promise<ReadResult> {
+      const result = await raw.read();
+      return { value: result.value, done: result.done };
+    },
+  };
+}
+
+function getStdinWriter(stdin: unknown): StdinWriter {
+  return stdin as StdinWriter;
 }
 
 const EMBED_SERVER_SCRIPT = `
@@ -82,7 +101,7 @@ for line in sys.stdin:
 
 export class EmbeddingClient {
   private proc: ReturnType<typeof Bun.spawn> | null = null;
-  private reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
+  private reader: TypedReader | null = null;
   private readonly decoder = new TextDecoder();
   private lineBuffer = "";
   private ready = false;
@@ -105,7 +124,7 @@ export class EmbeddingClient {
 
       // Auto-install
       console.error("[embeddings] mlx-embedding-models not found, installing...");
-      const install = Bun.spawn(["pip", "install", "mlx-embedding-models", "transformers<5", "einops"], {
+      const install = Bun.spawn(["python3", "-m", "pip", "install", "--user", "mlx-embedding-models", "transformers<5", "einops"], {
         stdout: "inherit",
         stderr: "inherit",
       });
@@ -126,7 +145,15 @@ export class EmbeddingClient {
   }
 
   async ensureStarted(): Promise<void> {
-    if (this.ready) return;
+    if (this.ready && this.proc != null) return;
+
+    // Guard against double-spawn: kill any existing process
+    if (this.proc != null) {
+      try { this.proc.kill(); } catch { /* ignore */ }
+      this.proc = null;
+      this.reader = null;
+      this.ready = false;
+    }
 
     if (!(await this.isAvailable())) {
       throw new Error(
@@ -141,22 +168,21 @@ export class EmbeddingClient {
     });
 
     // Keep a single reader for the lifetime of the process
-    // Bun.spawn with stdout: "pipe" returns ReadableStream<Uint8Array>
-    const stdoutStream = this.proc.stdout;
-    if (stdoutStream == null || typeof (stdoutStream as unknown as ReadableStream<Uint8Array>).getReader !== "function") {
-      throw new Error("Embedding server stdout is not a readable stream");
-    }
-    this.reader = (stdoutStream as unknown as ReadableStream<Uint8Array>).getReader();
+    this.reader = getReader(this.proc.stdout);
 
     const firstLine = await this.readLine();
     if (firstLine == null) {
       throw new Error("Embedding server did not start");
     }
 
-    const msg = JSON.parse(firstLine) as unknown;
-    const msgObj = msg as Record<string, unknown>;
-    if (typeof msgObj["error"] === "string") {
-      throw new Error(msgObj["error"]);
+    let msg: z.infer<typeof ReadyMessage>;
+    try {
+      msg = ReadyMessage.parse(JSON.parse(firstLine));
+    } catch {
+      throw new Error(`Embedding server sent invalid startup message: ${firstLine.slice(0, 200)}`);
+    }
+    if (msg.error != null) {
+      throw new Error(msg.error);
     }
 
     this.ready = true;
@@ -170,7 +196,7 @@ export class EmbeddingClient {
     }
 
     const request = JSON.stringify({ texts }) + "\n";
-    const stdin = this.proc.stdin as unknown as { write: (data: string) => void; flush: () => void };
+    const stdin = getStdinWriter(this.proc.stdin);
     stdin.write(request);
     stdin.flush();
 
@@ -179,10 +205,17 @@ export class EmbeddingClient {
       throw new Error("Embedding server returned no response");
     }
 
-    const response = JSON.parse(responseLine) as {
-      embeddings?: number[][];
-      error?: string;
-    };
+    let response: z.infer<typeof EmbedResponse>;
+    try {
+      response = EmbedResponse.parse(JSON.parse(responseLine));
+    } catch {
+      // If Zod parse fails, try raw JSON
+      const raw = JSON.parse(responseLine) as Record<string, unknown>;
+      if (typeof raw["error"] === "string") {
+        throw new Error(`Embedding error: ${raw["error"]}`);
+      }
+      throw new Error(`Invalid embedding response: ${responseLine.slice(0, 200)}`);
+    }
 
     if (response.error != null) {
       throw new Error(`Embedding error: ${response.error}`);
@@ -195,8 +228,10 @@ export class EmbeddingClient {
     return response.embeddings;
   }
 
-  private async readLine(): Promise<string | null> {
+  private async readLine(timeoutMs: number = 30_000): Promise<string | null> {
     if (this.reader == null) return null;
+
+    const deadline = Date.now() + timeoutMs;
 
     for (;;) {
       const newlineIdx = this.lineBuffer.indexOf("\n");
@@ -206,18 +241,30 @@ export class EmbeddingClient {
         return line;
       }
 
-      const { value, done }: ReadableStreamReadResult<Uint8Array> = await this.reader.read();
-      if (done) {
+      if (Date.now() > deadline) {
+        throw new Error("Embedding server read timeout");
+      }
+
+      const result = await Promise.race([
+        this.reader.read(),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Embedding server read timeout")), Math.max(1000, deadline - Date.now())),
+        ),
+      ]);
+
+      if (result.done) {
         return this.lineBuffer.length > 0 ? this.lineBuffer : null;
       }
-      this.lineBuffer += this.decoder.decode(value, { stream: true });
+      if (result.value != null) {
+        this.lineBuffer += this.decoder.decode(result.value, { stream: true });
+      }
     }
   }
 
   shutdown(): void {
     if (this.proc != null) {
       try {
-        const stdin = this.proc.stdin as unknown as { end: () => void };
+        const stdin = getStdinWriter(this.proc.stdin);
         stdin.end();
       } catch {
         // ignore

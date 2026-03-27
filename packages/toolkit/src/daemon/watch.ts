@@ -94,13 +94,17 @@ export async function runWatcher(verbose: boolean): Promise<void> {
             }
           }
         } catch (error) {
-          await logger.error("watch", "index_error", {
-            path: filePath,
-            error: String(error),
-          });
+          try {
+            await logger.error("watch", "index_error", {
+              path: filePath,
+              error: String(error),
+            });
+          } catch { /* don't let logger failures crash the watcher */ }
           if (verbose) console.error(`[watch] error: ${filePath}: ${String(error)}`);
         }
-        })();
+        })().catch((err: unknown) => {
+          console.error(`[watch] unhandled error: ${String(err)}`);
+        });
       }, DEBOUNCE_MS),
     );
   };
@@ -162,10 +166,13 @@ export async function runWatcher(verbose: boolean): Promise<void> {
     for (const w of watchers) w.close();
     for (const timer of pending.values()) clearTimeout(timer);
     embedder.shutdown();
-    void logger.info("watch", "daemon_stop", { pid: process.pid }).then(() => {
+    // Best-effort log, then exit regardless
+    void logger.info("watch", "daemon_stop", { pid: process.pid }).catch(() => {}).finally(() => {
       db.close();
       process.exit(0);
     });
+    // Force exit after 3s if logger hangs
+    setTimeout(() => { db.close(); process.exit(0); }, 3000);
   };
 
   process.on("SIGINT", shutdown);

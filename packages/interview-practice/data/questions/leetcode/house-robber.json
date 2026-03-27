@@ -1,0 +1,68 @@
+{
+  "id": "e19c08e5-245d-4fd6-80a6-07d3d1530a60",
+  "title": "House Robber",
+  "slug": "house-robber",
+  "difficulty": "medium",
+  "tags": ["dynamic-programming", "array"],
+  "description": "You are a professional robber planning to rob houses along a street. Each house has a certain amount of money stashed. The only constraint stopping you from robbing each of them is that adjacent houses have security systems connected — if two adjacent houses are broken into on the same night, the police will be triggered.\n\nGiven an integer array `nums` representing the amount of money in each house, return the maximum amount of money you can rob tonight without alerting the police.",
+  "parts": [
+    {
+      "partNumber": 1,
+      "prompt": "Given an array of house values, find the maximum you can rob without robbing two adjacent houses.",
+      "internalNotes": "Classic 1D DP. dp[i] = max(dp[i-1], dp[i-2] + nums[i]). Can optimize to O(1) space with two variables. Common mistakes: not considering the skip case, off-by-one at boundaries.",
+      "hints": [
+        { "level": "subtle", "content": "For each house, you have two choices. Think about what optimal means at each step." },
+        { "level": "moderate", "content": "This is a dynamic programming problem. What's the recurrence relation?" },
+        { "level": "explicit", "content": "dp[i] = max(dp[i-1], dp[i-2] + nums[i]). The choice at each house: skip it (take dp[i-1]) or rob it (dp[i-2] + nums[i])." }
+      ],
+      "testCases": [
+        { "input": "4\n1 2 3 1", "expected": "4", "explanation": "Rob house 0 and 2: 1+3=4" },
+        { "input": "5\n2 7 9 3 1", "expected": "12", "explanation": "Rob house 0, 2, 4: 2+9+1=12" },
+        { "input": "1\n5", "expected": "5", "explanation": "Single house" },
+        { "input": "2\n1 2", "expected": "2", "explanation": "Pick the larger" },
+        { "input": "6\n2 1 1 2 1 1", "expected": "4", "explanation": "Rob houses 0, 3: 2+2=4" }
+      ],
+      "followUps": ["Can you do this with O(1) space?"],
+      "expectedApproach": "1D DP with recurrence dp[i] = max(dp[i-1], dp[i-2] + nums[i]). Optimize to two variables.",
+      "expectedComplexity": { "time": "O(n)", "space": "O(1)" },
+      "transitionCriteria": {
+        "minApproachQuality": "optimal",
+        "mustExplainComplexity": true,
+        "transitionPrompt": "Now what if the houses are arranged in a circle? The first and last house are adjacent."
+      }
+    },
+    {
+      "partNumber": 2,
+      "prompt": "The houses are arranged in a circle — the first and last houses are adjacent. Same rules: can't rob adjacent houses. Find the maximum amount.",
+      "internalNotes": "Key insight: can't rob both house 0 and house n-1. Run the linear DP twice: once on houses [0..n-2], once on [1..n-1], take the max. Common mistake: trying to add a circular constraint to the DP directly.",
+      "hints": [
+        { "level": "subtle", "content": "The circular constraint means you can't take both the first and last house." },
+        { "level": "moderate", "content": "What if you solved two separate linear problems?" },
+        { "level": "explicit", "content": "Run house robber on nums[0..n-2] and nums[1..n-1]. Take the max of both results." }
+      ],
+      "testCases": [
+        { "input": "3\n2 3 2", "expected": "3", "explanation": "Can't rob both house 0 and 2, best is just house 1" },
+        { "input": "4\n1 2 3 1", "expected": "4", "explanation": "Rob house 1 and 3: 2+1=3, or house 0 and 2: 1+3=4" },
+        { "input": "3\n1 2 3", "expected": "3", "explanation": "Rob house 2 only" },
+        { "input": "1\n5", "expected": "5" }
+      ],
+      "followUps": [
+        "What's the time and space complexity?",
+        "Could you extend this to a tree structure (binary tree of houses)?"
+      ],
+      "expectedApproach": "Two passes of linear house robber: [0..n-2] and [1..n-1], take max.",
+      "expectedComplexity": { "time": "O(n)", "space": "O(1)" }
+    }
+  ],
+  "constraints": [
+    "1 <= nums.length <= 100",
+    "0 <= nums[i] <= 400"
+  ],
+  "io": {
+    "inputFormat": "int n, int[] nums",
+    "outputFormat": "int (maximum amount)",
+    "parseHint": "First line: n. Second line: n space-separated integers."
+  },
+  "source": "LeetCode #198 / #213",
+  "escalationPattern": "constraint-addition"
+}

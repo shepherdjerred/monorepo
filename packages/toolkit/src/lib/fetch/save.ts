@@ -51,7 +51,7 @@ export function urlToSlug(url: string): string {
 
 export function extractTitle(content: string, url: string): string {
   // Try to find a heading in the content
-  const headingMatch = /^#[ \t]+(.+)$/m.exec(content);
+  const headingMatch = /^# (\S[^\n]*)$/m.exec(content);
   if (headingMatch?.[1] != null) {
     return headingMatch[1].trim();
   }
@@ -76,11 +76,11 @@ export function buildFrontmatter(options: SaveOptions): string {
 
   const lines = [
     "---",
-    `url: ${options.url}`,
+    `url: "${options.url}"`,
     `title: "${title.replaceAll("\\", "").replaceAll('"', String.raw`\"`)}"`,
-    `domain: ${domain}`,
-    `fetched_at: ${now}`,
-    `tags: [${tags.join(", ")}]`,
+    `domain: "${domain}"`,
+    `fetched_at: "${now}"`,
+    `tags: [${tags.map((t) => `"${t.replaceAll('"', "")}"`).join(", ")}]`,
     "---",
     "",
   ];

@@ -1,0 +1,55 @@
+[pipeline]
+backend = "docling"
+output_format = "markdown"
+log_level = "INFO"
+log_json = false
+
+[extraction]
+docling_vlm = true
+mineru_backend = "hybrid-auto-engine"
+
+[preprocessing]
+enabled = "on_failure"
+upscale_model = "fsrcnn"
+min_dpi_threshold = 200
+min_contrast_threshold = 50
+
+[handwriting]
+enabled = true
+detect_model = "gemini-2.5-flash"
+extract_model = "gemini-2.5-pro"
+
+[images]
+classify_model = "gemini-2.5-flash"
+diagram_model = "gemini-2.5-flash"
+mermaid_self_correct = "hand_drawn_only"
+mermaid_validator = "merval"
+mermaid_renderer = "kroki"
+
+[verification]
+enabled = true
+anchored_model = "gemini-2.5-flash"
+anchored_all_pages = true
+table_cell_verification = true
+geometric_risk_controller = true
+grc_num_views = 5
+grc_consensus_threshold = 3
+
+[escalation]
+medium_model = "claude-sonnet-4-6"
+low_models = ["claude-sonnet-4-6", "gpt-4o"]
+unresolved_model = "claude-opus-4-6"
+max_opus_calls = 10
+
+[prompts]
+refusal_instruction = true
+grounded_cot = true
+confusion_pairs = ["0/O", "1/l/I", "5/S", "6/G", "8/B", "rn/m"]
+
+[domain]
+validate_dates = true
+validate_emails = true
+validate_currencies = true
+validate_phones = true
+validate_percentages = true
+column_type_consistency = true

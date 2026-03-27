@@ -1,0 +1,74 @@
+{
+  "id": "c94f6dd5-01d5-44f1-9ba3-bcef9842a71a",
+  "title": "Two Sum",
+  "slug": "two-sum",
+  "difficulty": "easy",
+  "tags": ["array", "hash-map"],
+  "description": "Given an array of integers `nums` and an integer `target`, find two numbers in the array that add up to the target. Return their indices.\n\nYou may assume that each input has exactly one solution, and you may not use the same element twice.\n\nYou can return the answer in any order.",
+  "parts": [
+    {
+      "partNumber": 1,
+      "prompt": "Given an array of integers and a target sum, return the indices of two numbers that add up to the target.",
+      "internalNotes": "Most candidates start with brute force O(n²). The optimal approach is a hash map for O(n). Watch for: off-by-one errors, not handling the case where the same element can't be used twice, returning indices vs values.",
+      "hints": [
+        { "level": "subtle", "content": "Think about what information you need to look up quickly." },
+        { "level": "moderate", "content": "What data structure gives you O(1) lookups?" },
+        { "level": "explicit", "content": "For each number, check if (target - number) exists in a hash map." }
+      ],
+      "testCases": [
+        { "input": "4\n2 7 11 15\n9", "expected": "0 1", "explanation": "nums[0] + nums[1] = 2 + 7 = 9" },
+        { "input": "3\n3 2 4\n6", "expected": "1 2", "explanation": "nums[1] + nums[2] = 2 + 4 = 6" },
+        { "input": "2\n3 3\n6", "expected": "0 1", "explanation": "Duplicate values edge case" },
+        { "input": "4\n1 5 3 7\n8", "expected": "1 2", "explanation": "5 + 3 = 8, not adjacent" },
+        { "input": "5\n-1 -2 -3 -4 -5\n-8", "expected": "2 4", "explanation": "Negative numbers" }
+      ],
+      "followUps": [
+        "What's the time complexity of your solution?",
+        "What's the space complexity?",
+        "Could you solve it without extra space?"
+      ],
+      "expectedApproach": "Hash map: iterate once, for each num check if (target - num) is in the map, if not add num to map.",
+      "expectedComplexity": { "time": "O(n)", "space": "O(n)" },
+      "transitionCriteria": {
+        "minApproachQuality": "optimal",
+        "mustExplainComplexity": true,
+        "transitionPrompt": "Good. Now what if the input array is already sorted? Can you do better on space?"
+      }
+    },
+    {
+      "partNumber": 2,
+      "prompt": "Now the input array is sorted in ascending order. Can you solve it with O(1) extra space?",
+      "internalNotes": "Two-pointer approach: left=0, right=n-1. If sum < target, move left. If sum > target, move right. O(n) time, O(1) space. Watch for: not leveraging the sorted property, still using a hash map.",
+      "hints": [
+        { "level": "subtle", "content": "The array is sorted — how can you use that property?" },
+        { "level": "moderate", "content": "Think about starting from both ends of the array." },
+        { "level": "explicit", "content": "Use two pointers, one at the start and one at the end. Move them inward based on whether the sum is too small or too large." }
+      ],
+      "testCases": [
+        { "input": "4\n2 7 11 15\n9", "expected": "0 1" },
+        { "input": "3\n2 3 4\n6", "expected": "0 2" },
+        { "input": "2\n-1 0\n-1", "expected": "0 1" },
+        { "input": "5\n1 2 3 4 5\n9", "expected": "3 4" }
+      ],
+      "followUps": [
+        "What's the time and space complexity now?",
+        "Why is this better than the hash map approach for sorted input?"
+      ],
+      "expectedApproach": "Two pointers from both ends, move inward based on sum comparison.",
+      "expectedComplexity": { "time": "O(n)", "space": "O(1)" }
+    }
+  ],
+  "constraints": [
+    "2 <= nums.length <= 10^4",
+    "-10^9 <= nums[i] <= 10^9",
+    "-10^9 <= target <= 10^9",
+    "Exactly one valid answer exists"
+  ],
+  "io": {
+    "inputFormat": "int n, int[] nums, int target",
+    "outputFormat": "int i, int j (space-separated indices)",
+    "parseHint": "First line: n (array length). Second line: n space-separated integers. Third line: target."
+  },
+  "source": "LeetCode #1 / #167",
+  "escalationPattern": "constraint-addition"
+}

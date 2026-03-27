@@ -1,0 +1,36 @@
+{
+  "name": "@shepherdjerred/interview-practice",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./lib/*": "./src/lib/*"
+  },
+  "imports": {
+    "#lib/*": "./src/lib/*",
+    "#commands/*": "./src/commands/*",
+    "#templates/*": "./src/templates/*",
+    "#config": "./src/config.ts",
+    "#logger": "./src/logger.ts"
+  },
+  "bin": {
+    "interview-practice": "./src/index.ts"
+  },
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "build": "bun build ./src/index.ts --compile --outfile=dist/interview-practice",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "latest",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@shepherdjerred/eslint-config": "workspace:*",
+    "@types/bun": "latest",
+    "eslint": "^9.39.2",
+    "typescript": "latest"
+  }
+}

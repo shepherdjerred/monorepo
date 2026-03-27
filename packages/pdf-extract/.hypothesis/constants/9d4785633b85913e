@@ -1,0 +1,4 @@
+# file: /Users/jerred/git/monorepo/packages/pdf-extract/src/pdf_extract/lib/mermaid.py
+# hypothesis_version: 6.151.9
+
+[200, '-', '--input', 'GET', 'ascii', 'classDiagram', 'erDiagram', 'flowchart', 'gantt', 'gitgraph', 'graph', 'journey', 'mermaid.render.fail', 'mermaid.render.ok', 'merval', 'mindmap', 'pie', 'quadrantChart', 'sankey', 'sequenceDiagram', 'stateDiagram', 'utf-8']
