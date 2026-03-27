@@ -60,6 +60,6 @@
     "zod": "^4.0.0"
   },
   "patchedDependencies": {
-    "satori@0.18.3": "packages/scout-for-lol/patches/satori@0.18.3.patch"
+    "satori@0.18.3": "patches/satori@0.18.3.patch"
   }
 }
