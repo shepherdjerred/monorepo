@@ -17,8 +17,6 @@ const ConfigSchema = z.object({
   transcriptWindowSize: z.number().int().min(1),
   dataDir: z.string(),
   logLevel: z.enum(["debug", "info", "warn", "error"]),
-  excalidrawPort: z.number().int(),
-  excalidrawImage: z.string(),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
@@ -65,11 +63,5 @@ export function loadConfig(): Config {
     ),
     dataDir,
     logLevel: Bun.env["LOG_LEVEL"] ?? "info",
-    excalidrawPort: Number.parseInt(
-      Bun.env["EXCALIDRAW_PORT"] ?? "8080",
-      10,
-    ),
-    excalidrawImage:
-      Bun.env["EXCALIDRAW_IMAGE"] ?? "excalidraw/excalidraw:latest",
   });
 }

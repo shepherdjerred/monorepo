@@ -83,10 +83,18 @@ function extractComponents(
 ): DiagramComponent[] {
   const components: DiagramComponent[] = [];
   for (const el of elements) {
-    if (!SHAPE_TYPES.has(el.type)) continue;
-    const name = shapeNames.get(el.id);
-    if (name !== undefined) {
+    // Named shapes (rectangle/ellipse/diamond with text inside)
+    if (SHAPE_TYPES.has(el.type)) {
+      const name = shapeNames.get(el.id) ?? `unnamed-${el.type}`;
       components.push({ name, type: el.type, x: el.x, y: el.y });
+      continue;
+    }
+    // Standalone text (not inside a container) — treat as a component
+    if (el.type === "text" && (el.containerId === undefined || el.containerId === null)) {
+      const text = el.text ?? el.originalText ?? "";
+      if (text.trim() !== "") {
+        components.push({ name: text.trim(), type: "text", x: el.x, y: el.y });
+      }
     }
   }
   return components;

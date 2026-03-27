@@ -1,9 +1,12 @@
 import { z } from "zod/v4";
 import { SystemDesignPhaseSchema } from "#lib/questions/schemas.ts";
-import type { SystemDesignPhase } from "#lib/questions/schemas.ts";
+import type { SystemDesignPhase, SystemDesignQuestion } from "#lib/questions/schemas.ts";
 import type { Session } from "#lib/session/manager.ts";
 import type { Logger } from "#logger";
+import type { AIClient } from "#lib/ai/client.ts";
 import { insertEvent } from "#lib/db/events.ts";
+import { buildSystemDesignReflectionPrompt } from "#lib/ai/prompts/system-design-reflection.ts";
+import type { TranscriptEntry } from "#lib/db/transcript.ts";
 
 const PHASE_ORDER: SystemDesignPhase[] = [
   "requirements",
@@ -40,11 +43,15 @@ export type DispatchSystemDesignToolOptions = {
   session: Session;
   currentPhase: SystemDesignPhase;
   logger: Logger;
+  getDiagramSnapshot?: (() => string | null) | undefined;
+  reflectionClient?: AIClient | undefined;
+  question?: SystemDesignQuestion | undefined;
+  recentTranscript?: TranscriptEntry[] | undefined;
 }
 
-export function dispatchSystemDesignTool(
+export async function dispatchSystemDesignTool(
   opts: DispatchSystemDesignToolOptions,
-): string {
+): Promise<string> {
   const { toolName, input, session, currentPhase, logger } = opts;
 
   switch (toolName) {
@@ -79,7 +86,14 @@ export function dispatchSystemDesignTool(
     }
 
     case "review_diagram": {
-      return "No diagram available yet. The candidate has not opened an Excalidraw file. Ask them to describe their architecture verbally.";
+      if (opts.getDiagramSnapshot === undefined) {
+        return "Diagram review not available. Ask the candidate to describe their architecture verbally.";
+      }
+      const snapshot = opts.getDiagramSnapshot();
+      if (snapshot === null) {
+        return "No diagram changes detected yet. The candidate hasn't added components to their Excalidraw diagram. Ask them to describe their architecture verbally or start drawing.";
+      }
+      return `Current diagram state:\n${snapshot}`;
     }
 
     case "give_hint": {
@@ -108,7 +122,37 @@ export function dispatchSystemDesignTool(
         phase: currentPhase,
       });
 
-      return `Reflection requested: ${reason}. [Reflection model not yet connected — use your own judgment for now.]`;
+      if (opts.reflectionClient === undefined || opts.question === undefined) {
+        return "Reflection model not configured. Use your own judgment to assess the candidate.";
+      }
+
+      try {
+        const diagramSnapshot = opts.getDiagramSnapshot?.() ?? null;
+        const reflectionPrompt = buildSystemDesignReflectionPrompt({
+          question: opts.question,
+          currentPhase,
+          recentTranscript: opts.recentTranscript ?? [],
+          diagramSnapshot,
+        });
+
+        const response = await opts.reflectionClient.chat({
+          systemPrompt: reflectionPrompt,
+          messages: [{ role: "user", content: `Analyze the current interview state. Reason: ${reason}` }],
+          maxTokens: 1024,
+        });
+
+        logger.info("sd_reflection_complete", {
+          tokensIn: response.tokensIn,
+          tokensOut: response.tokensOut,
+        });
+
+        return `Deep analysis results:\n${response.text}`;
+      } catch (error) {
+        logger.error("sd_reflection_failed", {
+          error: error instanceof Error ? error.message : String(error),
+        });
+        return "Reflection analysis failed. Use your own judgment to assess the candidate.";
+      }
     }
 
     default:

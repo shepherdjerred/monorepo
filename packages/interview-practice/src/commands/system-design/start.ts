@@ -34,6 +34,8 @@ import {
   formatSessionStart,
   formatSessionEnd,
 } from "#lib/output/formatter.ts";
+import { watchExcalidraw } from "#lib/excalidraw/watcher.ts";
+import { parseElements, type DiagramExtraction } from "#lib/excalidraw/parser.ts";
 
 export type SystemDesignStartOptions = {
   difficulty?: "junior" | "mid" | "senior" | "staff" | undefined;
@@ -121,6 +123,62 @@ export async function startSystemDesignSession(
 
   const timer = createTimer(timeMinutes);
 
+  // Set up Excalidraw diagram file and watcher
+  // The .excalidraw file is edited directly by the user (e.g. via VS Code Excalidraw extension)
+  // and watched for changes on disk. No Docker container needed.
+  let latestDiagramExtraction: DiagramExtraction | undefined;
+  const excalidrawFilePath = path.join(session.workspacePath, "diagram.excalidraw");
+
+  // Create initial empty excalidraw file
+  await Bun.write(excalidrawFilePath, JSON.stringify({
+    type: "excalidraw",
+    version: 2,
+    source: "interview-practice",
+    elements: [],
+    appState: { gridSize: null },
+    files: {},
+  }, null, 2));
+
+  console.log(`\n\u001B[36mDiagram file: ${excalidrawFilePath}\u001B[0m`);
+  console.log(`\u001B[90mOpen in VS Code with the Excalidraw extension (saves to disk automatically)\u001B[0m\n`);
+
+  // Watch excalidraw file for changes saved to disk
+  const excalidrawWatcher = watchExcalidraw(excalidrawFilePath, (content) => {
+    try {
+      latestDiagramExtraction = parseElements(content);
+      logger.debug("diagram_updated", {
+        components: latestDiagramExtraction.components.length,
+        connections: latestDiagramExtraction.connections.length,
+      });
+    } catch {
+      // Invalid JSON, ignore
+    }
+  });
+
+  function getDiagramSnapshot(): string | null {
+    if (latestDiagramExtraction === undefined) return null;
+    const { components, connections } = latestDiagramExtraction;
+    if (components.length === 0 && connections.length === 0) return null;
+
+    const lines: string[] = ["Components:"];
+    for (const c of components) {
+      lines.push(`  - ${c.name} (${c.type})`);
+    }
+    if (connections.length > 0) {
+      lines.push("Connections:");
+      for (const c of connections) {
+        lines.push(`  - ${c.from} -> ${c.to}${c.label !== undefined ? ` (${c.label})` : ""}`);
+      }
+    }
+    return lines.join("\n");
+  }
+
+  // Clean up watcher on process exit
+  const cleanup = () => {
+    excalidrawWatcher.stop();
+  };
+  process.on("SIGINT", () => { cleanup(); process.exit(); });
+
   // Track current phase
   let currentPhase: SystemDesignPhase = "requirements";
 
@@ -144,6 +202,7 @@ export async function startSystemDesignSession(
       timer,
       currentPhase,
       logger: logger.child("interviewer"),
+      getDiagramSnapshot,
     },
   );
 
@@ -179,6 +238,7 @@ export async function startSystemDesignSession(
             timer,
             currentPhase,
             logger: logger.child("interviewer"),
+            getDiagramSnapshot,
           },
         );
         console.log(formatInterviewerMessage(closingResult.aiText));
@@ -200,6 +260,7 @@ export async function startSystemDesignSession(
             timer,
             currentPhase,
             logger: logger.child("interviewer"),
+            getDiagramSnapshot,
           },
         );
         currentPhase = result.newPhase;
@@ -232,6 +293,7 @@ export async function startSystemDesignSession(
           timer,
           currentPhase,
           logger: logger.child("interviewer"),
+          getDiagramSnapshot,
         });
 
         currentPhase = result.newPhase;
@@ -256,6 +318,7 @@ export async function startSystemDesignSession(
   }
 
   rl.close();
+  cleanup();
   session.db.close();
   logger.info("sd_session_complete", {
     duration_s: Math.floor(timer.getElapsedMs() / 1000),
@@ -272,6 +335,7 @@ type SystemDesignTurnOptions = {
   timer: Timer;
   currentPhase: SystemDesignPhase;
   logger: Logger;
+  getDiagramSnapshot: () => string | null;
 }
 
 type SystemDesignTurnResult = {
@@ -305,7 +369,7 @@ async function runSystemDesignTurn(
     timerDisplay: timer.getDisplayTime(),
     timerPhase: timer.getPhase(),
     recentTranscript,
-    diagramSnapshot: null, // Excalidraw integration in Phase 2 Excalidraw task
+    diagramSnapshot: options.getDiagramSnapshot(),
   });
 
   const messages: Message[] =
@@ -332,12 +396,15 @@ async function runSystemDesignTurn(
         input: toolCall.input,
       });
 
-      const result = dispatchSystemDesignTool({
+      const result = await dispatchSystemDesignTool({
         toolName: toolCall.name,
         input: toolCall.input,
         session,
         currentPhase,
         logger,
+        getDiagramSnapshot: options.getDiagramSnapshot,
+        question,
+        recentTranscript,
       });
 
       if (

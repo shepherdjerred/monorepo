@@ -204,9 +204,14 @@ export async function runVoiceSession(opts: VoiceSessionOptions): Promise<void> 
   });
 
   // Watch solution file for changes and push code context to Realtime via session.update
+  let lastSentCodeSnapshot: string | undefined;
   const codeWatchInterval = setInterval(() => {
     void (async () => {
       try {
+        const codeSnapshot = await readSolutionSafe(solutionPath);
+        if (codeSnapshot === lastSentCodeSnapshot) return; // No change, skip update
+        lastSentCodeSnapshot = codeSnapshot;
+
         const updatedConfig = buildRealtimeSessionConfig({
           model: config.realtimeModel,
           voice: config.realtimeVoice,
@@ -219,7 +224,7 @@ export async function runVoiceSession(opts: VoiceSessionOptions): Promise<void> 
           hintsGiven: session.metadata.hintsGiven,
           testsRun: session.metadata.testsRun,
           tools,
-          codeSnapshot: await readSolutionSafe(solutionPath),
+          codeSnapshot,
         });
         realtimeClient.sendSessionUpdate(updatedConfig);
       } catch {

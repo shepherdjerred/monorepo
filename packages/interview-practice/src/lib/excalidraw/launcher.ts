@@ -8,11 +8,15 @@ export async function startContainer(
   port: number,
   image: string,
 ): Promise<ExcalidrawContainer> {
+  // Stop any existing Excalidraw container on this port to ensure a clean state
+  await stopContainersByPort(port);
+
   const proc = Bun.spawn(
     [
       "docker",
       "run",
       "-d",
+      "--name", `excalidraw-interview-${String(port)}`,
       "-p",
       `${String(port)}:80`,
       image,
@@ -39,6 +43,16 @@ export async function startContainer(
     port,
     url: `http://localhost:${String(port)}`,
   };
+}
+
+async function stopContainersByPort(port: number): Promise<void> {
+  // Remove any existing container with our naming convention
+  const name = `excalidraw-interview-${String(port)}`;
+  const proc = Bun.spawn(["docker", "rm", "-f", name], {
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  await proc.exited;
 }
 
 export async function stopContainer(containerId: string): Promise<void> {

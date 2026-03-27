@@ -74,7 +74,7 @@ describe("excalidraw parser", () => {
     expect(result.connections).toHaveLength(0);
   });
 
-  test("ignores shapes without text labels", () => {
+  test("includes unlabeled shapes with fallback name", () => {
     const json = JSON.stringify({
       elements: [
         {
@@ -88,7 +88,28 @@ describe("excalidraw parser", () => {
       ],
     });
     const result = parseElements(json);
-    expect(result.components).toHaveLength(0);
+    expect(result.components).toHaveLength(1);
+    expect(result.components[0]!.name).toBe("unnamed-rectangle");
+  });
+
+  test("extracts standalone text as components", () => {
+    const json = JSON.stringify({
+      elements: [
+        {
+          id: "txt1",
+          type: "text",
+          x: 50,
+          y: 50,
+          width: 80,
+          height: 20,
+          text: "Cache Layer",
+        },
+      ],
+    });
+    const result = parseElements(json);
+    expect(result.components).toHaveLength(1);
+    expect(result.components[0]!.name).toBe("Cache Layer");
+    expect(result.components[0]!.type).toBe("text");
   });
 
   test("ignores arrows without bindings", () => {

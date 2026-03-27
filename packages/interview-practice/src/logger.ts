@@ -1,4 +1,5 @@
 import path from "node:path";
+import { mkdirSync } from "node:fs";
 
 export type LogLevel = "debug" | "info" | "warn" | "error";
 
@@ -26,7 +27,7 @@ export function createLogger(options: {
   const minLevel = LEVEL_ORDER[options.level];
 
   const dir = path.dirname(options.logFilePath);
-  Bun.spawnSync(["mkdir", "-p", dir]);
+  mkdirSync(dir, { recursive: true });
 
   // Open a file writer for efficient appending
   const writer = Bun.file(options.logFilePath).writer();

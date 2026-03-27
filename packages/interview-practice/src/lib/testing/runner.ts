@@ -228,196 +228,104 @@ function tsTypeToJava(tsType: string): string {
   return map[tsType] ?? tsType;
 }
 
-function javaArgDeserializer(tsType: string, jsonExpr: string): string {
+function javaLiteral(value: unknown, tsType: string): string {
+  if (value === null || value === undefined) return "null";
   switch (tsType) {
     case "number":
-      return `((Number) ${jsonExpr}).intValue()`;
+      return String(value);
     case "number[]":
-      return `toIntArray((java.util.List<?>) ${jsonExpr})`;
+      return `new int[]{${(value as number[]).join(", ")}}`;
     case "number[][]":
-      return `toIntArray2D((java.util.List<?>) ${jsonExpr})`;
+      return `new int[][]{${(value as number[][]).map((row) => `{${row.join(", ")}}`).join(", ")}}`;
     case "string":
-      return `(String) ${jsonExpr}`;
+      return `"${String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
     case "string[]":
-      return `toStringArray((java.util.List<?>) ${jsonExpr})`;
+      return `new String[]{${(value as string[]).map((s) => `"${s.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`).join(", ")}}`;
     case "boolean":
-      return `(Boolean) ${jsonExpr}`;
+      return String(value);
+    case "boolean[]":
+      return `new boolean[]{${(value as boolean[]).join(", ")}}`;
     default:
-      return `${jsonExpr}`;
+      return String(value);
   }
 }
 
-function javaResultSerializer(tsReturnType: string, expr: string): string {
-  switch (tsReturnType) {
-    case "number[]":
-    case "number[][]":
-    case "string[]":
-    case "boolean[]":
-      return `arrayToJson(${expr})`;
-    default:
-      return `String.valueOf(${expr})`;
+function javaDeepEquals(tsType: string, actual: string, expected: string): string {
+  if (tsType.includes("[]")) {
+    return `java.util.Arrays.deepEquals(box(${actual}), box(${expected}))`;
   }
+  return `java.util.Objects.equals(${actual}, ${expected})`;
+}
+
+function javaToJsonString(tsType: string, expr: string): string {
+  if (tsType.includes("[][]")) return `deepToString(${expr})`;
+  if (tsType.includes("[]")) return `java.util.Arrays.toString(${expr}).replace(" ", "")`;
+  if (tsType === "string") return `"\\"" + ${expr} + "\\""`;
+  return `String.valueOf(${expr})`;
 }
 
 function generateJavaTestHarness(
   testCases: TestCase[],
   signature: FunctionSignature,
 ): string {
-  const testCasesJson = JSON.stringify(
-    testCases.map((tc) => ({ args: tc.args, expected: tc.expected })),
-  );
+  const cases: string[] = [];
 
-  const argDeserializations = signature.params.map((p, i) =>
-    `${tsTypeToJava(p.type)} arg${String(i)} = ${javaArgDeserializer(p.type, `args.get(${String(i)})`)};`
-  ).join("\n            ");
+  for (let i = 0; i < testCases.length; i++) {
+    const tc = testCases[i];
+    if (tc === undefined) continue;
+    const args = signature.params.map((p, j) => {
+      const arg = (tc.args as unknown[])[j];
+      return javaLiteral(arg, p.type);
+    });
+    const expectedLiteral = javaLiteral(tc.expected, signature.returnType);
+    const expectedJson = javaToJsonString(signature.returnType, `expected${String(i)}`);
+    const actualJson = javaToJsonString(signature.returnType, `actual${String(i)}`);
+    const equals = javaDeepEquals(signature.returnType, `actual${String(i)}`, `expected${String(i)}`);
 
-  const argNames = signature.params.map((_, i) => `arg${String(i)}`).join(", ");
-  const resultSer = javaResultSerializer(signature.returnType, "actual");
+    cases.push(`
+            // Test case ${String(i + 1)}
+            {
+                ${tsTypeToJava(signature.returnType)} expected${String(i)} = ${expectedLiteral};
+                long start = System.currentTimeMillis();
+                try {
+                    ${tsTypeToJava(signature.returnType)} actual${String(i)} = sol.${signature.name}(${args.join(", ")});
+                    boolean passed = ${equals};
+                    long dur = System.currentTimeMillis() - start;
+                    if (idx > 0) sb.append(",");
+                    sb.append(String.format("{\\"passed\\":%b,\\"actual\\":%s,\\"expected\\":%s,\\"error\\":null,\\"durationMs\\":%d}",
+                        passed, ${actualJson}, ${expectedJson}, dur));
+                } catch (Exception e) {
+                    long dur = System.currentTimeMillis() - start;
+                    if (idx > 0) sb.append(",");
+                    sb.append(String.format("{\\"passed\\":false,\\"actual\\":null,\\"expected\\":%s,\\"error\\":\\"%s\\",\\"durationMs\\":%d}",
+                        ${expectedJson}, e.getMessage() != null ? e.getMessage().replace("\\"", "\\\\\\"") : "null", dur));
+                }
+                idx++;
+            }`);
+  }
 
   return `import java.util.*;
 
 public class TestRunner {
-    public static void main(String[] args) throws Exception {
-        String json = ${JSON.stringify(testCasesJson)};
-        @SuppressWarnings("unchecked")
-        java.util.List<Map<String, Object>> testCases =
-            (java.util.List<Map<String, Object>>) new com.sun.script.javascript.RhinoScriptEngine()
-            .eval("Java.from(" + json + ")");
-        // Use simple JSON parsing instead
-        testCases = parseTestCases(json);
-
-        Solution solution = new Solution();
+    public static void main(String[] args) {
+        Solution sol = new Solution();
         StringBuilder sb = new StringBuilder("[");
-
-        for (int i = 0; i < testCases.size(); i++) {
-            Map<String, Object> tc = testCases.get(i);
-            @SuppressWarnings("unchecked")
-            java.util.List<Object> argsList = (java.util.List<Object>) tc.get("args");
-            Object expectedRaw = tc.get("expected");
-            long start = System.currentTimeMillis();
-
-            try {
-                ${argDeserializations}
-                ${tsTypeToJava(signature.returnType)} actual = solution.${signature.name}(${argNames});
-                String actualJson = ${resultSer};
-                String expectedJson = toJson(expectedRaw);
-                boolean passed = actualJson.equals(expectedJson);
-                long duration = System.currentTimeMillis() - start;
-
-                if (i > 0) sb.append(",");
-                sb.append(String.format(
-                    "{\\"passed\\":%b,\\"actual\\":%s,\\"expected\\":%s,\\"error\\":null,\\"durationMs\\":%d}",
-                    passed, quoteJson(actualJson), quoteJson(expectedJson), duration));
-            } catch (Exception e) {
-                long duration = System.currentTimeMillis() - start;
-                if (i > 0) sb.append(",");
-                sb.append(String.format(
-                    "{\\"passed\\":false,\\"actual\\":null,\\"expected\\":%s,\\"error\\":\\"%s\\",\\"durationMs\\":%d}",
-                    quoteJson(toJson(expectedRaw)), escapeJson(e.getMessage()), duration));
-            }
-        }
-
+        int idx = 0;
+${cases.join("\n")}
         sb.append("]");
         System.out.println(sb.toString());
     }
 
-    @SuppressWarnings("unchecked")
-    static java.util.List<Map<String, Object>> parseTestCases(String json) throws Exception {
-        // Minimal JSON array parser using Bun-compatible approach
-        // We parse using a simple recursive descent or javax.script
-        javax.script.ScriptEngine engine = new javax.script.ScriptEngineManager().getEngineByName("nashorn");
-        if (engine == null) {
-            engine = new javax.script.ScriptEngineManager().getEngineByName("js");
-        }
-        if (engine != null) {
-            Object result = engine.eval("Java.from(JSON.parse(" + quoteForJs(json) + "))");
-            return (java.util.List<Map<String, Object>>) result;
-        }
-        throw new RuntimeException("No JavaScript engine available for JSON parsing");
-    }
+    static Object[] box(int[] a) { Integer[] b = new Integer[a.length]; for (int i=0;i<a.length;i++) b[i]=a[i]; return b; }
+    static Object[] box(int[][] a) { Object[] b = new Object[a.length]; for (int i=0;i<a.length;i++) { Integer[] r=new Integer[a[i].length]; for(int j=0;j<a[i].length;j++) r[j]=a[i][j]; b[i]=r; } return b; }
+    static Object[] box(String[] a) { return a; }
+    static Object[] box(boolean[] a) { Boolean[] b = new Boolean[a.length]; for (int i=0;i<a.length;i++) b[i]=a[i]; return b; }
+    static Object[] box(Object[] a) { return a; }
 
-    static String quoteForJs(String s) {
-        return "\\"" + s.replace("\\\\", "\\\\\\\\").replace("\\"", "\\\\\\"") + "\\"";
-    }
-
-    static int[] toIntArray(java.util.List<?> list) {
-        int[] arr = new int[list.size()];
-        for (int i = 0; i < list.size(); i++) arr[i] = ((Number) list.get(i)).intValue();
-        return arr;
-    }
-
-    static int[][] toIntArray2D(java.util.List<?> list) {
-        int[][] arr = new int[list.size()][];
-        for (int i = 0; i < list.size(); i++) {
-            @SuppressWarnings("unchecked")
-            java.util.List<?> row = (java.util.List<?>) list.get(i);
-            arr[i] = toIntArray(row);
-        }
-        return arr;
-    }
-
-    static String[] toStringArray(java.util.List<?> list) {
-        String[] arr = new String[list.size()];
-        for (int i = 0; i < list.size(); i++) arr[i] = (String) list.get(i);
-        return arr;
-    }
-
-    static String toJson(Object o) {
-        if (o == null) return "null";
-        if (o instanceof Number) return String.valueOf(((Number) o).intValue());
-        if (o instanceof Boolean) return String.valueOf(o);
-        if (o instanceof String) return (String) o;
-        if (o instanceof int[]) return Arrays.toString((int[]) o).replace(" ", "");
-        if (o instanceof int[][]) {
-            StringBuilder sb = new StringBuilder("[");
-            int[][] arr = (int[][]) o;
-            for (int i = 0; i < arr.length; i++) {
-                if (i > 0) sb.append(",");
-                sb.append(Arrays.toString(arr[i]).replace(" ", ""));
-            }
-            sb.append("]");
-            return sb.toString();
-        }
-        if (o instanceof String[]) {
-            StringBuilder sb = new StringBuilder("[");
-            String[] arr = (String[]) o;
-            for (int i = 0; i < arr.length; i++) {
-                if (i > 0) sb.append(",");
-                sb.append("\\"").append(arr[i]).append("\\"");
-            }
-            sb.append("]");
-            return sb.toString();
-        }
-        if (o instanceof java.util.List) {
-            @SuppressWarnings("unchecked")
-            java.util.List<Object> list = (java.util.List<Object>) o;
-            StringBuilder sb = new StringBuilder("[");
-            for (int i = 0; i < list.size(); i++) {
-                if (i > 0) sb.append(",");
-                sb.append(toJson(list.get(i)));
-            }
-            sb.append("]");
-            return sb.toString();
-        }
-        return String.valueOf(o);
-    }
-
-    static String arrayToJson(Object arr) {
-        return toJson(arr);
-    }
-
-    static String quoteJson(String s) {
-        if (s.startsWith("[") || s.startsWith("{") || s.equals("null") ||
-            s.equals("true") || s.equals("false") ||
-            s.matches("-?\\\\d+(\\\\.\\\\d+)?")) {
-            return s;
-        }
-        return "\\"" + escapeJson(s) + "\\"";
-    }
-
-    static String escapeJson(String s) {
-        if (s == null) return "null";
-        return s.replace("\\\\", "\\\\\\\\").replace("\\"", "\\\\\\"").replace("\\n", "\\\\n");
+    static String deepToString(int[][] a) {
+        StringBuilder s = new StringBuilder("[");
+        for (int i=0;i<a.length;i++) { if(i>0)s.append(","); s.append(Arrays.toString(a[i]).replace(" ","")); }
+        s.append("]"); return s.toString();
     }
 }
 `;

@@ -502,16 +502,16 @@
         "interview-practice": "./src/index.ts",
       },
       "dependencies": {
-        "@anthropic-ai/sdk": "latest",
-        "@google/generative-ai": "latest",
-        "openai": "latest",
+        "@anthropic-ai/sdk": "^0.80.0",
+        "@google/generative-ai": "^0.24.1",
+        "openai": "^6.33.0",
         "zod": "^4.3.6",
       },
       "devDependencies": {
         "@shepherdjerred/eslint-config": "workspace:*",
-        "@types/bun": "latest",
+        "@types/bun": "^1.3.11",
         "eslint": "^9.39.2",
-        "typescript": "latest",
+        "typescript": "^5.8.3",
       },
     },
     "packages/monarch": {
@@ -7143,8 +7143,6 @@
     "@shepherdjerred/helm-types/zod": ["zod@4.3.6", "", {}, "sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg=="],
 
     "@shepherdjerred/interview-practice/@anthropic-ai/sdk": ["@anthropic-ai/sdk@0.80.0", "", { "dependencies": { "json-schema-to-ts": "^3.1.1" }, "peerDependencies": { "zod": "^3.25.0 || ^4.0.0" }, "optionalPeers": ["zod"], "bin": { "anthropic-ai-sdk": "bin/cli" } }, "sha512-WeXLn7zNVk3yjeshn+xZHvld6AoFUOR3Sep6pSoHho5YbSi6HwcirqgPA5ccFuW8QTVJAAU7N8uQQC6Wa9TG+g=="],
-
-    "@shepherdjerred/interview-practice/typescript": ["typescript@6.0.2", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-bGdAIrZ0wiGDo5l8c++HWtbaNCWTS4UTv7RaTH/ThVIgjkveJt83m74bBHMJkuCbslY8ixgLBVZJIOiQlQTjfQ=="],
 
     "@shepherdjerred/interview-practice/zod": ["zod@4.3.6", "", {}, "sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg=="],
 

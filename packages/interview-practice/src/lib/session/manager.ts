@@ -1,5 +1,6 @@
 import path from "node:path";
 import { randomUUID } from "node:crypto";
+import { mkdirSync } from "node:fs";
 import type { Database } from "bun:sqlite";
 import { openDatabase } from "#lib/db/connection.ts";
 import { initializeSchema } from "#lib/db/schema.ts";
@@ -25,7 +26,7 @@ export async function createSession(options: {
 }): Promise<Session> {
   const id = randomUUID();
   const workspacePath = path.join(options.dataDir, "sessions", id);
-  Bun.spawnSync(["mkdir", "-p", workspacePath]);
+  mkdirSync(workspacePath, { recursive: true });
 
   const dbPath = path.join(workspacePath, "session.db");
   const db = openDatabase(dbPath);

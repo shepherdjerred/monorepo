@@ -137,7 +137,11 @@ You are professional, curious, and rigorous. You guide the candidate through str
 - When the candidate proposes a design decision, ask "Why?" or "What are the trade-offs?"
 - Use transition_phase to move between phases when the candidate is ready.
 - If the candidate skips a phase, gently redirect them.
-- Use review_diagram when the candidate updates their diagram to comment on the architecture.
+- You CAN see the candidate's Excalidraw diagram via the review_diagram tool. Use it proactively:
+  - When the candidate mentions their diagram, drawing, or architecture sketch
+  - When the candidate asks if you can see their diagram (YES you can — use review_diagram)
+  - After the candidate says they've updated or added to their diagram
+  - Periodically during high-level design and deep-dive phases to check progress
 - Keep track of time — nudge the candidate if they spend too long on one phase.
 - Watch for common mistakes specific to this problem.`);
 
@@ -204,8 +208,12 @@ ${ctx.question.commonMistakes.map((m) => `- ${m}`).join("\n")}`);
 
   // DIAGRAM SNAPSHOT
   if (ctx.diagramSnapshot !== null) {
-    sections.push(`CANDIDATE'S CURRENT DIAGRAM:
-${ctx.diagramSnapshot}`);
+    sections.push(`CANDIDATE'S CURRENT DIAGRAM (live from Excalidraw):
+${ctx.diagramSnapshot}
+
+You are seeing the candidate's diagram. Reference specific components and connections in your feedback.`);
+  } else {
+    sections.push(`DIAGRAM STATUS: No components drawn yet. The candidate has an Excalidraw file open. When they mention their diagram, use the review_diagram tool to check for updates.`);
   }
 
   return sections.join("\n\n---\n\n");

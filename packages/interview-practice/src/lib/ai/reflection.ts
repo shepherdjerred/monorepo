@@ -31,25 +31,9 @@ export type ReflectionTriggerContext = {
   codeSnapshot: string | null;
 };
 
+// Reuse the schemas from reflection-queue.ts, omitting createdAt (added after parsing)
 const ReflectionArraySchema = z.array(
-  z.object({
-    type: z.enum(["observation", "suggestion", "next_move", "scoring_update"]),
-    content: z.string(),
-    priority: z.number().int().min(1).max(10),
-    nextMove: z
-      .object({
-        action: z.enum([
-          "reveal_next_part",
-          "give_hint",
-          "ask_complexity",
-          "wrap_up",
-          "continue",
-        ]),
-        targetPart: z.number().int().optional(),
-        condition: z.enum(["immediate", "after_response", "when_stuck"]),
-      })
-      .optional(),
-  }),
+  ReflectionSchema.omit({ createdAt: true }),
 );
 
 export async function triggerReflection(
